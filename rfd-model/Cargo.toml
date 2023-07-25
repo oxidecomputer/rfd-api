@@ -1,0 +1,28 @@
+[package]
+name = "rfd-model"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+mock = ["mockall"]
+
+[dependencies]
+async-bb8-diesel = { workspace = true }
+async-trait = { workspace = true }
+bb8 = { workspace = true }
+chrono = { workspace = true, features = ["serde"] }
+diesel = { workspace = true, features = ["chrono", "uuid", "serde_json"] }
+mockall = { workspace = true, optional = true }
+partial-struct = { workspace = true }
+schemars = { workspace = true, features = ["chrono", "uuid1"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+uuid = { workspace = true, features = ["v4", "serde"]  }
+
+[dev-dependencies]
+diesel_migrations = { version = "2.0.0", features = ["postgres"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }

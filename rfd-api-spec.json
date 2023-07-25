@@ -1,0 +1,964 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "RFD API",
+    "description": "Programmatic access to RFDs",
+    "contact": {
+      "url": "https://oxide.computer",
+      "email": "augustus@oxidecomputer.com"
+    },
+    "version": ""
+  },
+  "paths": {
+    "/api-user": {
+      "post": {
+        "operationId": "create_api_user",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiUserUpdateParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "successful creation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiUser_for_ApiPermission"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api-user/{identifier}": {
+      "get": {
+        "operationId": "get_api_user",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiUser_for_ApiPermission"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "operationId": "update_api_user",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiUserUpdateParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiUser_for_ApiPermission"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api-user/{identifier}/token": {
+      "get": {
+        "operationId": "list_api_user_tokens",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Array_of_ApiUserTokenResponse",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApiUserTokenResponse"
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "operationId": "create_api_user_token",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiUserTokenCreateParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "successful creation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InitialApiUserTokenResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api-user/{identifier}/token/{token_identifier}": {
+      "get": {
+        "operationId": "get_api_user_token",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "token_identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiUserTokenResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete_api_user_token",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "token_identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiUserTokenResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/login/access-token/{provider}": {
+      "post": {
+        "operationId": "access_token_login",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AccessTokenProviderName"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessTokenProviderLogin"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "successful creation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginTokenResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/login/jwt/{provider}": {
+      "post": {
+        "operationId": "jwt_login",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/JwtProviderName"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JwtProviderLogin"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "successful creation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginTokenResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/login/oauth/{provider}/device": {
+      "get": {
+        "operationId": "get_device_provider",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OAuthProviderName"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthProviderInfo"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/login/oauth/{provider}/device/exchange": {
+      "post": {
+        "operationId": "exchange_device_token",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OAuthProviderName"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessTokenExchangeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "*/*": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/rfd/{number}": {
+      "get": {
+        "operationId": "get_rfd",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FullRfd"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/self": {
+      "get": {
+        "operationId": "get_self",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiUser_for_ApiPermission"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "responses": {
+      "Error": {
+        "description": "Error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "AccessTokenExchangeRequest": {
+        "type": "object",
+        "properties": {
+          "device_code": {
+            "type": "string"
+          },
+          "grant_type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "device_code",
+          "grant_type"
+        ]
+      },
+      "AccessTokenProviderLogin": {
+        "type": "object",
+        "properties": {
+          "expiration": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/LoginPermissions"
+          },
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "permissions",
+          "token"
+        ]
+      },
+      "ApiPermission": {
+        "oneOf": [
+          {
+            "type": "string",
+            "enum": [
+              "CreateApiUserTokenSelf",
+              "CreateApiUserTokenAll",
+              "GetApiUserSelf",
+              "GetApiUserAll",
+              "GetApiUserTokenSelf",
+              "DeleteApiUserTokenSelf",
+              "DeleteApiUserTokenAll",
+              "CreateApiUser",
+              "UpdateApiUserSelf",
+              "UpdateApiUserAll",
+              "GetAllRfds",
+              "GetAssignedRfds"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "CreateApiUserToken": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "CreateApiUserToken"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "GetApiUser": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "GetApiUser"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "GetApiUserToken": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "GetApiUserToken"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "DeleteApiUserToken": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "DeleteApiUserToken"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "UpdateApiUser": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "UpdateApiUser"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "GetRfd": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "GetRfd"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "ApiUserTokenCreateParams": {
+        "type": "object",
+        "properties": {
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+          }
+        },
+        "required": [
+          "expires_at",
+          "permissions"
+        ]
+      },
+      "ApiUserTokenResponse": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+          }
+        },
+        "required": [
+          "created_at",
+          "id",
+          "permissions"
+        ]
+      },
+      "ApiUserUpdateParams": {
+        "type": "object",
+        "properties": {
+          "permissions": {
+            "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+          }
+        },
+        "required": [
+          "permissions"
+        ]
+      },
+      "ApiUser_for_ApiPermission": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "created_at",
+          "id",
+          "permissions",
+          "updated_at"
+        ]
+      },
+      "Error": {
+        "description": "Error information from a response.",
+        "type": "object",
+        "properties": {
+          "error_code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "request_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "request_id"
+        ]
+      },
+      "FullRfd": {
+        "type": "object",
+        "properties": {
+          "authors": {
+            "nullable": true,
+            "type": "string"
+          },
+          "commit": {
+            "type": "string"
+          },
+          "committed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "content": {
+            "type": "string"
+          },
+          "discussion": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "link": {
+            "nullable": true,
+            "type": "string"
+          },
+          "pdfs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FullRfdPdfEntry"
+            }
+          },
+          "rfd_number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sha": {
+            "type": "string"
+          },
+          "state": {
+            "nullable": true,
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "commit",
+          "committed_at",
+          "content",
+          "id",
+          "pdfs",
+          "rfd_number",
+          "sha",
+          "title"
+        ]
+      },
+      "FullRfdPdfEntry": {
+        "type": "object",
+        "properties": {
+          "link": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "link",
+          "source"
+        ]
+      },
+      "InitialApiUserTokenResponse": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+          },
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "created_at",
+          "id",
+          "permissions",
+          "token"
+        ]
+      },
+      "JwtProviderLogin": {
+        "type": "object",
+        "properties": {
+          "expiration": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/LoginPermissions"
+          },
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "permissions",
+          "token"
+        ]
+      },
+      "LoginPermissions": {
+        "oneOf": [
+          {
+            "type": "string",
+            "enum": [
+              "All"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "Specific": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ApiPermission"
+                }
+              }
+            },
+            "required": [
+              "Specific"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "LoginTokenResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "OAuthProviderInfo": {
+        "type": "object",
+        "properties": {
+          "auth_url_endpoint": {
+            "type": "string"
+          },
+          "client_id": {
+            "type": "string"
+          },
+          "device_code_endpoint": {
+            "type": "string"
+          },
+          "provider": {
+            "$ref": "#/components/schemas/OAuthProviderName"
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "token_endpoint": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "auth_url_endpoint",
+          "client_id",
+          "device_code_endpoint",
+          "provider",
+          "scopes",
+          "token_endpoint"
+        ]
+      },
+      "OAuthProviderName": {
+        "type": "string",
+        "enum": [
+          "google"
+        ]
+      },
+      "Permissions_for_ApiPermission": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ApiPermission"
+        }
+      },
+      "AccessTokenProviderName": {
+        "type": "string",
+        "enum": [
+          "github"
+        ]
+      },
+      "JwtProviderName": {
+        "type": "string",
+        "enum": [
+          "google"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,21 @@
+[package]
+name = "rfd-redirect"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+config = { workspace = true }
+dropshot = { workspace = true }
+regex = { workspace = true }
+rfd-data = { path = "../rfd-data" }
+schemars = { workspace = true }
+serde = { workspace = true }
+slog = { workspace = true }
+slog-async = { workspace = true }
+slog-tracing-bridge = { path = "../slog-tracing-bridge" }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter", "fmt", "json"] }

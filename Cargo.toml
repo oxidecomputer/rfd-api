@@ -1,0 +1,87 @@
+[workspace]
+members = [
+  "dropshot-authorization-header",
+  "rfd-api",
+  "rfd-cli",
+  "rfd-data",
+  "rfd-model",
+  "rfd-processor",
+  "rfd-redirect",
+  "rfd-sdk",
+  "parse-rfd",
+  "slog-tracing-bridge",
+  "trace-request",
+  "xtask"
+]
+resolver = "2"
+
+[workspace.dependencies]
+anyhow = "1.0.68"
+argon2 = "0.4.1"
+async-bb8-diesel = { git = "https://github.com/oxidecomputer/async-bb8-diesel" }
+async-trait = "0.1.61"
+base64 = "0.21.0"
+bb8 = "0.8.0"
+chrono = "0.4.22"
+clap = { version = "4.1.11", features = ["derive", "string", "env"] }
+config = { version = "0.13.1", features = ["toml"] }
+crc32c = "0.6.3"
+diesel = { version = "2.0.0", features = ["postgres"] }
+dirs = "5.0.0"
+dropshot = "0.9.0"
+dropshot-verified-body = { git = "https://github.com/oxidecomputer/dropshot-verified-body" }
+google-cloudkms1 = "5.0.2"
+google-drive = "0.7.0-rc.1"
+google-storage1 = "5.0.2"
+hex = "0.4.3"
+hmac = "0.12.1"
+http = "0.2.8"
+hyper = "0.14.23"
+hyper-tls = "0.5.0"
+jsonwebtoken = "8.2.0"
+meilisearch-sdk = "0.22.1"
+md-5 = "0.10.5"
+mime_guess = "2.0.4"
+mockall = "0.11.3"
+newline-converter = "0.2.2"
+oauth2 = "4.1.0"
+octorust = "0.7.0-rc.1"
+partial-struct = { git = "https://github.com/oxidecomputer/partial-struct" }
+progenitor = { git = "https://github.com/oxidecomputer/progenitor" }
+progenitor-client = { git = "https://github.com/oxidecomputer/progenitor" }
+rand_core = "0.6"
+regex = "1.7.1"
+reqwest = { version = "0.11", features = ["json", "stream"] }
+rsa = "0.8.2"
+rustfmt-wrapper = "0.2.0"
+schemars = "0.8.11"
+sha2 = "0.10.6"
+serde = "1"
+serde_bytes = "0.11.9"
+serde_json = "1"
+serde_urlencoded = "0.7.1"
+similar = "2.2.1"
+slog = "2.7.0"
+slog-async = "2.7.0"
+tap = "1.0.1"
+thiserror = "1.0.38"
+tokio = "1.25.0"
+toml = "0.5.10"
+tracing = "0.1.37"
+tracing-core = "0.1.30"
+tracing-slog = "0.2.0"
+tracing-subscriber = "0.3.16"
+uuid = "1.2.2"
+valuable = "0.1.0"
+yup-oauth2 = "8.1.0"
+
+# [patch."https://github.com/oxidecomputer/progenitor"]
+# progenitor = { path = "../progenitor/progenitor" }
+
+# [patch."https://github.com/oxidecomputer/typify"]
+# typify = { path = "../typify/typify" }
+
+# [patch.crates-io]
+# progenitor = { path = "../progenitor/progenitor"}
+# progenitor-client = { path = "../progenitor/progenitor-client"}
+# typify = { path = "../typify/typify" }

@@ -1,0 +1,53 @@
+[package]
+name = "rfd-api"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+argon2 = { workspace = true }
+async-trait = { workspace = true }
+base64 = { workspace = true }
+chrono = { workspace = true, features = ["serde"] }
+config = { workspace = true }
+crc32c = { workspace = true }
+dropshot = { workspace = true }
+dropshot-authorization-header = { path = "../dropshot-authorization-header" }
+dropshot-verified-body = { workspace = true, features = ["github"] }
+google-cloudkms1 = { workspace = true }
+http = { workspace = true }
+hyper = { workspace = true }
+hyper-tls = { workspace = true }
+jsonwebtoken = { workspace = true }
+oauth2 = { workspace = true }
+octorust = { workspace = true }
+partial-struct = { workspace = true }
+rand_core = { workspace = true, features = ["std"] }
+regex = { workspace = true }
+reqwest = { workspace = true }
+rfd-model = { path = "../rfd-model" }
+rsa = { workspace = true }
+schemars = { workspace = true, features = ["chrono"] }
+sha2 = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_bytes = { workspace = true }
+serde_json = { workspace = true }
+serde_urlencoded = { workspace = true }
+slog = { workspace = true }
+slog-async = { workspace = true }
+slog-tracing-bridge = { path = "../slog-tracing-bridge" }
+tap = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
+toml = { workspace = true }
+trace-request = { path = "../trace-request" }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter", "fmt", "json"] }
+uuid = { workspace = true, features = ["v4", "serde"]  }
+yup-oauth2 = { workspace = true }
+
+[dev-dependencies]
+async-trait = { workspace = true }
+mockall = { workspace = true }
+rfd-model = { path = "../rfd-model", features = ["mock"] }

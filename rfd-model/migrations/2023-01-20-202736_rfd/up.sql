@@ -1,0 +1,8 @@
+CREATE TABLE rfd (
+  id UUID PRIMARY KEY,
+  rfd_number INTEGER NOT NULL,
+  link VARCHAR,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  deleted_at TIMESTAMPTZ
+)

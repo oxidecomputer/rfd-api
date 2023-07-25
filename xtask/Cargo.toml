@@ -1,0 +1,15 @@
+[package]
+name = "xtask"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+clap = { workspace = true }
+newline-converter = { workspace = true }
+progenitor = { workspace = true }
+regex = { workspace = true }
+rustfmt-wrapper = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = { workspace = true }
+similar = { workspace = true }
