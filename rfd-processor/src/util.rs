@@ -5,7 +5,7 @@ use tokio::{fs, io::AsyncWriteExt};
 
 #[derive(Debug, Error)]
 pub enum FileIoError {
-    #[error(transparent)]
+    #[error("Failed to write file {0}")]
     Io(#[from] std::io::Error),
     #[error("Expected file path to have a parent path")]
     MissingParent,
