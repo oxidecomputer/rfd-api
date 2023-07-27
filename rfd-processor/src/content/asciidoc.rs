@@ -251,7 +251,9 @@ impl<'a> RfdRenderedFormat<RfdAsciidoc<'a>> for RenderedPdf {
         if cmd_output.status.success() {
             Ok(cmd_output.stdout.into())
         } else {
-            Err(RfdContentError::ParserFailed(String::from_utf8(cmd_output.stderr)))?
+            Err(RfdContentError::ParserFailed(String::from_utf8(
+                cmd_output.stderr,
+            )))?
         }
     }
 }
