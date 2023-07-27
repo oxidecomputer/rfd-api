@@ -18,6 +18,8 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+        ports:
+          - 5432:5432
 
     steps:
       - uses: actions/checkout@v2
@@ -28,5 +30,5 @@ jobs:
         with:
           command: test
         env:
-          TEST_DATABASE: postgres://test:test@postgres
+          TEST_DATABASE: postgres://test:test@localhost
           RUSTFLAGS: "--cfg tracing_unstable"
