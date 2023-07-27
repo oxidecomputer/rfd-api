@@ -2,12 +2,7 @@ use async_trait::async_trait;
 use octorust::Client;
 use regex::Regex;
 use rfd_data::RfdNumber;
-use std::{
-    borrow::Cow,
-    env,
-    path::PathBuf,
-    process::Command,
-};
+use std::{borrow::Cow, env, path::PathBuf, process::Command};
 use tap::TapFallible;
 use tracing::instrument;
 use uuid::Uuid;
