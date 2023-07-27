@@ -12,6 +12,7 @@
   "paths": {
     "/api-user": {
       "post": {
+        "summary": "Create a new user with a given set of permissions",
         "operationId": "create_api_user",
         "requestBody": {
           "content": {
@@ -45,6 +46,7 @@
     },
     "/api-user/{identifier}": {
       "get": {
+        "summary": "Get user information for a given user id",
         "operationId": "get_api_user",
         "parameters": [
           {
@@ -77,6 +79,7 @@
         }
       },
       "post": {
+        "summary": "Update the permissions assigned to a given user",
         "operationId": "update_api_user",
         "parameters": [
           {
@@ -121,6 +124,7 @@
     },
     "/api-user/{identifier}/token": {
       "get": {
+        "summary": "List the active and expired API tokens for a given user",
         "operationId": "list_api_user_tokens",
         "parameters": [
           {
@@ -270,6 +274,43 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiUserTokenResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/github": {
+      "post": {
+        "operationId": "github_webhook",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GitHubCommitPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "successfully enqueued operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Null",
+                  "type": "string",
+                  "enum": [
+                    null
+                  ]
                 }
               }
             }
@@ -472,6 +513,7 @@
     },
     "/self": {
       "get": {
+        "summary": "Retrieve the user information of the calling user",
         "operationId": "get_self",
         "responses": {
           "200": {
@@ -513,6 +555,11 @@
         "properties": {
           "device_code": {
             "type": "string"
+          },
+          "expires_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
           },
           "grant_type": {
             "type": "string"
@@ -818,6 +865,159 @@
         "required": [
           "link",
           "source"
+        ]
+      },
+      "GitHubCommit": {
+        "type": "object",
+        "properties": {
+          "added": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "id": {
+            "type": "string"
+          },
+          "modified": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "removed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "added",
+          "id",
+          "modified",
+          "removed",
+          "timestamp"
+        ]
+      },
+      "GitHubCommitPayload": {
+        "type": "object",
+        "properties": {
+          "commits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GitHubCommit"
+            }
+          },
+          "head_commit": {
+            "$ref": "#/components/schemas/GitHubCommit"
+          },
+          "installation": {
+            "$ref": "#/components/schemas/GitHubInstallation"
+          },
+          "ref_": {
+            "type": "string"
+          },
+          "repository": {
+            "$ref": "#/components/schemas/GitHubRepository"
+          },
+          "sender": {
+            "$ref": "#/components/schemas/GitHubSender"
+          }
+        },
+        "required": [
+          "commits",
+          "head_commit",
+          "installation",
+          "ref_",
+          "repository",
+          "sender"
+        ]
+      },
+      "GitHubInstallation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0
+          },
+          "node_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "node_id"
+        ]
+      },
+      "GitHubRepository": {
+        "type": "object",
+        "properties": {
+          "default_branch": {
+            "type": "string"
+          },
+          "id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0
+          },
+          "name": {
+            "type": "string"
+          },
+          "node_id": {
+            "type": "string"
+          },
+          "owner": {
+            "$ref": "#/components/schemas/GitHubRepositoryOwner"
+          }
+        },
+        "required": [
+          "default_branch",
+          "id",
+          "name",
+          "node_id",
+          "owner"
+        ]
+      },
+      "GitHubRepositoryOwner": {
+        "type": "object",
+        "properties": {
+          "login": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "login"
+        ]
+      },
+      "GitHubSender": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0
+          },
+          "login": {
+            "type": "string"
+          },
+          "node_id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "login",
+          "node_id",
+          "type"
         ]
       },
       "InitialApiUserTokenResponse": {
