@@ -1,4 +1,4 @@
-use std::{borrow::Cow, io, path::PathBuf, str::Utf8Error};
+use std::{borrow::Cow, io, path::PathBuf, str::Utf8Error, string::FromUtf8Error};
 
 use async_trait::async_trait;
 use base64::DecodeError;
@@ -34,7 +34,7 @@ pub enum RfdContentError {
     #[error("File io failure {0}")]
     File(#[from] FileIoError),
     #[error("Failed to parse content")]
-    ParserFailed,
+    ParserFailed(Result<String, FromUtf8Error>),
     #[error("Failed to run output generator to completion {0}")]
     TaskFailure(#[from] JoinError),
 }
