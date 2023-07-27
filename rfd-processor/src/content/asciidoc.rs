@@ -258,7 +258,7 @@ impl<'a> RfdRenderedFormat<RfdAsciidoc<'a>> for RenderedPdf {
 
 #[cfg(test)]
 mod tests {
-    use crate::content::RfdContent;
+    use crate::{content::RfdContent, util::test_util::start_tracing};
 
     use super::*;
 
@@ -548,6 +548,8 @@ in velit.
 
     #[tokio::test]
     async fn test_asciidoc_to_pdf() {
+        start_tracing();
+
         let rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content()));
         let pdf = RenderedPdf::render(&rfd, rfd.tmp_path().unwrap())
             .await
