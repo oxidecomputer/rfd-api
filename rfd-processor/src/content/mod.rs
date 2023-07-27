@@ -1,4 +1,4 @@
-use std::{borrow::Cow, io, path::Path, str::Utf8Error};
+use std::{borrow::Cow, io, path::PathBuf, str::Utf8Error};
 
 use async_trait::async_trait;
 use base64::DecodeError;
@@ -184,7 +184,7 @@ impl<'a> RfdAttributes for RfdContent<'a> {
 
 #[async_trait]
 pub trait RfdRenderedFormat<Source> {
-    async fn render(content: &Source, content_dir: &Path) -> Result<Self, RfdOutputError>
+    async fn render(content: &Source, content_dir: PathBuf) -> Result<Self, RfdOutputError>
     where
         Self: Sized;
 }

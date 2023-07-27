@@ -59,3 +59,18 @@ impl SliceExt for Vec<u8> {
         }
     }
 }
+
+#[cfg(test)]
+pub mod test_util {
+    use tracing_subscriber::EnvFilter;
+
+    #[allow(dead_code)]
+    pub fn start_tracing() {
+        let _subscriber = tracing_subscriber::fmt()
+            .with_file(false)
+            .with_line_number(false)
+            .with_env_filter(EnvFilter::from_default_env())
+            .pretty()
+            .init();
+    }
+}

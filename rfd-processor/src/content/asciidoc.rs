@@ -5,7 +5,7 @@ use rfd_data::RfdNumber;
 use std::{
     borrow::Cow,
     env,
-    path::{Path, PathBuf},
+    path::PathBuf,
     process::Command,
 };
 use tap::TapFallible;
@@ -97,7 +97,7 @@ impl<'a> RfdAsciidoc<'a> {
     ) -> Result<RfdPdf, RfdOutputError> {
         self.download_images(client, number, branch).await?;
 
-        let pdf = RenderedPdf::render(self, &self.tmp_path()).await?;
+        let pdf = RenderedPdf::render(self, self.tmp_path()?).await?;
 
         self.cleanup_tmp_path()?;
 
@@ -117,7 +117,7 @@ impl<'a> RfdAsciidoc<'a> {
         location: &GitHubRfdLocation,
     ) -> Result<(), RfdContentError> {
         let dir = number.repo_path();
-        let storage_path = self.tmp_path();
+        let storage_path = self.tmp_path()?;
 
         let images = location.get_images(client, number).await?;
 
@@ -138,20 +138,22 @@ impl<'a> RfdAsciidoc<'a> {
         Ok(())
     }
 
-    /// Computes the temporary path for use when generating asciidoc HTML. This returns None for
-    /// markdown files as no temporary storage is used
-    fn tmp_path(&self) -> PathBuf {
+    /// Create a tmp directory for rendering this RFD
+    fn tmp_path(&self) -> Result<PathBuf, RfdContentError> {
         let mut path = env::temp_dir();
         path.push("asciidoc-rfd-render/");
         path.push(&self.storage_id.to_string());
 
-        path
+        // Ensure the path exists
+        std::fs::create_dir_all(path.clone())?;
+
+        Ok(path)
     }
 
     // Cleanup remaining images and local state that was used by asciidoctor
     #[instrument(skip(self), fields(storage_path = ?self.tmp_path()), err)]
     fn cleanup_tmp_path(&self) -> Result<(), RfdContentError> {
-        let storage_path = self.tmp_path();
+        let storage_path = self.tmp_path()?;
 
         if storage_path.exists() && storage_path.is_dir() {
             tracing::info!("Removing temporary content directory {:?}", storage_path);
@@ -214,19 +216,15 @@ impl<'a> RfdAttributes for RfdAsciidoc<'a> {
 
 #[async_trait]
 impl<'a> RfdRenderedFormat<RfdAsciidoc<'a>> for RenderedPdf {
-    async fn render(content: &RfdAsciidoc, content_dir: &Path) -> Result<Self, RfdOutputError> {
-        let mut storage_path = env::temp_dir();
-        storage_path.push("rendered-pdf/");
-        storage_path.push(Uuid::new_v4().to_string());
-
-        let file_path = storage_path.join("contents.adoc");
+    async fn render(content: &RfdAsciidoc, content_dir: PathBuf) -> Result<Self, RfdOutputError> {
+        let file_path = content_dir.join("contents.adoc");
 
         // Write the contents to a temporary file.
         write_file(&file_path, content.content.as_bytes()).await?;
         tracing::info!("Wrote file to temp dir");
 
         let mut command = Command::new("asciidoctor-pdf");
-        command.current_dir(content_dir).args([
+        command.current_dir(content_dir.clone()).args([
             "-o",
             "-",
             "-r",
@@ -237,12 +235,16 @@ impl<'a> RfdRenderedFormat<RfdAsciidoc<'a>> for RenderedPdf {
         ]);
 
         let cmd_output = tokio::task::spawn_blocking(move || {
-            tracing::info!("Shelling out to asciidoctor");
+            tracing::info!(?file_path, "Shelling out to asciidoctor");
+
+            // Verify the expected resources exist
+            tracing::info!(?file_path, exists = file_path.exists(), "Check document");
+
             let out = command.output();
 
             match &out {
-                Ok(_) => tracing::info!("Command succeeded"),
-                Err(err) => tracing::info!(?err, "Command failed"),
+                Ok(_) => tracing::info!(?file_path, "Command succeeded"),
+                Err(err) => tracing::info!(?file_path, ?err, "Command failed"),
             };
 
             out
@@ -250,14 +252,6 @@ impl<'a> RfdRenderedFormat<RfdAsciidoc<'a>> for RenderedPdf {
         .await??;
 
         tracing::info!("Completed asciidoc rendering");
-
-        if storage_path.exists() && storage_path.is_dir() {
-            tracing::info!(?storage_path, "Removing temporary content directory");
-            std::fs::remove_dir_all(storage_path)
-                .tap_err(|err| tracing::warn!(?err, "Failed to clean up temporary files"))?;
-        }
-
-        tracing::info!("Finished cleanup and returning");
 
         if cmd_output.status.success() {
             Ok(cmd_output.stdout.into())
@@ -560,7 +554,7 @@ in velit.
     #[tokio::test]
     async fn test_asciidoc_to_pdf() {
         let rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content()));
-        let pdf = RenderedPdf::render(&rfd, &rfd.tmp_path())
+        let pdf = RenderedPdf::render(&rfd, rfd.tmp_path().unwrap())
             .await
             .unwrap()
             .into_inner();
