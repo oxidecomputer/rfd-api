@@ -16,3 +16,5 @@ jobs:
         with:
           command: build
           args: --release
+        env:
+          RUSTFLAGS: "--cfg tracing_unstable"
