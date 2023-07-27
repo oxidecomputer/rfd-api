@@ -30,8 +30,8 @@ jobs:
         shell: bash
         run: |
           sudo apt update -y && sudo apt install -y \
-            asciidoctor \
-            ruby \
+            asciidoctor=2.0.17 \
+            ruby=2.7.0 \
       - name: Install asciidoctor-pdf, asciidoctor-mermaid
         shell: bash
         run: |
