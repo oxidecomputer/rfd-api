@@ -39,8 +39,11 @@ jobs:
           sudo gem install asciidoctor-pdf -v 2.3.2
           sudo gem install asciidoctor-mermaid -v 0.4.1
           sudo npm install -g @mermaid-js/mermaid-cli
-
-          mmdc --help
+      - name: Report versions
+        run: |
+          asciidoctor --version
+          asciidoctor-pdf --version
+          mmdc --version
       - uses: actions-rs/cargo@v1
         with:
           command: test
