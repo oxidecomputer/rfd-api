@@ -104,6 +104,8 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::JwtLogin => None,
         CliCommand::ExchangeDeviceToken => None,
         CliCommand::GetDeviceProvider => None,
+
+        CliCommand::GithubWebhook => unimplemented!(),
     }
 }
 

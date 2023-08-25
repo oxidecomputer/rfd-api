@@ -1,6 +1,8 @@
 /target
 
 config.toml
+!.cargo/config.toml
+
 spec.toml
 key.json
 test-key.json

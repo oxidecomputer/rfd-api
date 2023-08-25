@@ -289,6 +289,9 @@
     },
     "/github": {
       "post": {
+        "tags": [
+          "hidden"
+        ],
         "operationId": "github_webhook",
         "requestBody": {
           "content": {
@@ -1160,5 +1163,11 @@
         ]
       }
     }
-  }
+  },
+  "tags": [
+    {
+      "name": "hidden",
+      "description": "Internal endpoints"
+    }
+  ]
 }

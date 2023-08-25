@@ -12,6 +12,8 @@ pub mod types {
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct AccessTokenExchangeRequest {
         pub device_code: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub expires_at: Option<chrono::DateTime<chrono::offset::Utc>>,
         pub grant_type: String,
     }
 
@@ -292,6 +294,126 @@ pub mod types {
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct GitHubCommit {
+        pub added: Vec<String>,
+        pub id: String,
+        pub modified: Vec<String>,
+        pub removed: Vec<String>,
+        pub timestamp: chrono::DateTime<chrono::offset::Utc>,
+    }
+
+    impl From<&GitHubCommit> for GitHubCommit {
+        fn from(value: &GitHubCommit) -> Self {
+            value.clone()
+        }
+    }
+
+    impl GitHubCommit {
+        pub fn builder() -> builder::GitHubCommit {
+            builder::GitHubCommit::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct GitHubCommitPayload {
+        pub commits: Vec<GitHubCommit>,
+        pub head_commit: GitHubCommit,
+        pub installation: GitHubInstallation,
+        pub ref_: String,
+        pub repository: GitHubRepository,
+        pub sender: GitHubSender,
+    }
+
+    impl From<&GitHubCommitPayload> for GitHubCommitPayload {
+        fn from(value: &GitHubCommitPayload) -> Self {
+            value.clone()
+        }
+    }
+
+    impl GitHubCommitPayload {
+        pub fn builder() -> builder::GitHubCommitPayload {
+            builder::GitHubCommitPayload::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct GitHubInstallation {
+        pub id: u64,
+        pub node_id: String,
+    }
+
+    impl From<&GitHubInstallation> for GitHubInstallation {
+        fn from(value: &GitHubInstallation) -> Self {
+            value.clone()
+        }
+    }
+
+    impl GitHubInstallation {
+        pub fn builder() -> builder::GitHubInstallation {
+            builder::GitHubInstallation::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct GitHubRepository {
+        pub default_branch: String,
+        pub id: u64,
+        pub name: String,
+        pub node_id: String,
+        pub owner: GitHubRepositoryOwner,
+    }
+
+    impl From<&GitHubRepository> for GitHubRepository {
+        fn from(value: &GitHubRepository) -> Self {
+            value.clone()
+        }
+    }
+
+    impl GitHubRepository {
+        pub fn builder() -> builder::GitHubRepository {
+            builder::GitHubRepository::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct GitHubRepositoryOwner {
+        pub login: String,
+    }
+
+    impl From<&GitHubRepositoryOwner> for GitHubRepositoryOwner {
+        fn from(value: &GitHubRepositoryOwner) -> Self {
+            value.clone()
+        }
+    }
+
+    impl GitHubRepositoryOwner {
+        pub fn builder() -> builder::GitHubRepositoryOwner {
+            builder::GitHubRepositoryOwner::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct GitHubSender {
+        pub id: u64,
+        pub login: String,
+        pub node_id: String,
+        #[serde(rename = "type")]
+        pub type_: String,
+    }
+
+    impl From<&GitHubSender> for GitHubSender {
+        fn from(value: &GitHubSender) -> Self {
+            value.clone()
+        }
+    }
+
+    impl GitHubSender {
+        pub fn builder() -> builder::GitHubSender {
+            builder::GitHubSender::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct InitialApiUserTokenResponse {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
         pub id: uuid::Uuid,
@@ -545,6 +667,7 @@ pub mod types {
         #[derive(Clone, Debug)]
         pub struct AccessTokenExchangeRequest {
             device_code: Result<String, String>,
+            expires_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
             grant_type: Result<String, String>,
         }
 
@@ -552,6 +675,7 @@ pub mod types {
             fn default() -> Self {
                 Self {
                     device_code: Err("no value supplied for device_code".to_string()),
+                    expires_at: Ok(Default::default()),
                     grant_type: Err("no value supplied for grant_type".to_string()),
                 }
             }
@@ -566,6 +690,16 @@ pub mod types {
                 self.device_code = value
                     .try_into()
                     .map_err(|e| format!("error converting supplied value for device_code: {}", e));
+                self
+            }
+            pub fn expires_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<chrono::DateTime<chrono::offset::Utc>>>,
+                T::Error: std::fmt::Display,
+            {
+                self.expires_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for expires_at: {}", e));
                 self
             }
             pub fn grant_type<T>(mut self, value: T) -> Self
@@ -585,6 +719,7 @@ pub mod types {
             fn try_from(value: AccessTokenExchangeRequest) -> Result<Self, String> {
                 Ok(Self {
                     device_code: value.device_code?,
+                    expires_at: value.expires_at?,
                     grant_type: value.grant_type?,
                 })
             }
@@ -594,6 +729,7 @@ pub mod types {
             fn from(value: super::AccessTokenExchangeRequest) -> Self {
                 Self {
                     device_code: Ok(value.device_code),
+                    expires_at: Ok(value.expires_at),
                     grant_type: Ok(value.grant_type),
                 }
             }
@@ -1266,6 +1402,502 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
+        pub struct GitHubCommit {
+            added: Result<Vec<String>, String>,
+            id: Result<String, String>,
+            modified: Result<Vec<String>, String>,
+            removed: Result<Vec<String>, String>,
+            timestamp: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+        }
+
+        impl Default for GitHubCommit {
+            fn default() -> Self {
+                Self {
+                    added: Err("no value supplied for added".to_string()),
+                    id: Err("no value supplied for id".to_string()),
+                    modified: Err("no value supplied for modified".to_string()),
+                    removed: Err("no value supplied for removed".to_string()),
+                    timestamp: Err("no value supplied for timestamp".to_string()),
+                }
+            }
+        }
+
+        impl GitHubCommit {
+            pub fn added<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Vec<String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.added = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for added: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn modified<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Vec<String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.modified = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for modified: {}", e));
+                self
+            }
+            pub fn removed<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Vec<String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.removed = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for removed: {}", e));
+                self
+            }
+            pub fn timestamp<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.timestamp = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for timestamp: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<GitHubCommit> for super::GitHubCommit {
+            type Error = String;
+            fn try_from(value: GitHubCommit) -> Result<Self, String> {
+                Ok(Self {
+                    added: value.added?,
+                    id: value.id?,
+                    modified: value.modified?,
+                    removed: value.removed?,
+                    timestamp: value.timestamp?,
+                })
+            }
+        }
+
+        impl From<super::GitHubCommit> for GitHubCommit {
+            fn from(value: super::GitHubCommit) -> Self {
+                Self {
+                    added: Ok(value.added),
+                    id: Ok(value.id),
+                    modified: Ok(value.modified),
+                    removed: Ok(value.removed),
+                    timestamp: Ok(value.timestamp),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct GitHubCommitPayload {
+            commits: Result<Vec<super::GitHubCommit>, String>,
+            head_commit: Result<super::GitHubCommit, String>,
+            installation: Result<super::GitHubInstallation, String>,
+            ref_: Result<String, String>,
+            repository: Result<super::GitHubRepository, String>,
+            sender: Result<super::GitHubSender, String>,
+        }
+
+        impl Default for GitHubCommitPayload {
+            fn default() -> Self {
+                Self {
+                    commits: Err("no value supplied for commits".to_string()),
+                    head_commit: Err("no value supplied for head_commit".to_string()),
+                    installation: Err("no value supplied for installation".to_string()),
+                    ref_: Err("no value supplied for ref_".to_string()),
+                    repository: Err("no value supplied for repository".to_string()),
+                    sender: Err("no value supplied for sender".to_string()),
+                }
+            }
+        }
+
+        impl GitHubCommitPayload {
+            pub fn commits<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Vec<super::GitHubCommit>>,
+                T::Error: std::fmt::Display,
+            {
+                self.commits = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for commits: {}", e));
+                self
+            }
+            pub fn head_commit<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::GitHubCommit>,
+                T::Error: std::fmt::Display,
+            {
+                self.head_commit = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for head_commit: {}", e));
+                self
+            }
+            pub fn installation<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::GitHubInstallation>,
+                T::Error: std::fmt::Display,
+            {
+                self.installation = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for installation: {}", e)
+                });
+                self
+            }
+            pub fn ref_<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.ref_ = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for ref_: {}", e));
+                self
+            }
+            pub fn repository<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::GitHubRepository>,
+                T::Error: std::fmt::Display,
+            {
+                self.repository = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for repository: {}", e));
+                self
+            }
+            pub fn sender<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::GitHubSender>,
+                T::Error: std::fmt::Display,
+            {
+                self.sender = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for sender: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<GitHubCommitPayload> for super::GitHubCommitPayload {
+            type Error = String;
+            fn try_from(value: GitHubCommitPayload) -> Result<Self, String> {
+                Ok(Self {
+                    commits: value.commits?,
+                    head_commit: value.head_commit?,
+                    installation: value.installation?,
+                    ref_: value.ref_?,
+                    repository: value.repository?,
+                    sender: value.sender?,
+                })
+            }
+        }
+
+        impl From<super::GitHubCommitPayload> for GitHubCommitPayload {
+            fn from(value: super::GitHubCommitPayload) -> Self {
+                Self {
+                    commits: Ok(value.commits),
+                    head_commit: Ok(value.head_commit),
+                    installation: Ok(value.installation),
+                    ref_: Ok(value.ref_),
+                    repository: Ok(value.repository),
+                    sender: Ok(value.sender),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct GitHubInstallation {
+            id: Result<u64, String>,
+            node_id: Result<String, String>,
+        }
+
+        impl Default for GitHubInstallation {
+            fn default() -> Self {
+                Self {
+                    id: Err("no value supplied for id".to_string()),
+                    node_id: Err("no value supplied for node_id".to_string()),
+                }
+            }
+        }
+
+        impl GitHubInstallation {
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<u64>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn node_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.node_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for node_id: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<GitHubInstallation> for super::GitHubInstallation {
+            type Error = String;
+            fn try_from(value: GitHubInstallation) -> Result<Self, String> {
+                Ok(Self {
+                    id: value.id?,
+                    node_id: value.node_id?,
+                })
+            }
+        }
+
+        impl From<super::GitHubInstallation> for GitHubInstallation {
+            fn from(value: super::GitHubInstallation) -> Self {
+                Self {
+                    id: Ok(value.id),
+                    node_id: Ok(value.node_id),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct GitHubRepository {
+            default_branch: Result<String, String>,
+            id: Result<u64, String>,
+            name: Result<String, String>,
+            node_id: Result<String, String>,
+            owner: Result<super::GitHubRepositoryOwner, String>,
+        }
+
+        impl Default for GitHubRepository {
+            fn default() -> Self {
+                Self {
+                    default_branch: Err("no value supplied for default_branch".to_string()),
+                    id: Err("no value supplied for id".to_string()),
+                    name: Err("no value supplied for name".to_string()),
+                    node_id: Err("no value supplied for node_id".to_string()),
+                    owner: Err("no value supplied for owner".to_string()),
+                }
+            }
+        }
+
+        impl GitHubRepository {
+            pub fn default_branch<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.default_branch = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for default_branch: {}", e)
+                });
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<u64>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn name<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.name = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for name: {}", e));
+                self
+            }
+            pub fn node_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.node_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for node_id: {}", e));
+                self
+            }
+            pub fn owner<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::GitHubRepositoryOwner>,
+                T::Error: std::fmt::Display,
+            {
+                self.owner = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for owner: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<GitHubRepository> for super::GitHubRepository {
+            type Error = String;
+            fn try_from(value: GitHubRepository) -> Result<Self, String> {
+                Ok(Self {
+                    default_branch: value.default_branch?,
+                    id: value.id?,
+                    name: value.name?,
+                    node_id: value.node_id?,
+                    owner: value.owner?,
+                })
+            }
+        }
+
+        impl From<super::GitHubRepository> for GitHubRepository {
+            fn from(value: super::GitHubRepository) -> Self {
+                Self {
+                    default_branch: Ok(value.default_branch),
+                    id: Ok(value.id),
+                    name: Ok(value.name),
+                    node_id: Ok(value.node_id),
+                    owner: Ok(value.owner),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct GitHubRepositoryOwner {
+            login: Result<String, String>,
+        }
+
+        impl Default for GitHubRepositoryOwner {
+            fn default() -> Self {
+                Self {
+                    login: Err("no value supplied for login".to_string()),
+                }
+            }
+        }
+
+        impl GitHubRepositoryOwner {
+            pub fn login<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.login = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for login: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<GitHubRepositoryOwner> for super::GitHubRepositoryOwner {
+            type Error = String;
+            fn try_from(value: GitHubRepositoryOwner) -> Result<Self, String> {
+                Ok(Self {
+                    login: value.login?,
+                })
+            }
+        }
+
+        impl From<super::GitHubRepositoryOwner> for GitHubRepositoryOwner {
+            fn from(value: super::GitHubRepositoryOwner) -> Self {
+                Self {
+                    login: Ok(value.login),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct GitHubSender {
+            id: Result<u64, String>,
+            login: Result<String, String>,
+            node_id: Result<String, String>,
+            type_: Result<String, String>,
+        }
+
+        impl Default for GitHubSender {
+            fn default() -> Self {
+                Self {
+                    id: Err("no value supplied for id".to_string()),
+                    login: Err("no value supplied for login".to_string()),
+                    node_id: Err("no value supplied for node_id".to_string()),
+                    type_: Err("no value supplied for type_".to_string()),
+                }
+            }
+        }
+
+        impl GitHubSender {
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<u64>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn login<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.login = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for login: {}", e));
+                self
+            }
+            pub fn node_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.node_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for node_id: {}", e));
+                self
+            }
+            pub fn type_<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.type_ = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for type_: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<GitHubSender> for super::GitHubSender {
+            type Error = String;
+            fn try_from(value: GitHubSender) -> Result<Self, String> {
+                Ok(Self {
+                    id: value.id?,
+                    login: value.login?,
+                    node_id: value.node_id?,
+                    type_: value.type_?,
+                })
+            }
+        }
+
+        impl From<super::GitHubSender> for GitHubSender {
+            fn from(value: super::GitHubSender) -> Self {
+                Self {
+                    id: Ok(value.id),
+                    login: Ok(value.login),
+                    node_id: Ok(value.node_id),
+                    type_: Ok(value.type_),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
         pub struct InitialApiUserTokenResponse {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             id: Result<uuid::Uuid, String>,
@@ -1650,6 +2282,8 @@ impl Client {
 }
 
 impl Client {
+    /// Create a new user with a given set of permissions
+    ///
     /// Sends a `POST` request to `/api-user`
     ///
     /// ```ignore
@@ -1662,6 +2296,8 @@ impl Client {
         builder::CreateApiUser::new(self)
     }
 
+    /// Get user information for a given user id
+    ///
     /// Sends a `GET` request to `/api-user/{identifier}`
     ///
     /// ```ignore
@@ -1674,6 +2310,8 @@ impl Client {
         builder::GetApiUser::new(self)
     }
 
+    /// Update the permissions assigned to a given user
+    ///
     /// Sends a `POST` request to `/api-user/{identifier}`
     ///
     /// ```ignore
@@ -1687,6 +2325,8 @@ impl Client {
         builder::UpdateApiUser::new(self)
     }
 
+    /// List the active and expired API tokens for a given user
+    ///
     /// Sends a `GET` request to `/api-user/{identifier}/token`
     ///
     /// ```ignore
@@ -1803,6 +2443,8 @@ impl Client {
         builder::GetRfd::new(self)
     }
 
+    /// Retrieve the user information of the calling user
+    ///
     /// Sends a `GET` request to `/self`
     ///
     /// ```ignore
@@ -1812,6 +2454,24 @@ impl Client {
     /// ```
     pub fn get_self(&self) -> builder::GetSelf {
         builder::GetSelf::new(self)
+    }
+}
+
+pub trait ClientHiddenExt {
+    /// Sends a `POST` request to `/github`
+    ///
+    /// ```ignore
+    /// let response = client.github_webhook()
+    ///    .body(body)
+    ///    .send()
+    ///    .await;
+    /// ```
+    fn github_webhook(&self) -> builder::GithubWebhook;
+}
+
+impl ClientHiddenExt for Client {
+    fn github_webhook(&self) -> builder::GithubWebhook {
+        builder::GithubWebhook::new(self)
     }
 }
 
@@ -2358,6 +3018,75 @@ pub mod builder {
         }
     }
 
+    /// Builder for [`ClientHiddenExt::github_webhook`]
+    ///
+    /// [`ClientHiddenExt::github_webhook`]: super::ClientHiddenExt::github_webhook
+    #[derive(Debug, Clone)]
+    pub struct GithubWebhook<'a> {
+        client: &'a super::Client,
+        body: Result<types::builder::GitHubCommitPayload, String>,
+    }
+
+    impl<'a> GithubWebhook<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client,
+                body: Ok(types::builder::GitHubCommitPayload::default()),
+            }
+        }
+
+        pub fn body<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::GitHubCommitPayload>,
+        {
+            self.body = value
+                .try_into()
+                .map(From::from)
+                .map_err(|_| "conversion to `GitHubCommitPayload` for body failed".to_string());
+            self
+        }
+
+        pub fn body_map<F>(mut self, f: F) -> Self
+        where
+            F: std::ops::FnOnce(
+                types::builder::GitHubCommitPayload,
+            ) -> types::builder::GitHubCommitPayload,
+        {
+            self.body = self.body.map(f);
+            self
+        }
+
+        /// Sends a `POST` request to `/github`
+        pub async fn send(self) -> Result<ResponseValue<()>, Error<types::Error>> {
+            let Self { client, body } = self;
+            let body = body
+                .and_then(std::convert::TryInto::<types::GitHubCommitPayload>::try_into)
+                .map_err(Error::InvalidRequest)?;
+            let url = format!("{}/github", client.baseurl,);
+            let request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .json(&body)
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                202u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
     /// Builder for [`Client::access_token_login`]
     ///
     /// [`Client::access_token_login`]: super::Client::access_token_login
@@ -2781,4 +3510,5 @@ pub mod builder {
 
 pub mod prelude {
     pub use super::Client;
+    pub use super::ClientHiddenExt;
 }

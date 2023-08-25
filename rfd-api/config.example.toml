@@ -1,0 +1,35 @@
+log_format = ""
+public_url = ""
+server_port = 8080
+database_url = ""
+
+[spec]
+title = ""
+description = ""
+contact_url = ""
+contact_email = ""
+output_path = ""
+
+[permissions]
+default = [
+  "GetApiUserSelf",
+  "UpdateApiUserSelf",
+  "CreateApiUserTokenSelf",
+  "GetApiUserTokenSelf",
+  "DeleteApiUserTokenSelf",
+
+  "GetAssignedRfds",
+]
+
+[jwt]
+default_expiration = 3600
+max_expiration = 1209600
+keys = []
+
+[authn.jwt.google]
+issuer = ""
+well_known_uri = ""
+
+[authn.oauth.google]
+client_id = "
+client_secret = "

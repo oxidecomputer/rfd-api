@@ -18,6 +18,7 @@ use crate::{context::ApiContext, error::ApiError};
 #[endpoint {
     method = POST,
     path = "/github",
+    tags = ["hidden"],
 }]
 #[instrument(
     skip(rqctx, body),

@@ -1,8 +1,8 @@
-use dropshot::{ApiDescription, ConfigDropshot, EndpointTagPolicy, HttpServerStarter, TagConfig};
+use dropshot::{ApiDescription, ConfigDropshot, EndpointTagPolicy, HttpServerStarter, TagConfig, TagDetails};
 use serde::Deserialize;
 use slog::Drain;
 use slog_tracing_bridge::BridgeDrain;
-use std::{error::Error, fs::File, net::SocketAddr, path::PathBuf};
+use std::{error::Error, fs::File, net::SocketAddr, path::PathBuf, collections::HashMap};
 
 use crate::{
     context::ApiContext,
@@ -49,10 +49,16 @@ pub fn server(
         slog::Logger::root(async_drain, slog::o!())
     };
 
+    let mut tag_definitions = HashMap::new();
+    tag_definitions.insert("hidden".to_string(), TagDetails {
+        description: Some("Internal endpoints".to_string()),
+        external_docs: None,
+    });
+
     let mut api = ApiDescription::new().tag_config(TagConfig {
         allow_other_tags: false,
         endpoint_tag_policy: EndpointTagPolicy::Any,
-        tag_definitions: vec![].into_iter().collect(),
+        tag_definitions,
     });
 
     // RFDs
