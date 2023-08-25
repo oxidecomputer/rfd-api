@@ -34,6 +34,7 @@ pub struct RfdRevisionModel {
     pub state: Option<String>,
     pub discussion: Option<String>,
     pub authors: Option<String>,
+    pub labels: Option<String>,
     pub content: String,
     pub content_format: ContentFormat,
     pub sha: String,

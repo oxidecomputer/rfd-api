@@ -252,6 +252,8 @@ pub mod types {
         pub discussion: Option<String>,
         pub id: uuid::Uuid,
         #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub labels: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
         pub link: Option<String>,
         pub pdfs: Vec<FullRfdPdfEntry>,
         pub rfd_number: i32,
@@ -1019,6 +1021,7 @@ pub mod types {
             content: Result<String, String>,
             discussion: Result<Option<String>, String>,
             id: Result<uuid::Uuid, String>,
+            labels: Result<Option<String>, String>,
             link: Result<Option<String>, String>,
             pdfs: Result<Vec<super::FullRfdPdfEntry>, String>,
             rfd_number: Result<i32, String>,
@@ -1036,6 +1039,7 @@ pub mod types {
                     content: Err("no value supplied for content".to_string()),
                     discussion: Ok(Default::default()),
                     id: Err("no value supplied for id".to_string()),
+                    labels: Ok(Default::default()),
                     link: Ok(Default::default()),
                     pdfs: Err("no value supplied for pdfs".to_string()),
                     rfd_number: Err("no value supplied for rfd_number".to_string()),
@@ -1105,6 +1109,16 @@ pub mod types {
                 self.id = value
                     .try_into()
                     .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn labels<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.labels = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for labels: {}", e));
                 self
             }
             pub fn link<T>(mut self, value: T) -> Self
@@ -1179,6 +1193,7 @@ pub mod types {
                     content: value.content?,
                     discussion: value.discussion?,
                     id: value.id?,
+                    labels: value.labels?,
                     link: value.link?,
                     pdfs: value.pdfs?,
                     rfd_number: value.rfd_number?,
@@ -1198,6 +1213,7 @@ pub mod types {
                     content: Ok(value.content),
                     discussion: Ok(value.discussion),
                     id: Ok(value.id),
+                    labels: Ok(value.labels),
                     link: Ok(value.link),
                     pdfs: Ok(value.pdfs),
                     rfd_number: Ok(value.rfd_number),

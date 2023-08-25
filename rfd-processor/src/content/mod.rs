@@ -58,6 +58,12 @@ pub trait RfdAttributes {
     /// Get the authors line stored within the document. The returned string may contain multiple
     /// names
     fn get_authors(&self) -> Option<&str>;
+
+    /// Get the labels stored within the document
+    fn get_labels(&self) -> Option<&str>;
+
+    // Update the labels stored within the document or add them if they do not exist
+    fn update_labels(&mut self, value: &str);
 }
 
 #[derive(Debug, Clone)]
@@ -178,6 +184,20 @@ impl<'a> RfdAttributes for RfdContent<'a> {
         match self {
             Self::Asciidoc(adoc) => adoc.get_authors(),
             Self::Markdown(md) => md.get_authors(),
+        }
+    }
+
+    fn get_labels(&self) -> Option<&str> {
+        match self {
+            Self::Asciidoc(adoc) => adoc.get_labels(),
+            Self::Markdown(md) => md.get_labels(),
+        }
+    }
+
+    fn update_labels(&mut self, value: &str) {
+        match self {
+            Self::Asciidoc(adoc) => adoc.update_labels(value),
+            Self::Markdown(md) => md.update_labels(value),
         }
     }
 }

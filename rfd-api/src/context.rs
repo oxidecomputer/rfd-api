@@ -130,6 +130,7 @@ pub struct FullRfd {
     pub title: String,
     pub state: Option<String>,
     pub authors: Option<String>,
+    pub labels: Option<String>,
     pub content: String,
     pub sha: String,
     pub commit: String,

@@ -153,6 +153,7 @@ diesel::table! {
         state -> Nullable<Varchar>,
         discussion -> Nullable<Varchar>,
         authors -> Nullable<Varchar>,
+        labels -> Nullable<Varchar>,
         content -> Varchar,
         content_format -> RfdContentFormat,
         sha -> Varchar,

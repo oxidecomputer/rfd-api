@@ -21,6 +21,7 @@ impl Cli {
             CliCommand::CreateApiUserToken => Self::cli_create_api_user_token(),
             CliCommand::GetApiUserToken => Self::cli_get_api_user_token(),
             CliCommand::DeleteApiUserToken => Self::cli_delete_api_user_token(),
+            CliCommand::GithubWebhook => Self::cli_github_webhook(),
             CliCommand::AccessTokenLogin => Self::cli_access_token_login(),
             CliCommand::JwtLogin => Self::cli_jwt_login(),
             CliCommand::GetDeviceProvider => Self::cli_get_device_provider(),
@@ -46,15 +47,18 @@ impl Cli {
                     .action(clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
+            .about("Create a new user with a given set of permissions")
     }
 
     pub fn cli_get_api_user() -> clap::Command {
-        clap::Command::new("").arg(
-            clap::Arg::new("identifier")
-                .long("identifier")
-                .value_parser(clap::value_parser!(uuid::Uuid))
-                .required(true),
-        )
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("identifier")
+                    .long("identifier")
+                    .value_parser(clap::value_parser!(uuid::Uuid))
+                    .required(true),
+            )
+            .about("Get user information for a given user id")
     }
 
     pub fn cli_update_api_user() -> clap::Command {
@@ -79,18 +83,10 @@ impl Cli {
                     .action(clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
+            .about("Update the permissions assigned to a given user")
     }
 
     pub fn cli_list_api_user_tokens() -> clap::Command {
-        clap::Command::new("").arg(
-            clap::Arg::new("identifier")
-                .long("identifier")
-                .value_parser(clap::value_parser!(uuid::Uuid))
-                .required(true),
-        )
-    }
-
-    pub fn cli_create_api_user_token() -> clap::Command {
         clap::Command::new("")
             .arg(
                 clap::Arg::new("identifier")
@@ -98,11 +94,22 @@ impl Cli {
                     .value_parser(clap::value_parser!(uuid::Uuid))
                     .required(true),
             )
+            .about("List the active and expired API tokens for a given user")
+    }
+
+    pub fn cli_create_api_user_token() -> clap::Command {
+        clap::Command::new("")
             .arg(
                 clap::Arg::new("expires-at")
                     .long("expires-at")
                     .value_parser(clap::value_parser!(chrono::DateTime<chrono::offset::Utc>))
                     .required_unless_present("json-body"),
+            )
+            .arg(
+                clap::Arg::new("identifier")
+                    .long("identifier")
+                    .value_parser(clap::value_parser!(uuid::Uuid))
+                    .required(true),
             )
             .arg(
                 clap::Arg::new("json-body")
@@ -152,8 +159,38 @@ impl Cli {
             )
     }
 
+    pub fn cli_github_webhook() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("ref")
+                    .long("ref")
+                    .value_parser(clap::value_parser!(String))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
+                clap::Arg::new("json-body")
+                    .long("json-body")
+                    .value_name("JSON-FILE")
+                    .required(true)
+                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .help("Path to a file that contains the full json body."),
+            )
+            .arg(
+                clap::Arg::new("json-body-template")
+                    .long("json-body-template")
+                    .action(clap::ArgAction::SetTrue)
+                    .help("XXX"),
+            )
+    }
+
     pub fn cli_access_token_login() -> clap::Command {
         clap::Command::new("")
+            .arg(
+                clap::Arg::new("expiration")
+                    .long("expiration")
+                    .value_parser(clap::value_parser!(chrono::DateTime<chrono::offset::Utc>))
+                    .required(false),
+            )
             .arg(
                 clap::Arg::new("provider")
                     .long("provider")
@@ -164,12 +201,6 @@ impl Cli {
                         |s| types::AccessTokenProviderName::try_from(s).unwrap(),
                     ))
                     .required(true),
-            )
-            .arg(
-                clap::Arg::new("expiration")
-                    .long("expiration")
-                    .value_parser(clap::value_parser!(chrono::DateTime<chrono::offset::Utc>))
-                    .required(false),
             )
             .arg(
                 clap::Arg::new("token")
@@ -196,6 +227,12 @@ impl Cli {
     pub fn cli_jwt_login() -> clap::Command {
         clap::Command::new("")
             .arg(
+                clap::Arg::new("expiration")
+                    .long("expiration")
+                    .value_parser(clap::value_parser!(chrono::DateTime<chrono::offset::Utc>))
+                    .required(false),
+            )
+            .arg(
                 clap::Arg::new("provider")
                     .long("provider")
                     .value_parser(clap::builder::TypedValueParser::map(
@@ -205,12 +242,6 @@ impl Cli {
                         |s| types::JwtProviderName::try_from(s).unwrap(),
                     ))
                     .required(true),
-            )
-            .arg(
-                clap::Arg::new("expiration")
-                    .long("expiration")
-                    .value_parser(clap::value_parser!(chrono::DateTime<chrono::offset::Utc>))
-                    .required(false),
             )
             .arg(
                 clap::Arg::new("token")
@@ -251,6 +282,24 @@ impl Cli {
     pub fn cli_exchange_device_token() -> clap::Command {
         clap::Command::new("")
             .arg(
+                clap::Arg::new("device-code")
+                    .long("device-code")
+                    .value_parser(clap::value_parser!(String))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
+                clap::Arg::new("expires-at")
+                    .long("expires-at")
+                    .value_parser(clap::value_parser!(chrono::DateTime<chrono::offset::Utc>))
+                    .required(false),
+            )
+            .arg(
+                clap::Arg::new("grant-type")
+                    .long("grant-type")
+                    .value_parser(clap::value_parser!(String))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
                 clap::Arg::new("provider")
                     .long("provider")
                     .value_parser(clap::builder::TypedValueParser::map(
@@ -260,18 +309,6 @@ impl Cli {
                         |s| types::OAuthProviderName::try_from(s).unwrap(),
                     ))
                     .required(true),
-            )
-            .arg(
-                clap::Arg::new("device-code")
-                    .long("device-code")
-                    .value_parser(clap::value_parser!(String))
-                    .required_unless_present("json-body"),
-            )
-            .arg(
-                clap::Arg::new("grant-type")
-                    .long("grant-type")
-                    .value_parser(clap::value_parser!(String))
-                    .required_unless_present("json-body"),
             )
             .arg(
                 clap::Arg::new("json-body")
@@ -299,7 +336,7 @@ impl Cli {
     }
 
     pub fn cli_get_self() -> clap::Command {
-        clap::Command::new("")
+        clap::Command::new("").about("Retrieve the user information of the calling user")
     }
 }
 
@@ -330,6 +367,9 @@ impl<T: CliOverride> Cli<T> {
             }
             CliCommand::DeleteApiUserToken => {
                 self.execute_delete_api_user_token(matches).await;
+            }
+            CliCommand::GithubWebhook => {
+                self.execute_github_webhook(matches).await;
             }
             CliCommand::AccessTokenLogin => {
                 self.execute_access_token_login(matches).await;
@@ -396,14 +436,14 @@ impl<T: CliOverride> Cli<T> {
 
     pub async fn execute_update_api_user(&self, matches: &clap::ArgMatches) {
         let mut request = self.client.update_api_user();
+        if let Some(value) = matches.get_one::<uuid::Uuid>("identifier") {
+            request = request.identifier(value.clone());
+        }
+
         if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
             let body_txt = std::fs::read_to_string(value).unwrap();
             let body_value = serde_json::from_str::<types::ApiUserUpdateParams>(&body_txt).unwrap();
             request = request.body(body_value);
-        }
-
-        if let Some(value) = matches.get_one::<uuid::Uuid>("identifier") {
-            request = request.identifier(value.clone());
         }
 
         self.over
@@ -442,20 +482,20 @@ impl<T: CliOverride> Cli<T> {
 
     pub async fn execute_create_api_user_token(&self, matches: &clap::ArgMatches) {
         let mut request = self.client.create_api_user_token();
-        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
-            let body_txt = std::fs::read_to_string(value).unwrap();
-            let body_value =
-                serde_json::from_str::<types::ApiUserTokenCreateParams>(&body_txt).unwrap();
-            request = request.body(body_value);
+        if let Some(value) = matches.get_one::<chrono::DateTime<chrono::offset::Utc>>("expires-at")
+        {
+            request = request.body_map(|body| body.expires_at(value.clone()))
         }
 
         if let Some(value) = matches.get_one::<uuid::Uuid>("identifier") {
             request = request.identifier(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<chrono::DateTime<chrono::offset::Utc>>("expires-at")
-        {
-            request = request.body_map(|body| body.expires_at(value.clone()))
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value =
+                serde_json::from_str::<types::ApiUserTokenCreateParams>(&body_txt).unwrap();
+            request = request.body(body_value);
         }
 
         self.over
@@ -520,26 +560,52 @@ impl<T: CliOverride> Cli<T> {
         }
     }
 
-    pub async fn execute_access_token_login(&self, matches: &clap::ArgMatches) {
-        let mut request = self.client.access_token_login();
+    pub async fn execute_github_webhook(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.github_webhook();
+        if let Some(value) = matches.get_one::<String>("ref") {
+            request = request.body_map(|body| body.ref_(value.clone()))
+        }
+
         if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
             let body_txt = std::fs::read_to_string(value).unwrap();
-            let body_value =
-                serde_json::from_str::<types::AccessTokenProviderLogin>(&body_txt).unwrap();
+            let body_value = serde_json::from_str::<types::GitHubCommitPayload>(&body_txt).unwrap();
             request = request.body(body_value);
+        }
+
+        self.over
+            .execute_github_webhook(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                println!("success\n{:#?}", r)
+            }
+            Err(r) => {
+                println!("error\n{:#?}", r)
+            }
+        }
+    }
+
+    pub async fn execute_access_token_login(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.access_token_login();
+        if let Some(value) = matches.get_one::<chrono::DateTime<chrono::offset::Utc>>("expiration")
+        {
+            request = request.body_map(|body| body.expiration(value.clone()))
         }
 
         if let Some(value) = matches.get_one::<types::AccessTokenProviderName>("provider") {
             request = request.provider(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<chrono::DateTime<chrono::offset::Utc>>("expiration")
-        {
-            request = request.body_map(|body| body.expiration(value.clone()))
-        }
-
         if let Some(value) = matches.get_one::<String>("token") {
             request = request.body_map(|body| body.token(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value =
+                serde_json::from_str::<types::AccessTokenProviderLogin>(&body_txt).unwrap();
+            request = request.body(body_value);
         }
 
         self.over
@@ -558,23 +624,23 @@ impl<T: CliOverride> Cli<T> {
 
     pub async fn execute_jwt_login(&self, matches: &clap::ArgMatches) {
         let mut request = self.client.jwt_login();
-        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
-            let body_txt = std::fs::read_to_string(value).unwrap();
-            let body_value = serde_json::from_str::<types::JwtProviderLogin>(&body_txt).unwrap();
-            request = request.body(body_value);
+        if let Some(value) = matches.get_one::<chrono::DateTime<chrono::offset::Utc>>("expiration")
+        {
+            request = request.body_map(|body| body.expiration(value.clone()))
         }
 
         if let Some(value) = matches.get_one::<types::JwtProviderName>("provider") {
             request = request.provider(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<chrono::DateTime<chrono::offset::Utc>>("expiration")
-        {
-            request = request.body_map(|body| body.expiration(value.clone()))
-        }
-
         if let Some(value) = matches.get_one::<String>("token") {
             request = request.body_map(|body| body.token(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value = serde_json::from_str::<types::JwtProviderLogin>(&body_txt).unwrap();
+            request = request.body(body_value);
         }
 
         self.over.execute_jwt_login(matches, &mut request).unwrap();
@@ -611,23 +677,28 @@ impl<T: CliOverride> Cli<T> {
 
     pub async fn execute_exchange_device_token(&self, matches: &clap::ArgMatches) {
         let mut request = self.client.exchange_device_token();
-        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
-            let body_txt = std::fs::read_to_string(value).unwrap();
-            let body_value =
-                serde_json::from_str::<types::AccessTokenExchangeRequest>(&body_txt).unwrap();
-            request = request.body(body_value);
+        if let Some(value) = matches.get_one::<String>("device-code") {
+            request = request.body_map(|body| body.device_code(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<chrono::DateTime<chrono::offset::Utc>>("expires-at")
+        {
+            request = request.body_map(|body| body.expires_at(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<String>("grant-type") {
+            request = request.body_map(|body| body.grant_type(value.clone()))
         }
 
         if let Some(value) = matches.get_one::<types::OAuthProviderName>("provider") {
             request = request.provider(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("device-code") {
-            request = request.body_map(|body| body.device_code(value.clone()))
-        }
-
-        if let Some(value) = matches.get_one::<String>("grant-type") {
-            request = request.body_map(|body| body.grant_type(value.clone()))
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value =
+                serde_json::from_str::<types::AccessTokenExchangeRequest>(&body_txt).unwrap();
+            request = request.body(body_value);
         }
 
         self.over
@@ -734,6 +805,14 @@ pub trait CliOverride {
         Ok(())
     }
 
+    fn execute_github_webhook(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::GithubWebhook,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
     fn execute_access_token_login(
         &self,
         matches: &clap::ArgMatches,
@@ -794,6 +873,7 @@ pub enum CliCommand {
     CreateApiUserToken,
     GetApiUserToken,
     DeleteApiUserToken,
+    GithubWebhook,
     AccessTokenLogin,
     JwtLogin,
     GetDeviceProvider,
@@ -812,6 +892,7 @@ impl CliCommand {
             CliCommand::CreateApiUserToken,
             CliCommand::GetApiUserToken,
             CliCommand::DeleteApiUserToken,
+            CliCommand::GithubWebhook,
             CliCommand::AccessTokenLogin,
             CliCommand::JwtLogin,
             CliCommand::GetDeviceProvider,
