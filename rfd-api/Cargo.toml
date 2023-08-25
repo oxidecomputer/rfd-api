@@ -36,13 +36,13 @@ serde_json = { workspace = true }
 serde_urlencoded = { workspace = true }
 slog = { workspace = true }
 slog-async = { workspace = true }
-slog-tracing-bridge = { path = "../slog-tracing-bridge" }
 tap = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 toml = { workspace = true }
 trace-request = { path = "../trace-request" }
 tracing = { workspace = true }
+tracing-slog = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter", "fmt", "json"] }
 uuid = { workspace = true, features = ["v4", "serde"]  }
 yup-oauth2 = { workspace = true }

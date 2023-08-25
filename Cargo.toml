@@ -1,6 +1,7 @@
 [workspace]
 members = [
   "dropshot-authorization-header",
+  "parse-rfd",
   "rfd-api",
   "rfd-cli",
   "rfd-data",
@@ -8,8 +9,6 @@ members = [
   "rfd-processor",
   "rfd-redirect",
   "rfd-sdk",
-  "parse-rfd",
-  "slog-tracing-bridge",
   "trace-request",
   "xtask"
 ]
@@ -69,7 +68,7 @@ tokio = "1.25.0"
 toml = "0.5.10"
 tracing = "0.1.37"
 tracing-core = "0.1.30"
-tracing-slog = "0.2.0"
+tracing-slog = { git = "https://github.com/oxidecomputer/tracing-slog" }
 tracing-subscriber = "0.3.16"
 uuid = "1.2.2"
 valuable = "0.1.0"

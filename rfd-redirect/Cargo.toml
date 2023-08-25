@@ -14,8 +14,8 @@ schemars = { workspace = true }
 serde = { workspace = true }
 slog = { workspace = true }
 slog-async = { workspace = true }
-slog-tracing-bridge = { path = "../slog-tracing-bridge" }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 thiserror = { workspace = true }
 tracing = { workspace = true }
+tracing-slog = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter", "fmt", "json"] }
