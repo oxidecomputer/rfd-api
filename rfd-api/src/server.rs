@@ -1,8 +1,10 @@
-use dropshot::{ApiDescription, ConfigDropshot, EndpointTagPolicy, HttpServerStarter, TagConfig, TagDetails};
+use dropshot::{
+    ApiDescription, ConfigDropshot, EndpointTagPolicy, HttpServerStarter, TagConfig, TagDetails,
+};
 use serde::Deserialize;
 use slog::Drain;
+use std::{collections::HashMap, error::Error, fs::File, net::SocketAddr, path::PathBuf};
 use tracing_slog::TracingSlogDrain;
-use std::{error::Error, fs::File, net::SocketAddr, path::PathBuf, collections::HashMap};
 
 use crate::{
     context::ApiContext,
@@ -50,10 +52,13 @@ pub fn server(
     };
 
     let mut tag_definitions = HashMap::new();
-    tag_definitions.insert("hidden".to_string(), TagDetails {
-        description: Some("Internal endpoints".to_string()),
-        external_docs: None,
-    });
+    tag_definitions.insert(
+        "hidden".to_string(),
+        TagDetails {
+            description: Some("Internal endpoints".to_string()),
+            external_docs: None,
+        },
+    );
 
     let mut api = ApiDescription::new().tag_config(TagConfig {
         allow_other_tags: false,

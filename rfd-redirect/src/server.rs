@@ -1,7 +1,7 @@
 use dropshot::{ApiDescription, ConfigDropshot, EndpointTagPolicy, HttpServerStarter, TagConfig};
 use slog::Drain;
-use tracing_slog::TracingSlogDrain;
 use std::{error::Error, net::SocketAddr};
+use tracing_slog::TracingSlogDrain;
 
 use crate::{
     context::Context,
