@@ -11,12 +11,14 @@ use rfd_model::{
     storage::{
         AccessTokenStore, ApiKeyFilter, ApiKeyStore, ApiUserFilter, ApiUserProviderFilter,
         ApiUserProviderStore, ApiUserStore, JobStore, ListPagination, LoginAttemptFilter,
-        LoginAttemptStore, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter,
-        RfdRevisionStore, RfdStore, StoreError, OAuthClientStore, OAuthClientSecretStore, OAuthClientRedirectUriStore,
+        LoginAttemptStore, OAuthClientFilter, OAuthClientRedirectUriStore, OAuthClientSecretStore,
+        OAuthClientStore, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter,
+        RfdRevisionStore, RfdStore, StoreError,
     },
     AccessToken, ApiUser, ApiUserProvider, InvalidValueError, Job, LoginAttempt, NewAccessToken,
-    NewApiKey, NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt, OAuthClient, OAuthClientRedirectUri,
-    NewOAuthClient, NewOAuthClientSecret, NewOAuthClientRedirectUri, OAuthClientSecret
+    NewApiKey, NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt, NewOAuthClient,
+    NewOAuthClientRedirectUri, NewOAuthClientSecret, OAuthClient, OAuthClientRedirectUri,
+    OAuthClientSecret,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -641,36 +643,65 @@ impl ApiContext {
     }
 
     pub async fn create_oauth_client(&self) -> Result<OAuthClient, StoreError> {
-        OAuthClientStore::upsert(&*self.storage, NewOAuthClient {
-            id: Uuid::new_v4(),
-        }).await
+        OAuthClientStore::upsert(&*self.storage, NewOAuthClient { id: Uuid::new_v4() }).await
     }
 
-    pub async fn create_oauth_secret(&self, client_id: &Uuid) -> Result<String, StoreError> {
-        let secret = String::new();
-
-        OAuthClientSecretStore::upsert(&*self.storage, NewOAuthClientSecret {
-            id: Uuid::new_v4(),
-            oauth_client_id: *client_id,
-            secret: secret.clone(),
-        }).await?;
-
-        Ok(secret)
+    pub async fn get_oauth_client(&self, id: &Uuid) -> Result<Option<OAuthClient>, StoreError> {
+        OAuthClientStore::get(&*self.storage, id, false).await
     }
 
-    pub async fn delete_oauth_secret(&self, id: &Uuid) -> Result<Option<OAuthClientSecret>, StoreError> {
+    pub async fn list_oauth_clients(&self) -> Result<Vec<OAuthClient>, StoreError> {
+        OAuthClientStore::list(
+            &*self.storage,
+            OAuthClientFilter::default(),
+            &ListPagination::default(),
+        )
+        .await
+    }
+
+    pub async fn add_oauth_secret(
+        &self,
+        client_id: &Uuid,
+        secret: &str,
+    ) -> Result<OAuthClientSecret, StoreError> {
+        OAuthClientSecretStore::upsert(
+            &*self.storage,
+            NewOAuthClientSecret {
+                id: Uuid::new_v4(),
+                oauth_client_id: *client_id,
+                secret: secret.to_string(),
+            },
+        )
+        .await
+    }
+
+    pub async fn delete_oauth_secret(
+        &self,
+        id: &Uuid,
+    ) -> Result<Option<OAuthClientSecret>, StoreError> {
         OAuthClientSecretStore::delete(&*self.storage, id).await
     }
 
-    pub async fn add_oauth_rediret_uri(&self, client_id: &Uuid, uri: &str) -> Result<OAuthClientRedirectUri, StoreError> {
-        OAuthClientRedirectUriStore::upsert(&*self.storage, NewOAuthClientRedirectUri {
-            id: Uuid::new_v4(),
-            oauth_client_id: *client_id,
-            redirect_uri: uri.to_string()
-        }).await
+    pub async fn add_oauth_redirect_uri(
+        &self,
+        client_id: &Uuid,
+        uri: &str,
+    ) -> Result<OAuthClientRedirectUri, StoreError> {
+        OAuthClientRedirectUriStore::upsert(
+            &*self.storage,
+            NewOAuthClientRedirectUri {
+                id: Uuid::new_v4(),
+                oauth_client_id: *client_id,
+                redirect_uri: uri.to_string(),
+            },
+        )
+        .await
     }
 
-    pub async fn delete_oauth_rediret_uri(&self, id: &Uuid) -> Result<Option<OAuthClientRedirectUri>, StoreError> {
+    pub async fn delete_oauth_redirect_uri(
+        &self,
+        id: &Uuid,
+    ) -> Result<Option<OAuthClientRedirectUri>, StoreError> {
         OAuthClientRedirectUriStore::delete(&*self.storage, id).await
     }
 }
@@ -684,8 +715,9 @@ pub(crate) mod tests {
             AccessTokenStore, ApiKeyStore, ApiUserProviderStore, ApiUserStore, JobStore,
             ListPagination, LoginAttemptStore, MockAccessTokenStore, MockApiKeyStore,
             MockApiUserProviderStore, MockApiUserStore, MockJobStore, MockLoginAttemptStore,
-            MockRfdPdfStore, MockRfdRevisionStore, MockRfdStore, RfdPdfStore, RfdRevisionStore,
-            RfdStore, MockOAuthClientStore, MockOAuthClientSecretStore, MockOAuthClientRedirectUriStore, OAuthClientStore, OAuthClientRedirectUriStore, OAuthClientSecretStore,
+            MockOAuthClientRedirectUriStore, MockOAuthClientSecretStore, MockOAuthClientStore,
+            MockRfdPdfStore, MockRfdRevisionStore, MockRfdStore, OAuthClientRedirectUriStore,
+            OAuthClientSecretStore, OAuthClientStore, RfdPdfStore, RfdRevisionStore, RfdStore,
         },
         ApiKey, ApiUserProvider, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
         NewLoginAttempt, NewRfd, NewRfdPdf, NewRfdRevision,
@@ -1094,8 +1126,16 @@ pub(crate) mod tests {
 
     #[async_trait]
     impl OAuthClientStore for MockStorage {
-        async fn get(&self, id: &uuid::Uuid, deleted: bool) -> Result<Option<rfd_model::OAuthClient>, rfd_model::storage::StoreError> {
-            self.oauth_client_store.as_ref().unwrap().get(id, deleted).await
+        async fn get(
+            &self,
+            id: &uuid::Uuid,
+            deleted: bool,
+        ) -> Result<Option<rfd_model::OAuthClient>, rfd_model::storage::StoreError> {
+            self.oauth_client_store
+                .as_ref()
+                .unwrap()
+                .get(id, deleted)
+                .await
         }
 
         async fn list(
@@ -1103,40 +1143,80 @@ pub(crate) mod tests {
             filter: rfd_model::storage::OAuthClientFilter,
             pagination: &ListPagination,
         ) -> Result<Vec<rfd_model::OAuthClient>, rfd_model::storage::StoreError> {
-            self.oauth_client_store.as_ref().unwrap().list(filter, pagination).await
+            self.oauth_client_store
+                .as_ref()
+                .unwrap()
+                .list(filter, pagination)
+                .await
         }
 
         async fn upsert(
             &self,
             client: rfd_model::NewOAuthClient,
         ) -> Result<rfd_model::OAuthClient, rfd_model::storage::StoreError> {
-            self.oauth_client_store.as_ref().unwrap().upsert(client).await
+            self.oauth_client_store
+                .as_ref()
+                .unwrap()
+                .upsert(client)
+                .await
         }
 
-        async fn delete(&self, id: &uuid::Uuid) -> Result<Option<rfd_model::OAuthClient>, rfd_model::storage::StoreError> {
+        async fn delete(
+            &self,
+            id: &uuid::Uuid,
+        ) -> Result<Option<rfd_model::OAuthClient>, rfd_model::storage::StoreError> {
             self.oauth_client_store.as_ref().unwrap().delete(id).await
         }
     }
 
     #[async_trait]
     impl OAuthClientSecretStore for MockStorage {
-        async fn upsert(&self, secret: rfd_model::NewOAuthClientSecret) -> Result<rfd_model::OAuthClientSecret, rfd_model::storage::StoreError> {
-            self.oauth_client_secret_store.as_ref().unwrap().upsert(secret).await
+        async fn upsert(
+            &self,
+            secret: rfd_model::NewOAuthClientSecret,
+        ) -> Result<rfd_model::OAuthClientSecret, rfd_model::storage::StoreError> {
+            self.oauth_client_secret_store
+                .as_ref()
+                .unwrap()
+                .upsert(secret)
+                .await
         }
 
-        async fn delete(&self, id: &uuid::Uuid) -> Result<Option<rfd_model::OAuthClientSecret>, rfd_model::storage::StoreError> {
-            self.oauth_client_secret_store.as_ref().unwrap().delete(id).await
+        async fn delete(
+            &self,
+            id: &uuid::Uuid,
+        ) -> Result<Option<rfd_model::OAuthClientSecret>, rfd_model::storage::StoreError> {
+            self.oauth_client_secret_store
+                .as_ref()
+                .unwrap()
+                .delete(id)
+                .await
         }
     }
 
     #[async_trait]
     impl OAuthClientRedirectUriStore for MockStorage {
-        async fn upsert(&self, redirect_uri: rfd_model::NewOAuthClientRedirectUri) -> Result<rfd_model::OAuthClientRedirectUri, rfd_model::storage::StoreError> {
-            self.oauth_client_redirect_uri_store.as_ref().unwrap().upsert(redirect_uri).await
+        async fn upsert(
+            &self,
+            redirect_uri: rfd_model::NewOAuthClientRedirectUri,
+        ) -> Result<rfd_model::OAuthClientRedirectUri, rfd_model::storage::StoreError> {
+            self.oauth_client_redirect_uri_store
+                .as_ref()
+                .unwrap()
+                .upsert(redirect_uri)
+                .await
         }
 
-        async fn delete(&self, id: &uuid::Uuid) -> Result<Option<rfd_model::OAuthClientRedirectUri>, rfd_model::storage::StoreError> {
-            self.oauth_client_redirect_uri_store.as_ref().unwrap().delete(id).await
+        async fn delete(
+            &self,
+            id: &uuid::Uuid,
+        ) -> Result<Option<rfd_model::OAuthClientRedirectUri>, rfd_model::storage::StoreError>
+        {
+            self.oauth_client_redirect_uri_store
+                .as_ref()
+                .unwrap()
+                .delete(id)
+                .await
         }
     }
 }

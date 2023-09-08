@@ -21,6 +21,7 @@ impl ExpandPermission for Permissions<ApiPermission> {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 pub enum ApiPermission {
+    // User information permissions
     CreateApiUserToken(Uuid),
     CreateApiUserTokenSelf,
     CreateApiUserTokenAll,
@@ -37,9 +38,23 @@ pub enum ApiPermission {
     UpdateApiUserSelf,
     UpdateApiUserAll,
 
+    // RFD access permissions
     GetRfd(BTreeSet<i32>),
     GetAllRfds,
     GetAssignedRfds,
+    GetAllDiscussions,
+
+    // OAuth client manage permissions
+    CreateOAuthClient,
+    GetOAuthClientAll,
+    GetOAuthClient(Uuid),
+    CreateOAuthClientSecret(Uuid),
+    GetOAuthClientSecret(Uuid),
+    DeleteOAuthClientSecret(Uuid),
+    CreateOAuthClientRedirectUri(Uuid),
+    GetOAuthClientRedirectUri(Uuid),
+    DeleteOAuthClientRedirectUri(Uuid),
+    DeleteOAuthClient(Uuid),
 }
 
 impl ApiPermission {

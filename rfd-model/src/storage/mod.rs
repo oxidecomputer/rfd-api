@@ -12,9 +12,9 @@ use crate::{
     permissions::Permission,
     schema_ext::{LoginAttemptState, PdfSource},
     AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LoginAttempt, NewAccessToken, NewApiKey,
-    NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt, NewRfd, NewRfdPdf, NewRfdRevision,
-    Rfd, RfdPdf, RfdRevision, OAuthClient, NewOAuthClient, OAuthClientSecret, OAuthClientRedirectUri,
-    NewOAuthClientSecret, NewOAuthClientRedirectUri,
+    NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt, NewOAuthClient,
+    NewOAuthClientRedirectUri, NewOAuthClientSecret, NewRfd, NewRfdPdf, NewRfdRevision,
+    OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, Rfd, RfdPdf, RfdRevision,
 };
 
 pub mod postgres;
@@ -360,6 +360,9 @@ pub trait OAuthClientSecretStore {
 #[cfg_attr(feature = "mock", automock)]
 #[async_trait]
 pub trait OAuthClientRedirectUriStore {
-    async fn upsert(&self, redirect_uri: NewOAuthClientRedirectUri) -> Result<OAuthClientRedirectUri, StoreError>;
+    async fn upsert(
+        &self,
+        redirect_uri: NewOAuthClientRedirectUri,
+    ) -> Result<OAuthClientRedirectUri, StoreError>;
     async fn delete(&self, id: &Uuid) -> Result<Option<OAuthClientRedirectUri>, StoreError>;
 }

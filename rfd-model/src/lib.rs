@@ -1,7 +1,10 @@
 use std::{collections::BTreeMap, fmt::Display};
 
 use chrono::{DateTime, Utc};
-use db::{JobModel, LoginAttemptModel, RfdModel, RfdPdfModel, RfdRevisionModel, OAuthClientRedirectUriModel, OAuthClientSecretModel};
+use db::{
+    JobModel, LoginAttemptModel, OAuthClientRedirectUriModel, OAuthClientSecretModel, RfdModel,
+    RfdPdfModel, RfdRevisionModel,
+};
 use partial_struct::partial;
 use permissions::Permissions;
 use schema_ext::{ContentFormat, LoginAttemptState, PdfSource};
@@ -349,7 +352,7 @@ impl From<OAuthClientSecretModel> for OAuthClientSecret {
             oauth_client_id: value.oauth_client_id,
             secret: value.secret,
             created_at: value.created_at,
-            deleted_at:value.deleted_at,
+            deleted_at: value.deleted_at,
         }
     }
 }
@@ -373,7 +376,7 @@ impl From<OAuthClientRedirectUriModel> for OAuthClientRedirectUri {
             oauth_client_id: value.oauth_client_id,
             redirect_uri: value.redirect_uri,
             created_at: value.created_at,
-            deleted_at:value.deleted_at,
+            deleted_at: value.deleted_at,
         }
     }
 }

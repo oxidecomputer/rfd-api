@@ -6,8 +6,8 @@ use uuid::Uuid;
 use crate::{
     permissions::Permissions,
     schema::{
-        api_key, api_user, api_user_access_token, api_user_provider, job, login_attempt, rfd,
-        rfd_pdf, rfd_revision, oauth_client, oauth_client_secret, oauth_client_redirect_uri,
+        api_key, api_user, api_user_access_token, api_user_provider, job, login_attempt,
+        oauth_client, oauth_client_redirect_uri, oauth_client_secret, rfd, rfd_pdf, rfd_revision,
     },
     schema_ext::{ContentFormat, LoginAttemptState, PdfSource},
 };

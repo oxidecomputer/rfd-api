@@ -1,4 +1,7 @@
-use std::{time::Duration, collections::{BTreeMap, BTreeSet}};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    time::Duration,
+};
 
 use async_bb8_diesel::{AsyncRunQueryDsl, ConnectionError, ConnectionManager, OptionalExtension};
 use async_trait::async_trait;
@@ -18,25 +21,27 @@ use uuid::Uuid;
 use crate::{
     db::{
         ApiKeyModel, ApiUserAccessTokenModel, ApiUserModel, ApiUserProviderModel, JobModel,
-        LoginAttemptModel, RfdModel, RfdPdfModel, RfdRevisionModel, OAuthClientSecretModel, OAuthClientModel, OAuthClientRedirectUriModel,
+        LoginAttemptModel, OAuthClientModel, OAuthClientRedirectUriModel, OAuthClientSecretModel,
+        RfdModel, RfdPdfModel, RfdRevisionModel,
     },
     permissions::{Permission, Permissions},
     schema::{
-        api_key, api_user, api_user_access_token, api_user_provider, job, login_attempt, rfd,
-        rfd_pdf, rfd_revision, oauth_client, oauth_client_secret, oauth_client_redirect_uri,
+        api_key, api_user, api_user_access_token, api_user_provider, job, login_attempt,
+        oauth_client, oauth_client_redirect_uri, oauth_client_secret, rfd, rfd_pdf, rfd_revision,
     },
     storage::StoreError,
     AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LoginAttempt, NewAccessToken, NewApiKey,
-    NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt, NewRfd, NewRfdPdf, NewRfdRevision,
-    Rfd, RfdPdf, RfdRevision, OAuthClient, NewOAuthClient, OAuthClientRedirectUri, OAuthClientSecret,
-    NewOAuthClientSecret, NewOAuthClientRedirectUri
+    NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt, NewOAuthClient,
+    NewOAuthClientRedirectUri, NewOAuthClientSecret, NewRfd, NewRfdPdf, NewRfdRevision,
+    OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, Rfd, RfdPdf, RfdRevision,
 };
 
 use super::{
     AccessTokenFilter, AccessTokenStore, ApiKeyFilter, ApiKeyStore, ApiUserFilter,
     ApiUserProviderFilter, ApiUserProviderStore, ApiUserStore, JobFilter, JobStore, ListPagination,
-    LoginAttemptFilter, LoginAttemptStore, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter,
-    RfdRevisionStore, RfdStore, OAuthClientStore, OAuthClientFilter, OAuthClientSecretStore, OAuthClientRedirectUriStore,
+    LoginAttemptFilter, LoginAttemptStore, OAuthClientFilter, OAuthClientRedirectUriStore,
+    OAuthClientSecretStore, OAuthClientStore, RfdFilter, RfdPdfFilter, RfdPdfStore,
+    RfdRevisionFilter, RfdRevisionStore, RfdStore,
 };
 
 pub type DbPool = Pool<ConnectionManager<PgConnection>>;
@@ -966,7 +971,7 @@ impl OAuthClientStore for PostgresStore {
             self,
             OAuthClientFilter {
                 id: Some(vec![*id]),
-                deleted
+                deleted,
             },
             &ListPagination::default().limit(1),
         )
@@ -985,10 +990,7 @@ impl OAuthClientStore for PostgresStore {
             .inner_join(oauth_client_redirect_uri::table)
             .into_boxed();
 
-        let OAuthClientFilter {
-            id,
-            deleted,
-        } = filter;
+        let OAuthClientFilter { id, deleted } = filter;
 
         if let Some(id) = id {
             query = query.filter(oauth_client::id.eq_any(id));
@@ -1002,38 +1004,42 @@ impl OAuthClientStore for PostgresStore {
             .offset(pagination.offset)
             .limit(pagination.limit)
             .order(oauth_client::created_at.desc())
-            .load_async::<(OAuthClientModel, OAuthClientSecretModel, OAuthClientRedirectUriModel)>(&self.conn)
+            .load_async::<(
+                OAuthClientModel,
+                OAuthClientSecretModel,
+                OAuthClientRedirectUriModel,
+            )>(&self.conn)
             .await?
             .into_iter()
-            .fold(BTreeMap::new(), |mut clients, (client, secret, redirect)| {
-                let value = clients.entry(client.id).or_insert((client, BTreeSet::<OAuthClientSecret>::new(), BTreeSet::<OAuthClientRedirectUri>::new()));
-                value.1.insert(secret.into());
-                value.2.insert(redirect.into());
-                clients
-            })
+            .fold(
+                BTreeMap::new(),
+                |mut clients, (client, secret, redirect)| {
+                    let value = clients.entry(client.id).or_insert((
+                        client,
+                        BTreeSet::<OAuthClientSecret>::new(),
+                        BTreeSet::<OAuthClientRedirectUri>::new(),
+                    ));
+                    value.1.insert(secret.into());
+                    value.2.insert(redirect.into());
+                    clients
+                },
+            )
             .into_iter()
-            .map(|(_, (client, secrets, redirect_uris))| {
-                OAuthClient {
-                    id: client.id,
-                    secrets: secrets.into_iter().collect::<Vec<_>>(),
-                    redirect_uris: redirect_uris.into_iter().collect::<Vec<_>>(),
-                    created_at: client.created_at,
-                    deleted_at: client.deleted_at,
-                }
+            .map(|(_, (client, secrets, redirect_uris))| OAuthClient {
+                id: client.id,
+                secrets: secrets.into_iter().collect::<Vec<_>>(),
+                redirect_uris: redirect_uris.into_iter().collect::<Vec<_>>(),
+                created_at: client.created_at,
+                deleted_at: client.deleted_at,
             })
             .collect::<Vec<_>>();
 
         Ok(clients)
     }
 
-    async fn upsert(
-        &self,
-        client: NewOAuthClient,
-    ) -> Result<OAuthClient, StoreError> {
+    async fn upsert(&self, client: NewOAuthClient) -> Result<OAuthClient, StoreError> {
         let client_m: OAuthClientModel = insert_into(oauth_client::dsl::oauth_client)
-            .values(
-                oauth_client::id.eq(client.id)
-            )
+            .values(oauth_client::id.eq(client.id))
             .get_result_async(&self.conn)
             .await?;
 
@@ -1060,14 +1066,15 @@ impl OAuthClientStore for PostgresStore {
 #[async_trait]
 impl OAuthClientSecretStore for PostgresStore {
     async fn upsert(&self, secret: NewOAuthClientSecret) -> Result<OAuthClientSecret, StoreError> {
-        let secret_m: OAuthClientSecretModel = insert_into(oauth_client_secret::dsl::oauth_client_secret)
-            .values((
-                oauth_client_secret::id.eq(secret.id),
-                oauth_client_secret::oauth_client_id.eq(secret.oauth_client_id),
-                oauth_client_secret::secret.eq(secret.secret),
-            ))
-            .get_result_async(&self.conn)
-            .await?;
+        let secret_m: OAuthClientSecretModel =
+            insert_into(oauth_client_secret::dsl::oauth_client_secret)
+                .values((
+                    oauth_client_secret::id.eq(secret.id),
+                    oauth_client_secret::oauth_client_id.eq(secret.oauth_client_id),
+                    oauth_client_secret::secret.eq(secret.secret),
+                ))
+                .get_result_async(&self.conn)
+                .await?;
 
         Ok(OAuthClientSecret {
             id: secret_m.id,
@@ -1100,15 +1107,19 @@ impl OAuthClientSecretStore for PostgresStore {
 
 #[async_trait]
 impl OAuthClientRedirectUriStore for PostgresStore {
-    async fn upsert(&self, redirect_uri: NewOAuthClientRedirectUri) -> Result<OAuthClientRedirectUri, StoreError> {
-        let redirect_uri_m: OAuthClientRedirectUriModel = insert_into(oauth_client_redirect_uri::dsl::oauth_client_redirect_uri)
-            .values((
-                oauth_client_redirect_uri::id.eq(redirect_uri.id),
-                oauth_client_redirect_uri::oauth_client_id.eq(redirect_uri.oauth_client_id),
-                oauth_client_redirect_uri::redirect_uri.eq(redirect_uri.redirect_uri),
-            ))
-            .get_result_async(&self.conn)
-            .await?;
+    async fn upsert(
+        &self,
+        redirect_uri: NewOAuthClientRedirectUri,
+    ) -> Result<OAuthClientRedirectUri, StoreError> {
+        let redirect_uri_m: OAuthClientRedirectUriModel =
+            insert_into(oauth_client_redirect_uri::dsl::oauth_client_redirect_uri)
+                .values((
+                    oauth_client_redirect_uri::id.eq(redirect_uri.id),
+                    oauth_client_redirect_uri::oauth_client_id.eq(redirect_uri.oauth_client_id),
+                    oauth_client_redirect_uri::redirect_uri.eq(redirect_uri.redirect_uri),
+                ))
+                .get_result_async(&self.conn)
+                .await?;
 
         Ok(OAuthClientRedirectUri {
             id: redirect_uri_m.id,
