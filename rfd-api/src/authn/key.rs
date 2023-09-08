@@ -1,6 +1,5 @@
 use argon2::password_hash::rand_core::{OsRng, RngCore};
 use async_trait::async_trait;
-use base64::{prelude::BASE64_URL_SAFE_NO_PAD, Engine};
 use google_cloudkms1::{hyper_rustls, CloudKMS};
 use rsa::{pkcs1::DecodeRsaPublicKey, Pkcs1v15Encrypt, PublicKey, RsaPublicKey};
 use thiserror::Error;
@@ -27,7 +26,7 @@ impl RawApiKey {
         let mut token_raw = [0; N];
         OsRng.fill_bytes(&mut token_raw);
 
-        let clear = BASE64_URL_SAFE_NO_PAD.encode(token_raw);
+        let clear = hex::encode(token_raw);
 
         Self { clear }
     }
