@@ -15,7 +15,7 @@ use crate::{
         },
         login::oauth::{
             authz_code::{authz_code_exchange, authz_code_redirect, authz_code_return},
-            device_token::{exchange_device_token, get_device_provider},
+            device_token::{exchange_device_token, get_device_provider}, client::{create_oauth_client, delete_oauth_client_redirect_uri, create_oauth_client_redirect_uri, delete_oauth_client_secret, create_oauth_client_secret, delete_oauth_client},
         },
         rfd::get_rfd,
         webhook::github_webhook,
@@ -80,6 +80,14 @@ pub fn server(
     api.register(get_api_user_token).unwrap();
     api.register(create_api_user_token).unwrap();
     api.register(delete_api_user_token).unwrap();
+
+    // OAuth Client Management
+    api.register(create_oauth_client).unwrap();
+    api.register(delete_oauth_client).unwrap();
+    api.register(create_oauth_client_secret).unwrap();
+    api.register(delete_oauth_client_secret).unwrap();
+    api.register(create_oauth_client_redirect_uri).unwrap();
+    api.register(delete_oauth_client_redirect_uri).unwrap();
 
     // OAuth Authorization Login
     api.register(authz_code_redirect).unwrap();

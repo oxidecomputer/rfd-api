@@ -12,6 +12,7 @@ use tracing::instrument;
 use super::{UserInfo, UserInfoError, UserInfoProvider};
 
 pub mod authz_code;
+pub mod client;
 pub mod device_token;
 pub mod google;
 
