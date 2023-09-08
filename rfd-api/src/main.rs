@@ -75,13 +75,6 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         )
     }
 
-    // if let Some(google) = config.authn.jwt.google {
-    //     context.insert_jwks_provider(
-    //         JwtProviderName::Google,
-    //         Box::new(GoogleOidcJwks::new(google.issuer, google.well_known_uri)),
-    //     )
-    // }
-
     tracing::debug!(?config.spec, "Spec configuration");
 
     let config = ServerConfig {

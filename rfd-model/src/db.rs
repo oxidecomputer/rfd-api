@@ -7,7 +7,7 @@ use crate::{
     permissions::Permissions,
     schema::{
         api_key, api_user, api_user_access_token, api_user_provider, job, login_attempt, rfd,
-        rfd_pdf, rfd_revision,
+        rfd_pdf, rfd_revision, oauth_client, oauth_client_secret, oauth_client_redirect_uri,
     },
     schema_ext::{ContentFormat, LoginAttemptState, PdfSource},
 };
@@ -135,4 +135,32 @@ pub struct LoginAttemptModel {
     pub provider_authz_code: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[diesel(table_name = oauth_client)]
+pub struct OAuthClientModel {
+    pub id: Uuid,
+    pub created_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[diesel(table_name = oauth_client_secret)]
+pub struct OAuthClientSecretModel {
+    pub id: Uuid,
+    pub oauth_client_id: Uuid,
+    pub secret: String,
+    pub created_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[diesel(table_name = oauth_client_redirect_uri)]
+pub struct OAuthClientRedirectUriModel {
+    pub id: Uuid,
+    pub oauth_client_id: Uuid,
+    pub redirect_uri: String,
+    pub created_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
 }

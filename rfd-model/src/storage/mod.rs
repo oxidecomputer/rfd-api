@@ -13,7 +13,8 @@ use crate::{
     schema_ext::{LoginAttemptState, PdfSource},
     AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LoginAttempt, NewAccessToken, NewApiKey,
     NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt, NewRfd, NewRfdPdf, NewRfdRevision,
-    Rfd, RfdPdf, RfdRevision,
+    Rfd, RfdPdf, RfdRevision, OAuthClient, NewOAuthClient, OAuthClientSecret, OAuthClientRedirectUri,
+    NewOAuthClientSecret, NewOAuthClientRedirectUri,
 };
 
 pub mod postgres;
@@ -328,4 +329,37 @@ pub trait LoginAttemptStore {
         pagination: &ListPagination,
     ) -> Result<Vec<LoginAttempt>, StoreError>;
     async fn upsert(&self, attempt: NewLoginAttempt) -> Result<LoginAttempt, StoreError>;
+}
+
+#[derive(Debug, Default)]
+pub struct OAuthClientFilter {
+    pub id: Option<Vec<Uuid>>,
+    pub deleted: bool,
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait OAuthClientStore {
+    async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<OAuthClient>, StoreError>;
+    async fn list(
+        &self,
+        filter: OAuthClientFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<OAuthClient>, StoreError>;
+    async fn upsert(&self, client: NewOAuthClient) -> Result<OAuthClient, StoreError>;
+    async fn delete(&self, id: &Uuid) -> Result<Option<OAuthClient>, StoreError>;
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait OAuthClientSecretStore {
+    async fn upsert(&self, secret: NewOAuthClientSecret) -> Result<OAuthClientSecret, StoreError>;
+    async fn delete(&self, id: &Uuid) -> Result<Option<OAuthClientSecret>, StoreError>;
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait OAuthClientRedirectUriStore {
+    async fn upsert(&self, redirect_uri: NewOAuthClientRedirectUri) -> Result<OAuthClientRedirectUri, StoreError>;
+    async fn delete(&self, id: &Uuid) -> Result<Option<OAuthClientRedirectUri>, StoreError>;
 }

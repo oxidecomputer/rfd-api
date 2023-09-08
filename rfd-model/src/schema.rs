@@ -99,6 +99,34 @@ diesel::table! {
 }
 
 diesel::table! {
+    oauth_client (id) {
+        id -> Uuid,
+        created_at -> Timestamptz,
+        deleted_at -> Nullable<Timestamptz>,
+    }
+}
+
+diesel::table! {
+    oauth_client_redirect_uri (id) {
+        id -> Uuid,
+        oauth_client_id -> Uuid,
+        redirect_uri -> Varchar,
+        created_at -> Timestamptz,
+        deleted_at -> Nullable<Timestamptz>,
+    }
+}
+
+diesel::table! {
+    oauth_client_secret (id) {
+        id -> Uuid,
+        oauth_client_id -> Uuid,
+        secret -> Varchar,
+        created_at -> Timestamptz,
+        deleted_at -> Nullable<Timestamptz>,
+    }
+}
+
+diesel::table! {
     rfd (id) {
         id -> Uuid,
         rfd_number -> Int4,
@@ -149,6 +177,8 @@ diesel::table! {
 diesel::joinable!(api_key -> api_user (api_user_id));
 diesel::joinable!(api_user_access_token -> api_user (api_user_id));
 diesel::joinable!(api_user_provider -> api_user (api_user_id));
+diesel::joinable!(oauth_client_redirect_uri -> oauth_client (oauth_client_id));
+diesel::joinable!(oauth_client_secret -> oauth_client (oauth_client_id));
 diesel::joinable!(rfd_pdf -> rfd_revision (rfd_revision_id));
 diesel::joinable!(rfd_revision -> rfd (rfd_id));
 
@@ -159,6 +189,9 @@ diesel::allow_tables_to_appear_in_same_query!(
     api_user_provider,
     job,
     login_attempt,
+    oauth_client,
+    oauth_client_redirect_uri,
+    oauth_client_secret,
     rfd,
     rfd_pdf,
     rfd_revision,

@@ -1,7 +1,7 @@
 use std::{collections::BTreeMap, fmt::Display};
 
 use chrono::{DateTime, Utc};
-use db::{JobModel, LoginAttemptModel, RfdModel, RfdPdfModel, RfdRevisionModel};
+use db::{JobModel, LoginAttemptModel, RfdModel, RfdPdfModel, RfdRevisionModel, OAuthClientRedirectUriModel, OAuthClientSecretModel};
 use partial_struct::partial;
 use permissions::Permissions;
 use schema_ext::{ContentFormat, LoginAttemptState, PdfSource};
@@ -312,6 +312,68 @@ impl From<LoginAttemptModel> for LoginAttempt {
             provider_authz_code: value.provider_authz_code,
             created_at: value.created_at,
             updated_at: value.updated_at,
+        }
+    }
+}
+
+#[partial(NewOAuthClient)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct OAuthClient {
+    pub id: Uuid,
+    #[partial(NewOAuthClient(skip))]
+    pub secrets: Vec<OAuthClientSecret>,
+    #[partial(NewOAuthClient(skip))]
+    pub redirect_uris: Vec<OAuthClientRedirectUri>,
+    #[partial(NewOAuthClient(skip))]
+    pub created_at: DateTime<Utc>,
+    #[partial(NewOAuthClient(skip))]
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+#[partial(NewOAuthClientSecret)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Eq, PartialOrd, Ord)]
+pub struct OAuthClientSecret {
+    pub id: Uuid,
+    pub oauth_client_id: Uuid,
+    pub secret: String,
+    #[partial(NewOAuthClientSecret(skip))]
+    pub created_at: DateTime<Utc>,
+    #[partial(NewOAuthClientSecret(skip))]
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+impl From<OAuthClientSecretModel> for OAuthClientSecret {
+    fn from(value: OAuthClientSecretModel) -> Self {
+        OAuthClientSecret {
+            id: value.id,
+            oauth_client_id: value.oauth_client_id,
+            secret: value.secret,
+            created_at: value.created_at,
+            deleted_at:value.deleted_at,
+        }
+    }
+}
+
+#[partial(NewOAuthClientRedirectUri)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema, Eq, PartialOrd, Ord)]
+pub struct OAuthClientRedirectUri {
+    pub id: Uuid,
+    pub oauth_client_id: Uuid,
+    pub redirect_uri: String,
+    #[partial(NewOAuthClientRedirectUri(skip))]
+    pub created_at: DateTime<Utc>,
+    #[partial(NewOAuthClientRedirectUri(skip))]
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+impl From<OAuthClientRedirectUriModel> for OAuthClientRedirectUri {
+    fn from(value: OAuthClientRedirectUriModel) -> Self {
+        OAuthClientRedirectUri {
+            id: value.id,
+            oauth_client_id: value.oauth_client_id,
+            redirect_uri: value.redirect_uri,
+            created_at: value.created_at,
+            deleted_at:value.deleted_at,
         }
     }
 }
