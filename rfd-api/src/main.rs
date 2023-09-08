@@ -3,7 +3,7 @@ use permissions::ApiPermission;
 use rfd_model::{
     permissions::{Caller, Permissions},
     storage::postgres::PostgresStore,
-    ApiUser, ApiUserToken,
+    ApiKey, ApiUser,
 };
 use server::{server, ServerConfig};
 use std::{
@@ -16,10 +16,7 @@ use tracing_subscriber::EnvFilter;
 use crate::{
     config::{AppConfig, ServerLogFormat},
     email_validator::DomainValidator,
-    endpoints::login::{
-        jwt::{google::GoogleOidcJwks, JwtProviderName},
-        oauth::{google::GoogleOAuthProvider, OAuthProviderName},
-    },
+    endpoints::login::oauth::{google::GoogleOAuthProvider, OAuthProviderName},
 };
 
 mod authn;
@@ -35,7 +32,7 @@ mod util;
 pub type ApiCaller = Caller<ApiPermission>;
 pub type ApiPermissions = Permissions<ApiPermission>;
 pub type User = ApiUser<ApiPermission>;
-pub type UserToken = ApiUserToken<ApiPermission>;
+pub type UserToken = ApiKey<ApiPermission>;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
@@ -78,12 +75,12 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         )
     }
 
-    if let Some(google) = config.authn.jwt.google {
-        context.insert_jwks_provider(
-            JwtProviderName::Google,
-            Box::new(GoogleOidcJwks::new(google.issuer, google.well_known_uri)),
-        )
-    }
+    // if let Some(google) = config.authn.jwt.google {
+    //     context.insert_jwks_provider(
+    //         JwtProviderName::Google,
+    //         Box::new(GoogleOidcJwks::new(google.issuer, google.well_known_uri)),
+    //     )
+    // }
 
     tracing::debug!(?config.spec, "Spec configuration");
 

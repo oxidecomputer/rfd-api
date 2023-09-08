@@ -13,10 +13,9 @@ use crate::{
             create_api_user, create_api_user_token, delete_api_user_token, get_api_user,
             get_api_user_token, get_self, list_api_user_tokens, update_api_user,
         },
-        login::{
-            access_token::access_token_login,
-            jwt::jwt_login,
-            oauth::{exchange_device_token, get_device_provider},
+        login::oauth::{
+            authz_code::{authz_code_exchange, authz_code_redirect, authz_code_return},
+            device_token::{exchange_device_token, get_device_provider},
         },
         rfd::get_rfd,
         webhook::github_webhook,
@@ -82,11 +81,10 @@ pub fn server(
     api.register(create_api_user_token).unwrap();
     api.register(delete_api_user_token).unwrap();
 
-    // Access Token Login
-    api.register(access_token_login).unwrap();
-
-    // JWT Login
-    api.register(jwt_login).unwrap();
+    // OAuth Authorization Login
+    api.register(authz_code_redirect).unwrap();
+    api.register(authz_code_return).unwrap();
+    api.register(authz_code_exchange).unwrap();
 
     // OAuth Device Login
     api.register(get_device_provider).unwrap();

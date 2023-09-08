@@ -6,7 +6,7 @@ use thiserror::Error;
 
 use crate::{context::ApiContext, util::response::unauthorized};
 
-use self::{jwt::Jwt, key::ApiKey};
+use self::{jwt::Jwt, key::EncryptedApiKey};
 
 pub mod jwt;
 pub mod key;
@@ -21,7 +21,7 @@ pub enum AuthError {
 
 // A token that provides authentication and optionally (JWT) authorization claims
 pub enum AuthToken {
-    ApiKey(ApiKey),
+    ApiKey(EncryptedApiKey),
     Jwt(Jwt),
 }
 
@@ -47,18 +47,19 @@ impl AuthToken {
 
         // Attempt to decode an API key from the token. If that fails then attempt to verify the
         // token as a JWT
-        match ApiKey::try_from(token.as_str()) {
-            Ok(api_key) => Ok(AuthToken::ApiKey(api_key)),
-            Err(err) => {
-                tracing::trace!(?err, "Bearer token is not an api key");
+        let jwt = Jwt::new(ctx, &token).await;
 
-                Jwt::new(ctx, &token)
-                    .await
-                    .map(AuthToken::Jwt)
-                    .map_err(|err| {
-                        tracing::trace!(?err, "Bearer token is not a valid JWT");
+        match jwt {
+            Ok(token) => Ok(AuthToken::Jwt(token)),
+            Err(err) => {
+                tracing::debug!(?err, "Token is not a JWT, falling back to API key");
+
+                Ok(AuthToken::ApiKey(EncryptedApiKey {
+                    encrypted: ctx.encrypt(token.as_str()).await.map_err(|err| {
+                        tracing::error!(?err, "Failed to encrypt authn token");
                         AuthError::FailedToExtract
-                    })
+                    })?,
+                }))
             }
         }
     }

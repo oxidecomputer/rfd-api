@@ -4,7 +4,7 @@ use dropshot::{
 };
 use http::StatusCode;
 use partial_struct::partial;
-use rfd_model::{storage::ListPagination, ApiUser, NewApiUser, NewApiUserToken};
+use rfd_model::{storage::ListPagination, ApiUser, NewApiKey, NewApiUser};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use trace_request::trace_request;
@@ -12,11 +12,11 @@ use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
-    authn::key::NewApiKey,
+    authn::key::RawApiKey,
     context::ApiContext,
     error::ApiError,
     permissions::ApiPermission,
-    util::response::{client_error, not_found},
+    util::response::{client_error, not_found, to_internal_error},
     ApiCaller, ApiPermissions, User,
 };
 
@@ -185,7 +185,7 @@ async fn update_api_user_op(
 pub async fn list_api_user_tokens(
     rqctx: RequestContext<ApiContext>,
     path: Path<ApiUserPath>,
-) -> Result<HttpResponseOk<Vec<ApiUserTokenResponse>>, HttpError> {
+) -> Result<HttpResponseOk<Vec<ApiKeyResponse>>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(&auth).await?;
@@ -197,7 +197,7 @@ async fn list_api_user_tokens_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
     path: &ApiUserPath,
-) -> Result<HttpResponseOk<Vec<ApiUserTokenResponse>>, HttpError> {
+) -> Result<HttpResponseOk<Vec<ApiKeyResponse>>, HttpError> {
     if caller.can(&ApiPermission::GetApiUserToken(path.identifier).into()) {
         tracing::info!("Fetch token list");
 
@@ -211,7 +211,7 @@ async fn list_api_user_tokens_op(
         Ok(HttpResponseOk(
             tokens
                 .into_iter()
-                .map(|token| ApiUserTokenResponse {
+                .map(|token| ApiKeyResponse {
                     id: token.id,
                     permissions: token.permissions,
                     created_at: token.created_at,
@@ -224,17 +224,17 @@ async fn list_api_user_tokens_op(
 }
 
 #[derive(Debug, Clone, Deserialize, JsonSchema)]
-pub struct ApiUserTokenCreateParams {
+pub struct ApiKeyCreateParams {
     permissions: ApiPermissions,
     expires_at: DateTime<Utc>,
 }
 
-#[partial(ApiUserTokenResponse)]
+#[partial(ApiKeyResponse)]
 #[derive(Debug, Serialize, JsonSchema)]
-pub struct InitialApiUserTokenResponse {
+pub struct InitialApiKeyResponse {
     pub id: Uuid,
-    #[partial(ApiUserTokenResponse(skip))]
-    pub token: String,
+    #[partial(ApiKeyResponse(skip))]
+    pub key: String,
     pub permissions: ApiPermissions,
     pub created_at: DateTime<Utc>,
 }
@@ -250,8 +250,8 @@ pub struct InitialApiUserTokenResponse {
 pub async fn create_api_user_token(
     rqctx: RequestContext<ApiContext>,
     path: Path<ApiUserPath>,
-    body: TypedBody<ApiUserTokenCreateParams>,
-) -> Result<HttpResponseCreated<InitialApiUserTokenResponse>, HttpError> {
+    body: TypedBody<ApiKeyCreateParams>,
+) -> Result<HttpResponseCreated<InitialApiKeyResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(&auth).await?;
@@ -263,8 +263,8 @@ async fn create_api_user_token_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
     path: &ApiUserPath,
-    body: ApiUserTokenCreateParams,
-) -> Result<HttpResponseCreated<InitialApiUserTokenResponse>, HttpError> {
+    body: ApiKeyCreateParams,
+) -> Result<HttpResponseCreated<InitialApiKeyResponse>, HttpError> {
     if caller.can(&ApiPermission::CreateApiUserToken(path.identifier).into()) {
         let api_user = ctx
             .get_api_user(&path.identifier)
@@ -272,16 +272,20 @@ async fn create_api_user_token_op(
             .map_err(ApiError::Storage)?;
 
         if let Some(api_user) = api_user {
-            let token_id = Uuid::new_v4();
+            let key_id = Uuid::new_v4();
 
-            let (token, hash) = NewApiKey::generate::<24>(&token_id).consume();
+            let key = RawApiKey::generate::<24>();
+            let encrypted = key
+                .encrypt(&*ctx.api_key.encryptor)
+                .await
+                .map_err(to_internal_error)?;
 
-            let user_token = ctx
+            let user_key = ctx
                 .create_api_user_token(
-                    NewApiUserToken {
-                        id: token_id,
+                    NewApiKey {
+                        id: key_id,
                         api_user_id: path.identifier,
-                        token: hash,
+                        key: encrypted.encrypted,
                         permissions: body.permissions,
                         expires_at: body.expires_at,
                     },
@@ -292,11 +296,11 @@ async fn create_api_user_token_op(
 
             // Creating an api token will return the hashed version, but we need to return the
             // plaintext token as we do not store a copy
-            Ok(HttpResponseCreated(InitialApiUserTokenResponse {
-                id: user_token.id,
-                token,
-                permissions: user_token.permissions,
-                created_at: user_token.created_at,
+            Ok(HttpResponseCreated(InitialApiKeyResponse {
+                id: user_key.id,
+                key: key.consume(),
+                permissions: user_key.permissions,
+                created_at: user_key.created_at,
             }))
         } else {
             Err(not_found("Failed to find api user"))
@@ -322,7 +326,7 @@ pub struct ApiUserTokenPath {
 pub async fn get_api_user_token(
     rqctx: RequestContext<ApiContext>,
     path: Path<ApiUserTokenPath>,
-) -> Result<HttpResponseOk<ApiUserTokenResponse>, HttpError> {
+) -> Result<HttpResponseOk<ApiKeyResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(&auth).await?;
@@ -334,7 +338,7 @@ async fn get_api_user_token_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
     path: &ApiUserTokenPath,
-) -> Result<HttpResponseOk<ApiUserTokenResponse>, HttpError> {
+) -> Result<HttpResponseOk<ApiKeyResponse>, HttpError> {
     if caller.can(&ApiPermission::GetApiUserToken(path.identifier).into()) {
         let token = ctx
             .get_api_user_token(&path.token_identifier)
@@ -342,7 +346,7 @@ async fn get_api_user_token_op(
             .map_err(ApiError::Storage)?;
 
         if let Some(token) = token {
-            Ok(HttpResponseOk(ApiUserTokenResponse {
+            Ok(HttpResponseOk(ApiKeyResponse {
                 id: token.id,
                 permissions: token.permissions,
                 created_at: token.created_at,
@@ -365,7 +369,7 @@ async fn get_api_user_token_op(
 pub async fn delete_api_user_token(
     rqctx: RequestContext<ApiContext>,
     path: Path<ApiUserTokenPath>,
-) -> Result<HttpResponseOk<ApiUserTokenResponse>, HttpError> {
+) -> Result<HttpResponseOk<ApiKeyResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(&auth).await?;
@@ -377,7 +381,7 @@ async fn delete_api_user_token_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
     path: &ApiUserTokenPath,
-) -> Result<HttpResponseOk<ApiUserTokenResponse>, HttpError> {
+) -> Result<HttpResponseOk<ApiKeyResponse>, HttpError> {
     if caller.can(&ApiPermission::DeleteApiUserToken(path.identifier).into()) {
         let token = ctx
             .delete_api_user_token(&path.token_identifier)
@@ -385,7 +389,7 @@ async fn delete_api_user_token_op(
             .map_err(ApiError::Storage)?;
 
         if let Some(token) = token {
-            Ok(HttpResponseOk(ApiUserTokenResponse {
+            Ok(HttpResponseOk(ApiKeyResponse {
                 id: token.id,
                 permissions: token.permissions,
                 created_at: token.created_at,
@@ -406,10 +410,8 @@ mod tests {
     use http::StatusCode;
     use mockall::predicate::eq;
     use rfd_model::{
-        storage::{
-            ApiUserTokenFilter, ListPagination, MockApiUserStore, MockApiUserTokenStore, StoreError,
-        },
-        ApiUser, ApiUserToken, NewApiUser,
+        storage::{ApiKeyFilter, ListPagination, MockApiKeyStore, MockApiUserStore, StoreError},
+        ApiKey, ApiUser, NewApiUser,
     };
     use uuid::Uuid;
 
@@ -418,7 +420,7 @@ mod tests {
         context::{tests::MockStorage, ApiContext},
         endpoints::api_user::{
             create_api_user_token_op, delete_api_user_token_op, get_api_user_token_op,
-            list_api_user_tokens_op, update_api_user_op, ApiUserPath, ApiUserTokenCreateParams,
+            list_api_user_tokens_op, update_api_user_op, ApiKeyCreateParams, ApiUserPath,
             ApiUserTokenPath,
         },
         permissions::ApiPermission,
@@ -621,10 +623,10 @@ mod tests {
         let success_id = Uuid::new_v4();
         let failure_id = Uuid::new_v4();
 
-        let mut store = MockApiUserTokenStore::new();
+        let mut store = MockApiKeyStore::new();
         store
             .expect_list()
-            .withf(move |x: &ApiUserTokenFilter, _: &ListPagination| {
+            .withf(move |x: &ApiKeyFilter, _: &ListPagination| {
                 x.api_user_id
                     .as_ref()
                     .map(|id| id.contains(&success_id))
@@ -633,7 +635,7 @@ mod tests {
             .returning(|_, _| Ok(vec![]));
         store
             .expect_list()
-            .withf(move |x: &ApiUserTokenFilter, _: &ListPagination| {
+            .withf(move |x: &ApiKeyFilter, _: &ListPagination| {
                 x.api_user_id
                     .as_ref()
                     .map(|id| id.contains(&failure_id))
@@ -751,7 +753,7 @@ mod tests {
             identifier: Uuid::new_v4(),
         };
 
-        let new_token = ApiUserTokenCreateParams {
+        let new_token = ApiKeyCreateParams {
             permissions: Vec::new().into(),
             expires_at: Utc::now() + Duration::seconds(5 * 60),
         };
@@ -770,17 +772,17 @@ mod tests {
             .with(eq(unknown_api_user_path.identifier), eq(false))
             .returning(move |_, _| Ok(None));
 
-        let mut token_store = MockApiUserTokenStore::new();
+        let mut token_store = MockApiKeyStore::new();
         token_store
             .expect_upsert()
             .withf(move |_, user| user.id == api_user_id)
-            .returning(|token, user| {
-                Ok(ApiUserToken {
+            .returning(|key, user| {
+                Ok(ApiKey {
                     id: Uuid::new_v4(),
                     api_user_id: user.id,
-                    token: token.token,
-                    permissions: token.permissions,
-                    expires_at: token.expires_at,
+                    key: key.key,
+                    permissions: key.permissions,
+                    expires_at: key.expires_at,
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,
@@ -895,10 +897,10 @@ mod tests {
     async fn test_get_api_user_token_permissions() {
         let api_user_id = Uuid::new_v4();
 
-        let token = ApiUserToken {
+        let token = ApiKey {
             id: Uuid::new_v4(),
             api_user_id: api_user_id,
-            token: "hashed_token".to_string(),
+            key: "encrypted_key".to_string(),
             permissions: Vec::new().into(),
             expires_at: Utc::now() + Duration::seconds(5 * 60),
             created_at: Utc::now(),
@@ -921,7 +923,7 @@ mod tests {
             token_identifier: Uuid::new_v4(),
         };
 
-        let mut token_store = MockApiUserTokenStore::new();
+        let mut token_store = MockApiKeyStore::new();
         token_store
             .expect_get()
             .with(eq(api_user_token_path.token_identifier), eq(false))
@@ -1021,10 +1023,10 @@ mod tests {
     async fn test_delete_api_user_token_permissions() {
         let api_user_id = Uuid::new_v4();
 
-        let token = ApiUserToken {
+        let token = ApiKey {
             id: Uuid::new_v4(),
             api_user_id: api_user_id,
-            token: "hashed_token".to_string(),
+            key: "encrypted_key".to_string(),
             permissions: Vec::new().into(),
             expires_at: Utc::now() + Duration::seconds(5 * 60),
             created_at: Utc::now(),
@@ -1047,7 +1049,7 @@ mod tests {
             token_identifier: Uuid::new_v4(),
         };
 
-        let mut token_store = MockApiUserTokenStore::new();
+        let mut token_store = MockApiKeyStore::new();
         token_store
             .expect_delete()
             .with(eq(api_user_token_path.token_identifier))

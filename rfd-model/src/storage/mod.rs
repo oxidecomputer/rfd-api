@@ -9,9 +9,11 @@ use thiserror::Error;
 use uuid::Uuid;
 
 use crate::{
-    permissions::Permission, schema_ext::PdfSource, AccessToken, ApiUser, ApiUserProvider,
-    ApiUserToken, Job, NewAccessToken, NewApiUser, NewApiUserProvider, NewApiUserToken, NewJob,
-    NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdPdf, RfdRevision,
+    permissions::Permission,
+    schema_ext::{LoginAttemptState, PdfSource},
+    AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LoginAttempt, NewAccessToken, NewApiKey,
+    NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt, NewRfd, NewRfdPdf, NewRfdRevision,
+    Rfd, RfdPdf, RfdRevision,
 };
 
 pub mod postgres;
@@ -242,27 +244,28 @@ pub trait ApiUserStore<T: Permission> {
 }
 
 #[derive(Debug, Default)]
-pub struct ApiUserTokenFilter {
+pub struct ApiKeyFilter {
     pub api_user_id: Option<Vec<Uuid>>,
+    pub key: Option<Vec<String>>,
     pub expired: bool,
     pub deleted: bool,
 }
 
 #[cfg_attr(feature = "mock", automock)]
 #[async_trait]
-pub trait ApiUserTokenStore<T: Permission> {
-    async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<ApiUserToken<T>>, StoreError>;
+pub trait ApiKeyStore<T: Permission> {
+    async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<ApiKey<T>>, StoreError>;
     async fn list(
         &self,
-        filter: ApiUserTokenFilter,
+        filter: ApiKeyFilter,
         pagination: &ListPagination,
-    ) -> Result<Vec<ApiUserToken<T>>, StoreError>;
+    ) -> Result<Vec<ApiKey<T>>, StoreError>;
     async fn upsert(
         &self,
-        token: NewApiUserToken<T>,
+        token: NewApiKey<T>,
         api_user: &ApiUser<T>,
-    ) -> Result<ApiUserToken<T>, StoreError>;
-    async fn delete(&self, id: &Uuid) -> Result<Option<ApiUserToken<T>>, StoreError>;
+    ) -> Result<ApiKey<T>, StoreError>;
+    async fn delete(&self, id: &Uuid) -> Result<Option<ApiKey<T>>, StoreError>;
 }
 
 #[derive(Debug, Default)]
@@ -305,4 +308,24 @@ pub trait AccessTokenStore {
         pagination: &ListPagination,
     ) -> Result<Vec<AccessToken>, StoreError>;
     async fn upsert(&self, token: NewAccessToken) -> Result<AccessToken, StoreError>;
+}
+
+#[derive(Debug, Default)]
+pub struct LoginAttemptFilter {
+    pub id: Option<Vec<Uuid>>,
+    pub client_id: Option<Vec<Uuid>>,
+    pub attempt_state: Option<Vec<LoginAttemptState>>,
+    pub authz_code: Option<Vec<String>>,
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait LoginAttemptStore {
+    async fn get(&self, id: &Uuid) -> Result<Option<LoginAttempt>, StoreError>;
+    async fn list(
+        &self,
+        filter: LoginAttemptFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<LoginAttempt>, StoreError>;
+    async fn upsert(&self, attempt: NewLoginAttempt) -> Result<LoginAttempt, StoreError>;
 }

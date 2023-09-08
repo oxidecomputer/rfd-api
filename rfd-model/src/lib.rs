@@ -1,10 +1,13 @@
+use std::{collections::BTreeMap, fmt::Display};
+
 use chrono::{DateTime, Utc};
-use db::{JobModel, RfdModel, RfdPdfModel, RfdRevisionModel};
+use db::{JobModel, LoginAttemptModel, RfdModel, RfdPdfModel, RfdRevisionModel};
 use partial_struct::partial;
 use permissions::Permissions;
-use schema_ext::{ContentFormat, PdfSource};
+use schema_ext::{ContentFormat, LoginAttemptState, PdfSource};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use thiserror::Error;
 use uuid::Uuid;
 
 pub mod db;
@@ -181,19 +184,19 @@ pub struct ApiUserProvider {
     pub deleted_at: Option<DateTime<Utc>>,
 }
 
-#[partial(NewApiUserToken)]
+#[partial(NewApiKey)]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
-pub struct ApiUserToken<T> {
+pub struct ApiKey<T> {
     pub id: Uuid,
     pub api_user_id: Uuid,
-    pub token: String,
+    pub key: String,
     pub permissions: Permissions<T>,
     pub expires_at: DateTime<Utc>,
-    #[partial(NewApiUserToken(skip))]
+    #[partial(NewApiKey(skip))]
     pub created_at: DateTime<Utc>,
-    #[partial(NewApiUserToken(skip))]
+    #[partial(NewApiKey(skip))]
     pub updated_at: DateTime<Utc>,
-    #[partial(NewApiUserToken(skip))]
+    #[partial(NewApiKey(skip))]
     pub deleted_at: Option<DateTime<Utc>>,
 }
 
@@ -207,4 +210,108 @@ pub struct AccessToken {
     pub created_at: DateTime<Utc>,
     #[partial(NewAccessToken(skip))]
     pub updated_at: DateTime<Utc>,
+}
+
+#[partial(NewLoginAttempt)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct LoginAttempt {
+    pub id: Uuid,
+    pub attempt_state: LoginAttemptState,
+    pub client_id: Uuid,
+    pub redirect_uri: String,
+    pub state: Option<String>,
+    pub pkce_challenge: Option<String>,
+    pub pkce_challenge_method: Option<String>,
+    pub authz_code: Option<String>,
+    pub expires_at: Option<DateTime<Utc>>,
+    pub provider: String,
+    pub provider_state: String,
+    pub provider_pkce_verifier: String,
+    pub provider_authz_code: Option<String>,
+    #[partial(NewLoginAttempt(skip))]
+    pub created_at: DateTime<Utc>,
+    #[partial(NewLoginAttempt(skip))]
+    pub updated_at: DateTime<Utc>,
+}
+
+impl LoginAttempt {
+    pub fn callback_url(&self) -> String {
+        let mut params = BTreeMap::new();
+
+        if let Some(state) = &self.state {
+            params.insert("state", state);
+        }
+
+        if let Some(authz_code) = &self.authz_code {
+            params.insert("code", authz_code);
+        }
+
+        let query_string = params
+            .into_iter()
+            .map(|(k, v)| format!("{}={}", k, v))
+            .collect::<Vec<_>>()
+            .join("&");
+
+        [self.redirect_uri.as_str(), query_string.as_str()].join("?")
+    }
+}
+
+#[derive(Debug, Error)]
+pub struct InvalidValueError {
+    pub field: String,
+    pub error: String,
+}
+
+impl Display for InvalidValueError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} has an invalid value: {}", self.field, self.error)
+    }
+}
+
+impl NewLoginAttempt {
+    pub fn new(
+        client_id: Uuid,
+        redirect_uri: String,
+        provider: String,
+        provider_state: String,
+        provider_pkce_verifier: String,
+    ) -> Result<Self, InvalidValueError> {
+        Ok(Self {
+            id: Uuid::new_v4(),
+            attempt_state: LoginAttemptState::New,
+            client_id,
+            redirect_uri,
+            state: None,
+            pkce_challenge: None,
+            pkce_challenge_method: None,
+            authz_code: None,
+            expires_at: None,
+            provider,
+            provider_state,
+            provider_pkce_verifier,
+            provider_authz_code: None,
+        })
+    }
+}
+
+impl From<LoginAttemptModel> for LoginAttempt {
+    fn from(value: LoginAttemptModel) -> Self {
+        Self {
+            id: value.id,
+            attempt_state: value.attempt_state,
+            client_id: value.client_id,
+            redirect_uri: value.redirect_uri,
+            state: value.state,
+            pkce_challenge: value.pkce_challenge,
+            pkce_challenge_method: value.pkce_challenge_method,
+            authz_code: value.authz_code,
+            expires_at: value.expires_at,
+            provider: value.provider,
+            provider_state: value.provider_state,
+            provider_pkce_verifier: value.provider_pkce_verifier,
+            provider_authz_code: value.provider_authz_code,
+            created_at: value.created_at,
+            updated_at: value.updated_at,
+        }
+    }
 }

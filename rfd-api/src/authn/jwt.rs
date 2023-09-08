@@ -19,7 +19,7 @@ use thiserror::Error;
 use tracing::instrument;
 use uuid::Uuid;
 
-use crate::{config::JwtKey, context::ApiContext, ApiPermissions};
+use crate::{config::AsymmetricKey, context::ApiContext, ApiPermissions};
 
 #[derive(Debug, Error)]
 pub enum JwtError {
@@ -168,7 +168,7 @@ pub enum CloudKmsError {
 
 // Signer that relies on a private key stored in GCP, and a locally store JWK. This signer never
 // has direct access to the private key
-pub struct CloudKmSigner {
+pub struct CloudKmsSigner {
     client: CloudKMS<HttpsConnector<HttpConnector>>,
     key_name: String,
     header: Header,
@@ -187,7 +187,7 @@ pub struct CloudKmsSignatureResponse {
 }
 
 #[async_trait]
-impl JwtSigner for CloudKmSigner {
+impl JwtSigner for CloudKmsSigner {
     type Claims = Claims;
 
     #[instrument(skip(self, claims), err(Debug))]
@@ -302,10 +302,10 @@ fn pem_to_jwk(id: &str, pem: &str) -> Result<Jwk, SignerError> {
 
 #[instrument(skip(key), err(Debug))]
 pub async fn key_to_signer(
-    key: &JwtKey,
+    key: &AsymmetricKey,
 ) -> Result<Box<dyn JwtSigner<Claims = Claims>>, SignerError> {
     Ok(match key {
-        JwtKey::Local {
+        AsymmetricKey::Local {
             kid,
             private,
             public,
@@ -322,7 +322,7 @@ pub async fn key_to_signer(
                 jwk,
             })
         }
-        JwtKey::Ckms {
+        AsymmetricKey::Ckms {
             kid,
             version,
             key,
@@ -399,7 +399,7 @@ pub async fn key_to_signer(
 
             tracing::trace!(?header, ?jwk, "Generated Cloud KMS signer");
 
-            Box::new(CloudKmSigner {
+            Box::new(CloudKmsSigner {
                 client: gcp_kms,
                 key_name,
                 header,

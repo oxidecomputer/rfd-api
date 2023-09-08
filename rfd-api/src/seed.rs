@@ -1,5 +1,5 @@
 use chrono::{Duration, Utc};
-use rfd_model::{storage::StoreError, ApiUser, NewApiUser, NewApiUserToken};
+use rfd_model::{storage::StoreError, ApiUser, NewApiUser, NewApiKey};
 use serde::Serialize;
 use thiserror::Error;
 use uuid::Uuid;
@@ -7,14 +7,14 @@ use uuid::Uuid;
 use crate::{
     authn::key::NewApiKey,
     context::ApiContext,
-    endpoints::api_user::InitialApiUserTokenResponse,
+    endpoints::api_user::InitialApiKKeyResponse,
     permissions::{ApiPermission, ApiUserPermission, RfdPermission},
 };
 
 #[derive(Debug, Serialize)]
 pub struct SeedApiUser {
     pub user: ApiUser<ApiPermission>,
-    pub token: InitialApiUserTokenResponse,
+    pub token: InitialApiKKeyResponse,
 }
 
 #[derive(Debug, Error)]
@@ -53,7 +53,7 @@ pub async fn seed(ctx: &ApiContext) -> Result<SeedApiUser, SeedError> {
 
     let stored_token = ctx
         .create_api_user_token(
-            NewApiUserToken {
+            NewApiKey {
                 id: token_id,
                 api_user_id: user.id,
                 token: hash,
@@ -66,7 +66,7 @@ pub async fn seed(ctx: &ApiContext) -> Result<SeedApiUser, SeedError> {
 
     Ok(SeedApiUser {
         user,
-        token: InitialApiUserTokenResponse {
+        token: InitialApiKKeyResponse {
             id: stored_token.id,
             token,
             permissions: stored_token.permissions,

@@ -4,15 +4,18 @@ use http::StatusCode;
 use hyper::{client::HttpConnector, Body, Client};
 use hyper_tls::HttpsConnector;
 use jsonwebtoken::jwk::JwkSet;
+use oauth2::CsrfToken;
 use rfd_model::{
     permissions::{Caller, Permissions},
+    schema_ext::LoginAttemptState,
     storage::{
-        AccessTokenStore, ApiUserFilter, ApiUserProviderFilter, ApiUserProviderStore, ApiUserStore,
-        ApiUserTokenFilter, ApiUserTokenStore, JobStore, ListPagination, RfdFilter, RfdPdfFilter,
-        RfdPdfStore, RfdRevisionFilter, RfdRevisionStore, RfdStore, StoreError,
+        AccessTokenStore, ApiKeyFilter, ApiKeyStore, ApiUserFilter, ApiUserProviderFilter,
+        ApiUserProviderStore, ApiUserStore, JobStore, ListPagination, LoginAttemptFilter,
+        LoginAttemptStore, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter,
+        RfdRevisionStore, RfdStore, StoreError,
     },
-    AccessToken, ApiUser, ApiUserProvider, Job, NewAccessToken, NewApiUser, NewApiUserProvider,
-    NewApiUserToken, NewJob,
+    AccessToken, ApiUser, ApiUserProvider, InvalidValueError, Job, LoginAttempt, NewAccessToken,
+    NewApiKey, NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -25,15 +28,12 @@ use uuid::Uuid;
 use crate::{
     authn::{
         jwt::{key_to_signer, Claims, JwtSigner, SignerError},
+        key::{key_to_encryptor, EncryptorError, KeyEncryptor},
         AuthError, AuthToken,
     },
     config::{JwtConfig, PermissionsConfig},
     email_validator::EmailValidator,
     endpoints::login::{
-        access_token::{
-            github::GitHubAccessTokenIdentity, AccessTokenProvider, AccessTokenProviderName,
-        },
-        jwt::{google::GoogleOidcIdentity, JwksProvider, JwtProvider, JwtProviderName},
         oauth::{OAuthProvider, OAuthProviderError, OAuthProviderFn, OAuthProviderName},
         LoginError, UserInfo,
     },
@@ -49,9 +49,10 @@ pub trait Storage:
     + RfdPdfStore
     + JobStore
     + ApiUserStore<ApiPermission>
-    + ApiUserTokenStore<ApiPermission>
+    + ApiKeyStore<ApiPermission>
     + ApiUserProviderStore
     + AccessTokenStore
+    + LoginAttemptStore
     + Send
     + Sync
     + 'static
@@ -63,9 +64,10 @@ impl<T> Storage for T where
         + RfdPdfStore
         + JobStore
         + ApiUserStore<ApiPermission>
-        + ApiUserTokenStore<ApiPermission>
+        + ApiKeyStore<ApiPermission>
         + ApiUserProviderStore
         + AccessTokenStore
+        + LoginAttemptStore
         + Send
         + Sync
         + 'static
@@ -79,8 +81,8 @@ pub struct ApiContext {
     pub storage: Arc<dyn Storage>,
     pub permissions: PermissionsContext,
     pub jwt: JwtContext,
+    pub api_key: ApiKeyContext,
     pub oauth_providers: HashMap<OAuthProviderName, Box<dyn OAuthProviderFn>>,
-    pub jwks_providers: HashMap<JwtProviderName, Box<dyn JwksProvider>>,
 }
 
 pub struct PermissionsContext {
@@ -92,6 +94,10 @@ pub struct JwtContext {
     pub max_expiration: i64,
     pub keys: Vec<Box<dyn JwtSigner<Claims = Claims>>>,
     pub jwks: JwkSet,
+}
+
+pub struct ApiKeyContext {
+    pub encryptor: Box<dyn KeyEncryptor>,
 }
 
 pub struct RegisteredAccessToken {
@@ -119,6 +125,14 @@ impl From<CallerError> for HttpError {
             CallerError::Storage(_) => internal_error("Internal storage failed"),
         }
     }
+}
+
+#[derive(Debug, Error)]
+pub enum LoginAttemptError {
+    #[error(transparent)]
+    FailedToCreate(#[from] InvalidValueError),
+    #[error(transparent)]
+    Storage(#[from] StoreError),
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
@@ -153,8 +167,8 @@ impl ApiContext {
     ) -> Result<Self, AppError> {
         let mut keys = vec![];
 
-        for key in jwt.keys {
-            keys.push(key_to_signer(&key).await?);
+        for key in &jwt.keys {
+            keys.push(key_to_signer(key).await?);
         }
 
         Ok(Self {
@@ -173,8 +187,10 @@ impl ApiContext {
                 },
                 keys,
             },
+            api_key: ApiKeyContext {
+                encryptor: key_to_encryptor(&jwt.keys[0]).await?,
+            },
             oauth_providers: HashMap::new(),
-            jwks_providers: HashMap::new(),
         })
     }
 
@@ -199,34 +215,42 @@ impl ApiContext {
         signer.sign(claims).await
     }
 
+    pub async fn encrypt(&self, value: &str) -> Result<String, EncryptorError> {
+        self.api_key.encryptor.encrypt(value).await
+    }
+
     #[instrument(skip(self, auth))]
     pub async fn get_caller(&self, auth: &AuthToken) -> Result<ApiCaller, CallerError> {
         let (api_user_id, permissions) = match auth {
             AuthToken::ApiKey(api_key) => {
                 async {
-                    let token_id = api_key.id();
-
                     tracing::debug!("Attempt to authenticate");
 
-                    let key = ApiUserTokenStore::get(&*self.storage, &token_id, false).await?;
+                    let mut key = ApiKeyStore::list(
+                        &*self.storage,
+                        ApiKeyFilter {
+                            key: Some(vec![api_key.encrypted.to_string()]),
+                            expired: false,
+                            deleted: false,
+                            ..Default::default()
+                        },
+                        &ListPagination {
+                            offset: 0,
+                            limit: 1,
+                        },
+                    )
+                    .await?;
 
-                    if let Some(key) = key {
-                        tracing::debug!("Found key to test");
+                    if let Some(key) = key.pop() {
+                        tracing::debug!("Verified caller key");
 
-                        if api_key.verify(&key.token) {
-                            tracing::debug!("Verified caller key");
-
-                            Ok((key.api_user_id, key.permissions))
-                        } else {
-                            tracing::debug!("Failed to verify token");
-                            Err(CallerError::FailedToAuthenticate)
-                        }
+                        Ok((key.api_user_id, key.permissions))
                     } else {
-                        tracing::debug!("Failed to find matching token");
+                        tracing::debug!("Failed to find matching key");
                         Err(CallerError::FailedToAuthenticate)
                     }
                 }
-                .instrument(info_span!("Test api key", key_id = ?api_key.id()))
+                .instrument(info_span!("Test api key"))
                 .await
             }
             AuthToken::Jwt(jwt) => {
@@ -258,43 +282,13 @@ impl ApiContext {
         let users =
             ApiUserStore::list(&*self.storage, user_filter, &ListPagination::latest()).await?;
 
-        let mut token_filter = ApiUserTokenFilter::default();
+        let mut token_filter = ApiKeyFilter::default();
         token_filter.deleted = true;
 
         let tokens =
-            ApiUserTokenStore::list(&*self.storage, token_filter, &ListPagination::latest())
-                .await?;
+            ApiKeyStore::list(&*self.storage, token_filter, &ListPagination::latest()).await?;
 
         Ok(users.len() == 0 && tokens.len() == 0)
-    }
-
-    pub async fn get_access_token_provider(
-        &self,
-        provider: &AccessTokenProviderName,
-        token: String,
-    ) -> Result<Box<dyn AccessTokenProvider>, LoginError> {
-        match provider {
-            AccessTokenProviderName::GitHub => Ok(Box::new(GitHubAccessTokenIdentity::new(token)?)),
-        }
-    }
-
-    pub fn insert_jwks_provider(&mut self, name: JwtProviderName, provider: Box<dyn JwksProvider>) {
-        self.jwks_providers.insert(name, provider);
-    }
-
-    pub async fn get_jwt_identity<'a>(
-        &'a self,
-        provider: &JwtProviderName,
-        token: String,
-    ) -> Result<Box<dyn JwtProvider + 'a>, LoginError> {
-        match provider {
-            JwtProviderName::Google => Ok(Box::new(GoogleOidcIdentity::new(
-                token,
-                self.jwks_providers
-                    .get(provider)
-                    .ok_or(LoginError::InvalidProvider)?,
-            ))),
-        }
     }
 
     pub fn insert_oauth_provider(
@@ -520,14 +514,14 @@ impl ApiContext {
 
     pub async fn create_api_user_token(
         &self,
-        token: NewApiUserToken<ApiPermission>,
+        token: NewApiKey<ApiPermission>,
         api_user: &ApiUser<ApiPermission>,
     ) -> Result<UserToken, StoreError> {
-        ApiUserTokenStore::upsert(&*self.storage, token, api_user).await
+        ApiKeyStore::upsert(&*self.storage, token, api_user).await
     }
 
     pub async fn get_api_user_token(&self, id: &Uuid) -> Result<Option<UserToken>, StoreError> {
-        ApiUserTokenStore::get(&*self.storage, id, false).await
+        ApiKeyStore::get(&*self.storage, id, false).await
     }
 
     pub async fn get_api_user_tokens(
@@ -535,12 +529,13 @@ impl ApiContext {
         api_user_id: &Uuid,
         pagination: &ListPagination,
     ) -> Result<Vec<UserToken>, StoreError> {
-        ApiUserTokenStore::list(
+        ApiKeyStore::list(
             &*self.storage,
-            ApiUserTokenFilter {
+            ApiKeyFilter {
                 api_user_id: Some(vec![*api_user_id]),
                 expired: true,
                 deleted: false,
+                ..Default::default()
             },
             pagination,
         )
@@ -570,14 +565,72 @@ impl ApiContext {
     }
 
     pub async fn delete_api_user_token(&self, id: &Uuid) -> Result<Option<UserToken>, StoreError> {
-        ApiUserTokenStore::delete(&*self.storage, id).await
+        ApiKeyStore::delete(&*self.storage, id).await
     }
 
     pub async fn create_access_token(
         &self,
-        device_token: NewAccessToken,
+        access_token: NewAccessToken,
     ) -> Result<AccessToken, StoreError> {
-        AccessTokenStore::upsert(&*self.storage, device_token).await
+        AccessTokenStore::upsert(&*self.storage, access_token).await
+    }
+
+    pub async fn create_login_attempt(
+        &self,
+        attempt: NewLoginAttempt,
+    ) -> Result<LoginAttempt, StoreError> {
+        LoginAttemptStore::upsert(&*self.storage, attempt).await
+    }
+
+    pub async fn set_login_provider_authz_code(
+        &self,
+        attempt: LoginAttempt,
+        code: String,
+    ) -> Result<LoginAttempt, StoreError> {
+        let mut attempt: NewLoginAttempt = attempt.into();
+        attempt.provider_authz_code = Some(code);
+
+        // TODO: Internal state changes to the struct
+        attempt.attempt_state = LoginAttemptState::RemoteAuthenticated;
+        attempt.authz_code = Some(CsrfToken::new_random().secret().to_string());
+
+        LoginAttemptStore::upsert(&*self.storage, attempt).await
+    }
+
+    pub async fn get_login_attempt(&self, id: &Uuid) -> Result<Option<LoginAttempt>, StoreError> {
+        LoginAttemptStore::get(&*self.storage, id).await
+    }
+
+    pub async fn get_login_attempt_for_code(
+        &self,
+        code: &str,
+    ) -> Result<Option<LoginAttempt>, StoreError> {
+        let filter = LoginAttemptFilter {
+            attempt_state: Some(vec![LoginAttemptState::RemoteAuthenticated]),
+            authz_code: Some(vec![code.to_string()]),
+            ..Default::default()
+        };
+
+        let mut attempts = LoginAttemptStore::list(
+            &*self.storage,
+            filter,
+            &ListPagination {
+                offset: 0,
+                limit: 1,
+            },
+        )
+        .await?;
+
+        Ok(attempts.pop())
+    }
+
+    pub async fn fail_login_attempt(
+        &self,
+        attempt: LoginAttempt,
+    ) -> Result<LoginAttempt, StoreError> {
+        let mut attempt: NewLoginAttempt = attempt.into();
+        attempt.attempt_state = LoginAttemptState::Failed;
+        LoginAttemptStore::upsert(&*self.storage, attempt).await
     }
 }
 
@@ -587,13 +640,14 @@ pub(crate) mod tests {
     use rfd_model::{
         permissions::Caller,
         storage::{
-            AccessTokenStore, ApiUserProviderStore, ApiUserStore, ApiUserTokenStore, JobStore,
-            ListPagination, MockAccessTokenStore, MockApiUserProviderStore, MockApiUserStore,
-            MockApiUserTokenStore, MockJobStore, MockRfdPdfStore, MockRfdRevisionStore,
-            MockRfdStore, RfdPdfStore, RfdRevisionStore, RfdStore,
+            AccessTokenStore, ApiKeyStore, ApiUserProviderStore, ApiUserStore, JobStore,
+            ListPagination, LoginAttemptStore, MockAccessTokenStore, MockApiKeyStore,
+            MockApiUserProviderStore, MockApiUserStore, MockJobStore, MockLoginAttemptStore,
+            MockRfdPdfStore, MockRfdRevisionStore, MockRfdStore, RfdPdfStore, RfdRevisionStore,
+            RfdStore,
         },
-        ApiUserProvider, ApiUserToken, NewAccessToken, NewApiUser, NewApiUserProvider,
-        NewApiUserToken, NewJob, NewRfd, NewRfdPdf, NewRfdRevision,
+        ApiKey, ApiUserProvider, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
+        NewLoginAttempt, NewRfd, NewRfdPdf, NewRfdRevision,
     };
     use std::sync::Arc;
 
@@ -607,9 +661,10 @@ pub(crate) mod tests {
         pub rfd_pdf_store: Option<Arc<MockRfdPdfStore>>,
         pub job_store: Option<Arc<MockJobStore>>,
         pub api_user_store: Option<Arc<MockApiUserStore<ApiPermission>>>,
-        pub api_user_token_store: Option<Arc<MockApiUserTokenStore<ApiPermission>>>,
+        pub api_user_token_store: Option<Arc<MockApiKeyStore<ApiPermission>>>,
         pub api_user_provider_store: Option<Arc<MockApiUserProviderStore>>,
         pub device_token_store: Option<Arc<MockAccessTokenStore>>,
+        pub login_attempt_store: Option<Arc<MockLoginAttemptStore>>,
     }
 
     impl MockStorage {
@@ -624,6 +679,7 @@ pub(crate) mod tests {
                 api_user_token_store: None,
                 api_user_provider_store: None,
                 device_token_store: None,
+                login_attempt_store: None,
             }
         }
     }
@@ -824,12 +880,12 @@ pub(crate) mod tests {
     }
 
     #[async_trait]
-    impl ApiUserTokenStore<ApiPermission> for MockStorage {
+    impl ApiKeyStore<ApiPermission> for MockStorage {
         async fn get(
             &self,
             id: &uuid::Uuid,
             deleted: bool,
-        ) -> Result<Option<ApiUserToken<ApiPermission>>, rfd_model::storage::StoreError> {
+        ) -> Result<Option<ApiKey<ApiPermission>>, rfd_model::storage::StoreError> {
             self.api_user_token_store
                 .as_ref()
                 .unwrap()
@@ -839,9 +895,9 @@ pub(crate) mod tests {
 
         async fn list(
             &self,
-            filter: rfd_model::storage::ApiUserTokenFilter,
+            filter: rfd_model::storage::ApiKeyFilter,
             pagination: &ListPagination,
-        ) -> Result<Vec<ApiUserToken<ApiPermission>>, rfd_model::storage::StoreError> {
+        ) -> Result<Vec<ApiKey<ApiPermission>>, rfd_model::storage::StoreError> {
             self.api_user_token_store
                 .as_ref()
                 .unwrap()
@@ -851,9 +907,9 @@ pub(crate) mod tests {
 
         async fn upsert(
             &self,
-            token: NewApiUserToken<ApiPermission>,
+            token: NewApiKey<ApiPermission>,
             api_user: &rfd_model::ApiUser<ApiPermission>,
-        ) -> Result<ApiUserToken<ApiPermission>, rfd_model::storage::StoreError> {
+        ) -> Result<ApiKey<ApiPermission>, rfd_model::storage::StoreError> {
             self.api_user_token_store
                 .as_ref()
                 .unwrap()
@@ -864,7 +920,7 @@ pub(crate) mod tests {
         async fn delete(
             &self,
             id: &uuid::Uuid,
-        ) -> Result<Option<ApiUserToken<ApiPermission>>, rfd_model::storage::StoreError> {
+        ) -> Result<Option<ApiKey<ApiPermission>>, rfd_model::storage::StoreError> {
             self.api_user_token_store.as_ref().unwrap().delete(id).await
         }
     }
@@ -952,6 +1008,39 @@ pub(crate) mod tests {
                 .as_ref()
                 .unwrap()
                 .upsert(token)
+                .await
+        }
+    }
+
+    #[async_trait]
+    impl LoginAttemptStore for MockStorage {
+        async fn get(
+            &self,
+            id: &uuid::Uuid,
+        ) -> Result<Option<rfd_model::LoginAttempt>, rfd_model::storage::StoreError> {
+            self.login_attempt_store.as_ref().unwrap().get(id).await
+        }
+
+        async fn list(
+            &self,
+            filter: rfd_model::storage::LoginAttemptFilter,
+            pagination: &ListPagination,
+        ) -> Result<Vec<rfd_model::LoginAttempt>, rfd_model::storage::StoreError> {
+            self.login_attempt_store
+                .as_ref()
+                .unwrap()
+                .list(filter, pagination)
+                .await
+        }
+
+        async fn upsert(
+            &self,
+            attempt: NewLoginAttempt,
+        ) -> Result<rfd_model::LoginAttempt, rfd_model::storage::StoreError> {
+            self.login_attempt_store
+                .as_ref()
+                .unwrap()
+                .upsert(attempt)
                 .await
         }
     }

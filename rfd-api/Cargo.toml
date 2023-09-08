@@ -16,6 +16,7 @@ dropshot = { workspace = true }
 dropshot-authorization-header = { path = "../dropshot-authorization-header" }
 dropshot-verified-body = { workspace = true, features = ["github"] }
 google-cloudkms1 = { workspace = true }
+hex = { workspace = true }
 http = { workspace = true }
 hyper = { workspace = true }
 hyper-tls = { workspace = true }
@@ -23,6 +24,7 @@ jsonwebtoken = { workspace = true }
 oauth2 = { workspace = true }
 octorust = { workspace = true }
 partial-struct = { workspace = true }
+rand = { workspace = true, features = ["std"] }
 rand_core = { workspace = true, features = ["std"] }
 regex = { workspace = true }
 reqwest = { workspace = true }

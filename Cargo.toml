@@ -48,6 +48,7 @@ octorust = "0.7.0-rc.1"
 partial-struct = { git = "https://github.com/oxidecomputer/partial-struct" }
 progenitor = { git = "https://github.com/oxidecomputer/progenitor" }
 progenitor-client = { git = "https://github.com/oxidecomputer/progenitor" }
+rand = "0.8.5"
 rand_core = "0.6"
 regex = "1.7.1"
 reqwest = { version = "0.11", features = ["json", "stream"] }

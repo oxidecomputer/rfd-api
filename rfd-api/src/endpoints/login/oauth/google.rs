@@ -71,8 +71,10 @@ impl OAuthProvider for GoogleOAuthProvider {
         &self.public.client_id
     }
 
-    fn client_secret(&mut self) -> Option<String> {
-        self.private.take().map(|private| private.client_secret)
+    fn client_secret(&self) -> Option<&str> {
+        self.private
+            .as_ref()
+            .map(|private| private.client_secret.as_str())
     }
 
     fn user_info_endpoint(&self) -> &str {

@@ -70,12 +70,12 @@ pub struct PermissionsConfig {
 pub struct JwtConfig {
     pub default_expiration: i64,
     pub max_expiration: i64,
-    pub keys: Vec<JwtKey>,
+    pub keys: Vec<AsymmetricKey>,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(tag = "kind", rename_all = "lowercase")]
-pub enum JwtKey {
+pub enum AsymmetricKey {
     Local {
         kid: String,
         #[serde(with = "serde_bytes")]

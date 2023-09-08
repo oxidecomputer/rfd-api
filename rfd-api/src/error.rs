@@ -3,13 +3,15 @@ use rfd_model::storage::StoreError;
 use thiserror::Error;
 
 use crate::{
-    authn::jwt::SignerError,
+    authn::{jwt::SignerError, key::EncryptorError},
     endpoints::login::{oauth::OAuthProviderError, LoginError},
     util::response::internal_error,
 };
 
 #[derive(Debug, Error)]
 pub enum AppError {
+    #[error(transparent)]
+    EncryptorError(#[from] EncryptorError),
     #[error("At least one JWT signing key must be configured")]
     NoConfiguredJwtKeys,
     #[error(transparent)]

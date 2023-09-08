@@ -17,25 +17,25 @@ use uuid::Uuid;
 
 use crate::{
     db::{
-        ApiUserAccessTokenModel, ApiUserModel, ApiUserProviderModel, ApiUserTokenModel, JobModel,
-        RfdModel, RfdPdfModel, RfdRevisionModel,
+        ApiKeyModel, ApiUserAccessTokenModel, ApiUserModel, ApiUserProviderModel, JobModel,
+        LoginAttemptModel, RfdModel, RfdPdfModel, RfdRevisionModel,
     },
     permissions::{Permission, Permissions},
     schema::{
-        api_user, api_user_access_token, api_user_provider, api_user_token, job, rfd, rfd_pdf,
-        rfd_revision,
+        api_key, api_user, api_user_access_token, api_user_provider, job, login_attempt, rfd,
+        rfd_pdf, rfd_revision,
     },
     storage::StoreError,
-    AccessToken, ApiUser, ApiUserProvider, ApiUserToken, Job, NewAccessToken, NewApiUser,
-    NewApiUserProvider, NewApiUserToken, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdPdf,
-    RfdRevision,
+    AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LoginAttempt, NewAccessToken, NewApiKey,
+    NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt, NewRfd, NewRfdPdf, NewRfdRevision,
+    Rfd, RfdPdf, RfdRevision,
 };
 
 use super::{
-    AccessTokenFilter, AccessTokenStore, ApiUserFilter, ApiUserProviderFilter,
-    ApiUserProviderStore, ApiUserStore, ApiUserTokenFilter, ApiUserTokenStore, JobFilter, JobStore,
-    ListPagination, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionStore,
-    RfdStore,
+    AccessTokenFilter, AccessTokenStore, ApiKeyFilter, ApiKeyStore, ApiUserFilter,
+    ApiUserProviderFilter, ApiUserProviderStore, ApiUserStore, JobFilter, JobStore, ListPagination,
+    LoginAttemptFilter, LoginAttemptStore, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter,
+    RfdRevisionStore, RfdStore,
 };
 
 pub type DbPool = Pool<ConnectionManager<PgConnection>>;
@@ -512,74 +512,79 @@ where
 }
 
 #[async_trait]
-impl<T> ApiUserTokenStore<T> for PostgresStore
+impl<T> ApiKeyStore<T> for PostgresStore
 where
     T: Permission,
 {
-    async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<ApiUserToken<T>>, StoreError> {
-        let mut query = api_user_token::dsl::api_user_token
+    async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<ApiKey<T>>, StoreError> {
+        let mut query = api_key::dsl::api_key
             .into_boxed()
-            .filter(api_user_token::id.eq(*id));
+            .filter(api_key::id.eq(*id));
 
         if !deleted {
-            query = query.filter(api_user_token::deleted_at.is_null());
+            query = query.filter(api_key::deleted_at.is_null());
         }
 
         let result = query
-            .get_result_async::<ApiUserTokenModel<T>>(&self.conn)
+            .get_result_async::<ApiKeyModel<T>>(&self.conn)
             .await
             .optional()?;
 
-        Ok(result.map(|token| ApiUserToken {
-            id: token.id,
-            api_user_id: token.api_user_id,
-            token: token.token,
-            permissions: token.permissions,
-            expires_at: token.expires_at,
-            created_at: token.created_at,
-            updated_at: token.updated_at,
-            deleted_at: token.deleted_at,
+        Ok(result.map(|key| ApiKey {
+            id: key.id,
+            api_user_id: key.api_user_id,
+            key: key.key,
+            permissions: key.permissions,
+            expires_at: key.expires_at,
+            created_at: key.created_at,
+            updated_at: key.updated_at,
+            deleted_at: key.deleted_at,
         }))
     }
 
     async fn list(
         &self,
-        filter: ApiUserTokenFilter,
+        filter: ApiKeyFilter,
         pagination: &ListPagination,
-    ) -> Result<Vec<ApiUserToken<T>>, StoreError> {
-        let mut query = api_user_token::dsl::api_user_token.into_boxed();
+    ) -> Result<Vec<ApiKey<T>>, StoreError> {
+        let mut query = api_key::dsl::api_key.into_boxed();
 
-        let ApiUserTokenFilter {
+        let ApiKeyFilter {
             api_user_id,
+            key,
             expired,
             deleted,
         } = filter;
 
         if let Some(api_user_id) = api_user_id {
-            query = query.filter(api_user_token::api_user_id.eq_any(api_user_id));
+            query = query.filter(api_key::api_user_id.eq_any(api_user_id));
+        }
+
+        if let Some(key) = key {
+            query = query.filter(api_key::key.eq_any(key));
         }
 
         if !expired {
-            query = query.filter(api_user_token::expires_at.gt(Utc::now()));
+            query = query.filter(api_key::expires_at.gt(Utc::now()));
         }
 
         if !deleted {
-            query = query.filter(api_user_token::deleted_at.is_null());
+            query = query.filter(api_key::deleted_at.is_null());
         }
 
         let results = query
             .offset(pagination.offset)
             .limit(pagination.limit)
-            .order(api_user_token::created_at.desc())
-            .get_results_async::<ApiUserTokenModel<T>>(&self.conn)
+            .order(api_key::created_at.desc())
+            .get_results_async::<ApiKeyModel<T>>(&self.conn)
             .await?;
 
         Ok(results
             .into_iter()
-            .map(|token| ApiUserToken {
+            .map(|token| ApiKey {
                 id: token.id,
                 api_user_id: token.api_user_id,
-                token: token.token,
+                key: token.key,
                 permissions: token.permissions,
                 expires_at: token.expires_at,
                 created_at: token.created_at,
@@ -591,11 +596,11 @@ where
 
     async fn upsert(
         &self,
-        token: NewApiUserToken<T>,
+        key: NewApiKey<T>,
         api_user: &ApiUser<T>,
-    ) -> Result<ApiUserToken<T>, StoreError> {
+    ) -> Result<ApiKey<T>, StoreError> {
         // Validate the the token permissions are a subset of the users permissions
-        let permissions: Permissions<T> = token
+        let permissions: Permissions<T> = key
             .permissions
             .inner()
             .iter()
@@ -612,37 +617,37 @@ where
             .collect::<Vec<T>>()
             .into();
 
-        let token_m: ApiUserTokenModel<T> = insert_into(api_user_token::dsl::api_user_token)
+        let key_m: ApiKeyModel<T> = insert_into(api_key::dsl::api_key)
             .values((
-                api_user_token::id.eq(token.id),
-                api_user_token::api_user_id.eq(token.api_user_id),
-                api_user_token::token.eq(token.token.clone()),
-                api_user_token::expires_at.eq(token.expires_at),
-                api_user_token::permissions.eq(permissions),
+                api_key::id.eq(key.id),
+                api_key::api_user_id.eq(key.api_user_id),
+                api_key::key.eq(key.key.clone()),
+                api_key::expires_at.eq(key.expires_at),
+                api_key::permissions.eq(permissions),
             ))
             .get_result_async(&self.conn)
             .await?;
 
-        Ok(ApiUserToken {
-            id: token_m.id,
-            api_user_id: token_m.api_user_id,
-            token: token_m.token,
-            permissions: token_m.permissions,
-            expires_at: token_m.expires_at,
-            created_at: token_m.created_at,
-            updated_at: token_m.updated_at,
-            deleted_at: token_m.deleted_at,
+        Ok(ApiKey {
+            id: key_m.id,
+            api_user_id: key_m.api_user_id,
+            key: key_m.key,
+            permissions: key_m.permissions,
+            expires_at: key_m.expires_at,
+            created_at: key_m.created_at,
+            updated_at: key_m.updated_at,
+            deleted_at: key_m.deleted_at,
         })
     }
 
-    async fn delete(&self, id: &Uuid) -> Result<Option<ApiUserToken<T>>, StoreError> {
-        let _ = update(api_user_token::dsl::api_user_token)
-            .filter(api_user_token::id.eq(*id))
-            .set(api_user_token::deleted_at.eq(Utc::now()))
+    async fn delete(&self, id: &Uuid) -> Result<Option<ApiKey<T>>, StoreError> {
+        let _ = update(api_key::dsl::api_key)
+            .filter(api_key::id.eq(*id))
+            .set(api_key::deleted_at.eq(Utc::now()))
             .execute_async(&self.conn)
             .await?;
 
-        ApiUserTokenStore::get(self, id, true).await
+        ApiKeyStore::get(self, id, true).await
     }
 }
 
@@ -862,5 +867,93 @@ impl AccessTokenStore for PostgresStore {
             created_at: token_m.created_at,
             updated_at: token_m.updated_at,
         })
+    }
+}
+
+#[async_trait]
+impl LoginAttemptStore for PostgresStore {
+    async fn get(&self, id: &Uuid) -> Result<Option<LoginAttempt>, StoreError> {
+        let query = login_attempt::dsl::login_attempt
+            .into_boxed()
+            .filter(login_attempt::id.eq(*id));
+
+        let result = query
+            .get_result_async::<LoginAttemptModel>(&self.conn)
+            .await
+            .optional()?;
+
+        Ok(result.map(|attempt| attempt.into()))
+    }
+
+    async fn list(
+        &self,
+        filter: LoginAttemptFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<LoginAttempt>, StoreError> {
+        let mut query = login_attempt::dsl::login_attempt.into_boxed();
+
+        let LoginAttemptFilter {
+            id,
+            client_id,
+            attempt_state,
+            authz_code,
+        } = filter;
+
+        if let Some(id) = id {
+            query = query.filter(login_attempt::id.eq_any(id));
+        }
+
+        if let Some(client_id) = client_id {
+            query = query.filter(login_attempt::client_id.eq_any(client_id));
+        }
+
+        if let Some(attempt_state) = attempt_state {
+            query = query.filter(login_attempt::attempt_state.eq_any(attempt_state));
+        }
+
+        if let Some(authz_code) = authz_code {
+            query = query.filter(login_attempt::authz_code.eq_any(authz_code));
+        }
+
+        let results = query
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+            .order(login_attempt::created_at.desc())
+            .get_results_async::<LoginAttemptModel>(&self.conn)
+            .await?;
+
+        Ok(results.into_iter().map(|model| model.into()).collect())
+    }
+
+    async fn upsert(&self, attempt: NewLoginAttempt) -> Result<LoginAttempt, StoreError> {
+        let attempt_m: LoginAttemptModel = insert_into(login_attempt::dsl::login_attempt)
+            .values((
+                login_attempt::id.eq(attempt.id),
+                login_attempt::attempt_state.eq(attempt.attempt_state),
+                login_attempt::client_id.eq(attempt.client_id),
+                login_attempt::redirect_uri.eq(attempt.redirect_uri),
+                login_attempt::state.eq(attempt.state),
+                login_attempt::pkce_challenge.eq(attempt.pkce_challenge),
+                login_attempt::pkce_challenge_method.eq(attempt.pkce_challenge_method),
+                login_attempt::authz_code.eq(attempt.authz_code),
+                login_attempt::expires_at.eq(attempt.expires_at),
+                login_attempt::provider.eq(attempt.provider),
+                login_attempt::provider_state.eq(attempt.provider_state),
+                login_attempt::provider_pkce_verifier.eq(attempt.provider_pkce_verifier),
+                login_attempt::provider_authz_code.eq(attempt.provider_authz_code),
+            ))
+            .on_conflict(login_attempt::id)
+            .do_update()
+            .set((
+                login_attempt::attempt_state.eq(excluded(login_attempt::attempt_state)),
+                login_attempt::authz_code.eq(excluded(login_attempt::authz_code)),
+                login_attempt::expires_at.eq(excluded(login_attempt::expires_at)),
+                login_attempt::provider_authz_code.eq(excluded(login_attempt::provider_authz_code)),
+                login_attempt::updated_at.eq(Utc::now()),
+            ))
+            .get_result_async(&self.conn)
+            .await?;
+
+        Ok(attempt_m.into())
     }
 }
