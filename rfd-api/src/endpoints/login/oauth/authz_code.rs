@@ -22,7 +22,7 @@ use crate::{
     context::ApiContext,
     endpoints::login::LoginError,
     error::ApiError,
-    util::response::{bad_request, client_error, internal_error, to_internal_error},
+    util::response::{bad_request, client_error, internal_error, to_internal_error}, authn::key::RawApiKey,
 };
 
 #[derive(Debug, Deserialize, JsonSchema, Serialize)]
@@ -176,6 +176,7 @@ pub async fn authz_code_return(
 #[derive(Debug, Deserialize, JsonSchema, Serialize)]
 pub struct OAuthAuthzCodeExchangeQuery {
     pub client_id: Uuid,
+    pub client_secret: String,
     pub redirect_uri: String,
     pub grant_type: String,
     pub code: String,
@@ -192,7 +193,7 @@ pub struct OAuthAuthzCodeExchangeResponse {
 /// Exchange an authorization code for an access token
 #[endpoint {
     method = GET,
-    path = "/login/oauth/{provider}/authz_code/exchange"
+    path = "/login/oauth/{provider}/authz_code/token"
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn authz_code_exchange(
@@ -213,13 +214,22 @@ pub async fn authz_code_exchange(
         return Err(bad_request("Invalid grant type"));
     }
 
+    let client_secret = RawApiKey::new(query.client_secret.clone()).encrypt(&*ctx.api_key.encryptor).await.map_err(to_internal_error)?;
+
     ctx.get_oauth_client(&query.client_id)
         .await
         .map_err(to_internal_error)?
         .ok_or_else(|| client_error(StatusCode::UNAUTHORIZED, "Invalid client"))
         .and_then(|client| {
             if client.is_redirect_uri_valid(&query.redirect_uri) {
-                Ok(client)
+                if client.is_secret_valid(&client_secret.encrypted) {
+                    Ok(client)
+                } else {
+                    Err(client_error(
+                        StatusCode::UNAUTHORIZED,
+                        "Invalid secret",
+                    ))    
+                }
             } else {
                 Err(client_error(
                     StatusCode::UNAUTHORIZED,

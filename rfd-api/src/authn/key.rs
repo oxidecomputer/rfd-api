@@ -20,6 +20,10 @@ pub enum KeyEncryptionFailure {
 }
 
 impl RawApiKey {
+    pub fn new(key: String) -> Self {
+        Self { clear: key }
+    }
+
     // Generate a new API key
     pub fn generate<const N: usize>() -> Self {
         // Generate random data to extend the token id with
