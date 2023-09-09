@@ -7,7 +7,11 @@ use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
-    context::ApiContext, error::ApiError, permissions::ApiPermission, util::response::client_error,
+    authn::key::RawApiKey,
+    context::ApiContext,
+    error::ApiError,
+    permissions::ApiPermission,
+    util::response::{client_error, to_internal_error},
     ApiCaller,
 };
 
@@ -138,12 +142,19 @@ async fn create_oauth_client_secret_op(
     path: &AddOAuthClientSecretPath,
 ) -> Result<HttpResponseOk<OAuthClientSecret>, HttpError> {
     if caller.can(&ApiPermission::CreateOAuthClientSecret(path.client_id)) {
-        let secret = String::new();
+        let secret = RawApiKey::generate::<24>();
         let mut client_secret = ctx
-            .add_oauth_secret(&path.client_id, &secret)
+            .add_oauth_secret(
+                &path.client_id,
+                &secret
+                    .encrypt(&*ctx.api_key.encryptor)
+                    .await
+                    .map_err(to_internal_error)?
+                    .encrypted,
+            )
             .await
             .map_err(ApiError::Storage)?;
-        client_secret.secret = secret;
+        client_secret.secret = secret.consume();
 
         Ok(HttpResponseOk(client_secret))
     } else {

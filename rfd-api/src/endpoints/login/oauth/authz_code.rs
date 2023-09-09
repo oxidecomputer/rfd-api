@@ -3,6 +3,7 @@ use dropshot::{
     endpoint, http_response_temporary_redirect, HttpError, HttpResponseOk,
     HttpResponseTemporaryRedirect, Path, Query, RequestContext,
 };
+use http::StatusCode;
 use oauth2::{
     reqwest::async_http_client, AuthorizationCode, CsrfToken, PkceCodeChallenge, PkceCodeVerifier,
     Scope, TokenResponse,
@@ -21,7 +22,7 @@ use crate::{
     context::ApiContext,
     endpoints::login::LoginError,
     error::ApiError,
-    util::response::{bad_request, internal_error, to_internal_error},
+    util::response::{bad_request, client_error, internal_error, to_internal_error},
 };
 
 #[derive(Debug, Deserialize, JsonSchema, Serialize)]
@@ -46,6 +47,22 @@ pub async fn authz_code_redirect(
     let ctx = rqctx.context();
     let path = path.into_inner();
     let query = query.into_inner();
+
+    ctx.get_oauth_client(&query.client_id)
+        .await
+        .map_err(to_internal_error)?
+        .ok_or_else(|| client_error(StatusCode::UNAUTHORIZED, "Invalid client"))
+        .and_then(|client| {
+            if client.is_redirect_uri_valid(&query.redirect_uri) {
+                Ok(client)
+            } else {
+                Err(client_error(
+                    StatusCode::UNAUTHORIZED,
+                    "Invalid redirect uri",
+                ))
+            }
+        })?;
+
     let provider = ctx
         .get_oauth_provider(&path.provider)
         .await
@@ -195,6 +212,21 @@ pub async fn authz_code_exchange(
     if &query.grant_type != "authorization_code" {
         return Err(bad_request("Invalid grant type"));
     }
+
+    ctx.get_oauth_client(&query.client_id)
+        .await
+        .map_err(to_internal_error)?
+        .ok_or_else(|| client_error(StatusCode::UNAUTHORIZED, "Invalid client"))
+        .and_then(|client| {
+            if client.is_redirect_uri_valid(&query.redirect_uri) {
+                Ok(client)
+            } else {
+                Err(client_error(
+                    StatusCode::UNAUTHORIZED,
+                    "Invalid redirect uri",
+                ))
+            }
+        })?;
 
     // Lookup the request assigned to this code and verify that it is a valid request
     let attempt = ctx
