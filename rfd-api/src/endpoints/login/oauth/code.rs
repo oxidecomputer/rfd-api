@@ -36,7 +36,7 @@ pub struct OAuthAuthzCodeQuery {
 /// Generate the remote provider login url and redirect the user
 #[endpoint {
     method = GET,
-    path = "/login/oauth/{provider}/authz_code/authorize"
+    path = "/login/oauth/{provider}/code/authorize"
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn authz_code_redirect(
@@ -79,12 +79,15 @@ pub async fn authz_code_redirect(
         query.redirect_uri,
         provider.name().to_string(),
         CsrfToken::new_random().secret().to_string(),
-        pkce_verifier.secret().to_string(),
     )
     .map_err(|err| {
         tracing::error!(?err, "Attempted to construct invalid login attempt");
         internal_error("Attempted to construct invalid login attempt".to_string())
     })?;
+
+    if provider.supports_pkce() {
+        attempt.provider_pkce_verifier = Some(pkce_verifier.secret().to_string());
+    }
 
     // Add in the user defined state and redirect uri
     attempt.state = Some(query.state);
@@ -121,10 +124,10 @@ pub struct OAuthAuthzCodeReturnQuery {
 /// Handle return calls from a remote OAuth provider
 #[endpoint {
     method = GET,
-    path = "/login/oauth/{provider}/authz_code/return"
+    path = "/login/oauth/{provider}/code/callback"
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
-pub async fn authz_code_return(
+pub async fn authz_code_callback(
     rqctx: RequestContext<ApiContext>,
     path: Path<OAuthProviderNameParam>,
     query: Query<OAuthAuthzCodeReturnQuery>,
@@ -224,7 +227,7 @@ pub struct OAuthAuthzCodeExchangeResponse {
 /// Exchange an authorization code for an access token
 #[endpoint {
     method = GET,
-    path = "/login/oauth/{provider}/authz_code/token"
+    path = "/login/oauth/{provider}/code/token"
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn authz_code_exchange(
@@ -293,13 +296,18 @@ pub async fn authz_code_exchange(
 
     // Exchange the stored authorization code with the remote provider for a remote access token
     let client = provider.as_client().map_err(to_internal_error)?;
-    let response = client
+    let mut request = client
         .exchange_code(AuthorizationCode::new(
             attempt.provider_authz_code.ok_or_else(|| {
                 internal_error("Expected authorization code to exist due to attempt state")
             })?,
-        ))
-        .set_pkce_verifier(PkceCodeVerifier::new(attempt.provider_pkce_verifier))
+        ));
+
+    if let Some(pkce_verifier) = attempt.provider_pkce_verifier {
+        request = request.set_pkce_verifier(PkceCodeVerifier::new(pkce_verifier))
+    }
+
+    let response = request
         .request_async(async_http_client)
         .await
         .map_err(to_internal_error)?;

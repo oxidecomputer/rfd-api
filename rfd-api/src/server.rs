@@ -14,7 +14,7 @@ use crate::{
             get_api_user_token, get_self, list_api_user_tokens, update_api_user,
         },
         login::oauth::{
-            authz_code::{authz_code_exchange, authz_code_redirect, authz_code_return},
+            code::{authz_code_exchange, authz_code_redirect, authz_code_callback},
             client::{
                 create_oauth_client, create_oauth_client_redirect_uri, create_oauth_client_secret,
                 delete_oauth_client_redirect_uri, delete_oauth_client_secret, get_oauth_client,
@@ -97,7 +97,7 @@ pub fn server(
 
     // OAuth Authorization Login
     api.register(authz_code_redirect).unwrap();
-    api.register(authz_code_return).unwrap();
+    api.register(authz_code_callback).unwrap();
     api.register(authz_code_exchange).unwrap();
 
     // OAuth Device Login

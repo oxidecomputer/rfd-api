@@ -230,7 +230,7 @@ pub struct LoginAttempt {
     pub error: Option<String>,
     pub provider: String,
     pub provider_state: String,
-    pub provider_pkce_verifier: String,
+    pub provider_pkce_verifier: Option<String>,
     pub provider_authz_code: Option<String>,
     pub provider_error: Option<String>,
     #[partial(NewLoginAttempt(skip))]
@@ -283,7 +283,6 @@ impl NewLoginAttempt {
         redirect_uri: String,
         provider: String,
         provider_state: String,
-        provider_pkce_verifier: String,
     ) -> Result<Self, InvalidValueError> {
         Ok(Self {
             id: Uuid::new_v4(),
@@ -298,7 +297,7 @@ impl NewLoginAttempt {
             error: None,
             provider,
             provider_state,
-            provider_pkce_verifier,
+            provider_pkce_verifier: None,
             provider_authz_code: None,
             provider_error: None,
         })

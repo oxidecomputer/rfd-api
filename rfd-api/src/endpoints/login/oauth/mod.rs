@@ -11,7 +11,7 @@ use tracing::instrument;
 
 use super::{UserInfo, UserInfoError, UserInfoProvider};
 
-pub mod authz_code;
+pub mod code;
 pub mod client;
 pub mod device_token;
 pub mod google;
@@ -32,6 +32,7 @@ pub trait OAuthProvider: ExtractUserInfo + Debug {
     fn auth_url_endpoint(&self) -> &str;
     fn token_exchange_content_type(&self) -> &str;
     fn token_exchange_endpoint(&self) -> &str;
+    fn supports_pkce(&self) -> bool;
 
     fn provider_info(&self, public_url: &str) -> OAuthProviderInfo {
         OAuthProviderInfo {

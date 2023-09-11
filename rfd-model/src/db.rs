@@ -132,7 +132,7 @@ pub struct LoginAttemptModel {
     pub error: Option<String>,
     pub provider: String,
     pub provider_state: String,
-    pub provider_pkce_verifier: String,
+    pub provider_pkce_verifier: Option<String>,
     pub provider_authz_code: Option<String>,
     pub provider_error: Option<String>,
     pub created_at: DateTime<Utc>,

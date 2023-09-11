@@ -99,4 +99,8 @@ impl OAuthProvider for GoogleOAuthProvider {
     fn token_exchange_endpoint(&self) -> &str {
         "https://oauth2.googleapis.com/token"
     }
+
+    fn supports_pkce(&self) -> bool {
+        true
+    }
 }
