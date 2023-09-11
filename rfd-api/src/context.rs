@@ -636,9 +636,13 @@ impl ApiContext {
     pub async fn fail_login_attempt(
         &self,
         attempt: LoginAttempt,
+        error: Option<&str>,
+        provider_error: Option<&str>,
     ) -> Result<LoginAttempt, StoreError> {
         let mut attempt: NewLoginAttempt = attempt.into();
         attempt.attempt_state = LoginAttemptState::Failed;
+        attempt.error = error.map(|s| s.to_string());
+        attempt.provider_error = provider_error.map(|s| s.to_string());
         LoginAttemptStore::upsert(&*self.storage, attempt).await
     }
 

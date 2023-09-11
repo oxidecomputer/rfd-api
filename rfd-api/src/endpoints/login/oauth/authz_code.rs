@@ -113,8 +113,9 @@ pub async fn authz_code_redirect(
 
 #[derive(Debug, Deserialize, JsonSchema, Serialize)]
 pub struct OAuthAuthzCodeReturnQuery {
-    pub state: String,
-    pub code: String,
+    pub state: Option<String>,
+    pub code: Option<String>,
+    pub error: Option<String>,
 }
 
 /// Handle return calls from a remote OAuth provider
@@ -138,40 +139,70 @@ pub async fn authz_code_return(
 
     tracing::debug!(provider = ?provider.name(), "Acquired OAuth provider for authz code exchange");
 
-    // Attempt to extract the request id and csrf token from the state parameter. These must both
-    // be present
-    let (id, csrf) = query
-        .state
-        .split_once(":")
-        .and_then(|(id, csrf)| id.parse::<Uuid>().ok().map(|id| (id, csrf)))
-        .ok_or_else(|| bad_request("Invalid state".to_string()))?;
+    let original_attempt = match query.state {
+        Some(state) => {
 
-    // Look up the login attempt referenced in the state and verify that has the csrf value still
-    // matches
-    let original_attempt = ctx
-        .get_login_attempt(&id)
-        .await
-        .map_err(to_internal_error)?
-        .ok_or_else(|| bad_request("Invalid login attempt".to_string()))?;
+            // Attempt to extract the request id and csrf token from the state parameter. These
+            // must both be present
+            if let Some((id, csrf)) = state
+                .split_once(":")
+                .and_then(|(id, csrf)| id.parse::<Uuid>().ok().map(|id| (id, csrf))) {
 
-    // Verify the csrf token. If these do not match, then fail the request
-    if original_attempt.provider_state != csrf {
-        ctx.fail_login_attempt(original_attempt)
-            .await
-            .map_err(to_internal_error)?;
-        return Err(bad_request("Invalid csrf".to_string()));
-    }
+                    // Look up the login attempt referenced in the state and verify that has the
+                    // csrf value still matches
+                    ctx
+                        .get_login_attempt(&id)
+                        .await
+                        .map_err(to_internal_error)?
+                        .and_then(|attempt| {
+                            if attempt.state.as_ref().map(|s| s == csrf).unwrap_or(false) {
+                                Some(attempt)
+                            } else {
+                                None
+                            }
+                        })
+                } else {
+                    None
+                }
+        },
+        None => None
+    };
 
-    // Store the authorization code returned by the underlying OAuth provider and transition the
-    // attempt to the awaiting state
-    let attempt = ctx
-        .set_login_provider_authz_code(original_attempt, query.code)
-        .await
-        .map_err(to_internal_error)?;
+    // If an attempt could not be found than the server needs to fail with an internal server error.
+    // We do not have a redirect_uri to send the user to. This is a deficiency in how login attempts
+    // are tracked. They are currently tracked without storing any state on the client, and as such
+    // are fully dependent on the state parameter. Instead a very short lived cookie should be used
+    // to track the attempt that the client is making so that we can restore the attempt without
+    // use of the state parameter
+    let mut attempt = original_attempt
+        .ok_or_else(|| internal_error("Failed to load matching login attempt"))?;
+
+    attempt = match (query.code, query.error) {
+        (Some(code), None) => {
+
+            // Store the authorization code returned by the underlying OAuth provider and transition the
+            // attempt to the awaiting state
+            ctx
+                .set_login_provider_authz_code(attempt, code.to_string())
+                .await
+                .map_err(to_internal_error)?
+        }
+        (code, error) => {
+
+            // Store the provider return error for future debugging, but if an error has been
+            // returned or there is a missing code, then we can not report a successful process
+            attempt.provider_authz_code = code;
+
+            // TODO: Specialize the returned error
+            ctx.fail_login_attempt(attempt, Some("server_error"), error.as_deref()).await.map_err(to_internal_error)?
+        }
+    };
 
     // Redirect back to the original authenticator
     http_response_temporary_redirect(attempt.callback_url())
 }
+
+
 
 #[derive(Debug, Deserialize, JsonSchema, Serialize)]
 pub struct OAuthAuthzCodeExchangeQuery {

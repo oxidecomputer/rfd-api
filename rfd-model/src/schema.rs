@@ -89,10 +89,12 @@ diesel::table! {
         pkce_challenge_method -> Nullable<Varchar>,
         authz_code -> Nullable<Varchar>,
         expires_at -> Nullable<Timestamptz>,
+        error -> Nullable<Varchar>,
         provider -> Varchar,
         provider_state -> Varchar,
         provider_pkce_verifier -> Varchar,
         provider_authz_code -> Nullable<Varchar>,
+        provider_error -> Nullable<Varchar>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
     }

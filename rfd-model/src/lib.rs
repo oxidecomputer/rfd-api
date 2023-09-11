@@ -227,10 +227,12 @@ pub struct LoginAttempt {
     pub pkce_challenge_method: Option<String>,
     pub authz_code: Option<String>,
     pub expires_at: Option<DateTime<Utc>>,
+    pub error: Option<String>,
     pub provider: String,
     pub provider_state: String,
     pub provider_pkce_verifier: String,
     pub provider_authz_code: Option<String>,
+    pub provider_error: Option<String>,
     #[partial(NewLoginAttempt(skip))]
     pub created_at: DateTime<Utc>,
     #[partial(NewLoginAttempt(skip))]
@@ -245,8 +247,12 @@ impl LoginAttempt {
             params.insert("state", state);
         }
 
-        if let Some(authz_code) = &self.authz_code {
-            params.insert("code", authz_code);
+        if let Some(error) = &self.error {
+            params.insert("error", error);
+        } else {
+            if let Some(authz_code) = &self.authz_code {
+                params.insert("code", authz_code);
+            }
         }
 
         let query_string = params
@@ -289,10 +295,12 @@ impl NewLoginAttempt {
             pkce_challenge_method: None,
             authz_code: None,
             expires_at: None,
+            error: None,
             provider,
             provider_state,
             provider_pkce_verifier,
             provider_authz_code: None,
+            provider_error: None,
         })
     }
 }
@@ -309,10 +317,12 @@ impl From<LoginAttemptModel> for LoginAttempt {
             pkce_challenge_method: value.pkce_challenge_method,
             authz_code: value.authz_code,
             expires_at: value.expires_at,
+            error: None,
             provider: value.provider,
             provider_state: value.provider_state,
             provider_pkce_verifier: value.provider_pkce_verifier,
             provider_authz_code: value.provider_authz_code,
+            provider_error: value.provider_error,
             created_at: value.created_at,
             updated_at: value.updated_at,
         }

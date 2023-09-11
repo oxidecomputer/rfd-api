@@ -129,10 +129,12 @@ pub struct LoginAttemptModel {
     pub pkce_challenge_method: Option<String>,
     pub authz_code: Option<String>,
     pub expires_at: Option<DateTime<Utc>>,
+    pub error: Option<String>,
     pub provider: String,
     pub provider_state: String,
     pub provider_pkce_verifier: String,
     pub provider_authz_code: Option<String>,
+    pub provider_error: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
 }

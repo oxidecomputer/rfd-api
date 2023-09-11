@@ -11,11 +11,13 @@ CREATE TABLE login_attempt(
   pkce_challenge_method VARCHAR,
   authz_code VARCHAR,
   expires_at TIMESTAMPTZ,
+  error VARCHAR,
 
   provider VARCHAR NOT NULL,
   provider_state VARCHAR NOT NULL UNIQUE,
   provider_pkce_verifier VARCHAR NOT NULL,
   provider_authz_code VARCHAR,
+  provider_error VARCHAR,
 
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
