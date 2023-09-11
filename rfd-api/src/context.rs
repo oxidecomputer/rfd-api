@@ -34,7 +34,7 @@ use crate::{
         key::{key_to_encryptor, KeyEncryptor},
         AuthError, AuthToken,
     },
-    config::{JwtConfig, PermissionsConfig, AsymmetricKey},
+    config::{AsymmetricKey, JwtConfig, PermissionsConfig},
     email_validator::EmailValidator,
     endpoints::login::{
         oauth::{OAuthProvider, OAuthProviderError, OAuthProviderFn, OAuthProviderName},
@@ -189,7 +189,7 @@ impl ApiContext {
             permissions: PermissionsContext {
                 default: permissions.default.into(),
             },
-            
+
             jwt: JwtContext {
                 default_expiration: jwt.default_expiration,
                 max_expiration: jwt.max_expiration,
@@ -392,6 +392,9 @@ impl ApiContext {
         filter.provider_id = Some(vec![info.external_id.id().to_string()]);
 
         tracing::info!("Check for existing users matching the requested external id");
+
+        // TODO: Handle user merging. When a user signs in with a verified email that we have
+        // already seen how do we handle merges?
 
         let api_user_providers = self
             .list_api_user_provider(filter, &ListPagination::latest())

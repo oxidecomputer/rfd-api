@@ -1,7 +1,11 @@
 use async_trait::async_trait;
 use dropshot::Method;
 use http::{header, Request};
-use hyper::{body::to_bytes, client::connect::Connect, Body, Client};
+use hyper::{
+    body::{to_bytes, Bytes},
+    client::connect::Connect,
+    Body, Client,
+};
 use oauth2::{basic::BasicClient, url::ParseError, AuthUrl, ClientId, ClientSecret, TokenUrl};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -11,9 +15,10 @@ use tracing::instrument;
 
 use super::{UserInfo, UserInfoError, UserInfoProvider};
 
-pub mod code;
 pub mod client;
+pub mod code;
 pub mod device_token;
+pub mod github;
 pub mod google;
 
 #[derive(Debug, Error)]
@@ -27,7 +32,9 @@ pub trait OAuthProvider: ExtractUserInfo + Debug {
     fn scopes(&self) -> Vec<&str>;
     fn client_id(&self) -> &str;
     fn client_secret(&self) -> Option<&str>;
-    fn user_info_endpoint(&self) -> &str;
+
+    // TODO: How can user info be change to something statically checked instead of a runtime check
+    fn user_info_endpoints(&self) -> Vec<&str>;
     fn device_code_endpoint(&self) -> &str;
     fn auth_url_endpoint(&self) -> &str;
     fn token_exchange_content_type(&self) -> &str;
@@ -61,7 +68,7 @@ pub trait OAuthProvider: ExtractUserInfo + Debug {
 }
 
 pub trait ExtractUserInfo {
-    fn extract_user_info(&self, data: &[u8]) -> Result<UserInfo, UserInfoError>;
+    fn extract_user_info(&self, data: &[Bytes]) -> Result<UserInfo, UserInfoError>;
 }
 
 // Trait describing an factory function for constructing an OAuthProvider
@@ -87,20 +94,26 @@ where
     {
         tracing::trace!("Requesting user information from OAuth provider");
 
-        let request = Request::builder()
-            .method(Method::GET)
-            .header(header::AUTHORIZATION, format!("Bearer {}", token))
-            .uri(self.user_info_endpoint())
-            .body(Body::empty())?;
+        let mut responses = vec![];
 
-        let response = client.request(request).await?;
+        for endpoint in self.user_info_endpoints() {
+            let request = Request::builder()
+                .method(Method::GET)
+                .header(header::AUTHORIZATION, format!("Bearer {}", token))
+                .uri(endpoint)
+                .body(Body::empty())?;
 
-        tracing::trace!(status = ?response.status(), "Received response from OAuth provider");
+            let response = client.request(request).await?;
 
-        let body = response.into_body();
-        let bytes = to_bytes(body).await?;
+            tracing::trace!(status = ?response.status(), "Received response from OAuth provider");
 
-        self.extract_user_info(&bytes)
+            let body = response.into_body();
+            let bytes = to_bytes(body).await?;
+
+            responses.push(bytes);
+        }
+
+        self.extract_user_info(&responses)
     }
 }
 
@@ -117,12 +130,14 @@ pub struct OAuthProviderInfo {
 #[derive(Debug, Deserialize, PartialEq, Eq, Hash, Serialize, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
 pub enum OAuthProviderName {
+    GitHub,
     Google,
 }
 
 impl Display for OAuthProviderName {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            OAuthProviderName::GitHub => write!(f, "github"),
             OAuthProviderName::Google => write!(f, "google"),
         }
     }

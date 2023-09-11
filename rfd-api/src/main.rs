@@ -16,7 +16,7 @@ use tracing_subscriber::EnvFilter;
 use crate::{
     config::{AppConfig, ServerLogFormat},
     email_validator::DomainValidator,
-    endpoints::login::oauth::{google::GoogleOAuthProvider, OAuthProviderName},
+    endpoints::login::oauth::{google::GoogleOAuthProvider, OAuthProviderName, github::GitHubOAuthProvider},
 };
 
 mod authn;
@@ -63,6 +63,18 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         config.keys,
     )
     .await?;
+
+    if let Some(github) = config.authn.oauth.github {
+        context.insert_oauth_provider(
+            OAuthProviderName::GitHub,
+            Box::new(move || {
+                Box::new(GitHubOAuthProvider::new(
+                    github.client_id.clone(),
+                    github.client_secret.clone(),
+                ))
+            }),
+        )
+    }
 
     if let Some(google) = config.authn.oauth.google {
         context.insert_oauth_provider(

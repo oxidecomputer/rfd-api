@@ -19,10 +19,11 @@ use uuid::Uuid;
 
 use super::{OAuthProviderNameParam, UserInfoProvider};
 use crate::{
+    authn::key::RawApiKey,
     context::ApiContext,
     endpoints::login::LoginError,
     error::ApiError,
-    util::response::{bad_request, client_error, internal_error, to_internal_error}, authn::key::RawApiKey,
+    util::response::{bad_request, client_error, internal_error, to_internal_error},
 };
 
 #[derive(Debug, Deserialize, JsonSchema, Serialize)]
@@ -144,31 +145,29 @@ pub async fn authz_code_callback(
 
     let original_attempt = match query.state {
         Some(state) => {
-
             // Attempt to extract the request id and csrf token from the state parameter. These
             // must both be present
             if let Some((id, csrf)) = state
                 .split_once(":")
-                .and_then(|(id, csrf)| id.parse::<Uuid>().ok().map(|id| (id, csrf))) {
-
-                    // Look up the login attempt referenced in the state and verify that has the
-                    // csrf value still matches
-                    ctx
-                        .get_login_attempt(&id)
-                        .await
-                        .map_err(to_internal_error)?
-                        .and_then(|attempt| {
-                            if attempt.state.as_ref().map(|s| s == csrf).unwrap_or(false) {
-                                Some(attempt)
-                            } else {
-                                None
-                            }
-                        })
-                } else {
-                    None
-                }
-        },
-        None => None
+                .and_then(|(id, csrf)| id.parse::<Uuid>().ok().map(|id| (id, csrf)))
+            {
+                // Look up the login attempt referenced in the state and verify that has the
+                // csrf value still matches
+                ctx.get_login_attempt(&id)
+                    .await
+                    .map_err(to_internal_error)?
+                    .and_then(|attempt| {
+                        if attempt.state.as_ref().map(|s| s == csrf).unwrap_or(false) {
+                            Some(attempt)
+                        } else {
+                            None
+                        }
+                    })
+            } else {
+                None
+            }
+        }
+        None => None,
     };
 
     // If an attempt could not be found than the server needs to fail with an internal server error.
@@ -177,35 +176,32 @@ pub async fn authz_code_callback(
     // are fully dependent on the state parameter. Instead a very short lived cookie should be used
     // to track the attempt that the client is making so that we can restore the attempt without
     // use of the state parameter
-    let mut attempt = original_attempt
-        .ok_or_else(|| internal_error("Failed to load matching login attempt"))?;
+    let mut attempt =
+        original_attempt.ok_or_else(|| internal_error("Failed to load matching login attempt"))?;
 
     attempt = match (query.code, query.error) {
         (Some(code), None) => {
-
             // Store the authorization code returned by the underlying OAuth provider and transition the
             // attempt to the awaiting state
-            ctx
-                .set_login_provider_authz_code(attempt, code.to_string())
+            ctx.set_login_provider_authz_code(attempt, code.to_string())
                 .await
                 .map_err(to_internal_error)?
         }
         (code, error) => {
-
             // Store the provider return error for future debugging, but if an error has been
             // returned or there is a missing code, then we can not report a successful process
             attempt.provider_authz_code = code;
 
             // TODO: Specialize the returned error
-            ctx.fail_login_attempt(attempt, Some("server_error"), error.as_deref()).await.map_err(to_internal_error)?
+            ctx.fail_login_attempt(attempt, Some("server_error"), error.as_deref())
+                .await
+                .map_err(to_internal_error)?
         }
     };
 
     // Redirect back to the original authenticator
     http_response_temporary_redirect(attempt.callback_url())
 }
-
-
 
 #[derive(Debug, Deserialize, JsonSchema, Serialize)]
 pub struct OAuthAuthzCodeExchangeQuery {
@@ -248,7 +244,10 @@ pub async fn authz_code_exchange(
         return Err(bad_request("Invalid grant type"));
     }
 
-    let client_secret = RawApiKey::new(query.client_secret.clone()).encrypt(&*ctx.secrets.encryptor).await.map_err(to_internal_error)?;
+    let client_secret = RawApiKey::new(query.client_secret.clone())
+        .encrypt(&*ctx.secrets.encryptor)
+        .await
+        .map_err(to_internal_error)?;
 
     ctx.get_oauth_client(&query.client_id)
         .await
@@ -259,10 +258,7 @@ pub async fn authz_code_exchange(
                 if client.is_secret_valid(&client_secret.encrypted) {
                     Ok(client)
                 } else {
-                    Err(client_error(
-                        StatusCode::UNAUTHORIZED,
-                        "Invalid secret",
-                    ))    
+                    Err(client_error(StatusCode::UNAUTHORIZED, "Invalid secret"))
                 }
             } else {
                 Err(client_error(
@@ -296,12 +292,11 @@ pub async fn authz_code_exchange(
 
     // Exchange the stored authorization code with the remote provider for a remote access token
     let client = provider.as_client().map_err(to_internal_error)?;
-    let mut request = client
-        .exchange_code(AuthorizationCode::new(
-            attempt.provider_authz_code.ok_or_else(|| {
-                internal_error("Expected authorization code to exist due to attempt state")
-            })?,
-        ));
+    let mut request = client.exchange_code(AuthorizationCode::new(
+        attempt.provider_authz_code.ok_or_else(|| {
+            internal_error("Expected authorization code to exist due to attempt state")
+        })?,
+    ));
 
     if let Some(pkce_verifier) = attempt.provider_pkce_verifier {
         request = request.set_pkce_verifier(PkceCodeVerifier::new(pkce_verifier))

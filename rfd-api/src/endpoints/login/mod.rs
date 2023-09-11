@@ -151,12 +151,14 @@ pub struct UserInfo {
 
 #[derive(Debug, Error)]
 pub enum UserInfoError {
+    #[error("Failed to deserialize user info {0}")]
+    Deserialize(#[from] serde_json::Error),
     #[error("Failed to create user info request {0}")]
     Http(#[from] http::Error),
     #[error("Failed to send user info request {0}")]
     Hyper(#[from] hyper::Error),
-    #[error("Failed to deserialize user info {0}")]
-    Deserialize(#[from] serde_json::Error),
+    #[error("User information is missing")]
+    MissingUserInfoData(String),
 }
 
 #[async_trait]

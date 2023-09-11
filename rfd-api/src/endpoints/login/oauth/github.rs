@@ -7,67 +7,75 @@ use crate::endpoints::login::{ExternalUserId, UserInfo, UserInfoError};
 
 use super::{ExtractUserInfo, OAuthProvider, OAuthProviderName};
 
-pub struct GoogleOAuthProvider {
-    public: GooglePublicProvider,
-    private: Option<GooglePrivateProvider>,
+pub struct GitHubOAuthProvider {
+    public: GitHubPublicProvider,
+    private: Option<GitHubPrivateProvider>,
 }
 
-impl fmt::Debug for GoogleOAuthProvider {
+impl fmt::Debug for GitHubOAuthProvider {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("GoogleOAuthProvider").finish()
+        f.debug_struct("GitHubOAuthProvider").finish()
     }
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct GooglePublicProvider {
+pub struct GitHubPublicProvider {
     client_id: String,
 }
 
-pub struct GooglePrivateProvider {
+pub struct GitHubPrivateProvider {
     client_secret: String,
 }
 
-impl GoogleOAuthProvider {
+impl GitHubOAuthProvider {
     pub fn new(client_id: String, client_secret: String) -> Self {
         Self {
-            public: GooglePublicProvider { client_id },
-            private: Some(GooglePrivateProvider { client_secret }),
+            public: GitHubPublicProvider { client_id },
+            private: Some(GitHubPrivateProvider { client_secret }),
         }
     }
 }
 
 #[derive(Debug, Deserialize)]
-struct GoogleUserInfo {
-    sub: String,
-    email: String,
-    email_verified: bool,
+struct GitHubUser {
+    id: String,
 }
 
-impl ExtractUserInfo for GoogleOAuthProvider {
+#[derive(Debug, Deserialize)]
+struct GitHubUserEmails {
+    email: String,
+    verified: bool,
+    // TODO: Add ability to mask non-visible emails?
+    _visibility: Option<String>,
+}
+
+impl ExtractUserInfo for GitHubOAuthProvider {
     // There should always be as many entries in the data list as there are endpoints. This should
     // be changed in the future to be a static check
     fn extract_user_info(&self, data: &[Bytes]) -> Result<UserInfo, UserInfoError> {
-        let remote_info: GoogleUserInfo = serde_json::from_slice(&data[0])?;
-        let verified_emails = if remote_info.email_verified {
-            vec![remote_info.email]
-        } else {
-            vec![]
-        };
+        let user: GitHubUser = serde_json::from_slice(&data[1])?;
+
+        let remote_emails: Vec<GitHubUserEmails> = serde_json::from_slice(&data[1])?;
+        let verified_emails = remote_emails
+            .into_iter()
+            .filter(|email| email.verified)
+            .map(|e| e.email)
+            .collect::<Vec<_>>();
 
         Ok(UserInfo {
-            external_id: ExternalUserId::Google(remote_info.sub),
+            external_id: ExternalUserId::GitHub(user.id),
             verified_emails,
         })
     }
 }
 
-impl OAuthProvider for GoogleOAuthProvider {
+impl OAuthProvider for GitHubOAuthProvider {
     fn name(&self) -> OAuthProviderName {
-        OAuthProviderName::Google
+        OAuthProviderName::GitHub
     }
 
     fn scopes(&self) -> Vec<&str> {
-        vec!["https://www.googleapis.com/auth/userinfo.email", "openid"]
+        vec!["user:email"]
     }
 
     fn client_id(&self) -> &str {
@@ -81,15 +89,18 @@ impl OAuthProvider for GoogleOAuthProvider {
     }
 
     fn user_info_endpoints(&self) -> Vec<&str> {
-        vec!["https://openidconnect.googleapis.com/v1/userinfo"]
+        vec![
+            "https://api.github.com/user",
+            "https://api.github.com/user/emails",
+        ]
     }
 
     fn device_code_endpoint(&self) -> &str {
-        "https://oauth2.googleapis.com/device/code"
+        "https://github.com/login/device/code"
     }
 
     fn auth_url_endpoint(&self) -> &str {
-        "https://accounts.google.com/o/oauth2/auth"
+        "https://github.com/login/oauth/authorize"
     }
 
     fn token_exchange_content_type(&self) -> &str {
@@ -97,7 +108,7 @@ impl OAuthProvider for GoogleOAuthProvider {
     }
 
     fn token_exchange_endpoint(&self) -> &str {
-        "https://oauth2.googleapis.com/token"
+        "https://github.com/login/oauth/access_token"
     }
 
     fn supports_pkce(&self) -> bool {

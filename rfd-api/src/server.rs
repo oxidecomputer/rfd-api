@@ -14,12 +14,12 @@ use crate::{
             get_api_user_token, get_self, list_api_user_tokens, update_api_user,
         },
         login::oauth::{
-            code::{authz_code_exchange, authz_code_redirect, authz_code_callback},
             client::{
                 create_oauth_client, create_oauth_client_redirect_uri, create_oauth_client_secret,
                 delete_oauth_client_redirect_uri, delete_oauth_client_secret, get_oauth_client,
                 list_oauth_clients,
             },
+            code::{authz_code_callback, authz_code_exchange, authz_code_redirect},
             device_token::{exchange_device_token, get_device_provider},
         },
         rfd::get_rfd,
