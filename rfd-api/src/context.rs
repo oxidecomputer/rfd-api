@@ -393,9 +393,6 @@ impl ApiContext {
 
         tracing::info!("Check for existing users matching the requested external id");
 
-        // TODO: Handle user merging. When a user signs in with a verified email that we have
-        // already seen how do we handle merges?
-
         let api_user_providers = self
             .list_api_user_provider(filter, &ListPagination::latest())
             .await?;
