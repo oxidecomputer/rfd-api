@@ -245,7 +245,7 @@ pub async fn authz_code_exchange(
         return Err(bad_request("Invalid grant type"));
     }
 
-    let client_secret = RawApiKey::new(query.client_secret.clone()).encrypt(&*ctx.api_key.encryptor).await.map_err(to_internal_error)?;
+    let client_secret = RawApiKey::new(query.client_secret.clone()).encrypt(&*ctx.secrets.encryptor).await.map_err(to_internal_error)?;
 
     ctx.get_oauth_client(&query.client_id)
         .await

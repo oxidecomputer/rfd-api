@@ -31,10 +31,10 @@ use uuid::Uuid;
 use crate::{
     authn::{
         jwt::{key_to_signer, Claims, JwtSigner, SignerError},
-        key::{key_to_encryptor, EncryptorError, KeyEncryptor},
+        key::{key_to_encryptor, KeyEncryptor},
         AuthError, AuthToken,
     },
-    config::{JwtConfig, PermissionsConfig},
+    config::{JwtConfig, PermissionsConfig, AsymmetricKey},
     email_validator::EmailValidator,
     endpoints::login::{
         oauth::{OAuthProvider, OAuthProviderError, OAuthProviderFn, OAuthProviderName},
@@ -90,7 +90,7 @@ pub struct ApiContext {
     pub storage: Arc<dyn Storage>,
     pub permissions: PermissionsContext,
     pub jwt: JwtContext,
-    pub api_key: ApiKeyContext,
+    pub secrets: SecretContext,
     pub oauth_providers: HashMap<OAuthProviderName, Box<dyn OAuthProviderFn>>,
 }
 
@@ -101,11 +101,11 @@ pub struct PermissionsContext {
 pub struct JwtContext {
     pub default_expiration: i64,
     pub max_expiration: i64,
-    pub keys: Vec<Box<dyn JwtSigner<Claims = Claims>>>,
+    pub signers: Vec<Box<dyn JwtSigner<Claims = Claims>>>,
     pub jwks: JwkSet,
 }
 
-pub struct ApiKeyContext {
+pub struct SecretContext {
     pub encryptor: Box<dyn KeyEncryptor>,
 }
 
@@ -173,11 +173,12 @@ impl ApiContext {
         storage: Arc<dyn Storage>,
         permissions: PermissionsConfig,
         jwt: JwtConfig,
+        keys: Vec<AsymmetricKey>,
     ) -> Result<Self, AppError> {
-        let mut keys = vec![];
+        let mut signers = vec![];
 
-        for key in &jwt.keys {
-            keys.push(key_to_signer(key).await?);
+        for key in &keys {
+            signers.push(key_to_signer(key).await?);
         }
 
         Ok(Self {
@@ -188,16 +189,17 @@ impl ApiContext {
             permissions: PermissionsContext {
                 default: permissions.default.into(),
             },
+            
             jwt: JwtContext {
                 default_expiration: jwt.default_expiration,
                 max_expiration: jwt.max_expiration,
                 jwks: JwkSet {
-                    keys: keys.iter().map(|k| k.jwk()).cloned().collect(),
+                    keys: signers.iter().map(|k| k.jwk()).cloned().collect(),
                 },
-                keys,
+                signers,
             },
-            api_key: ApiKeyContext {
-                encryptor: key_to_encryptor(&jwt.keys[0]).await?,
+            secrets: SecretContext {
+                encryptor: key_to_encryptor(&keys[0]).await?,
             },
             oauth_providers: HashMap::new(),
         })
@@ -220,12 +222,8 @@ impl ApiContext {
     }
 
     pub async fn sign(&self, claims: &Claims) -> Result<String, SignerError> {
-        let signer = self.jwt.keys.first().unwrap();
+        let signer = self.jwt.signers.first().unwrap();
         signer.sign(claims).await
-    }
-
-    pub async fn encrypt(&self, value: &str) -> Result<String, EncryptorError> {
-        self.api_key.encryptor.encrypt(value).await
     }
 
     #[instrument(skip(self, auth))]

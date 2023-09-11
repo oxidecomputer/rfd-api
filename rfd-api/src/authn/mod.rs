@@ -4,7 +4,7 @@ use dropshot::{HttpError, RequestContext, SharedExtractor};
 use dropshot_authorization_header::bearer::BearerAuth;
 use thiserror::Error;
 
-use crate::{context::ApiContext, util::response::unauthorized};
+use crate::{context::ApiContext, util::response::unauthorized, authn::key::RawApiKey};
 
 use self::{jwt::Jwt, key::EncryptedApiKey};
 
@@ -54,12 +54,11 @@ impl AuthToken {
             Err(err) => {
                 tracing::debug!(?err, "Token is not a JWT, falling back to API key");
 
-                Ok(AuthToken::ApiKey(EncryptedApiKey {
-                    encrypted: ctx.encrypt(token.as_str()).await.map_err(|err| {
+                Ok(AuthToken::ApiKey(RawApiKey::new(token).encrypt(&*ctx.secrets.encryptor).await.map_err(|err| {
                         tracing::error!(?err, "Failed to encrypt authn token");
                         AuthError::FailedToExtract
                     })?,
-                }))
+                ))
             }
         }
     }

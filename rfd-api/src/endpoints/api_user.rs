@@ -276,7 +276,7 @@ async fn create_api_user_token_op(
 
             let key = RawApiKey::generate::<24>();
             let encrypted = key
-                .encrypt(&*ctx.api_key.encryptor)
+                .encrypt(&*ctx.secrets.encryptor)
                 .await
                 .map_err(to_internal_error)?;
 
@@ -471,6 +471,7 @@ mod tests {
             Arc::new(storage),
             PermissionsConfig::default(),
             JwtConfig::default(),
+            Vec::new(),
         )
         .await
         .unwrap();
@@ -543,6 +544,7 @@ mod tests {
             Arc::new(storage),
             PermissionsConfig::default(),
             JwtConfig::default(),
+            Vec::new(),
         )
         .await
         .unwrap();
@@ -652,6 +654,7 @@ mod tests {
             Arc::new(storage),
             PermissionsConfig::default(),
             JwtConfig::default(),
+            Vec::new(),
         )
         .await
         .unwrap();
@@ -799,6 +802,7 @@ mod tests {
             Arc::new(storage),
             PermissionsConfig::default(),
             JwtConfig::default(),
+            Vec::new(),
         )
         .await
         .unwrap();
@@ -946,6 +950,7 @@ mod tests {
             Arc::new(storage),
             PermissionsConfig::default(),
             JwtConfig::default(),
+            Vec::new(),
         )
         .await
         .unwrap();
@@ -1072,6 +1077,7 @@ mod tests {
             Arc::new(storage),
             PermissionsConfig::default(),
             JwtConfig::default(),
+            Vec::new(),
         )
         .await
         .unwrap();

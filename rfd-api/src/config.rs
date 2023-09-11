@@ -20,6 +20,7 @@ pub struct AppConfig {
     pub server_port: u16,
     pub database_url: String,
     pub permissions: PermissionsConfig,
+    pub keys: Vec<AsymmetricKey>,
     pub jwt: JwtConfig,
     pub spec: Option<SpecConfig>,
     pub authn: AuthnProviders,
@@ -70,7 +71,6 @@ pub struct PermissionsConfig {
 pub struct JwtConfig {
     pub default_expiration: i64,
     pub max_expiration: i64,
-    pub keys: Vec<AsymmetricKey>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -97,30 +97,27 @@ pub enum AsymmetricKey {
 
 #[derive(Debug, Deserialize)]
 pub struct AuthnProviders {
-    pub jwt: JwtProviders,
     pub oauth: OAuthProviders,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct JwtProviders {
-    pub google: Option<GoogleJwtConfig>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct GoogleJwtConfig {
-    pub issuer: String,
-    pub well_known_uri: String,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct OAuthProviders {
+    pub github: Option<GitHubOAuthConfig>,
     pub google: Option<GoogleOAuthConfig>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GitHubOAuthConfig {
+    pub client_id: String,
+    pub client_secret: String,
+    pub redirect_uri: String,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct GoogleOAuthConfig {
     pub client_id: String,
     pub client_secret: String,
+    pub redirect_uri: String,
 }
 
 impl AppConfig {

@@ -64,7 +64,10 @@ impl OAuthProvider for GoogleOAuthProvider {
     }
 
     fn scopes(&self) -> Vec<&str> {
-        vec!["email"]
+        vec![
+            "https://www.googleapis.com/auth/userinfo.email",
+            "openid"
+        ]
     }
 
     fn client_id(&self) -> &str {

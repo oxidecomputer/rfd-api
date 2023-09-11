@@ -60,6 +60,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         ),
         config.permissions,
         config.jwt,
+        config.keys,
     )
     .await?;
 

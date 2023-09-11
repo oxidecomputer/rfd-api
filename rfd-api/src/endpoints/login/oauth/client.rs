@@ -147,7 +147,7 @@ async fn create_oauth_client_secret_op(
             .add_oauth_secret(
                 &path.client_id,
                 &secret
-                    .encrypt(&*ctx.api_key.encryptor)
+                    .encrypt(&*ctx.secrets.encryptor)
                     .await
                     .map_err(to_internal_error)?
                     .encrypted,
