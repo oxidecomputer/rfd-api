@@ -724,9 +724,50 @@ pub(crate) mod tests {
         ApiKey, ApiUserProvider, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
         NewLoginAttempt, NewRfd, NewRfdPdf, NewRfdRevision,
     };
+    use rsa::{
+        pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
+        RsaPrivateKey, RsaPublicKey,
+    };
+
     use std::sync::Arc;
 
-    use crate::permissions::ApiPermission;
+    use crate::{
+        config::{AsymmetricKey, JwtConfig, PermissionsConfig},
+        permissions::ApiPermission,
+        util::tests::AnyEmailValidator,
+    };
+
+    use super::ApiContext;
+
+    // Construct a mock context that can be used in tests
+    pub async fn mock_context(storage: MockStorage) -> ApiContext {
+        let mut rng = rand::thread_rng();
+        let bits = 2048;
+        let priv_key = RsaPrivateKey::new(&mut rng, bits).expect("Failed to generate a key");
+        let pub_key = RsaPublicKey::from(&priv_key);
+
+        ApiContext::new(
+            Arc::new(AnyEmailValidator),
+            "".to_string(),
+            Arc::new(storage),
+            PermissionsConfig::default(),
+            JwtConfig::default(),
+            vec![
+                // We are in the context of a test and do not care about the key leaking
+                AsymmetricKey::Local {
+                    kid: String::new(),
+                    private: priv_key
+                        .to_pkcs8_pem(LineEnding::LF)
+                        .unwrap()
+                        .as_bytes()
+                        .to_vec(),
+                    public: pub_key.to_public_key_pem(LineEnding::LF).unwrap(),
+                },
+            ],
+        )
+        .await
+        .unwrap()
+    }
 
     // Construct a mock storage engine that can be wrapped in an ApiContext for testing
     pub struct MockStorage {

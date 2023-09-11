@@ -53,3 +53,4 @@ yup-oauth2 = { workspace = true }
 async-trait = { workspace = true }
 mockall = { workspace = true }
 rfd-model = { path = "../rfd-model", features = ["mock"] }
+rsa = { workspace = true, features = ["pem"] }

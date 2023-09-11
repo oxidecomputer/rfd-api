@@ -1,7 +1,7 @@
 use argon2::password_hash::rand_core::{OsRng, RngCore};
 use async_trait::async_trait;
 use google_cloudkms1::{hyper_rustls, CloudKMS};
-use rsa::{pkcs1::DecodeRsaPublicKey, Pkcs1v15Encrypt, PublicKey, RsaPublicKey};
+use rsa::{pkcs8::DecodePublicKey, Pkcs1v15Encrypt, PublicKey, RsaPublicKey};
 use thiserror::Error;
 use tracing::instrument;
 
@@ -74,7 +74,7 @@ pub enum EncryptorError {
     #[error(transparent)]
     Encryption(#[from] rsa::errors::Error),
     #[error(transparent)]
-    PemDecode(#[from] rsa::pkcs1::Error),
+    PemDecode(#[from] rsa::pkcs8::spki::Error),
     #[error("Failed to construct credentials for remote key storage")]
     RemoteKeyAuthMissing,
     #[error("Key input does not match requested output")]
@@ -181,7 +181,7 @@ pub async fn key_to_encryptor(
     };
 
     Ok(Box::new(LocalKey {
-        public_key: RsaPublicKey::from_pkcs1_pem(&pem)?,
+        public_key: RsaPublicKey::from_public_key_pem(&pem)?,
     }))
 }
 

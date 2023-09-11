@@ -416,15 +416,14 @@ mod tests {
     use uuid::Uuid;
 
     use crate::{
-        config::{JwtConfig, PermissionsConfig},
-        context::{tests::MockStorage, ApiContext},
+        context::tests::{mock_context, MockStorage},
         endpoints::api_user::{
             create_api_user_token_op, delete_api_user_token_op, get_api_user_token_op,
             list_api_user_tokens_op, update_api_user_op, ApiKeyCreateParams, ApiUserPath,
             ApiUserTokenPath,
         },
         permissions::ApiPermission,
-        util::tests::{get_status, AnyEmailValidator},
+        util::tests::get_status,
         ApiCaller,
     };
 
@@ -465,16 +464,7 @@ mod tests {
         let mut storage = MockStorage::new();
         storage.api_user_store = Some(Arc::new(store));
 
-        let ctx = ApiContext::new(
-            Arc::new(AnyEmailValidator),
-            "".to_string(),
-            Arc::new(storage),
-            PermissionsConfig::default(),
-            JwtConfig::default(),
-            Vec::new(),
-        )
-        .await
-        .unwrap();
+        let ctx = mock_context(storage).await;
 
         // 1. Fail to create due to lack of permissions
         let no_permissions = ApiCaller {
@@ -538,16 +528,7 @@ mod tests {
         let mut storage = MockStorage::new();
         storage.api_user_store = Some(Arc::new(store));
 
-        let ctx = ApiContext::new(
-            Arc::new(AnyEmailValidator),
-            "".to_string(),
-            Arc::new(storage),
-            PermissionsConfig::default(),
-            JwtConfig::default(),
-            Vec::new(),
-        )
-        .await
-        .unwrap();
+        let ctx = mock_context(storage).await;
 
         let success_path = ApiUserPath {
             identifier: success_id,
@@ -648,16 +629,7 @@ mod tests {
         let mut storage = MockStorage::new();
         storage.api_user_token_store = Some(Arc::new(store));
 
-        let ctx = ApiContext::new(
-            Arc::new(AnyEmailValidator),
-            "".to_string(),
-            Arc::new(storage),
-            PermissionsConfig::default(),
-            JwtConfig::default(),
-            Vec::new(),
-        )
-        .await
-        .unwrap();
+        let ctx = mock_context(storage).await;
 
         // 1. Fail to list due to lack of permissions
         let no_permissions = ApiCaller {
@@ -796,16 +768,7 @@ mod tests {
         storage.api_user_store = Some(Arc::new(api_user_store));
         storage.api_user_token_store = Some(Arc::new(token_store));
 
-        let ctx = ApiContext::new(
-            Arc::new(AnyEmailValidator),
-            "".to_string(),
-            Arc::new(storage),
-            PermissionsConfig::default(),
-            JwtConfig::default(),
-            Vec::new(),
-        )
-        .await
-        .unwrap();
+        let ctx = mock_context(storage).await;
 
         // 1. Fail to create due to lack of permissions
         let no_permissions = ApiCaller {
@@ -944,16 +907,7 @@ mod tests {
         let mut storage = MockStorage::new();
         storage.api_user_token_store = Some(Arc::new(token_store));
 
-        let ctx = ApiContext::new(
-            Arc::new(AnyEmailValidator),
-            "".to_string(),
-            Arc::new(storage),
-            PermissionsConfig::default(),
-            JwtConfig::default(),
-            Vec::new(),
-        )
-        .await
-        .unwrap();
+        let ctx = mock_context(storage).await;
 
         // 1. Fail to get due to lack of permissions
         let no_permissions = ApiCaller {
@@ -1071,16 +1025,7 @@ mod tests {
         let mut storage = MockStorage::new();
         storage.api_user_token_store = Some(Arc::new(token_store));
 
-        let ctx = ApiContext::new(
-            Arc::new(AnyEmailValidator),
-            "".to_string(),
-            Arc::new(storage),
-            PermissionsConfig::default(),
-            JwtConfig::default(),
-            Vec::new(),
-        )
-        .await
-        .unwrap();
+        let ctx = mock_context(storage).await;
 
         // 1. Fail to get due to lack of permissions
         let no_permissions = ApiCaller {
