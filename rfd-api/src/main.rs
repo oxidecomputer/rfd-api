@@ -16,7 +16,9 @@ use tracing_subscriber::EnvFilter;
 use crate::{
     config::{AppConfig, ServerLogFormat},
     email_validator::DomainValidator,
-    endpoints::login::oauth::{google::GoogleOAuthProvider, OAuthProviderName, github::GitHubOAuthProvider},
+    endpoints::login::oauth::{
+        github::GitHubOAuthProvider, google::GoogleOAuthProvider, OAuthProviderName,
+    },
 };
 
 mod authn;
