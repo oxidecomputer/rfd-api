@@ -108,7 +108,7 @@ pub async fn authz_code_redirect(
     // Add in the user defined state and redirect uri
     attempt.state = Some(query.state);
 
-    // Store the generate attempt
+    // Store the generated attempt
     let attempt = ctx
         .create_login_attempt(attempt)
         .await
@@ -169,7 +169,7 @@ pub async fn authz_code_callback(
 
     tracing::debug!(provider = ?provider.name(), "Acquired OAuth provider for authz code exchange");
 
-    // If we are missing the expected state parameter than we can not proceed at all with verifying
+    // If we are missing the expected state parameter then we can not proceed at all with verifying
     // this callback request. We also do not have a redirect uri to send the user to so we instead
     // report unauthorized
     let attempt_id = query
