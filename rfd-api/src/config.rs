@@ -78,8 +78,8 @@ pub struct JwtConfig {
 pub enum AsymmetricKey {
     Local {
         kid: String,
-        #[serde(with = "serde_bytes")]
-        private: Vec<u8>,
+        // #[serde(with = "serde_bytes")]
+        private: String,
         public: String,
     },
     // Kms {
@@ -93,6 +93,29 @@ pub enum AsymmetricKey {
         location: String,
         project: String,
     },
+}
+
+impl AsymmetricKey {
+    pub fn kid(&self) -> &str {
+        match self {
+            Self::Local { kid, .. } => kid,
+            Self::Ckms { kid, .. } => kid,
+        }
+    }
+
+    pub fn mock_private_key(&self) -> &str {
+        match &self {
+            Self::Local { private, .. } => private,
+            _ => unimplemented!(),
+        }
+    }
+
+    pub fn mock_public_key(&self) -> &str {
+        match &self {
+            Self::Local { public, .. } => public,
+            _ => unimplemented!(),
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]

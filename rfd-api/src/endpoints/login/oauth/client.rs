@@ -142,19 +142,15 @@ async fn create_oauth_client_secret_op(
     path: &AddOAuthClientSecretPath,
 ) -> Result<HttpResponseOk<OAuthClientSecret>, HttpError> {
     if caller.can(&ApiPermission::CreateOAuthClientSecret(path.client_id)) {
-        let secret = RawApiKey::generate::<24>();
+        let secret = RawApiKey::generate::<24>()
+            .sign(&*ctx.secrets.signer)
+            .await
+            .map_err(to_internal_error)?;
         let mut client_secret = ctx
-            .add_oauth_secret(
-                &path.client_id,
-                &secret
-                    .encrypt(&*ctx.secrets.encryptor)
-                    .await
-                    .map_err(to_internal_error)?
-                    .encrypted,
-            )
+            .add_oauth_secret(&path.client_id, secret.signature())
             .await
             .map_err(ApiError::Storage)?;
-        client_secret.secret = secret.consume();
+        client_secret.secret = secret.signed();
 
         Ok(HttpResponseOk(client_secret))
     } else {

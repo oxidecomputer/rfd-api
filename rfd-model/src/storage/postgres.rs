@@ -944,7 +944,6 @@ impl LoginAttemptStore for PostgresStore {
                 login_attempt::authz_code.eq(attempt.authz_code),
                 login_attempt::expires_at.eq(attempt.expires_at),
                 login_attempt::provider.eq(attempt.provider),
-                login_attempt::provider_state.eq(attempt.provider_state),
                 login_attempt::provider_pkce_verifier.eq(attempt.provider_pkce_verifier),
                 login_attempt::provider_authz_code.eq(attempt.provider_authz_code),
             ))

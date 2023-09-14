@@ -30,9 +30,8 @@ use uuid::Uuid;
 
 use crate::{
     authn::{
-        jwt::{key_to_signer, Claims, JwtSigner, SignerError},
-        key::{key_to_encryptor, KeyEncryptor},
-        AuthError, AuthToken,
+        jwt::{Claims, JwtSigner, JwtSignerError},
+        AuthError, AuthToken, Signer,
     },
     config::{AsymmetricKey, JwtConfig, PermissionsConfig},
     email_validator::EmailValidator,
@@ -101,12 +100,13 @@ pub struct PermissionsContext {
 pub struct JwtContext {
     pub default_expiration: i64,
     pub max_expiration: i64,
-    pub signers: Vec<Box<dyn JwtSigner<Claims = Claims>>>,
+    // pub signers: Vec<Box<dyn JwtSigner<Claims = Claims>>>,
+    pub signers: Vec<JwtSigner>,
     pub jwks: JwkSet,
 }
 
 pub struct SecretContext {
-    pub encryptor: Box<dyn KeyEncryptor>,
+    pub signer: Arc<dyn Signer>,
 }
 
 pub struct RegisteredAccessToken {
@@ -175,10 +175,10 @@ impl ApiContext {
         jwt: JwtConfig,
         keys: Vec<AsymmetricKey>,
     ) -> Result<Self, AppError> {
-        let mut signers = vec![];
+        let mut jwt_signers = vec![];
 
         for key in &keys {
-            signers.push(key_to_signer(key).await?);
+            jwt_signers.push(JwtSigner::new(&key).await.unwrap())
         }
 
         Ok(Self {
@@ -194,12 +194,12 @@ impl ApiContext {
                 default_expiration: jwt.default_expiration,
                 max_expiration: jwt.max_expiration,
                 jwks: JwkSet {
-                    keys: signers.iter().map(|k| k.jwk()).cloned().collect(),
+                    keys: jwt_signers.iter().map(|k| k.jwk()).cloned().collect(),
                 },
-                signers,
+                signers: jwt_signers,
             },
             secrets: SecretContext {
-                encryptor: key_to_encryptor(&keys[0]).await?,
+                signer: keys[0].as_signer().await?,
             },
             oauth_providers: HashMap::new(),
         })
@@ -221,7 +221,7 @@ impl ApiContext {
         &self.jwt.jwks
     }
 
-    pub async fn sign(&self, claims: &Claims) -> Result<String, SignerError> {
+    pub async fn sign_jwt(&self, claims: &Claims) -> Result<String, JwtSignerError> {
         let signer = self.jwt.signers.first().unwrap();
         signer.sign(claims).await
     }
@@ -236,7 +236,7 @@ impl ApiContext {
                     let mut key = ApiKeyStore::list(
                         &*self.storage,
                         ApiKeyFilter {
-                            key: Some(vec![api_key.encrypted.to_string()]),
+                            key: Some(vec![api_key.signature().to_string()]),
                             expired: false,
                             deleted: false,
                             ..Default::default()
@@ -489,7 +489,7 @@ impl ApiContext {
             })
             .await?;
 
-        let signed = self.sign(&claims).await?;
+        let signed = self.sign_jwt(&claims).await?;
 
         Ok(RegisteredAccessToken {
             access_token: token,
@@ -724,28 +724,19 @@ pub(crate) mod tests {
         ApiKey, ApiUserProvider, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
         NewLoginAttempt, NewRfd, NewRfdPdf, NewRfdRevision,
     };
-    use rsa::{
-        pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
-        RsaPrivateKey, RsaPublicKey,
-    };
 
     use std::sync::Arc;
 
     use crate::{
-        config::{AsymmetricKey, JwtConfig, PermissionsConfig},
+        config::{JwtConfig, PermissionsConfig},
         permissions::ApiPermission,
-        util::tests::AnyEmailValidator,
+        util::tests::{mock_key, AnyEmailValidator},
     };
 
     use super::ApiContext;
 
     // Construct a mock context that can be used in tests
     pub async fn mock_context(storage: MockStorage) -> ApiContext {
-        let mut rng = rand::thread_rng();
-        let bits = 2048;
-        let priv_key = RsaPrivateKey::new(&mut rng, bits).expect("Failed to generate a key");
-        let pub_key = RsaPublicKey::from(&priv_key);
-
         ApiContext::new(
             Arc::new(AnyEmailValidator),
             "".to_string(),
@@ -754,15 +745,7 @@ pub(crate) mod tests {
             JwtConfig::default(),
             vec![
                 // We are in the context of a test and do not care about the key leaking
-                AsymmetricKey::Local {
-                    kid: String::new(),
-                    private: priv_key
-                        .to_pkcs8_pem(LineEnding::LF)
-                        .unwrap()
-                        .as_bytes()
-                        .to_vec(),
-                    public: pub_key.to_public_key_pem(LineEnding::LF).unwrap(),
-                },
+                mock_key(),
             ],
         )
         .await

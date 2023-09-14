@@ -1,9 +1,13 @@
 use chrono::{Duration, Utc};
 use dropshot::{
     endpoint, http_response_temporary_redirect, HttpError, HttpResponseOk,
-    HttpResponseTemporaryRedirect, Path, Query, RequestContext,
+    HttpResponseTemporaryRedirect, Path, Query, RequestContext, TypedBody,
 };
-use http::StatusCode;
+use http::{
+    header::{LOCATION, SET_COOKIE},
+    HeaderValue, StatusCode,
+};
+use hyper::{Body, Response};
 use oauth2::{
     reqwest::async_http_client, AuthorizationCode, CsrfToken, PkceCodeChallenge, PkceCodeVerifier,
     Scope, TokenResponse,
@@ -19,12 +23,17 @@ use uuid::Uuid;
 
 use super::{OAuthProviderNameParam, UserInfoProvider};
 use crate::{
-    authn::key::RawApiKey,
+    authn::key::SignedApiKey,
     context::ApiContext,
     endpoints::login::LoginError,
     error::ApiError,
-    util::response::{bad_request, client_error, internal_error, to_internal_error},
+    util::{
+        request::RequestCookies,
+        response::{bad_request, client_error, internal_error, to_internal_error, unauthorized},
+    },
 };
+
+static LOGIN_ATTEMPT_COOKIE: &str = "__rfd_login";
 
 #[derive(Debug, Deserialize, JsonSchema, Serialize)]
 pub struct OAuthAuthzCodeQuery {
@@ -32,6 +41,13 @@ pub struct OAuthAuthzCodeQuery {
     pub redirect_uri: String,
     pub response_type: String,
     pub state: String,
+}
+
+#[derive(Debug, Deserialize, JsonSchema, Serialize)]
+pub struct OAuthAuthzCodeRedirectHeaders {
+    #[serde(rename = "set-cookies")]
+    cookies: String,
+    location: String,
 }
 
 /// Generate the remote provider login url and redirect the user
@@ -44,7 +60,7 @@ pub async fn authz_code_redirect(
     rqctx: RequestContext<ApiContext>,
     path: Path<OAuthProviderNameParam>,
     query: Query<OAuthAuthzCodeQuery>,
-) -> Result<HttpResponseTemporaryRedirect, HttpError> {
+) -> Result<Response<Body>, HttpError> {
     let ctx = rqctx.context();
     let path = path.into_inner();
     let query = query.into_inner();
@@ -79,7 +95,6 @@ pub async fn authz_code_redirect(
         query.client_id,
         query.redirect_uri,
         provider.name().to_string(),
-        CsrfToken::new_random().secret().to_string(),
     )
     .map_err(|err| {
         tracing::error!(?err, "Attempted to construct invalid login attempt");
@@ -99,9 +114,13 @@ pub async fn authz_code_redirect(
         .await
         .map_err(to_internal_error)?;
 
+    // Create an attempt cookie header for storing the login attempt
+    let login_cookie = HeaderValue::from_str(&format!("{}={}", LOGIN_ATTEMPT_COOKIE, attempt.id))
+        .map_err(to_internal_error)?;
+
     // Generate the url to the remote provider that the user will be redirected to
     let (url, _) = client
-        .authorize_url(|| CsrfToken::new(format!("{}:{}", attempt.id, attempt.provider_state)))
+        .authorize_url(|| CsrfToken::new(attempt.id.to_string()))
         .set_pkce_challenge(pkce_challenge)
         .add_scopes(
             provider
@@ -112,7 +131,14 @@ pub async fn authz_code_redirect(
         )
         .url();
 
-    http_response_temporary_redirect(url.to_string())
+    Ok(Response::builder()
+        .status(StatusCode::TEMPORARY_REDIRECT)
+        .header(SET_COOKIE, login_cookie)
+        .header(
+            LOCATION,
+            HeaderValue::from_str(url.as_str()).map_err(to_internal_error)?,
+        )
+        .body(Body::empty())?)
 }
 
 #[derive(Debug, Deserialize, JsonSchema, Serialize)]
@@ -143,44 +169,65 @@ pub async fn authz_code_callback(
 
     tracing::debug!(provider = ?provider.name(), "Acquired OAuth provider for authz code exchange");
 
-    let original_attempt = match query.state {
-        Some(state) => {
-            // Attempt to extract the request id and csrf token from the state parameter. These
-            // must both be present
-            if let Some((id, csrf)) = state
-                .split_once(":")
-                .and_then(|(id, csrf)| id.parse::<Uuid>().ok().map(|id| (id, csrf)))
-            {
-                // Look up the login attempt referenced in the state and verify that has the
-                // csrf value still matches
-                ctx.get_login_attempt(&id)
-                    .await
-                    .map_err(to_internal_error)?
-                    .and_then(|attempt| {
-                        if attempt.state.as_ref().map(|s| s == csrf).unwrap_or(false) {
-                            Some(attempt)
-                        } else {
-                            None
-                        }
-                    })
-            } else {
-                None
-            }
-        }
-        None => None,
-    };
+    // If we are missing the expected state parameter than we can not proceed at all with verifying
+    // this callback request. We also do not have a redirect uri to send the user to so we instead
+    // report unauthorized
+    let attempt_id = query
+        .state
+        .ok_or_else(|| {
+            tracing::warn!("OAuth callback is missing a state parameter");
+            unauthorized()
+        })?
+        .parse()
+        .map_err(|err| {
+            tracing::warn!(?err, "Failed to parse state");
+            unauthorized()
+        })?;
 
-    // If an attempt could not be found than the server needs to fail with an internal server error.
-    // We do not have a redirect_uri to send the user to. This is a deficiency in how login attempts
-    // are tracked. They are currently tracked without storing any state on the client, and as such
-    // are fully dependent on the state parameter. Instead a very short lived cookie should be used
-    // to track the attempt that the client is making so that we can restore the attempt without
-    // use of the state parameter
-    let mut attempt =
-        original_attempt.ok_or_else(|| internal_error("Failed to load matching login attempt"))?;
+    // The client must present the attempt cookie at a minimum. Without it we are unable to lookup a
+    // login attempt to match against. Without the cookie to verify the state parameter we can not
+    // determine a redirect uri so we instead report unauthorized
+    let attempt_cookie: Uuid = rqctx
+        .request
+        .cookie(LOGIN_ATTEMPT_COOKIE)
+        .ok_or_else(|| {
+            tracing::warn!("OAuth callback is missing a login state cookie");
+            unauthorized()
+        })?
+        .value()
+        .parse()
+        .map_err(|err| {
+            tracing::warn!(?err, "Failed to parse state");
+            unauthorized()
+        })?;
+
+    // Verify that the attempt_id returned from the state matches the expected client value. If they
+    // do not match we can not lookup a redirect uri so we instead return unauthorized
+    if attempt_id != attempt_cookie {
+        tracing::warn!(
+            ?attempt_id,
+            ?attempt_cookie,
+            "OAuth state does not match expected cookie value"
+        );
+        return Err(unauthorized());
+    }
+
+    // We have now verified the attempt id and can use it to look up the rest of the login attempt
+    // material to try and complete the flow
+    let mut attempt = ctx
+        .get_login_attempt(&attempt_id)
+        .await
+        .map_err(to_internal_error)?
+        .ok_or_else(|| {
+            // If we fail to find a matching attempt, there is not much we can do other than return
+            // unauthorized
+            unauthorized()
+        })?;
 
     attempt = match (query.code, query.error) {
         (Some(code), None) => {
+            tracing::info!(?attempt.id, "Received valid login attempt. Storing authorization code");
+
             // Store the authorization code returned by the underlying OAuth provider and transition the
             // attempt to the awaiting state
             ctx.set_login_provider_authz_code(attempt, code.to_string())
@@ -188,6 +235,8 @@ pub async fn authz_code_callback(
                 .map_err(to_internal_error)?
         }
         (code, error) => {
+            tracing::info!(?attempt.id, ?error, "Received an error response from the remote server");
+
             // Store the provider return error for future debugging, but if an error has been
             // returned or there is a missing code, then we can not report a successful process
             attempt.provider_authz_code = code;
@@ -204,7 +253,7 @@ pub async fn authz_code_callback(
 }
 
 #[derive(Debug, Deserialize, JsonSchema, Serialize)]
-pub struct OAuthAuthzCodeExchangeQuery {
+pub struct OAuthAuthzCodeExchangeBody {
     pub client_id: Uuid,
     pub client_secret: String,
     pub redirect_uri: String,
@@ -222,14 +271,15 @@ pub struct OAuthAuthzCodeExchangeResponse {
 
 /// Exchange an authorization code for an access token
 #[endpoint {
-    method = GET,
-    path = "/login/oauth/{provider}/code/token"
+    method = POST,
+    path = "/login/oauth/{provider}/code/token",
+    content_type = "application/x-www-form-urlencoded",
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn authz_code_exchange(
     rqctx: RequestContext<ApiContext>,
     path: Path<OAuthProviderNameParam>,
-    query: Query<OAuthAuthzCodeExchangeQuery>,
+    body: TypedBody<OAuthAuthzCodeExchangeBody>,
 ) -> Result<HttpResponseOk<OAuthAuthzCodeExchangeResponse>, HttpError> {
     let ctx = rqctx.context();
     let path = path.into_inner();
@@ -237,25 +287,23 @@ pub async fn authz_code_exchange(
         .get_oauth_provider(&path.provider)
         .await
         .map_err(ApiError::OAuth)?;
-    let query = query.into_inner();
+    let body = body.into_inner();
 
     // Verify that we received the expected grant type
-    if &query.grant_type != "authorization_code" {
+    if &body.grant_type != "authorization_code" {
         return Err(bad_request("Invalid grant type"));
     }
 
-    let client_secret = RawApiKey::new(query.client_secret.clone())
-        .encrypt(&*ctx.secrets.encryptor)
-        .await
+    let client_secret = SignedApiKey::parse(&body.client_secret, &*ctx.secrets.signer)
         .map_err(to_internal_error)?;
 
-    ctx.get_oauth_client(&query.client_id)
+    ctx.get_oauth_client(&body.client_id)
         .await
         .map_err(to_internal_error)?
         .ok_or_else(|| client_error(StatusCode::UNAUTHORIZED, "Invalid client"))
         .and_then(|client| {
-            if client.is_redirect_uri_valid(&query.redirect_uri) {
-                if client.is_secret_valid(&client_secret.encrypted) {
+            if client.is_redirect_uri_valid(&body.redirect_uri) {
+                if client.is_secret_valid(client_secret.signature()) {
                     Ok(client)
                 } else {
                     Err(client_error(StatusCode::UNAUTHORIZED, "Invalid secret"))
@@ -270,14 +318,14 @@ pub async fn authz_code_exchange(
 
     // Lookup the request assigned to this code and verify that it is a valid request
     let attempt = ctx
-        .get_login_attempt_for_code(&query.code)
+        .get_login_attempt_for_code(&body.code)
         .await
         .map_err(to_internal_error)?
         .ok_or_else(|| bad_request("Invalid code".to_string()))
         .and_then(|attempt| {
-            if attempt.client_id != query.client_id {
+            if attempt.client_id != body.client_id {
                 Err(bad_request("Invalid client id".to_string()))
-            } else if attempt.redirect_uri != query.redirect_uri {
+            } else if attempt.redirect_uri != body.redirect_uri {
                 Err(bad_request("Invalid redirect uri".to_string()))
             } else if attempt.attempt_state != LoginAttemptState::RemoteAuthenticated {
                 Err(bad_request("Invalid login state".to_string()))

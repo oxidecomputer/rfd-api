@@ -229,7 +229,6 @@ pub struct LoginAttempt {
     pub expires_at: Option<DateTime<Utc>>,
     pub error: Option<String>,
     pub provider: String,
-    pub provider_state: String,
     pub provider_pkce_verifier: Option<String>,
     pub provider_authz_code: Option<String>,
     pub provider_error: Option<String>,
@@ -282,7 +281,6 @@ impl NewLoginAttempt {
         client_id: Uuid,
         redirect_uri: String,
         provider: String,
-        provider_state: String,
     ) -> Result<Self, InvalidValueError> {
         Ok(Self {
             id: Uuid::new_v4(),
@@ -296,7 +294,6 @@ impl NewLoginAttempt {
             expires_at: None,
             error: None,
             provider,
-            provider_state,
             provider_pkce_verifier: None,
             provider_authz_code: None,
             provider_error: None,
@@ -318,7 +315,6 @@ impl From<LoginAttemptModel> for LoginAttempt {
             expires_at: value.expires_at,
             error: None,
             provider: value.provider,
-            provider_state: value.provider_state,
             provider_pkce_verifier: value.provider_pkce_verifier,
             provider_authz_code: value.provider_authz_code,
             provider_error: value.provider_error,

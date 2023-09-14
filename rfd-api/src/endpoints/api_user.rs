@@ -274,9 +274,8 @@ async fn create_api_user_token_op(
         if let Some(api_user) = api_user {
             let key_id = Uuid::new_v4();
 
-            let key = RawApiKey::generate::<24>();
-            let encrypted = key
-                .encrypt(&*ctx.secrets.encryptor)
+            let key = RawApiKey::generate::<24>()
+                .sign(&*ctx.secrets.signer)
                 .await
                 .map_err(to_internal_error)?;
 
@@ -285,7 +284,7 @@ async fn create_api_user_token_op(
                     NewApiKey {
                         id: key_id,
                         api_user_id: path.identifier,
-                        key: encrypted.encrypted,
+                        key: key.signature().to_string(),
                         permissions: body.permissions,
                         expires_at: body.expires_at,
                     },
@@ -298,7 +297,7 @@ async fn create_api_user_token_op(
             // plaintext token as we do not store a copy
             Ok(HttpResponseCreated(InitialApiKeyResponse {
                 id: user_key.id,
-                key: key.consume(),
+                key: key.signed(),
                 permissions: user_key.permissions,
                 created_at: user_key.created_at,
             }))

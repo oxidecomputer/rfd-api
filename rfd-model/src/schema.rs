@@ -91,7 +91,6 @@ diesel::table! {
         expires_at -> Nullable<Timestamptz>,
         error -> Nullable<Varchar>,
         provider -> Varchar,
-        provider_state -> Varchar,
         provider_pkce_verifier -> Nullable<Varchar>,
         provider_authz_code -> Nullable<Varchar>,
         provider_error -> Nullable<Varchar>,

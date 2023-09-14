@@ -14,7 +14,6 @@ CREATE TABLE login_attempt(
   error VARCHAR,
 
   provider VARCHAR NOT NULL,
-  provider_state VARCHAR NOT NULL UNIQUE,
   provider_pkce_verifier VARCHAR,
   provider_authz_code VARCHAR,
   provider_error VARCHAR,
