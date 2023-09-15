@@ -297,7 +297,7 @@ async fn create_api_user_token_op(
             // plaintext token as we do not store a copy
             Ok(HttpResponseCreated(InitialApiKeyResponse {
                 id: user_key.id,
-                key: key.signed(),
+                key: key.key(),
                 permissions: user_key.permissions,
                 created_at: user_key.created_at,
             }))

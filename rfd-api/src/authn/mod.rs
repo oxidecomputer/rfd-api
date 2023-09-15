@@ -20,7 +20,7 @@ use tracing::instrument;
 use crate::{
     config::AsymmetricKey,
     context::ApiContext,
-    util::{cloud_kms_client, response::unauthorized},
+    util::{cloud_kms_client, response::unauthorized}, authn::key::RawApiKey,
 };
 
 use self::{jwt::Jwt, key::SignedApiKey};
@@ -72,8 +72,8 @@ impl AuthToken {
                 tracing::debug!(?err, "Token is not a JWT, falling back to API key");
 
                 Ok(AuthToken::ApiKey(
-                    SignedApiKey::parse(&token, &*ctx.secrets.signer).map_err(|err| {
-                        tracing::error!(?err, "Failed to encrypt authn token");
+                    RawApiKey::new(token).sign(&*ctx.secrets.signer).await.map_err(|err| {
+                        tracing::error!(?err, "Failed to generate signature for request token");
                         AuthError::FailedToExtract
                     })?,
                 ))

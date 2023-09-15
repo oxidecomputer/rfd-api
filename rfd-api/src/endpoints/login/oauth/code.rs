@@ -23,7 +23,7 @@ use uuid::Uuid;
 
 use super::{OAuthProviderNameParam, UserInfoProvider};
 use crate::{
-    authn::key::SignedApiKey,
+    authn::key::RawApiKey,
     context::ApiContext,
     endpoints::login::LoginError,
     error::ApiError,
@@ -308,8 +308,7 @@ pub async fn authz_code_exchange(
         return Err(bad_request("Invalid grant type"));
     }
 
-    let client_secret = SignedApiKey::parse(&body.client_secret, &*ctx.secrets.signer)
-        .map_err(|err| {
+    let client_secret = RawApiKey::new(body.client_secret).sign(&*ctx.secrets.signer).await.map_err(|err| {
             tracing::warn!(?err, "Failed the validate client secret");
 
             // TODO: Change this to a bad request with invalid_client ?
