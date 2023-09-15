@@ -65,6 +65,8 @@ pub async fn authz_code_redirect(
     let path = path.into_inner();
     let query = query.into_inner();
 
+    // Lookup the client specified by the provided client id and verify that the redirect uri
+    // is a valid for this client. If either of these fail we return an unauthorized response
     ctx.get_oauth_client(&query.client_id)
         .await
         .map_err(to_internal_error)?
@@ -80,6 +82,10 @@ pub async fn authz_code_redirect(
             }
         })?;
 
+    tracing::debug!(?query.client_id, ?query.redirect_uri, "Verified client id and redirect uri");
+
+    // Find the configured provider for the requested remote backend. We should always have a valid
+    // provider value, so if this fails then a 500 is returned
     let provider = ctx
         .get_oauth_provider(&path.provider)
         .await
@@ -87,6 +93,10 @@ pub async fn authz_code_redirect(
 
     tracing::debug!(provider = ?provider.name(), "Acquired OAuth provider for authz code login");
 
+    // We may also fail if the provider configuration is not correctly configured
+    // TODO: This behavior should be changed so that clients are precomputed. We do not need to be
+    // constructing a new client on every request. That said, we need to ensure the client does not
+    // maintain state between requests
     let client = provider.as_client().map_err(to_internal_error)?;
     let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
 
@@ -114,7 +124,10 @@ pub async fn authz_code_redirect(
         .await
         .map_err(to_internal_error)?;
 
-    // Create an attempt cookie header for storing the login attempt
+    tracing::info!(?attempt.id, "Created login attempt");
+
+    // Create an attempt cookie header for storing the login attempt. This also acts as our csrf
+    // check
     let login_cookie = HeaderValue::from_str(&format!("{}={}", LOGIN_ATTEMPT_COOKIE, attempt.id))
         .map_err(to_internal_error)?;
 
@@ -161,11 +174,11 @@ pub async fn authz_code_callback(
 ) -> Result<HttpResponseTemporaryRedirect, HttpError> {
     let ctx = rqctx.context();
     let path = path.into_inner();
+    let query = query.into_inner();
     let provider = ctx
         .get_oauth_provider(&path.provider)
         .await
         .map_err(ApiError::OAuth)?;
-    let query = query.into_inner();
 
     tracing::debug!(provider = ?provider.name(), "Acquired OAuth provider for authz code exchange");
 
@@ -283,32 +296,42 @@ pub async fn authz_code_exchange(
 ) -> Result<HttpResponseOk<OAuthAuthzCodeExchangeResponse>, HttpError> {
     let ctx = rqctx.context();
     let path = path.into_inner();
+    let body = body.into_inner();
     let provider = ctx
         .get_oauth_provider(&path.provider)
         .await
         .map_err(ApiError::OAuth)?;
-    let body = body.into_inner();
 
     // Verify that we received the expected grant type
     if &body.grant_type != "authorization_code" {
+        // TODO: Needs to be json body
         return Err(bad_request("Invalid grant type"));
     }
 
     let client_secret = SignedApiKey::parse(&body.client_secret, &*ctx.secrets.signer)
-        .map_err(to_internal_error)?;
+        .map_err(|err| {
+            tracing::warn!("Failed the validate client secret");
+
+            // TODO: Change this to a bad request with invalid_client ?
+            unauthorized()
+        })?;
 
     ctx.get_oauth_client(&body.client_id)
         .await
         .map_err(to_internal_error)?
+        // TODO: This should be a bad request with a json body
         .ok_or_else(|| client_error(StatusCode::UNAUTHORIZED, "Invalid client"))
         .and_then(|client| {
             if client.is_redirect_uri_valid(&body.redirect_uri) {
                 if client.is_secret_valid(client_secret.signature()) {
                     Ok(client)
                 } else {
+
+                    // TODO: Change this to a bad request with invalid_client ?
                     Err(client_error(StatusCode::UNAUTHORIZED, "Invalid secret"))
                 }
             } else {
+            // TODO: Change this to a bad request with invalid_client ?
                 Err(client_error(
                     StatusCode::UNAUTHORIZED,
                     "Invalid redirect uri",
@@ -321,15 +344,20 @@ pub async fn authz_code_exchange(
         .get_login_attempt_for_code(&body.code)
         .await
         .map_err(to_internal_error)?
+        // TODO: Bad request is ok, but a json body with invalid_grant should be returned
         .ok_or_else(|| bad_request("Invalid code".to_string()))
         .and_then(|attempt| {
             if attempt.client_id != body.client_id {
+                // TODO: Bad request is ok, but a json body with invalid_grant should be returned
                 Err(bad_request("Invalid client id".to_string()))
             } else if attempt.redirect_uri != body.redirect_uri {
+                // TODO: Bad request is ok, but a json body with invalid_grant should be returned
                 Err(bad_request("Invalid redirect uri".to_string()))
             } else if attempt.attempt_state != LoginAttemptState::RemoteAuthenticated {
+                // TODO: Bad request is ok, but a json body with invalid_client should be returned
                 Err(bad_request("Invalid login state".to_string()))
             } else if attempt.expires_at.map(|t| t <= Utc::now()).unwrap_or(true) {
+                // TODO: Bad request is ok, but a json body with invalid_client should be returned
                 Err(bad_request("Login attempt expired".to_string()))
             } else {
                 // TODO: Perform pkce check
@@ -354,6 +382,8 @@ pub async fn authz_code_exchange(
         .request_async(async_http_client)
         .await
         .map_err(to_internal_error)?;
+
+    tracing::info!("Fetched access token from remote service");
 
     // Use the retrieved access token to fetch the user information from the remote API
     let info = provider
