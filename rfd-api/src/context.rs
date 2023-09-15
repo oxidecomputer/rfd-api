@@ -236,7 +236,7 @@ impl ApiContext {
                     let mut key = ApiKeyStore::list(
                         &*self.storage,
                         ApiKeyFilter {
-                            key: Some(vec![api_key.signature().to_string()]),
+                            key_signature: Some(vec![api_key.signature().to_string()]),
                             expired: false,
                             deleted: false,
                             ..Default::default()
@@ -671,7 +671,7 @@ impl ApiContext {
             NewOAuthClientSecret {
                 id: Uuid::new_v4(),
                 oauth_client_id: *client_id,
-                secret: secret.to_string(),
+                secret_signature: secret.to_string(),
             },
         )
         .await

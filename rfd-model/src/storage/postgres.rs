@@ -539,7 +539,7 @@ where
         Ok(result.map(|key| ApiKey {
             id: key.id,
             api_user_id: key.api_user_id,
-            key: key.key,
+            key_signature: key.key_signature,
             permissions: key.permissions,
             expires_at: key.expires_at,
             created_at: key.created_at,
@@ -557,7 +557,7 @@ where
 
         let ApiKeyFilter {
             api_user_id,
-            key,
+            key_signature,
             expired,
             deleted,
         } = filter;
@@ -566,8 +566,8 @@ where
             query = query.filter(api_key::api_user_id.eq_any(api_user_id));
         }
 
-        if let Some(key) = key {
-            query = query.filter(api_key::key.eq_any(key));
+        if let Some(key_signature) = key_signature {
+            query = query.filter(api_key::key_signature.eq_any(key_signature));
         }
 
         if !expired {
@@ -590,7 +590,7 @@ where
             .map(|token| ApiKey {
                 id: token.id,
                 api_user_id: token.api_user_id,
-                key: token.key,
+                key_signature: token.key_signature,
                 permissions: token.permissions,
                 expires_at: token.expires_at,
                 created_at: token.created_at,
@@ -627,7 +627,7 @@ where
             .values((
                 api_key::id.eq(key.id),
                 api_key::api_user_id.eq(key.api_user_id),
-                api_key::key.eq(key.key.clone()),
+                api_key::key_signature.eq(key.key_signature.clone()),
                 api_key::expires_at.eq(key.expires_at),
                 api_key::permissions.eq(permissions),
             ))
@@ -637,7 +637,7 @@ where
         Ok(ApiKey {
             id: key_m.id,
             api_user_id: key_m.api_user_id,
-            key: key_m.key,
+            key_signature: key_m.key_signature,
             permissions: key_m.permissions,
             expires_at: key_m.expires_at,
             created_at: key_m.created_at,
@@ -1070,7 +1070,7 @@ impl OAuthClientSecretStore for PostgresStore {
                 .values((
                     oauth_client_secret::id.eq(secret.id),
                     oauth_client_secret::oauth_client_id.eq(secret.oauth_client_id),
-                    oauth_client_secret::secret.eq(secret.secret),
+                    oauth_client_secret::secret_signature.eq(secret.secret_signature),
                 ))
                 .get_result_async(&self.conn)
                 .await?;
@@ -1078,7 +1078,7 @@ impl OAuthClientSecretStore for PostgresStore {
         Ok(OAuthClientSecret {
             id: secret_m.id,
             oauth_client_id: secret_m.oauth_client_id,
-            secret: secret_m.secret,
+            secret_signature: secret_m.secret_signature,
             created_at: secret_m.created_at,
             deleted_at: secret_m.deleted_at,
         })

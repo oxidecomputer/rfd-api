@@ -192,7 +192,7 @@ pub struct ApiUserProvider {
 pub struct ApiKey<T> {
     pub id: Uuid,
     pub api_user_id: Uuid,
-    pub key: String,
+    pub key_signature: String,
     pub permissions: Permissions<T>,
     pub expires_at: DateTime<Utc>,
     #[partial(NewApiKey(skip))]
@@ -343,7 +343,7 @@ pub struct OAuthClient {
 pub struct OAuthClientSecret {
     pub id: Uuid,
     pub oauth_client_id: Uuid,
-    pub secret: String,
+    pub secret_signature: String,
     #[partial(NewOAuthClientSecret(skip))]
     pub created_at: DateTime<Utc>,
     #[partial(NewOAuthClientSecret(skip))]
@@ -355,7 +355,7 @@ impl From<OAuthClientSecretModel> for OAuthClientSecret {
         OAuthClientSecret {
             id: value.id,
             oauth_client_id: value.oauth_client_id,
-            secret: value.secret,
+            secret_signature: value.secret_signature,
             created_at: value.created_at,
             deleted_at: value.deleted_at,
         }
@@ -387,8 +387,8 @@ impl From<OAuthClientRedirectUriModel> for OAuthClientRedirectUri {
 }
 
 impl OAuthClient {
-    pub fn is_secret_valid(&self, secret: &str) -> bool {
-        self.secrets.iter().any(|s| s.secret == secret)
+    pub fn is_secret_valid(&self, signature: &str) -> bool {
+        self.secrets.iter().any(|s| s.secret_signature == signature)
     }
 
     pub fn is_redirect_uri_valid(&self, redirect_uri: &str) -> bool {

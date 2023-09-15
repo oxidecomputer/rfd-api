@@ -9,7 +9,7 @@ CREATE TABLE api_user (
 CREATE TABLE api_key (
   id UUID PRIMARY KEY,
   api_user_id UUID REFERENCES api_user (id) NOT NULL,
-  key TEXT NOT NULL UNIQUE,
+  key_signature TEXT NOT NULL UNIQUE,
   permissions JSONB NOT NULL,
   expires_at TIMESTAMPTZ NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

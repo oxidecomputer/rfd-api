@@ -18,7 +18,7 @@ diesel::table! {
     api_key (id) {
         id -> Uuid,
         api_user_id -> Uuid,
-        key -> Text,
+        key_signature -> Text,
         permissions -> Jsonb,
         expires_at -> Timestamptz,
         created_at -> Timestamptz,
@@ -121,7 +121,7 @@ diesel::table! {
     oauth_client_secret (id) {
         id -> Uuid,
         oauth_client_id -> Uuid,
-        secret -> Varchar,
+        secret_signature -> Varchar,
         created_at -> Timestamptz,
         deleted_at -> Nullable<Timestamptz>,
     }

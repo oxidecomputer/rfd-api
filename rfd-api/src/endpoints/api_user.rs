@@ -284,7 +284,7 @@ async fn create_api_user_token_op(
                     NewApiKey {
                         id: key_id,
                         api_user_id: path.identifier,
-                        key: key.signature().to_string(),
+                        key_signature: key.signature().to_string(),
                         permissions: body.permissions,
                         expires_at: body.expires_at,
                     },
@@ -754,7 +754,7 @@ mod tests {
                 Ok(ApiKey {
                     id: Uuid::new_v4(),
                     api_user_id: user.id,
-                    key: key.key,
+                    key_signature: key.key_signature,
                     permissions: key.permissions,
                     expires_at: key.expires_at,
                     created_at: Utc::now(),
@@ -866,7 +866,7 @@ mod tests {
         let token = ApiKey {
             id: Uuid::new_v4(),
             api_user_id: api_user_id,
-            key: "encrypted_key".to_string(),
+            key_signature: "encrypted_key".to_string(),
             permissions: Vec::new().into(),
             expires_at: Utc::now() + Duration::seconds(5 * 60),
             created_at: Utc::now(),
@@ -984,7 +984,7 @@ mod tests {
         let token = ApiKey {
             id: Uuid::new_v4(),
             api_user_id: api_user_id,
-            key: "encrypted_key".to_string(),
+            key_signature: "encrypted_key".to_string(),
             permissions: Vec::new().into(),
             expires_at: Utc::now() + Duration::seconds(5 * 60),
             created_at: Utc::now(),

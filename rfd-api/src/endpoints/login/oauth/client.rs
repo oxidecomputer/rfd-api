@@ -150,7 +150,7 @@ async fn create_oauth_client_secret_op(
             .add_oauth_secret(&path.client_id, secret.signature())
             .await
             .map_err(ApiError::Storage)?;
-        client_secret.secret = secret.signed();
+        client_secret.secret_signature = secret.signed();
 
         Ok(HttpResponseOk(client_secret))
     } else {

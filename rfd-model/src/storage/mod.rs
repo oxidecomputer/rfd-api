@@ -247,7 +247,7 @@ pub trait ApiUserStore<T: Permission> {
 #[derive(Debug, Default)]
 pub struct ApiKeyFilter {
     pub api_user_id: Option<Vec<Uuid>>,
-    pub key: Option<Vec<String>>,
+    pub key_signature: Option<Vec<String>>,
     pub expired: bool,
     pub deleted: bool,
 }

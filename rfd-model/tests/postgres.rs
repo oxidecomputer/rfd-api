@@ -179,7 +179,7 @@ async fn test_api_user() {
         NewApiKey {
             id: Uuid::new_v4(),
             api_user_id: api_user.id,
-            key: format!("key-{}", Uuid::new_v4()),
+            key_signature: format!("key-{}", Uuid::new_v4()),
             permissions: vec![TestPermission::GetApiKey(api_user_id).into()].into(),
             expires_at: Utc::now() + Duration::seconds(5 * 60),
         },
@@ -194,7 +194,7 @@ async fn test_api_user() {
         NewApiKey {
             id: Uuid::new_v4(),
             api_user_id: api_user.id,
-            key: format!("key-{}", Uuid::new_v4()),
+            key_signature: format!("key-{}", Uuid::new_v4()),
             permissions: vec![
                 TestPermission::CreateApiUser.into(),
                 TestPermission::GetApiKey(api_user_id).into(),
@@ -217,7 +217,7 @@ async fn test_api_user() {
         NewApiKey {
             id: Uuid::new_v4(),
             api_user_id: api_user.id,
-            key: format!("key-{}", Uuid::new_v4()),
+            key_signature: format!("key-{}", Uuid::new_v4()),
             permissions: vec![
                 TestPermission::CreateApiUser.into(),
                 TestPermission::GetApiKey(api_user_id).into(),
@@ -237,7 +237,7 @@ async fn test_api_user() {
         &store,
         ApiKeyFilter {
             api_user_id: Some(vec![api_user.id]),
-            key: None,
+            key_signature: None,
             expired: false,
             deleted: false,
         },
@@ -255,7 +255,7 @@ async fn test_api_user() {
         &store,
         ApiKeyFilter {
             api_user_id: Some(vec![api_user.id]),
-            key: None,
+            key_signature: None,
             expired: true,
             deleted: false,
         },
@@ -287,7 +287,7 @@ async fn test_api_user() {
         &store,
         ApiKeyFilter {
             api_user_id: Some(vec![api_user.id]),
-            key: None,
+            key_signature: None,
             expired: true,
             deleted: true,
         },

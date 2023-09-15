@@ -86,7 +86,7 @@ pub struct ApiUserModel<T> {
 pub struct ApiKeyModel<T> {
     pub id: Uuid,
     pub api_user_id: Uuid,
-    pub key: String,
+    pub key_signature: String,
     pub permissions: Permissions<T>,
     pub expires_at: DateTime<Utc>,
     pub created_at: DateTime<Utc>,
@@ -151,7 +151,7 @@ pub struct OAuthClientModel {
 pub struct OAuthClientSecretModel {
     pub id: Uuid,
     pub oauth_client_id: Uuid,
-    pub secret: String,
+    pub secret_signature: String,
     pub created_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
 }

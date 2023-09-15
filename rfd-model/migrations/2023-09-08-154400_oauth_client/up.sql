@@ -7,7 +7,7 @@ CREATE TABLE oauth_client(
 CREATE TABLE oauth_client_secret(
   id UUID PRIMARY KEY,
   oauth_client_id UUID REFERENCES oauth_client (id) NOT NULL,
-  secret VARCHAR NOT NULL,
+  secret_signature VARCHAR NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   deleted_at TIMESTAMPTZ
 );
