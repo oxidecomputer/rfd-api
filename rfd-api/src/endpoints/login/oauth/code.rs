@@ -310,7 +310,7 @@ pub async fn authz_code_exchange(
 
     let client_secret = SignedApiKey::parse(&body.client_secret, &*ctx.secrets.signer)
         .map_err(|err| {
-            tracing::warn!("Failed the validate client secret");
+            tracing::warn!(?err, "Failed the validate client secret");
 
             // TODO: Change this to a bad request with invalid_client ?
             unauthorized()
