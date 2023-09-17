@@ -10,7 +10,7 @@ use tap::TapFallible;
 use trace_request::trace_request;
 use tracing::instrument;
 
-use super::{OAuthProvider, OAuthProviderInfo, OAuthProviderNameParam, UserInfoProvider};
+use super::{OAuthProvider, OAuthProviderInfo, OAuthProviderNameParam, UserInfoProvider, ClientType};
 use crate::{
     context::ApiContext, endpoints::login::LoginError, error::ApiError, util::response::bad_request,
 };
@@ -35,7 +35,7 @@ pub async fn get_device_provider(
         .map_err(ApiError::OAuth)?;
 
     Ok(HttpResponseOk(
-        provider.provider_info(&rqctx.context().public_url),
+        provider.provider_info(&rqctx.context().public_url, &ClientType::Device),
     ))
 }
 
@@ -65,9 +65,9 @@ impl AccessTokenExchange {
         req: AccessTokenExchangeRequest,
         provider: &Box<dyn OAuthProvider + Send + Sync>,
     ) -> Option<Self> {
-        provider.client_secret().map(|client_secret| Self {
+        provider.client_secret(&ClientType::Device).map(|client_secret| Self {
             provider: ProviderTokenExchange {
-                client_id: provider.client_id().to_string(),
+                client_id: provider.client_id(&ClientType::Device).to_string(),
                 device_code: req.device_code,
                 grant_type: req.grant_type,
                 client_secret: client_secret.to_string(),

@@ -131,11 +131,23 @@ impl RfdRevisionFilter {
     }
 }
 
+#[derive(Debug, Default)]
+pub enum RfdRevisionGroupBy {
+    Id,
+    #[default]
+    None,
+}
+
 #[cfg_attr(feature = "mock", automock)]
 #[async_trait]
 pub trait RfdRevisionStore {
     async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<RfdRevision>, StoreError>;
     async fn list(
+        &self,
+        filter: RfdRevisionFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdRevision>, StoreError>;
+    async fn list_unique_rfd(
         &self,
         filter: RfdRevisionFilter,
         pagination: &ListPagination,

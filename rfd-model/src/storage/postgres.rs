@@ -97,6 +97,8 @@ impl RfdStore for PostgresStore {
     ) -> Result<Vec<Rfd>, StoreError> {
         let mut query = rfd::dsl::rfd.into_boxed();
 
+        tracing::trace!(?filter, "Lookup RFDs");
+
         let RfdFilter {
             id,
             rfd_number,
@@ -181,6 +183,8 @@ impl RfdRevisionStore for PostgresStore {
     ) -> Result<Vec<RfdRevision>, StoreError> {
         let mut query = rfd_revision::dsl::rfd_revision.into_boxed();
 
+        tracing::trace!(?filter, "Lookup RFD revisions");
+
         let RfdRevisionFilter {
             id,
             rfd,
@@ -208,6 +212,52 @@ impl RfdRevisionStore for PostgresStore {
             .offset(pagination.offset)
             .limit(pagination.limit)
             .order(rfd_revision::created_at.desc())
+            .get_results_async::<RfdRevisionModel>(&self.conn)
+            .await?;
+
+        Ok(results
+            .into_iter()
+            .map(|revision| revision.into())
+            .collect())
+    }
+
+    // TODO: Refactor into a group by arg in list. Diesel types here are a pain
+    async fn list_unique_rfd(
+        &self,
+        filter: RfdRevisionFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdRevision>, StoreError> {
+        let mut query = rfd_revision::dsl::rfd_revision.distinct_on(rfd_revision::rfd_id).into_boxed();
+
+        tracing::trace!(?filter, "Lookup unique RFD revisions");
+
+        let RfdRevisionFilter {
+            id,
+            rfd,
+            sha,
+            deleted,
+        } = filter;
+
+        if let Some(id) = id {
+            query = query.filter(rfd_revision::id.eq_any(id));
+        }
+
+        if let Some(rfd) = rfd {
+            query = query.filter(rfd_revision::rfd_id.eq_any(rfd));
+        }
+
+        if let Some(sha) = sha {
+            query = query.filter(rfd_revision::sha.eq_any(sha));
+        }
+
+        if !deleted {
+            query = query.filter(rfd_revision::deleted_at.is_null());
+        }
+
+        let results = query
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+            .order(rfd_revision::rfd_id.asc())
             .get_results_async::<RfdRevisionModel>(&self.conn)
             .await?;
 
@@ -282,6 +332,8 @@ impl RfdPdfStore for PostgresStore {
         pagination: &ListPagination,
     ) -> Result<Vec<RfdPdf>, StoreError> {
         let mut query = rfd_pdf::dsl::rfd_pdf.into_boxed();
+
+        tracing::trace!(?filter, "Lookup RFD pdfs");
 
         let RfdPdfFilter {
             id,

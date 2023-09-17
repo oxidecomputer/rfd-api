@@ -133,6 +133,7 @@ impl PermissionStorage for Permissions<ApiPermission> {
                 },
 
                 ApiPermission::GetAssignedRfds => {
+                    expanded.push(p.clone());
                     for p in user.permissions().iter() {
                         match p {
                             ApiPermission::GetRfd(number) => expanded.push(ApiPermission::GetRfd(*number)),
@@ -141,6 +142,7 @@ impl PermissionStorage for Permissions<ApiPermission> {
                     }
                 },
                 ApiPermission::GetAssignedOAuthClients => {
+                    expanded.push(p.clone());
                     for p in user.permissions().iter() {
                         match p {
                             ApiPermission::GetOAuthClient(id) => expanded.push(ApiPermission::GetOAuthClient(*id)),
@@ -149,6 +151,7 @@ impl PermissionStorage for Permissions<ApiPermission> {
                     }
                 },
                 ApiPermission::UpdateAssignedOAuthClients => {
+                    expanded.push(p.clone());
                     for p in user.permissions().iter() {
                         match p {
                             ApiPermission::UpdateOAuthClient(id) => expanded.push(ApiPermission::UpdateOAuthClient(*id)),
@@ -157,6 +160,7 @@ impl PermissionStorage for Permissions<ApiPermission> {
                     }
                 },
                 ApiPermission::DeleteAssignedOAuthClients => {
+                    expanded.push(p.clone());
                     for p in user.permissions().iter() {
                         match p {
                             ApiPermission::DeleteOAuthClient(id) => expanded.push(ApiPermission::DeleteOAuthClient(*id)),
@@ -165,11 +169,26 @@ impl PermissionStorage for Permissions<ApiPermission> {
                     }
                 },
 
-                ApiPermission::GetApiUserSelf => expanded.push(ApiPermission::GetApiUser(*user.id())),
-                ApiPermission::CreateApiUserTokenSelf => expanded.push(ApiPermission::CreateApiUserToken(*user.id())),
-                ApiPermission::GetApiUserTokenSelf => expanded.push(ApiPermission::GetApiUserToken(*user.id())),
-                ApiPermission::DeleteApiUserTokenSelf => expanded.push(ApiPermission::DeleteApiUserToken(*user.id())),
-                ApiPermission::UpdateApiUserSelf => expanded.push(ApiPermission::UpdateApiUser(*user.id())),
+                ApiPermission::GetApiUserSelf => {
+                    expanded.push(p.clone());
+                    expanded.push(ApiPermission::GetApiUser(*user.id()))
+                },
+                ApiPermission::CreateApiUserTokenSelf => {
+                    expanded.push(p.clone());
+                    expanded.push(ApiPermission::CreateApiUserToken(*user.id()))
+                },
+                ApiPermission::GetApiUserTokenSelf => {
+                    expanded.push(p.clone());
+                    expanded.push(ApiPermission::GetApiUserToken(*user.id()))
+                },
+                ApiPermission::DeleteApiUserTokenSelf => {
+                    expanded.push(p.clone());
+                    expanded.push(ApiPermission::DeleteApiUserToken(*user.id()))
+                },
+                ApiPermission::UpdateApiUserSelf => {
+                    expanded.push(p.clone());
+                    expanded.push(ApiPermission::UpdateApiUser(*user.id()))
+                },
 
                 other => expanded.push(other.clone()),
             }

@@ -22,10 +22,23 @@ impl Cli {
             CliCommand::GetApiUserToken => Self::cli_get_api_user_token(),
             CliCommand::DeleteApiUserToken => Self::cli_delete_api_user_token(),
             CliCommand::GithubWebhook => Self::cli_github_webhook(),
-            CliCommand::AccessTokenLogin => Self::cli_access_token_login(),
-            CliCommand::JwtLogin => Self::cli_jwt_login(),
+            CliCommand::AuthzCodeRedirect => Self::cli_authz_code_redirect(),
+            CliCommand::AuthzCodeCallback => Self::cli_authz_code_callback(),
+            CliCommand::AuthzCodeExchange => Self::cli_authz_code_exchange(),
             CliCommand::GetDeviceProvider => Self::cli_get_device_provider(),
             CliCommand::ExchangeDeviceToken => Self::cli_exchange_device_token(),
+            CliCommand::ListOauthClients => Self::cli_list_oauth_clients(),
+            CliCommand::CreateOauthClient => Self::cli_create_oauth_client(),
+            CliCommand::GetOauthClient => Self::cli_get_oauth_client(),
+            CliCommand::CreateOauthClientRedirectUri => {
+                Self::cli_create_oauth_client_redirect_uri()
+            }
+            CliCommand::DeleteOauthClientRedirectUri => {
+                Self::cli_delete_oauth_client_redirect_uri()
+            }
+            CliCommand::CreateOauthClientSecret => Self::cli_create_oauth_client_secret(),
+            CliCommand::DeleteOauthClientSecret => Self::cli_delete_oauth_client_secret(),
+            CliCommand::GetRfds => Self::cli_get_rfds(),
             CliCommand::GetRfd => Self::cli_get_rfd(),
             CliCommand::GetSelf => Self::cli_get_self(),
         }
@@ -183,53 +196,59 @@ impl Cli {
             )
     }
 
-    pub fn cli_access_token_login() -> clap::Command {
+    pub fn cli_authz_code_redirect() -> clap::Command {
         clap::Command::new("")
             .arg(
-                clap::Arg::new("expiration")
-                    .long("expiration")
-                    .value_parser(clap::value_parser!(chrono::DateTime<chrono::offset::Utc>))
-                    .required(false),
+                clap::Arg::new("client-id")
+                    .long("client-id")
+                    .value_parser(clap::value_parser!(uuid::Uuid))
+                    .required(true),
             )
             .arg(
                 clap::Arg::new("provider")
                     .long("provider")
                     .value_parser(clap::builder::TypedValueParser::map(
                         clap::builder::PossibleValuesParser::new([
-                            types::AccessTokenProviderName::Github.to_string(),
+                            types::OAuthProviderName::GitHub.to_string(),
+                            types::OAuthProviderName::Google.to_string(),
                         ]),
-                        |s| types::AccessTokenProviderName::try_from(s).unwrap(),
+                        |s| types::OAuthProviderName::try_from(s).unwrap(),
                     ))
                     .required(true),
             )
             .arg(
-                clap::Arg::new("token")
-                    .long("token")
+                clap::Arg::new("redirect-uri")
+                    .long("redirect-uri")
                     .value_parser(clap::value_parser!(String))
-                    .required_unless_present("json-body"),
+                    .required(true),
             )
             .arg(
-                clap::Arg::new("json-body")
-                    .long("json-body")
-                    .value_name("JSON-FILE")
-                    .required(true)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
-                    .help("Path to a file that contains the full json body."),
+                clap::Arg::new("response-type")
+                    .long("response-type")
+                    .value_parser(clap::value_parser!(String))
+                    .required(true),
             )
             .arg(
-                clap::Arg::new("json-body-template")
-                    .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
-                    .help("XXX"),
+                clap::Arg::new("state")
+                    .long("state")
+                    .value_parser(clap::value_parser!(String))
+                    .required(true),
             )
+            .about("Generate the remote provider login url and redirect the user")
     }
 
-    pub fn cli_jwt_login() -> clap::Command {
+    pub fn cli_authz_code_callback() -> clap::Command {
         clap::Command::new("")
             .arg(
-                clap::Arg::new("expiration")
-                    .long("expiration")
-                    .value_parser(clap::value_parser!(chrono::DateTime<chrono::offset::Utc>))
+                clap::Arg::new("code")
+                    .long("code")
+                    .value_parser(clap::value_parser!(String))
+                    .required(false),
+            )
+            .arg(
+                clap::Arg::new("error")
+                    .long("error")
+                    .value_parser(clap::value_parser!(String))
                     .required(false),
             )
             .arg(
@@ -237,15 +256,69 @@ impl Cli {
                     .long("provider")
                     .value_parser(clap::builder::TypedValueParser::map(
                         clap::builder::PossibleValuesParser::new([
-                            types::JwtProviderName::Google.to_string()
+                            types::OAuthProviderName::GitHub.to_string(),
+                            types::OAuthProviderName::Google.to_string(),
                         ]),
-                        |s| types::JwtProviderName::try_from(s).unwrap(),
+                        |s| types::OAuthProviderName::try_from(s).unwrap(),
                     ))
                     .required(true),
             )
             .arg(
-                clap::Arg::new("token")
-                    .long("token")
+                clap::Arg::new("state")
+                    .long("state")
+                    .value_parser(clap::value_parser!(String))
+                    .required(false),
+            )
+            .about("Handle return calls from a remote OAuth provider")
+    }
+
+    pub fn cli_authz_code_exchange() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("client-id")
+                    .long("client-id")
+                    .value_parser(clap::value_parser!(uuid::Uuid))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
+                clap::Arg::new("client-secret")
+                    .long("client-secret")
+                    .value_parser(clap::value_parser!(String))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
+                clap::Arg::new("code")
+                    .long("code")
+                    .value_parser(clap::value_parser!(String))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
+                clap::Arg::new("grant-type")
+                    .long("grant-type")
+                    .value_parser(clap::value_parser!(String))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
+                clap::Arg::new("pkce-verifier")
+                    .long("pkce-verifier")
+                    .value_parser(clap::value_parser!(String))
+                    .required(false),
+            )
+            .arg(
+                clap::Arg::new("provider")
+                    .long("provider")
+                    .value_parser(clap::builder::TypedValueParser::map(
+                        clap::builder::PossibleValuesParser::new([
+                            types::OAuthProviderName::GitHub.to_string(),
+                            types::OAuthProviderName::Google.to_string(),
+                        ]),
+                        |s| types::OAuthProviderName::try_from(s).unwrap(),
+                    ))
+                    .required(true),
+            )
+            .arg(
+                clap::Arg::new("redirect-uri")
+                    .long("redirect-uri")
                     .value_parser(clap::value_parser!(String))
                     .required_unless_present("json-body"),
             )
@@ -253,7 +326,7 @@ impl Cli {
                 clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
-                    .required(true)
+                    .required(false)
                     .value_parser(clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
@@ -263,6 +336,7 @@ impl Cli {
                     .action(clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
+            .about("Exchange an authorization code for an access token")
     }
 
     pub fn cli_get_device_provider() -> clap::Command {
@@ -271,7 +345,8 @@ impl Cli {
                 .long("provider")
                 .value_parser(clap::builder::TypedValueParser::map(
                     clap::builder::PossibleValuesParser::new([
-                        types::OAuthProviderName::Google.to_string()
+                        types::OAuthProviderName::GitHub.to_string(),
+                        types::OAuthProviderName::Google.to_string(),
                     ]),
                     |s| types::OAuthProviderName::try_from(s).unwrap(),
                 ))
@@ -304,6 +379,7 @@ impl Cli {
                     .long("provider")
                     .value_parser(clap::builder::TypedValueParser::map(
                         clap::builder::PossibleValuesParser::new([
+                            types::OAuthProviderName::GitHub.to_string(),
                             types::OAuthProviderName::Google.to_string(),
                         ]),
                         |s| types::OAuthProviderName::try_from(s).unwrap(),
@@ -326,13 +402,114 @@ impl Cli {
             )
     }
 
+    pub fn cli_list_oauth_clients() -> clap::Command {
+        clap::Command::new("").about("List OAuth clients")
+    }
+
+    pub fn cli_create_oauth_client() -> clap::Command {
+        clap::Command::new("").about("Create a new OAuth Client")
+    }
+
+    pub fn cli_get_oauth_client() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("client-id")
+                    .long("client-id")
+                    .value_parser(clap::value_parser!(uuid::Uuid))
+                    .required(true),
+            )
+            .about("Get an new OAuth Client")
+    }
+
+    pub fn cli_create_oauth_client_redirect_uri() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("client-id")
+                    .long("client-id")
+                    .value_parser(clap::value_parser!(uuid::Uuid))
+                    .required(true),
+            )
+            .arg(
+                clap::Arg::new("redirect-uri")
+                    .long("redirect-uri")
+                    .value_parser(clap::value_parser!(String))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
+                clap::Arg::new("json-body")
+                    .long("json-body")
+                    .value_name("JSON-FILE")
+                    .required(false)
+                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .help("Path to a file that contains the full json body."),
+            )
+            .arg(
+                clap::Arg::new("json-body-template")
+                    .long("json-body-template")
+                    .action(clap::ArgAction::SetTrue)
+                    .help("XXX"),
+            )
+            .about("Add an OAuth client redirect uri")
+    }
+
+    pub fn cli_delete_oauth_client_redirect_uri() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("client-id")
+                    .long("client-id")
+                    .value_parser(clap::value_parser!(uuid::Uuid))
+                    .required(true),
+            )
+            .arg(
+                clap::Arg::new("redirect-uri-id")
+                    .long("redirect-uri-id")
+                    .value_parser(clap::value_parser!(uuid::Uuid))
+                    .required(true),
+            )
+            .about("Delete an OAuth client redirect uri")
+    }
+
+    pub fn cli_create_oauth_client_secret() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("client-id")
+                    .long("client-id")
+                    .value_parser(clap::value_parser!(uuid::Uuid))
+                    .required(true),
+            )
+            .about("Add an OAuth client secret")
+    }
+
+    pub fn cli_delete_oauth_client_secret() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("client-id")
+                    .long("client-id")
+                    .value_parser(clap::value_parser!(uuid::Uuid))
+                    .required(true),
+            )
+            .arg(
+                clap::Arg::new("secret-id")
+                    .long("secret-id")
+                    .value_parser(clap::value_parser!(uuid::Uuid))
+                    .required(true),
+            )
+            .about("Delete an OAuth client secret")
+    }
+
+    pub fn cli_get_rfds() -> clap::Command {
+        clap::Command::new("").about("List all available RFDs")
+    }
+
     pub fn cli_get_rfd() -> clap::Command {
-        clap::Command::new("").arg(
-            clap::Arg::new("number")
-                .long("number")
-                .value_parser(clap::value_parser!(String))
-                .required(true),
-        )
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(clap::value_parser!(String))
+                    .required(true),
+            )
+            .about("Get the latest representation of an RFD")
     }
 
     pub fn cli_get_self() -> clap::Command {
@@ -371,17 +548,44 @@ impl<T: CliOverride> Cli<T> {
             CliCommand::GithubWebhook => {
                 self.execute_github_webhook(matches).await;
             }
-            CliCommand::AccessTokenLogin => {
-                self.execute_access_token_login(matches).await;
+            CliCommand::AuthzCodeRedirect => {
+                self.execute_authz_code_redirect(matches).await;
             }
-            CliCommand::JwtLogin => {
-                self.execute_jwt_login(matches).await;
+            CliCommand::AuthzCodeCallback => {
+                self.execute_authz_code_callback(matches).await;
+            }
+            CliCommand::AuthzCodeExchange => {
+                self.execute_authz_code_exchange(matches).await;
             }
             CliCommand::GetDeviceProvider => {
                 self.execute_get_device_provider(matches).await;
             }
             CliCommand::ExchangeDeviceToken => {
                 self.execute_exchange_device_token(matches).await;
+            }
+            CliCommand::ListOauthClients => {
+                self.execute_list_oauth_clients(matches).await;
+            }
+            CliCommand::CreateOauthClient => {
+                self.execute_create_oauth_client(matches).await;
+            }
+            CliCommand::GetOauthClient => {
+                self.execute_get_oauth_client(matches).await;
+            }
+            CliCommand::CreateOauthClientRedirectUri => {
+                self.execute_create_oauth_client_redirect_uri(matches).await;
+            }
+            CliCommand::DeleteOauthClientRedirectUri => {
+                self.execute_delete_oauth_client_redirect_uri(matches).await;
+            }
+            CliCommand::CreateOauthClientSecret => {
+                self.execute_create_oauth_client_secret(matches).await;
+            }
+            CliCommand::DeleteOauthClientSecret => {
+                self.execute_delete_oauth_client_secret(matches).await;
+            }
+            CliCommand::GetRfds => {
+                self.execute_get_rfds(matches).await;
             }
             CliCommand::GetRfd => {
                 self.execute_get_rfd(matches).await;
@@ -493,8 +697,7 @@ impl<T: CliOverride> Cli<T> {
 
         if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
             let body_txt = std::fs::read_to_string(value).unwrap();
-            let body_value =
-                serde_json::from_str::<types::ApiUserTokenCreateParams>(&body_txt).unwrap();
+            let body_value = serde_json::from_str::<types::ApiKeyCreateParams>(&body_txt).unwrap();
             request = request.body(body_value);
         }
 
@@ -586,35 +789,67 @@ impl<T: CliOverride> Cli<T> {
         }
     }
 
-    pub async fn execute_access_token_login(&self, matches: &clap::ArgMatches) {
-        let mut request = self.client.access_token_login();
-        if let Some(value) = matches.get_one::<chrono::DateTime<chrono::offset::Utc>>("expiration")
-        {
-            request = request.body_map(|body| body.expiration(value.clone()))
+    pub async fn execute_authz_code_redirect(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.authz_code_redirect();
+        if let Some(value) = matches.get_one::<uuid::Uuid>("client-id") {
+            request = request.client_id(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<types::AccessTokenProviderName>("provider") {
+        if let Some(value) = matches.get_one::<types::OAuthProviderName>("provider") {
             request = request.provider(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("token") {
-            request = request.body_map(|body| body.token(value.clone()))
+        if let Some(value) = matches.get_one::<String>("redirect-uri") {
+            request = request.redirect_uri(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
-            let body_txt = std::fs::read_to_string(value).unwrap();
-            let body_value =
-                serde_json::from_str::<types::AccessTokenProviderLogin>(&body_txt).unwrap();
-            request = request.body(body_value);
+        if let Some(value) = matches.get_one::<String>("response-type") {
+            request = request.response_type(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<String>("state") {
+            request = request.state(value.clone());
         }
 
         self.over
-            .execute_access_token_login(matches, &mut request)
+            .execute_authz_code_redirect(matches, &mut request)
             .unwrap();
         let result = request.send().await;
         match result {
             Ok(r) => {
-                println!("success\n{:#?}", r)
+                todo!()
+            }
+            Err(r) => {
+                todo!()
+            }
+        }
+    }
+
+    pub async fn execute_authz_code_callback(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.authz_code_callback();
+        if let Some(value) = matches.get_one::<String>("code") {
+            request = request.code(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<String>("error") {
+            request = request.error(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<types::OAuthProviderName>("provider") {
+            request = request.provider(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<String>("state") {
+            request = request.state(value.clone());
+        }
+
+        self.over
+            .execute_authz_code_callback(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                todo!()
             }
             Err(r) => {
                 println!("error\n{:#?}", r)
@@ -622,28 +857,46 @@ impl<T: CliOverride> Cli<T> {
         }
     }
 
-    pub async fn execute_jwt_login(&self, matches: &clap::ArgMatches) {
-        let mut request = self.client.jwt_login();
-        if let Some(value) = matches.get_one::<chrono::DateTime<chrono::offset::Utc>>("expiration")
-        {
-            request = request.body_map(|body| body.expiration(value.clone()))
+    pub async fn execute_authz_code_exchange(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.authz_code_exchange();
+        if let Some(value) = matches.get_one::<uuid::Uuid>("client-id") {
+            request = request.body_map(|body| body.client_id(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<types::JwtProviderName>("provider") {
+        if let Some(value) = matches.get_one::<String>("client-secret") {
+            request = request.body_map(|body| body.client_secret(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<String>("code") {
+            request = request.body_map(|body| body.code(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<String>("grant-type") {
+            request = request.body_map(|body| body.grant_type(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<String>("pkce-verifier") {
+            request = request.body_map(|body| body.pkce_verifier(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<types::OAuthProviderName>("provider") {
             request = request.provider(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("token") {
-            request = request.body_map(|body| body.token(value.clone()))
+        if let Some(value) = matches.get_one::<String>("redirect-uri") {
+            request = request.body_map(|body| body.redirect_uri(value.clone()))
         }
 
         if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
             let body_txt = std::fs::read_to_string(value).unwrap();
-            let body_value = serde_json::from_str::<types::JwtProviderLogin>(&body_txt).unwrap();
+            let body_value =
+                serde_json::from_str::<types::OAuthAuthzCodeExchangeBody>(&body_txt).unwrap();
             request = request.body(body_value);
         }
 
-        self.over.execute_jwt_login(matches, &mut request).unwrap();
+        self.over
+            .execute_authz_code_exchange(matches, &mut request)
+            .unwrap();
         let result = request.send().await;
         match result {
             Ok(r) => {
@@ -711,6 +964,171 @@ impl<T: CliOverride> Cli<T> {
             }
             Err(r) => {
                 todo!()
+            }
+        }
+    }
+
+    pub async fn execute_list_oauth_clients(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.list_oauth_clients();
+        self.over
+            .execute_list_oauth_clients(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                println!("success\n{:#?}", r)
+            }
+            Err(r) => {
+                println!("error\n{:#?}", r)
+            }
+        }
+    }
+
+    pub async fn execute_create_oauth_client(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.create_oauth_client();
+        self.over
+            .execute_create_oauth_client(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                println!("success\n{:#?}", r)
+            }
+            Err(r) => {
+                println!("error\n{:#?}", r)
+            }
+        }
+    }
+
+    pub async fn execute_get_oauth_client(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.get_oauth_client();
+        if let Some(value) = matches.get_one::<uuid::Uuid>("client-id") {
+            request = request.client_id(value.clone());
+        }
+
+        self.over
+            .execute_get_oauth_client(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                println!("success\n{:#?}", r)
+            }
+            Err(r) => {
+                println!("error\n{:#?}", r)
+            }
+        }
+    }
+
+    pub async fn execute_create_oauth_client_redirect_uri(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.create_oauth_client_redirect_uri();
+        if let Some(value) = matches.get_one::<uuid::Uuid>("client-id") {
+            request = request.client_id(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<String>("redirect-uri") {
+            request = request.body_map(|body| body.redirect_uri(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value =
+                serde_json::from_str::<types::AddOAuthClientRedirectBody>(&body_txt).unwrap();
+            request = request.body(body_value);
+        }
+
+        self.over
+            .execute_create_oauth_client_redirect_uri(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                println!("success\n{:#?}", r)
+            }
+            Err(r) => {
+                println!("error\n{:#?}", r)
+            }
+        }
+    }
+
+    pub async fn execute_delete_oauth_client_redirect_uri(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.delete_oauth_client_redirect_uri();
+        if let Some(value) = matches.get_one::<uuid::Uuid>("client-id") {
+            request = request.client_id(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<uuid::Uuid>("redirect-uri-id") {
+            request = request.redirect_uri_id(value.clone());
+        }
+
+        self.over
+            .execute_delete_oauth_client_redirect_uri(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                println!("success\n{:#?}", r)
+            }
+            Err(r) => {
+                println!("error\n{:#?}", r)
+            }
+        }
+    }
+
+    pub async fn execute_create_oauth_client_secret(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.create_oauth_client_secret();
+        if let Some(value) = matches.get_one::<uuid::Uuid>("client-id") {
+            request = request.client_id(value.clone());
+        }
+
+        self.over
+            .execute_create_oauth_client_secret(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                println!("success\n{:#?}", r)
+            }
+            Err(r) => {
+                println!("error\n{:#?}", r)
+            }
+        }
+    }
+
+    pub async fn execute_delete_oauth_client_secret(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.delete_oauth_client_secret();
+        if let Some(value) = matches.get_one::<uuid::Uuid>("client-id") {
+            request = request.client_id(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<uuid::Uuid>("secret-id") {
+            request = request.secret_id(value.clone());
+        }
+
+        self.over
+            .execute_delete_oauth_client_secret(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                println!("success\n{:#?}", r)
+            }
+            Err(r) => {
+                println!("error\n{:#?}", r)
+            }
+        }
+    }
+
+    pub async fn execute_get_rfds(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.get_rfds();
+        self.over.execute_get_rfds(matches, &mut request).unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                println!("success\n{:#?}", r)
+            }
+            Err(r) => {
+                println!("error\n{:#?}", r)
             }
         }
     }
@@ -813,18 +1231,26 @@ pub trait CliOverride {
         Ok(())
     }
 
-    fn execute_access_token_login(
+    fn execute_authz_code_redirect(
         &self,
         matches: &clap::ArgMatches,
-        request: &mut builder::AccessTokenLogin,
+        request: &mut builder::AuthzCodeRedirect,
     ) -> Result<(), String> {
         Ok(())
     }
 
-    fn execute_jwt_login(
+    fn execute_authz_code_callback(
         &self,
         matches: &clap::ArgMatches,
-        request: &mut builder::JwtLogin,
+        request: &mut builder::AuthzCodeCallback,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn execute_authz_code_exchange(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::AuthzCodeExchange,
     ) -> Result<(), String> {
         Ok(())
     }
@@ -841,6 +1267,70 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::ExchangeDeviceToken,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn execute_list_oauth_clients(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::ListOauthClients,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn execute_create_oauth_client(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::CreateOauthClient,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn execute_get_oauth_client(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::GetOauthClient,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn execute_create_oauth_client_redirect_uri(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::CreateOauthClientRedirectUri,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn execute_delete_oauth_client_redirect_uri(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::DeleteOauthClientRedirectUri,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn execute_create_oauth_client_secret(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::CreateOauthClientSecret,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn execute_delete_oauth_client_secret(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::DeleteOauthClientSecret,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn execute_get_rfds(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::GetRfds,
     ) -> Result<(), String> {
         Ok(())
     }
@@ -874,10 +1364,19 @@ pub enum CliCommand {
     GetApiUserToken,
     DeleteApiUserToken,
     GithubWebhook,
-    AccessTokenLogin,
-    JwtLogin,
+    AuthzCodeRedirect,
+    AuthzCodeCallback,
+    AuthzCodeExchange,
     GetDeviceProvider,
     ExchangeDeviceToken,
+    ListOauthClients,
+    CreateOauthClient,
+    GetOauthClient,
+    CreateOauthClientRedirectUri,
+    DeleteOauthClientRedirectUri,
+    CreateOauthClientSecret,
+    DeleteOauthClientSecret,
+    GetRfds,
     GetRfd,
     GetSelf,
 }
@@ -893,10 +1392,19 @@ impl CliCommand {
             CliCommand::GetApiUserToken,
             CliCommand::DeleteApiUserToken,
             CliCommand::GithubWebhook,
-            CliCommand::AccessTokenLogin,
-            CliCommand::JwtLogin,
+            CliCommand::AuthzCodeRedirect,
+            CliCommand::AuthzCodeCallback,
+            CliCommand::AuthzCodeExchange,
             CliCommand::GetDeviceProvider,
             CliCommand::ExchangeDeviceToken,
+            CliCommand::ListOauthClients,
+            CliCommand::CreateOauthClient,
+            CliCommand::GetOauthClient,
+            CliCommand::CreateOauthClientRedirectUri,
+            CliCommand::DeleteOauthClientRedirectUri,
+            CliCommand::CreateOauthClientSecret,
+            CliCommand::DeleteOauthClientSecret,
+            CliCommand::GetRfds,
             CliCommand::GetRfd,
             CliCommand::GetSelf,
         ]

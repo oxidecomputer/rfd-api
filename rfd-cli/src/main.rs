@@ -41,12 +41,15 @@ impl Context {
 
     pub fn client(&mut self) -> Result<&Client> {
         if self.client.is_none() {
-            let mut auth_header =
-                HeaderValue::from_str(&format!("Bearer {}", self.config.token()?))?;
-            auth_header.set_sensitive(true);
 
             let mut default_headers = HeaderMap::new();
-            default_headers.insert(AUTHORIZATION, auth_header);
+
+            if let Ok(token) = self.config.token() {
+                let mut auth_header =
+                    HeaderValue::from_str(&format!("Bearer {}", self.config.token()?))?;
+                auth_header.set_sensitive(true);
+                default_headers.insert(AUTHORIZATION, auth_header);
+            }
 
             let http_client = reqwest::Client::builder()
                 .default_headers(default_headers)
@@ -94,18 +97,30 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::DeleteApiUserToken => Some("user token delete"),
         CliCommand::GetApiUser => Some("user get"),
         CliCommand::GetApiUserToken => Some("user token get"),
-        CliCommand::GetRfd => Some("rfd"),
+        CliCommand::GetRfd => Some("rfd get"),
+        CliCommand::GetRfds => Some("rfd list"),
         CliCommand::GetSelf => Some("self"),
         CliCommand::ListApiUserTokens => Some("user token list"),
         CliCommand::UpdateApiUser => Some("user update"),
 
+        // OAuth client commands
+        CliCommand::ListOauthClients => None,
+        CliCommand::CreateOauthClient => None,
+        CliCommand::GetOauthClient => None,
+        CliCommand::CreateOauthClientRedirectUri => None,
+        CliCommand::DeleteOauthClientRedirectUri => None,
+        CliCommand::CreateOauthClientSecret => None,
+        CliCommand::DeleteOauthClientSecret => None,
+
         // Authentication is handled separately
-        CliCommand::AccessTokenLogin => None,
-        CliCommand::JwtLogin => None,
         CliCommand::ExchangeDeviceToken => None,
         CliCommand::GetDeviceProvider => None,
 
-        CliCommand::GithubWebhook => unimplemented!(),
+        // Unsupported commands
+        CliCommand::AuthzCodeRedirect => None,
+        CliCommand::AuthzCodeCallback => None,
+        CliCommand::AuthzCodeExchange => None,
+        CliCommand::GithubWebhook => None,
     }
 }
 

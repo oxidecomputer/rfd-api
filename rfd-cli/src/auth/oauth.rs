@@ -76,6 +76,8 @@ impl GoogleDeviceAuth {
             req = req.add_scope(Scope::new(scope.to_string()));
         }
 
-        req.request_async(async_http_client).await
+        let res = req.request_async(async_http_client).await;
+
+        res
     }
 }

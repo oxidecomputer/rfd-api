@@ -3,6 +3,7 @@ use http::StatusCode;
 use rfd_model::{OAuthClient, OAuthClientRedirectUri, OAuthClientSecret};
 use schemars::JsonSchema;
 use serde::Deserialize;
+use trace_request::trace_request;
 use tracing::instrument;
 use uuid::Uuid;
 
@@ -16,6 +17,7 @@ use crate::{
 };
 
 /// List OAuth clients
+#[trace_request]
 #[endpoint {
     method = GET,
     path = "/oauth/client"
@@ -41,6 +43,7 @@ async fn list_oauth_clients_op(
 }
 
 /// Create a new OAuth Client
+#[trace_request]
 #[endpoint {
     method = POST,
     path = "/oauth/client"
@@ -83,6 +86,7 @@ pub struct GetOAuthClientPath {
 }
 
 /// Get an new OAuth Client
+#[trace_request]
 #[endpoint {
     method = GET,
     path = "/oauth/client/{client_id}"
@@ -121,6 +125,7 @@ pub struct AddOAuthClientSecretPath {
 }
 
 /// Add an OAuth client secret
+#[trace_request]
 #[endpoint {
     method = POST,
     path = "/oauth/client/{client_id}/secret"
@@ -167,6 +172,7 @@ pub struct DeleteOAuthClientSecretPath {
 }
 
 /// Delete an OAuth client secret
+#[trace_request]
 #[endpoint {
     method = DELETE,
     path = "/oauth/client/{client_id}/secret/{secret_id}"
@@ -210,6 +216,7 @@ pub struct AddOAuthClientRedirectBody {
 }
 
 /// Add an OAuth client redirect uri
+#[trace_request]
 #[endpoint {
     method = POST,
     path = "/oauth/client/{client_id}/redirect_uri"
@@ -251,6 +258,7 @@ pub struct DeleteOAuthClientRedirectPath {
 }
 
 /// Delete an OAuth client redirect uri
+#[trace_request]
 #[endpoint {
     method = DELETE,
     path = "/oauth/client/{client_id}/redirect_uri/{redirect_uri_id}"

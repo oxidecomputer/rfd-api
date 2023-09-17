@@ -812,8 +812,37 @@
         }
       }
     },
+    "/rfd": {
+      "get": {
+        "summary": "List all available RFDs",
+        "operationId": "get_rfds",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Array_of_ListRfd",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ListRfd"
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
     "/rfd/{number}": {
       "get": {
+        "summary": "Get the latest representation of an RFD",
         "operationId": "get_rfd",
         "parameters": [
           {
@@ -970,8 +999,11 @@
               "GetAllRfds",
               "GetAssignedRfds",
               "GetAllDiscussions",
+              "GetAssignedDiscussions",
               "CreateOAuthClient",
-              "GetOAuthClientAll"
+              "GetAssignedOAuthClients",
+              "UpdateAssignedOAuthClients",
+              "DeleteAssignedOAuthClients"
             ]
           },
           {
@@ -1043,6 +1075,19 @@
             "type": "object",
             "properties": {
               "GetRfd": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "required": [
+              "GetRfd"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "GetRfds": {
                 "type": "array",
                 "items": {
                   "type": "integer",
@@ -1052,7 +1097,37 @@
               }
             },
             "required": [
-              "GetRfd"
+              "GetRfds"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "GetDiscussion": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "required": [
+              "GetDiscussion"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "GetDiscussions": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "GetDiscussions"
             ],
             "additionalProperties": false
           },
@@ -1072,6 +1147,23 @@
           {
             "type": "object",
             "properties": {
+              "GetOAuthClients": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "GetOAuthClients"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
               "UpdateOAuthClient": {
                 "type": "string",
                 "format": "uuid"
@@ -1085,6 +1177,23 @@
           {
             "type": "object",
             "properties": {
+              "UpdateOAuthClients": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "UpdateOAuthClients"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
               "DeleteOAuthClient": {
                 "type": "string",
                 "format": "uuid"
@@ -1092,6 +1201,23 @@
             },
             "required": [
               "DeleteOAuthClient"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "DeleteOAuthClients": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "DeleteOAuthClients"
             ],
             "additionalProperties": false
           }
@@ -1412,6 +1538,56 @@
           "permissions"
         ]
       },
+      "ListRfd": {
+        "type": "object",
+        "properties": {
+          "authors": {
+            "nullable": true,
+            "type": "string"
+          },
+          "commit": {
+            "type": "string"
+          },
+          "committed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "discussion": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "link": {
+            "nullable": true,
+            "type": "string"
+          },
+          "rfd_number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sha": {
+            "type": "string"
+          },
+          "state": {
+            "nullable": true,
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "commit",
+          "committed_at",
+          "id",
+          "rfd_number",
+          "sha",
+          "title"
+        ]
+      },
       "OAuthAuthzCodeExchangeBody": {
         "type": "object",
         "properties": {
@@ -1607,7 +1783,8 @@
         "type": "array",
         "items": {
           "$ref": "#/components/schemas/ApiPermission"
-        }
+        },
+        "uniqueItems": true
       }
     }
   },

@@ -1,15 +1,17 @@
 use std::fmt;
 
 use hyper::body::Bytes;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 
 use crate::endpoints::login::{ExternalUserId, UserInfo, UserInfoError};
 
-use super::{ExtractUserInfo, OAuthProvider, OAuthProviderName};
+use super::{ExtractUserInfo, OAuthProvider, OAuthProviderName, ClientType, OAuthPublicCredentials, OAuthPrivateCredentials};
 
 pub struct GoogleOAuthProvider {
-    public: GooglePublicProvider,
-    private: Option<GooglePrivateProvider>,
+    device_public: OAuthPublicCredentials,
+    device_private: Option<OAuthPrivateCredentials>,
+    web_public: OAuthPublicCredentials,
+    web_private: Option<OAuthPrivateCredentials>,
 }
 
 impl fmt::Debug for GoogleOAuthProvider {
@@ -18,20 +20,18 @@ impl fmt::Debug for GoogleOAuthProvider {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct GooglePublicProvider {
-    client_id: String,
-}
-
-pub struct GooglePrivateProvider {
-    client_secret: String,
-}
-
 impl GoogleOAuthProvider {
-    pub fn new(client_id: String, client_secret: String) -> Self {
+    pub fn new(
+        device_client_id: String,
+        device_client_secret: String,
+        web_client_id: String,
+        web_client_secret: String,
+    ) -> Self {
         Self {
-            public: GooglePublicProvider { client_id },
-            private: Some(GooglePrivateProvider { client_secret }),
+            device_public: OAuthPublicCredentials { client_id: device_client_id },
+            device_private: Some(OAuthPrivateCredentials { client_secret: device_client_secret }),
+            web_public: OAuthPublicCredentials { client_id: web_client_id },
+            web_private: Some(OAuthPrivateCredentials { client_secret: web_client_secret }),
         }
     }
 }
@@ -70,14 +70,18 @@ impl OAuthProvider for GoogleOAuthProvider {
         vec!["https://www.googleapis.com/auth/userinfo.email", "openid"]
     }
 
-    fn client_id(&self) -> &str {
-        &self.public.client_id
+    fn client_id(&self, client_type: &ClientType) -> &str {
+        match client_type {
+            ClientType::Device => &self.device_public.client_id,
+            ClientType::Web => &self.web_public.client_id,
+        }
     }
 
-    fn client_secret(&self) -> Option<&str> {
-        self.private
-            .as_ref()
-            .map(|private| private.client_secret.as_str())
+    fn client_secret(&self, client_type: &ClientType) -> Option<&str> {
+        match client_type {
+            ClientType::Device => self.device_private.as_ref().map(|private| private.client_secret.as_str()),
+            ClientType::Web => self.web_private.as_ref().map(|private| private.client_secret.as_str()),
+        }
     }
 
     fn user_info_endpoints(&self) -> Vec<&str> {

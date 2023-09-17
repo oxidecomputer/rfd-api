@@ -5,6 +5,7 @@ use hyper::{client::HttpConnector, Body, Client};
 use hyper_tls::HttpsConnector;
 use jsonwebtoken::jwk::JwkSet;
 use oauth2::CsrfToken;
+use partial_struct::partial;
 use rfd_model::{
     permissions::{Caller, Permissions},
     schema_ext::LoginAttemptState,
@@ -144,6 +145,7 @@ pub enum LoginAttemptError {
     Storage(#[from] StoreError),
 }
 
+#[partial(ListRfd)]
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
 pub struct FullRfd {
     pub id: Uuid,
@@ -153,10 +155,12 @@ pub struct FullRfd {
     pub title: String,
     pub state: Option<String>,
     pub authors: Option<String>,
+    #[partial(ListRfd(skip))]
     pub content: String,
     pub sha: String,
     pub commit: String,
     pub committed_at: DateTime<Utc>,
+    #[partial(ListRfd(skip))]
     pub pdfs: Vec<FullRfdPdfEntry>,
 }
 
@@ -318,6 +322,56 @@ impl ApiContext {
     }
 
     // RFD Operations
+
+    pub async fn list_rfds(
+        &self,
+        caller: &Caller<ApiPermission>,
+    ) -> Result<Vec<ListRfd>, StoreError> {
+        let mut filter = RfdFilter::default();
+
+        if !caller.can(&ApiPermission::GetAllRfds) {
+            let numbers = caller.permissions.iter().filter_map(|p| {
+                match p {
+                    ApiPermission::GetRfd(number) => Some(*number),
+                    _ => None
+                }
+            }).collect::<Vec<_>>();
+
+            filter = filter.rfd_number(Some(numbers));
+        }
+
+        let rfds = RfdStore::list(
+            &*self.storage,
+            filter,
+            &ListPagination::default().limit(1),
+        )
+        .await.tap_err(|err| tracing::error!(?err, "Failed to lookup RFDs"))?;
+
+        let rfd_revisions = RfdRevisionStore::list_unique_rfd(
+            &*self.storage,
+            RfdRevisionFilter::default()
+                .rfd(Some(rfds.iter().map(|rfd| rfd.id).collect())),
+            &ListPagination::default(),
+        )
+        .await.tap_err(|err| tracing::error!(?err, "Failed to lookup RFD revisions"))?;
+
+        let rfd_list = rfds.into_iter().zip(rfd_revisions).map(|(rfd, revision)| {
+            ListRfd {
+                id: rfd.id,
+                rfd_number: rfd.rfd_number,
+                link: rfd.link,
+                discussion: revision.discussion,
+                title: revision.title,
+                state: revision.state,
+                authors: revision.authors,
+                sha: revision.sha,
+                commit: revision.commit_sha,
+                committed_at: revision.committed_at,
+            }
+        }).collect::<Vec<_>>();
+
+        Ok(rfd_list)
+    }
 
     pub async fn get_rfd(
         &self,
@@ -877,6 +931,18 @@ pub(crate) mod tests {
         }
 
         async fn list(
+            &self,
+            filter: rfd_model::storage::RfdRevisionFilter,
+            pagination: &ListPagination,
+        ) -> Result<Vec<rfd_model::RfdRevision>, rfd_model::storage::StoreError> {
+            self.rfd_revision_store
+                .as_ref()
+                .unwrap()
+                .list(filter, pagination)
+                .await
+        }
+
+        async fn list_unique_rfd(
             &self,
             filter: rfd_model::storage::RfdRevisionFilter,
             pagination: &ListPagination,

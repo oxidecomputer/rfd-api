@@ -87,8 +87,10 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             OAuthProviderName::Google,
             Box::new(move || {
                 Box::new(GoogleOAuthProvider::new(
-                    google.client_id.clone(),
-                    google.client_secret.clone(),
+                    google.device.client_id.clone(),
+                    google.device.client_secret.clone(),
+                    google.web.client_id.clone(),
+                    google.web.client_secret.clone(),
                 ))
             }),
         )

@@ -193,7 +193,7 @@ impl GitHubRfdRepo {
 
                         let rfd_number = RfdNumber::from(number);
 
-                        // Only interesting in exactly the RFD file that matches the branch name
+                        // Only interested in exactly the RFD file that matches the branch name
                         let response = client.repos().get_content_file(&self.owner, &self.repo, &format!("rfd/{}/README.adoc", rfd_number.as_number_string()), &branch.commit.sha).await;
 
                         // 404s are returned as errors, but that should not stop processing. This only

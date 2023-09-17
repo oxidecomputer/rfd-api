@@ -25,7 +25,7 @@ use super::{OAuthProviderNameParam, UserInfoProvider};
 use crate::{
     authn::key::RawApiKey,
     context::ApiContext,
-    endpoints::login::LoginError,
+    endpoints::login::{LoginError, oauth::ClientType},
     error::ApiError,
     util::{
         request::RequestCookies,
@@ -97,7 +97,7 @@ pub async fn authz_code_redirect(
     // TODO: This behavior should be changed so that clients are precomputed. We do not need to be
     // constructing a new client on every request. That said, we need to ensure the client does not
     // maintain state between requests
-    let client = provider.as_client().map_err(to_internal_error)?;
+    let client = provider.as_client(&ClientType::Web).map_err(to_internal_error)?;
     let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
 
     // Construct a new login attempt with the minimum required values
@@ -366,7 +366,7 @@ pub async fn authz_code_exchange(
         })?;
 
     // Exchange the stored authorization code with the remote provider for a remote access token
-    let client = provider.as_client().map_err(to_internal_error)?;
+    let client = provider.as_client(&ClientType::Web).map_err(to_internal_error)?;
     let mut request = client.exchange_code(AuthorizationCode::new(
         attempt.provider_authz_code.ok_or_else(|| {
             internal_error("Expected authorization code to exist due to attempt state")

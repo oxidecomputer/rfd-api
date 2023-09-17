@@ -27,11 +27,24 @@ pub enum OAuthProviderError {
     FailToCreateInvalidProvider,
 }
 
+pub enum ClientType {
+    Device,
+    Web,
+}
+
+pub struct OAuthPublicCredentials {
+    client_id: String,
+}
+
+pub struct OAuthPrivateCredentials {
+    client_secret: String,
+}
+
 pub trait OAuthProvider: ExtractUserInfo + Debug {
     fn name(&self) -> OAuthProviderName;
     fn scopes(&self) -> Vec<&str>;
-    fn client_id(&self) -> &str;
-    fn client_secret(&self) -> Option<&str>;
+    fn client_id(&self, client_type: &ClientType) -> &str;
+    fn client_secret(&self, client_type: &ClientType) -> Option<&str>;
 
     // TODO: How can user info be change to something statically checked instead of a runtime check
     fn user_info_endpoints(&self) -> Vec<&str>;
@@ -41,10 +54,10 @@ pub trait OAuthProvider: ExtractUserInfo + Debug {
     fn token_exchange_endpoint(&self) -> &str;
     fn supports_pkce(&self) -> bool;
 
-    fn provider_info(&self, public_url: &str) -> OAuthProviderInfo {
+    fn provider_info(&self, public_url: &str, client_type: &ClientType) -> OAuthProviderInfo {
         OAuthProviderInfo {
             provider: self.name(),
-            client_id: self.client_id().to_string(),
+            client_id: self.client_id(client_type).to_string(),
             auth_url_endpoint: self.auth_url_endpoint().to_string(),
             device_code_endpoint: self.device_code_endpoint().to_string(),
             token_endpoint: format!("{}/login/oauth/{}/device/exchange", public_url, self.name(),),
@@ -56,10 +69,10 @@ pub trait OAuthProvider: ExtractUserInfo + Debug {
         }
     }
 
-    fn as_client(&self) -> Result<BasicClient, ParseError> {
+    fn as_client(&self, client_type: &ClientType) -> Result<BasicClient, ParseError> {
         Ok(BasicClient::new(
-            ClientId::new(self.client_id().to_string()),
-            self.client_secret()
+            ClientId::new(self.client_id(client_type).to_string()),
+            self.client_secret(client_type)
                 .map(|s| ClientSecret::new(s.to_string())),
             AuthUrl::new(self.auth_url_endpoint().to_string())?,
             Some(TokenUrl::new(self.token_exchange_endpoint().to_string())?),

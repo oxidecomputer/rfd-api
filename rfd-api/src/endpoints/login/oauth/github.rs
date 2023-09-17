@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::endpoints::login::{ExternalUserId, UserInfo, UserInfoError};
 
-use super::{ExtractUserInfo, OAuthProvider, OAuthProviderName};
+use super::{ExtractUserInfo, OAuthProvider, OAuthProviderName, ClientType};
 
 pub struct GitHubOAuthProvider {
     public: GitHubPublicProvider,
@@ -78,11 +78,11 @@ impl OAuthProvider for GitHubOAuthProvider {
         vec!["user:email"]
     }
 
-    fn client_id(&self) -> &str {
+    fn client_id(&self, _client_type: &ClientType) -> &str {
         &self.public.client_id
     }
 
-    fn client_secret(&self) -> Option<&str> {
+    fn client_secret(&self, _client_type: &ClientType) -> Option<&str> {
         self.private
             .as_ref()
             .map(|private| private.client_secret.as_str())

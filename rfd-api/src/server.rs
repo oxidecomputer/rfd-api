@@ -22,7 +22,7 @@ use crate::{
             code::{authz_code_callback, authz_code_exchange, authz_code_redirect},
             device_token::{exchange_device_token, get_device_provider},
         },
-        rfd::get_rfd,
+        rfd::{get_rfd, get_rfds},
         webhook::github_webhook,
     },
 };
@@ -71,6 +71,7 @@ pub fn server(
     });
 
     // RFDs
+    api.register(get_rfds).unwrap();
     api.register(get_rfd).unwrap();
 
     // Webhooks

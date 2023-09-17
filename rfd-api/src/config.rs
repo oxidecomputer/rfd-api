@@ -138,6 +138,18 @@ pub struct GitHubOAuthConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct GoogleOAuthConfig {
+    pub device: GoogleOAuthDeviceConfig,
+    pub web: GoogleOAuthWebConfig,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GoogleOAuthDeviceConfig {
+    pub client_id: String,
+    pub client_secret: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GoogleOAuthWebConfig {
     pub client_id: String,
     pub client_secret: String,
     pub redirect_uri: String,
@@ -146,7 +158,8 @@ pub struct GoogleOAuthConfig {
 impl AppConfig {
     pub fn new() -> Result<Self, ConfigError> {
         let config = Config::builder()
-            .add_source(File::with_name("config.toml"))
+            .add_source(File::with_name("config.toml").required(false))
+            .add_source(File::with_name("rfd-api/config.toml").required(false))
             .add_source(Environment::default())
             .build()?;
 

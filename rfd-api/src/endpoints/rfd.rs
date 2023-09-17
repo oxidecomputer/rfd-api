@@ -6,10 +6,10 @@ use trace_request::trace_request;
 use tracing::instrument;
 
 use crate::{
-    context::{ApiContext, FullRfd},
+    context::{ApiContext, FullRfd, ListRfd},
     permissions::ApiPermission,
     util::response::{client_error, internal_error, not_found},
-    ApiCaller,
+    ApiCaller, error::ApiError,
 };
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -17,7 +17,31 @@ pub struct RfdPathParams {
     number: String,
 }
 
-// Get the latest known representation of an RFD
+/// List all available RFDs
+#[trace_request]
+#[endpoint {
+    method = GET,
+    path = "/rfd",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn get_rfds(
+    rqctx: RequestContext<ApiContext>,
+) -> Result<HttpResponseOk<Vec<ListRfd>>, HttpError> {
+    let ctx = rqctx.context();
+    let auth = ctx.authn_token(&rqctx).await?;
+    get_rfds_op(ctx, &ctx.get_caller(&auth).await?).await
+}
+
+#[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
+async fn get_rfds_op(
+    ctx: &ApiContext,
+    caller: &ApiCaller,
+) -> Result<HttpResponseOk<Vec<ListRfd>>, HttpError> {
+    let rfds = ctx.list_rfds(caller).await.map_err(ApiError::Storage)?;
+    Ok(HttpResponseOk(rfds))
+}
+
+/// Get the latest representation of an RFD
 #[trace_request]
 #[endpoint {
     method = GET,
