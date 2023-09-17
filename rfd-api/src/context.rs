@@ -40,7 +40,7 @@ use crate::{
         LoginError, UserInfo,
     },
     error::{ApiError, AppError},
-    permissions::{ApiPermission, ExpandPermission},
+    permissions::{ApiPermission, PermissionStorage},
     util::response::{client_error, internal_error},
     ApiCaller, ApiPermissions, User, UserToken,
 };
@@ -236,7 +236,7 @@ impl ApiContext {
                     let mut key = ApiKeyStore::list(
                         &*self.storage,
                         ApiKeyFilter {
-                            key_signature: Some(vec![api_key.signature().to_string()]),
+                            id: Some(vec![*api_key.id()]),
                             expired: false,
                             deleted: false,
                             ..Default::default()
@@ -267,10 +267,11 @@ impl ApiContext {
         }?;
 
         // The permissions for the caller is the intersection of the user's permissions and the tokens permissions
-        if let Some(user) = ApiUserStore::get(&*self.storage, &api_user_id, false).await? {
+        if let Some(user) = self.get_api_user(&api_user_id).await? {
             let caller = Caller {
                 id: api_user_id,
-                permissions: user.permissions.intersect(&permissions).expand(&user),
+                permissions: permissions.expand(&user).intersect(&user.permissions),
+                user,
             };
 
             tracing::info!(?caller, "Resolved caller");
@@ -501,7 +502,12 @@ impl ApiContext {
     // API User Operations
 
     pub async fn get_api_user(&self, id: &Uuid) -> Result<Option<User>, StoreError> {
-        ApiUserStore::get(&*self.storage, id, false).await
+        let user = ApiUserStore::get(&*self.storage, id, false).await?.map(|mut user| {
+            user.permissions = user.permissions.expand(&user);
+            user
+        });
+
+        Ok(user)
     }
 
     pub async fn list_api_user(
@@ -514,9 +520,38 @@ impl ApiContext {
 
     pub async fn update_api_user(
         &self,
-        api_user: NewApiUser<ApiPermission>,
+        mut api_user: NewApiUser<ApiPermission>,
     ) -> Result<User, StoreError> {
+        api_user.permissions = api_user.permissions.contract(&api_user);
         ApiUserStore::upsert(&*self.storage, api_user).await
+    }
+
+    pub async fn add_permissions_to_user(
+        &self,
+        api_user: &ApiUser<ApiPermission>,
+        new_permissions: Permissions<ApiPermission>
+    ) -> Result<User, StoreError> {
+        let mut user_update: NewApiUser<ApiPermission> = api_user.clone().into();
+        for permission in new_permissions.into_iter() {
+            tracing::info!(id = ?api_user.id, ?permission, "Adding permission to user");
+            user_update.permissions.insert(permission);
+        }
+
+        self.update_api_user(user_update).await
+    }
+
+    pub async fn remove_permissions_from_user(
+        &self,
+        api_user: &ApiUser<ApiPermission>,
+        new_permissions: Permissions<ApiPermission>
+    ) -> Result<User, StoreError> {
+        let mut user_update: NewApiUser<ApiPermission> = api_user.clone().into();
+        for permission in new_permissions.into_iter() {
+            tracing::info!(id = ?api_user.id, ?permission, "Removing permission from user");
+            user_update.permissions.remove(&permission);
+        }
+
+        self.update_api_user(user_update).await
     }
 
     pub async fn create_api_user_token(
@@ -655,7 +690,7 @@ impl ApiContext {
     pub async fn list_oauth_clients(&self) -> Result<Vec<OAuthClient>, StoreError> {
         OAuthClientStore::list(
             &*self.storage,
-            OAuthClientFilter::default(),
+            OAuthClientFilter { id: None, deleted: false },
             &ListPagination::default(),
         )
         .await
@@ -663,13 +698,14 @@ impl ApiContext {
 
     pub async fn add_oauth_secret(
         &self,
+        id: &Uuid,
         client_id: &Uuid,
         secret: &str,
     ) -> Result<OAuthClientSecret, StoreError> {
         OAuthClientSecretStore::upsert(
             &*self.storage,
             NewOAuthClientSecret {
-                id: Uuid::new_v4(),
+                id: *id,
                 oauth_client_id: *client_id,
                 secret_signature: secret.to_string(),
             },

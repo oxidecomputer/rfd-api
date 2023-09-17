@@ -143,10 +143,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Array_of_ApiUserTokenResponse",
+                  "title": "Array_of_ApiKeyResponse",
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/ApiUserTokenResponse"
+                    "$ref": "#/components/schemas/ApiKeyResponse"
                   }
                 }
               }
@@ -177,7 +177,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ApiUserTokenCreateParams"
+                "$ref": "#/components/schemas/ApiKeyCreateParams"
               }
             }
           },
@@ -189,7 +189,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InitialApiUserTokenResponse"
+                  "$ref": "#/components/schemas/InitialApiKeyResponse"
                 }
               }
             }
@@ -232,7 +232,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiUserTokenResponse"
+                  "$ref": "#/components/schemas/ApiKeyResponse"
                 }
               }
             }
@@ -273,7 +273,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiUserTokenResponse"
+                  "$ref": "#/components/schemas/ApiKeyResponse"
                 }
               }
             }
@@ -327,36 +327,113 @@
         }
       }
     },
-    "/login/access-token/{provider}": {
-      "post": {
-        "operationId": "access_token_login",
+    "/login/oauth/{provider}/code/authorize": {
+      "get": {
+        "summary": "Generate the remote provider login url and redirect the user",
+        "operationId": "authz_code_redirect",
         "parameters": [
           {
             "in": "path",
             "name": "provider",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/AccessTokenProviderName"
+              "$ref": "#/components/schemas/OAuthProviderName"
+            }
+          },
+          {
+            "in": "query",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "redirect_uri",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "response_type",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AccessTokenProviderLogin"
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "*/*": {
+                "schema": {}
               }
             }
+          }
+        }
+      }
+    },
+    "/login/oauth/{provider}/code/callback": {
+      "get": {
+        "summary": "Handle return calls from a remote OAuth provider",
+        "operationId": "authz_code_callback",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OAuthProviderName"
+            }
           },
-          "required": true
-        },
+          {
+            "in": "query",
+            "name": "code",
+            "schema": {
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "error",
+            "schema": {
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "schema": {
+              "nullable": true,
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
-          "201": {
-            "description": "successful creation",
-            "content": {
-              "application/json": {
+          "307": {
+            "description": "redirect (temporary redirect)",
+            "headers": {
+              "location": {
+                "description": "HTTP \"Location\" header",
+                "style": "simple",
+                "required": true,
                 "schema": {
-                  "$ref": "#/components/schemas/LoginTokenResponse"
+                  "type": "string"
                 }
               }
             }
@@ -370,36 +447,37 @@
         }
       }
     },
-    "/login/jwt/{provider}": {
+    "/login/oauth/{provider}/code/token": {
       "post": {
-        "operationId": "jwt_login",
+        "summary": "Exchange an authorization code for an access token",
+        "operationId": "authz_code_exchange",
         "parameters": [
           {
             "in": "path",
             "name": "provider",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/JwtProviderName"
+              "$ref": "#/components/schemas/OAuthProviderName"
             }
           }
         ],
         "requestBody": {
           "content": {
-            "application/json": {
+            "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/JwtProviderLogin"
+                "$ref": "#/components/schemas/OAuthAuthzCodeExchangeBody"
               }
             }
           },
           "required": true
         },
         "responses": {
-          "201": {
-            "description": "successful creation",
+          "200": {
+            "description": "successful operation",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LoginTokenResponse"
+                  "$ref": "#/components/schemas/OAuthAuthzCodeExchangeResponse"
                 }
               }
             }
@@ -477,6 +555,259 @@
                 "schema": {}
               }
             }
+          }
+        }
+      }
+    },
+    "/oauth/client": {
+      "get": {
+        "summary": "List OAuth clients",
+        "operationId": "list_oauth_clients",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Array_of_OAuthClient",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OAuthClient"
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new OAuth Client",
+        "operationId": "create_oauth_client",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthClient"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/oauth/client/{client_id}": {
+      "get": {
+        "summary": "Get an new OAuth Client",
+        "operationId": "get_oauth_client",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthClient"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/oauth/client/{client_id}/redirect_uri": {
+      "post": {
+        "summary": "Add an OAuth client redirect uri",
+        "operationId": "create_oauth_client_redirect_uri",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddOAuthClientRedirectBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthClientRedirectUri"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/oauth/client/{client_id}/redirect_uri/{redirect_uri_id}": {
+      "delete": {
+        "summary": "Delete an OAuth client redirect uri",
+        "operationId": "delete_oauth_client_redirect_uri",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "redirect_uri_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthClientRedirectUri"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/oauth/client/{client_id}/secret": {
+      "post": {
+        "summary": "Add an OAuth client secret",
+        "operationId": "create_oauth_client_secret",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthClientSecret"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/oauth/client/{client_id}/secret/{secret_id}": {
+      "delete": {
+        "summary": "Delete an OAuth client secret",
+        "operationId": "delete_oauth_client_secret",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "secret_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthClientSecret"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
           }
         }
       }
@@ -573,24 +904,52 @@
           "grant_type"
         ]
       },
-      "AccessTokenProviderLogin": {
+      "AddOAuthClientRedirectBody": {
         "type": "object",
         "properties": {
-          "expiration": {
-            "nullable": true,
-            "type": "string",
-            "format": "date-time"
-          },
-          "permissions": {
-            "$ref": "#/components/schemas/LoginPermissions"
-          },
-          "token": {
+          "redirect_uri": {
             "type": "string"
           }
         },
         "required": [
-          "permissions",
-          "token"
+          "redirect_uri"
+        ]
+      },
+      "ApiKeyCreateParams": {
+        "type": "object",
+        "properties": {
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+          }
+        },
+        "required": [
+          "expires_at",
+          "permissions"
+        ]
+      },
+      "ApiKeyResponse": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+          }
+        },
+        "required": [
+          "created_at",
+          "id",
+          "permissions"
         ]
       },
       "ApiPermission": {
@@ -609,7 +968,10 @@
               "UpdateApiUserSelf",
               "UpdateApiUserAll",
               "GetAllRfds",
-              "GetAssignedRfds"
+              "GetAssignedRfds",
+              "GetAllDiscussions",
+              "CreateOAuthClient",
+              "GetOAuthClientAll"
             ]
           },
           {
@@ -693,44 +1055,46 @@
               "GetRfd"
             ],
             "additionalProperties": false
-          }
-        ]
-      },
-      "ApiUserTokenCreateParams": {
-        "type": "object",
-        "properties": {
-          "expires_at": {
-            "type": "string",
-            "format": "date-time"
           },
-          "permissions": {
-            "$ref": "#/components/schemas/Permissions_for_ApiPermission"
-          }
-        },
-        "required": [
-          "expires_at",
-          "permissions"
-        ]
-      },
-      "ApiUserTokenResponse": {
-        "type": "object",
-        "properties": {
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
+          {
+            "type": "object",
+            "properties": {
+              "GetOAuthClient": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "GetOAuthClient"
+            ],
+            "additionalProperties": false
           },
-          "id": {
-            "type": "string",
-            "format": "uuid"
+          {
+            "type": "object",
+            "properties": {
+              "UpdateOAuthClient": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "UpdateOAuthClient"
+            ],
+            "additionalProperties": false
           },
-          "permissions": {
-            "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+          {
+            "type": "object",
+            "properties": {
+              "DeleteOAuthClient": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "DeleteOAuthClient"
+            ],
+            "additionalProperties": false
           }
-        },
-        "required": [
-          "created_at",
-          "id",
-          "permissions"
         ]
       },
       "ApiUserUpdateParams": {
@@ -1023,7 +1387,7 @@
           "type"
         ]
       },
-      "InitialApiUserTokenResponse": {
+      "InitialApiKeyResponse": {
         "type": "object",
         "properties": {
           "created_at": {
@@ -1034,74 +1398,168 @@
             "type": "string",
             "format": "uuid"
           },
+          "key": {
+            "type": "string"
+          },
           "permissions": {
             "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+          }
+        },
+        "required": [
+          "created_at",
+          "id",
+          "key",
+          "permissions"
+        ]
+      },
+      "OAuthAuthzCodeExchangeBody": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "format": "uuid"
           },
-          "token": {
+          "client_secret": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "grant_type": {
+            "type": "string"
+          },
+          "pkce_verifier": {
+            "nullable": true,
+            "type": "string"
+          },
+          "redirect_uri": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id",
+          "client_secret",
+          "code",
+          "grant_type",
+          "redirect_uri"
+        ]
+      },
+      "OAuthAuthzCodeExchangeResponse": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string"
+          },
+          "expires_in": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "token_type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "expires_in",
+          "token_type"
+        ]
+      },
+      "OAuthClient": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "redirect_uris": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OAuthClientRedirectUri"
+            }
+          },
+          "secrets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OAuthClientSecret"
+            }
+          }
+        },
+        "required": [
+          "created_at",
+          "id",
+          "redirect_uris",
+          "secrets"
+        ]
+      },
+      "OAuthClientRedirectUri": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "oauth_client_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "redirect_uri": {
             "type": "string"
           }
         },
         "required": [
           "created_at",
           "id",
-          "permissions",
-          "token"
+          "oauth_client_id",
+          "redirect_uri"
         ]
       },
-      "JwtProviderLogin": {
+      "OAuthClientSecret": {
         "type": "object",
         "properties": {
-          "expiration": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
             "nullable": true,
             "type": "string",
             "format": "date-time"
           },
-          "permissions": {
-            "$ref": "#/components/schemas/LoginPermissions"
-          },
-          "token": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "permissions",
-          "token"
-        ]
-      },
-      "LoginPermissions": {
-        "oneOf": [
-          {
+          "id": {
             "type": "string",
-            "enum": [
-              "All"
-            ]
+            "format": "uuid"
           },
-          {
-            "type": "object",
-            "properties": {
-              "Specific": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/ApiPermission"
-                }
-              }
-            },
-            "required": [
-              "Specific"
-            ],
-            "additionalProperties": false
-          }
-        ]
-      },
-      "LoginTokenResponse": {
-        "type": "object",
-        "properties": {
-          "token": {
+          "oauth_client_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "secret_signature": {
             "type": "string"
           }
         },
         "required": [
-          "token"
+          "created_at",
+          "id",
+          "oauth_client_id",
+          "secret_signature"
         ]
       },
       "OAuthProviderInfo": {
@@ -1141,6 +1599,7 @@
       "OAuthProviderName": {
         "type": "string",
         "enum": [
+          "git-hub",
           "google"
         ]
       },
@@ -1149,18 +1608,6 @@
         "items": {
           "$ref": "#/components/schemas/ApiPermission"
         }
-      },
-      "AccessTokenProviderName": {
-        "type": "string",
-        "enum": [
-          "github"
-        ]
-      },
-      "JwtProviderName": {
-        "type": "string",
-        "enum": [
-          "google"
-        ]
       }
     }
   },

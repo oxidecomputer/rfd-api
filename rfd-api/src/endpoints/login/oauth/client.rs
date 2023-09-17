@@ -35,13 +35,9 @@ async fn list_oauth_clients_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
 ) -> Result<HttpResponseOk<Vec<OAuthClient>>, HttpError> {
-    if caller.can(&ApiPermission::GetOAuthClientAll) {
-        Ok(HttpResponseOk(
-            ctx.list_oauth_clients().await.map_err(ApiError::Storage)?,
-        ))
-    } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
-    }
+    Ok(HttpResponseOk(
+        ctx.list_oauth_clients().await.map_err(ApiError::Storage)?.into_iter().filter(|client| caller.can(&ApiPermission::GetOAuthClient(client.id))).collect(),
+    ))
 }
 
 /// Create a new OAuth Client
@@ -65,9 +61,17 @@ async fn create_oauth_client_op(
     caller: &ApiCaller,
 ) -> Result<HttpResponseOk<OAuthClient>, HttpError> {
     if caller.can(&ApiPermission::CreateOAuthClient) {
-        Ok(HttpResponseOk(
-            ctx.create_oauth_client().await.map_err(ApiError::Storage)?,
-        ))
+        // Create the new client
+        let client = ctx.create_oauth_client().await.map_err(ApiError::Storage)?;
+
+        // Give the caller permission to perform actions on the client        
+        ctx.add_permissions_to_user(&caller.user, vec![
+            ApiPermission::GetOAuthClient(client.id),
+            ApiPermission::UpdateOAuthClient(client.id),
+            ApiPermission::DeleteOAuthClient(client.id),
+        ].into()).await.map_err(ApiError::Storage)?;
+
+        Ok(HttpResponseOk(client))
     } else {
         Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
     }
@@ -100,10 +104,7 @@ async fn get_oauth_client_op(
     caller: &ApiCaller,
     path: &GetOAuthClientPath,
 ) -> Result<HttpResponseOk<Option<OAuthClient>>, HttpError> {
-    if caller.any(&[
-        &ApiPermission::GetOAuthClientAll,
-        &ApiPermission::GetOAuthClient(path.client_id),
-    ]) {
+    if caller.can(&ApiPermission::GetOAuthClient(path.client_id)) {
         Ok(HttpResponseOk(
             ctx.get_oauth_client(&path.client_id)
                 .await
@@ -141,13 +142,14 @@ async fn create_oauth_client_secret_op(
     caller: &ApiCaller,
     path: &AddOAuthClientSecretPath,
 ) -> Result<HttpResponseOk<OAuthClientSecret>, HttpError> {
-    if caller.can(&ApiPermission::CreateOAuthClientSecret(path.client_id)) {
-        let secret = RawApiKey::generate::<24>()
+    if caller.can(&ApiPermission::UpdateOAuthClient(path.client_id)) {
+        let id = Uuid::new_v4();
+        let secret = RawApiKey::generate::<24>(&id)
             .sign(&*ctx.secrets.signer)
             .await
             .map_err(to_internal_error)?;
         let mut client_secret = ctx
-            .add_oauth_secret(&path.client_id, secret.signature())
+            .add_oauth_secret(&id, &path.client_id, secret.signature())
             .await
             .map_err(ApiError::Storage)?;
         client_secret.secret_signature = secret.key();
@@ -186,7 +188,7 @@ async fn delete_oauth_client_secret_op(
     caller: &ApiCaller,
     path: &DeleteOAuthClientSecretPath,
 ) -> Result<HttpResponseOk<Option<OAuthClientSecret>>, HttpError> {
-    if caller.can(&ApiPermission::DeleteOAuthClientSecret(path.secret_id)) {
+    if caller.can(&ApiPermission::UpdateOAuthClient(path.secret_id)) {
         Ok(HttpResponseOk(
             ctx.delete_oauth_secret(&path.secret_id)
                 .await
@@ -231,7 +233,7 @@ async fn create_oauth_client_redirect_uri_op(
     path: &AddOAuthClientRedirectPath,
     body: AddOAuthClientRedirectBody,
 ) -> Result<HttpResponseOk<OAuthClientRedirectUri>, HttpError> {
-    if caller.can(&ApiPermission::CreateOAuthClientRedirectUri(path.client_id)) {
+    if caller.can(&ApiPermission::UpdateOAuthClient(path.client_id)) {
         Ok(HttpResponseOk(
             ctx.add_oauth_redirect_uri(&path.client_id, &body.redirect_uri)
                 .await
@@ -270,7 +272,7 @@ async fn delete_oauth_client_redirect_uri_op(
     caller: &ApiCaller,
     path: &DeleteOAuthClientRedirectPath,
 ) -> Result<HttpResponseOk<Option<OAuthClientRedirectUri>>, HttpError> {
-    if caller.can(&ApiPermission::DeleteOAuthClientRedirectUri(path.client_id)) {
+    if caller.can(&ApiPermission::UpdateOAuthClient(path.client_id)) {
         Ok(HttpResponseOk(
             ctx.delete_oauth_redirect_uri(&path.redirect_uri_id)
                 .await

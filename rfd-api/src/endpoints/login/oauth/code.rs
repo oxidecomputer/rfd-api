@@ -308,12 +308,12 @@ pub async fn authz_code_exchange(
         return Err(bad_request("Invalid grant type"));
     }
 
-    let client_secret = RawApiKey::new(body.client_secret).sign(&*ctx.secrets.signer).await.map_err(|err| {
-            tracing::warn!(?err, "Failed the validate client secret");
-
-            // TODO: Change this to a bad request with invalid_client ?
-            unauthorized()
-        })?;
+    let client_secret = RawApiKey::try_from(body.client_secret.as_str()).map_err(|err| {
+        tracing::warn!(?err, "Failed to parse OAuth client secret");
+        
+        // TODO: Change this to a bad request with invalid_client ?
+        unauthorized()
+    })?;
 
     ctx.get_oauth_client(&body.client_id)
         .await
@@ -322,7 +322,7 @@ pub async fn authz_code_exchange(
         .ok_or_else(|| client_error(StatusCode::UNAUTHORIZED, "Invalid client"))
         .and_then(|client| {
             if client.is_redirect_uri_valid(&body.redirect_uri) {
-                if client.is_secret_valid(client_secret.signature()) {
+                if client.is_secret_valid(&client_secret.id().to_string()) {
                     Ok(client)
                 } else {
 

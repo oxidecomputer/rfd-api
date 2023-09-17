@@ -160,7 +160,7 @@ impl From<JobModel> for Job {
 
 #[partial(NewApiUser)]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
-pub struct ApiUser<T> {
+pub struct ApiUser<T: Ord> {
     pub id: Uuid,
     pub permissions: Permissions<T>,
     #[partial(NewApiUser(skip))]
@@ -189,7 +189,7 @@ pub struct ApiUserProvider {
 
 #[partial(NewApiKey)]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
-pub struct ApiKey<T> {
+pub struct ApiKey<T: Ord> {
     pub id: Uuid,
     pub api_user_id: Uuid,
     pub key_signature: String,

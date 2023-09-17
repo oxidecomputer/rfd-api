@@ -5,16 +5,16 @@ use thiserror::Error;
 use uuid::Uuid;
 
 use crate::{
-    authn::key::NewApiKey,
+    authn::key::RawApiKey,
     context::ApiContext,
-    endpoints::api_user::InitialApiKKeyResponse,
-    permissions::{ApiPermission, ApiUserPermission, RfdPermission},
+    endpoints::api_user::InitialApiKeyResponse,
+    permissions::ApiPermission,
 };
 
 #[derive(Debug, Serialize)]
 pub struct SeedApiUser {
     pub user: ApiUser<ApiPermission>,
-    pub token: InitialApiKKeyResponse,
+    pub token: InitialApiKeyResponse,
 }
 
 #[derive(Debug, Error)]
@@ -37,26 +37,33 @@ pub async fn seed(ctx: &ApiContext) -> Result<SeedApiUser, SeedError> {
         .update_api_user(NewApiUser {
             id: user_id,
             permissions: vec![
-                RfdPermission::GetAllRfds.into(),
-                ApiUserPermission::CreateApiUser.into(),
-                ApiUserPermission::UpdateAllApiUser.into(),
-                ApiUserPermission::CreateApiUserToken(user_id).into(),
-                ApiUserPermission::GetApiUserToken(user_id).into(),
-                ApiUserPermission::DeleteApiUserToken(user_id).into(),
+                ApiPermission::CreateApiUserTokenAll,
+                ApiPermission::GetApiUserAll,
+                ApiPermission::GetApiUserTokenSelf,
+                ApiPermission::DeleteApiUserTokenAll,
+                ApiPermission::CreateApiUser,
+                ApiPermission::UpdateApiUserAll,
+                ApiPermission::GetAllRfds,
+                ApiPermission::GetAllDiscussions,
+                ApiPermission::CreateOAuthClient,
+                ApiPermission::GetAssignedOAuthClients,
+                ApiPermission::UpdateAssignedOAuthClients,
+                ApiPermission::DeleteAssignedOAuthClients,
             ]
             .into(),
         })
         .await?;
 
     let token_id = Uuid::new_v4();
-    let (token, hash) = NewApiKey::generate::<24>(&token_id).consume();
+    let raw_key = RawApiKey::generate::<24>(&token_id);
+    let encrypted_key = raw_key.sign(&*ctx.secrets.signer).await.unwrap();
 
     let stored_token = ctx
         .create_api_user_token(
             NewApiKey {
                 id: token_id,
                 api_user_id: user.id,
-                token: hash,
+                key_signature: encrypted_key.signature().to_string(),
                 permissions: user.permissions.clone(),
                 expires_at: Utc::now() + Duration::seconds(7 * 24 * 60 * 60),
             },
@@ -66,9 +73,9 @@ pub async fn seed(ctx: &ApiContext) -> Result<SeedApiUser, SeedError> {
 
     Ok(SeedApiUser {
         user,
-        token: InitialApiKKeyResponse {
+        token: InitialApiKeyResponse {
             id: stored_token.id,
-            token,
+            key: encrypted_key.key(),
             permissions: stored_token.permissions,
             created_at: stored_token.created_at,
         },

@@ -73,7 +73,7 @@ pub struct JobModel {
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
 #[diesel(table_name = api_user)]
-pub struct ApiUserModel<T> {
+pub struct ApiUserModel<T: Ord> {
     pub id: Uuid,
     pub permissions: Permissions<T>,
     pub created_at: DateTime<Utc>,
@@ -83,7 +83,7 @@ pub struct ApiUserModel<T> {
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
 #[diesel(table_name = api_key)]
-pub struct ApiKeyModel<T> {
+pub struct ApiKeyModel<T: Ord> {
     pub id: Uuid,
     pub api_user_id: Uuid,
     pub key_signature: String,

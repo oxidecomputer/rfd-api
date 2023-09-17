@@ -41,7 +41,7 @@ async fn get_rfd_op(
 ) -> Result<HttpResponseOk<FullRfd>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
         if caller.any(&[
-            &ApiPermission::get_rfd(rfd_number).into(),
+            &ApiPermission::GetRfd(rfd_number).into(),
             &ApiPermission::GetAllRfds.into(),
         ]) {
             match ctx.get_rfd(rfd_number, None).await {

@@ -233,7 +233,7 @@ pub struct ApiUserFilter {
 
 #[cfg_attr(feature = "mock", automock)]
 #[async_trait]
-pub trait ApiUserStore<T: Permission> {
+pub trait ApiUserStore<T: Permission + Ord> {
     async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<ApiUser<T>>, StoreError>;
     async fn list(
         &self,
@@ -246,6 +246,7 @@ pub trait ApiUserStore<T: Permission> {
 
 #[derive(Debug, Default)]
 pub struct ApiKeyFilter {
+    pub id: Option<Vec<Uuid>>,
     pub api_user_id: Option<Vec<Uuid>>,
     pub key_signature: Option<Vec<String>>,
     pub expired: bool,
@@ -254,7 +255,7 @@ pub struct ApiKeyFilter {
 
 #[cfg_attr(feature = "mock", automock)]
 #[async_trait]
-pub trait ApiKeyStore<T: Permission> {
+pub trait ApiKeyStore<T: Permission + Ord> {
     async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<ApiKey<T>>, StoreError>;
     async fn list(
         &self,

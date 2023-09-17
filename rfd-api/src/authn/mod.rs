@@ -23,7 +23,7 @@ use crate::{
     util::{cloud_kms_client, response::unauthorized}, authn::key::RawApiKey,
 };
 
-use self::{jwt::Jwt, key::SignedApiKey};
+use self::jwt::Jwt;
 
 pub mod jwt;
 pub mod key;
@@ -38,7 +38,7 @@ pub enum AuthError {
 
 // A token that provides authentication and optionally (JWT) authorization claims
 pub enum AuthToken {
-    ApiKey(SignedApiKey),
+    ApiKey(RawApiKey),
     Jwt(Jwt),
 }
 
@@ -69,11 +69,11 @@ impl AuthToken {
         match jwt {
             Ok(token) => Ok(AuthToken::Jwt(token)),
             Err(err) => {
-                tracing::debug!(?err, "Token is not a JWT, falling back to API key");
+                tracing::debug!(?err, ?token, "Token is not a JWT, falling back to API key");
 
                 Ok(AuthToken::ApiKey(
-                    RawApiKey::new(token).sign(&*ctx.secrets.signer).await.map_err(|err| {
-                        tracing::error!(?err, "Failed to generate signature for request token");
+                    RawApiKey::try_from(token.as_str()).map_err(|err| {
+                        tracing::info!(?err, "Failed to parse API key");
                         AuthError::FailedToExtract
                     })?,
                 ))

@@ -24,7 +24,7 @@ fn leakable_dbs() -> Vec<String> {
     leaks.split(',').map(|s| s.to_string()).collect()
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize, JsonSchema)]
+#[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize, JsonSchema, PartialOrd, Ord)]
 enum TestPermission {
     CreateApiUser,
     CreateApiKey(Uuid),
@@ -236,6 +236,7 @@ async fn test_api_user() {
     let tokens = ApiKeyStore::list(
         &store,
         ApiKeyFilter {
+            id: None,
             api_user_id: Some(vec![api_user.id]),
             key_signature: None,
             expired: false,
@@ -254,6 +255,7 @@ async fn test_api_user() {
     let all_tokens = ApiKeyStore::list(
         &store,
         ApiKeyFilter {
+            id: None,
             api_user_id: Some(vec![api_user.id]),
             key_signature: None,
             expired: true,
@@ -286,6 +288,7 @@ async fn test_api_user() {
     let deleted_tokens = ApiKeyStore::<TestPermission>::list(
         &store,
         ApiKeyFilter {
+            id: None,
             api_user_id: Some(vec![api_user.id]),
             key_signature: None,
             expired: true,

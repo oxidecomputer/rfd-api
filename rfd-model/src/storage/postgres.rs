@@ -422,7 +422,7 @@ impl JobStore for PostgresStore {
 #[async_trait]
 impl<T> ApiUserStore<T> for PostgresStore
 where
-    T: Permission,
+    T: Permission + Ord,
 {
     async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<ApiUser<T>>, StoreError> {
         let user = ApiUserStore::list(
@@ -520,7 +520,7 @@ where
 #[async_trait]
 impl<T> ApiKeyStore<T> for PostgresStore
 where
-    T: Permission,
+    T: Permission + Ord,
 {
     async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<ApiKey<T>>, StoreError> {
         let mut query = api_key::dsl::api_key
@@ -556,11 +556,16 @@ where
         let mut query = api_key::dsl::api_key.into_boxed();
 
         let ApiKeyFilter {
+            id,
             api_user_id,
             key_signature,
             expired,
             deleted,
         } = filter;
+
+        if let Some(id) = id {
+            query = query.filter(api_key::id.eq_any(id));
+        }
 
         if let Some(api_user_id) = api_user_id {
             query = query.filter(api_key::api_user_id.eq_any(api_user_id));
@@ -608,7 +613,6 @@ where
         // Validate the the token permissions are a subset of the users permissions
         let permissions: Permissions<T> = key
             .permissions
-            .inner()
             .iter()
             .filter(|permission| {
                 let can = api_user.permissions.can(permission);
@@ -620,7 +624,7 @@ where
                 can
             })
             .cloned()
-            .collect::<Vec<T>>()
+            .collect::<BTreeSet<T>>()
             .into();
 
         let key_m: ApiKeyModel<T> = insert_into(api_key::dsl::api_key)
@@ -985,8 +989,8 @@ impl OAuthClientStore for PostgresStore {
         pagination: &ListPagination,
     ) -> Result<Vec<OAuthClient>, StoreError> {
         let mut query = oauth_client::dsl::oauth_client
-            .inner_join(oauth_client_secret::table)
-            .inner_join(oauth_client_redirect_uri::table)
+            .left_join(oauth_client_secret::table)
+            .left_join(oauth_client_redirect_uri::table)
             .into_boxed();
 
         let OAuthClientFilter { id, deleted } = filter;
@@ -1005,8 +1009,8 @@ impl OAuthClientStore for PostgresStore {
             .order(oauth_client::created_at.desc())
             .load_async::<(
                 OAuthClientModel,
-                OAuthClientSecretModel,
-                OAuthClientRedirectUriModel,
+                Option<OAuthClientSecretModel>,
+                Option<OAuthClientRedirectUriModel>,
             )>(&self.conn)
             .await?
             .into_iter()
@@ -1018,8 +1022,15 @@ impl OAuthClientStore for PostgresStore {
                         BTreeSet::<OAuthClientSecret>::new(),
                         BTreeSet::<OAuthClientRedirectUri>::new(),
                     ));
-                    value.1.insert(secret.into());
-                    value.2.insert(redirect.into());
+
+                    if let Some(secret) = secret {
+                        value.1.insert(secret.into());
+                    }
+
+                    if let Some(redirect) = redirect {
+                        value.2.insert(redirect.into());
+                    }
+
                     clients
                 },
             )

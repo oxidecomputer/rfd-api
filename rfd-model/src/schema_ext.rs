@@ -98,7 +98,7 @@ impl Display for PdfSource {
 
 impl<T> ToSql<Jsonb, Pg> for Permissions<T>
 where
-    T: Serialize + Debug,
+    T: Serialize + Debug + Ord,
 {
     fn to_sql(&self, out: &mut Output<Pg>) -> serialize::Result {
         let value = serde_json::to_value(self)?;
@@ -108,7 +108,7 @@ where
 
 impl<T> FromSql<Jsonb, Pg> for Permissions<T>
 where
-    T: DeserializeOwned + Debug,
+    T: DeserializeOwned + Debug + Ord,
 {
     fn from_sql(bytes: <Pg as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
         let value = <serde_json::Value as FromSql<Jsonb, Pg>>::from_sql(bytes)?;
