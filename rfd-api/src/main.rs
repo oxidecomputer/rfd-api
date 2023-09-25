@@ -28,7 +28,6 @@ mod email_validator;
 mod endpoints;
 mod error;
 mod permissions;
-mod seed;
 mod server;
 mod util;
 
@@ -64,11 +63,9 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         config.permissions,
         config.jwt,
         config.keys,
+        config.search,
     )
     .await?;
-
-    // let initial_user = seed::seed(&context).await.unwrap();
-    // panic!("{:#?}", initial_user);
 
     if let Some(github) = config.authn.oauth.github {
         context.insert_oauth_provider(

@@ -5,7 +5,10 @@ use serde::Deserialize;
 
 use crate::endpoints::login::{ExternalUserId, UserInfo, UserInfoError};
 
-use super::{ExtractUserInfo, OAuthProvider, OAuthProviderName, ClientType, OAuthPublicCredentials, OAuthPrivateCredentials};
+use super::{
+    ClientType, ExtractUserInfo, OAuthPrivateCredentials, OAuthProvider, OAuthProviderName,
+    OAuthPublicCredentials,
+};
 
 pub struct GoogleOAuthProvider {
     device_public: OAuthPublicCredentials,
@@ -28,10 +31,18 @@ impl GoogleOAuthProvider {
         web_client_secret: String,
     ) -> Self {
         Self {
-            device_public: OAuthPublicCredentials { client_id: device_client_id },
-            device_private: Some(OAuthPrivateCredentials { client_secret: device_client_secret }),
-            web_public: OAuthPublicCredentials { client_id: web_client_id },
-            web_private: Some(OAuthPrivateCredentials { client_secret: web_client_secret }),
+            device_public: OAuthPublicCredentials {
+                client_id: device_client_id,
+            },
+            device_private: Some(OAuthPrivateCredentials {
+                client_secret: device_client_secret,
+            }),
+            web_public: OAuthPublicCredentials {
+                client_id: web_client_id,
+            },
+            web_private: Some(OAuthPrivateCredentials {
+                client_secret: web_client_secret,
+            }),
         }
     }
 }
@@ -79,8 +90,14 @@ impl OAuthProvider for GoogleOAuthProvider {
 
     fn client_secret(&self, client_type: &ClientType) -> Option<&str> {
         match client_type {
-            ClientType::Device => self.device_private.as_ref().map(|private| private.client_secret.as_str()),
-            ClientType::Web => self.web_private.as_ref().map(|private| private.client_secret.as_str()),
+            ClientType::Device => self
+                .device_private
+                .as_ref()
+                .map(|private| private.client_secret.as_str()),
+            ClientType::Web => self
+                .web_private
+                .as_ref()
+                .map(|private| private.client_secret.as_str()),
         }
     }
 

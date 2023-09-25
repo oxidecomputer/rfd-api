@@ -24,7 +24,9 @@ fn leakable_dbs() -> Vec<String> {
     leaks.split(',').map(|s| s.to_string()).collect()
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize, JsonSchema, PartialOrd, Ord)]
+#[derive(
+    Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize, JsonSchema, PartialOrd, Ord,
+)]
 enum TestPermission {
     CreateApiUser,
     CreateApiKey(Uuid),

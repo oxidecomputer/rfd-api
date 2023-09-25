@@ -24,6 +24,7 @@ pub struct AppConfig {
     pub jwt: JwtConfig,
     pub spec: Option<SpecConfig>,
     pub authn: AuthnProviders,
+    pub search: SearchConfig,
 }
 
 #[derive(Debug)]
@@ -102,20 +103,6 @@ impl AsymmetricKey {
             Self::Ckms { kid, .. } => kid,
         }
     }
-
-    pub fn mock_private_key(&self) -> &str {
-        match &self {
-            Self::Local { private, .. } => private,
-            _ => unimplemented!(),
-        }
-    }
-
-    pub fn mock_public_key(&self) -> &str {
-        match &self {
-            Self::Local { public, .. } => public,
-            _ => unimplemented!(),
-        }
-    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -153,6 +140,13 @@ pub struct GoogleOAuthWebConfig {
     pub client_id: String,
     pub client_secret: String,
     pub redirect_uri: String,
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct SearchConfig {
+    pub host: String,
+    pub key: String,
+    pub index: String,
 }
 
 impl AppConfig {

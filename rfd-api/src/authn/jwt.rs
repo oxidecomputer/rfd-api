@@ -6,7 +6,6 @@ use jsonwebtoken::{
     jwk::{AlgorithmParameters, CommonParameters, Jwk, PublicKeyUse, RSAKeyParameters, RSAKeyType},
     Algorithm, DecodingKey, Header, Validation,
 };
-use rsa::PublicKeyParts;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tracing::instrument;
@@ -68,7 +67,7 @@ impl Jwt {
             .map(|key| (key, Jwt::algo(&jwk)))
             .map_err(JwtError::InvalidJwk)?;
 
-        tracing::debug!("Kid matched known decoding key");
+        tracing::debug!(?jwk, ?algorithm, "Kid matched known decoding key");
 
         let data = decode(token, &key, &Validation::new(algorithm?)).map_err(JwtError::Decode)?;
 
@@ -93,6 +92,8 @@ impl Jwt {
 
 #[derive(Debug, Error)]
 pub enum JwtSignerError {
+    #[error("Failed to encode header")]
+    Header(serde_json::Error),
     #[error("Failed to generate signer: {0}")]
     InvalidKey(SigningKeyError),
     #[error("Failed to serialize claims: {0}")]
@@ -113,11 +114,13 @@ impl JwtSigner {
         let jwk = key.as_jwk().await?;
         let mut header = Header::new(Algorithm::RS256);
         header.kid = Some(key.kid().to_string());
+        let encoded_header = to_base64_json(&header)?;
+
         let signer = key.as_signer().await.map_err(JwtSignerError::InvalidKey)?;
 
         Ok(Self {
             header,
-            encoded_header: String::new(),
+            encoded_header,
             jwk,
             signer,
         })
@@ -145,10 +148,7 @@ impl JwtSigner {
             .map_err(JwtSignerError::Signature)?;
 
         let enc_signature = URL_SAFE_NO_PAD.encode(signature);
-        Ok(format!(
-            "{}.{}.{}",
-            self.encoded_header, encoded_claims, enc_signature
-        ))
+        Ok(format!("{}.{}", message, enc_signature))
     }
 
     pub fn header(&self) -> &Header {
@@ -159,6 +159,8 @@ impl JwtSigner {
         &self.jwk
     }
 }
+
+use rsa::traits::PublicKeyParts;
 
 impl AsymmetricKey {
     pub async fn as_jwk(&self) -> Result<Jwk, JwtSignerError> {

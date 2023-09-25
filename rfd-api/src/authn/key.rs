@@ -40,12 +40,7 @@ impl RawApiKey {
 
     pub async fn sign(self, signer: &dyn Signer) -> Result<SignedApiKey, ApiKeyError> {
         let key = format!("{}.{}", self.id, self.clear);
-        let signature = hex::encode(
-            signer
-                .sign(&key)
-                .await
-                .map_err(ApiKeyError::Signing)?,
-        );
+        let signature = hex::encode(signer.sign(&key).await.map_err(ApiKeyError::Signing)?);
         Ok(SignedApiKey::new(key, signature))
     }
 }
@@ -55,18 +50,14 @@ impl TryFrom<&str> for RawApiKey {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value.split_once(".") {
-            Some((id, key)) => {
-                Ok(RawApiKey {
-                    id: id.parse().map_err(|err| {
-                        tracing::info!(?err, "Api key prefix is not a valid uuid");
-                        ApiKeyError::FailedToParse
-                    })?,
-                    clear: key.to_string(),
-                })
-            }
-            None => {
-                Err(ApiKeyError::FailedToParse)
-            }
+            Some((id, key)) => Ok(RawApiKey {
+                id: id.parse().map_err(|err| {
+                    tracing::info!(?err, "Api key prefix is not a valid uuid");
+                    ApiKeyError::FailedToParse
+                })?,
+                clear: key.to_string(),
+            }),
+            None => Err(ApiKeyError::FailedToParse),
         }
     }
 }
@@ -78,10 +69,7 @@ pub struct SignedApiKey {
 
 impl SignedApiKey {
     fn new(key: String, signature: String) -> Self {
-        Self {
-            key,
-            signature,
-        }
+        Self { key, signature }
     }
 
     pub fn key(self) -> String {
@@ -101,7 +89,7 @@ mod tests {
     use crate::util::tests::mock_key;
 
     #[tokio::test]
-    async fn test_rejects_invalid_source() {
+    async fn test_generates_signatures() {
         let id = Uuid::new_v4();
         let signer = mock_key().as_signer().await.unwrap();
 

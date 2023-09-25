@@ -1,5 +1,5 @@
 use rfd_model::storage::{JobFilter, JobStore, ListPagination, StoreError};
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 use tap::TapFallible;
 use thiserror::Error;
 use tokio::time::interval;
@@ -17,10 +17,10 @@ pub enum JobError {
 }
 
 pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
-    let mut interval = interval(Duration::from_secs(1));
+    let mut interval = interval(ctx.processor.interval);
     interval.tick().await;
 
-    let pagination = ListPagination::default().limit(10);
+    let pagination = ListPagination::default().limit(ctx.processor.batch_size);
 
     loop {
         let jobs = JobStore::list(

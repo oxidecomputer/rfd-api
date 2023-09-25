@@ -38,7 +38,12 @@ async fn list_oauth_clients_op(
     caller: &ApiCaller,
 ) -> Result<HttpResponseOk<Vec<OAuthClient>>, HttpError> {
     Ok(HttpResponseOk(
-        ctx.list_oauth_clients().await.map_err(ApiError::Storage)?.into_iter().filter(|client| caller.can(&ApiPermission::GetOAuthClient(client.id))).collect(),
+        ctx.list_oauth_clients()
+            .await
+            .map_err(ApiError::Storage)?
+            .into_iter()
+            .filter(|client| caller.can(&ApiPermission::GetOAuthClient(client.id)))
+            .collect(),
     ))
 }
 
@@ -67,12 +72,18 @@ async fn create_oauth_client_op(
         // Create the new client
         let client = ctx.create_oauth_client().await.map_err(ApiError::Storage)?;
 
-        // Give the caller permission to perform actions on the client        
-        ctx.add_permissions_to_user(&caller.user, vec![
-            ApiPermission::GetOAuthClient(client.id),
-            ApiPermission::UpdateOAuthClient(client.id),
-            ApiPermission::DeleteOAuthClient(client.id),
-        ].into()).await.map_err(ApiError::Storage)?;
+        // Give the caller permission to perform actions on the client
+        ctx.add_permissions_to_user(
+            &caller.user,
+            vec![
+                ApiPermission::GetOAuthClient(client.id),
+                ApiPermission::UpdateOAuthClient(client.id),
+                ApiPermission::DeleteOAuthClient(client.id),
+            ]
+            .into(),
+        )
+        .await
+        .map_err(ApiError::Storage)?;
 
         Ok(HttpResponseOk(client))
     } else {

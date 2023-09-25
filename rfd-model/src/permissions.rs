@@ -82,7 +82,8 @@ where
     }
 
     pub fn intersect(&self, other: &Permissions<T>) -> Permissions<T> {
-        self.0.intersection(&other.0)
+        self.0
+            .intersection(&other.0)
             .into_iter()
             .map(|p| p.clone())
             .collect::<BTreeSet<_>>()

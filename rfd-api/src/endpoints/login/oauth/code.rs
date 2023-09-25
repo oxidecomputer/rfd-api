@@ -25,7 +25,7 @@ use super::{OAuthProviderNameParam, UserInfoProvider};
 use crate::{
     authn::key::RawApiKey,
     context::ApiContext,
-    endpoints::login::{LoginError, oauth::ClientType},
+    endpoints::login::{oauth::ClientType, LoginError},
     error::ApiError,
     util::{
         request::RequestCookies,
@@ -97,7 +97,9 @@ pub async fn authz_code_redirect(
     // TODO: This behavior should be changed so that clients are precomputed. We do not need to be
     // constructing a new client on every request. That said, we need to ensure the client does not
     // maintain state between requests
-    let client = provider.as_client(&ClientType::Web).map_err(to_internal_error)?;
+    let client = provider
+        .as_client(&ClientType::Web)
+        .map_err(to_internal_error)?;
     let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
 
     // Construct a new login attempt with the minimum required values
@@ -310,7 +312,7 @@ pub async fn authz_code_exchange(
 
     let client_secret = RawApiKey::try_from(body.client_secret.as_str()).map_err(|err| {
         tracing::warn!(?err, "Failed to parse OAuth client secret");
-        
+
         // TODO: Change this to a bad request with invalid_client ?
         unauthorized()
     })?;
@@ -325,12 +327,11 @@ pub async fn authz_code_exchange(
                 if client.is_secret_valid(&client_secret.id().to_string()) {
                     Ok(client)
                 } else {
-
                     // TODO: Change this to a bad request with invalid_client ?
                     Err(client_error(StatusCode::UNAUTHORIZED, "Invalid secret"))
                 }
             } else {
-            // TODO: Change this to a bad request with invalid_client ?
+                // TODO: Change this to a bad request with invalid_client ?
                 Err(client_error(
                     StatusCode::UNAUTHORIZED,
                     "Invalid redirect uri",
@@ -366,7 +367,9 @@ pub async fn authz_code_exchange(
         })?;
 
     // Exchange the stored authorization code with the remote provider for a remote access token
-    let client = provider.as_client(&ClientType::Web).map_err(to_internal_error)?;
+    let client = provider
+        .as_client(&ClientType::Web)
+        .map_err(to_internal_error)?;
     let mut request = client.exchange_code(AuthorizationCode::new(
         attempt.provider_authz_code.ok_or_else(|| {
             internal_error("Expected authorization code to exist due to attempt state")

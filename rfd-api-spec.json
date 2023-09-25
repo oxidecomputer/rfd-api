@@ -874,6 +874,44 @@
         }
       }
     },
+    "/rfd-search": {
+      "get": {
+        "summary": "Search the RFD index and get a list of results",
+        "operationId": "search_rfds",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Array_of_ListRfd",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ListRfd"
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
     "/self": {
       "get": {
         "summary": "Retrieve the user information of the calling user",
@@ -1000,6 +1038,7 @@
               "GetAssignedRfds",
               "GetAllDiscussions",
               "GetAssignedDiscussions",
+              "SearchRfds",
               "CreateOAuthClient",
               "GetAssignedOAuthClients",
               "UpdateAssignedOAuthClients",

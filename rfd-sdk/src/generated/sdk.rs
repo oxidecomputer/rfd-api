@@ -99,6 +99,7 @@ pub mod types {
         GetAssignedRfds,
         GetAllDiscussions,
         GetAssignedDiscussions,
+        SearchRfds,
         CreateOAuthClient,
         GetAssignedOAuthClients,
         UpdateAssignedOAuthClients,
@@ -3063,6 +3064,20 @@ impl Client {
         builder::GetRfd::new(self)
     }
 
+    /// Search the RFD index and get a list of results
+    ///
+    /// Sends a `GET` request to `/rfd-search`
+    ///
+    /// ```ignore
+    /// let response = client.search_rfds()
+    ///    .q(q)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn search_rfds(&self) -> builder::SearchRfds {
+        builder::SearchRfds::new(self)
+    }
+
     /// Retrieve the user information of the calling user
     ///
     /// Sends a `GET` request to `/self`
@@ -4691,6 +4706,64 @@ pub mod builder {
                     reqwest::header::ACCEPT,
                     reqwest::header::HeaderValue::from_static("application/json"),
                 )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::search_rfds`]
+    ///
+    /// [`Client::search_rfds`]: super::Client::search_rfds
+    #[derive(Debug, Clone)]
+    pub struct SearchRfds<'a> {
+        client: &'a super::Client,
+        q: Result<String, String>,
+    }
+
+    impl<'a> SearchRfds<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client,
+                q: Err("q was not initialized".to_string()),
+            }
+        }
+
+        pub fn q<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<String>,
+        {
+            self.q = value
+                .try_into()
+                .map_err(|_| "conversion to `String` for q failed".to_string());
+            self
+        }
+
+        /// Sends a `GET` request to `/rfd-search`
+        pub async fn send(self) -> Result<ResponseValue<Vec<types::ListRfd>>, Error<types::Error>> {
+            let Self { client, q } = self;
+            let q = q.map_err(Error::InvalidRequest)?;
+            let url = format!("{}/rfd-search", client.baseurl,);
+            let mut query = Vec::with_capacity(1usize);
+            query.push(("q", q.to_string()));
+            let request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .query(&query)
                 .build()?;
             let result = client.client.execute(request).await;
             let response = result?;

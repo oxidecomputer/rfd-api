@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::endpoints::login::{ExternalUserId, UserInfo, UserInfoError};
 
-use super::{ExtractUserInfo, OAuthProvider, OAuthProviderName, ClientType};
+use super::{ClientType, ExtractUserInfo, OAuthProvider, OAuthProviderName};
 
 pub struct GitHubOAuthProvider {
     public: GitHubPublicProvider,

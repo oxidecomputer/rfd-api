@@ -661,7 +661,7 @@ mod tests {
         let no_permissions = ApiCaller {
             id: user1.id,
             permissions: Vec::new().into(),
-            user: user1
+            user: user1,
         };
 
         let resp = list_api_user_tokens_op(

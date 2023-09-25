@@ -4,6 +4,7 @@ use http::StatusCode;
 use hyper::{client::HttpConnector, Body, Client};
 use hyper_tls::HttpsConnector;
 use jsonwebtoken::jwk::JwkSet;
+use meilisearch_sdk::Client as SearchClient;
 use oauth2::CsrfToken;
 use partial_struct::partial;
 use rfd_model::{
@@ -34,7 +35,7 @@ use crate::{
         jwt::{Claims, JwtSigner, JwtSignerError},
         AuthError, AuthToken, Signer,
     },
-    config::{AsymmetricKey, JwtConfig, PermissionsConfig},
+    config::{AsymmetricKey, JwtConfig, PermissionsConfig, SearchConfig},
     email_validator::EmailValidator,
     endpoints::login::{
         oauth::{OAuthProvider, OAuthProviderError, OAuthProviderFn, OAuthProviderName},
@@ -45,6 +46,8 @@ use crate::{
     util::response::{client_error, internal_error},
     ApiCaller, ApiPermissions, User, UserToken,
 };
+
+static UNLIMITED: i64 = 9999999;
 
 pub trait Storage:
     RfdStore
@@ -92,6 +95,7 @@ pub struct ApiContext {
     pub jwt: JwtContext,
     pub secrets: SecretContext,
     pub oauth_providers: HashMap<OAuthProviderName, Box<dyn OAuthProviderFn>>,
+    pub search: SearchContext,
 }
 
 pub struct PermissionsContext {
@@ -108,6 +112,11 @@ pub struct JwtContext {
 
 pub struct SecretContext {
     pub signer: Arc<dyn Signer>,
+}
+
+pub struct SearchContext {
+    pub client: SearchClient,
+    pub index: String,
 }
 
 pub struct RegisteredAccessToken {
@@ -178,6 +187,7 @@ impl ApiContext {
         permissions: PermissionsConfig,
         jwt: JwtConfig,
         keys: Vec<AsymmetricKey>,
+        search: SearchConfig,
     ) -> Result<Self, AppError> {
         let mut jwt_signers = vec![];
 
@@ -206,6 +216,10 @@ impl ApiContext {
                 signer: keys[0].as_signer().await?,
             },
             oauth_providers: HashMap::new(),
+            search: SearchContext {
+                client: SearchClient::new(search.host, search.key),
+                index: search.index,
+            },
         })
     }
 
@@ -251,6 +265,8 @@ impl ApiContext {
                         },
                     )
                     .await?;
+
+                    // TODO: Verify found signature
 
                     if let Some(key) = key.pop() {
                         tracing::debug!("Verified caller key");
@@ -326,37 +342,46 @@ impl ApiContext {
     pub async fn list_rfds(
         &self,
         caller: &Caller<ApiPermission>,
+        filter: Option<RfdFilter>,
     ) -> Result<Vec<ListRfd>, StoreError> {
-        let mut filter = RfdFilter::default();
+        let mut filter = filter.unwrap_or_default();
 
         if !caller.can(&ApiPermission::GetAllRfds) {
-            let numbers = caller.permissions.iter().filter_map(|p| {
-                match p {
+            let numbers = caller
+                .permissions
+                .iter()
+                .filter_map(|p| match p {
                     ApiPermission::GetRfd(number) => Some(*number),
-                    _ => None
-                }
-            }).collect::<Vec<_>>();
+                    _ => None,
+                })
+                .collect::<Vec<_>>();
 
             filter = filter.rfd_number(Some(numbers));
         }
 
-        let rfds = RfdStore::list(
+        let mut rfds = RfdStore::list(
             &*self.storage,
             filter,
-            &ListPagination::default().limit(1),
+            &ListPagination::default().limit(UNLIMITED),
         )
-        .await.tap_err(|err| tracing::error!(?err, "Failed to lookup RFDs"))?;
+        .await
+        .tap_err(|err| tracing::error!(?err, "Failed to lookup RFDs"))?;
 
-        let rfd_revisions = RfdRevisionStore::list_unique_rfd(
+        let mut rfd_revisions = RfdRevisionStore::list_unique_rfd(
             &*self.storage,
-            RfdRevisionFilter::default()
-                .rfd(Some(rfds.iter().map(|rfd| rfd.id).collect())),
-            &ListPagination::default(),
+            RfdRevisionFilter::default().rfd(Some(rfds.iter().map(|rfd| rfd.id).collect())),
+            &ListPagination::default().limit(UNLIMITED),
         )
-        .await.tap_err(|err| tracing::error!(?err, "Failed to lookup RFD revisions"))?;
+        .await
+        .tap_err(|err| tracing::error!(?err, "Failed to lookup RFD revisions"))?;
 
-        let rfd_list = rfds.into_iter().zip(rfd_revisions).map(|(rfd, revision)| {
-            ListRfd {
+        rfds.sort_by(|a, b| a.id.cmp(&b.id));
+        rfd_revisions.sort_by(|a, b| a.rfd_id.cmp(&b.rfd_id));
+
+        let mut rfd_list = rfds
+            .into_iter()
+            .zip(rfd_revisions)
+            .map(|(rfd, revision)| ListRfd {
                 id: rfd.id,
                 rfd_number: rfd.rfd_number,
                 link: rfd.link,
@@ -367,8 +392,10 @@ impl ApiContext {
                 sha: revision.sha,
                 commit: revision.commit_sha,
                 committed_at: revision.committed_at,
-            }
-        }).collect::<Vec<_>>();
+            })
+            .collect::<Vec<_>>();
+
+        rfd_list.sort_by(|a, b| b.rfd_number.cmp(&a.rfd_number));
 
         Ok(rfd_list)
     }
@@ -556,10 +583,12 @@ impl ApiContext {
     // API User Operations
 
     pub async fn get_api_user(&self, id: &Uuid) -> Result<Option<User>, StoreError> {
-        let user = ApiUserStore::get(&*self.storage, id, false).await?.map(|mut user| {
-            user.permissions = user.permissions.expand(&user);
-            user
-        });
+        let user = ApiUserStore::get(&*self.storage, id, false)
+            .await?
+            .map(|mut user| {
+                user.permissions = user.permissions.expand(&user);
+                user
+            });
 
         Ok(user)
     }
@@ -583,7 +612,7 @@ impl ApiContext {
     pub async fn add_permissions_to_user(
         &self,
         api_user: &ApiUser<ApiPermission>,
-        new_permissions: Permissions<ApiPermission>
+        new_permissions: Permissions<ApiPermission>,
     ) -> Result<User, StoreError> {
         let mut user_update: NewApiUser<ApiPermission> = api_user.clone().into();
         for permission in new_permissions.into_iter() {
@@ -597,7 +626,7 @@ impl ApiContext {
     pub async fn remove_permissions_from_user(
         &self,
         api_user: &ApiUser<ApiPermission>,
-        new_permissions: Permissions<ApiPermission>
+        new_permissions: Permissions<ApiPermission>,
     ) -> Result<User, StoreError> {
         let mut user_update: NewApiUser<ApiPermission> = api_user.clone().into();
         for permission in new_permissions.into_iter() {
@@ -744,7 +773,10 @@ impl ApiContext {
     pub async fn list_oauth_clients(&self) -> Result<Vec<OAuthClient>, StoreError> {
         OAuthClientStore::list(
             &*self.storage,
-            OAuthClientFilter { id: None, deleted: false },
+            OAuthClientFilter {
+                id: None,
+                deleted: false,
+            },
             &ListPagination::default(),
         )
         .await
@@ -818,7 +850,7 @@ pub(crate) mod tests {
     use std::sync::Arc;
 
     use crate::{
-        config::{JwtConfig, PermissionsConfig},
+        config::{JwtConfig, PermissionsConfig, SearchConfig},
         permissions::ApiPermission,
         util::tests::{mock_key, AnyEmailValidator},
     };
@@ -837,6 +869,7 @@ pub(crate) mod tests {
                 // We are in the context of a test and do not care about the key leaking
                 mock_key(),
             ],
+            SearchConfig::default(),
         )
         .await
         .unwrap()

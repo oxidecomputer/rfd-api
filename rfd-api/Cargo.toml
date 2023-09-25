@@ -22,15 +22,18 @@ http = { workspace = true }
 hyper = { workspace = true }
 hyper-tls = { workspace = true }
 jsonwebtoken = { workspace = true }
+meilisearch-sdk = { workspace = true }
 oauth2 = { workspace = true }
 octorust = { workspace = true }
+openssl = { workspace = true }
 partial-struct = { workspace = true }
 rand = { workspace = true, features = ["std"] }
 rand_core = { workspace = true, features = ["std"] }
 regex = { workspace = true }
 reqwest = { workspace = true }
+ring = { workspace = true }
 rfd-model = { path = "../rfd-model" }
-rsa = { workspace = true }
+rsa = { workspace = true, features = ["sha2"] }
 schemars = { workspace = true, features = ["chrono"] }
 sha2 = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

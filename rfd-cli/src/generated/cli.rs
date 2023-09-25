@@ -2,14 +2,19 @@
 
 use rfd_sdk::*;
 
-pub struct Cli<T: CliOverride = ()> {
+pub struct Cli<T: CliOverride = (), U: CliOutput = ()> {
     client: rfd_sdk::Client,
     over: T,
+    output: U,
 }
 
 impl Cli {
     pub fn new(client: rfd_sdk::Client) -> Self {
-        Self { client, over: () }
+        Self {
+            client,
+            over: (),
+            output: (),
+        }
     }
 
     pub fn get_command(cmd: CliCommand) -> clap::Command {
@@ -40,6 +45,7 @@ impl Cli {
             CliCommand::DeleteOauthClientSecret => Self::cli_delete_oauth_client_secret(),
             CliCommand::GetRfds => Self::cli_get_rfds(),
             CliCommand::GetRfd => Self::cli_get_rfd(),
+            CliCommand::SearchRfds => Self::cli_search_rfds(),
             CliCommand::GetSelf => Self::cli_get_self(),
         }
     }
@@ -512,14 +518,29 @@ impl Cli {
             .about("Get the latest representation of an RFD")
     }
 
+    pub fn cli_search_rfds() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("q")
+                    .long("q")
+                    .value_parser(clap::value_parser!(String))
+                    .required(true),
+            )
+            .about("Search the RFD index and get a list of results")
+    }
+
     pub fn cli_get_self() -> clap::Command {
         clap::Command::new("").about("Retrieve the user information of the calling user")
     }
 }
 
-impl<T: CliOverride> Cli<T> {
-    pub fn new_with_override(client: rfd_sdk::Client, over: T) -> Self {
-        Self { client, over }
+impl<T: CliOverride, U: CliOutput> Cli<T, U> {
+    pub fn new_with_override(client: rfd_sdk::Client, over: T, output: U) -> Self {
+        Self {
+            client,
+            over,
+            output,
+        }
     }
 
     pub async fn execute(&self, cmd: CliCommand, matches: &clap::ArgMatches) {
@@ -590,6 +611,9 @@ impl<T: CliOverride> Cli<T> {
             CliCommand::GetRfd => {
                 self.execute_get_rfd(matches).await;
             }
+            CliCommand::SearchRfds => {
+                self.execute_search_rfds(matches).await;
+            }
             CliCommand::GetSelf => {
                 self.execute_get_self(matches).await;
             }
@@ -609,12 +633,8 @@ impl<T: CliOverride> Cli<T> {
             .unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self.output.output_create_api_user(Ok(r.into_inner())),
+            Err(r) => self.output.output_create_api_user(Err(r)),
         }
     }
 
@@ -629,12 +649,8 @@ impl<T: CliOverride> Cli<T> {
             .unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self.output.output_get_api_user(Ok(r.into_inner())),
+            Err(r) => self.output.output_get_api_user(Err(r)),
         }
     }
 
@@ -655,12 +671,8 @@ impl<T: CliOverride> Cli<T> {
             .unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self.output.output_update_api_user(Ok(r.into_inner())),
+            Err(r) => self.output.output_update_api_user(Err(r)),
         }
     }
 
@@ -675,12 +687,8 @@ impl<T: CliOverride> Cli<T> {
             .unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self.output.output_list_api_user_tokens(Ok(r.into_inner())),
+            Err(r) => self.output.output_list_api_user_tokens(Err(r)),
         }
     }
 
@@ -706,12 +714,8 @@ impl<T: CliOverride> Cli<T> {
             .unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self.output.output_create_api_user_token(Ok(r.into_inner())),
+            Err(r) => self.output.output_create_api_user_token(Err(r)),
         }
     }
 
@@ -730,12 +734,8 @@ impl<T: CliOverride> Cli<T> {
             .unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self.output.output_get_api_user_token(Ok(r.into_inner())),
+            Err(r) => self.output.output_get_api_user_token(Err(r)),
         }
     }
 
@@ -754,12 +754,8 @@ impl<T: CliOverride> Cli<T> {
             .unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self.output.output_delete_api_user_token(Ok(r.into_inner())),
+            Err(r) => self.output.output_delete_api_user_token(Err(r)),
         }
     }
 
@@ -780,12 +776,8 @@ impl<T: CliOverride> Cli<T> {
             .unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self.output.output_github_webhook(Ok(r.into_inner())),
+            Err(r) => self.output.output_github_webhook(Err(r)),
         }
     }
 
@@ -851,9 +843,7 @@ impl<T: CliOverride> Cli<T> {
             Ok(r) => {
                 todo!()
             }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Err(r) => self.output.output_authz_code_callback(Err(r)),
         }
     }
 
@@ -899,12 +889,8 @@ impl<T: CliOverride> Cli<T> {
             .unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self.output.output_authz_code_exchange(Ok(r.into_inner())),
+            Err(r) => self.output.output_authz_code_exchange(Err(r)),
         }
     }
 
@@ -919,12 +905,8 @@ impl<T: CliOverride> Cli<T> {
             .unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self.output.output_get_device_provider(Ok(r.into_inner())),
+            Err(r) => self.output.output_get_device_provider(Err(r)),
         }
     }
 
@@ -975,12 +957,8 @@ impl<T: CliOverride> Cli<T> {
             .unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self.output.output_list_oauth_clients(Ok(r.into_inner())),
+            Err(r) => self.output.output_list_oauth_clients(Err(r)),
         }
     }
 
@@ -991,12 +969,8 @@ impl<T: CliOverride> Cli<T> {
             .unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self.output.output_create_oauth_client(Ok(r.into_inner())),
+            Err(r) => self.output.output_create_oauth_client(Err(r)),
         }
     }
 
@@ -1011,12 +985,8 @@ impl<T: CliOverride> Cli<T> {
             .unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self.output.output_get_oauth_client(Ok(r.into_inner())),
+            Err(r) => self.output.output_get_oauth_client(Err(r)),
         }
     }
 
@@ -1042,12 +1012,10 @@ impl<T: CliOverride> Cli<T> {
             .unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self
+                .output
+                .output_create_oauth_client_redirect_uri(Ok(r.into_inner())),
+            Err(r) => self.output.output_create_oauth_client_redirect_uri(Err(r)),
         }
     }
 
@@ -1066,12 +1034,10 @@ impl<T: CliOverride> Cli<T> {
             .unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self
+                .output
+                .output_delete_oauth_client_redirect_uri(Ok(r.into_inner())),
+            Err(r) => self.output.output_delete_oauth_client_redirect_uri(Err(r)),
         }
     }
 
@@ -1086,12 +1052,10 @@ impl<T: CliOverride> Cli<T> {
             .unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self
+                .output
+                .output_create_oauth_client_secret(Ok(r.into_inner())),
+            Err(r) => self.output.output_create_oauth_client_secret(Err(r)),
         }
     }
 
@@ -1110,12 +1074,10 @@ impl<T: CliOverride> Cli<T> {
             .unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self
+                .output
+                .output_delete_oauth_client_secret(Ok(r.into_inner())),
+            Err(r) => self.output.output_delete_oauth_client_secret(Err(r)),
         }
     }
 
@@ -1124,12 +1086,8 @@ impl<T: CliOverride> Cli<T> {
         self.over.execute_get_rfds(matches, &mut request).unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self.output.output_get_rfds(Ok(r.into_inner())),
+            Err(r) => self.output.output_get_rfds(Err(r)),
         }
     }
 
@@ -1142,12 +1100,24 @@ impl<T: CliOverride> Cli<T> {
         self.over.execute_get_rfd(matches, &mut request).unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self.output.output_get_rfd(Ok(r.into_inner())),
+            Err(r) => self.output.output_get_rfd(Err(r)),
+        }
+    }
+
+    pub async fn execute_search_rfds(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.search_rfds();
+        if let Some(value) = matches.get_one::<String>("q") {
+            request = request.q(value.clone());
+        }
+
+        self.over
+            .execute_search_rfds(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => self.output.output_search_rfds(Ok(r.into_inner())),
+            Err(r) => self.output.output_search_rfds(Err(r)),
         }
     }
 
@@ -1156,12 +1126,8 @@ impl<T: CliOverride> Cli<T> {
         self.over.execute_get_self(matches, &mut request).unwrap();
         let result = request.send().await;
         match result {
-            Ok(r) => {
-                println!("success\n{:#?}", r)
-            }
-            Err(r) => {
-                println!("error\n{:#?}", r)
-            }
+            Ok(r) => self.output.output_get_self(Ok(r.into_inner())),
+            Err(r) => self.output.output_get_self(Err(r)),
         }
     }
 }
@@ -1343,6 +1309,14 @@ pub trait CliOverride {
         Ok(())
     }
 
+    fn execute_search_rfds(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::SearchRfds,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
     fn execute_get_self(
         &self,
         matches: &clap::ArgMatches,
@@ -1353,6 +1327,145 @@ pub trait CliOverride {
 }
 
 impl CliOverride for () {}
+
+pub trait CliOutput {
+    fn output_create_api_user(
+        &self,
+        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_get_api_user(
+        &self,
+        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_update_api_user(
+        &self,
+        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_list_api_user_tokens(
+        &self,
+        response: Result<Vec<types::ApiKeyResponse>, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_create_api_user_token(
+        &self,
+        response: Result<types::InitialApiKeyResponse, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_get_api_user_token(
+        &self,
+        response: Result<types::ApiKeyResponse, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_delete_api_user_token(
+        &self,
+        response: Result<types::ApiKeyResponse, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_github_webhook(&self, response: Result<(), progenitor_client::Error<types::Error>>) {}
+
+    fn output_authz_code_redirect(&self, response: Result<(), progenitor_client::Error<()>>) {}
+
+    fn output_authz_code_callback(
+        &self,
+        response: Result<(), progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_authz_code_exchange(
+        &self,
+        response: Result<
+            types::OAuthAuthzCodeExchangeResponse,
+            progenitor_client::Error<types::Error>,
+        >,
+    ) {
+    }
+
+    fn output_get_device_provider(
+        &self,
+        response: Result<types::OAuthProviderInfo, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_exchange_device_token(&self, response: Result<(), progenitor_client::Error<()>>) {}
+
+    fn output_list_oauth_clients(
+        &self,
+        response: Result<Vec<types::OAuthClient>, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_create_oauth_client(
+        &self,
+        response: Result<types::OAuthClient, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_get_oauth_client(
+        &self,
+        response: Result<types::OAuthClient, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_create_oauth_client_redirect_uri(
+        &self,
+        response: Result<types::OAuthClientRedirectUri, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_delete_oauth_client_redirect_uri(
+        &self,
+        response: Result<types::OAuthClientRedirectUri, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_create_oauth_client_secret(
+        &self,
+        response: Result<types::OAuthClientSecret, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_delete_oauth_client_secret(
+        &self,
+        response: Result<types::OAuthClientSecret, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_get_rfds(
+        &self,
+        response: Result<Vec<types::ListRfd>, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_get_rfd(
+        &self,
+        response: Result<types::FullRfd, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_search_rfds(
+        &self,
+        response: Result<Vec<types::ListRfd>, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_get_self(
+        &self,
+        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+}
+
+impl CliOutput for () {}
 
 #[derive(Copy, Clone, Debug)]
 pub enum CliCommand {
@@ -1378,6 +1491,7 @@ pub enum CliCommand {
     DeleteOauthClientSecret,
     GetRfds,
     GetRfd,
+    SearchRfds,
     GetSelf,
 }
 
@@ -1406,6 +1520,7 @@ impl CliCommand {
             CliCommand::DeleteOauthClientSecret,
             CliCommand::GetRfds,
             CliCommand::GetRfd,
+            CliCommand::SearchRfds,
             CliCommand::GetSelf,
         ]
         .into_iter()

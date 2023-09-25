@@ -18,9 +18,13 @@ http = { workspace = true }
 meilisearch-sdk = { workspace = true }
 md-5 = { workspace = true }
 mime_guess = { workspace = true }
-octorust = { workspace = true }
+octorust = { workspace = true, features = ["httpcache"] }
 parse-rfd = { path = "../parse-rfd" }
 regex = { workspace = true }
+reqwest = { workspace = true }
+reqwest-middleware = { workspace = true }
+reqwest-retry = { workspace = true }
+reqwest-tracing = { workspace = true }
 rfd-data = { path = "../rfd-data" }
 rfd-model = { path = "../rfd-model" }
 serde = { workspace = true }

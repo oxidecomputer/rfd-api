@@ -1,9 +1,14 @@
+use std::time::Duration;
+
 use async_trait::async_trait;
 use google_drive::{traits::FileOps, Client as GDriveClient};
 use google_storage1::{
     hyper, hyper::client::HttpConnector, hyper_rustls, hyper_rustls::HttpsConnector, Storage,
 };
-use octorust::{auth::Credentials, Client as GitHubClient, ClientError};
+use octorust::{
+    auth::Credentials, http_cache::FileBasedCache, Client as GitHubClient, ClientError,
+};
+use reqwest::Error as ReqwestError;
 use rfd_model::storage::postgres::PostgresStore;
 use thiserror::Error;
 
@@ -36,6 +41,8 @@ impl Database {
 #[derive(Debug, Error)]
 pub enum ContextError {
     #[error(transparent)]
+    ClientConstruction(ReqwestError),
+    #[error(transparent)]
     FailedToCreateGitHubClient(#[from] ClientError),
     #[error("Failed to find GCP credentials {0}")]
     FailedToFindGcpCredentials(std::io::Error),
@@ -46,6 +53,8 @@ pub enum ContextError {
 }
 
 pub struct Context {
+    pub processor: ProcessorCtx,
+    pub scanner: ScannerCtx,
     pub db: Database,
     pub github: GitHubCtx,
     pub actions: Vec<BoxedAction>,
@@ -56,10 +65,27 @@ pub struct Context {
 
 impl Context {
     pub async fn new(db: Database, config: &AppConfig) -> Result<Self, ContextError> {
-        let github_client = GitHubClient::new(
+        let http = reqwest::Client::builder()
+            .build()
+            .map_err(ContextError::ClientConstruction)?;
+        let retry_policy =
+            reqwest_retry::policies::ExponentialBackoff::builder().build_with_max_retries(3);
+        let client = reqwest_middleware::ClientBuilder::new(http)
+            // Trace HTTP requests. See the tracing crate to make use of these traces.
+            .with(reqwest_tracing::TracingMiddleware::default())
+            // Retry failed requests.
+            .with(reqwest_retry::RetryTransientMiddleware::new_with_policy(
+                retry_policy,
+            ))
+            .build();
+        let http_cache = Box::new(FileBasedCache::new("/tmp/.cache/github"));
+
+        let github_client = GitHubClient::custom(
             "rfd-processor",
             Credentials::Token(config.auth.github.token.to_string()),
-        )?;
+            client,
+            http_cache,
+        );
 
         let repository = GitHubRfdRepo::new(
             &github_client,
@@ -70,6 +96,13 @@ impl Context {
         .await?;
 
         Ok(Self {
+            processor: ProcessorCtx {
+                batch_size: config.processor_batch_size,
+                interval: Duration::from_secs(config.processor_interval),
+            },
+            scanner: ScannerCtx {
+                interval: Duration::from_secs(config.scanner_interval),
+            },
             db,
             github: GitHubCtx {
                 client: github_client,
@@ -85,6 +118,15 @@ impl Context {
             search: SearchCtx::new(&config.search_storage),
         })
     }
+}
+
+pub struct ProcessorCtx {
+    pub batch_size: i64,
+    pub interval: Duration,
+}
+
+pub struct ScannerCtx {
+    pub interval: Duration,
 }
 
 pub struct GitHubCtx {

@@ -124,6 +124,8 @@ impl RfdStore for PostgresStore {
             .get_results_async::<RfdModel>(&self.conn)
             .await?;
 
+        tracing::trace!(count = ?results.len(), "Found RFDs");
+
         Ok(results.into_iter().map(|rfd| rfd.into()).collect())
     }
 
@@ -227,7 +229,9 @@ impl RfdRevisionStore for PostgresStore {
         filter: RfdRevisionFilter,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdRevision>, StoreError> {
-        let mut query = rfd_revision::dsl::rfd_revision.distinct_on(rfd_revision::rfd_id).into_boxed();
+        let mut query = rfd_revision::dsl::rfd_revision
+            .distinct_on(rfd_revision::rfd_id)
+            .into_boxed();
 
         tracing::trace!(?filter, "Lookup unique RFD revisions");
 
@@ -260,6 +264,8 @@ impl RfdRevisionStore for PostgresStore {
             .order(rfd_revision::rfd_id.asc())
             .get_results_async::<RfdRevisionModel>(&self.conn)
             .await?;
+
+        tracing::trace!(count = ?results.len(), "Found unique RFD revisions");
 
         Ok(results
             .into_iter()
@@ -452,6 +458,7 @@ impl JobStore for PostgresStore {
                 job::sha.eq(new_job.sha.clone()),
                 job::rfd.eq(new_job.rfd.clone()),
                 job::webhook_delivery_id.eq(new_job.webhook_delivery_id.clone()),
+                job::processed.eq(false),
                 job::committed_at.eq(new_job.committed_at.clone()),
             ))
             .get_result_async(&self.conn)

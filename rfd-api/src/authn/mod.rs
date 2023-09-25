@@ -6,8 +6,9 @@ use dropshot_authorization_header::bearer::BearerAuth;
 use google_cloudkms1::{api::AsymmetricSignRequest, hyper_rustls::HttpsConnector, CloudKMS};
 use hyper::client::HttpConnector;
 use rsa::{
+    pkcs1v15::Signature,
+    pkcs1v15::{SigningKey, VerifyingKey},
     pkcs8::{DecodePrivateKey, DecodePublicKey},
-    pss::{BlindedSigningKey, Signature, VerifyingKey},
     signature::{Keypair, RandomizedSigner, SignatureEncoding, Verifier},
     RsaPrivateKey, RsaPublicKey,
 };
@@ -18,9 +19,10 @@ use thiserror::Error;
 use tracing::instrument;
 
 use crate::{
+    authn::key::RawApiKey,
     config::AsymmetricKey,
     context::ApiContext,
-    util::{cloud_kms_client, response::unauthorized}, authn::key::RawApiKey,
+    util::{cloud_kms_client, response::unauthorized},
 };
 
 use self::jwt::Jwt;
@@ -93,6 +95,8 @@ impl From<AuthError> for HttpError {
 pub enum SigningKeyError {
     #[error("Cloud signing failed: {0}")]
     CloudKmsError(#[from] CloudKmsError),
+    #[error("Failed to immediately verify generated signature")]
+    GeneratedInvalidSignature,
     #[error("Failed to parse public key: {0}")]
     InvalidPublicKey(#[from] rsa::pkcs8::spki::Error),
     #[error("Invalid signature: {0}")]
@@ -107,7 +111,7 @@ pub trait Signer: Send + Sync {
 
 // A signer that stores a local in memory key for signing new JWTs
 pub struct LocalKey {
-    signing_key: BlindedSigningKey<Sha256>,
+    signing_key: SigningKey<Sha256>,
     verifying_key: VerifyingKey<Sha256>,
 }
 
@@ -115,14 +119,21 @@ pub struct LocalKey {
 impl Signer for LocalKey {
     #[instrument(skip(self, message), err(Debug))]
     async fn sign(&self, message: &str) -> Result<Vec<u8>, SigningKeyError> {
+        tracing::trace!("Signing message");
         let mut rng = rand::thread_rng();
-        Ok(self
+        let signature = self
             .signing_key
             .sign_with_rng(&mut rng, message.as_bytes())
-            .to_vec())
+            .to_vec();
+
+        self.verify(message, &Signature::try_from(signature.as_ref()).unwrap())
+            .map_err(|_| SigningKeyError::GeneratedInvalidSignature)?;
+
+        Ok(signature)
     }
 
     fn verify(&self, message: &str, signature: &Signature) -> Result<(), SigningKeyError> {
+        tracing::trace!("Verifying message");
         Ok(self.verifying_key.verify(message.as_bytes(), &signature)?)
     }
 }
@@ -257,6 +268,15 @@ impl AsymmetricKey {
         }
     }
 
+    pub async fn private_key(&self) -> Result<RsaPrivateKey, SigningKeyError> {
+        Ok(match self {
+            AsymmetricKey::Local { private, .. } => {
+                RsaPrivateKey::from_pkcs8_pem(&private).unwrap()
+            }
+            _ => unimplemented!(),
+        })
+    }
+
     pub async fn public_key(&self) -> Result<RsaPublicKey, SigningKeyError> {
         Ok(match self {
             AsymmetricKey::Local { public, .. } => RsaPublicKey::from_public_key_pem(&public)?,
@@ -283,7 +303,7 @@ impl AsymmetricKey {
         Ok(match self {
             AsymmetricKey::Local { private, .. } => {
                 let private_key = RsaPrivateKey::from_pkcs8_pem(&private).unwrap();
-                let signing_key = BlindedSigningKey::new(private_key);
+                let signing_key = SigningKey::new(private_key);
                 let verifying_key = signing_key.verifying_key();
 
                 Arc::new(LocalKey {

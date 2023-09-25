@@ -3,6 +3,7 @@
 use anyhow::{anyhow, Result};
 use clap::{Arg, ArgAction, Command, CommandFactory, FromArgMatches};
 use generated::cli::*;
+use printer::RfdCliPrinter;
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
 use rfd_sdk::Client;
 use std::time::Duration;
@@ -13,6 +14,7 @@ mod auth;
 mod cmd;
 mod err;
 mod generated;
+mod printer;
 mod store;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -41,7 +43,6 @@ impl Context {
 
     pub fn client(&mut self) -> Result<&Client> {
         if self.client.is_none() {
-
             let mut default_headers = HeaderMap::new();
 
             if let Ok(token) = self.config.token() {
@@ -99,6 +100,7 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::GetApiUserToken => Some("user token get"),
         CliCommand::GetRfd => Some("rfd get"),
         CliCommand::GetRfds => Some("rfd list"),
+        CliCommand::SearchRfds => Some("rfd search"),
         CliCommand::GetSelf => Some("self"),
         CliCommand::ListApiUserTokens => Some("user token list"),
         CliCommand::UpdateApiUser => Some("user update"),
@@ -196,7 +198,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 sm = sub_matches;
             }
 
-            let cli = Cli::new_with_override(ctx.client()?.clone(), ());
+            let cli = Cli::new_with_override(ctx.client()?.clone(), (), RfdCliPrinter {});
             cli.execute(node.cmd.unwrap(), sm).await;
         }
     };
