@@ -42,9 +42,6 @@ pub enum LoginError {
 impl From<LoginError> for HttpError {
     fn from(err: LoginError) -> Self {
         match err {
-            // LoginError::AccessTokenError(_) => {
-            //     internal_error("Failed to construct internal client to authenticate")
-            // }
             LoginError::ExcessTokenExpiration => {
                 let mut err =
                     bad_request("Requested expiration exceeds maximum allowed token duration");

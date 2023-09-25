@@ -1,8 +1,9 @@
+use chrono::{DateTime, Utc};
 use dropshot::{endpoint, HttpError, HttpResponseOk, Path, RequestContext, TypedBody};
 use http::StatusCode;
 use rfd_model::{OAuthClient, OAuthClientRedirectUri, OAuthClientSecret};
 use schemars::JsonSchema;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use trace_request::trace_request;
 use tracing::instrument;
 use uuid::Uuid;
@@ -135,6 +136,13 @@ pub struct AddOAuthClientSecretPath {
     pub client_id: Uuid,
 }
 
+#[derive(Debug, Serialize, JsonSchema)]
+pub struct InitialOAuthClientSecretResponse {
+    pub id: Uuid,
+    pub key: String,
+    pub created_at: DateTime<Utc>,
+}
+
 /// Add an OAuth client secret
 #[trace_request]
 #[endpoint {
@@ -145,32 +153,35 @@ pub struct AddOAuthClientSecretPath {
 pub async fn create_oauth_client_secret(
     rqctx: RequestContext<ApiContext>,
     path: Path<AddOAuthClientSecretPath>,
-) -> Result<HttpResponseOk<OAuthClientSecret>, HttpError> {
+) -> Result<HttpResponseOk<InitialOAuthClientSecretResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(&auth).await?;
-    create_oauth_client_secret_op(ctx, &caller, &path.into_inner()).await
+    create_oauth_client_secret_op(ctx, &caller, path.into_inner().client_id).await
 }
 
 #[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
 async fn create_oauth_client_secret_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
-    path: &AddOAuthClientSecretPath,
-) -> Result<HttpResponseOk<OAuthClientSecret>, HttpError> {
-    if caller.can(&ApiPermission::UpdateOAuthClient(path.client_id)) {
+    client_id: Uuid,
+) -> Result<HttpResponseOk<InitialOAuthClientSecretResponse>, HttpError> {
+    if caller.can(&ApiPermission::UpdateOAuthClient(client_id)) {
         let id = Uuid::new_v4();
         let secret = RawApiKey::generate::<24>(&id)
             .sign(&*ctx.secrets.signer)
             .await
             .map_err(to_internal_error)?;
-        let mut client_secret = ctx
-            .add_oauth_secret(&id, &path.client_id, secret.signature())
+        let client_secret = ctx
+            .add_oauth_secret(&id, &client_id, secret.signature())
             .await
             .map_err(ApiError::Storage)?;
-        client_secret.secret_signature = secret.key();
 
-        Ok(HttpResponseOk(client_secret))
+        Ok(HttpResponseOk(InitialOAuthClientSecretResponse {
+            id: client_secret.id,
+            key: secret.key(),
+            created_at: client_secret.created_at,
+        }))
     } else {
         Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
     }
@@ -299,5 +310,112 @@ async fn delete_oauth_client_redirect_uri_op(
         ))
     } else {
         Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::{Arc, Mutex};
+
+    use chrono::Utc;
+    use rfd_model::{
+        storage::{MockOAuthClientStore, MockOAuthClientSecretStore, MockApiUserStore},
+        ApiUser, OAuthClient, OAuthClientSecret,
+    };
+    use uuid::Uuid;
+
+    use crate::{
+        context::tests::{mock_context, MockStorage},
+        permissions::ApiPermission,
+        ApiCaller, authn::key::RawApiKey, endpoints::login::oauth::CheckOAuthClient,
+    };
+
+    use super::{create_oauth_client_op, create_oauth_client_secret_op};
+
+    fn mock_user() -> ApiUser<ApiPermission> {
+        ApiUser {
+            id: Uuid::new_v4(),
+            permissions: vec![
+                ApiPermission::CreateOAuthClient,
+                
+            ].into(),
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+            deleted_at: None,
+        }
+    }
+
+    #[tokio::test]
+    async fn test_create_client_with_secret() {
+        let mut user_store = MockApiUserStore::new();
+        user_store
+            .expect_upsert()
+            .returning(|user| {
+                Ok(ApiUser {
+                    id: user.id,
+                    permissions: user.permissions,
+                    created_at: Utc::now(),
+                    updated_at: Utc::now(),
+                    deleted_at: None,
+                })
+            });
+
+        let mut store = MockOAuthClientStore::new();
+        store
+            .expect_upsert()
+            .returning(|client| {
+                Ok(OAuthClient {
+                    id: client.id,
+                    secrets: vec![],
+                    redirect_uris: vec![],
+                    created_at: Utc::now(),
+                    deleted_at: None,
+                })
+            });
+
+        let last_stored_secret = Arc::new(Mutex::new(None));
+
+        let mut secret_store = MockOAuthClientSecretStore::new();
+        let extractor = last_stored_secret.clone();
+        secret_store
+            .expect_upsert()
+            .returning(move |secret| {
+                let stored = OAuthClientSecret {
+                    id: secret.id,
+                    oauth_client_id: secret.oauth_client_id,
+                    secret_signature: secret.secret_signature,
+                    created_at: Utc::now(),
+                    deleted_at: None,
+                };
+
+                let mut extract = extractor.lock().unwrap();
+                *extract = Some(stored.clone());
+                drop(extract);
+
+                Ok(stored)
+            });
+
+        let mut storage = MockStorage::new();
+        storage.api_user_store = Some(Arc::new(user_store));
+        storage.oauth_client_store = Some(Arc::new(store));
+        storage.oauth_client_secret_store = Some(Arc::new(secret_store));
+
+        let ctx = mock_context(storage).await;
+        let user = mock_user();
+        let mut caller = ApiCaller {
+            id: user.id,
+            permissions: user.permissions.clone(),
+            user,
+        };
+
+        let mut client = create_oauth_client_op(&ctx, &caller).await.unwrap().0;
+        caller.permissions.insert(ApiPermission::UpdateOAuthClient(client.id));
+
+        let secret = create_oauth_client_secret_op(&ctx, &caller, client.id).await.unwrap().0;
+        client.secrets.push(last_stored_secret.lock().unwrap().clone().unwrap());
+
+        let key = RawApiKey::try_from(secret.key.as_str()).unwrap();
+
+        assert!(client.is_secret_valid(&key, &*ctx.secrets.signer))
     }
 }
