@@ -25,7 +25,7 @@ use super::{OAuthProviderNameParam, UserInfoProvider};
 use crate::{
     authn::key::RawApiKey,
     context::ApiContext,
-    endpoints::login::{oauth::ClientType, LoginError},
+    endpoints::login::{oauth::{ClientType, CheckOAuthClient}, LoginError},
     error::ApiError,
     util::{
         request::RequestCookies,
@@ -324,7 +324,7 @@ pub async fn authz_code_exchange(
         .ok_or_else(|| client_error(StatusCode::UNAUTHORIZED, "Invalid client"))
         .and_then(|client| {
             if client.is_redirect_uri_valid(&body.redirect_uri) {
-                if client.is_secret_valid(&client_secret.id().to_string()) {
+                if client.is_secret_valid(&client_secret, &*ctx.secrets.signer) {
                     Ok(client)
                 } else {
                     // TODO: Change this to a bad request with invalid_client ?

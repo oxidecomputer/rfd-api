@@ -385,15 +385,3 @@ impl From<OAuthClientRedirectUriModel> for OAuthClientRedirectUri {
         }
     }
 }
-
-impl OAuthClient {
-    pub fn is_secret_valid(&self, signature: &str) -> bool {
-        self.secrets.iter().any(|s| s.secret_signature == signature)
-    }
-
-    pub fn is_redirect_uri_valid(&self, redirect_uri: &str) -> bool {
-        self.redirect_uris
-            .iter()
-            .any(|r| r.redirect_uri == redirect_uri)
-    }
-}

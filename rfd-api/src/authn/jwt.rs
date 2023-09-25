@@ -143,7 +143,7 @@ impl JwtSigner {
 
         let signature = self
             .signer
-            .sign(&message)
+            .sign(message.as_bytes())
             .await
             .map_err(JwtSignerError::Signature)?;
 

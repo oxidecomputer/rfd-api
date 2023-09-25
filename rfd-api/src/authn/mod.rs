@@ -105,8 +105,8 @@ pub enum SigningKeyError {
 
 #[async_trait]
 pub trait Signer: Send + Sync {
-    async fn sign(&self, message: &str) -> Result<Vec<u8>, SigningKeyError>;
-    fn verify(&self, message: &str, signature: &Signature) -> Result<(), SigningKeyError>;
+    async fn sign(&self, message: &[u8]) -> Result<Vec<u8>, SigningKeyError>;
+    fn verify(&self, message: &[u8], signature: &Signature) -> Result<(), SigningKeyError>;
 }
 
 // A signer that stores a local in memory key for signing new JWTs
@@ -118,12 +118,12 @@ pub struct LocalKey {
 #[async_trait]
 impl Signer for LocalKey {
     #[instrument(skip(self, message), err(Debug))]
-    async fn sign(&self, message: &str) -> Result<Vec<u8>, SigningKeyError> {
+    async fn sign(&self, message: &[u8]) -> Result<Vec<u8>, SigningKeyError> {
         tracing::trace!("Signing message");
         let mut rng = rand::thread_rng();
         let signature = self
             .signing_key
-            .sign_with_rng(&mut rng, message.as_bytes())
+            .sign_with_rng(&mut rng, message)
             .to_vec();
 
         self.verify(message, &Signature::try_from(signature.as_ref()).unwrap())
@@ -132,9 +132,9 @@ impl Signer for LocalKey {
         Ok(signature)
     }
 
-    fn verify(&self, message: &str, signature: &Signature) -> Result<(), SigningKeyError> {
+    fn verify(&self, message: &[u8], signature: &Signature) -> Result<(), SigningKeyError> {
         tracing::trace!("Verifying message");
-        Ok(self.verifying_key.verify(message.as_bytes(), &signature)?)
+        Ok(self.verifying_key.verify(message, &signature)?)
     }
 }
 
@@ -180,7 +180,7 @@ pub struct CloudKmsSignatureResponse {
 #[async_trait]
 impl Signer for CloudKmsSigner {
     #[instrument(skip(self, message), err(Debug))]
-    async fn sign(&self, message: &str) -> Result<Vec<u8>, SigningKeyError> {
+    async fn sign(&self, message: &[u8]) -> Result<Vec<u8>, SigningKeyError> {
         let mut hasher = Sha256::new();
         hasher.update(message);
         let digest = hasher.finalize();
@@ -245,8 +245,8 @@ impl Signer for CloudKmsSigner {
         Ok(signature)
     }
 
-    fn verify(&self, message: &str, signature: &Signature) -> Result<(), SigningKeyError> {
-        Ok(self.verifying_key.verify(message.as_bytes(), &signature)?)
+    fn verify(&self, message: &[u8], signature: &Signature) -> Result<(), SigningKeyError> {
+        Ok(self.verifying_key.verify(message, &signature)?)
     }
 }
 

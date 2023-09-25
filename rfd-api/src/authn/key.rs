@@ -1,18 +1,18 @@
 use argon2::password_hash::rand_core::{OsRng, RngCore};
 use hex::FromHexError;
+use rsa::pkcs1v15::Signature;
 use thiserror::Error;
 use uuid::Uuid;
 
 use super::{Signer, SigningKeyError};
 
 pub struct RawApiKey {
-    id: Uuid,
-    clear: String,
+    clear: Vec<u8>,
 }
 
 #[derive(Debug, Error)]
 pub enum ApiKeyError {
-    #[error("Failed to decode signature: {0}")]
+    #[error("Failed to decode component: {0}")]
     Decode(#[from] FromHexError),
     #[error("Failed to parse API key")]
     FailedToParse,
@@ -29,19 +29,23 @@ impl RawApiKey {
         let mut token_raw = [0; N];
         OsRng.fill_bytes(&mut token_raw);
 
-        let clear = hex::encode(token_raw);
+        let mut clear = id.as_bytes().to_vec();
+        clear.append(&mut token_raw.to_vec());
 
-        Self { id: *id, clear }
+        Self { clear }
     }
 
-    pub fn id(&self) -> &Uuid {
-        &self.id
+    pub fn id(&self) -> &[u8] {
+        &self.clear[0..24]
     }
 
     pub async fn sign(self, signer: &dyn Signer) -> Result<SignedApiKey, ApiKeyError> {
-        let key = format!("{}.{}", self.id, self.clear);
-        let signature = hex::encode(signer.sign(&key).await.map_err(ApiKeyError::Signing)?);
-        Ok(SignedApiKey::new(key, signature))
+        let signature = hex::encode(signer.sign(&self.clear).await.map_err(ApiKeyError::Signing)?);
+        Ok(SignedApiKey::new(hex::encode(self.clear), signature))
+    }
+
+    pub fn verify(&self, signer: &dyn Signer, signature: &Signature) -> bool {
+        signer.verify(&self.clear, signature).is_ok()
     }
 }
 
@@ -49,15 +53,12 @@ impl TryFrom<&str> for RawApiKey {
     type Error = ApiKeyError;
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value.split_once(".") {
-            Some((id, key)) => Ok(RawApiKey {
-                id: id.parse().map_err(|err| {
-                    tracing::info!(?err, "Api key prefix is not a valid uuid");
-                    ApiKeyError::FailedToParse
-                })?,
-                clear: key.to_string(),
-            }),
-            None => Err(ApiKeyError::FailedToParse),
+        let decoded = hex::decode(value)?;
+
+        if decoded.len() > 24 {
+            Ok(RawApiKey { clear: decoded })
+        } else {
+            Err(ApiKeyError::FailedToParse)
         }
     }
 }

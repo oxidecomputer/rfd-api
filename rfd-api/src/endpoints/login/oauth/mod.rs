@@ -7,11 +7,15 @@ use hyper::{
     Body, Client,
 };
 use oauth2::{basic::BasicClient, url::ParseError, AuthUrl, ClientId, ClientSecret, TokenUrl};
+use rfd_model::OAuthClient;
+use rsa::pkcs1v15::Signature;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
 use thiserror::Error;
 use tracing::instrument;
+
+use crate::authn::{Signer, key::RawApiKey};
 
 use super::{UserInfo, UserInfoError, UserInfoProvider};
 
@@ -159,4 +163,36 @@ impl Display for OAuthProviderName {
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 pub struct OAuthProviderNameParam {
     provider: OAuthProviderName,
+}
+
+pub trait CheckOAuthClient {
+    fn is_secret_valid(&self, key: &RawApiKey, signer: &dyn Signer) -> bool;
+    fn is_redirect_uri_valid(&self, redirect_uri: &str) -> bool;
+}
+
+impl CheckOAuthClient for OAuthClient {
+    fn is_secret_valid(&self, key: &RawApiKey, signer: &dyn Signer) -> bool {
+        for secret in &self.secrets {
+            match Signature::try_from(secret.secret_signature.as_bytes()) {
+                Ok(signature) => {
+                    if key.verify(signer, &signature) {
+                        return true;
+                    }
+                }
+                Err(err) => {
+                    tracing::error!(?err, ?secret.id, "Client contains an invalid secret signature");
+                }
+            }
+
+            
+        }
+
+        false
+    }   
+
+    fn is_redirect_uri_valid(&self, redirect_uri: &str) -> bool {
+        self.redirect_uris
+            .iter()
+            .any(|r| r.redirect_uri == redirect_uri)
+    } 
 }

@@ -129,6 +129,8 @@ pub struct RegisteredAccessToken {
 pub enum CallerError {
     #[error("Failed to authenticate caller")]
     FailedToAuthenticate,
+    #[error("Supplied API key is invalid")]
+    InvalidKey,
     #[error("Inner storage failure: {0}")]
     Storage(#[from] StoreError),
 }
@@ -139,6 +141,9 @@ impl From<CallerError> for HttpError {
 
         match error {
             CallerError::FailedToAuthenticate => {
+                client_error(StatusCode::UNAUTHORIZED, "Failed to authenticate")
+            }
+            CallerError::InvalidKey => {
                 client_error(StatusCode::UNAUTHORIZED, "Failed to authenticate")
             }
             CallerError::Storage(_) => internal_error("Internal storage failed"),
@@ -251,10 +256,15 @@ impl ApiContext {
                 async {
                     tracing::debug!("Attempt to authenticate");
 
+                    let id = Uuid::from_slice(api_key.id()).map_err(|err| {
+                        tracing::info!(?err, slice = ?api_key.id(), "Failed to parse id from API key");
+                        CallerError::InvalidKey
+                    })?;
+
                     let mut key = ApiKeyStore::list(
                         &*self.storage,
                         ApiKeyFilter {
-                            id: Some(vec![*api_key.id()]),
+                            id: Some(vec![id]),
                             expired: false,
                             deleted: false,
                             ..Default::default()
