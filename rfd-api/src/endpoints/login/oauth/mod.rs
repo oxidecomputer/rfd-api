@@ -15,7 +15,7 @@ use std::fmt::{Debug, Display};
 use thiserror::Error;
 use tracing::instrument;
 
-use crate::authn::{Signer, key::RawApiKey};
+use crate::authn::{key::RawApiKey, Signer};
 
 use super::{UserInfo, UserInfoError, UserInfoProvider};
 
@@ -183,16 +183,14 @@ impl CheckOAuthClient for OAuthClient {
                     tracing::error!(?err, ?secret.id, "Client contains an invalid secret signature");
                 }
             }
-
-            
         }
 
         false
-    }   
+    }
 
     fn is_redirect_uri_valid(&self, redirect_uri: &str) -> bool {
         self.redirect_uris
             .iter()
             .any(|r| r.redirect_uri == redirect_uri)
-    } 
+    }
 }

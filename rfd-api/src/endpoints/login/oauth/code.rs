@@ -25,7 +25,10 @@ use super::{OAuthProviderNameParam, UserInfoProvider};
 use crate::{
     authn::key::RawApiKey,
     context::ApiContext,
-    endpoints::login::{oauth::{ClientType, CheckOAuthClient}, LoginError},
+    endpoints::login::{
+        oauth::{CheckOAuthClient, ClientType},
+        LoginError,
+    },
     error::ApiError,
     util::{
         request::RequestCookies,

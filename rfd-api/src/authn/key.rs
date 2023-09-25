@@ -40,7 +40,12 @@ impl RawApiKey {
     }
 
     pub async fn sign(self, signer: &dyn Signer) -> Result<SignedApiKey, ApiKeyError> {
-        let signature = hex::encode(signer.sign(&self.clear).await.map_err(ApiKeyError::Signing)?);
+        let signature = hex::encode(
+            signer
+                .sign(&self.clear)
+                .await
+                .map_err(ApiKeyError::Signing)?,
+        );
         Ok(SignedApiKey::new(hex::encode(self.clear), signature))
     }
 

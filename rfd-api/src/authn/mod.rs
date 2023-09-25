@@ -121,10 +121,7 @@ impl Signer for LocalKey {
     async fn sign(&self, message: &[u8]) -> Result<Vec<u8>, SigningKeyError> {
         tracing::trace!("Signing message");
         let mut rng = rand::thread_rng();
-        let signature = self
-            .signing_key
-            .sign_with_rng(&mut rng, message)
-            .to_vec();
+        let signature = self.signing_key.sign_with_rng(&mut rng, message).to_vec();
 
         self.verify(message, &Signature::try_from(signature.as_ref()).unwrap())
             .map_err(|_| SigningKeyError::GeneratedInvalidSignature)?;
