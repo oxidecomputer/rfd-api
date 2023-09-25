@@ -48,8 +48,8 @@ oauth2 = "4.1.0"
 octorust = "0.7.0-rc.1"
 openssl = "0.10.57"
 partial-struct = { git = "https://github.com/oxidecomputer/partial-struct" }
-progenitor = { git = "https://github.com/oxidecomputer/progenitor" }
-progenitor-client = { git = "https://github.com/oxidecomputer/progenitor" }
+progenitor = { git = "https://github.com/oxidecomputer/progenitor", branch = "print-example" }
+progenitor-client = { git = "https://github.com/oxidecomputer/progenitor", branch = "print-example" }
 rand = "0.8.5"
 rand_core = "0.6"
 regex = "1.7.1"
@@ -83,8 +83,8 @@ uuid = "1.2.2"
 valuable = "0.1.0"
 yup-oauth2 = "8.1.0"
 
-[patch."https://github.com/oxidecomputer/progenitor"]
-progenitor = { path = "../progenitor/progenitor" }
+# [patch."https://github.com/oxidecomputer/progenitor"]
+# progenitor = { path = "../progenitor/progenitor" }
 
 # [patch."https://github.com/oxidecomputer/typify"]
 # typify = { path = "../typify/typify" }

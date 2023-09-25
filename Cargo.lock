@@ -2444,8 +2444,9 @@ dependencies = [
 [[package]]
 name = "progenitor"
 version = "0.3.0"
+source = "git+https://github.com/oxidecomputer/progenitor?branch=print-example#032b1bcc2f672af6abdbd0678d04d0405c7701ae"
 dependencies = [
- "progenitor-client 0.3.0",
+ "progenitor-client",
  "progenitor-impl",
  "progenitor-macro",
  "serde_json",
@@ -2454,20 +2455,7 @@ dependencies = [
 [[package]]
 name = "progenitor-client"
 version = "0.3.0"
-dependencies = [
- "bytes",
- "futures-core",
- "percent-encoding 2.3.0",
- "reqwest",
- "serde",
- "serde_json",
- "serde_urlencoded",
-]
-
-[[package]]
-name = "progenitor-client"
-version = "0.3.0"
-source = "git+https://github.com/oxidecomputer/progenitor#5c941c0b41b0235031f3ade33a9c119945f1fd51"
+source = "git+https://github.com/oxidecomputer/progenitor?branch=print-example#032b1bcc2f672af6abdbd0678d04d0405c7701ae"
 dependencies = [
  "bytes",
  "futures-core",
@@ -2481,6 +2469,7 @@ dependencies = [
 [[package]]
 name = "progenitor-impl"
 version = "0.3.0"
+source = "git+https://github.com/oxidecomputer/progenitor?branch=print-example#032b1bcc2f672af6abdbd0678d04d0405c7701ae"
 dependencies = [
  "getopts",
  "heck",
@@ -2502,6 +2491,7 @@ dependencies = [
 [[package]]
 name = "progenitor-macro"
 version = "0.3.0"
+source = "git+https://github.com/oxidecomputer/progenitor?branch=print-example#032b1bcc2f672af6abdbd0678d04d0405c7701ae"
 dependencies = [
  "openapiv3",
  "proc-macro2",
@@ -2833,7 +2823,7 @@ dependencies = [
  "config",
  "dirs 5.0.1",
  "oauth2",
- "progenitor-client 0.3.0 (git+https://github.com/oxidecomputer/progenitor)",
+ "progenitor-client",
  "reqwest",
  "rfd-sdk",
  "serde",
@@ -2930,7 +2920,7 @@ name = "rfd-sdk"
 version = "0.1.0"
 dependencies = [
  "chrono",
- "progenitor-client 0.3.0 (git+https://github.com/oxidecomputer/progenitor)",
+ "progenitor-client",
  "reqwest",
  "schemars",
  "serde",
