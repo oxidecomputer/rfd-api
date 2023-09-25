@@ -1,7 +1,7 @@
 use chrono::{Duration, Utc};
 use dropshot::{
     endpoint, http_response_temporary_redirect, HttpError, HttpResponseOk,
-    HttpResponseTemporaryRedirect, Path, Query, RequestContext, TypedBody,
+    HttpResponseTemporaryRedirect, Path, Query, RequestContext, RequestInfo, TypedBody,
 };
 use http::{
     header::{LOCATION, SET_COOKIE},
@@ -185,6 +185,56 @@ fn oauth_redirect_response(
         .body(Body::empty())?)
 }
 
+fn verify_csrf(
+    request: &RequestInfo,
+    query: &OAuthAuthzCodeReturnQuery,
+) -> Result<Uuid, HttpError> {
+    // If we are missing the expected state parameter then we can not proceed at all with verifying
+    // this callback request. We also do not have a redirect uri to send the user to so we instead
+    // report unauthorized
+    let attempt_id = query
+        .state
+        .as_ref()
+        .ok_or_else(|| {
+            tracing::warn!("OAuth callback is missing a state parameter");
+            unauthorized()
+        })?
+        .parse()
+        .map_err(|err| {
+            tracing::warn!(?err, "Failed to parse state");
+            unauthorized()
+        })?;
+
+    // The client must present the attempt cookie at a minimum. Without it we are unable to lookup a
+    // login attempt to match against. Without the cookie to verify the state parameter we can not
+    // determine a redirect uri so we instead report unauthorized
+    let attempt_cookie: Uuid = request
+        .cookie(LOGIN_ATTEMPT_COOKIE)
+        .ok_or_else(|| {
+            tracing::warn!("OAuth callback is missing a login state cookie");
+            unauthorized()
+        })?
+        .value()
+        .parse()
+        .map_err(|err| {
+            tracing::warn!(?err, "Failed to parse state");
+            unauthorized()
+        })?;
+
+    // Verify that the attempt_id returned from the state matches the expected client value. If they
+    // do not match we can not lookup a redirect uri so we instead return unauthorized
+    if attempt_id != attempt_cookie {
+        tracing::warn!(
+            ?attempt_id,
+            ?attempt_cookie,
+            "OAuth state does not match expected cookie value"
+        );
+        Err(unauthorized())
+    } else {
+        Ok(attempt_id)
+    }
+}
+
 #[derive(Debug, Deserialize, JsonSchema, Serialize)]
 pub struct OAuthAuthzCodeReturnQuery {
     pub state: Option<String>,
@@ -213,48 +263,8 @@ pub async fn authz_code_callback(
 
     tracing::debug!(provider = ?provider.name(), "Acquired OAuth provider for authz code exchange");
 
-    // If we are missing the expected state parameter then we can not proceed at all with verifying
-    // this callback request. We also do not have a redirect uri to send the user to so we instead
-    // report unauthorized
-    let attempt_id = query
-        .state
-        .ok_or_else(|| {
-            tracing::warn!("OAuth callback is missing a state parameter");
-            unauthorized()
-        })?
-        .parse()
-        .map_err(|err| {
-            tracing::warn!(?err, "Failed to parse state");
-            unauthorized()
-        })?;
-
-    // The client must present the attempt cookie at a minimum. Without it we are unable to lookup a
-    // login attempt to match against. Without the cookie to verify the state parameter we can not
-    // determine a redirect uri so we instead report unauthorized
-    let attempt_cookie: Uuid = rqctx
-        .request
-        .cookie(LOGIN_ATTEMPT_COOKIE)
-        .ok_or_else(|| {
-            tracing::warn!("OAuth callback is missing a login state cookie");
-            unauthorized()
-        })?
-        .value()
-        .parse()
-        .map_err(|err| {
-            tracing::warn!(?err, "Failed to parse state");
-            unauthorized()
-        })?;
-
-    // Verify that the attempt_id returned from the state matches the expected client value. If they
-    // do not match we can not lookup a redirect uri so we instead return unauthorized
-    if attempt_id != attempt_cookie {
-        tracing::warn!(
-            ?attempt_id,
-            ?attempt_cookie,
-            "OAuth state does not match expected cookie value"
-        );
-        return Err(unauthorized());
-    }
+    // Verify and extract the attempt id before performing any work
+    let attempt_id = verify_csrf(&rqctx.request, &query)?;
 
     // We have now verified the attempt id and can use it to look up the rest of the login attempt
     // material to try and complete the flow
@@ -458,18 +468,53 @@ pub async fn authz_code_exchange(
 
 #[cfg(test)]
 mod tests {
+    use std::net::{Ipv4Addr, SocketAddrV4};
+
     use chrono::Utc;
-    use http::header::{LOCATION, SET_COOKIE};
+    use dropshot::RequestInfo;
+    use http::{
+        header::{COOKIE, LOCATION, SET_COOKIE},
+        HeaderValue,
+    };
+    use hyper::Body;
     use oauth2::PkceCodeChallenge;
     use rfd_model::{schema_ext::LoginAttemptState, LoginAttempt};
     use uuid::Uuid;
 
     use crate::{
         context::tests::{mock_context, MockStorage},
-        endpoints::login::oauth::OAuthProviderName,
+        endpoints::login::oauth::{
+            code::{verify_csrf, OAuthAuthzCodeReturnQuery, LOGIN_ATTEMPT_COOKIE},
+            OAuthProviderName,
+        },
+        util::request::RequestCookies,
     };
 
     use super::oauth_redirect_response;
+
+    #[tokio::test]
+    async fn test_csrf_check() {
+        let id = Uuid::new_v4();
+
+        let mut rq = hyper::Request::new(Body::empty());
+        rq.headers_mut().insert(
+            COOKIE,
+            HeaderValue::from_str(&format!("{}={}", LOGIN_ATTEMPT_COOKIE, id)).unwrap(),
+        );
+
+        let request = RequestInfo::new(
+            &rq,
+            std::net::SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(0, 0, 0, 0), 8888)),
+        );
+
+        let query = OAuthAuthzCodeReturnQuery {
+            state: Some(id.to_string()),
+            code: None,
+            error: None,
+        };
+
+        assert_eq!(id, verify_csrf(&request, &query).unwrap());
+    }
 
     #[tokio::test]
     async fn test_remote_provider_redirect_url() {

@@ -9,7 +9,7 @@ use crate::authn::CloudKmsError;
 pub mod request {
     use cookie::Cookie;
     use dropshot::RequestInfo;
-    use http::header::SET_COOKIE;
+    use http::header::COOKIE;
 
     pub trait RequestCookies {
         fn cookie(&self, name: &str) -> Option<Cookie>;
@@ -17,7 +17,7 @@ pub mod request {
 
     impl RequestCookies for RequestInfo {
         fn cookie(&self, name: &str) -> Option<Cookie> {
-            let cookie_header = self.headers().get(SET_COOKIE)?;
+            let cookie_header = self.headers().get(COOKIE)?;
 
             Cookie::split_parse(String::from_utf8(cookie_header.as_bytes().to_vec()).unwrap())
                 .filter_map(|cookie| match cookie {
