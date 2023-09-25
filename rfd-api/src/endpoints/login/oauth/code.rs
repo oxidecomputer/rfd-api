@@ -487,7 +487,6 @@ mod tests {
             code::{verify_csrf, OAuthAuthzCodeReturnQuery, LOGIN_ATTEMPT_COOKIE},
             OAuthProviderName,
         },
-        util::request::RequestCookies,
     };
 
     use super::oauth_redirect_response;
