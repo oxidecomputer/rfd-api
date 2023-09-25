@@ -12,7 +12,7 @@ use oauth2::{
     reqwest::async_http_client, AuthorizationCode, CsrfToken, PkceCodeChallenge, PkceCodeVerifier,
     Scope, TokenResponse,
 };
-use rfd_model::{schema_ext::LoginAttemptState, NewLoginAttempt};
+use rfd_model::{schema_ext::LoginAttemptState, LoginAttempt, NewLoginAttempt, OAuthClient};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
@@ -21,7 +21,7 @@ use tap::TapFallible;
 use tracing::instrument;
 use uuid::Uuid;
 
-use super::{OAuthProviderNameParam, UserInfoProvider};
+use super::{OAuthProvider, OAuthProviderNameParam, UserInfoProvider};
 use crate::{
     authn::key::RawApiKey,
     context::ApiContext,
@@ -53,6 +53,29 @@ pub struct OAuthAuthzCodeRedirectHeaders {
     location: String,
 }
 
+// Lookup the client specified by the provided client id and verify that the redirect uri
+// is a valid for this client. If either of these fail we return an unauthorized response
+async fn get_oauth_client(
+    ctx: &ApiContext,
+    client_id: &Uuid,
+    redirect_uri: &str,
+) -> Result<OAuthClient, HttpError> {
+    let client = ctx
+        .get_oauth_client(&client_id)
+        .await
+        .map_err(to_internal_error)?
+        .ok_or_else(|| client_error(StatusCode::UNAUTHORIZED, "Invalid client"))?;
+
+    if client.is_redirect_uri_valid(&redirect_uri) {
+        Ok(client)
+    } else {
+        Err(client_error(
+            StatusCode::UNAUTHORIZED,
+            "Invalid redirect uri",
+        ))
+    }
+}
+
 /// Generate the remote provider login url and redirect the user
 #[endpoint {
     method = GET,
@@ -68,22 +91,7 @@ pub async fn authz_code_redirect(
     let path = path.into_inner();
     let query = query.into_inner();
 
-    // Lookup the client specified by the provided client id and verify that the redirect uri
-    // is a valid for this client. If either of these fail we return an unauthorized response
-    ctx.get_oauth_client(&query.client_id)
-        .await
-        .map_err(to_internal_error)?
-        .ok_or_else(|| client_error(StatusCode::UNAUTHORIZED, "Invalid client"))
-        .and_then(|client| {
-            if client.is_redirect_uri_valid(&query.redirect_uri) {
-                Ok(client)
-            } else {
-                Err(client_error(
-                    StatusCode::UNAUTHORIZED,
-                    "Invalid redirect uri",
-                ))
-            }
-        })?;
+    get_oauth_client(ctx, &query.client_id, &query.redirect_uri).await?;
 
     tracing::debug!(?query.client_id, ?query.redirect_uri, "Verified client id and redirect uri");
 
@@ -96,15 +104,6 @@ pub async fn authz_code_redirect(
 
     tracing::debug!(provider = ?provider.name(), "Acquired OAuth provider for authz code login");
 
-    // We may also fail if the provider configuration is not correctly configured
-    // TODO: This behavior should be changed so that clients are precomputed. We do not need to be
-    // constructing a new client on every request. That said, we need to ensure the client does not
-    // maintain state between requests
-    let client = provider
-        .as_client(&ClientType::Web)
-        .map_err(to_internal_error)?;
-    let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
-
     // Construct a new login attempt with the minimum required values
     let mut attempt = NewLoginAttempt::new(
         query.client_id,
@@ -116,9 +115,13 @@ pub async fn authz_code_redirect(
         internal_error("Attempted to construct invalid login attempt".to_string())
     })?;
 
-    if provider.supports_pkce() {
+    let pkce_challenge = if provider.supports_pkce() {
+        let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
         attempt.provider_pkce_verifier = Some(pkce_verifier.secret().to_string());
-    }
+        Some(pkce_challenge)
+    } else {
+        None
+    };
 
     // Add in the user defined state and redirect uri
     attempt.state = Some(query.state);
@@ -131,30 +134,53 @@ pub async fn authz_code_redirect(
 
     tracing::info!(?attempt.id, "Created login attempt");
 
+    Ok(oauth_redirect_response(
+        &*provider,
+        &attempt,
+        pkce_challenge,
+    )?)
+}
+
+fn oauth_redirect_response(
+    provider: &dyn OAuthProvider,
+    attempt: &LoginAttempt,
+    code_challenge: Option<PkceCodeChallenge>,
+) -> Result<Response<Body>, HttpError> {
+    // We may fail if the provider configuration is not correctly configured
+    // TODO: This behavior should be changed so that clients are precomputed. We do not need to be
+    // constructing a new client on every request. That said, we need to ensure the client does not
+    // maintain state between requests
+    let client = provider
+        .as_client(&ClientType::Web)
+        .map_err(to_internal_error)?;
+
     // Create an attempt cookie header for storing the login attempt. This also acts as our csrf
     // check
     let login_cookie = HeaderValue::from_str(&format!("{}={}", LOGIN_ATTEMPT_COOKIE, attempt.id))
         .map_err(to_internal_error)?;
 
     // Generate the url to the remote provider that the user will be redirected to
-    let (url, _) = client
+    let mut authz_url = client
         .authorize_url(|| CsrfToken::new(attempt.id.to_string()))
-        .set_pkce_challenge(pkce_challenge)
         .add_scopes(
             provider
                 .scopes()
                 .into_iter()
                 .map(|s| Scope::new(s.to_string()))
                 .collect::<Vec<_>>(),
-        )
-        .url();
+        );
+
+    // If the caller has provided a code challenge, add it to the url
+    if let Some(challenge) = code_challenge {
+        authz_url = authz_url.set_pkce_challenge(challenge);
+    };
 
     Ok(Response::builder()
         .status(StatusCode::TEMPORARY_REDIRECT)
         .header(SET_COOKIE, login_cookie)
         .header(
             LOCATION,
-            HeaderValue::from_str(url.as_str()).map_err(to_internal_error)?,
+            HeaderValue::from_str(authz_url.url().0.as_str()).map_err(to_internal_error)?,
         )
         .body(Body::empty())?)
 }
@@ -428,4 +454,86 @@ pub async fn authz_code_exchange(
         access_token: token.signed_token,
         expires_in: token.expires_at.timestamp() - Utc::now().timestamp(),
     }))
+}
+
+#[cfg(test)]
+mod tests {
+    use chrono::Utc;
+    use http::header::{LOCATION, SET_COOKIE};
+    use oauth2::PkceCodeChallenge;
+    use rfd_model::{schema_ext::LoginAttemptState, LoginAttempt};
+    use uuid::Uuid;
+
+    use crate::{
+        context::tests::{mock_context, MockStorage},
+        endpoints::login::oauth::OAuthProviderName,
+    };
+
+    use super::oauth_redirect_response;
+
+    #[tokio::test]
+    async fn test_remote_provider_redirect_url() {
+        let storage = MockStorage::new();
+        let ctx = mock_context(storage).await;
+
+        let (challenge, _) = PkceCodeChallenge::new_random_sha256();
+        let attempt = LoginAttempt {
+            id: Uuid::new_v4(),
+            attempt_state: LoginAttemptState::New,
+            client_id: Uuid::new_v4(),
+            redirect_uri: "https://test.oxeng.dev/callback".to_string(),
+            state: Some("ox_state".to_string()),
+            pkce_challenge: Some("ox_challenge".to_string()),
+            pkce_challenge_method: Some("S256".to_string()),
+            authz_code: None,
+            expires_at: None,
+            error: None,
+            provider: "google".to_string(),
+            provider_pkce_verifier: Some("rfd_verifier".to_string()),
+            provider_authz_code: None,
+            provider_error: None,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        let response = oauth_redirect_response(
+            &*ctx
+                .get_oauth_provider(&OAuthProviderName::Google)
+                .await
+                .unwrap(),
+            &attempt,
+            Some(challenge.clone()),
+        )
+        .unwrap();
+
+        let expected_location = format!("https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=google_web_client_id&state={}&code_challenge={}&code_challenge_method=S256&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+openid", attempt.id, challenge.as_str());
+
+        assert_eq!(
+            expected_location,
+            String::from_utf8(
+                response
+                    .headers()
+                    .get(LOCATION)
+                    .unwrap()
+                    .as_bytes()
+                    .to_vec()
+            )
+            .unwrap()
+        );
+        assert_eq!(
+            attempt.id.to_string().as_str(),
+            String::from_utf8(
+                response
+                    .headers()
+                    .get(SET_COOKIE)
+                    .unwrap()
+                    .as_bytes()
+                    .to_vec()
+            )
+            .unwrap()
+            .split_once('=')
+            .unwrap()
+            .1
+        )
+    }
 }

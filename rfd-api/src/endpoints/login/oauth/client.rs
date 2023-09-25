@@ -319,15 +319,17 @@ mod tests {
 
     use chrono::Utc;
     use rfd_model::{
-        storage::{MockOAuthClientStore, MockOAuthClientSecretStore, MockApiUserStore},
+        storage::{MockApiUserStore, MockOAuthClientSecretStore, MockOAuthClientStore},
         ApiUser, OAuthClient, OAuthClientSecret,
     };
     use uuid::Uuid;
 
     use crate::{
+        authn::key::RawApiKey,
         context::tests::{mock_context, MockStorage},
+        endpoints::login::oauth::CheckOAuthClient,
         permissions::ApiPermission,
-        ApiCaller, authn::key::RawApiKey, endpoints::login::oauth::CheckOAuthClient,
+        ApiCaller,
     };
 
     use super::{create_oauth_client_op, create_oauth_client_secret_op};
@@ -335,10 +337,7 @@ mod tests {
     fn mock_user() -> ApiUser<ApiPermission> {
         ApiUser {
             id: Uuid::new_v4(),
-            permissions: vec![
-                ApiPermission::CreateOAuthClient,
-                
-            ].into(),
+            permissions: vec![ApiPermission::CreateOAuthClient].into(),
             created_at: Utc::now(),
             updated_at: Utc::now(),
             deleted_at: None,
@@ -348,52 +347,46 @@ mod tests {
     #[tokio::test]
     async fn test_create_client_with_secret() {
         let mut user_store = MockApiUserStore::new();
-        user_store
-            .expect_upsert()
-            .returning(|user| {
-                Ok(ApiUser {
-                    id: user.id,
-                    permissions: user.permissions,
-                    created_at: Utc::now(),
-                    updated_at: Utc::now(),
-                    deleted_at: None,
-                })
-            });
+        user_store.expect_upsert().returning(|user| {
+            Ok(ApiUser {
+                id: user.id,
+                permissions: user.permissions,
+                created_at: Utc::now(),
+                updated_at: Utc::now(),
+                deleted_at: None,
+            })
+        });
 
         let mut store = MockOAuthClientStore::new();
-        store
-            .expect_upsert()
-            .returning(|client| {
-                Ok(OAuthClient {
-                    id: client.id,
-                    secrets: vec![],
-                    redirect_uris: vec![],
-                    created_at: Utc::now(),
-                    deleted_at: None,
-                })
-            });
+        store.expect_upsert().returning(|client| {
+            Ok(OAuthClient {
+                id: client.id,
+                secrets: vec![],
+                redirect_uris: vec![],
+                created_at: Utc::now(),
+                deleted_at: None,
+            })
+        });
 
         let last_stored_secret = Arc::new(Mutex::new(None));
 
         let mut secret_store = MockOAuthClientSecretStore::new();
         let extractor = last_stored_secret.clone();
-        secret_store
-            .expect_upsert()
-            .returning(move |secret| {
-                let stored = OAuthClientSecret {
-                    id: secret.id,
-                    oauth_client_id: secret.oauth_client_id,
-                    secret_signature: secret.secret_signature,
-                    created_at: Utc::now(),
-                    deleted_at: None,
-                };
+        secret_store.expect_upsert().returning(move |secret| {
+            let stored = OAuthClientSecret {
+                id: secret.id,
+                oauth_client_id: secret.oauth_client_id,
+                secret_signature: secret.secret_signature,
+                created_at: Utc::now(),
+                deleted_at: None,
+            };
 
-                let mut extract = extractor.lock().unwrap();
-                *extract = Some(stored.clone());
-                drop(extract);
+            let mut extract = extractor.lock().unwrap();
+            *extract = Some(stored.clone());
+            drop(extract);
 
-                Ok(stored)
-            });
+            Ok(stored)
+        });
 
         let mut storage = MockStorage::new();
         storage.api_user_store = Some(Arc::new(user_store));
@@ -409,10 +402,17 @@ mod tests {
         };
 
         let mut client = create_oauth_client_op(&ctx, &caller).await.unwrap().0;
-        caller.permissions.insert(ApiPermission::UpdateOAuthClient(client.id));
+        caller
+            .permissions
+            .insert(ApiPermission::UpdateOAuthClient(client.id));
 
-        let secret = create_oauth_client_secret_op(&ctx, &caller, client.id).await.unwrap().0;
-        client.secrets.push(last_stored_secret.lock().unwrap().clone().unwrap());
+        let secret = create_oauth_client_secret_op(&ctx, &caller, client.id)
+            .await
+            .unwrap()
+            .0;
+        client
+            .secrets
+            .push(last_stored_secret.lock().unwrap().clone().unwrap());
 
         let key = RawApiKey::try_from(secret.key.as_str()).unwrap();
 

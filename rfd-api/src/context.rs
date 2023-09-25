@@ -861,6 +861,7 @@ pub(crate) mod tests {
 
     use crate::{
         config::{JwtConfig, PermissionsConfig, SearchConfig},
+        endpoints::login::oauth::{google::GoogleOAuthProvider, OAuthProviderName},
         permissions::ApiPermission,
         util::tests::{mock_key, AnyEmailValidator},
     };
@@ -869,7 +870,7 @@ pub(crate) mod tests {
 
     // Construct a mock context that can be used in tests
     pub async fn mock_context(storage: MockStorage) -> ApiContext {
-        ApiContext::new(
+        let mut ctx = ApiContext::new(
             Arc::new(AnyEmailValidator),
             "".to_string(),
             Arc::new(storage),
@@ -882,7 +883,21 @@ pub(crate) mod tests {
             SearchConfig::default(),
         )
         .await
-        .unwrap()
+        .unwrap();
+
+        ctx.insert_oauth_provider(
+            OAuthProviderName::Google,
+            Box::new(move || {
+                Box::new(GoogleOAuthProvider::new(
+                    "google_device_client_id".to_string(),
+                    "google_device_client_secret".to_string(),
+                    "google_web_client_id".to_string(),
+                    "google_web_client_secret".to_string(),
+                ))
+            }),
+        );
+
+        ctx
     }
 
     // Construct a mock storage engine that can be wrapped in an ApiContext for testing
