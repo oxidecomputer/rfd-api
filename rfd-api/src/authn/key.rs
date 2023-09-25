@@ -1,11 +1,11 @@
 use argon2::password_hash::rand_core::{OsRng, RngCore};
 use hex::FromHexError;
-use rsa::pkcs1v15::Signature;
 use thiserror::Error;
 use uuid::Uuid;
 
 use super::{Signer, SigningKeyError};
 
+#[derive(Debug)]
 pub struct RawApiKey {
     clear: Vec<u8>,
 }
@@ -20,6 +20,8 @@ pub enum ApiKeyError {
     MalformedSignature(#[from] rsa::signature::Error),
     #[error("Failed to sign API key: {0}")]
     Signing(SigningKeyError),
+    #[error("Failed to sign API key: {0}")]
+    Verify(SigningKeyError),
 }
 
 impl RawApiKey {
@@ -36,7 +38,7 @@ impl RawApiKey {
     }
 
     pub fn id(&self) -> &[u8] {
-        &self.clear[0..24]
+        &self.clear[0..16]
     }
 
     pub async fn sign(self, signer: &dyn Signer) -> Result<SignedApiKey, ApiKeyError> {
@@ -49,8 +51,12 @@ impl RawApiKey {
         Ok(SignedApiKey::new(hex::encode(self.clear), signature))
     }
 
-    pub fn verify(&self, signer: &dyn Signer, signature: &Signature) -> bool {
-        signer.verify(&self.clear, signature).is_ok()
+    pub fn verify(&self, signer: &dyn Signer, signature: &[u8]) -> Result<bool, ApiKeyError> {
+        let signature = hex::decode(signature)?;
+        Ok(signer
+            .verify(&self.clear, &signature)
+            .map(|_| true)
+            .map_err(ApiKeyError::Verify)?)
     }
 }
 
@@ -60,9 +66,10 @@ impl TryFrom<&str> for RawApiKey {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let decoded = hex::decode(value)?;
 
-        if decoded.len() > 24 {
+        if decoded.len() > 16 {
             Ok(RawApiKey { clear: decoded })
         } else {
+            tracing::debug!(len = ?decoded.len(), "API key is too short");
             Err(ApiKeyError::FailedToParse)
         }
     }
@@ -93,6 +100,22 @@ mod tests {
 
     use super::RawApiKey;
     use crate::util::tests::mock_key;
+
+    #[tokio::test]
+    async fn test_verifies_signature() {
+        let id = Uuid::new_v4();
+        let signer = mock_key().as_signer().await.unwrap();
+
+        let raw = RawApiKey::generate::<8>(&id);
+        println!("{:?}", raw);
+
+        let signed = raw.sign(&*signer).await.unwrap();
+
+        let raw2 = RawApiKey::try_from(signed.key.as_str()).unwrap();
+        println!("{:?}", raw2);
+
+        assert!(raw2.verify(&*signer, signed.signature.as_bytes()).unwrap())
+    }
 
     #[tokio::test]
     async fn test_generates_signatures() {

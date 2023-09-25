@@ -106,7 +106,7 @@ pub enum SigningKeyError {
 #[async_trait]
 pub trait Signer: Send + Sync {
     async fn sign(&self, message: &[u8]) -> Result<Vec<u8>, SigningKeyError>;
-    fn verify(&self, message: &[u8], signature: &Signature) -> Result<(), SigningKeyError>;
+    fn verify(&self, message: &[u8], signature: &[u8]) -> Result<(), SigningKeyError>;
 }
 
 // A signer that stores a local in memory key for signing new JWTs
@@ -123,13 +123,14 @@ impl Signer for LocalKey {
         let mut rng = rand::thread_rng();
         let signature = self.signing_key.sign_with_rng(&mut rng, message).to_vec();
 
-        self.verify(message, &Signature::try_from(signature.as_ref()).unwrap())
+        self.verify(message, &signature)
             .map_err(|_| SigningKeyError::GeneratedInvalidSignature)?;
 
         Ok(signature)
     }
 
-    fn verify(&self, message: &[u8], signature: &Signature) -> Result<(), SigningKeyError> {
+    fn verify(&self, message: &[u8], signature: &[u8]) -> Result<(), SigningKeyError> {
+        let signature = Signature::try_from(signature)?;
         tracing::trace!("Verifying message");
         Ok(self.verifying_key.verify(message, &signature)?)
     }
@@ -242,7 +243,8 @@ impl Signer for CloudKmsSigner {
         Ok(signature)
     }
 
-    fn verify(&self, message: &[u8], signature: &Signature) -> Result<(), SigningKeyError> {
+    fn verify(&self, message: &[u8], signature: &[u8]) -> Result<(), SigningKeyError> {
+        let signature = Signature::try_from(signature)?;
         Ok(self.verifying_key.verify(message, &signature)?)
     }
 }

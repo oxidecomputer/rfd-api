@@ -8,7 +8,6 @@ use hyper::{
 };
 use oauth2::{basic::BasicClient, url::ParseError, AuthUrl, ClientId, ClientSecret, TokenUrl};
 use rfd_model::OAuthClient;
-use rsa::pkcs1v15::Signature;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
@@ -173,9 +172,9 @@ pub trait CheckOAuthClient {
 impl CheckOAuthClient for OAuthClient {
     fn is_secret_valid(&self, key: &RawApiKey, signer: &dyn Signer) -> bool {
         for secret in &self.secrets {
-            match Signature::try_from(secret.secret_signature.as_bytes()) {
-                Ok(signature) => {
-                    if key.verify(signer, &signature) {
+            match key.verify(signer, secret.secret_signature.as_bytes()) {
+                Ok(verified) => {
+                    if verified {
                         return true;
                     }
                 }
