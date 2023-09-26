@@ -509,7 +509,11 @@ mod tests {
     use hyper::Body;
     use mockall::predicate::eq;
     use oauth2::PkceCodeChallenge;
-    use rfd_model::{schema_ext::LoginAttemptState, storage::MockLoginAttemptStore, LoginAttempt};
+    use rfd_model::{
+        schema_ext::LoginAttemptState,
+        storage::{MockLoginAttemptStore, MockOAuthClientRedirectUriStore, MockOAuthClientStore},
+        LoginAttempt, OAuthClient, OAuthClientRedirectUri,
+    };
     use uuid::Uuid;
 
     use crate::{
@@ -520,7 +524,108 @@ mod tests {
         },
     };
 
-    use super::{authz_code_callback_op, oauth_redirect_response};
+    use super::{authz_code_callback_op, get_oauth_client, oauth_redirect_response};
+
+    #[tokio::test]
+    async fn test_oauth_client_lookup_checks_redirect_uri() {
+        let client_id = Uuid::new_v4();
+        let client = OAuthClient {
+            id: client_id,
+            secrets: vec![],
+            redirect_uris: vec![OAuthClientRedirectUri {
+                id: Uuid::new_v4(),
+                oauth_client_id: client_id,
+                redirect_uri: "https://test.oxeng.dev/callback".to_string(),
+                created_at: Utc::now(),
+                deleted_at: None,
+            }],
+            created_at: Utc::now(),
+            deleted_at: None,
+        };
+
+        let mut client_store = MockOAuthClientStore::new();
+        client_store
+            .expect_get()
+            .with(eq(client_id), eq(false))
+            .returning(move |_, _| Ok(Some(client.clone())));
+
+        let mut storage = MockStorage::new();
+        storage.oauth_client_store = Some(Arc::new(client_store));
+        let ctx = mock_context(storage).await;
+
+        let failure =
+            get_oauth_client(&ctx, &client_id, "https://not-test.oxeng.dev/callback").await;
+        assert_eq!(StatusCode::UNAUTHORIZED, failure.unwrap_err().status_code);
+
+        let success = get_oauth_client(&ctx, &client_id, "https://test.oxeng.dev/callback").await;
+        assert_eq!(client_id, success.unwrap().id);
+    }
+
+    #[tokio::test]
+    async fn test_remote_provider_redirect_url() {
+        let storage = MockStorage::new();
+        let ctx = mock_context(storage).await;
+
+        let (challenge, _) = PkceCodeChallenge::new_random_sha256();
+        let attempt = LoginAttempt {
+            id: Uuid::new_v4(),
+            attempt_state: LoginAttemptState::New,
+            client_id: Uuid::new_v4(),
+            redirect_uri: "https://test.oxeng.dev/callback".to_string(),
+            state: Some("ox_state".to_string()),
+            pkce_challenge: Some("ox_challenge".to_string()),
+            pkce_challenge_method: Some("S256".to_string()),
+            authz_code: None,
+            expires_at: None,
+            error: None,
+            provider: "google".to_string(),
+            provider_pkce_verifier: Some("rfd_verifier".to_string()),
+            provider_authz_code: None,
+            provider_error: None,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        let response = oauth_redirect_response(
+            &*ctx
+                .get_oauth_provider(&OAuthProviderName::Google)
+                .await
+                .unwrap(),
+            &attempt,
+            Some(challenge.clone()),
+        )
+        .unwrap();
+
+        let expected_location = format!("https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=google_web_client_id&state={}&code_challenge={}&code_challenge_method=S256&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+openid", attempt.id, challenge.as_str());
+
+        assert_eq!(
+            expected_location,
+            String::from_utf8(
+                response
+                    .headers()
+                    .get(LOCATION)
+                    .unwrap()
+                    .as_bytes()
+                    .to_vec()
+            )
+            .unwrap()
+        );
+        assert_eq!(
+            attempt.id.to_string().as_str(),
+            String::from_utf8(
+                response
+                    .headers()
+                    .get(SET_COOKIE)
+                    .unwrap()
+                    .as_bytes()
+                    .to_vec()
+            )
+            .unwrap()
+            .split_once('=')
+            .unwrap()
+            .1
+        )
+    }
 
     #[tokio::test]
     async fn test_csrf_check() {
@@ -820,70 +925,4 @@ mod tests {
 
     #[tokio::test]
     async fn test_fails_callback_with_error() {}
-
-    #[tokio::test]
-    async fn test_remote_provider_redirect_url() {
-        let storage = MockStorage::new();
-        let ctx = mock_context(storage).await;
-
-        let (challenge, _) = PkceCodeChallenge::new_random_sha256();
-        let attempt = LoginAttempt {
-            id: Uuid::new_v4(),
-            attempt_state: LoginAttemptState::New,
-            client_id: Uuid::new_v4(),
-            redirect_uri: "https://test.oxeng.dev/callback".to_string(),
-            state: Some("ox_state".to_string()),
-            pkce_challenge: Some("ox_challenge".to_string()),
-            pkce_challenge_method: Some("S256".to_string()),
-            authz_code: None,
-            expires_at: None,
-            error: None,
-            provider: "google".to_string(),
-            provider_pkce_verifier: Some("rfd_verifier".to_string()),
-            provider_authz_code: None,
-            provider_error: None,
-            created_at: Utc::now(),
-            updated_at: Utc::now(),
-        };
-
-        let response = oauth_redirect_response(
-            &*ctx
-                .get_oauth_provider(&OAuthProviderName::Google)
-                .await
-                .unwrap(),
-            &attempt,
-            Some(challenge.clone()),
-        )
-        .unwrap();
-
-        let expected_location = format!("https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=google_web_client_id&state={}&code_challenge={}&code_challenge_method=S256&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+openid", attempt.id, challenge.as_str());
-
-        assert_eq!(
-            expected_location,
-            String::from_utf8(
-                response
-                    .headers()
-                    .get(LOCATION)
-                    .unwrap()
-                    .as_bytes()
-                    .to_vec()
-            )
-            .unwrap()
-        );
-        assert_eq!(
-            attempt.id.to_string().as_str(),
-            String::from_utf8(
-                response
-                    .headers()
-                    .get(SET_COOKIE)
-                    .unwrap()
-                    .as_bytes()
-                    .to_vec()
-            )
-            .unwrap()
-            .split_once('=')
-            .unwrap()
-            .1
-        )
-    }
 }
