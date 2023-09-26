@@ -266,6 +266,17 @@ pub async fn authz_code_callback(
     // Verify and extract the attempt id before performing any work
     let attempt_id = verify_csrf(&rqctx.request, &query)?;
 
+    http_response_temporary_redirect(
+        authz_code_callback_op(ctx, &attempt_id, query.code, query.error).await?,
+    )
+}
+
+pub async fn authz_code_callback_op(
+    ctx: &ApiContext,
+    attempt_id: &Uuid,
+    code: Option<String>,
+    error: Option<String>,
+) -> Result<String, HttpError> {
     // We have now verified the attempt id and can use it to look up the rest of the login attempt
     // material to try and complete the flow
     let mut attempt = ctx
@@ -278,7 +289,7 @@ pub async fn authz_code_callback(
             unauthorized()
         })?;
 
-    attempt = match (query.code, query.error) {
+    attempt = match (code, error) {
         (Some(code), None) => {
             tracing::info!(?attempt.id, "Received valid login attempt. Storing authorization code");
 
@@ -303,7 +314,7 @@ pub async fn authz_code_callback(
     };
 
     // Redirect back to the original authenticator
-    http_response_temporary_redirect(attempt.callback_url())
+    Ok(attempt.callback_url())
 }
 
 #[derive(Debug, Deserialize, JsonSchema, Serialize)]
@@ -468,17 +479,21 @@ pub async fn authz_code_exchange(
 
 #[cfg(test)]
 mod tests {
-    use std::net::{Ipv4Addr, SocketAddrV4};
+    use std::{
+        net::{Ipv4Addr, SocketAddrV4},
+        sync::{Arc, Mutex},
+    };
 
     use chrono::Utc;
     use dropshot::RequestInfo;
     use http::{
         header::{COOKIE, LOCATION, SET_COOKIE},
-        HeaderValue,
+        HeaderMap, HeaderValue,
     };
     use hyper::Body;
+    use mockall::predicate::eq;
     use oauth2::PkceCodeChallenge;
-    use rfd_model::{schema_ext::LoginAttemptState, LoginAttempt};
+    use rfd_model::{schema_ext::LoginAttemptState, storage::MockLoginAttemptStore, LoginAttempt};
     use uuid::Uuid;
 
     use crate::{
@@ -489,7 +504,7 @@ mod tests {
         },
     };
 
-    use super::oauth_redirect_response;
+    use super::{authz_code_callback_op, oauth_redirect_response};
 
     #[tokio::test]
     async fn test_csrf_check() {
@@ -514,6 +529,70 @@ mod tests {
 
         assert_eq!(id, verify_csrf(&request, &query).unwrap());
     }
+
+    #[tokio::test]
+    async fn test_handles_callback_with_code() {
+        let attempt_id = Uuid::new_v4();
+        let attempt = LoginAttempt {
+            id: attempt_id,
+            attempt_state: LoginAttemptState::New,
+            client_id: Uuid::new_v4(),
+            redirect_uri: "https://test.oxeng.dev/callback".to_string(),
+            state: Some("ox_state".to_string()),
+            pkce_challenge: Some("ox_challenge".to_string()),
+            pkce_challenge_method: Some("S256".to_string()),
+            authz_code: None,
+            expires_at: None,
+            error: None,
+            provider: "google".to_string(),
+            provider_pkce_verifier: Some("rfd_verifier".to_string()),
+            provider_authz_code: None,
+            provider_error: None,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+        };
+
+        let mut attempt_store = MockLoginAttemptStore::new();
+        let original_attempt = attempt.clone();
+        attempt_store
+            .expect_get()
+            .with(eq(attempt.id))
+            .returning(move |_| Ok(Some(original_attempt.clone())));
+
+        let extracted_code = Arc::new(Mutex::new(None));
+        let extractor = extracted_code.clone();
+        attempt_store
+            .expect_upsert()
+            .withf(|attempt| attempt.attempt_state == LoginAttemptState::RemoteAuthenticated)
+            .returning(move |arg| {
+                let mut returned = attempt.clone();
+                returned.attempt_state = arg.attempt_state;
+                returned.authz_code = arg.authz_code;
+                *extractor.lock().unwrap() = returned.authz_code.clone();
+                Ok(returned)
+            });
+
+        let mut storage = MockStorage::new();
+        storage.login_attempt_store = Some(Arc::new(attempt_store));
+        let ctx = mock_context(storage).await;
+
+        let location =
+            authz_code_callback_op(&ctx, &attempt_id, Some("remote-code".to_string()), None)
+                .await
+                .unwrap();
+
+        let lock = extracted_code.lock();
+        assert_eq!(
+            format!(
+                "https://test.oxeng.dev/callback?code={}&state=ox_state",
+                lock.unwrap().as_ref().unwrap()
+            ),
+            location
+        );
+    }
+
+    #[tokio::test]
+    async fn test_fails_callback_with_error() {}
 
     #[tokio::test]
     async fn test_remote_provider_redirect_url() {
