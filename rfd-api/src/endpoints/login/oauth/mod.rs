@@ -43,7 +43,7 @@ pub struct OAuthPrivateCredentials {
     client_secret: String,
 }
 
-pub trait OAuthProvider: ExtractUserInfo + Debug {
+pub trait OAuthProvider: ExtractUserInfo + Debug + Send + Sync {
     fn name(&self) -> OAuthProviderName;
     fn scopes(&self) -> Vec<&str>;
     fn client_id(&self, client_type: &ClientType) -> &str;

@@ -228,6 +228,10 @@ impl ApiContext {
         })
     }
 
+    pub fn set_storage(&mut self, storage: Arc<dyn Storage>) {
+        self.storage = storage;
+    }
+
     pub async fn authn_token(&self, rqctx: &RequestContext<Self>) -> Result<AuthToken, AuthError> {
         AuthToken::extract(rqctx).await
     }

@@ -7,7 +7,8 @@ use http::{
     header::{LOCATION, SET_COOKIE},
     HeaderValue, StatusCode,
 };
-use hyper::{Body, Response};
+use hyper::{client::HttpConnector, Body, Client, Response};
+use hyper_tls::HttpsConnector;
 use oauth2::{
     reqwest::async_http_client, AuthorizationCode, CsrfToken, PkceCodeChallenge, PkceCodeVerifier,
     Scope, TokenResponse,
@@ -27,7 +28,7 @@ use crate::{
     context::ApiContext,
     endpoints::login::{
         oauth::{CheckOAuthClient, ClientType},
-        LoginError,
+        LoginError, UserInfo,
     },
     error::ApiError,
     util::{
@@ -370,97 +371,36 @@ pub async fn authz_code_exchange(
         .await
         .map_err(ApiError::OAuth)?;
 
-    // Verify that we received the expected grant type
-    if &body.grant_type != "authorization_code" {
-        // TODO: Needs to be json body
-        return Err(bad_request("Invalid grant type"));
-    }
+    // Verify the submitted client credentials
+    authorize_exchange(
+        &ctx,
+        &body.grant_type,
+        &body.client_id,
+        &body.client_secret,
+        &body.redirect_uri,
+    )
+    .await?;
 
-    let client_secret = RawApiKey::try_from(body.client_secret.as_str()).map_err(|err| {
-        tracing::warn!(?err, "Failed to parse OAuth client secret");
+    tracing::debug!("Authorized code exchange");
 
-        // TODO: Change this to a bad request with invalid_client ?
-        unauthorized()
-    })?;
-
-    ctx.get_oauth_client(&body.client_id)
-        .await
-        .map_err(to_internal_error)?
-        // TODO: This should be a bad request with a json body
-        .ok_or_else(|| client_error(StatusCode::UNAUTHORIZED, "Invalid client"))
-        .and_then(|client| {
-            if client.is_redirect_uri_valid(&body.redirect_uri) {
-                if client.is_secret_valid(&client_secret, &*ctx.secrets.signer) {
-                    Ok(client)
-                } else {
-                    // TODO: Change this to a bad request with invalid_client ?
-                    Err(client_error(StatusCode::UNAUTHORIZED, "Invalid secret"))
-                }
-            } else {
-                // TODO: Change this to a bad request with invalid_client ?
-                Err(client_error(
-                    StatusCode::UNAUTHORIZED,
-                    "Invalid redirect uri",
-                ))
-            }
-        })?;
-
-    // Lookup the request assigned to this code and verify that it is a valid request
+    // Lookup the request assigned to this code
     let attempt = ctx
         .get_login_attempt_for_code(&body.code)
         .await
         .map_err(to_internal_error)?
         // TODO: Bad request is ok, but a json body with invalid_grant should be returned
-        .ok_or_else(|| bad_request("Invalid code".to_string()))
-        .and_then(|attempt| {
-            if attempt.client_id != body.client_id {
-                // TODO: Bad request is ok, but a json body with invalid_grant should be returned
-                Err(bad_request("Invalid client id".to_string()))
-            } else if attempt.redirect_uri != body.redirect_uri {
-                // TODO: Bad request is ok, but a json body with invalid_grant should be returned
-                Err(bad_request("Invalid redirect uri".to_string()))
-            } else if attempt.attempt_state != LoginAttemptState::RemoteAuthenticated {
-                // TODO: Bad request is ok, but a json body with invalid_client should be returned
-                Err(bad_request("Invalid login state".to_string()))
-            } else if attempt.expires_at.map(|t| t <= Utc::now()).unwrap_or(true) {
-                // TODO: Bad request is ok, but a json body with invalid_client should be returned
-                Err(bad_request("Login attempt expired".to_string()))
-            } else {
-                // TODO: Perform pkce check
+        .ok_or_else(|| bad_request("Invalid code".to_string()))?;
 
-                Ok(attempt)
-            }
-        })?;
+    // Verify that the login attempt is valid and matches the submitted client credentials
+    verify_login_attempt(&attempt, &body.client_id, &body.redirect_uri)?;
 
-    // Exchange the stored authorization code with the remote provider for a remote access token
-    let client = provider
-        .as_client(&ClientType::Web)
-        .map_err(to_internal_error)?;
-    let mut request = client.exchange_code(AuthorizationCode::new(
-        attempt.provider_authz_code.ok_or_else(|| {
-            internal_error("Expected authorization code to exist due to attempt state")
-        })?,
-    ));
+    tracing::debug!("Verified login attempt");
 
-    if let Some(pkce_verifier) = attempt.provider_pkce_verifier {
-        request = request.set_pkce_verifier(PkceCodeVerifier::new(pkce_verifier))
-    }
+    // Now that the attempt has been confirmed, use it to fetch user information form the remote
+    // provider
+    let info = fetch_user_info(&ctx.https_client, &*provider, &attempt).await?;
 
-    let response = request
-        .request_async(async_http_client)
-        .await
-        .map_err(to_internal_error)?;
-
-    tracing::info!("Fetched access token from remote service");
-
-    // Use the retrieved access token to fetch the user information from the remote API
-    let info = provider
-        .get_user_info(&ctx.https_client, response.access_token().secret())
-        .await
-        .map_err(LoginError::UserInfo)
-        .tap_err(|err| tracing::error!(?err, "Failed to look up user information"))?;
-
-    tracing::debug!("Verified and validated OAuth user");
+    tracing::debug!("Retrieved user information from remote provider");
 
     // Register this user as an API user if needed
     let api_user = ctx.register_api_user(info).await?;
@@ -473,14 +413,7 @@ pub async fn authz_code_exchange(
         .register_access_token(
             &api_user,
             &api_user.permissions,
-            Some(
-                Utc::now().add(Duration::seconds(
-                    response
-                        .expires_in()
-                        .map(|d| d.as_secs() - 120)
-                        .unwrap_or(0) as i64,
-                )),
-            ),
+            Some(Utc::now().add(Duration::seconds(7 * 24 * 60 * 60))),
         )
         .await?;
 
@@ -491,6 +424,110 @@ pub async fn authz_code_exchange(
         access_token: token.signed_token,
         expires_in: token.expires_at.timestamp() - Utc::now().timestamp(),
     }))
+}
+
+async fn authz_code_exchange_op() {}
+
+async fn authorize_exchange(
+    ctx: &ApiContext,
+    grant_type: &str,
+    client_id: &Uuid,
+    client_secret: &str,
+    redirect_uri: &str,
+) -> Result<(), HttpError> {
+    let client = get_oauth_client(ctx, &client_id, &redirect_uri).await?;
+
+    // Verify that we received the expected grant type
+    if grant_type != "authorization_code" {
+        // TODO: Needs to be json body
+        return Err(bad_request("Invalid grant type"));
+    }
+
+    let client_secret = RawApiKey::try_from(client_secret).map_err(|err| {
+        tracing::warn!(?err, "Failed to parse OAuth client secret");
+
+        // TODO: Change this to a bad request with invalid_client ?
+        unauthorized()
+    })?;
+
+    if !client.is_secret_valid(&client_secret, &*ctx.secrets.signer) {
+        // TODO: Change this to a bad request with invalid_client ?
+        Err(client_error(StatusCode::UNAUTHORIZED, "Invalid secret"))
+    } else {
+        Ok(())
+    }
+}
+
+fn verify_login_attempt(
+    attempt: &LoginAttempt,
+    client_id: &Uuid,
+    redirect_uri: &str,
+) -> Result<(), HttpError> {
+    if attempt.client_id != *client_id {
+        // TODO: Bad request is ok, but a json body with invalid_grant should be returned
+        Err(bad_request("Invalid client id".to_string()))
+    } else if attempt.redirect_uri != redirect_uri {
+        // TODO: Bad request is ok, but a json body with invalid_grant should be returned
+        Err(bad_request("Invalid redirect uri".to_string()))
+    } else if attempt.attempt_state != LoginAttemptState::RemoteAuthenticated {
+        // TODO: Bad request is ok, but a json body with invalid_client should be returned
+        Err(bad_request("Invalid login state".to_string()))
+    } else if attempt.expires_at.map(|t| t <= Utc::now()).unwrap_or(true) {
+        // TODO: Bad request is ok, but a json body with invalid_client should be returned
+        Err(bad_request("Login attempt expired".to_string()))
+    } else {
+        // TODO: Perform pkce check
+
+        Ok(())
+    }
+}
+
+async fn fetch_user_info(
+    https: &Client<HttpsConnector<HttpConnector>, Body>,
+    provider: &dyn OAuthProvider,
+    attempt: &LoginAttempt,
+) -> Result<UserInfo, HttpError> {
+    // Exchange the stored authorization code with the remote provider for a remote access token
+    let client = provider
+        .as_client(&ClientType::Web)
+        .map_err(to_internal_error)?;
+    let mut request = client.exchange_code(AuthorizationCode::new(
+        attempt
+            .provider_authz_code
+            .as_ref()
+            .ok_or_else(|| {
+                internal_error("Expected authorization code to exist due to attempt state")
+            })?
+            .to_string(),
+    ));
+
+    if let Some(pkce_verifier) = &attempt.provider_pkce_verifier {
+        request = request.set_pkce_verifier(PkceCodeVerifier::new(pkce_verifier.to_string()))
+    }
+
+    let response = request
+        .request_async(async_http_client)
+        .await
+        .map_err(to_internal_error)?;
+
+    tracing::info!("Fetched access token from remote service");
+
+    // Use the retrieved access token to fetch the user information from the remote API
+    let info = provider
+        .get_user_info(&https, response.access_token().secret())
+        .await
+        .map_err(LoginError::UserInfo)
+        .tap_err(|err| tracing::error!(?err, "Failed to look up user information"))?;
+
+    // Now that we are done with fetching user information from the remote API, we can revoke it
+    client
+        .revoke_token(response.access_token().into())
+        .map_err(internal_error)?
+        .request_async(async_http_client)
+        .await
+        .map_err(internal_error)?;
+
+    Ok(info)
 }
 
 #[cfg(test)]
@@ -511,20 +548,62 @@ mod tests {
     use oauth2::PkceCodeChallenge;
     use rfd_model::{
         schema_ext::LoginAttemptState,
-        storage::{MockLoginAttemptStore, MockOAuthClientRedirectUriStore, MockOAuthClientStore},
-        LoginAttempt, OAuthClient, OAuthClientRedirectUri,
+        storage::{MockLoginAttemptStore, MockOAuthClientStore},
+        LoginAttempt, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret,
     };
     use uuid::Uuid;
 
     use crate::{
-        context::tests::{mock_context, MockStorage},
+        authn::key::RawApiKey,
+        context::{
+            tests::{mock_context, MockStorage},
+            ApiContext,
+        },
         endpoints::login::oauth::{
             code::{verify_csrf, OAuthAuthzCodeReturnQuery, LOGIN_ATTEMPT_COOKIE},
             OAuthProviderName,
         },
     };
 
-    use super::{authz_code_callback_op, get_oauth_client, oauth_redirect_response};
+    use super::{
+        authorize_exchange, authz_code_callback_op, get_oauth_client, oauth_redirect_response,
+    };
+
+    async fn mock_client() -> (ApiContext, OAuthClient, String) {
+        let ctx = mock_context(MockStorage::new()).await;
+        let client_id = Uuid::new_v4();
+        let key = RawApiKey::generate::<8>(&Uuid::new_v4())
+            .sign(&*ctx.secrets.signer)
+            .await
+            .unwrap();
+        let secret_signature = key.signature().to_string();
+        let client_secret = key.key();
+        let redirect_uri = "callback-destination";
+
+        (
+            ctx,
+            OAuthClient {
+                id: client_id,
+                secrets: vec![OAuthClientSecret {
+                    id: Uuid::new_v4(),
+                    oauth_client_id: client_id,
+                    secret_signature,
+                    created_at: Utc::now(),
+                    deleted_at: None,
+                }],
+                redirect_uris: vec![OAuthClientRedirectUri {
+                    id: Uuid::new_v4(),
+                    oauth_client_id: client_id,
+                    redirect_uri: redirect_uri.to_string(),
+                    created_at: Utc::now(),
+                    deleted_at: None,
+                }],
+                created_at: Utc::now(),
+                deleted_at: None,
+            },
+            client_secret,
+        )
+    }
 
     #[tokio::test]
     async fn test_oauth_client_lookup_checks_redirect_uri() {
@@ -925,4 +1004,189 @@ mod tests {
 
     #[tokio::test]
     async fn test_fails_callback_with_error() {}
+
+    #[tokio::test]
+    async fn test_exchange_checks_client_id_and_redirect() {
+        let (mut ctx, client, client_secret) = mock_client().await;
+        let client_id = client.id;
+        let redirect_uri = client.redirect_uris[0].redirect_uri.clone();
+        let wrong_client_id = Uuid::new_v4();
+
+        let mut client_store = MockOAuthClientStore::new();
+        client_store
+            .expect_get()
+            .with(eq(wrong_client_id), eq(false))
+            .returning(move |_, _| Ok(None));
+        client_store
+            .expect_get()
+            .with(eq(client_id), eq(false))
+            .returning(move |_, _| Ok(Some(client.clone())));
+
+        let mut storage = MockStorage::new();
+        storage.oauth_client_store = Some(Arc::new(client_store));
+
+        ctx.set_storage(Arc::new(storage));
+
+        assert_eq!(
+            StatusCode::UNAUTHORIZED,
+            authorize_exchange(
+                &ctx,
+                "authorization_code",
+                &wrong_client_id,
+                &client_secret,
+                &redirect_uri,
+            )
+            .await
+            .unwrap_err()
+            .status_code
+        );
+
+        assert_eq!(
+            StatusCode::UNAUTHORIZED,
+            authorize_exchange(
+                &ctx,
+                "authorization_code",
+                &client_id,
+                &client_secret,
+                "wrong-callback-destination",
+            )
+            .await
+            .unwrap_err()
+            .status_code
+        );
+
+        assert_eq!(
+            (),
+            authorize_exchange(
+                &ctx,
+                "authorization_code",
+                &client_id,
+                &client_secret,
+                &redirect_uri,
+            )
+            .await
+            .unwrap()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_exchange_checks_grant_type() {
+        let (mut ctx, client, client_secret) = mock_client().await;
+        let client_id = client.id;
+        let redirect_uri = client.redirect_uris[0].redirect_uri.clone();
+
+        let mut client_store = MockOAuthClientStore::new();
+        client_store
+            .expect_get()
+            .with(eq(client_id), eq(false))
+            .returning(move |_, _| Ok(Some(client.clone())));
+
+        let mut storage = MockStorage::new();
+        storage.oauth_client_store = Some(Arc::new(client_store));
+
+        ctx.set_storage(Arc::new(storage));
+
+        assert_eq!(
+            StatusCode::BAD_REQUEST,
+            authorize_exchange(
+                &ctx,
+                "not_authorization_code",
+                &client_id,
+                &client_secret,
+                &redirect_uri
+            )
+            .await
+            .unwrap_err()
+            .status_code
+        );
+
+        assert_eq!(
+            (),
+            authorize_exchange(
+                &ctx,
+                "authorization_code",
+                &client_id,
+                &client_secret,
+                &redirect_uri
+            )
+            .await
+            .unwrap()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_exchange_checks_for_valid_secret() {
+        let (mut ctx, client, client_secret) = mock_client().await;
+        let client_id = client.id;
+        let redirect_uri = client.redirect_uris[0].redirect_uri.clone();
+
+        let mut client_store = MockOAuthClientStore::new();
+        client_store
+            .expect_get()
+            .with(eq(client_id), eq(false))
+            .returning(move |_, _| Ok(Some(client.clone())));
+
+        let mut storage = MockStorage::new();
+        storage.oauth_client_store = Some(Arc::new(client_store));
+
+        ctx.set_storage(Arc::new(storage));
+
+        let invalid_secret = RawApiKey::generate::<8>(&Uuid::new_v4())
+            .sign(&*ctx.secrets.signer)
+            .await
+            .unwrap()
+            .signature()
+            .to_string();
+
+        assert_eq!(
+            StatusCode::UNAUTHORIZED,
+            authorize_exchange(
+                &ctx,
+                "authorization_code",
+                &client_id,
+                "too-short",
+                &redirect_uri
+            )
+            .await
+            .unwrap_err()
+            .status_code
+        );
+
+        assert_eq!(
+            StatusCode::UNAUTHORIZED,
+            authorize_exchange(
+                &ctx,
+                "authorization_code",
+                &client_id,
+                &invalid_secret,
+                &redirect_uri
+            )
+            .await
+            .unwrap_err()
+            .status_code
+        );
+
+        assert_eq!(
+            (),
+            authorize_exchange(
+                &ctx,
+                "authorization_code",
+                &client_id,
+                &client_secret,
+                &redirect_uri
+            )
+            .await
+            .unwrap()
+        );
+    }
+
+    #[tokio::test]
+    async fn test_exchange_fails_on_invalid_code() {
+        unimplemented!()
+    }
+
+    #[tokio::test]
+    async fn test_login_attempt_verification() {
+        unimplemented!()
+    }
 }
