@@ -256,46 +256,48 @@ impl ApiContext {
     #[instrument(skip(self, auth))]
     pub async fn get_caller(&self, auth: &AuthToken) -> Result<ApiCaller, CallerError> {
         let (api_user_id, permissions) = match auth {
-            AuthToken::ApiKey(api_key) => async {
-                tracing::debug!("Attempt to authenticate");
+            AuthToken::ApiKey(api_key) => {
+                async {
+                    tracing::debug!("Attempt to authenticate");
 
-                let id = Uuid::from_slice(api_key.id()).map_err(|err| {
+                    let id = Uuid::from_slice(api_key.id()).map_err(|err| {
                     tracing::info!(?err, slice = ?api_key.id(), "Failed to parse id from API key");
                     CallerError::InvalidKey
                 })?;
 
-                let mut key = ApiKeyStore::list(
-                    &*self.storage,
-                    ApiKeyFilter {
-                        id: Some(vec![id]),
-                        expired: false,
-                        deleted: false,
-                        ..Default::default()
-                    },
-                    &ListPagination {
-                        offset: 0,
-                        limit: 1,
-                    },
-                )
-                .await?;
+                    let mut key = ApiKeyStore::list(
+                        &*self.storage,
+                        ApiKeyFilter {
+                            id: Some(vec![id]),
+                            expired: false,
+                            deleted: false,
+                            ..Default::default()
+                        },
+                        &ListPagination {
+                            offset: 0,
+                            limit: 1,
+                        },
+                    )
+                    .await?;
 
-                if let Some(key) = key.pop() {
-                    if let Err(err) =
-                        api_key.verify(&*self.secrets.signer, key.key_signature.as_bytes())
-                    {
-                        tracing::debug!(?err, "Failed to verify api key");
-                        Err(CallerError::FailedToAuthenticate)
+                    if let Some(key) = key.pop() {
+                        if let Err(err) =
+                            api_key.verify(&*self.secrets.signer, key.key_signature.as_bytes())
+                        {
+                            tracing::debug!(?err, "Failed to verify api key");
+                            Err(CallerError::FailedToAuthenticate)
+                        } else {
+                            tracing::debug!("Verified caller key");
+                            Ok((key.api_user_id, key.permissions))
+                        }
                     } else {
-                        tracing::debug!("Verified caller key");
-                        Ok((key.api_user_id, key.permissions))
+                        tracing::debug!("Failed to find matching key");
+                        Err(CallerError::FailedToAuthenticate)
                     }
-                } else {
-                    tracing::debug!("Failed to find matching key");
-                    Err(CallerError::FailedToAuthenticate)
                 }
+                .instrument(info_span!("Test api key"))
+                .await
             }
-            .instrument(info_span!("Test api key"))
-            .await,
             AuthToken::Jwt(jwt) => {
                 // AuthnToken::Jwt can only be generated from a verified JWT
                 Ok((jwt.claims.aud, jwt.claims.prm.clone()))
