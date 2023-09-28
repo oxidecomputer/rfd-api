@@ -35,7 +35,7 @@ use crate::{
     error::ApiError,
     util::{
         request::RequestCookies,
-        response::{bad_request, client_error, internal_error, to_internal_error, unauthorized},
+        response::{bad_request, internal_error, to_internal_error, unauthorized},
     },
 };
 
@@ -48,18 +48,28 @@ struct OAuthError {
     error_description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     error_uri: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    state: Option<String>,
+}
+
+#[derive(Debug, Deserialize, JsonSchema, Serialize, PartialEq, Eq)]
+#[serde(untagged)]
+enum OAuthErrorCode {
+    AccessDenied,
+    InvalidClient,
+    InvalidGrant,
+    InvalidRequest,
+    InvalidScope,
+    ServerError,
+    TemporarilyUnavailable,
+    UnauthorizedClient,
+    UnsupportedGrantType,
+    UnsupportedResponseType,
 }
 
 #[derive(Debug, Deserialize, JsonSchema, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
-enum OAuthErrorCode {
-    InvalidRequest,
-    InvalidClient,
-    InvalidGrant,
-    UnauthorizedClient,
-    UnsupportedGrantType,
-    InvalidScope,
-}
+enum OAuthTokenErrorCode {}
 
 impl From<OAuthError> for HttpError {
     fn from(value: OAuthError) -> Self {
@@ -94,20 +104,35 @@ async fn get_oauth_client(
     ctx: &ApiContext,
     client_id: &Uuid,
     redirect_uri: &str,
-) -> Result<OAuthClient, HttpError> {
+) -> Result<OAuthClient, OAuthError> {
     let client = ctx
         .get_oauth_client(&client_id)
         .await
-        .map_err(to_internal_error)?
-        .ok_or_else(|| client_error(StatusCode::UNAUTHORIZED, "Invalid client"))?;
+        .map_err(|err| {
+            tracing::error!(?err, "Failed to lookup OAuth client");
+            OAuthError {
+                error: OAuthErrorCode::ServerError,
+                error_description: None,
+                error_uri: None,
+                state: None,
+            }
+        })?
+        .ok_or_else(|| OAuthError {
+            error: OAuthErrorCode::InvalidRequest,
+            error_description: Some("Unknown client id".to_string()),
+            error_uri: None,
+            state: None,
+        })?;
 
     if client.is_redirect_uri_valid(&redirect_uri) {
         Ok(client)
     } else {
-        Err(client_error(
-            StatusCode::UNAUTHORIZED,
-            "Invalid redirect uri",
-        ))
+        Err(OAuthError {
+            error: OAuthErrorCode::InvalidRequest,
+            error_description: Some("Invalid redirect uri".to_string()),
+            error_uri: None,
+            state: None,
+        })
     }
 }
 
@@ -406,7 +431,7 @@ pub async fn authz_code_exchange(
         .map_err(ApiError::OAuth)?;
 
     // Verify the submitted client credentials
-    authorize_exchange(
+    authorize_code_exchange(
         &ctx,
         &body.grant_type,
         &body.client_id,
@@ -465,33 +490,43 @@ pub async fn authz_code_exchange(
     }))
 }
 
-async fn authz_code_exchange_op() {}
-
-async fn authorize_exchange(
+async fn authorize_code_exchange(
     ctx: &ApiContext,
     grant_type: &str,
     client_id: &Uuid,
     client_secret: &str,
     redirect_uri: &str,
-) -> Result<(), HttpError> {
+) -> Result<(), OAuthError> {
     let client = get_oauth_client(ctx, &client_id, &redirect_uri).await?;
 
     // Verify that we received the expected grant type
     if grant_type != "authorization_code" {
-        // TODO: Needs to be json body
-        return Err(bad_request("unsupported_grant_type"));
+        return Err(OAuthError {
+            error: OAuthErrorCode::UnsupportedGrantType,
+            error_description: None,
+            error_uri: None,
+            state: None,
+        });
     }
 
     let client_secret = RawApiKey::try_from(client_secret).map_err(|err| {
         tracing::warn!(?err, "Failed to parse OAuth client secret");
 
-        // TODO: Change this to a bad request with invalid_client ?
-        unauthorized()
+        OAuthError {
+            error: OAuthErrorCode::InvalidRequest,
+            error_description: Some("Malformed client secret".to_string()),
+            error_uri: None,
+            state: None,
+        }
     })?;
 
     if !client.is_secret_valid(&client_secret, &*ctx.secrets.signer) {
-        // TODO: Change this to a bad request with invalid_client ?
-        Err(client_error(StatusCode::UNAUTHORIZED, "invalid_client"))
+        Err(OAuthError {
+            error: OAuthErrorCode::InvalidClient,
+            error_description: Some("Invalid client secret".to_string()),
+            error_uri: None,
+            state: None,
+        })
     } else {
         Ok(())
     }
@@ -508,24 +543,28 @@ fn verify_login_attempt(
             error: OAuthErrorCode::InvalidGrant,
             error_description: Some("Invalid client id".to_string()),
             error_uri: None,
+            state: None,
         })
     } else if attempt.redirect_uri != redirect_uri {
         Err(OAuthError {
             error: OAuthErrorCode::InvalidGrant,
             error_description: Some("Invalid redirect uri".to_string()),
             error_uri: None,
+            state: None,
         })
     } else if attempt.attempt_state != LoginAttemptState::RemoteAuthenticated {
         Err(OAuthError {
             error: OAuthErrorCode::InvalidGrant,
             error_description: Some("Grant is in an invalid state".to_string()),
             error_uri: None,
+            state: None,
         })
     } else if attempt.expires_at.map(|t| t <= Utc::now()).unwrap_or(true) {
         Err(OAuthError {
             error: OAuthErrorCode::InvalidGrant,
             error_description: Some("Grant has expired".to_string()),
             error_uri: None,
+            state: None,
         })
     } else {
         match (attempt.pkce_challenge.as_deref(), pkce_verifier) {
@@ -533,6 +572,7 @@ fn verify_login_attempt(
                 error: OAuthErrorCode::InvalidRequest,
                 error_description: Some("Missing pkce verifier".to_string()),
                 error_uri: None,
+                state: None,
             }),
             (Some(challenge), Some(verifier)) => {
                 let mut hasher = Sha256::new();
@@ -547,6 +587,7 @@ fn verify_login_attempt(
                         error: OAuthErrorCode::InvalidGrant,
                         error_description: Some("Invalid pkce verifier".to_string()),
                         error_uri: None,
+                        state: None,
                     })
                 }
             }
@@ -643,7 +684,7 @@ mod tests {
     };
 
     use super::{
-        authorize_exchange, authz_code_callback_op, get_oauth_client, oauth_redirect_response,
+        authorize_code_exchange, authz_code_callback_op, get_oauth_client, oauth_redirect_response,
     };
 
     async fn mock_client() -> (ApiContext, OAuthClient, String) {
@@ -709,9 +750,14 @@ mod tests {
         storage.oauth_client_store = Some(Arc::new(client_store));
         let ctx = mock_context(storage).await;
 
-        let failure =
-            get_oauth_client(&ctx, &client_id, "https://not-test.oxeng.dev/callback").await;
-        assert_eq!(StatusCode::UNAUTHORIZED, failure.unwrap_err().status_code);
+        let failure = get_oauth_client(&ctx, &client_id, "https://not-test.oxeng.dev/callback")
+            .await
+            .unwrap_err();
+        assert_eq!(OAuthErrorCode::InvalidRequest, failure.error);
+        assert_eq!(
+            Some("Invalid redirect uri".to_string()),
+            failure.error_description
+        );
 
         let success = get_oauth_client(&ctx, &client_id, "https://test.oxeng.dev/callback").await;
         assert_eq!(client_id, success.unwrap().id);
@@ -1105,8 +1151,8 @@ mod tests {
         ctx.set_storage(Arc::new(storage));
 
         assert_eq!(
-            StatusCode::UNAUTHORIZED,
-            authorize_exchange(
+            Some("Unknown client id".to_string()),
+            authorize_code_exchange(
                 &ctx,
                 "authorization_code",
                 &wrong_client_id,
@@ -1115,12 +1161,12 @@ mod tests {
             )
             .await
             .unwrap_err()
-            .status_code
+            .error_description
         );
 
         assert_eq!(
-            StatusCode::UNAUTHORIZED,
-            authorize_exchange(
+            Some("Invalid redirect uri".to_string()),
+            authorize_code_exchange(
                 &ctx,
                 "authorization_code",
                 &client_id,
@@ -1129,12 +1175,12 @@ mod tests {
             )
             .await
             .unwrap_err()
-            .status_code
+            .error_description
         );
 
         assert_eq!(
             (),
-            authorize_exchange(
+            authorize_code_exchange(
                 &ctx,
                 "authorization_code",
                 &client_id,
@@ -1164,8 +1210,8 @@ mod tests {
         ctx.set_storage(Arc::new(storage));
 
         assert_eq!(
-            StatusCode::BAD_REQUEST,
-            authorize_exchange(
+            OAuthErrorCode::UnsupportedGrantType,
+            authorize_code_exchange(
                 &ctx,
                 "not_authorization_code",
                 &client_id,
@@ -1174,12 +1220,12 @@ mod tests {
             )
             .await
             .unwrap_err()
-            .status_code
+            .error
         );
 
         assert_eq!(
             (),
-            authorize_exchange(
+            authorize_code_exchange(
                 &ctx,
                 "authorization_code",
                 &client_id,
@@ -1216,8 +1262,8 @@ mod tests {
             .to_string();
 
         assert_eq!(
-            StatusCode::UNAUTHORIZED,
-            authorize_exchange(
+            OAuthErrorCode::InvalidRequest,
+            authorize_code_exchange(
                 &ctx,
                 "authorization_code",
                 &client_id,
@@ -1226,12 +1272,12 @@ mod tests {
             )
             .await
             .unwrap_err()
-            .status_code
+            .error
         );
 
         assert_eq!(
-            StatusCode::UNAUTHORIZED,
-            authorize_exchange(
+            OAuthErrorCode::InvalidClient,
+            authorize_code_exchange(
                 &ctx,
                 "authorization_code",
                 &client_id,
@@ -1240,12 +1286,12 @@ mod tests {
             )
             .await
             .unwrap_err()
-            .status_code
+            .error
         );
 
         assert_eq!(
             (),
-            authorize_exchange(
+            authorize_code_exchange(
                 &ctx,
                 "authorization_code",
                 &client_id,
@@ -1289,6 +1335,7 @@ mod tests {
                 error: OAuthErrorCode::InvalidGrant,
                 error_description: Some("Invalid client id".to_string()),
                 error_uri: None,
+                state: None,
             },
             verify_login_attempt(
                 &bad_client_id,
@@ -1309,6 +1356,7 @@ mod tests {
                 error: OAuthErrorCode::InvalidGrant,
                 error_description: Some("Invalid redirect uri".to_string()),
                 error_uri: None,
+                state: None,
             },
             verify_login_attempt(
                 &bad_redirect_uri,
@@ -1329,6 +1377,7 @@ mod tests {
                 error: OAuthErrorCode::InvalidGrant,
                 error_description: Some("Grant is in an invalid state".to_string()),
                 error_uri: None,
+                state: None,
             },
             verify_login_attempt(
                 &unconfirmed_state,
@@ -1349,6 +1398,7 @@ mod tests {
                 error: OAuthErrorCode::InvalidGrant,
                 error_description: Some("Grant is in an invalid state".to_string()),
                 error_uri: None,
+                state: None,
             },
             verify_login_attempt(
                 &already_used_state,
@@ -1369,6 +1419,7 @@ mod tests {
                 error: OAuthErrorCode::InvalidGrant,
                 error_description: Some("Grant is in an invalid state".to_string()),
                 error_uri: None,
+                state: None,
             },
             verify_login_attempt(
                 &failed_state,
@@ -1389,6 +1440,7 @@ mod tests {
                 error: OAuthErrorCode::InvalidGrant,
                 error_description: Some("Grant has expired".to_string()),
                 error_uri: None,
+                state: None,
             },
             verify_login_attempt(
                 &expired,
@@ -1406,6 +1458,7 @@ mod tests {
                 error: OAuthErrorCode::InvalidRequest,
                 error_description: Some("Missing pkce verifier".to_string()),
                 error_uri: None,
+                state: None,
             },
             verify_login_attempt(
                 &missing_pkce,
@@ -1426,6 +1479,7 @@ mod tests {
                 error: OAuthErrorCode::InvalidGrant,
                 error_description: Some("Invalid pkce verifier".to_string()),
                 error_uri: None,
+                state: None,
             },
             verify_login_attempt(
                 &invalid_pkce,
