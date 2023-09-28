@@ -35,7 +35,7 @@ use crate::{
     error::ApiError,
     util::{
         request::RequestCookies,
-        response::{bad_request, internal_error, to_internal_error, unauthorized},
+        response::{internal_error, to_internal_error, unauthorized},
     },
 };
 
@@ -245,6 +245,7 @@ fn oauth_redirect_response(
         .body(Body::empty())?)
 }
 
+// TODO: Determine if 401 empty responses are correct here
 fn verify_csrf(
     request: &RequestInfo,
     query: &OAuthAuthzCodeReturnQuery,
@@ -447,8 +448,12 @@ pub async fn authz_code_exchange(
         .get_login_attempt_for_code(&body.code)
         .await
         .map_err(to_internal_error)?
-        // TODO: Bad request is ok, but a json body with invalid_grant should be returned
-        .ok_or_else(|| bad_request("invalid_grant".to_string()))?;
+        .ok_or_else(|| OAuthError {
+            error: OAuthErrorCode::InvalidGrant,
+            error_description: None,
+            error_uri: None,
+            state: None,
+        })?;
 
     // Verify that the login attempt is valid and matches the submitted client credentials
     verify_login_attempt(

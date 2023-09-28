@@ -51,11 +51,10 @@ impl RawApiKey {
         Ok(SignedApiKey::new(hex::encode(self.clear), signature))
     }
 
-    pub fn verify(&self, signer: &dyn Signer, signature: &[u8]) -> Result<bool, ApiKeyError> {
+    pub fn verify(&self, signer: &dyn Signer, signature: &[u8]) -> Result<(), ApiKeyError> {
         let signature = hex::decode(signature)?;
         Ok(signer
             .verify(&self.clear, &signature)
-            .map(|_| true)
             .map_err(ApiKeyError::Verify)?)
     }
 }
@@ -114,7 +113,10 @@ mod tests {
         let raw2 = RawApiKey::try_from(signed.key.as_str()).unwrap();
         println!("{:?}", raw2);
 
-        assert!(raw2.verify(&*signer, signed.signature.as_bytes()).unwrap())
+        assert_eq!(
+            (),
+            raw2.verify(&*signer, signed.signature.as_bytes()).unwrap()
+        )
     }
 
     #[tokio::test]

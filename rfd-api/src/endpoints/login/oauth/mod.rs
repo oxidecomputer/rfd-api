@@ -173,11 +173,7 @@ impl CheckOAuthClient for OAuthClient {
     fn is_secret_valid(&self, key: &RawApiKey, signer: &dyn Signer) -> bool {
         for secret in &self.secrets {
             match key.verify(signer, secret.secret_signature.as_bytes()) {
-                Ok(verified) => {
-                    if verified {
-                        return true;
-                    }
-                }
+                Ok(_) => return true,
                 Err(err) => {
                     tracing::error!(?err, ?secret.id, "Client contains an invalid secret signature");
                 }
