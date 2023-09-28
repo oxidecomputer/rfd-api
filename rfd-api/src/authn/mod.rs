@@ -153,7 +153,7 @@ pub enum CloudKmsError {
     #[error("CloudKMS signing request did not return a signature")]
     MissingSignature,
     #[error("Failed to find remote key")]
-    RemoteKeyAuthMissing,
+    RemoteKeyAuthMissing(#[from] std::io::Error),
 }
 
 // Signer that relies on a private key stored in GCP, and a locally store JWK. This signer never

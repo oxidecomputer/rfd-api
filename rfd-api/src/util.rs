@@ -97,7 +97,7 @@ pub async fn cloud_kms_client() -> Result<CloudKMS<HttpsConnector<HttpConnector>
                     ?err,
                     "Failed to construct Cloud KMS credentials from service account"
                 );
-                CloudKmsError::RemoteKeyAuthMissing
+                CloudKmsError::RemoteKeyAuthMissing(err)
             })?
         }
         yup_oauth2::authenticator::ApplicationDefaultCredentialsTypes::InstanceMetadata(auth) => {
@@ -108,7 +108,7 @@ pub async fn cloud_kms_client() -> Result<CloudKMS<HttpsConnector<HttpConnector>
                     ?err,
                     "Failed to construct Cloud KMS credentials from instance metadata"
                 );
-                CloudKmsError::RemoteKeyAuthMissing
+                CloudKmsError::RemoteKeyAuthMissing(err)
             })?
         }
     };
