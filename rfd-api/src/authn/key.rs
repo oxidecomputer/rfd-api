@@ -1,5 +1,5 @@
-use argon2::password_hash::rand_core::{OsRng, RngCore};
 use hex::FromHexError;
+use rand::{rngs::OsRng, RngCore};
 use thiserror::Error;
 use uuid::Uuid;
 
