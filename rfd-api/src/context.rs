@@ -11,11 +11,11 @@ use rfd_model::{
     permissions::{Caller, Permissions},
     schema_ext::LoginAttemptState,
     storage::{
-        AccessTokenStore, ApiKeyFilter, ApiKeyStore, ApiUserFilter, ApiUserProviderFilter,
-        ApiUserProviderStore, ApiUserStore, JobStore, ListPagination, LoginAttemptFilter,
-        LoginAttemptStore, OAuthClientFilter, OAuthClientRedirectUriStore, OAuthClientSecretStore,
-        OAuthClientStore, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter,
-        RfdRevisionStore, RfdStore, StoreError,
+        AccessGroupFilter, AccessGroupStore, AccessTokenStore, ApiKeyFilter, ApiKeyStore,
+        ApiUserFilter, ApiUserProviderFilter, ApiUserProviderStore, ApiUserStore, JobStore,
+        ListPagination, LoginAttemptFilter, LoginAttemptStore, OAuthClientFilter,
+        OAuthClientRedirectUriStore, OAuthClientSecretStore, OAuthClientStore, RfdFilter,
+        RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionStore, RfdStore, StoreError,
     },
     AccessToken, ApiUser, ApiUserProvider, InvalidValueError, Job, LoginAttempt, NewAccessToken,
     NewApiKey, NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt, NewOAuthClient,
@@ -62,6 +62,7 @@ pub trait Storage:
     + OAuthClientStore
     + OAuthClientSecretStore
     + OAuthClientRedirectUriStore
+    + AccessGroupStore<ApiPermission>
     + Send
     + Sync
     + 'static
@@ -80,6 +81,7 @@ impl<T> Storage for T where
         + OAuthClientStore
         + OAuthClientSecretStore
         + OAuthClientRedirectUriStore
+        + AccessGroupStore<ApiPermission>
         + Send
         + Sync
         + 'static
@@ -255,58 +257,17 @@ impl ApiContext {
 
     #[instrument(skip(self, auth))]
     pub async fn get_caller(&self, auth: &AuthToken) -> Result<ApiCaller, CallerError> {
-        let (api_user_id, permissions) = match auth {
-            AuthToken::ApiKey(api_key) => async {
-                tracing::debug!("Attempt to authenticate");
-
-                let id = Uuid::from_slice(api_key.id()).map_err(|err| {
-                    tracing::info!(?err, slice = ?api_key.id(), "Failed to parse id from API key");
-                    CallerError::InvalidKey
-                })?;
-
-                let mut key = ApiKeyStore::list(
-                    &*self.storage,
-                    ApiKeyFilter {
-                        id: Some(vec![id]),
-                        expired: false,
-                        deleted: false,
-                        ..Default::default()
-                    },
-                    &ListPagination {
-                        offset: 0,
-                        limit: 1,
-                    },
-                )
-                .await?;
-
-                if let Some(key) = key.pop() {
-                    if let Err(err) =
-                        api_key.verify(&*self.secrets.signer, key.key_signature.as_bytes())
-                    {
-                        tracing::debug!(?err, "Failed to verify api key");
-                        Err(CallerError::FailedToAuthenticate)
-                    } else {
-                        tracing::debug!("Verified caller key");
-                        Ok((key.api_user_id, key.permissions))
-                    }
-                } else {
-                    tracing::debug!("Failed to find matching key");
-                    Err(CallerError::FailedToAuthenticate)
-                }
-            }
-            .instrument(info_span!("Test api key"))
-            .await,
-            AuthToken::Jwt(jwt) => {
-                // AuthnToken::Jwt can only be generated from a verified JWT
-                Ok((jwt.claims.aud, jwt.claims.prm.clone()))
-            }
-        }?;
+        let (api_user_id, permissions) = self.get_base_permissions(&auth).await?;
 
         // The permissions for the caller is the intersection of the user's permissions and the tokens permissions
         if let Some(user) = self.get_api_user(&api_user_id).await? {
+            let mut group_permissions = self.get_user_group_permissions(&user).await?;
+            let mut assigned_permissions = user.permissions.clone();
+            assigned_permissions.append(&mut group_permissions);
+
             let caller = Caller {
                 id: api_user_id,
-                permissions: permissions.expand(&user).intersect(&user.permissions),
+                permissions: permissions.expand(&user).intersect(&assigned_permissions),
                 user,
             };
 
@@ -317,6 +278,86 @@ impl ApiContext {
             tracing::error!("User for verified token does not exist");
             Err(CallerError::FailedToAuthenticate)
         }
+    }
+
+    async fn get_base_permissions(
+        &self,
+        auth: &AuthToken,
+    ) -> Result<(Uuid, Permissions<ApiPermission>), CallerError> {
+        Ok(match auth {
+            AuthToken::ApiKey(api_key) => {
+                async {
+                    tracing::debug!("Attempt to authenticate");
+
+                    let id = Uuid::from_slice(api_key.id()).map_err(|err| {
+                    tracing::info!(?err, slice = ?api_key.id(), "Failed to parse id from API key");
+                    CallerError::InvalidKey
+                })?;
+
+                    let mut key = ApiKeyStore::list(
+                        &*self.storage,
+                        ApiKeyFilter {
+                            id: Some(vec![id]),
+                            expired: false,
+                            deleted: false,
+                            ..Default::default()
+                        },
+                        &ListPagination {
+                            offset: 0,
+                            limit: 1,
+                        },
+                    )
+                    .await?;
+
+                    if let Some(key) = key.pop() {
+                        if let Err(err) =
+                            api_key.verify(&*self.secrets.signer, key.key_signature.as_bytes())
+                        {
+                            tracing::debug!(?err, "Failed to verify api key");
+                            Err(CallerError::FailedToAuthenticate)
+                        } else {
+                            tracing::debug!("Verified caller key");
+                            Ok((key.api_user_id, key.permissions))
+                        }
+                    } else {
+                        tracing::debug!("Failed to find matching key");
+                        Err(CallerError::FailedToAuthenticate)
+                    }
+                }
+                .instrument(info_span!("Test api key"))
+                .await
+            }
+            AuthToken::Jwt(jwt) => {
+                // AuthnToken::Jwt can only be generated from a verified JWT
+                Ok((jwt.claims.aud, jwt.claims.prm.clone()))
+            }
+        }?)
+    }
+
+    async fn get_user_group_permissions(
+        &self,
+        user: &ApiUser<ApiPermission>,
+    ) -> Result<Permissions<ApiPermission>, StoreError> {
+        let groups = AccessGroupStore::list(
+            &*self.storage,
+            AccessGroupFilter {
+                id: Some(user.groups.clone()),
+                ..Default::default()
+            },
+            &ListPagination::default().limit(UNLIMITED),
+        )
+        .await?;
+
+        let permissions = groups
+            .into_iter()
+            .fold(ApiPermissions::new(), |mut aggregate, group| {
+                let mut expanded = group.permissions.expand(user);
+                aggregate.append(&mut expanded);
+
+                aggregate
+            });
+
+        Ok(permissions)
     }
 
     pub async fn is_empty(&self) -> Result<bool, StoreError> {
@@ -541,6 +582,7 @@ impl ApiContext {
                 .update_api_user(NewApiUser {
                     id: api_user_id,
                     permissions: self.permissions.default.clone(),
+                    groups: vec![],
                 })
                 .await
                 .map_err(ApiError::Storage)
@@ -847,20 +889,178 @@ impl ApiContext {
 }
 
 #[cfg(test)]
-pub(crate) mod tests {
+mod tests {
+    use chrono::{Duration, Utc};
+    use mockall::predicate::eq;
+    use rfd_model::{
+        storage::{AccessGroupFilter, ListPagination, MockAccessGroupStore, MockApiUserStore},
+        AccessGroup, ApiUser,
+    };
+    use std::{ops::Add, sync::Arc};
+    use uuid::Uuid;
+
+    use crate::{
+        authn::{
+            jwt::{Claims, Jwt},
+            AuthToken,
+        },
+        context::UNLIMITED,
+        permissions::ApiPermission,
+        ApiPermissions,
+    };
+
+    use super::{
+        test_mocks::{mock_context, MockStorage},
+        ApiContext,
+    };
+
+    async fn create_token(
+        ctx: &ApiContext,
+        user_id: Uuid,
+        permissions: &ApiPermissions,
+    ) -> AuthToken {
+        let user_token = ctx.jwt.signers[0]
+            .sign(&Claims {
+                aud: user_id,
+                prm: permissions.clone(),
+                exp: Utc::now().add(Duration::seconds(60)).timestamp(),
+                nbf: 0,
+                jti: Uuid::new_v4(),
+            })
+            .await
+            .unwrap();
+
+        let jwt = AuthToken::Jwt(Jwt::new(&ctx, &user_token).await.unwrap());
+
+        jwt
+    }
+
+    #[tokio::test]
+    async fn test_jwt_permissions() {
+        let mut storage = MockStorage::new();
+
+        let group_id = Uuid::new_v4();
+        let group_permissions: ApiPermissions = vec![ApiPermission::GetRfd(10)].into();
+        let group = AccessGroup {
+            id: group_id,
+            name: "TestGroup".to_string(),
+            permissions: group_permissions.clone(),
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+            deleted_at: None,
+        };
+        let pagination = ListPagination::default().limit(UNLIMITED);
+        let mut group_store = MockAccessGroupStore::new();
+        group_store
+            .expect_list()
+            .with(
+                eq(AccessGroupFilter {
+                    id: Some(vec![group_id]),
+                    ..Default::default()
+                }),
+                eq(pagination),
+            )
+            .returning(move |_, _| Ok(vec![group.clone()]));
+
+        let user_id = Uuid::new_v4();
+        let user_permissions: ApiPermissions = vec![ApiPermission::GetRfd(5)].into();
+        let user = ApiUser {
+            id: user_id,
+            permissions: user_permissions.clone(),
+            groups: vec![group_id],
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+            deleted_at: None,
+        };
+        let mut user_store = MockApiUserStore::new();
+        user_store
+            .expect_get()
+            .with(eq(user.id), eq(false))
+            .returning(move |_, _| Ok(Some(user.clone())));
+
+        storage.access_group_store = Some(Arc::new(group_store));
+        storage.api_user_store = Some(Arc::new(user_store));
+        let ctx = mock_context(storage).await;
+
+        let token_with_no_permissions = create_token(&ctx, user_id, &vec![].into()).await;
+        let permissions = ctx.get_caller(&token_with_no_permissions).await.unwrap();
+        assert_eq!(ApiPermissions::new(), permissions.permissions);
+
+        let token_with_excess_permissions = create_token(
+            &ctx,
+            user_id,
+            &vec![
+                ApiPermission::GetRfd(1),
+                ApiPermission::GetRfd(2),
+                ApiPermission::GetRfd(5),
+            ]
+            .into(),
+        )
+        .await;
+        let permissions = ctx
+            .get_caller(&token_with_excess_permissions)
+            .await
+            .unwrap();
+        assert_eq!(
+            ApiPermissions::from(vec![ApiPermission::GetRfd(5)]),
+            permissions.permissions
+        );
+
+        let token_with_only_user_permissions =
+            create_token(&ctx, user_id, &vec![ApiPermission::GetRfd(5)].into()).await;
+        let permissions = ctx
+            .get_caller(&token_with_only_user_permissions)
+            .await
+            .unwrap();
+        assert_eq!(
+            ApiPermissions::from(vec![ApiPermission::GetRfd(5)]),
+            permissions.permissions
+        );
+
+        let token_with_only_group_permissions =
+            create_token(&ctx, user_id, &vec![ApiPermission::GetRfd(10)].into()).await;
+        let permissions = ctx
+            .get_caller(&token_with_only_group_permissions)
+            .await
+            .unwrap();
+        assert_eq!(
+            ApiPermissions::from(vec![ApiPermission::GetRfd(10)]),
+            permissions.permissions
+        );
+
+        let token_with_user_and_group_permissions = create_token(
+            &ctx,
+            user_id,
+            &vec![ApiPermission::GetRfd(5), ApiPermission::GetRfd(10)].into(),
+        )
+        .await;
+        let permissions = ctx
+            .get_caller(&token_with_user_and_group_permissions)
+            .await
+            .unwrap();
+        assert_eq!(
+            ApiPermissions::from(vec![ApiPermission::GetRfd(5), ApiPermission::GetRfd(10)]),
+            permissions.permissions
+        );
+    }
+}
+
+#[cfg(test)]
+pub(crate) mod test_mocks {
     use async_trait::async_trait;
     use rfd_model::{
         permissions::Caller,
         storage::{
-            AccessTokenStore, ApiKeyStore, ApiUserProviderStore, ApiUserStore, JobStore,
-            ListPagination, LoginAttemptStore, MockAccessTokenStore, MockApiKeyStore,
-            MockApiUserProviderStore, MockApiUserStore, MockJobStore, MockLoginAttemptStore,
-            MockOAuthClientRedirectUriStore, MockOAuthClientSecretStore, MockOAuthClientStore,
-            MockRfdPdfStore, MockRfdRevisionStore, MockRfdStore, OAuthClientRedirectUriStore,
+            AccessGroupStore, AccessTokenStore, ApiKeyStore, ApiUserProviderStore, ApiUserStore,
+            JobStore, ListPagination, LoginAttemptStore, MockAccessGroupStore,
+            MockAccessTokenStore, MockApiKeyStore, MockApiUserProviderStore, MockApiUserStore,
+            MockJobStore, MockLoginAttemptStore, MockOAuthClientRedirectUriStore,
+            MockOAuthClientSecretStore, MockOAuthClientStore, MockRfdPdfStore,
+            MockRfdRevisionStore, MockRfdStore, OAuthClientRedirectUriStore,
             OAuthClientSecretStore, OAuthClientStore, RfdPdfStore, RfdRevisionStore, RfdStore,
         },
-        ApiKey, ApiUserProvider, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
-        NewLoginAttempt, NewRfd, NewRfdPdf, NewRfdRevision,
+        ApiKey, ApiUserProvider, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser,
+        NewApiUserProvider, NewJob, NewLoginAttempt, NewRfd, NewRfdPdf, NewRfdRevision,
     };
 
     use std::sync::Arc;
@@ -921,6 +1121,7 @@ pub(crate) mod tests {
         pub oauth_client_store: Option<Arc<MockOAuthClientStore>>,
         pub oauth_client_secret_store: Option<Arc<MockOAuthClientSecretStore>>,
         pub oauth_client_redirect_uri_store: Option<Arc<MockOAuthClientRedirectUriStore>>,
+        pub access_group_store: Option<Arc<MockAccessGroupStore<ApiPermission>>>,
     }
 
     impl MockStorage {
@@ -939,6 +1140,7 @@ pub(crate) mod tests {
                 oauth_client_store: None,
                 oauth_client_secret_store: None,
                 oauth_client_redirect_uri_store: None,
+                access_group_store: None,
             }
         }
     }
@@ -1409,6 +1611,54 @@ pub(crate) mod tests {
                 .unwrap()
                 .delete(id)
                 .await
+        }
+    }
+
+    #[async_trait]
+    impl AccessGroupStore<ApiPermission> for MockStorage {
+        async fn get(
+            &self,
+            id: &uuid::Uuid,
+            deleted: bool,
+        ) -> Result<Option<rfd_model::AccessGroup<ApiPermission>>, rfd_model::storage::StoreError>
+        {
+            self.access_group_store
+                .as_ref()
+                .unwrap()
+                .get(id, deleted)
+                .await
+        }
+
+        async fn list(
+            &self,
+            filter: rfd_model::storage::AccessGroupFilter,
+            pagination: &ListPagination,
+        ) -> Result<Vec<rfd_model::AccessGroup<ApiPermission>>, rfd_model::storage::StoreError>
+        {
+            self.access_group_store
+                .as_ref()
+                .unwrap()
+                .list(filter, pagination)
+                .await
+        }
+
+        async fn upsert(
+            &self,
+            group: &NewAccessGroup<ApiPermission>,
+        ) -> Result<rfd_model::AccessGroup<ApiPermission>, rfd_model::storage::StoreError> {
+            self.access_group_store
+                .as_ref()
+                .unwrap()
+                .upsert(group)
+                .await
+        }
+
+        async fn delete(
+            &self,
+            id: &uuid::Uuid,
+        ) -> Result<Option<rfd_model::AccessGroup<ApiPermission>>, rfd_model::storage::StoreError>
+        {
+            self.access_group_store.as_ref().unwrap().delete(id).await
         }
     }
 }

@@ -11,10 +11,11 @@ use uuid::Uuid;
 use crate::{
     permissions::Permission,
     schema_ext::{LoginAttemptState, PdfSource},
-    AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LoginAttempt, NewAccessToken, NewApiKey,
-    NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt, NewOAuthClient,
-    NewOAuthClientRedirectUri, NewOAuthClientSecret, NewRfd, NewRfdPdf, NewRfdRevision,
-    OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, Rfd, RfdPdf, RfdRevision,
+    AccessGroup, AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LoginAttempt, NewAccessGroup,
+    NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt,
+    NewOAuthClient, NewOAuthClientRedirectUri, NewOAuthClientSecret, NewRfd, NewRfdPdf,
+    NewRfdRevision, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, Rfd, RfdPdf,
+    RfdRevision,
 };
 
 pub mod postgres;
@@ -33,7 +34,7 @@ pub enum StoreError {
     Unknown,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ListPagination {
     pub offset: i64,
     pub limit: i64,
@@ -240,6 +241,7 @@ pub trait JobStore {
 pub struct ApiUserFilter {
     pub id: Option<Vec<Uuid>>,
     pub email: Option<Vec<String>>,
+    pub groups: Option<Vec<Uuid>>,
     pub deleted: bool,
 }
 
@@ -378,4 +380,24 @@ pub trait OAuthClientRedirectUriStore {
         redirect_uri: NewOAuthClientRedirectUri,
     ) -> Result<OAuthClientRedirectUri, StoreError>;
     async fn delete(&self, id: &Uuid) -> Result<Option<OAuthClientRedirectUri>, StoreError>;
+}
+
+#[derive(Debug, Default, PartialEq)]
+pub struct AccessGroupFilter {
+    pub id: Option<Vec<Uuid>>,
+    pub name: Option<Vec<String>>,
+    pub deleted: bool,
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait AccessGroupStore<T: Permission + Ord> {
+    async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<AccessGroup<T>>, StoreError>;
+    async fn list(
+        &self,
+        filter: AccessGroupFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<AccessGroup<T>>, StoreError>;
+    async fn upsert(&self, group: &NewAccessGroup<T>) -> Result<AccessGroup<T>, StoreError>;
+    async fn delete(&self, id: &Uuid) -> Result<Option<AccessGroup<T>>, StoreError>;
 }

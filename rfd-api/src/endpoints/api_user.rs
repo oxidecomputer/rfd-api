@@ -88,6 +88,7 @@ async fn get_api_user_op(
 #[derive(Debug, Clone, PartialEq, Deserialize, JsonSchema)]
 pub struct ApiUserUpdateParams {
     permissions: ApiPermissions,
+    groups: Vec<Uuid>,
 }
 
 /// Create a new user with a given set of permissions
@@ -117,6 +118,7 @@ async fn create_api_user_op(
             .update_api_user(NewApiUser {
                 id: Uuid::new_v4(),
                 permissions: body.permissions,
+                groups: body.groups,
             })
             .await
             .map_err(ApiError::Storage)?;
@@ -165,6 +167,7 @@ async fn update_api_user_op(
             .update_api_user(NewApiUser {
                 id: path.identifier,
                 permissions: body.permissions,
+                groups: body.groups,
             })
             .await
             .map_err(ApiError::Storage)?;
@@ -415,7 +418,7 @@ mod tests {
     use uuid::Uuid;
 
     use crate::{
-        context::tests::{mock_context, MockStorage},
+        context::test_mocks::{mock_context, MockStorage},
         endpoints::api_user::{
             create_api_user_token_op, delete_api_user_token_op, get_api_user_token_op,
             list_api_user_tokens_op, update_api_user_op, ApiKeyCreateParams, ApiUserPath,
@@ -432,6 +435,7 @@ mod tests {
         ApiUser {
             id: Uuid::new_v4(),
             permissions: vec![].into(),
+            groups: vec![],
             created_at: Utc::now(),
             updated_at: Utc::now(),
             deleted_at: None,
@@ -442,10 +446,12 @@ mod tests {
     async fn test_create_api_user_permissions() {
         let successful_update = ApiUserUpdateParams {
             permissions: vec![ApiPermission::CreateApiUser.into()].into(),
+            groups: vec![],
         };
 
         let failure_update = ApiUserUpdateParams {
             permissions: vec![ApiPermission::GetApiUserAll.into()].into(),
+            groups: vec![],
         };
 
         let mut store = MockApiUserStore::new();
@@ -458,6 +464,7 @@ mod tests {
                 Ok(ApiUser {
                     id: user.id,
                     permissions: user.permissions,
+                    groups: vec![],
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,
@@ -515,11 +522,13 @@ mod tests {
         let success_id = Uuid::new_v4();
         let successful_update = ApiUserUpdateParams {
             permissions: Vec::new().into(),
+            groups: vec![],
         };
 
         let failure_id = Uuid::new_v4();
         let failure_update = ApiUserUpdateParams {
             permissions: Vec::new().into(),
+            groups: vec![],
         };
 
         let mut store = MockApiUserStore::new();
@@ -530,6 +539,7 @@ mod tests {
                 Ok(ApiUser {
                     id: user.id,
                     permissions: user.permissions,
+                    groups: vec![],
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,
@@ -747,6 +757,7 @@ mod tests {
         let api_user = ApiUser {
             id: api_user_id,
             permissions: vec![ApiPermission::GetApiUserToken(api_user_id).into()].into(),
+            groups: vec![],
             created_at: Utc::now(),
             updated_at: Utc::now(),
             deleted_at: None,

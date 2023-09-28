@@ -326,7 +326,7 @@ mod tests {
 
     use crate::{
         authn::key::RawApiKey,
-        context::tests::{mock_context, MockStorage},
+        context::test_mocks::{mock_context, MockStorage},
         endpoints::login::oauth::CheckOAuthClient,
         permissions::ApiPermission,
         ApiCaller,
@@ -338,6 +338,7 @@ mod tests {
         ApiUser {
             id: Uuid::new_v4(),
             permissions: vec![ApiPermission::CreateOAuthClient].into(),
+            groups: vec![],
             created_at: Utc::now(),
             updated_at: Utc::now(),
             deleted_at: None,
@@ -351,6 +352,7 @@ mod tests {
             Ok(ApiUser {
                 id: user.id,
                 permissions: user.permissions,
+                groups: vec![],
                 created_at: Utc::now(),
                 updated_at: Utc::now(),
                 deleted_at: None,

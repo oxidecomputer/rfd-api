@@ -94,6 +94,10 @@ where
         self.0.insert(item)
     }
 
+    pub fn append(&mut self, other: &mut Self) {
+        self.0.append(&mut other.0)
+    }
+
     pub fn remove(&mut self, item: &T) -> bool {
         self.0.remove(item)
     }

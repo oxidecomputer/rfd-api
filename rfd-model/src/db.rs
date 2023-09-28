@@ -6,8 +6,9 @@ use uuid::Uuid;
 use crate::{
     permissions::Permissions,
     schema::{
-        api_key, api_user, api_user_access_token, api_user_provider, job, login_attempt,
-        oauth_client, oauth_client_redirect_uri, oauth_client_secret, rfd, rfd_pdf, rfd_revision,
+        access_groups, api_key, api_user, api_user_access_token, api_user_provider, job,
+        login_attempt, oauth_client, oauth_client_redirect_uri, oauth_client_secret, rfd, rfd_pdf,
+        rfd_revision,
     },
     schema_ext::{ContentFormat, LoginAttemptState, PdfSource},
 };
@@ -79,6 +80,7 @@ pub struct ApiUserModel<T: Ord> {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
+    pub groups: Vec<Option<Uuid>>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
@@ -163,5 +165,16 @@ pub struct OAuthClientRedirectUriModel {
     pub oauth_client_id: Uuid,
     pub redirect_uri: String,
     pub created_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[diesel(table_name = access_groups)]
+pub struct AccessGroupModel<T: Ord> {
+    pub id: Uuid,
+    pub name: String,
+    pub permissions: Permissions<T>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
 }

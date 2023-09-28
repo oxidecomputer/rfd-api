@@ -126,6 +126,7 @@ async fn test_api_user() {
         NewApiUser {
             id: api_user_id,
             permissions: vec![TestPermission::CreateApiKey(api_user_id).into()].into(),
+            groups: vec![],
         },
     )
     .await
@@ -145,6 +146,7 @@ async fn test_api_user() {
         NewApiUser {
             id: api_user_id,
             permissions: vec![TestPermission::CreateApiKey(api_user_id).into()].into(),
+            groups: vec![],
         },
     )
     .await
@@ -163,6 +165,7 @@ async fn test_api_user() {
                 TestPermission::DeleteApiKey(api_user_id).into(),
             ]
             .into(),
+            groups: vec![],
         },
     )
     .await
@@ -324,6 +327,7 @@ async fn test_api_user() {
         ApiUserFilter {
             id: None,
             email: None,
+            groups: None,
             deleted: true,
         },
         &ListPagination::default(),

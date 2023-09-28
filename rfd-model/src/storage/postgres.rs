@@ -20,28 +20,30 @@ use uuid::Uuid;
 
 use crate::{
     db::{
-        ApiKeyModel, ApiUserAccessTokenModel, ApiUserModel, ApiUserProviderModel, JobModel,
-        LoginAttemptModel, OAuthClientModel, OAuthClientRedirectUriModel, OAuthClientSecretModel,
-        RfdModel, RfdPdfModel, RfdRevisionModel,
+        AccessGroupModel, ApiKeyModel, ApiUserAccessTokenModel, ApiUserModel, ApiUserProviderModel,
+        JobModel, LoginAttemptModel, OAuthClientModel, OAuthClientRedirectUriModel,
+        OAuthClientSecretModel, RfdModel, RfdPdfModel, RfdRevisionModel,
     },
     permissions::{Permission, Permissions},
     schema::{
-        api_key, api_user, api_user_access_token, api_user_provider, job, login_attempt,
-        oauth_client, oauth_client_redirect_uri, oauth_client_secret, rfd, rfd_pdf, rfd_revision,
+        access_groups, api_key, api_user, api_user_access_token, api_user_provider, job,
+        login_attempt, oauth_client, oauth_client_redirect_uri, oauth_client_secret, rfd, rfd_pdf,
+        rfd_revision,
     },
     storage::StoreError,
-    AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LoginAttempt, NewAccessToken, NewApiKey,
-    NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt, NewOAuthClient,
-    NewOAuthClientRedirectUri, NewOAuthClientSecret, NewRfd, NewRfdPdf, NewRfdRevision,
-    OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, Rfd, RfdPdf, RfdRevision,
+    AccessGroup, AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LoginAttempt, NewAccessGroup,
+    NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt,
+    NewOAuthClient, NewOAuthClientRedirectUri, NewOAuthClientSecret, NewRfd, NewRfdPdf,
+    NewRfdRevision, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, Rfd, RfdPdf,
+    RfdRevision,
 };
 
 use super::{
-    AccessTokenFilter, AccessTokenStore, ApiKeyFilter, ApiKeyStore, ApiUserFilter,
-    ApiUserProviderFilter, ApiUserProviderStore, ApiUserStore, JobFilter, JobStore, ListPagination,
-    LoginAttemptFilter, LoginAttemptStore, OAuthClientFilter, OAuthClientRedirectUriStore,
-    OAuthClientSecretStore, OAuthClientStore, RfdFilter, RfdPdfFilter, RfdPdfStore,
-    RfdRevisionFilter, RfdRevisionStore, RfdStore,
+    AccessGroupFilter, AccessGroupStore, AccessTokenFilter, AccessTokenStore, ApiKeyFilter,
+    ApiKeyStore, ApiUserFilter, ApiUserProviderFilter, ApiUserProviderStore, ApiUserStore,
+    JobFilter, JobStore, ListPagination, LoginAttemptFilter, LoginAttemptStore, OAuthClientFilter,
+    OAuthClientRedirectUriStore, OAuthClientSecretStore, OAuthClientStore, RfdFilter, RfdPdfFilter,
+    RfdPdfStore, RfdRevisionFilter, RfdRevisionStore, RfdStore,
 };
 
 pub type DbPool = Pool<ConnectionManager<PgConnection>>;
@@ -489,6 +491,7 @@ where
             ApiUserFilter {
                 id: Some(vec![*id]),
                 email: None,
+                groups: None,
                 deleted,
             },
             &ListPagination::default().limit(1),
@@ -506,7 +509,12 @@ where
             .left_join(api_user_provider::dsl::api_user_provider)
             .into_boxed();
 
-        let ApiUserFilter { id, email, deleted } = filter;
+        let ApiUserFilter {
+            id,
+            email,
+            groups,
+            deleted,
+        } = filter;
 
         if let Some(id) = id {
             query = query.filter(api_user::id.eq_any(id));
@@ -514,6 +522,10 @@ where
 
         if let Some(email) = email {
             query = query.filter(api_user_provider::emails.contains(email));
+        }
+
+        if let Some(groups) = groups {
+            query = query.filter(api_user::groups.overlaps_with(groups));
         }
 
         if !deleted {
@@ -532,6 +544,7 @@ where
             .map(|(user, _)| ApiUser {
                 id: user.id,
                 permissions: user.permissions,
+                groups: user.groups.into_iter().filter_map(|g| g).collect(),
                 created_at: user.created_at,
                 updated_at: user.updated_at,
                 deleted_at: user.deleted_at,
@@ -559,6 +572,7 @@ where
         Ok(ApiUser {
             id: user_m.id,
             permissions: user_m.permissions,
+            groups: user_m.groups.into_iter().filter_map(|g| g).collect(),
             created_at: user_m.created_at,
             updated_at: user_m.updated_at,
             deleted_at: user_m.deleted_at,
@@ -1216,5 +1230,87 @@ impl OAuthClientRedirectUriStore for PostgresStore {
             .optional()?;
 
         Ok(result.map(|redirect| redirect.into()))
+    }
+}
+
+#[async_trait]
+impl<T> AccessGroupStore<T> for PostgresStore
+where
+    T: Permission + Ord,
+{
+    async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<AccessGroup<T>>, StoreError> {
+        let client = AccessGroupStore::list(
+            self,
+            AccessGroupFilter {
+                id: Some(vec![*id]),
+                name: None,
+                deleted,
+            },
+            &ListPagination::default().limit(1),
+        )
+        .await?;
+
+        Ok(client.into_iter().nth(0))
+    }
+
+    async fn list(
+        &self,
+        filter: AccessGroupFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<AccessGroup<T>>, StoreError> {
+        let mut query = access_groups::dsl::access_groups.into_boxed();
+
+        let AccessGroupFilter { id, name, deleted } = filter;
+
+        if let Some(id) = id {
+            query = query.filter(access_groups::id.eq_any(id));
+        }
+
+        if let Some(name) = name {
+            query = query.filter(access_groups::name.eq_any(name));
+        }
+
+        if !deleted {
+            query = query.filter(access_groups::deleted_at.is_null());
+        }
+
+        let results = query
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+            .order(access_groups::created_at.desc())
+            .get_results_async::<AccessGroupModel<T>>(&self.conn)
+            .await?;
+
+        Ok(results.into_iter().map(|model| model.into()).collect())
+    }
+
+    async fn upsert(&self, group: &NewAccessGroup<T>) -> Result<AccessGroup<T>, StoreError> {
+        let group_m: AccessGroupModel<T> = insert_into(access_groups::dsl::access_groups)
+            .values((
+                access_groups::id.eq(group.id),
+                access_groups::name.eq(group.name.clone()),
+                access_groups::permissions.eq(group.permissions.clone()),
+            ))
+            .on_conflict(access_groups::id)
+            .do_update()
+            .set((
+                access_groups::name.eq(excluded(access_groups::name)),
+                access_groups::permissions.eq(excluded(access_groups::permissions)),
+                access_groups::updated_at.eq(Utc::now()),
+            ))
+            .get_result_async(&self.conn)
+            .await?;
+
+        Ok(group_m.into())
+    }
+
+    async fn delete(&self, id: &Uuid) -> Result<Option<AccessGroup<T>>, StoreError> {
+        let _ = update(access_groups::dsl::access_groups)
+            .filter(access_groups::id.eq(*id))
+            .set(access_groups::deleted_at.eq(Utc::now()))
+            .execute_async(&self.conn)
+            .await?;
+
+        AccessGroupStore::get(self, id, true).await
     }
 }

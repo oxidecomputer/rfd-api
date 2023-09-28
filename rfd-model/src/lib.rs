@@ -2,8 +2,8 @@ use std::{collections::BTreeMap, fmt::Display};
 
 use chrono::{DateTime, Utc};
 use db::{
-    JobModel, LoginAttemptModel, OAuthClientRedirectUriModel, OAuthClientSecretModel, RfdModel,
-    RfdPdfModel, RfdRevisionModel,
+    AccessGroupModel, JobModel, LoginAttemptModel, OAuthClientRedirectUriModel,
+    OAuthClientSecretModel, RfdModel, RfdPdfModel, RfdRevisionModel,
 };
 use partial_struct::partial;
 use permissions::Permissions;
@@ -163,6 +163,7 @@ impl From<JobModel> for Job {
 pub struct ApiUser<T: Ord> {
     pub id: Uuid,
     pub permissions: Permissions<T>,
+    pub groups: Vec<Uuid>,
     #[partial(NewApiUser(skip))]
     pub created_at: DateTime<Utc>,
     #[partial(NewApiUser(skip))]
@@ -381,6 +382,36 @@ impl From<OAuthClientRedirectUriModel> for OAuthClientRedirectUri {
             oauth_client_id: value.oauth_client_id,
             redirect_uri: value.redirect_uri,
             created_at: value.created_at,
+            deleted_at: value.deleted_at,
+        }
+    }
+}
+
+#[partial(NewAccessGroup)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct AccessGroup<T: Ord> {
+    pub id: Uuid,
+    pub name: String,
+    pub permissions: Permissions<T>,
+    #[partial(NewAccessGroup(skip))]
+    pub created_at: DateTime<Utc>,
+    #[partial(NewAccessGroup(skip))]
+    pub updated_at: DateTime<Utc>,
+    #[partial(NewAccessGroup(skip))]
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+impl<T> From<AccessGroupModel<T>> for AccessGroup<T>
+where
+    T: Ord,
+{
+    fn from(value: AccessGroupModel<T>) -> Self {
+        AccessGroup {
+            id: value.id,
+            name: value.name,
+            permissions: value.permissions,
+            created_at: value.created_at,
+            updated_at: value.updated_at,
             deleted_at: value.deleted_at,
         }
     }

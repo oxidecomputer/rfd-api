@@ -15,6 +15,17 @@ pub mod sql_types {
 }
 
 diesel::table! {
+    access_groups (id) {
+        id -> Uuid,
+        name -> Varchar,
+        permissions -> Jsonb,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+        deleted_at -> Nullable<Timestamptz>,
+    }
+}
+
+diesel::table! {
     api_key (id) {
         id -> Uuid,
         api_user_id -> Uuid,
@@ -34,6 +45,7 @@ diesel::table! {
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
         deleted_at -> Nullable<Timestamptz>,
+        groups -> Array<Nullable<Uuid>>,
     }
 }
 
@@ -184,6 +196,7 @@ diesel::joinable!(rfd_pdf -> rfd_revision (rfd_revision_id));
 diesel::joinable!(rfd_revision -> rfd (rfd_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    access_groups,
     api_key,
     api_user,
     api_user_access_token,

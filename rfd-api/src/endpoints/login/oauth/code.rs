@@ -676,7 +676,7 @@ mod tests {
     use crate::{
         authn::key::RawApiKey,
         context::{
-            tests::{mock_context, MockStorage},
+            test_mocks::{mock_context, MockStorage},
             ApiContext,
         },
         endpoints::login::oauth::{
