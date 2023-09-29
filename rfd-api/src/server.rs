@@ -13,6 +13,7 @@ use crate::{
             create_api_user, create_api_user_token, delete_api_user_token, get_api_user,
             get_api_user_token, get_self, list_api_user_tokens, update_api_user,
         },
+        groups::{create_group, delete_group, get_groups, update_group},
         login::oauth::{
             client::{
                 create_oauth_client, create_oauth_client_redirect_uri, create_oauth_client_secret,
@@ -87,6 +88,12 @@ pub fn server(
     api.register(get_api_user_token).unwrap();
     api.register(create_api_user_token).unwrap();
     api.register(delete_api_user_token).unwrap();
+
+    // Group Management
+    api.register(get_groups).unwrap();
+    api.register(create_group).unwrap();
+    api.register(update_group).unwrap();
+    api.register(delete_group).unwrap();
 
     // OAuth Client Management
     api.register(list_oauth_clients).unwrap();

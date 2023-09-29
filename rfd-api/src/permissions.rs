@@ -227,6 +227,14 @@ pub enum ApiPermission {
     UpdateApiUserSelf,
     UpdateApiUserAll,
 
+    // Group permissions,
+    ListGroups,
+    CreateGroup,
+    UpdateGroup(Uuid),
+    AddToGroup(Uuid),
+    RemoveFromGroup(Uuid),
+    DeleteGroup(Uuid),
+
     // RFD access permissions
     GetRfd(i32),
     GetRfds(BTreeSet<i32>),

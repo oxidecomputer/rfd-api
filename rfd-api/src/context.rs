@@ -17,10 +17,10 @@ use rfd_model::{
         OAuthClientRedirectUriStore, OAuthClientSecretStore, OAuthClientStore, RfdFilter,
         RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionStore, RfdStore, StoreError,
     },
-    AccessToken, ApiUser, ApiUserProvider, InvalidValueError, Job, LoginAttempt, NewAccessToken,
-    NewApiKey, NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt, NewOAuthClient,
-    NewOAuthClientRedirectUri, NewOAuthClientSecret, OAuthClient, OAuthClientRedirectUri,
-    OAuthClientSecret,
+    AccessGroup, AccessToken, ApiUser, ApiUserProvider, InvalidValueError, Job, LoginAttempt,
+    NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
+    NewLoginAttempt, NewOAuthClient, NewOAuthClientRedirectUri, NewOAuthClientSecret, OAuthClient,
+    OAuthClientRedirectUri, OAuthClientSecret,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -758,6 +758,8 @@ impl ApiContext {
         AccessTokenStore::upsert(&*self.storage, access_token).await
     }
 
+    // Login Attempt Operations
+
     pub async fn create_login_attempt(
         &self,
         attempt: NewLoginAttempt,
@@ -819,6 +821,8 @@ impl ApiContext {
         attempt.provider_error = provider_error.map(|s| s.to_string());
         LoginAttemptStore::upsert(&*self.storage, attempt).await
     }
+
+    // OAuth Client Operations
 
     pub async fn create_oauth_client(&self) -> Result<OAuthClient, StoreError> {
         OAuthClientStore::upsert(&*self.storage, NewOAuthClient { id: Uuid::new_v4() }).await
@@ -885,6 +889,41 @@ impl ApiContext {
         id: &Uuid,
     ) -> Result<Option<OAuthClientRedirectUri>, StoreError> {
         OAuthClientRedirectUriStore::delete(&*self.storage, id).await
+    }
+
+    // Group Operations
+    pub async fn get_groups(&self) -> Result<Vec<AccessGroup<ApiPermission>>, StoreError> {
+        Ok(AccessGroupStore::list(
+            &*self.storage,
+            AccessGroupFilter {
+                id: None,
+                name: None,
+                deleted: false,
+            },
+            &ListPagination::default().limit(UNLIMITED),
+        )
+        .await?)
+    }
+
+    pub async fn create_group(
+        &self,
+        group: NewAccessGroup<ApiPermission>,
+    ) -> Result<AccessGroup<ApiPermission>, StoreError> {
+        AccessGroupStore::upsert(&*self.storage, &group).await
+    }
+
+    pub async fn update_group(
+        &self,
+        group: NewAccessGroup<ApiPermission>,
+    ) -> Result<AccessGroup<ApiPermission>, StoreError> {
+        AccessGroupStore::upsert(&*self.storage, &group).await
+    }
+
+    pub async fn delete_group(
+        &self,
+        group_id: &Uuid,
+    ) -> Result<Option<AccessGroup<ApiPermission>>, StoreError> {
+        AccessGroupStore::delete(&*self.storage, &group_id).await
     }
 }
 
