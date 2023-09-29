@@ -19,6 +19,7 @@ use crate::{
     endpoints::login::oauth::{
         github::GitHubOAuthProvider, google::GoogleOAuthProvider, OAuthProviderName,
     },
+    initial_data::InitialData,
 };
 
 mod authn;
@@ -27,6 +28,7 @@ mod context;
 mod email_validator;
 mod endpoints;
 mod error;
+mod initial_data;
 mod mapper;
 mod permissions;
 mod server;
@@ -66,6 +68,9 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         config.search,
     )
     .await?;
+
+    let init_data = InitialData::new()?;
+    init_data.initialize(&context).await?;
 
     if let Some(github) = config.authn.oauth.github {
         context.insert_oauth_provider(

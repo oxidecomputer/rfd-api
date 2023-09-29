@@ -11,11 +11,11 @@ use uuid::Uuid;
 use crate::{
     permissions::Permission,
     schema_ext::{LoginAttemptState, PdfSource},
-    AccessGroup, AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LoginAttempt, NewAccessGroup,
-    NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt,
-    NewOAuthClient, NewOAuthClientRedirectUri, NewOAuthClientSecret, NewRfd, NewRfdPdf,
-    NewRfdRevision, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, Rfd, RfdPdf,
-    RfdRevision,
+    AccessGroup, AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LoginAttempt, Mapper,
+    NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
+    NewLoginAttempt, NewMapper, NewOAuthClient, NewOAuthClientRedirectUri, NewOAuthClientSecret,
+    NewRfd, NewRfdPdf, NewRfdRevision, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, Rfd,
+    RfdPdf, RfdRevision,
 };
 
 pub mod postgres;
@@ -400,4 +400,24 @@ pub trait AccessGroupStore<T: Permission + Ord> {
     ) -> Result<Vec<AccessGroup<T>>, StoreError>;
     async fn upsert(&self, group: &NewAccessGroup<T>) -> Result<AccessGroup<T>, StoreError>;
     async fn delete(&self, id: &Uuid) -> Result<Option<AccessGroup<T>>, StoreError>;
+}
+
+#[derive(Debug, Default, PartialEq)]
+pub struct MapperFilter {
+    pub id: Option<Vec<Uuid>>,
+    pub name: Option<Vec<String>>,
+    pub deleted: bool,
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait MapperStore {
+    async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<Mapper>, StoreError>;
+    async fn list(
+        &self,
+        filter: MapperFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<Mapper>, StoreError>;
+    async fn upsert(&self, new_mapper: &NewMapper) -> Result<Mapper, StoreError>;
+    async fn delete(&self, id: &Uuid) -> Result<Option<Mapper>, StoreError>;
 }

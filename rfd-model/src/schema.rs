@@ -112,6 +112,16 @@ diesel::table! {
 }
 
 diesel::table! {
+    mapper (id) {
+        id -> Uuid,
+        name -> Varchar,
+        rule -> Jsonb,
+        created_at -> Timestamptz,
+        deleted_at -> Nullable<Timestamptz>,
+    }
+}
+
+diesel::table! {
     oauth_client (id) {
         id -> Uuid,
         created_at -> Timestamptz,
@@ -203,6 +213,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     api_user_provider,
     job,
     login_attempt,
+    mapper,
     oauth_client,
     oauth_client_redirect_uri,
     oauth_client_secret,

@@ -13,9 +13,10 @@ use rfd_model::{
     storage::{
         AccessGroupFilter, AccessGroupStore, AccessTokenStore, ApiKeyFilter, ApiKeyStore,
         ApiUserFilter, ApiUserProviderFilter, ApiUserProviderStore, ApiUserStore, JobStore,
-        ListPagination, LoginAttemptFilter, LoginAttemptStore, OAuthClientFilter,
-        OAuthClientRedirectUriStore, OAuthClientSecretStore, OAuthClientStore, RfdFilter,
-        RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionStore, RfdStore, StoreError,
+        ListPagination, LoginAttemptFilter, LoginAttemptStore, MapperFilter, MapperStore,
+        OAuthClientFilter, OAuthClientRedirectUriStore, OAuthClientSecretStore, OAuthClientStore,
+        RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionStore, RfdStore,
+        StoreError,
     },
     AccessGroup, AccessToken, ApiUser, ApiUserProvider, InvalidValueError, Job, LoginAttempt,
     NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
@@ -42,7 +43,7 @@ use crate::{
         LoginError, UserInfo,
     },
     error::{ApiError, AppError},
-    mapper::{ApiPermissionMapper, GroupMapper},
+    mapper::{MapperRule, MapperRules},
     permissions::{ApiPermission, PermissionStorage},
     util::response::{client_error, internal_error},
     ApiCaller, ApiPermissions, User, UserToken,
@@ -64,6 +65,7 @@ pub trait Storage:
     + OAuthClientSecretStore
     + OAuthClientRedirectUriStore
     + AccessGroupStore<ApiPermission>
+    + MapperStore
     + Send
     + Sync
     + 'static
@@ -83,6 +85,7 @@ impl<T> Storage for T where
         + OAuthClientSecretStore
         + OAuthClientRedirectUriStore
         + AccessGroupStore<ApiPermission>
+        + MapperStore
         + Send
         + Sync
         + 'static
@@ -98,7 +101,6 @@ pub struct ApiContext {
     pub secrets: SecretContext,
     pub oauth_providers: HashMap<OAuthProviderName, Box<dyn OAuthProviderFn>>,
     pub search: SearchContext,
-    pub mappers: MapperContext,
 }
 
 pub struct JwtContext {
@@ -116,11 +118,6 @@ pub struct SecretContext {
 pub struct SearchContext {
     pub client: SearchClient,
     pub index: String,
-}
-
-pub struct MapperContext {
-    pub direct_permissions: Vec<Box<dyn ApiPermissionMapper>>,
-    pub groups: Vec<Box<dyn GroupMapper>>,
 }
 
 pub struct RegisteredAccessToken {
@@ -224,10 +221,6 @@ impl ApiContext {
             search: SearchContext {
                 client: SearchClient::new(search.host, search.key),
                 index: search.index,
-            },
-            mappers: MapperContext {
-                direct_permissions: vec![],
-                groups: vec![],
             },
         })
     }
@@ -539,15 +532,11 @@ impl ApiContext {
             .await?;
 
         let mut mapped_permissions = ApiPermissions::new();
-
-        for mapper in &self.mappers.direct_permissions {
-            mapped_permissions.append(&mut mapper.permissions_for(&self, &info).await);
-        }
-
         let mut mapped_groups = vec![];
 
-        for mapper in &self.mappers.groups {
-            mapped_groups.append(&mut mapper.groups_for(&self, &info).await);
+        for mapper in &self.get_mappers().await? {
+            mapped_permissions.append(&mut mapper.permissions_for(&self, &info).await?);
+            mapped_groups.append(&mut mapper.groups_for(&self, &info).await?);
         }
 
         match api_user_providers.len() {
@@ -596,16 +585,23 @@ impl ApiContext {
     async fn ensure_api_user(
         &self,
         api_user_id: Uuid,
-        mapped_permissions: ApiPermissions,
-        mapped_grous: Vec<Uuid>,
+        mut mapped_permissions: ApiPermissions,
+        mut mapped_groups: Vec<Uuid>,
     ) -> Result<User, ApiError> {
         match self.get_api_user(&api_user_id).await? {
-            Some(api_user) => Ok(api_user),
+            Some(api_user) => {
+                // Ensure that the existing user has "at least" the mapped permissions
+                let mut update: NewApiUser<ApiPermission> = api_user.into();
+                update.permissions.append(&mut mapped_permissions);
+                update.groups.append(&mut mapped_groups);
+
+                Ok(ApiUserStore::upsert(&*self.storage, update).await?)
+            }
             None => self
                 .update_api_user(NewApiUser {
                     id: api_user_id,
                     permissions: mapped_permissions,
-                    groups: mapped_grous,
+                    groups: mapped_groups,
                 })
                 .await
                 .map_err(ApiError::Storage)
@@ -992,6 +988,26 @@ impl ApiContext {
             None
         })
     }
+
+    // Mapper Operations
+
+    pub async fn get_mappers(&self) -> Result<Vec<MapperRules>, StoreError> {
+        Ok(MapperStore::list(
+            &*self.storage,
+            MapperFilter::default(),
+            &ListPagination::default().limit(UNLIMITED),
+        )
+        .await?
+        .into_iter()
+        .filter_map(|mapper| {
+            serde_json::from_value::<MapperRules>(mapper.rule)
+                .map_err(|err| {
+                    tracing::error!(?err, "Failed to translate stored rule to mapper");
+                })
+                .ok()
+        })
+        .collect::<Vec<_>>())
+    }
 }
 
 #[cfg(test)]
@@ -1158,15 +1174,15 @@ pub(crate) mod test_mocks {
         permissions::Caller,
         storage::{
             AccessGroupStore, AccessTokenStore, ApiKeyStore, ApiUserProviderStore, ApiUserStore,
-            JobStore, ListPagination, LoginAttemptStore, MockAccessGroupStore,
+            JobStore, ListPagination, LoginAttemptStore, MapperStore, MockAccessGroupStore,
             MockAccessTokenStore, MockApiKeyStore, MockApiUserProviderStore, MockApiUserStore,
-            MockJobStore, MockLoginAttemptStore, MockOAuthClientRedirectUriStore,
+            MockJobStore, MockLoginAttemptStore, MockMapperStore, MockOAuthClientRedirectUriStore,
             MockOAuthClientSecretStore, MockOAuthClientStore, MockRfdPdfStore,
             MockRfdRevisionStore, MockRfdStore, OAuthClientRedirectUriStore,
             OAuthClientSecretStore, OAuthClientStore, RfdPdfStore, RfdRevisionStore, RfdStore,
         },
         ApiKey, ApiUserProvider, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser,
-        NewApiUserProvider, NewJob, NewLoginAttempt, NewRfd, NewRfdPdf, NewRfdRevision,
+        NewApiUserProvider, NewJob, NewLoginAttempt, NewMapper, NewRfd, NewRfdPdf, NewRfdRevision,
     };
 
     use std::sync::Arc;
@@ -1227,6 +1243,7 @@ pub(crate) mod test_mocks {
         pub oauth_client_secret_store: Option<Arc<MockOAuthClientSecretStore>>,
         pub oauth_client_redirect_uri_store: Option<Arc<MockOAuthClientRedirectUriStore>>,
         pub access_group_store: Option<Arc<MockAccessGroupStore<ApiPermission>>>,
+        pub mapper_store: Option<Arc<MockMapperStore>>,
     }
 
     impl MockStorage {
@@ -1246,6 +1263,7 @@ pub(crate) mod test_mocks {
                 oauth_client_secret_store: None,
                 oauth_client_redirect_uri_store: None,
                 access_group_store: None,
+                mapper_store: None,
             }
         }
     }
@@ -1764,6 +1782,43 @@ pub(crate) mod test_mocks {
         ) -> Result<Option<rfd_model::AccessGroup<ApiPermission>>, rfd_model::storage::StoreError>
         {
             self.access_group_store.as_ref().unwrap().delete(id).await
+        }
+    }
+
+    #[async_trait]
+    impl MapperStore for MockStorage {
+        async fn get(
+            &self,
+            id: &uuid::Uuid,
+            deleted: bool,
+        ) -> Result<Option<rfd_model::Mapper>, rfd_model::storage::StoreError> {
+            self.mapper_store.as_ref().unwrap().get(id, deleted).await
+        }
+
+        async fn list(
+            &self,
+            filter: rfd_model::storage::MapperFilter,
+            pagination: &ListPagination,
+        ) -> Result<Vec<rfd_model::Mapper>, rfd_model::storage::StoreError> {
+            self.mapper_store
+                .as_ref()
+                .unwrap()
+                .list(filter, pagination)
+                .await
+        }
+
+        async fn upsert(
+            &self,
+            new_mapper: &NewMapper,
+        ) -> Result<rfd_model::Mapper, rfd_model::storage::StoreError> {
+            self.mapper_store.as_ref().unwrap().upsert(new_mapper).await
+        }
+
+        async fn delete(
+            &self,
+            id: &uuid::Uuid,
+        ) -> Result<Option<rfd_model::Mapper>, rfd_model::storage::StoreError> {
+            self.mapper_store.as_ref().unwrap().delete(id).await
         }
     }
 }

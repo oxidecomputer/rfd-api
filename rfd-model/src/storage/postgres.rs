@@ -19,29 +19,30 @@ use uuid::Uuid;
 use crate::{
     db::{
         AccessGroupModel, ApiKeyModel, ApiUserAccessTokenModel, ApiUserModel, ApiUserProviderModel,
-        JobModel, LoginAttemptModel, OAuthClientModel, OAuthClientRedirectUriModel,
+        JobModel, LoginAttemptModel, MapperModel, OAuthClientModel, OAuthClientRedirectUriModel,
         OAuthClientSecretModel, RfdModel, RfdPdfModel, RfdRevisionModel,
     },
     permissions::{Permission, Permissions},
     schema::{
         access_groups, api_key, api_user, api_user_access_token, api_user_provider, job,
-        login_attempt, oauth_client, oauth_client_redirect_uri, oauth_client_secret, rfd, rfd_pdf,
-        rfd_revision,
+        login_attempt, mapper, oauth_client, oauth_client_redirect_uri, oauth_client_secret, rfd,
+        rfd_pdf, rfd_revision,
     },
     storage::StoreError,
-    AccessGroup, AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LoginAttempt, NewAccessGroup,
-    NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt,
-    NewOAuthClient, NewOAuthClientRedirectUri, NewOAuthClientSecret, NewRfd, NewRfdPdf,
-    NewRfdRevision, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, Rfd, RfdPdf,
-    RfdRevision,
+    AccessGroup, AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LoginAttempt, Mapper,
+    NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
+    NewLoginAttempt, NewMapper, NewOAuthClient, NewOAuthClientRedirectUri, NewOAuthClientSecret,
+    NewRfd, NewRfdPdf, NewRfdRevision, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, Rfd,
+    RfdPdf, RfdRevision,
 };
 
 use super::{
     AccessGroupFilter, AccessGroupStore, AccessTokenFilter, AccessTokenStore, ApiKeyFilter,
     ApiKeyStore, ApiUserFilter, ApiUserProviderFilter, ApiUserProviderStore, ApiUserStore,
-    JobFilter, JobStore, ListPagination, LoginAttemptFilter, LoginAttemptStore, OAuthClientFilter,
-    OAuthClientRedirectUriStore, OAuthClientSecretStore, OAuthClientStore, RfdFilter, RfdPdfFilter,
-    RfdPdfStore, RfdRevisionFilter, RfdRevisionStore, RfdStore,
+    JobFilter, JobStore, ListPagination, LoginAttemptFilter, LoginAttemptStore, MapperFilter,
+    MapperStore, OAuthClientFilter, OAuthClientRedirectUriStore, OAuthClientSecretStore,
+    OAuthClientStore, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionStore,
+    RfdStore,
 };
 
 pub type DbPool = Pool<ConnectionManager<PgConnection>>;
@@ -1308,5 +1309,75 @@ where
             .await?;
 
         AccessGroupStore::get(self, id, true).await
+    }
+}
+
+#[async_trait]
+impl MapperStore for PostgresStore {
+    async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<Mapper>, StoreError> {
+        let client = MapperStore::list(
+            self,
+            MapperFilter {
+                id: Some(vec![*id]),
+                name: None,
+                deleted,
+            },
+            &ListPagination::default().limit(1),
+        )
+        .await?;
+
+        Ok(client.into_iter().nth(0))
+    }
+
+    async fn list(
+        &self,
+        filter: MapperFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<Mapper>, StoreError> {
+        let mut query = mapper::dsl::mapper.into_boxed();
+
+        let MapperFilter { id, name, deleted } = filter;
+
+        if let Some(id) = id {
+            query = query.filter(mapper::id.eq_any(id));
+        }
+
+        if let Some(name) = name {
+            query = query.filter(mapper::name.eq_any(name));
+        }
+
+        if !deleted {
+            query = query.filter(mapper::deleted_at.is_null());
+        }
+
+        let results = query
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+            .order(mapper::created_at.desc())
+            .get_results_async::<MapperModel>(&self.conn)
+            .await?;
+
+        Ok(results.into_iter().map(|model| model.into()).collect())
+    }
+    async fn upsert(&self, new_mapper: &NewMapper) -> Result<Mapper, StoreError> {
+        let mapper_m: MapperModel = insert_into(mapper::dsl::mapper)
+            .values((
+                mapper::id.eq(new_mapper.id),
+                mapper::name.eq(new_mapper.name.clone()),
+                mapper::rule.eq(new_mapper.rule.clone()),
+            ))
+            .get_result_async(&self.conn)
+            .await?;
+
+        Ok(mapper_m.into())
+    }
+    async fn delete(&self, id: &Uuid) -> Result<Option<Mapper>, StoreError> {
+        let _ = update(mapper::dsl::mapper)
+            .filter(mapper::id.eq(*id))
+            .set(mapper::deleted_at.eq(Utc::now()))
+            .execute_async(&self.conn)
+            .await?;
+
+        MapperStore::get(self, id, true).await
     }
 }

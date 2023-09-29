@@ -2,7 +2,7 @@ use std::{collections::BTreeMap, fmt::Display};
 
 use chrono::{DateTime, Utc};
 use db::{
-    AccessGroupModel, JobModel, LoginAttemptModel, OAuthClientRedirectUriModel,
+    AccessGroupModel, JobModel, LoginAttemptModel, MapperModel, OAuthClientRedirectUriModel,
     OAuthClientSecretModel, RfdModel, RfdPdfModel, RfdRevisionModel,
 };
 use partial_struct::partial;
@@ -10,6 +10,7 @@ use permissions::Permissions;
 use schema_ext::{ContentFormat, LoginAttemptState, PdfSource};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use thiserror::Error;
 use uuid::Uuid;
 
@@ -412,6 +413,30 @@ where
             permissions: value.permissions,
             created_at: value.created_at,
             updated_at: value.updated_at,
+            deleted_at: value.deleted_at,
+        }
+    }
+}
+
+#[partial(NewMapper)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct Mapper {
+    pub id: Uuid,
+    pub name: String,
+    pub rule: Value,
+    #[partial(NewMapper(skip))]
+    pub created_at: DateTime<Utc>,
+    #[partial(NewMapper(skip))]
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+impl From<MapperModel> for Mapper {
+    fn from(value: MapperModel) -> Self {
+        Mapper {
+            id: value.id,
+            name: value.name,
+            rule: value.rule,
+            created_at: value.created_at,
             deleted_at: value.deleted_at,
         }
     }
