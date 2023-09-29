@@ -27,6 +27,7 @@ mod context;
 mod email_validator;
 mod endpoints;
 mod error;
+mod mapper;
 mod permissions;
 mod server;
 mod util;
@@ -60,7 +61,6 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     format!("Failed to establish initial database connection: {:?}", err)
                 })?,
         ),
-        config.permissions,
         config.jwt,
         config.keys,
         config.search,

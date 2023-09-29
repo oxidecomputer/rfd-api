@@ -5,7 +5,7 @@ use serde::{
 };
 use thiserror::Error;
 
-use crate::{permissions::ApiPermission, server::SpecConfig};
+use crate::server::SpecConfig;
 
 #[derive(Debug, Error)]
 pub enum AppConfigError {
@@ -19,7 +19,6 @@ pub struct AppConfig {
     pub public_url: String,
     pub server_port: u16,
     pub database_url: String,
-    pub permissions: PermissionsConfig,
     pub keys: Vec<AsymmetricKey>,
     pub jwt: JwtConfig,
     pub spec: Option<SpecConfig>,
@@ -61,11 +60,6 @@ impl<'de> Deserialize<'de> for ServerLogFormat {
 
         deserializer.deserialize_any(ExternalId)
     }
-}
-
-#[derive(Debug, Default, Deserialize)]
-pub struct PermissionsConfig {
-    pub default: Vec<ApiPermission>,
 }
 
 #[derive(Debug, Default, Deserialize)]

@@ -35,13 +35,14 @@ use crate::{
         jwt::{Claims, JwtSigner, JwtSignerError},
         AuthError, AuthToken, Signer,
     },
-    config::{AsymmetricKey, JwtConfig, PermissionsConfig, SearchConfig},
+    config::{AsymmetricKey, JwtConfig, SearchConfig},
     email_validator::EmailValidator,
     endpoints::login::{
         oauth::{OAuthProvider, OAuthProviderError, OAuthProviderFn, OAuthProviderName},
         LoginError, UserInfo,
     },
     error::{ApiError, AppError},
+    mapper::{ApiPermissionMapper, GroupMapper},
     permissions::{ApiPermission, PermissionStorage},
     util::response::{client_error, internal_error},
     ApiCaller, ApiPermissions, User, UserToken,
@@ -93,15 +94,11 @@ pub struct ApiContext {
     pub https_client: Client<HttpsConnector<HttpConnector>, Body>,
     pub public_url: String,
     pub storage: Arc<dyn Storage>,
-    pub permissions: PermissionsContext,
     pub jwt: JwtContext,
     pub secrets: SecretContext,
     pub oauth_providers: HashMap<OAuthProviderName, Box<dyn OAuthProviderFn>>,
     pub search: SearchContext,
-}
-
-pub struct PermissionsContext {
-    pub default: ApiPermissions,
+    pub mappers: MapperContext,
 }
 
 pub struct JwtContext {
@@ -119,6 +116,11 @@ pub struct SecretContext {
 pub struct SearchContext {
     pub client: SearchClient,
     pub index: String,
+}
+
+pub struct MapperContext {
+    pub direct_permissions: Vec<Box<dyn ApiPermissionMapper>>,
+    pub groups: Vec<Box<dyn GroupMapper>>,
 }
 
 pub struct RegisteredAccessToken {
@@ -191,7 +193,6 @@ impl ApiContext {
         email_validator: Arc<dyn EmailValidator + Send + Sync>,
         public_url: String,
         storage: Arc<dyn Storage>,
-        permissions: PermissionsConfig,
         jwt: JwtConfig,
         keys: Vec<AsymmetricKey>,
         search: SearchConfig,
@@ -207,9 +208,6 @@ impl ApiContext {
             https_client: hyper::Client::builder().build(HttpsConnector::new()),
             public_url,
             storage,
-            permissions: PermissionsContext {
-                default: permissions.default.into(),
-            },
 
             jwt: JwtContext {
                 default_expiration: jwt.default_expiration,
@@ -226,6 +224,10 @@ impl ApiContext {
             search: SearchContext {
                 client: SearchClient::new(search.host, search.key),
                 index: search.index,
+            },
+            mappers: MapperContext {
+                direct_permissions: vec![],
+                groups: vec![],
             },
         })
     }
@@ -536,11 +538,25 @@ impl ApiContext {
             .list_api_user_provider(filter, &ListPagination::latest())
             .await?;
 
+        let mut mapped_permissions = ApiPermissions::new();
+
+        for mapper in &self.mappers.direct_permissions {
+            mapped_permissions.append(&mut mapper.permissions_for(&self, &info).await);
+        }
+
+        let mut mapped_groups = vec![];
+
+        for mapper in &self.mappers.groups {
+            mapped_groups.append(&mut mapper.groups_for(&self, &info).await);
+        }
+
         match api_user_providers.len() {
             0 => {
                 tracing::info!("Did not find any existing users. Registering a new user.");
 
-                let user = self.ensure_api_user(Uuid::new_v4()).await?;
+                let user = self
+                    .ensure_api_user(Uuid::new_v4(), mapped_permissions, mapped_groups)
+                    .await?;
                 self.update_api_user_provider(NewApiUserProvider {
                     id: Uuid::new_v4(),
                     api_user_id: user.id,
@@ -557,7 +573,9 @@ impl ApiContext {
 
                 // This branch ensures that there is a 0th indexed item
                 let provider = api_user_providers.into_iter().nth(0).unwrap();
-                Ok(self.ensure_api_user(provider.api_user_id).await?)
+                Ok(self
+                    .ensure_api_user(provider.api_user_id, mapped_permissions, mapped_groups)
+                    .await?)
             }
             _ => {
                 // If we found more than one provider, then we have encountered an inconsistency in
@@ -575,14 +593,19 @@ impl ApiContext {
         }
     }
 
-    async fn ensure_api_user(&self, api_user_id: Uuid) -> Result<User, ApiError> {
+    async fn ensure_api_user(
+        &self,
+        api_user_id: Uuid,
+        mapped_permissions: ApiPermissions,
+        mapped_grous: Vec<Uuid>,
+    ) -> Result<User, ApiError> {
         match self.get_api_user(&api_user_id).await? {
             Some(api_user) => Ok(api_user),
             None => self
                 .update_api_user(NewApiUser {
                     id: api_user_id,
-                    permissions: self.permissions.default.clone(),
-                    groups: vec![],
+                    permissions: mapped_permissions,
+                    groups: mapped_grous,
                 })
                 .await
                 .map_err(ApiError::Storage)
@@ -1149,7 +1172,7 @@ pub(crate) mod test_mocks {
     use std::sync::Arc;
 
     use crate::{
-        config::{JwtConfig, PermissionsConfig, SearchConfig},
+        config::{JwtConfig, SearchConfig},
         endpoints::login::oauth::{google::GoogleOAuthProvider, OAuthProviderName},
         permissions::ApiPermission,
         util::tests::{mock_key, AnyEmailValidator},
@@ -1163,7 +1186,6 @@ pub(crate) mod test_mocks {
             Arc::new(AnyEmailValidator),
             "".to_string(),
             Arc::new(storage),
-            PermissionsConfig::default(),
             JwtConfig::default(),
             vec![
                 // We are in the context of a test and do not care about the key leaking
