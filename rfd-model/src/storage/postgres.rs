@@ -1,8 +1,3 @@
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    time::Duration,
-};
-
 use async_bb8_diesel::{AsyncRunQueryDsl, ConnectionError, ConnectionManager, OptionalExtension};
 use async_trait::async_trait;
 use bb8::Pool;
@@ -15,7 +10,10 @@ use diesel::{
     upsert::{excluded, on_constraint},
     ExpressionMethods, PgArrayExpressionMethods,
 };
-
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    time::Duration,
+};
 use uuid::Uuid;
 
 use crate::{
@@ -73,10 +71,6 @@ impl PostgresStore {
                 .build(manager)
                 .await?,
         })
-    }
-
-    pub fn connection(&self) -> &DbPool {
-        &self.conn
     }
 }
 
@@ -559,11 +553,13 @@ where
             .values((
                 api_user::id.eq(user.id),
                 api_user::permissions.eq(user.permissions.clone()),
+                api_user::groups.eq(user.groups.clone()),
             ))
             .on_conflict(api_user::id)
             .do_update()
             .set((
                 api_user::permissions.eq(excluded(api_user::permissions)),
+                api_user::groups.eq(excluded(api_user::groups)),
                 api_user::updated_at.eq(Utc::now()),
             ))
             .get_result_async(&self.conn)

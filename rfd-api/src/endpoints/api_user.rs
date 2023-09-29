@@ -2,7 +2,6 @@ use chrono::{DateTime, Utc};
 use dropshot::{
     endpoint, HttpError, HttpResponseCreated, HttpResponseOk, Path, RequestContext, TypedBody,
 };
-use http::StatusCode;
 use partial_struct::partial;
 use rfd_model::{storage::ListPagination, ApiUser, NewApiKey, NewApiUser};
 use schemars::JsonSchema;
@@ -16,7 +15,7 @@ use crate::{
     context::ApiContext,
     error::ApiError,
     permissions::ApiPermission,
-    util::response::{client_error, not_found, to_internal_error},
+    util::response::{forbidden, not_found, to_internal_error},
     ApiCaller, ApiPermissions, User,
 };
 
@@ -81,7 +80,7 @@ async fn get_api_user_op(
             Err(not_found("Failed to find"))
         }
     } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
+        Err(forbidden())
     }
 }
 
@@ -125,7 +124,7 @@ async fn create_api_user_op(
 
         Ok(HttpResponseCreated(user))
     } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
+        Err(forbidden())
     }
 }
 
@@ -174,7 +173,7 @@ async fn update_api_user_op(
 
         Ok(HttpResponseOk(user))
     } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
+        Err(forbidden())
     }
 }
 
@@ -222,7 +221,7 @@ async fn list_api_user_tokens_op(
                 .collect(),
         ))
     } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
+        Err(forbidden())
     }
 }
 
@@ -308,7 +307,7 @@ async fn create_api_user_token_op(
             Err(not_found("Failed to find api user"))
         }
     } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
+        Err(forbidden())
     }
 }
 
@@ -357,7 +356,7 @@ async fn get_api_user_token_op(
             Err(not_found("Failed to find token"))
         }
     } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
+        Err(forbidden())
     }
 }
 
@@ -400,7 +399,72 @@ async fn delete_api_user_token_op(
             Err(not_found("Failed to find token"))
         }
     } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
+        Err(forbidden())
+    }
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct AddGroupBody {
+    group_id: Uuid,
+}
+
+#[trace_request]
+#[endpoint {
+    method = POST,
+    path = "/api-user/{identifier}/group",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn add_api_user_to_group(
+    rqctx: RequestContext<ApiContext>,
+    path: Path<ApiUserPath>,
+    body: TypedBody<AddGroupBody>,
+) -> Result<HttpResponseOk<ApiUser<ApiPermission>>, HttpError> {
+    let ctx = rqctx.context();
+    let auth = ctx.authn_token(&rqctx).await?;
+    let caller = ctx.get_caller(&auth).await?;
+    let path = path.into_inner();
+    let body = body.into_inner();
+
+    if caller.can(&ApiPermission::AddToGroup(body.group_id)) {
+        ctx.add_api_user_to_group(&path.identifier, &body.group_id)
+            .await
+            .map_err(ApiError::Storage)?
+            .map(HttpResponseOk)
+            .ok_or_else(|| not_found("User does not exist"))
+    } else {
+        Err(forbidden())
+    }
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct ApiUserRemoveGroupPath {
+    identifier: Uuid,
+    group_id: Uuid,
+}
+
+#[trace_request]
+#[endpoint {
+    method = DELETE,
+    path = "/api-user/{identifier}/group/{group_id}",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn remove_api_user_from_group(
+    rqctx: RequestContext<ApiContext>,
+    path: Path<ApiUserRemoveGroupPath>,
+) -> Result<HttpResponseOk<ApiUser<ApiPermission>>, HttpError> {
+    let ctx = rqctx.context();
+    let auth = ctx.authn_token(&rqctx).await?;
+    let caller = ctx.get_caller(&auth).await?;
+    let path = path.into_inner();
+
+    if caller.can(&ApiPermission::RemoveFromGroup(path.group_id)) {
+        ctx.remove_api_user_from_group(&path.identifier, &path.group_id)
+            .await
+            .map_err(ApiError::Storage)?
+            .map(HttpResponseOk)
+            .ok_or_else(|| not_found("User does not exist"))
+    } else {
+        Err(forbidden())
     }
 }
 

@@ -925,6 +925,50 @@ impl ApiContext {
     ) -> Result<Option<AccessGroup<ApiPermission>>, StoreError> {
         AccessGroupStore::delete(&*self.storage, &group_id).await
     }
+
+    pub async fn add_api_user_to_group(
+        &self,
+        api_user_id: &Uuid,
+        group_id: &Uuid,
+    ) -> Result<Option<ApiUser<ApiPermission>>, StoreError> {
+        // TODO: This needs to be wrapped in a transaction. That requires reworking the way the
+        // store traits are handled. Ideally we could have an API that still abstracts away the
+        // underlying connection management while allowing for transactions. Possibly something
+        // that takes a closure and passes in a connection that implements all of the expected
+        // data store traits
+        let user = ApiUserStore::get(&*self.storage, api_user_id, false).await?;
+
+        Ok(if let Some(user) = user {
+            let mut update: NewApiUser<ApiPermission> = user.into();
+            update.groups.push(*group_id);
+
+            Some(ApiUserStore::upsert(&*self.storage, update).await?)
+        } else {
+            None
+        })
+    }
+
+    pub async fn remove_api_user_from_group(
+        &self,
+        api_user_id: &Uuid,
+        group_id: &Uuid,
+    ) -> Result<Option<ApiUser<ApiPermission>>, StoreError> {
+        // TODO: This needs to be wrapped in a transaction. That requires reworking the way the
+        // store traits are handled. Ideally we could have an API that still abstracts away the
+        // underlying connection management while allowing for transactions. Possibly something
+        // that takes a closure and passes in a connection that implements all of the expected
+        // data store traits
+        let user = ApiUserStore::get(&*self.storage, api_user_id, false).await?;
+
+        Ok(if let Some(user) = user {
+            let mut update: NewApiUser<ApiPermission> = user.into();
+            update.groups.retain(|id| id != group_id);
+
+            Some(ApiUserStore::upsert(&*self.storage, update).await?)
+        } else {
+            None
+        })
+    }
 }
 
 #[cfg(test)]

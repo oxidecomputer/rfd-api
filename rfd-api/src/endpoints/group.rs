@@ -7,7 +7,7 @@ use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
-    context::ApiContext, error::ApiError, permissions::ApiPermission, util::response::unauthorized,
+    context::ApiContext, error::ApiError, permissions::ApiPermission, util::response::forbidden,
     ApiPermissions,
 };
 
@@ -21,15 +21,15 @@ pub async fn get_groups(
     rqctx: RequestContext<ApiContext>,
 ) -> Result<HttpResponseOk<Vec<AccessGroup<ApiPermission>>>, HttpError> {
     let ctx = rqctx.context();
-    let auth = ctx.authn_token(&rqctx).await;
-    let caller = ctx.get_caller(&auth?).await?;
+    let auth = ctx.authn_token(&rqctx).await?;
+    let caller = ctx.get_caller(&auth).await?;
 
     if caller.can(&ApiPermission::ListGroups) {
         Ok(HttpResponseOk(
             ctx.get_groups().await.map_err(ApiError::Storage)?,
         ))
     } else {
-        Err(unauthorized())
+        Err(forbidden())
     }
 }
 
@@ -50,8 +50,8 @@ pub async fn create_group(
     body: TypedBody<AccessGroupUpdateParams>,
 ) -> Result<HttpResponseOk<AccessGroup<ApiPermission>>, HttpError> {
     let ctx = rqctx.context();
-    let auth = ctx.authn_token(&rqctx).await;
-    let caller = ctx.get_caller(&auth?).await?;
+    let auth = ctx.authn_token(&rqctx).await?;
+    let caller = ctx.get_caller(&auth).await?;
 
     if caller.can(&ApiPermission::CreateGroup) {
         let body = body.into_inner();
@@ -65,7 +65,7 @@ pub async fn create_group(
             .map_err(ApiError::Storage)?,
         ))
     } else {
-        Err(unauthorized())
+        Err(forbidden())
     }
 }
 
@@ -86,8 +86,8 @@ pub async fn update_group(
     body: TypedBody<AccessGroupUpdateParams>,
 ) -> Result<HttpResponseOk<AccessGroup<ApiPermission>>, HttpError> {
     let ctx = rqctx.context();
-    let auth = ctx.authn_token(&rqctx).await;
-    let caller = ctx.get_caller(&auth?).await?;
+    let auth = ctx.authn_token(&rqctx).await?;
+    let caller = ctx.get_caller(&auth).await?;
     let path = path.into_inner();
 
     if caller.can(&ApiPermission::UpdateGroup(path.group_id)) {
@@ -102,7 +102,7 @@ pub async fn update_group(
             .map_err(ApiError::Storage)?,
         ))
     } else {
-        Err(unauthorized())
+        Err(forbidden())
     }
 }
 
@@ -117,8 +117,8 @@ pub async fn delete_group(
     path: Path<AccessGroupPath>,
 ) -> Result<HttpResponseOk<Option<AccessGroup<ApiPermission>>>, HttpError> {
     let ctx = rqctx.context();
-    let auth = ctx.authn_token(&rqctx).await;
-    let caller = ctx.get_caller(&auth?).await?;
+    let auth = ctx.authn_token(&rqctx).await?;
+    let caller = ctx.get_caller(&auth).await?;
     let path = path.into_inner();
 
     if caller.can(&ApiPermission::DeleteGroup(path.group_id)) {
@@ -128,6 +128,6 @@ pub async fn delete_group(
                 .map_err(ApiError::Storage)?,
         ))
     } else {
-        Err(unauthorized())
+        Err(forbidden())
     }
 }

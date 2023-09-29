@@ -44,6 +44,10 @@ pub mod response {
         client_error(StatusCode::UNAUTHORIZED, "Unauthorized")
     }
 
+    pub fn forbidden() -> HttpError {
+        client_error(StatusCode::FORBIDDEN, "Unauthorized")
+    }
+
     pub fn client_error<S>(status_code: StatusCode, message: S) -> HttpError
     where
         S: ToString,

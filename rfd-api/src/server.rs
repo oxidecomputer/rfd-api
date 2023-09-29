@@ -10,10 +10,11 @@ use crate::{
     context::ApiContext,
     endpoints::{
         api_user::{
-            create_api_user, create_api_user_token, delete_api_user_token, get_api_user,
-            get_api_user_token, get_self, list_api_user_tokens, update_api_user,
+            add_api_user_to_group, create_api_user, create_api_user_token, delete_api_user_token,
+            get_api_user, get_api_user_token, get_self, list_api_user_tokens,
+            remove_api_user_from_group, update_api_user,
         },
-        groups::{create_group, delete_group, get_groups, update_group},
+        group::{create_group, delete_group, get_groups, update_group},
         login::oauth::{
             client::{
                 create_oauth_client, create_oauth_client_redirect_uri, create_oauth_client_secret,
@@ -88,6 +89,8 @@ pub fn server(
     api.register(get_api_user_token).unwrap();
     api.register(create_api_user_token).unwrap();
     api.register(delete_api_user_token).unwrap();
+    api.register(add_api_user_to_group).unwrap();
+    api.register(remove_api_user_from_group).unwrap();
 
     // Group Management
     api.register(get_groups).unwrap();
