@@ -406,13 +406,14 @@ pub trait AccessGroupStore<T: Permission + Ord> {
 pub struct MapperFilter {
     pub id: Option<Vec<Uuid>>,
     pub name: Option<Vec<String>>,
+    pub depleted: bool,
     pub deleted: bool,
 }
 
 #[cfg_attr(feature = "mock", automock)]
 #[async_trait]
 pub trait MapperStore {
-    async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<Mapper>, StoreError>;
+    async fn get(&self, id: &Uuid, depleted: bool, deleted: bool) -> Result<Option<Mapper>, StoreError>;
     async fn list(
         &self,
         filter: MapperFilter,

@@ -116,6 +116,9 @@ diesel::table! {
         id -> Uuid,
         name -> Varchar,
         rule -> Jsonb,
+        activations -> Nullable<Int4>,
+        max_activations -> Nullable<Int4>,
+        depleted_at -> Nullable<Timestamptz>,
         created_at -> Timestamptz,
         deleted_at -> Nullable<Timestamptz>,
     }

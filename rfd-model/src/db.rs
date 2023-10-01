@@ -186,6 +186,9 @@ pub struct MapperModel {
     pub id: Uuid,
     pub name: String,
     pub rule: Value,
+    pub activations: Option<i32>,
+    pub max_activations: Option<i32>,
+    pub depleted_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
 }

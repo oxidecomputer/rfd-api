@@ -1314,12 +1314,13 @@ where
 
 #[async_trait]
 impl MapperStore for PostgresStore {
-    async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<Mapper>, StoreError> {
+    async fn get(&self, id: &Uuid, depleted: bool, deleted: bool) -> Result<Option<Mapper>, StoreError> {
         let client = MapperStore::list(
             self,
             MapperFilter {
                 id: Some(vec![*id]),
                 name: None,
+                depleted,
                 deleted,
             },
             &ListPagination::default().limit(1),
@@ -1336,7 +1337,7 @@ impl MapperStore for PostgresStore {
     ) -> Result<Vec<Mapper>, StoreError> {
         let mut query = mapper::dsl::mapper.into_boxed();
 
-        let MapperFilter { id, name, deleted } = filter;
+        let MapperFilter { id, name, depleted, deleted } = filter;
 
         if let Some(id) = id {
             query = query.filter(mapper::id.eq_any(id));
@@ -1344,6 +1345,10 @@ impl MapperStore for PostgresStore {
 
         if let Some(name) = name {
             query = query.filter(mapper::name.eq_any(name));
+        }
+
+        if !depleted {
+            query = query.filter(mapper::depleted_at.is_null());
         }
 
         if !deleted {
@@ -1365,6 +1370,21 @@ impl MapperStore for PostgresStore {
                 mapper::id.eq(new_mapper.id),
                 mapper::name.eq(new_mapper.name.clone()),
                 mapper::rule.eq(new_mapper.rule.clone()),
+                mapper::activations.eq(new_mapper.activations),
+                mapper::max_activations.eq(new_mapper.max_activations),
+                mapper::depleted_at.eq(
+                    if new_mapper.activations == new_mapper.max_activations {
+                        Some(Utc::now())
+                    } else {
+                        None
+                    }
+                ),
+            ))
+            .on_conflict(mapper::id)
+            .do_update()
+            .set((
+                mapper::activations.eq(excluded(mapper::activations)),
+                mapper::depleted_at.eq(excluded(mapper::depleted_at)),
             ))
             .get_result_async(&self.conn)
             .await?;
@@ -1378,6 +1398,6 @@ impl MapperStore for PostgresStore {
             .execute_async(&self.conn)
             .await?;
 
-        MapperStore::get(self, id, true).await
+        MapperStore::get(self, id, false, true).await
     }
 }

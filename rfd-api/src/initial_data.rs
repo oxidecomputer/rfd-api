@@ -3,18 +3,23 @@ use rfd_model::{storage::StoreError, NewAccessGroup};
 use serde::Deserialize;
 use uuid::Uuid;
 
-use crate::{context::ApiContext, mapper::MapperRules, ApiPermissions};
+use crate::{context::ApiContext, mapper::MappingRules, ApiPermissions};
 
 #[derive(Debug, Deserialize)]
 pub struct InitialData {
     pub groups: Vec<InitialGroup>,
-    pub mappers: Vec<MapperRules>,
+    pub mappers: Vec<InitialMapper>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct InitialGroup {
     pub name: String,
     pub permissions: ApiPermissions,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct InitialMapper {
+    pub rule: MappingRules,
 }
 
 impl InitialData {

@@ -15,7 +15,6 @@ use tracing_subscriber::EnvFilter;
 
 use crate::{
     config::{AppConfig, ServerLogFormat},
-    email_validator::DomainValidator,
     endpoints::login::oauth::{
         github::GitHubOAuthProvider, google::GoogleOAuthProvider, OAuthProviderName,
     },
@@ -25,7 +24,6 @@ use crate::{
 mod authn;
 mod config;
 mod context;
-mod email_validator;
 mod endpoints;
 mod error;
 mod initial_data;
@@ -54,7 +52,6 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     };
 
     let mut context = ApiContext::new(
-        Arc::new(DomainValidator::new(vec![])),
         config.public_url,
         Arc::new(
             PostgresStore::new(&config.database_url)

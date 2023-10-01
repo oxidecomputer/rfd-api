@@ -424,6 +424,10 @@ pub struct Mapper {
     pub id: Uuid,
     pub name: String,
     pub rule: Value,
+    pub activations: Option<i32>,
+    pub max_activations: Option<i32>,
+    #[partial(NewMapper(skip))]
+    pub depleted_at: Option<DateTime<Utc>>,
     #[partial(NewMapper(skip))]
     pub created_at: DateTime<Utc>,
     #[partial(NewMapper(skip))]
@@ -436,6 +440,9 @@ impl From<MapperModel> for Mapper {
             id: value.id,
             name: value.name,
             rule: value.rule,
+            activations: value.activations,
+            max_activations: value.max_activations,
+            depleted_at: value.depleted_at,
             created_at: value.created_at,
             deleted_at: value.deleted_at,
         }

@@ -21,7 +21,7 @@ use rfd_model::{
     AccessGroup, AccessToken, ApiUser, ApiUserProvider, InvalidValueError, Job, LoginAttempt,
     NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
     NewLoginAttempt, NewOAuthClient, NewOAuthClientRedirectUri, NewOAuthClientSecret, OAuthClient,
-    OAuthClientRedirectUri, OAuthClientSecret,
+    OAuthClientRedirectUri, OAuthClientSecret, NewMapper
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -37,13 +37,12 @@ use crate::{
         AuthError, AuthToken, Signer,
     },
     config::{AsymmetricKey, JwtConfig, SearchConfig},
-    email_validator::EmailValidator,
     endpoints::login::{
         oauth::{OAuthProvider, OAuthProviderError, OAuthProviderFn, OAuthProviderName},
         LoginError, UserInfo,
     },
     error::{ApiError, AppError},
-    mapper::{MapperRule, MapperRules},
+    mapper::{MapperRule, MappingRules, Mapping},
     permissions::{ApiPermission, PermissionStorage},
     util::response::{client_error, internal_error},
     ApiCaller, ApiPermissions, User, UserToken,
@@ -93,7 +92,6 @@ impl<T> Storage for T where
 }
 
 pub struct ApiContext {
-    pub email_validator: Arc<dyn EmailValidator + Send + Sync>,
     pub https_client: Client<HttpsConnector<HttpConnector>, Body>,
     pub public_url: String,
     pub storage: Arc<dyn Storage>,
@@ -187,7 +185,6 @@ pub struct FullRfdPdfEntry {
 
 impl ApiContext {
     pub async fn new(
-        email_validator: Arc<dyn EmailValidator + Send + Sync>,
         public_url: String,
         storage: Arc<dyn Storage>,
         jwt: JwtConfig,
@@ -201,7 +198,6 @@ impl ApiContext {
         }
 
         Ok(Self {
-            email_validator,
             https_client: hyper::Client::builder().build(HttpsConnector::new()),
             public_url,
             storage,
@@ -531,13 +527,7 @@ impl ApiContext {
             .list_api_user_provider(filter, &ListPagination::latest())
             .await?;
 
-        let mut mapped_permissions = ApiPermissions::new();
-        let mut mapped_groups = vec![];
-
-        for mapper in &self.get_mappers().await? {
-            mapped_permissions.append(&mut mapper.permissions_for(&self, &info).await?);
-            mapped_groups.append(&mut mapper.groups_for(&self, &info).await?);
-        }
+        let (mapped_permissions, mapped_groups) = self.get_mapped_fields(&info).await?;
 
         match api_user_providers.len() {
             0 => {
@@ -580,6 +570,53 @@ impl ApiContext {
                 .into())
             }
         }
+    }
+
+    async fn get_mapped_fields(&self, info: &UserInfo) -> Result<(ApiPermissions, Vec<Uuid>), StoreError> {
+        let mut mapped_permissions = ApiPermissions::new();
+        let mut mapped_groups = vec![];
+
+        // We optimistically load mappers here. We do not want to take a lock on the mappers and
+        // instead handle mappers that become depleted before we can evaluate them at evaluation
+        // time.
+        for mapping in self.get_mappers().await? {
+            let (permissions, groups) = (
+                mapping.rule.permissions_for(&self, &info).await?,
+                mapping.rule.groups_for(&self, &info).await?,
+            );
+
+            // If a rule is set to apply a permission or group to a user, then the rule needs to be
+            // checked for usage. If it does not have an activation limit then nothing is needed.
+            // If it does have a limit then we need to attempt to consume an activation. If the
+            // consumption works then we add the permissions. If they fail then we do not, but we
+            // do not fail the entire mapping process
+            let apply = if !permissions.is_empty() || !groups.is_empty() {
+                if mapping.max_activations.is_some() {
+                    match self.consume_mapping_activation(&mapping).await {
+                        Ok(_) => {
+                            true
+                        }
+                        Err(err) => {
+                            // TODO: Inspect the error. We expect to see a conflict error, and
+                            // should is expected to be seen. Other errors are problematic.
+                            tracing::warn!(?err, "Login may have attempted to use depleted mapper. This may be ok if it is an isolated occurrence, but should occur repeatedly.");
+                            false
+                        }
+                    }
+                } else {
+                    true
+                }
+            } else {
+                false
+            };
+
+            if apply {
+                mapped_permissions.append(&mut mapping.rule.permissions_for(&self, &info).await?);
+                mapped_groups.append(&mut mapping.rule.groups_for(&self, &info).await?);
+            }
+        }
+
+        Ok((mapped_permissions, mapped_groups))
     }
 
     async fn ensure_api_user(
@@ -991,7 +1028,7 @@ impl ApiContext {
 
     // Mapper Operations
 
-    pub async fn get_mappers(&self) -> Result<Vec<MapperRules>, StoreError> {
+    pub async fn get_mappers(&self) -> Result<Vec<Mapping>, StoreError> {
         Ok(MapperStore::list(
             &*self.storage,
             MapperFilter::default(),
@@ -1000,13 +1037,36 @@ impl ApiContext {
         .await?
         .into_iter()
         .filter_map(|mapper| {
-            serde_json::from_value::<MapperRules>(mapper.rule)
+            serde_json::from_value::<MappingRules>(mapper.rule)
                 .map_err(|err| {
                     tracing::error!(?err, "Failed to translate stored rule to mapper");
                 })
                 .ok()
+                .map(|rule| {
+                    Mapping {
+                        id: mapper.id,
+                        name: mapper.name,
+                        rule,
+                        activations: mapper.activations,
+                        max_activations: mapper.max_activations,
+                    }
+                })
         })
         .collect::<Vec<_>>())
+    }
+
+    async fn consume_mapping_activation(&self, mapping: &Mapping) -> Result<(), StoreError> {
+        Ok(MapperStore::upsert(&*self.storage, &NewMapper {
+            id: mapping.id,
+            name: mapping.name.clone(),
+            // If a rule fails to serialize, then something critical has gone wrong. Rules should
+            // never be modified after they are created, and rules must be persisted before they
+            // can be used for an activation. So if a rule fails to serialize, then the stored rule
+            // has become corrupted or something in the application has manipulated the rule.
+            rule: serde_json::to_value(&mapping.rule).expect("Store rules must be able to be re-serialized"),
+            activations: mapping.activations.map(|i| i + 1),
+            max_activations: mapping.max_activations,
+        }).await.map(|_| ())?)
     }
 }
 
@@ -1191,7 +1251,7 @@ pub(crate) mod test_mocks {
         config::{JwtConfig, SearchConfig},
         endpoints::login::oauth::{google::GoogleOAuthProvider, OAuthProviderName},
         permissions::ApiPermission,
-        util::tests::{mock_key, AnyEmailValidator},
+        util::tests::mock_key,
     };
 
     use super::ApiContext;
@@ -1199,7 +1259,6 @@ pub(crate) mod test_mocks {
     // Construct a mock context that can be used in tests
     pub async fn mock_context(storage: MockStorage) -> ApiContext {
         let mut ctx = ApiContext::new(
-            Arc::new(AnyEmailValidator),
             "".to_string(),
             Arc::new(storage),
             JwtConfig::default(),
@@ -1790,9 +1849,10 @@ pub(crate) mod test_mocks {
         async fn get(
             &self,
             id: &uuid::Uuid,
+            used: bool,
             deleted: bool,
         ) -> Result<Option<rfd_model::Mapper>, rfd_model::storage::StoreError> {
-            self.mapper_store.as_ref().unwrap().get(id, deleted).await
+            self.mapper_store.as_ref().unwrap().get(id, used, deleted).await
         }
 
         async fn list(

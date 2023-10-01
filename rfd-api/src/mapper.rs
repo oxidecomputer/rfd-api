@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use rfd_model::storage::StoreError;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{context::ApiContext, endpoints::login::UserInfo, ApiPermissions};
@@ -15,12 +15,21 @@ pub trait MapperRule: Send + Sync {
     async fn groups_for(&self, ctx: &ApiContext, user: &UserInfo) -> Result<Vec<Uuid>, StoreError>;
 }
 
-#[derive(Debug, Deserialize)]
-pub enum MapperRules {
+#[derive(Debug, Serialize)]
+pub struct Mapping {
+    pub id: Uuid,
+    pub name: String,
+    pub rule: MappingRules,
+    pub activations: Option<i32>,
+    pub max_activations: Option<i32>,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub enum MappingRules {
     EmailDomain(EmailDomainMapper),
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize)]
 pub struct EmailDomainMapper {
     domain: String,
     groups: Vec<String>,
@@ -63,7 +72,7 @@ impl MapperRule for EmailDomainMapper {
 }
 
 #[async_trait]
-impl MapperRule for MapperRules {
+impl MapperRule for MappingRules {
     async fn permissions_for(
         &self,
         ctx: &ApiContext,
