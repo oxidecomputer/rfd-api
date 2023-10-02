@@ -10,14 +10,16 @@ use crate::{context::ApiContext, endpoints::login::UserInfo, ApiPermissions};
 use super::MapperRule;
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct EmailDomainMapper {
+pub struct EmailAddressMapper {
     email: String,
+    #[serde(default)]
     permissions: ApiPermissions,
+    #[serde(default)]
     groups: Vec<String>,
 }
 
 #[async_trait]
-impl MapperRule for EmailDomainMapper {
+impl MapperRule for EmailAddressMapper {
     async fn permissions_for(
         &self,
         _ctx: &ApiContext,

@@ -14,6 +14,7 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     time::Duration,
 };
+use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
@@ -547,8 +548,9 @@ where
             .collect())
     }
 
+    #[instrument(skip(self), fields(id = ?user.id, permissions = ?user.permissions, groups = ?user.groups))]
     async fn upsert(&self, user: NewApiUser<T>) -> Result<ApiUser<T>, StoreError> {
-        tracing::info!(id = ?user.id, permissions = ?user.permissions, "Upserting user");
+        tracing::trace!("Upserting user");
 
         let user_m: ApiUserModel<T> = insert_into(api_user::dsl::api_user)
             .values((
@@ -1314,12 +1316,16 @@ where
 
 #[async_trait]
 impl MapperStore for PostgresStore {
+
+    #[instrument(skip(self), err(Debug))]
     async fn get(
         &self,
         id: &Uuid,
         depleted: bool,
         deleted: bool,
     ) -> Result<Option<Mapper>, StoreError> {
+        tracing::trace!("Get mapper");
+
         let client = MapperStore::list(
             self,
             MapperFilter {
@@ -1335,11 +1341,14 @@ impl MapperStore for PostgresStore {
         Ok(client.into_iter().nth(0))
     }
 
+    #[instrument(skip(self), err(Debug))]
     async fn list(
         &self,
         filter: MapperFilter,
         pagination: &ListPagination,
     ) -> Result<Vec<Mapper>, StoreError> {
+        tracing::trace!("Listing mappers");
+
         let mut query = mapper::dsl::mapper.into_boxed();
 
         let MapperFilter {
@@ -1374,7 +1383,13 @@ impl MapperStore for PostgresStore {
 
         Ok(results.into_iter().map(|model| model.into()).collect())
     }
+
+    #[instrument(skip(self), err(Debug))]
     async fn upsert(&self, new_mapper: &NewMapper) -> Result<Mapper, StoreError> {
+        tracing::trace!("Upserting mapper");
+
+        let depleted = new_mapper.max_activations.map(|max| new_mapper.activations.unwrap_or(0) == max).unwrap_or(false);
+
         let mapper_m: MapperModel = insert_into(mapper::dsl::mapper)
             .values((
                 mapper::id.eq(new_mapper.id),
@@ -1382,11 +1397,7 @@ impl MapperStore for PostgresStore {
                 mapper::rule.eq(new_mapper.rule.clone()),
                 mapper::activations.eq(new_mapper.activations),
                 mapper::max_activations.eq(new_mapper.max_activations),
-                mapper::depleted_at.eq(if new_mapper.activations == new_mapper.max_activations {
-                    Some(Utc::now())
-                } else {
-                    None
-                }),
+                mapper::depleted_at.eq(if depleted { Some(Utc::now()) } else { None }),
             ))
             .on_conflict(mapper::id)
             .do_update()
@@ -1399,7 +1410,11 @@ impl MapperStore for PostgresStore {
 
         Ok(mapper_m.into())
     }
+
+    #[instrument(skip(self), err(Debug))]
     async fn delete(&self, id: &Uuid) -> Result<Option<Mapper>, StoreError> {
+        tracing::trace!("Deleting mapper");
+
         let _ = update(mapper::dsl::mapper)
             .filter(mapper::id.eq(*id))
             .set(mapper::deleted_at.eq(Utc::now()))

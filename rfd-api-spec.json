@@ -122,6 +122,93 @@
         }
       }
     },
+    "/api-user/{identifier}/group": {
+      "post": {
+        "operationId": "add_api_user_to_group",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddGroupBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiUser_for_ApiPermission"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api-user/{identifier}/group/{group_id}": {
+      "delete": {
+        "operationId": "remove_api_user_from_group",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiUser_for_ApiPermission"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
     "/api-user/{identifier}/token": {
       "get": {
         "summary": "List the active and expired API tokens for a given user",
@@ -314,6 +401,140 @@
                   "enum": [
                     null
                   ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/group": {
+      "get": {
+        "operationId": "get_groups",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Array_of_AccessGroup_for_ApiPermission",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccessGroup_for_ApiPermission"
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "operationId": "create_group",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessGroupUpdateParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessGroup_for_ApiPermission"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/group/{group_id}": {
+      "put": {
+        "operationId": "update_group",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccessGroupUpdateParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessGroup_for_ApiPermission"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete_group",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessGroup_for_ApiPermission"
                 }
               }
             }
@@ -951,6 +1172,56 @@
       }
     },
     "schemas": {
+      "AccessGroupUpdateParams": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+          }
+        },
+        "required": [
+          "name",
+          "permissions"
+        ]
+      },
+      "AccessGroup_for_ApiPermission": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "created_at",
+          "id",
+          "name",
+          "permissions",
+          "updated_at"
+        ]
+      },
       "AccessTokenExchangeRequest": {
         "type": "object",
         "properties": {
@@ -969,6 +1240,18 @@
         "required": [
           "device_code",
           "grant_type"
+        ]
+      },
+      "AddGroupBody": {
+        "type": "object",
+        "properties": {
+          "group_id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "group_id"
         ]
       },
       "AddOAuthClientRedirectBody": {
@@ -1034,6 +1317,8 @@
               "CreateApiUser",
               "UpdateApiUserSelf",
               "UpdateApiUserAll",
+              "ListGroups",
+              "CreateGroup",
               "GetAllRfds",
               "GetAssignedRfds",
               "GetAllDiscussions",
@@ -1107,6 +1392,58 @@
             },
             "required": [
               "UpdateApiUser"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "UpdateGroup": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "UpdateGroup"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "AddToGroup": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "AddToGroup"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "RemoveFromGroup": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "RemoveFromGroup"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "DeleteGroup": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "DeleteGroup"
             ],
             "additionalProperties": false
           },
@@ -1265,11 +1602,20 @@
       "ApiUserUpdateParams": {
         "type": "object",
         "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "uniqueItems": true
+          },
           "permissions": {
             "$ref": "#/components/schemas/Permissions_for_ApiPermission"
           }
         },
         "required": [
+          "groups",
           "permissions"
         ]
       },
@@ -1285,6 +1631,14 @@
             "type": "string",
             "format": "date-time"
           },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "uniqueItems": true
+          },
           "id": {
             "type": "string",
             "format": "uuid"
@@ -1299,6 +1653,7 @@
         },
         "required": [
           "created_at",
+          "groups",
           "id",
           "permissions",
           "updated_at"

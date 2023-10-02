@@ -2739,6 +2739,7 @@ dependencies = [
  "config",
  "cookie",
  "crc32c",
+ "diesel",
  "dropshot",
  "dropshot-authorization-header",
  "dropshot-verified-body",

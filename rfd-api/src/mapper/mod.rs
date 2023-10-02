@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use crate::{context::ApiContext, endpoints::login::UserInfo, ApiPermissions};
 
-use self::email_domain::EmailDomainMapper;
+use self::{email_domain::EmailDomainMapper, email_address::EmailAddressMapper};
 
 pub mod email_address;
 pub mod email_domain;
@@ -55,7 +55,9 @@ impl TryFrom<Mapper> for Mapping {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
+#[serde(tag = "rule", rename_all = "snake_case")]
 pub enum MappingRules {
+    EmailAddress(EmailAddressMapper),
     EmailDomain(EmailDomainMapper),
 }
 
@@ -67,6 +69,7 @@ impl MapperRule for MappingRules {
         user: &UserInfo,
     ) -> Result<ApiPermissions, StoreError> {
         match self {
+            Self::EmailAddress(rule) => rule.permissions_for(ctx, user).await,
             Self::EmailDomain(rule) => rule.permissions_for(ctx, user).await,
         }
     }
@@ -77,6 +80,7 @@ impl MapperRule for MappingRules {
         user: &UserInfo,
     ) -> Result<BTreeSet<Uuid>, StoreError> {
         match self {
+            Self::EmailAddress(rule) => rule.groups_for(ctx, user).await,
             Self::EmailDomain(rule) => rule.groups_for(ctx, user).await,
         }
     }

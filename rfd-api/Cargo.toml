@@ -12,6 +12,7 @@ chrono = { workspace = true, features = ["serde"] }
 config = { workspace = true }
 cookie = { workspace = true }
 crc32c = { workspace = true }
+diesel = { workspace = true }
 dropshot = { workspace = true }
 dropshot-authorization-header = { path = "../dropshot-authorization-header" }
 dropshot-verified-body = { workspace = true, features = ["github"] }

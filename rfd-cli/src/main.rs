@@ -93,6 +93,7 @@ impl<'a> Tree<'a> {
 
 fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
     match cmd {
+        // User commands
         CliCommand::CreateApiUser => Some("user create"),
         CliCommand::CreateApiUserToken => Some("user token create"),
         CliCommand::DeleteApiUserToken => Some("user token delete"),
@@ -104,6 +105,16 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::GetSelf => Some("self"),
         CliCommand::ListApiUserTokens => Some("user token list"),
         CliCommand::UpdateApiUser => Some("user update"),
+
+        // Group commands
+        CliCommand::GetGroups => Some("group get"),
+        CliCommand::CreateGroup => Some("group create"),
+        CliCommand::UpdateGroup => Some("group update"),
+        CliCommand::DeleteGroup => Some("group delete"),
+
+        // User admin commands
+        CliCommand::AddApiUserToGroup => Some("group membership add"),
+        CliCommand::RemoveApiUserFromGroup => Some("group membership remove"),
 
         // OAuth client commands
         CliCommand::ListOauthClients => None,

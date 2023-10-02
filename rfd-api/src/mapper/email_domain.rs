@@ -12,6 +12,9 @@ use super::MapperRule;
 #[derive(Debug, Deserialize, Serialize)]
 pub struct EmailDomainMapper {
     domain: String,
+    #[serde(default)]
+    permissions: ApiPermissions,
+    #[serde(default)]
     groups: Vec<String>,
 }
 

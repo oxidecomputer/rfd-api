@@ -1,6 +1,7 @@
 /target
 
 config.toml
+mappers.toml
 !.cargo/config.toml
 
 spec.toml

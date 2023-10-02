@@ -259,9 +259,14 @@ impl ApiContext {
             let mut assigned_permissions = user.permissions.clone();
             assigned_permissions.append(&mut group_permissions);
 
+            let token_permissions = permissions.expand(&user);
+            let combined_permissions = token_permissions.intersect(&assigned_permissions);
+
+            tracing::info!(token = ?token_permissions, user = ?assigned_permissions, combined = ?combined_permissions, "Computed caller permissions");
+
             let caller = Caller {
                 id: api_user_id,
-                permissions: permissions.expand(&user).intersect(&assigned_permissions),
+                permissions: combined_permissions,
                 user,
             };
 
@@ -328,10 +333,13 @@ impl ApiContext {
         }?)
     }
 
+    #[instrument(skip(self), fields(user_id = ?user.id, groups = ?user.groups))]
     async fn get_user_group_permissions(
         &self,
         user: &ApiUser<ApiPermission>,
     ) -> Result<Permissions<ApiPermission>, StoreError> {
+        tracing::debug!("Expanding groups into permissions");
+
         let groups = AccessGroupStore::list(
             &*self.storage,
             AccessGroupFilter {
@@ -342,10 +350,14 @@ impl ApiContext {
         )
         .await?;
 
+        tracing::debug!(?groups, "Found groups to map to permissions");
+
         let permissions = groups
             .into_iter()
             .fold(ApiPermissions::new(), |mut aggregate, group| {
                 let mut expanded = group.permissions.expand(user);
+
+                tracing::trace!(group_id = ?group.id, group_name = ?group.name, permissions = ?expanded, "Transformed group into permission set");
                 aggregate.append(&mut expanded);
 
                 aggregate
@@ -534,7 +546,7 @@ impl ApiContext {
 
         match api_user_providers.len() {
             0 => {
-                tracing::info!("Did not find any existing users. Registering a new user.");
+                tracing::info!(?mapped_permissions, ?mapped_groups, "Did not find any existing users. Registering a new user.");
 
                 let user = self
                     .ensure_api_user(Uuid::new_v4(), mapped_permissions, mapped_groups)
@@ -623,6 +635,7 @@ impl ApiContext {
         Ok((mapped_permissions, mapped_groups))
     }
 
+    #[instrument(skip(self), err(Debug))]
     async fn ensure_api_user(
         &self,
         api_user_id: Uuid,
@@ -719,6 +732,7 @@ impl ApiContext {
         ApiUserStore::list(&*self.storage, filter, pagination).await
     }
 
+    #[instrument(skip(self))]
     pub async fn update_api_user(
         &self,
         mut api_user: NewApiUser<ApiPermission>,
@@ -1033,7 +1047,7 @@ impl ApiContext {
     // Mapper Operations
 
     pub async fn get_mappers(&self) -> Result<Vec<Mapping>, StoreError> {
-        Ok(MapperStore::list(
+        let mappers = MapperStore::list(
             &*self.storage,
             MapperFilter::default(),
             &ListPagination::default().limit(UNLIMITED),
@@ -1041,7 +1055,11 @@ impl ApiContext {
         .await?
         .into_iter()
         .filter_map(|mapper| mapper.try_into().ok())
-        .collect::<Vec<_>>())
+        .collect::<Vec<_>>();
+
+        tracing::trace!(?mappers, "Fetched list of mappers to test");
+
+        Ok(mappers)
     }
 
     pub async fn add_mapper(&self, new_mapper: &NewMapper) -> Result<Mapper, StoreError> {
@@ -1049,6 +1067,11 @@ impl ApiContext {
     }
 
     async fn consume_mapping_activation(&self, mapping: &Mapping) -> Result<(), StoreError> {
+        // Activations are only incremented if the rule actually has a max activation value
+        let activations = mapping.max_activations.map(|_| {
+            mapping.activations.unwrap_or(0) + 1
+        });
+
         Ok(MapperStore::upsert(
             &*self.storage,
             &NewMapper {
@@ -1060,7 +1083,7 @@ impl ApiContext {
                 // has become corrupted or something in the application has manipulated the rule.
                 rule: serde_json::to_value(&mapping.rule)
                     .expect("Store rules must be able to be re-serialized"),
-                activations: mapping.activations.map(|i| i + 1),
+                activations: activations,
                 max_activations: mapping.max_activations,
             },
         )
