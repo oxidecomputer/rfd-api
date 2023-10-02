@@ -1,8 +1,9 @@
 use std::collections::BTreeSet;
 
 use async_trait::async_trait;
-use rfd_model::storage::StoreError;
+use rfd_model::{storage::StoreError, Mapper};
 use serde::{Deserialize, Serialize};
+use tap::TapFallible;
 use uuid::Uuid;
 
 use crate::{context::ApiContext, endpoints::login::UserInfo, ApiPermissions};
@@ -33,6 +34,24 @@ pub struct Mapping {
     pub rule: MappingRules,
     pub activations: Option<i32>,
     pub max_activations: Option<i32>,
+}
+
+impl TryFrom<Mapper> for Mapping {
+    type Error = serde_json::Error;
+
+    fn try_from(value: Mapper) -> Result<Self, Self::Error> {
+        serde_json::from_value::<MappingRules>(value.rule)
+            .tap_err(|err| {
+                tracing::error!(?err, "Failed to translate stored rule to mapper");
+            })
+            .map(|rule| Mapping {
+                id: value.id,
+                name: value.name,
+                rule,
+                activations: value.activations,
+                max_activations: value.max_activations,
+            })
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize)]

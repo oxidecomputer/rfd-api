@@ -19,7 +19,7 @@ use rfd_model::{
         StoreError,
     },
     AccessGroup, AccessToken, ApiUser, ApiUserProvider, InvalidValueError, Job, LoginAttempt,
-    NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
+    Mapper, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
     NewLoginAttempt, NewMapper, NewOAuthClient, NewOAuthClientRedirectUri, NewOAuthClientSecret,
     OAuthClient, OAuthClientRedirectUri, OAuthClientSecret,
 };
@@ -45,7 +45,7 @@ use crate::{
         LoginError, UserInfo,
     },
     error::{ApiError, AppError},
-    mapper::{MapperRule, Mapping, MappingRules},
+    mapper::{MapperRule, Mapping},
     permissions::{ApiPermission, PermissionStorage},
     util::response::{client_error, internal_error},
     ApiCaller, ApiPermissions, User, UserToken,
@@ -1040,21 +1040,12 @@ impl ApiContext {
         )
         .await?
         .into_iter()
-        .filter_map(|mapper| {
-            serde_json::from_value::<MappingRules>(mapper.rule)
-                .map_err(|err| {
-                    tracing::error!(?err, "Failed to translate stored rule to mapper");
-                })
-                .ok()
-                .map(|rule| Mapping {
-                    id: mapper.id,
-                    name: mapper.name,
-                    rule,
-                    activations: mapper.activations,
-                    max_activations: mapper.max_activations,
-                })
-        })
+        .filter_map(|mapper| mapper.try_into().ok())
         .collect::<Vec<_>>())
+    }
+
+    pub async fn add_mapper(&self, new_mapper: &NewMapper) -> Result<Mapper, StoreError> {
+        Ok(MapperStore::upsert(&*self.storage, new_mapper).await?)
     }
 
     async fn consume_mapping_activation(&self, mapping: &Mapping) -> Result<(), StoreError> {
