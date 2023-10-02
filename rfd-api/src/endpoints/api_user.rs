@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 use chrono::{DateTime, Utc};
 use dropshot::{
     endpoint, HttpError, HttpResponseCreated, HttpResponseOk, Path, RequestContext, TypedBody,
@@ -87,7 +89,7 @@ async fn get_api_user_op(
 #[derive(Debug, Clone, PartialEq, Deserialize, JsonSchema)]
 pub struct ApiUserUpdateParams {
     permissions: ApiPermissions,
-    groups: Vec<Uuid>,
+    groups: BTreeSet<Uuid>,
 }
 
 /// Create a new user with a given set of permissions
@@ -470,7 +472,7 @@ pub async fn remove_api_user_from_group(
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
+    use std::{sync::Arc, collections::BTreeSet};
 
     use chrono::{Duration, Utc};
     use http::StatusCode;
@@ -499,7 +501,7 @@ mod tests {
         ApiUser {
             id: Uuid::new_v4(),
             permissions: vec![].into(),
-            groups: vec![],
+            groups: BTreeSet::new(),
             created_at: Utc::now(),
             updated_at: Utc::now(),
             deleted_at: None,
@@ -510,12 +512,12 @@ mod tests {
     async fn test_create_api_user_permissions() {
         let successful_update = ApiUserUpdateParams {
             permissions: vec![ApiPermission::CreateApiUser.into()].into(),
-            groups: vec![],
+            groups: BTreeSet::new(),
         };
 
         let failure_update = ApiUserUpdateParams {
             permissions: vec![ApiPermission::GetApiUserAll.into()].into(),
-            groups: vec![],
+            groups: BTreeSet::new(),
         };
 
         let mut store = MockApiUserStore::new();
@@ -528,7 +530,7 @@ mod tests {
                 Ok(ApiUser {
                     id: user.id,
                     permissions: user.permissions,
-                    groups: vec![],
+                    groups: BTreeSet::new(),
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,
@@ -586,13 +588,13 @@ mod tests {
         let success_id = Uuid::new_v4();
         let successful_update = ApiUserUpdateParams {
             permissions: Vec::new().into(),
-            groups: vec![],
+            groups: BTreeSet::new(),
         };
 
         let failure_id = Uuid::new_v4();
         let failure_update = ApiUserUpdateParams {
             permissions: Vec::new().into(),
-            groups: vec![],
+            groups: BTreeSet::new(),
         };
 
         let mut store = MockApiUserStore::new();
@@ -603,7 +605,7 @@ mod tests {
                 Ok(ApiUser {
                     id: user.id,
                     permissions: user.permissions,
-                    groups: vec![],
+                    groups: BTreeSet::new(),
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,
@@ -821,7 +823,7 @@ mod tests {
         let api_user = ApiUser {
             id: api_user_id,
             permissions: vec![ApiPermission::GetApiUserToken(api_user_id).into()].into(),
-            groups: vec![],
+            groups: BTreeSet::new(),
             created_at: Utc::now(),
             updated_at: Utc::now(),
             deleted_at: None,

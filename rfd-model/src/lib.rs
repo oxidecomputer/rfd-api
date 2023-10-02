@@ -1,4 +1,4 @@
-use std::{collections::BTreeMap, fmt::Display};
+use std::{collections::{BTreeMap, BTreeSet}, fmt::Display};
 
 use chrono::{DateTime, Utc};
 use db::{
@@ -164,7 +164,7 @@ impl From<JobModel> for Job {
 pub struct ApiUser<T: Ord> {
     pub id: Uuid,
     pub permissions: Permissions<T>,
-    pub groups: Vec<Uuid>,
+    pub groups: BTreeSet<Uuid>,
     #[partial(NewApiUser(skip))]
     pub created_at: DateTime<Utc>,
     #[partial(NewApiUser(skip))]

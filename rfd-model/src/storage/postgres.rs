@@ -554,7 +554,7 @@ where
             .values((
                 api_user::id.eq(user.id),
                 api_user::permissions.eq(user.permissions.clone()),
-                api_user::groups.eq(user.groups.clone()),
+                api_user::groups.eq(user.groups.into_iter().collect::<Vec<_>>()),
             ))
             .on_conflict(api_user::id)
             .do_update()

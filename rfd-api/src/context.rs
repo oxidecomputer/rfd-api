@@ -25,7 +25,7 @@ use rfd_model::{
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, sync::Arc};
+use std::{collections::{HashMap, BTreeSet}, sync::Arc};
 use tap::TapFallible;
 use thiserror::Error;
 use tracing::{info_span, instrument, Instrument};
@@ -332,7 +332,7 @@ impl ApiContext {
         let groups = AccessGroupStore::list(
             &*self.storage,
             AccessGroupFilter {
-                id: Some(user.groups.clone()),
+                id: Some(user.groups.iter().copied().collect()),
                 ..Default::default()
             },
             &ListPagination::default().limit(UNLIMITED),
@@ -572,9 +572,9 @@ impl ApiContext {
         }
     }
 
-    async fn get_mapped_fields(&self, info: &UserInfo) -> Result<(ApiPermissions, Vec<Uuid>), StoreError> {
+    async fn get_mapped_fields(&self, info: &UserInfo) -> Result<(ApiPermissions, BTreeSet<Uuid>), StoreError> {
         let mut mapped_permissions = ApiPermissions::new();
-        let mut mapped_groups = vec![];
+        let mut mapped_groups = BTreeSet::new();
 
         // We optimistically load mappers here. We do not want to take a lock on the mappers and
         // instead handle mappers that become depleted before we can evaluate them at evaluation
@@ -623,7 +623,7 @@ impl ApiContext {
         &self,
         api_user_id: Uuid,
         mut mapped_permissions: ApiPermissions,
-        mut mapped_groups: Vec<Uuid>,
+        mut mapped_groups: BTreeSet<Uuid>,
     ) -> Result<User, ApiError> {
         match self.get_api_user(&api_user_id).await? {
             Some(api_user) => {
@@ -996,7 +996,7 @@ impl ApiContext {
 
         Ok(if let Some(user) = user {
             let mut update: NewApiUser<ApiPermission> = user.into();
-            update.groups.push(*group_id);
+            update.groups.insert(*group_id);
 
             Some(ApiUserStore::upsert(&*self.storage, update).await?)
         } else {
@@ -1078,7 +1078,7 @@ mod tests {
         storage::{AccessGroupFilter, ListPagination, MockAccessGroupStore, MockApiUserStore},
         AccessGroup, ApiUser,
     };
-    use std::{ops::Add, sync::Arc};
+    use std::{ops::Add, sync::Arc, collections::BTreeSet};
     use uuid::Uuid;
 
     use crate::{
@@ -1146,10 +1146,12 @@ mod tests {
 
         let user_id = Uuid::new_v4();
         let user_permissions: ApiPermissions = vec![ApiPermission::GetRfd(5)].into();
+        let mut groups = BTreeSet::new();
+        groups.insert(group_id);
         let user = ApiUser {
             id: user_id,
             permissions: user_permissions.clone(),
-            groups: vec![group_id],
+            groups,
             created_at: Utc::now(),
             updated_at: Utc::now(),
             deleted_at: None,

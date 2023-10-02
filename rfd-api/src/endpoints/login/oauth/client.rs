@@ -315,7 +315,7 @@ async fn delete_oauth_client_redirect_uri_op(
 
 #[cfg(test)]
 mod tests {
-    use std::sync::{Arc, Mutex};
+    use std::{sync::{Arc, Mutex}, collections::BTreeSet};
 
     use chrono::Utc;
     use rfd_model::{
@@ -338,7 +338,7 @@ mod tests {
         ApiUser {
             id: Uuid::new_v4(),
             permissions: vec![ApiPermission::CreateOAuthClient].into(),
-            groups: vec![],
+            groups: BTreeSet::new(),
             created_at: Utc::now(),
             updated_at: Utc::now(),
             deleted_at: None,
@@ -352,7 +352,7 @@ mod tests {
             Ok(ApiUser {
                 id: user.id,
                 permissions: user.permissions,
-                groups: vec![],
+                groups: user.groups,
                 created_at: Utc::now(),
                 updated_at: Utc::now(),
                 deleted_at: None,
