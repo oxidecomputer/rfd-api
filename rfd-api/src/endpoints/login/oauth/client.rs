@@ -315,7 +315,10 @@ async fn delete_oauth_client_redirect_uri_op(
 
 #[cfg(test)]
 mod tests {
-    use std::{sync::{Arc, Mutex}, collections::BTreeSet};
+    use std::{
+        collections::BTreeSet,
+        sync::{Arc, Mutex},
+    };
 
     use chrono::Utc;
     use rfd_model::{

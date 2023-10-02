@@ -1314,7 +1314,12 @@ where
 
 #[async_trait]
 impl MapperStore for PostgresStore {
-    async fn get(&self, id: &Uuid, depleted: bool, deleted: bool) -> Result<Option<Mapper>, StoreError> {
+    async fn get(
+        &self,
+        id: &Uuid,
+        depleted: bool,
+        deleted: bool,
+    ) -> Result<Option<Mapper>, StoreError> {
         let client = MapperStore::list(
             self,
             MapperFilter {
@@ -1337,7 +1342,12 @@ impl MapperStore for PostgresStore {
     ) -> Result<Vec<Mapper>, StoreError> {
         let mut query = mapper::dsl::mapper.into_boxed();
 
-        let MapperFilter { id, name, depleted, deleted } = filter;
+        let MapperFilter {
+            id,
+            name,
+            depleted,
+            deleted,
+        } = filter;
 
         if let Some(id) = id {
             query = query.filter(mapper::id.eq_any(id));
@@ -1372,13 +1382,11 @@ impl MapperStore for PostgresStore {
                 mapper::rule.eq(new_mapper.rule.clone()),
                 mapper::activations.eq(new_mapper.activations),
                 mapper::max_activations.eq(new_mapper.max_activations),
-                mapper::depleted_at.eq(
-                    if new_mapper.activations == new_mapper.max_activations {
-                        Some(Utc::now())
-                    } else {
-                        None
-                    }
-                ),
+                mapper::depleted_at.eq(if new_mapper.activations == new_mapper.max_activations {
+                    Some(Utc::now())
+                } else {
+                    None
+                }),
             ))
             .on_conflict(mapper::id)
             .do_update()

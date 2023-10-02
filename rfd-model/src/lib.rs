@@ -1,4 +1,7 @@
-use std::{collections::{BTreeMap, BTreeSet}, fmt::Display};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    fmt::Display,
+};
 
 use chrono::{DateTime, Utc};
 use db::{

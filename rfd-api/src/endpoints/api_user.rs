@@ -472,7 +472,7 @@ pub async fn remove_api_user_from_group(
 
 #[cfg(test)]
 mod tests {
-    use std::{sync::Arc, collections::BTreeSet};
+    use std::{collections::BTreeSet, sync::Arc};
 
     use chrono::{Duration, Utc};
     use http::StatusCode;

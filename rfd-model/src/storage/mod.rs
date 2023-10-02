@@ -413,7 +413,12 @@ pub struct MapperFilter {
 #[cfg_attr(feature = "mock", automock)]
 #[async_trait]
 pub trait MapperStore {
-    async fn get(&self, id: &Uuid, depleted: bool, deleted: bool) -> Result<Option<Mapper>, StoreError>;
+    async fn get(
+        &self,
+        id: &Uuid,
+        depleted: bool,
+        deleted: bool,
+    ) -> Result<Option<Mapper>, StoreError>;
     async fn list(
         &self,
         filter: MapperFilter,

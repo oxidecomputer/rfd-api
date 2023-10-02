@@ -20,12 +20,15 @@ use rfd_model::{
     },
     AccessGroup, AccessToken, ApiUser, ApiUserProvider, InvalidValueError, Job, LoginAttempt,
     NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
-    NewLoginAttempt, NewOAuthClient, NewOAuthClientRedirectUri, NewOAuthClientSecret, OAuthClient,
-    OAuthClientRedirectUri, OAuthClientSecret, NewMapper
+    NewLoginAttempt, NewMapper, NewOAuthClient, NewOAuthClientRedirectUri, NewOAuthClientSecret,
+    OAuthClient, OAuthClientRedirectUri, OAuthClientSecret,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::{collections::{HashMap, BTreeSet}, sync::Arc};
+use std::{
+    collections::{BTreeSet, HashMap},
+    sync::Arc,
+};
 use tap::TapFallible;
 use thiserror::Error;
 use tracing::{info_span, instrument, Instrument};
@@ -42,7 +45,7 @@ use crate::{
         LoginError, UserInfo,
     },
     error::{ApiError, AppError},
-    mapper::{MapperRule, MappingRules, Mapping},
+    mapper::{MapperRule, Mapping, MappingRules},
     permissions::{ApiPermission, PermissionStorage},
     util::response::{client_error, internal_error},
     ApiCaller, ApiPermissions, User, UserToken,
@@ -572,7 +575,10 @@ impl ApiContext {
         }
     }
 
-    async fn get_mapped_fields(&self, info: &UserInfo) -> Result<(ApiPermissions, BTreeSet<Uuid>), StoreError> {
+    async fn get_mapped_fields(
+        &self,
+        info: &UserInfo,
+    ) -> Result<(ApiPermissions, BTreeSet<Uuid>), StoreError> {
         let mut mapped_permissions = ApiPermissions::new();
         let mut mapped_groups = BTreeSet::new();
 
@@ -593,9 +599,7 @@ impl ApiContext {
             let apply = if !permissions.is_empty() || !groups.is_empty() {
                 if mapping.max_activations.is_some() {
                     match self.consume_mapping_activation(&mapping).await {
-                        Ok(_) => {
-                            true
-                        }
+                        Ok(_) => true,
                         Err(err) => {
                             // TODO: Inspect the error. We expect to see a conflict error, and
                             // should is expected to be seen. Other errors are problematic.
@@ -1042,31 +1046,35 @@ impl ApiContext {
                     tracing::error!(?err, "Failed to translate stored rule to mapper");
                 })
                 .ok()
-                .map(|rule| {
-                    Mapping {
-                        id: mapper.id,
-                        name: mapper.name,
-                        rule,
-                        activations: mapper.activations,
-                        max_activations: mapper.max_activations,
-                    }
+                .map(|rule| Mapping {
+                    id: mapper.id,
+                    name: mapper.name,
+                    rule,
+                    activations: mapper.activations,
+                    max_activations: mapper.max_activations,
                 })
         })
         .collect::<Vec<_>>())
     }
 
     async fn consume_mapping_activation(&self, mapping: &Mapping) -> Result<(), StoreError> {
-        Ok(MapperStore::upsert(&*self.storage, &NewMapper {
-            id: mapping.id,
-            name: mapping.name.clone(),
-            // If a rule fails to serialize, then something critical has gone wrong. Rules should
-            // never be modified after they are created, and rules must be persisted before they
-            // can be used for an activation. So if a rule fails to serialize, then the stored rule
-            // has become corrupted or something in the application has manipulated the rule.
-            rule: serde_json::to_value(&mapping.rule).expect("Store rules must be able to be re-serialized"),
-            activations: mapping.activations.map(|i| i + 1),
-            max_activations: mapping.max_activations,
-        }).await.map(|_| ())?)
+        Ok(MapperStore::upsert(
+            &*self.storage,
+            &NewMapper {
+                id: mapping.id,
+                name: mapping.name.clone(),
+                // If a rule fails to serialize, then something critical has gone wrong. Rules should
+                // never be modified after they are created, and rules must be persisted before they
+                // can be used for an activation. So if a rule fails to serialize, then the stored rule
+                // has become corrupted or something in the application has manipulated the rule.
+                rule: serde_json::to_value(&mapping.rule)
+                    .expect("Store rules must be able to be re-serialized"),
+                activations: mapping.activations.map(|i| i + 1),
+                max_activations: mapping.max_activations,
+            },
+        )
+        .await
+        .map(|_| ())?)
     }
 }
 
@@ -1078,7 +1086,7 @@ mod tests {
         storage::{AccessGroupFilter, ListPagination, MockAccessGroupStore, MockApiUserStore},
         AccessGroup, ApiUser,
     };
-    use std::{ops::Add, sync::Arc, collections::BTreeSet};
+    use std::{collections::BTreeSet, ops::Add, sync::Arc};
     use uuid::Uuid;
 
     use crate::{
@@ -1854,7 +1862,11 @@ pub(crate) mod test_mocks {
             used: bool,
             deleted: bool,
         ) -> Result<Option<rfd_model::Mapper>, rfd_model::storage::StoreError> {
-            self.mapper_store.as_ref().unwrap().get(id, used, deleted).await
+            self.mapper_store
+                .as_ref()
+                .unwrap()
+                .get(id, used, deleted)
+                .await
         }
 
         async fn list(
