@@ -46,8 +46,8 @@ use crate::{
     },
     error::{ApiError, AppError},
     mapper::{MapperRule, Mapping},
-    permissions::{ApiPermission, PermissionStorage},
-    util::response::{client_error, internal_error},
+    permissions::{ApiPermission, ApiPermissionError, PermissionStorage},
+    util::response::{bad_request, client_error, internal_error},
     ApiCaller, ApiPermissions, User, UserToken,
 };
 
@@ -133,6 +133,8 @@ pub enum CallerError {
     FailedToAuthenticate,
     #[error("Supplied API key is invalid")]
     InvalidKey,
+    #[error("Invalid scope: {0}")]
+    Scope(#[from] ApiPermissionError),
     #[error("Inner storage failure: {0}")]
     Storage(#[from] StoreError),
 }
@@ -148,6 +150,7 @@ impl From<CallerError> for HttpError {
             CallerError::InvalidKey => {
                 client_error(StatusCode::UNAUTHORIZED, "Failed to authenticate")
             }
+            CallerError::Scope(_) => bad_request("Invalid scope"),
             CallerError::Storage(_) => internal_error("Internal storage failed"),
         }
     }
@@ -255,19 +258,17 @@ impl ApiContext {
 
         // The permissions for the caller is the intersection of the user's permissions and the tokens permissions
         if let Some(user) = self.get_api_user(&api_user_id).await? {
-            let mut group_permissions = self.get_user_group_permissions(&user).await?;
-            let mut assigned_permissions = user.permissions.clone();
-            assigned_permissions.append(&mut group_permissions);
+            let user_permissions = self.get_user_permissions(&user).await?;
+            let token_permissions = permissions.expand(&user.id, Some(&user_permissions));
 
-            let token_permissions = permissions.expand(&user);
-            let combined_permissions = token_permissions.intersect(&assigned_permissions);
+            let combined_permissions = token_permissions.intersect(&user_permissions);
 
-            tracing::info!(token = ?token_permissions, user = ?assigned_permissions, combined = ?combined_permissions, "Computed caller permissions");
+            tracing::info!(token = ?token_permissions, user = ?user_permissions, combined = ?combined_permissions, "Computed caller permissions");
 
             let caller = Caller {
                 id: api_user_id,
                 permissions: combined_permissions,
-                user,
+                // user,
             };
 
             tracing::info!(?caller, "Resolved caller");
@@ -328,12 +329,24 @@ impl ApiContext {
             }
             AuthToken::Jwt(jwt) => {
                 // AuthnToken::Jwt can only be generated from a verified JWT
-                Ok((jwt.claims.aud, jwt.claims.prm.clone()))
+                let permissions = ApiPermission::from_scope(jwt.claims.scp.iter())?;
+                Ok((jwt.claims.aud, permissions))
             }
         }?)
     }
 
     #[instrument(skip(self), fields(user_id = ?user.id, groups = ?user.groups))]
+    async fn get_user_permissions(
+        &self,
+        user: &ApiUser<ApiPermission>,
+    ) -> Result<ApiPermissions, StoreError> {
+        let mut group_permissions = self.get_user_group_permissions(&user).await?;
+        let mut permissions = user.permissions.clone();
+        permissions.append(&mut group_permissions);
+
+        Ok(permissions)
+    }
+
     async fn get_user_group_permissions(
         &self,
         user: &ApiUser<ApiPermission>,
@@ -355,7 +368,7 @@ impl ApiContext {
         let permissions = groups
             .into_iter()
             .fold(ApiPermissions::new(), |mut aggregate, group| {
-                let mut expanded = group.permissions.expand(user);
+                let mut expanded = group.permissions.expand(&user.id, Some(&user.permissions));
 
                 tracing::trace!(group_id = ?group.id, group_name = ?group.name, permissions = ?expanded, "Transformed group into permission set");
                 aggregate.append(&mut expanded);
@@ -409,7 +422,7 @@ impl ApiContext {
     ) -> Result<Vec<ListRfd>, StoreError> {
         let mut filter = filter.unwrap_or_default();
 
-        if !caller.can(&ApiPermission::GetAllRfds) {
+        if !caller.can(&ApiPermission::GetRfdsAll) {
             let numbers = caller
                 .permissions
                 .iter()
@@ -546,7 +559,11 @@ impl ApiContext {
 
         match api_user_providers.len() {
             0 => {
-                tracing::info!(?mapped_permissions, ?mapped_groups, "Did not find any existing users. Registering a new user.");
+                tracing::info!(
+                    ?mapped_permissions,
+                    ?mapped_groups,
+                    "Did not find any existing users. Registering a new user."
+                );
 
                 let user = self
                     .ensure_api_user(Uuid::new_v4(), mapped_permissions, mapped_groups)
@@ -671,7 +688,7 @@ impl ApiContext {
     pub async fn register_access_token(
         &self,
         api_user: &ApiUser<ApiPermission>,
-        requested_permissions: &Permissions<ApiPermission>,
+        scope: Vec<String>,
         expires_at: Option<DateTime<Utc>>,
     ) -> Result<RegisteredAccessToken, ApiError> {
         let expires_at = expires_at
@@ -681,14 +698,10 @@ impl ApiContext {
             return Err(ApiError::Login(LoginError::ExcessTokenExpiration));
         }
 
-        // Take the intersection of the api user permissions and the requested permissions. Tokens
-        // should never have permissions that are wider than the user's permissions
-        let permissions = requested_permissions.intersect(&api_user.permissions);
-
         // Ensure that the token is within the configured limits
         let claims = Claims {
             aud: api_user.id,
-            prm: permissions,
+            scp: scope,
             exp: expires_at.timestamp(),
             nbf: Utc::now().timestamp(),
             jti: Uuid::new_v4(),
@@ -717,7 +730,7 @@ impl ApiContext {
         let user = ApiUserStore::get(&*self.storage, id, false)
             .await?
             .map(|mut user| {
-                user.permissions = user.permissions.expand(&user);
+                user.permissions = user.permissions.expand(&user.id, None);
                 user
             });
 
@@ -737,22 +750,27 @@ impl ApiContext {
         &self,
         mut api_user: NewApiUser<ApiPermission>,
     ) -> Result<User, StoreError> {
-        api_user.permissions = api_user.permissions.contract(&api_user);
+        api_user.permissions = api_user.permissions.contract(&api_user.id);
         ApiUserStore::upsert(&*self.storage, api_user).await
     }
 
     pub async fn add_permissions_to_user(
         &self,
-        api_user: &ApiUser<ApiPermission>,
+        user_id: &Uuid,
         new_permissions: Permissions<ApiPermission>,
-    ) -> Result<User, StoreError> {
-        let mut user_update: NewApiUser<ApiPermission> = api_user.clone().into();
-        for permission in new_permissions.into_iter() {
-            tracing::info!(id = ?api_user.id, ?permission, "Adding permission to user");
-            user_update.permissions.insert(permission);
-        }
+    ) -> Result<Option<User>, StoreError> {
+        Ok(match self.get_api_user(user_id).await? {
+            Some(user) => {
+                let mut user_update: NewApiUser<ApiPermission> = user.into();
+                for permission in new_permissions.into_iter() {
+                    tracing::info!(id = ?user_id, ?permission, "Adding permission to user");
+                    user_update.permissions.insert(permission);
+                }
 
-        self.update_api_user(user_update).await
+                Some(self.update_api_user(user_update).await?)
+            }
+            None => None,
+        })
     }
 
     pub async fn remove_permissions_from_user(
@@ -1068,9 +1086,9 @@ impl ApiContext {
 
     async fn consume_mapping_activation(&self, mapping: &Mapping) -> Result<(), StoreError> {
         // Activations are only incremented if the rule actually has a max activation value
-        let activations = mapping.max_activations.map(|_| {
-            mapping.activations.unwrap_or(0) + 1
-        });
+        let activations = mapping
+            .max_activations
+            .map(|_| mapping.activations.unwrap_or(0) + 1);
 
         Ok(MapperStore::upsert(
             &*self.storage,
@@ -1118,15 +1136,11 @@ mod tests {
         ApiContext,
     };
 
-    async fn create_token(
-        ctx: &ApiContext,
-        user_id: Uuid,
-        permissions: &ApiPermissions,
-    ) -> AuthToken {
+    async fn create_token(ctx: &ApiContext, user_id: Uuid, scope: Vec<String>) -> AuthToken {
         let user_token = ctx.jwt.signers[0]
             .sign(&Claims {
                 aud: user_id,
-                prm: permissions.clone(),
+                scp: scope,
                 exp: Utc::now().add(Duration::seconds(60)).timestamp(),
                 nbf: 0,
                 jti: Uuid::new_v4(),
@@ -1178,6 +1192,7 @@ mod tests {
             updated_at: Utc::now(),
             deleted_at: None,
         };
+
         let mut user_store = MockApiUserStore::new();
         user_store
             .expect_get()
@@ -1188,62 +1203,13 @@ mod tests {
         storage.api_user_store = Some(Arc::new(user_store));
         let ctx = mock_context(storage).await;
 
-        let token_with_no_permissions = create_token(&ctx, user_id, &vec![].into()).await;
-        let permissions = ctx.get_caller(&token_with_no_permissions).await.unwrap();
+        let token_with_no_scope = create_token(&ctx, user_id, vec![]).await;
+        let permissions = ctx.get_caller(&token_with_no_scope).await.unwrap();
         assert_eq!(ApiPermissions::new(), permissions.permissions);
 
-        let token_with_excess_permissions = create_token(
-            &ctx,
-            user_id,
-            &vec![
-                ApiPermission::GetRfd(1),
-                ApiPermission::GetRfd(2),
-                ApiPermission::GetRfd(5),
-            ]
-            .into(),
-        )
-        .await;
-        let permissions = ctx
-            .get_caller(&token_with_excess_permissions)
-            .await
-            .unwrap();
-        assert_eq!(
-            ApiPermissions::from(vec![ApiPermission::GetRfd(5)]),
-            permissions.permissions
-        );
-
-        let token_with_only_user_permissions =
-            create_token(&ctx, user_id, &vec![ApiPermission::GetRfd(5)].into()).await;
-        let permissions = ctx
-            .get_caller(&token_with_only_user_permissions)
-            .await
-            .unwrap();
-        assert_eq!(
-            ApiPermissions::from(vec![ApiPermission::GetRfd(5)]),
-            permissions.permissions
-        );
-
-        let token_with_only_group_permissions =
-            create_token(&ctx, user_id, &vec![ApiPermission::GetRfd(10)].into()).await;
-        let permissions = ctx
-            .get_caller(&token_with_only_group_permissions)
-            .await
-            .unwrap();
-        assert_eq!(
-            ApiPermissions::from(vec![ApiPermission::GetRfd(10)]),
-            permissions.permissions
-        );
-
-        let token_with_user_and_group_permissions = create_token(
-            &ctx,
-            user_id,
-            &vec![ApiPermission::GetRfd(5), ApiPermission::GetRfd(10)].into(),
-        )
-        .await;
-        let permissions = ctx
-            .get_caller(&token_with_user_and_group_permissions)
-            .await
-            .unwrap();
+        let token_with_rfd_read_scope =
+            create_token(&ctx, user_id, vec!["rfd:content:r".to_string()]).await;
+        let permissions = ctx.get_caller(&token_with_rfd_read_scope).await.unwrap();
         assert_eq!(
             ApiPermissions::from(vec![ApiPermission::GetRfd(5), ApiPermission::GetRfd(10)]),
             permissions.permissions

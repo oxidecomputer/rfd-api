@@ -75,7 +75,7 @@ async fn create_oauth_client_op(
 
         // Give the caller permission to perform actions on the client
         ctx.add_permissions_to_user(
-            &caller.user,
+            &caller.id,
             vec![
                 ApiPermission::GetOAuthClient(client.id),
                 ApiPermission::UpdateOAuthClient(client.id),
@@ -321,6 +321,7 @@ mod tests {
     };
 
     use chrono::Utc;
+    use mockall::predicate::eq;
     use rfd_model::{
         storage::{MockApiUserStore, MockOAuthClientSecretStore, MockOAuthClientStore},
         ApiUser, OAuthClient, OAuthClientSecret,
@@ -350,7 +351,17 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_client_with_secret() {
+        let user = mock_user();
+        let mut caller = ApiCaller {
+            id: user.id,
+            permissions: user.permissions.clone(),
+        };
+
         let mut user_store = MockApiUserStore::new();
+        user_store
+            .expect_get()
+            .with(eq(user.id), eq(false))
+            .returning(move |_, _| Ok(Some(user.clone())));
         user_store.expect_upsert().returning(|user| {
             Ok(ApiUser {
                 id: user.id,
@@ -399,12 +410,6 @@ mod tests {
         storage.oauth_client_secret_store = Some(Arc::new(secret_store));
 
         let ctx = mock_context(storage).await;
-        let user = mock_user();
-        let mut caller = ApiCaller {
-            id: user.id,
-            permissions: user.permissions.clone(),
-            user,
-        };
 
         let mut client = create_oauth_client_op(&ctx, &caller).await.unwrap().0;
         caller

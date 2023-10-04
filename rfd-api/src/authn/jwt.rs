@@ -11,7 +11,7 @@ use thiserror::Error;
 use tracing::instrument;
 use uuid::Uuid;
 
-use crate::{config::AsymmetricKey, context::ApiContext, ApiPermissions};
+use crate::{config::AsymmetricKey, context::ApiContext};
 
 use super::{Signer, SigningKeyError};
 
@@ -38,7 +38,7 @@ pub struct Jwt {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Claims {
     pub aud: Uuid,
-    pub prm: ApiPermissions,
+    pub scp: Vec<String>,
     pub exp: i64,
     pub nbf: i64,
     pub jti: Uuid,

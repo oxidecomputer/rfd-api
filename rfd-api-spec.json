@@ -588,6 +588,14 @@
           },
           {
             "in": "query",
+            "name": "scope",
+            "schema": {
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "state",
             "required": true,
             "schema": {
@@ -1308,26 +1316,35 @@
             "type": "string",
             "enum": [
               "CreateApiUserTokenSelf",
+              "CreateApiUserTokenAssigned",
               "CreateApiUserTokenAll",
               "GetApiUserSelf",
+              "GetApiUserAssigned",
               "GetApiUserAll",
               "GetApiUserTokenSelf",
+              "GetApiUserTokenAssigned",
+              "GetApiUserTokenAll",
               "DeleteApiUserTokenSelf",
+              "DeleteApiUserTokenAssigned",
               "DeleteApiUserTokenAll",
               "CreateApiUser",
               "UpdateApiUserSelf",
+              "UpdateApiUserAssigned",
               "UpdateApiUserAll",
               "ListGroups",
               "CreateGroup",
-              "GetAllRfds",
-              "GetAssignedRfds",
-              "GetAllDiscussions",
-              "GetAssignedDiscussions",
+              "GetRfdsAssigned",
+              "GetRfdsAll",
+              "GetDiscussionsAssigned",
+              "GetDiscussionsAll",
               "SearchRfds",
               "CreateOAuthClient",
-              "GetAssignedOAuthClients",
-              "UpdateAssignedOAuthClients",
-              "DeleteAssignedOAuthClients"
+              "GetOAuthClientsAssigned",
+              "GetOAuthClientsAll",
+              "UpdateOAuthClientsAssigned",
+              "UpdateOAuthClientsAll",
+              "DeleteOAuthClientsAssigned",
+              "DeleteOAuthClientsAll"
             ]
           },
           {

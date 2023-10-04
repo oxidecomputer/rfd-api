@@ -554,7 +554,6 @@ mod tests {
         let no_permissions = ApiCaller {
             id: user1.id,
             permissions: Vec::new().into(),
-            user: user1,
         };
 
         let resp = create_api_user_op(&ctx, &no_permissions, successful_update.clone()).await;
@@ -568,7 +567,6 @@ mod tests {
         let with_permissions = ApiCaller {
             id: user2.id,
             permissions: vec![ApiPermission::CreateApiUser.into()].into(),
-            user: user2,
         };
 
         let resp = create_api_user_op(&ctx, &with_permissions, successful_update.clone()).await;
@@ -634,7 +632,6 @@ mod tests {
         let no_permissions = ApiCaller {
             id: user1.id,
             permissions: Vec::new().into(),
-            user: user1,
         };
 
         let resp = update_api_user_op(
@@ -654,7 +651,6 @@ mod tests {
         let with_specific_permissions = ApiCaller {
             id: user2.id,
             permissions: vec![ApiPermission::UpdateApiUser(success_path.identifier).into()].into(),
-            user: user2,
         };
 
         let resp = update_api_user_op(
@@ -674,7 +670,6 @@ mod tests {
         let with_general_permissions = ApiCaller {
             id: user3.id,
             permissions: vec![ApiPermission::UpdateApiUserAll.into()].into(),
-            user: user3,
         };
 
         let resp = update_api_user_op(
@@ -737,7 +732,6 @@ mod tests {
         let no_permissions = ApiCaller {
             id: user1.id,
             permissions: Vec::new().into(),
-            user: user1,
         };
 
         let resp = list_api_user_tokens_op(
@@ -758,7 +752,6 @@ mod tests {
         let incorrect_permissions = ApiCaller {
             id: user2.id,
             permissions: vec![ApiPermission::GetApiUserToken(Uuid::new_v4()).into()].into(),
-            user: user2,
         };
 
         let resp = list_api_user_tokens_op(
@@ -779,7 +772,6 @@ mod tests {
         let success_permissions = ApiCaller {
             id: user3.id,
             permissions: vec![ApiPermission::GetApiUserToken(success_id).into()].into(),
-            user: user3,
         };
 
         let resp = list_api_user_tokens_op(
@@ -800,7 +792,6 @@ mod tests {
         let failure_permissions = ApiCaller {
             id: user4.id,
             permissions: vec![ApiPermission::GetApiUserToken(failure_id).into()].into(),
-            user: user4,
         };
 
         let resp = list_api_user_tokens_op(
@@ -889,7 +880,6 @@ mod tests {
         let no_permissions = ApiCaller {
             id: user1.id,
             permissions: Vec::new().into(),
-            user: user1,
         };
 
         let resp =
@@ -905,7 +895,6 @@ mod tests {
         let incorrect_permissions = ApiCaller {
             id: user2.id,
             permissions: vec![ApiPermission::CreateApiUserToken(Uuid::new_v4()).into()].into(),
-            user: user2,
         };
 
         let resp = create_api_user_token_op(
@@ -928,7 +917,6 @@ mod tests {
                 ApiPermission::CreateApiUserToken(unknown_api_user_path.identifier).into(),
             ]
             .into(),
-            user: user3,
         };
 
         let resp = create_api_user_token_op(
@@ -949,7 +937,6 @@ mod tests {
             id: user4.id,
             permissions: vec![ApiPermission::CreateApiUserToken(api_user_path.identifier).into()]
                 .into(),
-            user: user4,
         };
 
         let resp = create_api_user_token_op(
@@ -973,7 +960,6 @@ mod tests {
                 ApiPermission::CreateApiUserToken(failure_api_user_path.identifier).into(),
             ]
             .into(),
-            user: user5,
         };
 
         let resp = create_api_user_token_op(
@@ -1043,7 +1029,6 @@ mod tests {
         let no_permissions = ApiCaller {
             id: user1.id,
             permissions: Vec::new().into(),
-            user: user1,
         };
 
         let resp = get_api_user_token_op(&ctx, &no_permissions, &api_user_token_path).await;
@@ -1057,7 +1042,6 @@ mod tests {
         let incorrect_permissions = ApiCaller {
             id: user2.id,
             permissions: vec![ApiPermission::GetApiUserToken(Uuid::new_v4()).into()].into(),
-            user: user2,
         };
 
         let resp = get_api_user_token_op(&ctx, &incorrect_permissions, &api_user_token_path).await;
@@ -1075,7 +1059,6 @@ mod tests {
             )
             .into()]
             .into(),
-            user: user3,
         };
 
         let resp =
@@ -1093,7 +1076,6 @@ mod tests {
                 ApiPermission::GetApiUserToken(api_user_token_path.identifier).into(),
             ]
             .into(),
-            user: user4,
         };
 
         let resp = get_api_user_token_op(&ctx, &success_permissions, &api_user_token_path).await;
@@ -1111,7 +1093,6 @@ mod tests {
             )
             .into()]
             .into(),
-            user: user5,
         };
 
         let resp =
@@ -1176,7 +1157,6 @@ mod tests {
         let no_permissions = ApiCaller {
             id: user1.id,
             permissions: Vec::new().into(),
-            user: user1,
         };
 
         let resp = delete_api_user_token_op(&ctx, &no_permissions, &api_user_token_path).await;
@@ -1190,7 +1170,6 @@ mod tests {
         let incorrect_permissions = ApiCaller {
             id: user2.id,
             permissions: vec![ApiPermission::DeleteApiUserToken(Uuid::new_v4()).into()].into(),
-            user: user2,
         };
 
         let resp =
@@ -1209,7 +1188,6 @@ mod tests {
             )
             .into()]
             .into(),
-            user: user3,
         };
 
         let resp =
@@ -1228,7 +1206,6 @@ mod tests {
                 ApiPermission::DeleteApiUserToken(api_user_token_path.identifier).into(),
             ]
             .into(),
-            user: user4,
         };
 
         let resp = delete_api_user_token_op(&ctx, &success_permissions, &api_user_token_path).await;
@@ -1246,7 +1223,6 @@ mod tests {
             )
             .into()]
             .into(),
-            user: user5,
         };
 
         let resp =

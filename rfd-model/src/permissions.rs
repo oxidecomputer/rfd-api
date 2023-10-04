@@ -5,8 +5,6 @@ use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::ApiUser;
-
 pub trait Permission:
     Clone + Debug + Eq + PartialEq + Hash + Serialize + DeserializeOwned + Send + Sync + 'static
 {
@@ -20,7 +18,7 @@ impl<T> Permission for T where
 pub struct Caller<T: Ord> {
     pub id: Uuid,
     pub permissions: Permissions<T>,
-    pub user: ApiUser<T>,
+    // pub user: ApiUser<T>,
 }
 
 impl<T> Caller<T>

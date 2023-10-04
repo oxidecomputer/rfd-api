@@ -1,6 +1,9 @@
 use config::{Config, ConfigError, Environment, File};
-use diesel::result::{Error as DieselError, DatabaseErrorKind};
-use rfd_model::{storage::{StoreError, PoolError, ConnectionError}, NewAccessGroup, NewMapper};
+use diesel::result::{DatabaseErrorKind, Error as DieselError};
+use rfd_model::{
+    storage::{ConnectionError, PoolError, StoreError},
+    NewAccessGroup, NewMapper,
+};
 use serde::Deserialize;
 use thiserror::Error;
 use tracing::Instrument;
@@ -62,7 +65,9 @@ impl InitialData {
                 .await
                 .map(|_| ())
                 .or_else(handle_unique_violation_error)
-            }.instrument(span).await?
+            }
+            .instrument(span)
+            .await?
         }
 
         for mapper in self.mappers {
@@ -77,12 +82,14 @@ impl InitialData {
                 };
 
                 ctx.add_mapper(&new_mapper)
-                .await
-                .map(|_| ())
-                .or_else(handle_unique_violation_error)?;
+                    .await
+                    .map(|_| ())
+                    .or_else(handle_unique_violation_error)?;
 
                 Ok::<(), InitError>(())
-            }.instrument(span).await?;
+            }
+            .instrument(span)
+            .await?;
         }
 
         Ok(())
@@ -91,10 +98,12 @@ impl InitialData {
 
 fn handle_unique_violation_error(err: StoreError) -> Result<(), StoreError> {
     match err {
-        StoreError::Pool(PoolError::Connection(ConnectionError::Query(DieselError::DatabaseError(DatabaseErrorKind::UniqueViolation, info)))) => {
+        StoreError::Pool(PoolError::Connection(ConnectionError::Query(
+            DieselError::DatabaseError(DatabaseErrorKind::UniqueViolation, info),
+        ))) => {
             tracing::info!(?info, "Record already exists. Skipping.");
             Ok(())
-        },
+        }
         err => {
             tracing::error!(?err, "Failed to store record");
             Err(err)

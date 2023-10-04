@@ -241,6 +241,7 @@ pub struct LoginAttempt {
     pub created_at: DateTime<Utc>,
     #[partial(NewLoginAttempt(skip))]
     pub updated_at: DateTime<Utc>,
+    pub scope: String,
 }
 
 impl LoginAttempt {
@@ -285,6 +286,7 @@ impl NewLoginAttempt {
     pub fn new(
         client_id: Uuid,
         redirect_uri: String,
+        scope: String,
         provider: String,
     ) -> Result<Self, InvalidValueError> {
         Ok(Self {
@@ -302,6 +304,7 @@ impl NewLoginAttempt {
             provider_pkce_verifier: None,
             provider_authz_code: None,
             provider_error: None,
+            scope,
         })
     }
 }
@@ -325,6 +328,7 @@ impl From<LoginAttemptModel> for LoginAttempt {
             provider_error: value.provider_error,
             created_at: value.created_at,
             updated_at: value.updated_at,
+            scope: value.scope,
         }
     }
 }

@@ -1316,7 +1316,6 @@ where
 
 #[async_trait]
 impl MapperStore for PostgresStore {
-
     #[instrument(skip(self), err(Debug))]
     async fn get(
         &self,
@@ -1388,7 +1387,10 @@ impl MapperStore for PostgresStore {
     async fn upsert(&self, new_mapper: &NewMapper) -> Result<Mapper, StoreError> {
         tracing::trace!("Upserting mapper");
 
-        let depleted = new_mapper.max_activations.map(|max| new_mapper.activations.unwrap_or(0) == max).unwrap_or(false);
+        let depleted = new_mapper
+            .max_activations
+            .map(|max| new_mapper.activations.unwrap_or(0) == max)
+            .unwrap_or(false);
 
         let mapper_m: MapperModel = insert_into(mapper::dsl::mapper)
             .values((

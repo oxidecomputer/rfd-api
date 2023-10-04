@@ -108,6 +108,7 @@ diesel::table! {
         provider_error -> Nullable<Varchar>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        scope -> Varchar,
     }
 }
 

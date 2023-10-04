@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 use crate::{context::ApiContext, endpoints::login::UserInfo, ApiPermissions};
 
-use self::{email_domain::EmailDomainMapper, email_address::EmailAddressMapper};
+use self::{email_address::EmailAddressMapper, email_domain::EmailDomainMapper};
 
 pub mod email_address;
 pub mod email_domain;

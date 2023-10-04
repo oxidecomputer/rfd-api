@@ -23,7 +23,7 @@ pub enum ApiError {
     #[error("Invalid signing key: {0}")]
     Key(#[from] SigningKeyError),
     #[error(transparent)]
-    Login(LoginError),
+    Login(#[from] LoginError),
     #[error("Internal OAuth provider failed {0}")]
     OAuth(#[from] OAuthProviderError),
     #[error("Internal storage failed {0}")]

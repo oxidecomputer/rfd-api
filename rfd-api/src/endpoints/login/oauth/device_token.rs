@@ -161,7 +161,19 @@ pub async fn exchange_device_token(
             tracing::info!(api_user_id = ?api_user.id, "Retrieved api user to generate device token for");
 
             let token = ctx
-                .register_access_token(&api_user, &api_user.permissions, exchange.expires_at)
+                .register_access_token(
+                    &api_user,
+                    vec![
+                        "user:info:r".to_string(),
+                        "user:token:r".to_string(),
+                        "user:token:w".to_string(),
+                        "group:r".to_string(),
+                        "rfd:content:r".to_string(),
+                        "rfd:discussion:r".to_string(),
+                        "search".to_string(),
+                    ],
+                    exchange.expires_at,
+                )
                 .await?;
 
             tracing::info!(provider = ?path.provider, api_user_id = ?api_user.id, "Generated access token");
