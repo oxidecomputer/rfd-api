@@ -11,7 +11,7 @@ use crate::{
         login_attempt, mapper, oauth_client, oauth_client_redirect_uri, oauth_client_secret, rfd,
         rfd_pdf, rfd_revision,
     },
-    schema_ext::{ContentFormat, LoginAttemptState, PdfSource},
+    schema_ext::{ContentFormat, LoginAttemptState, PdfSource, Visibility},
 };
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
@@ -20,11 +20,10 @@ pub struct RfdModel {
     pub id: Uuid,
     pub rfd_number: i32,
     pub link: Option<String>,
-    // pub relevant_components: Vec<Option<String>>,
-    // pub milestones: Vec<Option<String>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
+    pub visibility: Visibility,
 }
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]

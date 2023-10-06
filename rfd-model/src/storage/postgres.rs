@@ -133,17 +133,15 @@ impl RfdStore for PostgresStore {
                 rfd::id.eq(new_rfd.id),
                 rfd::rfd_number.eq(new_rfd.rfd_number.clone()),
                 rfd::link.eq(new_rfd.link.clone()),
-                // rfd::relevant_components.eq(new_rfd.relevant_components.clone()),
-                // rfd::milestones.eq(new_rfd.milestones.clone()),
+                rfd::visibility.eq(new_rfd.visibility.clone()),
             ))
             .on_conflict(rfd::id)
             .do_update()
             .set((
                 rfd::rfd_number.eq(excluded(rfd::rfd_number)),
                 rfd::link.eq(excluded(rfd::link)),
-                // rfd::relevant_components.eq(excluded(rfd::relevant_components)),
-                // rfd::milestones.eq(excluded(rfd::milestones)),
                 rfd::updated_at.eq(Utc::now()),
+                rfd::visibility.eq(excluded(rfd::visibility)),
             ))
             .get_result_async(&self.conn)
             .await?;

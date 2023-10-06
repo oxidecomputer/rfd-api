@@ -10,7 +10,7 @@ use db::{
 };
 use partial_struct::partial;
 use permissions::Permissions;
-use schema_ext::{ContentFormat, LoginAttemptState, PdfSource};
+use schema_ext::{ContentFormat, LoginAttemptState, PdfSource, Visibility};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -30,14 +30,13 @@ pub struct Rfd {
     pub id: Uuid,
     pub rfd_number: i32,
     pub link: Option<String>,
-    // pub relevant_components: Vec<Option<String>>,
-    // pub milestones: Vec<Option<String>>,
     #[partial(NewRfd(skip))]
     pub created_at: DateTime<Utc>,
     #[partial(NewRfd(skip))]
     pub updated_at: DateTime<Utc>,
     #[partial(NewRfd(skip))]
     pub deleted_at: Option<DateTime<Utc>>,
+    pub visibility: Visibility,
 }
 
 impl From<RfdModel> for Rfd {
@@ -46,11 +45,10 @@ impl From<RfdModel> for Rfd {
             id: value.id,
             rfd_number: value.rfd_number,
             link: value.link,
-            // relevant_components: value.relevant_components,
-            // milestones: value.milestones,
             created_at: value.created_at,
             updated_at: value.updated_at,
             deleted_at: value.deleted_at,
+            visibility: value.visibility,
         }
     }
 }

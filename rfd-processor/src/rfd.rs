@@ -4,7 +4,7 @@ use chrono::{DateTime, Utc};
 use octorust::{Client, ClientError};
 use rfd_data::RfdNumber;
 use rfd_model::{
-    schema_ext::ContentFormat,
+    schema_ext::{ContentFormat, Visibility},
     storage::{
         ListPagination, RfdFilter, RfdRevisionFilter, RfdRevisionStore, RfdStore, StoreError,
     },
@@ -267,7 +267,7 @@ impl RemoteRfd {
         let number = self.number;
         let payload = self.into_payload()?;
 
-        let id = RfdStore::list(
+        let (id, visibility) = RfdStore::list(
             storage,
             RfdFilter::default().rfd_number(Some(vec![payload.number.into()])),
             &ListPagination::latest(),
@@ -275,8 +275,8 @@ impl RemoteRfd {
         .await?
         .into_iter()
         .next()
-        .map(|rfd| rfd.id)
-        .unwrap_or_else(|| Uuid::new_v4());
+        .map(|rfd| (rfd.id, rfd.visibility))
+        .unwrap_or_else(|| (Uuid::new_v4(), Visibility::Private));
 
         let rfd = RfdStore::upsert(
             storage,
@@ -284,8 +284,7 @@ impl RemoteRfd {
                 id,
                 rfd_number: payload.number.into(),
                 link: payload.link.into(),
-                // relevant_components: vec![],
-                // milestones: vec![],
+                visibility,
             },
         )
         .await?;

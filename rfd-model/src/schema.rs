@@ -12,6 +12,10 @@ pub mod sql_types {
     #[derive(diesel::sql_types::SqlType)]
     #[diesel(postgres_type(name = "rfd_pdf_source"))]
     pub struct RfdPdfSource;
+
+    #[derive(diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "rfd_visibility"))]
+    pub struct RfdVisibility;
 }
 
 diesel::table! {
@@ -154,6 +158,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::RfdVisibility;
+
     rfd (id) {
         id -> Uuid,
         rfd_number -> Int4,
@@ -161,6 +168,7 @@ diesel::table! {
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
         deleted_at -> Nullable<Timestamptz>,
+        visibility -> RfdVisibility,
     }
 }
 
