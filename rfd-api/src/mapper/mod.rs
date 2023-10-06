@@ -8,10 +8,11 @@ use uuid::Uuid;
 
 use crate::{context::ApiContext, endpoints::login::UserInfo, ApiPermissions};
 
-use self::{email_address::EmailAddressMapper, email_domain::EmailDomainMapper};
+use self::{email_address::EmailAddressMapper, email_domain::EmailDomainMapper, github_username::GitHubUsernameMapper};
 
 pub mod email_address;
 pub mod email_domain;
+pub mod github_username;
 
 #[async_trait]
 pub trait MapperRule: Send + Sync {
@@ -59,6 +60,7 @@ impl TryFrom<Mapper> for Mapping {
 pub enum MappingRules {
     EmailAddress(EmailAddressMapper),
     EmailDomain(EmailDomainMapper),
+    GitHubUsername(GitHubUsernameMapper),
 }
 
 #[async_trait]
@@ -71,6 +73,7 @@ impl MapperRule for MappingRules {
         match self {
             Self::EmailAddress(rule) => rule.permissions_for(ctx, user).await,
             Self::EmailDomain(rule) => rule.permissions_for(ctx, user).await,
+            Self::GitHubUsername(rule) => rule.permissions_for(ctx, user).await,
         }
     }
 
@@ -82,6 +85,7 @@ impl MapperRule for MappingRules {
         match self {
             Self::EmailAddress(rule) => rule.groups_for(ctx, user).await,
             Self::EmailDomain(rule) => rule.groups_for(ctx, user).await,
+            Self::GitHubUsername(rule) => rule.groups_for(ctx, user).await,
         }
     }
 }

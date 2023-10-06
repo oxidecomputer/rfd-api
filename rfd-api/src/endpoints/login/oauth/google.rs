@@ -71,6 +71,7 @@ impl ExtractUserInfo for GoogleOAuthProvider {
         Ok(UserInfo {
             external_id: ExternalUserId::Google(remote_info.sub),
             verified_emails,
+            github_username: None,
         })
     }
 }

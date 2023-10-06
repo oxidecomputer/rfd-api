@@ -60,6 +60,7 @@ impl GitHubOAuthProvider {
 #[derive(Debug, Deserialize)]
 struct GitHubUser {
     id: u32,
+    login: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -86,6 +87,7 @@ impl ExtractUserInfo for GitHubOAuthProvider {
         Ok(UserInfo {
             external_id: ExternalUserId::GitHub(user.id.to_string()),
             verified_emails,
+            github_username: Some(user.login)
         })
     }
 }
