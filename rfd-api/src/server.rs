@@ -12,7 +12,7 @@ use crate::{
         api_user::{
             add_api_user_to_group, create_api_user, create_api_user_token, delete_api_user_token,
             get_api_user, get_api_user_token, get_self, list_api_user_tokens,
-            remove_api_user_from_group, update_api_user,
+            remove_api_user_from_group, update_api_user, link_provider,
         },
         group::{create_group, delete_group, get_groups, update_group},
         login::oauth::{
@@ -25,7 +25,7 @@ use crate::{
             device_token::{exchange_device_token, get_device_provider},
         },
         rfd::{get_rfd, get_rfds, search_rfds},
-        webhook::github_webhook,
+        webhook::github_webhook, api_user_provider::create_link_token,
     },
 };
 
@@ -91,6 +91,8 @@ pub fn server(
     api.register(delete_api_user_token).unwrap();
     api.register(add_api_user_to_group).unwrap();
     api.register(remove_api_user_from_group).unwrap();
+    api.register(link_provider).unwrap();
+    api.register(create_link_token).unwrap();
 
     // Group Management
     api.register(get_groups).unwrap();

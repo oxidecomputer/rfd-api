@@ -470,6 +470,27 @@ pub async fn remove_api_user_from_group(
     }
 }
 
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct ApiUserProviderLinkPayload {
+    identifier: Uuid,
+    token: String,
+}
+
+/// Link an existing login provider to this user
+#[trace_request]
+#[endpoint {
+    method = POST,
+    path = "/api-user/{identifier}/link",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn link_provider(
+    rqctx: RequestContext<ApiContext>,
+    path: Path<ApiUserPath>,
+    body: TypedBody<ApiUserProviderLinkPayload>,
+) -> Result<HttpResponseOk<ApiUser<ApiPermission>>, HttpError> {
+    unimplemented!()
+}
+
 #[cfg(test)]
 mod tests {
     use std::{collections::BTreeSet, sync::Arc};
