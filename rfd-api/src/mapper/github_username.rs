@@ -25,7 +25,11 @@ impl MapperRule for GitHubUsernameMapper {
         _ctx: &ApiContext,
         user: &UserInfo,
     ) -> Result<ApiPermissions, StoreError> {
-        if user.github_username.as_ref().map(|u| u == &self.github_username).unwrap_or(false)
+        if user
+            .github_username
+            .as_ref()
+            .map(|u| u == &self.github_username)
+            .unwrap_or(false)
         {
             Ok(self.permissions.clone())
         } else {
@@ -38,7 +42,12 @@ impl MapperRule for GitHubUsernameMapper {
         ctx: &ApiContext,
         user: &UserInfo,
     ) -> Result<BTreeSet<Uuid>, StoreError> {
-        if user.github_username.as_ref().map(|u| u == &self.github_username).unwrap_or(false) {
+        if user
+            .github_username
+            .as_ref()
+            .map(|u| u == &self.github_username)
+            .unwrap_or(false)
+        {
             let groups = ctx
                 .get_groups()
                 .await?

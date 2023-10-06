@@ -1,10 +1,7 @@
 use async_trait::async_trait;
 use dropshot::Method;
 use http::header;
-use hyper::{
-    body::Bytes,
-    Body
-};
+use hyper::{body::Bytes, Body};
 use oauth2::{basic::BasicClient, url::ParseError, AuthUrl, ClientId, ClientSecret, TokenUrl};
 use rfd_model::OAuthClient;
 use schemars::JsonSchema;
@@ -104,14 +101,14 @@ where
         &self,
         client: &reqwest::Client,
         token: &str,
-    ) -> Result<UserInfo, UserInfoError>
-    {
+    ) -> Result<UserInfo, UserInfoError> {
         tracing::trace!("Requesting user information from OAuth provider");
 
         let mut responses = vec![];
 
         for endpoint in self.user_info_endpoints() {
-            let request = client.request(Method::GET, endpoint)
+            let request = client
+                .request(Method::GET, endpoint)
                 .header(header::AUTHORIZATION, format!("Bearer {}", token))
                 .body(Body::empty())
                 .build()?;

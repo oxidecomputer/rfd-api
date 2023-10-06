@@ -1,6 +1,6 @@
 use chrono::{DateTime, Utc};
 use dropshot::{endpoint, HttpError, HttpResponseOk, Method, Path, RequestContext, TypedBody};
-use http::{header, Request, Response, StatusCode, HeaderValue};
+use http::{header, HeaderValue, Request, Response, StatusCode};
 use hyper::{body::to_bytes, Body};
 use oauth2::{basic::BasicTokenType, EmptyExtraTokenFields, StandardTokenResponse, TokenResponse};
 use schemars::JsonSchema;
@@ -155,14 +155,12 @@ pub async fn exchange_device_token(
         // We unfortunately can not trust our providers to follow specs and therefore need to do
         // our own inspection of the response to determine what to do
         if !parts.status.is_success() {
-
             // If the server returned a non-success status then we are going to trust the server and
             // report their error back to the client
             tracing::debug!(provider = ?path.provider, "Received error response from OAuth provider");
 
             Ok(Response::from_parts(parts, body))
         } else {
-
             // The server gave us back a non-error response but it still may not be a success.
             // GitHub for instance does not use a status code for indicating the success or failure
             // of a call. So instead we try to deserialize the body into an access token, with the
@@ -170,15 +168,20 @@ pub async fn exchange_device_token(
             // an error instead.
 
             let bytes = to_bytes(body).await?;
-            let parsed: Result<StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>, serde_json::Error> = serde_json::from_slice(&bytes);
+            let parsed: Result<
+                StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>,
+                serde_json::Error,
+            > = serde_json::from_slice(&bytes);
 
             match parsed {
                 Ok(parsed) => {
                     let info = provider
-                    .get_user_info(provider.client(), parsed.access_token().secret())
-                    .await
-                    .map_err(LoginError::UserInfo)
-                    .tap_err(|err| tracing::error!(?err, "Failed to look up user information"))?;
+                        .get_user_info(provider.client(), parsed.access_token().secret())
+                        .await
+                        .map_err(LoginError::UserInfo)
+                        .tap_err(|err| {
+                            tracing::error!(?err, "Failed to look up user information")
+                        })?;
 
                     tracing::debug!("Verified and validated OAuth user");
 
@@ -223,45 +226,52 @@ pub async fn exchange_device_token(
                             .unwrap()
                             .into(),
                         )?)
-                },
+                }
                 Err(_) => {
-
                     // Do not log the error here as we want to ensure we do not leak token information
-                    tracing::debug!("Failed to parse a success response from the remote token endpoint");
+                    tracing::debug!(
+                        "Failed to parse a success response from the remote token endpoint"
+                    );
 
                     // Try to deserialize the body again, but this time as an error
-                    let mut error_response = match serde_json::from_slice::<ProxyTokenError>(&bytes) {
+                    let mut error_response = match serde_json::from_slice::<ProxyTokenError>(&bytes)
+                    {
                         Ok(error) => {
-
                             // We found an error in the message body. This is not ideal, but we at
                             // least can understand what the server was trying to tell us
                             tracing::debug!(?error, provider = ?path.provider, "Parsed error response from OAuth provider");
                             Response::from_parts(parts, Body::from(bytes))
                         }
                         Err(_) => {
-                            
                             // We still do not know what the remote server is doing... and need to
                             // cancel the request ourselves
-                            tracing::warn!("Remote OAuth provide returned a response that we do not undestand");
+                            tracing::warn!(
+                                "Remote OAuth provide returned a response that we do not undestand"
+                            );
 
-                            Response::new(Body::from(serde_json::to_string(&ProxyTokenError {
-                                error: "access_denied".to_string(),
-                                error_description: Some(format!("{} returned a malformed response", path.provider)),
-                                error_uri: None,
-                            }).unwrap()))
+                            Response::new(Body::from(
+                                serde_json::to_string(&ProxyTokenError {
+                                    error: "access_denied".to_string(),
+                                    error_description: Some(format!(
+                                        "{} returned a malformed response",
+                                        path.provider
+                                    )),
+                                    error_uri: None,
+                                })
+                                .unwrap(),
+                            ))
                         }
                     };
 
                     *error_response.status_mut() = StatusCode::BAD_REQUEST;
                     error_response.headers_mut().insert(
                         header::CONTENT_TYPE,
-                        HeaderValue::from_static("application/json")
+                        HeaderValue::from_static("application/json"),
                     );
 
                     Ok(error_response)
                 }
             }
-
         }
     } else {
         tracing::info!(provider = ?path.provider, "Found an OAuth provider, but it is not configured properly");

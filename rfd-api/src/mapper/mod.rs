@@ -8,7 +8,10 @@ use uuid::Uuid;
 
 use crate::{context::ApiContext, endpoints::login::UserInfo, ApiPermissions};
 
-use self::{email_address::EmailAddressMapper, email_domain::EmailDomainMapper, github_username::GitHubUsernameMapper};
+use self::{
+    email_address::EmailAddressMapper, email_domain::EmailDomainMapper,
+    github_username::GitHubUsernameMapper,
+};
 
 pub mod email_address;
 pub mod email_domain;

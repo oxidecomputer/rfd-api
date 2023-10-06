@@ -1,5 +1,5 @@
-use itertools::{Itertools, EitherOrBoth};
-use rfd_sdk::types::{Error, ListRfd, ApiUserForApiPermission, AccessGroupForApiPermission};
+use itertools::{EitherOrBoth, Itertools};
+use rfd_sdk::types::{AccessGroupForApiPermission, ApiUserForApiPermission, Error, ListRfd};
 use std::{fs::File, io::Write, process::Command};
 use tabwriter::TabWriter;
 
@@ -118,7 +118,7 @@ impl CliOutput for RfdTabPrinter {
     ) {
         match response {
             Ok(user) => print_user(&user),
-            Err(err) => print_error(err)
+            Err(err) => print_error(err),
         }
     }
 
@@ -128,7 +128,7 @@ impl CliOutput for RfdTabPrinter {
     ) {
         match response {
             Ok(user) => print_user(&user),
-            Err(err) => print_error(err)
+            Err(err) => print_error(err),
         }
     }
 
@@ -141,7 +141,7 @@ impl CliOutput for RfdTabPrinter {
     ) {
         match response {
             Ok(groups) => print_groups(&groups),
-            Err(err) => print_error(err)
+            Err(err) => print_error(err),
         }
     }
 }
@@ -239,9 +239,17 @@ fn print_user(user: &ApiUserForApiPermission) {
             &mut tw,
             "{}{}\t{}\t{}",
             TEXT_COLOR,
-            if i == 0 { user.id.to_string() } else { String::new() },
+            if i == 0 {
+                user.id.to_string()
+            } else {
+                String::new()
+            },
             inner,
-            if i == 0 { user.created_at.to_string() } else { String::new() },
+            if i == 0 {
+                user.created_at.to_string()
+            } else {
+                String::new()
+            },
         );
     }
 
@@ -254,16 +262,8 @@ fn print_user(user: &ApiUserForApiPermission) {
 fn print_groups(groups: &Vec<AccessGroupForApiPermission>) {
     let mut tw = TabWriter::new(vec![]).ansi(true);
 
-    writeln!(
-        &mut tw,
-        "{}Id\tName\tPermissions\tCreated At",
-        HEADER_COLOR
-    );
-    writeln!(
-        &mut tw,
-        "{}--\t----\t-----------\t----------",
-        HEADER_COLOR
-    );
+    writeln!(&mut tw, "{}Id\tName\tPermissions\tCreated At", HEADER_COLOR);
+    writeln!(&mut tw, "{}--\t----\t-----------\t----------", HEADER_COLOR);
 
     for group in groups {
         for (i, permission) in group.permissions.iter().enumerate() {
@@ -271,10 +271,22 @@ fn print_groups(groups: &Vec<AccessGroupForApiPermission>) {
                 &mut tw,
                 "{}{}\t{}\t{}\t{}",
                 TEXT_COLOR,
-                if i == 0 { group.id.to_string() } else { String::new() },
-                if i == 0 { group.name.to_string() } else { String::new() },
+                if i == 0 {
+                    group.id.to_string()
+                } else {
+                    String::new()
+                },
+                if i == 0 {
+                    group.name.to_string()
+                } else {
+                    String::new()
+                },
                 permission,
-                if i == 0 { group.created_at.to_string() } else { String::new() },
+                if i == 0 {
+                    group.created_at.to_string()
+                } else {
+                    String::new()
+                },
             );
         }
     }

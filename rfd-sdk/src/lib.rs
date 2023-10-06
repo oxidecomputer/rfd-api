@@ -2,8 +2,8 @@ mod generated;
 
 use std::fmt::Display;
 
-pub use generated::sdk::*;
 use generated::sdk::types::ApiPermission;
+pub use generated::sdk::*;
 pub use progenitor_client::Error as ProgenitorClientError;
 
 impl Display for ApiPermission {
@@ -37,25 +37,62 @@ impl Display for ApiPermission {
             Self::RemoveFromGroup(id) => write!(f, "remove-group-membership:{}", id),
             Self::DeleteGroup(id) => write!(f, "delete-group:{}", id),
             Self::GetRfd(number) => write!(f, "get-rfd:{}", number),
-            Self::GetRfds(numbers) => write!(f, "get-rfds:{}", numbers.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",")),
+            Self::GetRfds(numbers) => write!(
+                f,
+                "get-rfds:{}",
+                numbers
+                    .iter()
+                    .map(|i| i.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
             Self::GetRfdsAssigned => write!(f, "get-rfds-assigned"),
             Self::GetRfdsAll => write!(f, "get-rfds-all"),
             Self::GetDiscussion(number) => write!(f, "get-discussion:{}", number),
-            Self::GetDiscussions(numbers) => write!(f, "get-discussions:{}", numbers.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",")),
+            Self::GetDiscussions(numbers) => write!(
+                f,
+                "get-discussions:{}",
+                numbers
+                    .iter()
+                    .map(|i| i.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
             Self::GetDiscussionsAssigned => write!(f, "get-discussions-assigned"),
             Self::GetDiscussionsAll => write!(f, "get-discussions-all"),
             Self::SearchRfds => write!(f, "search-rfds"),
             Self::CreateOAuthClient => write!(f, "create-oauth-client"),
             Self::GetOAuthClient(id) => write!(f, "get-oauth-client:{}", id),
-            Self::GetOAuthClients(ids) => write!(f, "get-oauth-clients:{}", ids.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",")),
+            Self::GetOAuthClients(ids) => write!(
+                f,
+                "get-oauth-clients:{}",
+                ids.iter()
+                    .map(|i| i.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
             Self::GetOAuthClientsAssigned => write!(f, "get-oauth-clients-assigned"),
             Self::GetOAuthClientsAll => write!(f, "get-oauth-clients-all"),
             Self::UpdateOAuthClient(id) => write!(f, "update-oauth-client:{}", id),
-            Self::UpdateOAuthClients(ids) => write!(f, "update-oauth-clients:{}", ids.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",")),
+            Self::UpdateOAuthClients(ids) => write!(
+                f,
+                "update-oauth-clients:{}",
+                ids.iter()
+                    .map(|i| i.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
             Self::UpdateOAuthClientsAssigned => write!(f, "update-oauth-clients-assigned"),
             Self::UpdateOAuthClientsAll => write!(f, "update-oauth-clients-all"),
             Self::DeleteOAuthClient(id) => write!(f, "delete-oauth-client:{}", id),
-            Self::DeleteOAuthClients(ids) => write!(f, "delete-oauth-clients:{}", ids.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",")),
+            Self::DeleteOAuthClients(ids) => write!(
+                f,
+                "delete-oauth-clients:{}",
+                ids.iter()
+                    .map(|i| i.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
             Self::DeleteOAuthClientsAssigned => write!(f, "delete-oauth-clients-assigned"),
             Self::DeleteOAuthClientsAll => write!(f, "delete-oauth-clients-self"),
         }

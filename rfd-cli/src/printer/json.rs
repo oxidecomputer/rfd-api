@@ -5,7 +5,10 @@ use crate::generated::cli::CliOutput;
 
 pub struct RfdJsonPrinter;
 
-fn print_cli_output<T>(response: &Result<T, progenitor_client::Error<types::Error>>) where T: Serialize {
+fn print_cli_output<T>(response: &Result<T, progenitor_client::Error<types::Error>>)
+where
+    T: Serialize,
+{
     match response {
         Ok(res) => println!("{}", serde_json::to_string(&res).unwrap()),
         Err(err) => eprintln!("{}", err),

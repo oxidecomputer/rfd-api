@@ -1,13 +1,16 @@
 use std::fmt;
 
-use http::{HeaderMap, header::USER_AGENT, HeaderValue};
+use http::{header::USER_AGENT, HeaderMap, HeaderValue};
 use hyper::body::Bytes;
 use reqwest::Client;
 use serde::Deserialize;
 
 use crate::endpoints::login::{ExternalUserId, UserInfo, UserInfoError};
 
-use super::{ClientType, ExtractUserInfo, OAuthProvider, OAuthProviderName, OAuthPublicCredentials, OAuthPrivateCredentials};
+use super::{
+    ClientType, ExtractUserInfo, OAuthPrivateCredentials, OAuthProvider, OAuthProviderName,
+    OAuthPublicCredentials,
+};
 
 pub struct GitHubOAuthProvider {
     // public: GitHubPublicProvider,
@@ -34,10 +37,7 @@ impl GitHubOAuthProvider {
     ) -> Self {
         let mut headers = HeaderMap::new();
         headers.insert(USER_AGENT, HeaderValue::from_static("rfd-api"));
-        let client = Client::builder()
-            .default_headers(headers)
-            .build()
-            .unwrap();
+        let client = Client::builder().default_headers(headers).build().unwrap();
 
         Self {
             device_public: OAuthPublicCredentials {
@@ -87,7 +87,7 @@ impl ExtractUserInfo for GitHubOAuthProvider {
         Ok(UserInfo {
             external_id: ExternalUserId::GitHub(user.id.to_string()),
             verified_emails,
-            github_username: Some(user.login)
+            github_username: Some(user.login),
         })
     }
 }

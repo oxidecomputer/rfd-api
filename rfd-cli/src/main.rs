@@ -3,7 +3,7 @@
 use anyhow::{anyhow, Result};
 use clap::{Arg, ArgAction, Command, CommandFactory, FromArgMatches};
 use generated::cli::*;
-use printer::{RfdTabPrinter, Printer, RfdJsonPrinter};
+use printer::{Printer, RfdJsonPrinter, RfdTabPrinter};
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
 use rfd_sdk::Client;
 use std::time::Duration;
@@ -168,7 +168,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     let mut cmd = root.cmd("rfd");
-    cmd = cmd.bin_name("rfd")
+    cmd = cmd
+        .bin_name("rfd")
         .arg(
             Arg::new("debug")
                 .long("debug")
@@ -185,7 +186,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .global(true)
                 .value_parser(["json", "tab"])
                 .default_value("json")
-                .action(ArgAction::Set)
+                .action(ArgAction::Set),
         );
 
     cmd = cmd.subcommand(cmd::config::ConfigCmd::command());
@@ -203,7 +204,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let printer = match format.as_str() {
         "json" => Printer::Json(RfdJsonPrinter),
         "tab" => Printer::Tab(RfdTabPrinter),
-        other => panic!("Unknown format {}", other)
+        other => panic!("Unknown format {}", other),
     };
 
     let mut node = &root;
