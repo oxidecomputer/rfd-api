@@ -106,31 +106,24 @@ pub struct AuthnProviders {
 
 #[derive(Debug, Deserialize)]
 pub struct OAuthProviders {
-    pub github: Option<GitHubOAuthConfig>,
-    pub google: Option<GoogleOAuthConfig>,
+    pub github: Option<OAuthConfig>,
+    pub google: Option<OAuthConfig>,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct GitHubOAuthConfig {
-    pub client_id: String,
-    pub client_secret: String,
-    pub redirect_uri: String,
+pub struct OAuthConfig {
+    pub device: OAuthDeviceConfig,
+    pub web: OAuthWebConfig,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct GoogleOAuthConfig {
-    pub device: GoogleOAuthDeviceConfig,
-    pub web: GoogleOAuthWebConfig,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct GoogleOAuthDeviceConfig {
+pub struct OAuthDeviceConfig {
     pub client_id: String,
     pub client_secret: String,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct GoogleOAuthWebConfig {
+pub struct OAuthWebConfig {
     pub client_id: String,
     pub client_secret: String,
     pub redirect_uri: String,

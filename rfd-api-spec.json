@@ -2207,7 +2207,7 @@
       "OAuthProviderName": {
         "type": "string",
         "enum": [
-          "git-hub",
+          "github",
           "google"
         ]
       },

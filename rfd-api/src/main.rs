@@ -74,8 +74,10 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
             OAuthProviderName::GitHub,
             Box::new(move || {
                 Box::new(GitHubOAuthProvider::new(
-                    github.client_id.clone(),
-                    github.client_secret.clone(),
+                    github.device.client_id.clone(),
+                    github.device.client_secret.clone(),
+                    github.web.client_id.clone(),
+                    github.web.client_secret.clone(),
                 ))
             }),
         )

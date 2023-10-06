@@ -144,26 +144,35 @@ pub mod types {
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub enum ApiPermission {
         CreateApiUserTokenSelf,
+        CreateApiUserTokenAssigned,
         CreateApiUserTokenAll,
         GetApiUserSelf,
+        GetApiUserAssigned,
         GetApiUserAll,
         GetApiUserTokenSelf,
+        GetApiUserTokenAssigned,
+        GetApiUserTokenAll,
         DeleteApiUserTokenSelf,
+        DeleteApiUserTokenAssigned,
         DeleteApiUserTokenAll,
         CreateApiUser,
         UpdateApiUserSelf,
+        UpdateApiUserAssigned,
         UpdateApiUserAll,
         ListGroups,
         CreateGroup,
-        GetAllRfds,
-        GetAssignedRfds,
-        GetAllDiscussions,
-        GetAssignedDiscussions,
+        GetRfdsAssigned,
+        GetRfdsAll,
+        GetDiscussionsAssigned,
+        GetDiscussionsAll,
         SearchRfds,
         CreateOAuthClient,
-        GetAssignedOAuthClients,
-        UpdateAssignedOAuthClients,
-        DeleteAssignedOAuthClients,
+        GetOAuthClientsAssigned,
+        GetOAuthClientsAll,
+        UpdateOAuthClientsAssigned,
+        UpdateOAuthClientsAll,
+        DeleteOAuthClientsAssigned,
+        DeleteOAuthClientsAll,
         CreateApiUserToken(uuid::Uuid),
         GetApiUser(uuid::Uuid),
         GetApiUserToken(uuid::Uuid),
@@ -636,8 +645,8 @@ pub mod types {
         schemars :: JsonSchema,
     )]
     pub enum OAuthProviderName {
-        #[serde(rename = "git-hub")]
-        GitHub,
+        #[serde(rename = "github")]
+        Github,
         #[serde(rename = "google")]
         Google,
     }
@@ -651,7 +660,7 @@ pub mod types {
     impl ToString for OAuthProviderName {
         fn to_string(&self) -> String {
             match *self {
-                Self::GitHub => "git-hub".to_string(),
+                Self::Github => "github".to_string(),
                 Self::Google => "google".to_string(),
             }
         }
@@ -661,7 +670,7 @@ pub mod types {
         type Err = &'static str;
         fn from_str(value: &str) -> Result<Self, &'static str> {
             match value {
-                "git-hub" => Ok(Self::GitHub),
+                "github" => Ok(Self::Github),
                 "google" => Ok(Self::Google),
                 _ => Err("invalid value"),
             }
@@ -3344,6 +3353,7 @@ impl Client {
     ///    .client_id(client_id)
     ///    .redirect_uri(redirect_uri)
     ///    .response_type(response_type)
+    ///    .scope(scope)
     ///    .state(state)
     ///    .send()
     ///    .await;
@@ -4645,6 +4655,7 @@ pub mod builder {
         client_id: Result<uuid::Uuid, String>,
         redirect_uri: Result<String, String>,
         response_type: Result<String, String>,
+        scope: Result<Option<String>, String>,
         state: Result<String, String>,
     }
 
@@ -4656,6 +4667,7 @@ pub mod builder {
                 client_id: Err("client_id was not initialized".to_string()),
                 redirect_uri: Err("redirect_uri was not initialized".to_string()),
                 response_type: Err("response_type was not initialized".to_string()),
+                scope: Ok(None),
                 state: Err("state was not initialized".to_string()),
             }
         }
@@ -4700,6 +4712,17 @@ pub mod builder {
             self
         }
 
+        pub fn scope<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<String>,
+        {
+            self.scope = value
+                .try_into()
+                .map(Some)
+                .map_err(|_| "conversion to `String` for scope failed".to_string());
+            self
+        }
+
         pub fn state<V>(mut self, value: V) -> Self
         where
             V: std::convert::TryInto<String>,
@@ -4718,22 +4741,27 @@ pub mod builder {
                 client_id,
                 redirect_uri,
                 response_type,
+                scope,
                 state,
             } = self;
             let provider = provider.map_err(Error::InvalidRequest)?;
             let client_id = client_id.map_err(Error::InvalidRequest)?;
             let redirect_uri = redirect_uri.map_err(Error::InvalidRequest)?;
             let response_type = response_type.map_err(Error::InvalidRequest)?;
+            let scope = scope.map_err(Error::InvalidRequest)?;
             let state = state.map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/login/oauth/{}/code/authorize",
                 client.baseurl,
                 encode_path(&provider.to_string()),
             );
-            let mut query = Vec::with_capacity(4usize);
+            let mut query = Vec::with_capacity(5usize);
             query.push(("client_id", client_id.to_string()));
             query.push(("redirect_uri", redirect_uri.to_string()));
             query.push(("response_type", response_type.to_string()));
+            if let Some(v) = &scope {
+                query.push(("scope", v.to_string()));
+            }
             query.push(("state", state.to_string()));
             let request = client.client.get(url).query(&query).build()?;
             let result = client.client.execute(request).await;

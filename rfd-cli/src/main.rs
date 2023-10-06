@@ -3,7 +3,7 @@
 use anyhow::{anyhow, Result};
 use clap::{Arg, ArgAction, Command, CommandFactory, FromArgMatches};
 use generated::cli::*;
-use printer::RfdCliPrinter;
+use printer::{RfdTabPrinter, Printer, RfdJsonPrinter};
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
 use rfd_sdk::Client;
 use std::time::Duration;
@@ -107,7 +107,7 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::UpdateApiUser => Some("user update"),
 
         // Group commands
-        CliCommand::GetGroups => Some("group get"),
+        CliCommand::GetGroups => Some("group list"),
         CliCommand::CreateGroup => Some("group create"),
         CliCommand::UpdateGroup => Some("group update"),
         CliCommand::DeleteGroup => Some("group delete"),
@@ -168,13 +168,25 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     let mut cmd = root.cmd("rfd");
-    cmd = cmd.bin_name("rfd").arg(
-        Arg::new("debug")
-            .short('d')
-            .help("Enable more verbose errors")
-            .global(true)
-            .action(ArgAction::SetTrue),
-    );
+    cmd = cmd.bin_name("rfd")
+        .arg(
+            Arg::new("debug")
+                .long("debug")
+                .short('d')
+                .help("Enable more verbose errors")
+                .global(true)
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("format")
+                .long("format")
+                .short('f')
+                .help("Specify the output format to display results in")
+                .global(true)
+                .value_parser(["json", "tab"])
+                .default_value("json")
+                .action(ArgAction::Set)
+        );
 
     cmd = cmd.subcommand(cmd::config::ConfigCmd::command());
     cmd = cmd.subcommand(auth::Login::command());
@@ -186,6 +198,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
     if matches.try_get_one::<bool>("debug").ok().is_some() {
         ctx.verbosity = VerbosityLevel::All;
     }
+
+    let format = matches.try_get_one::<String>("format").unwrap().unwrap();
+    let printer = match format.as_str() {
+        "json" => Printer::Json(RfdJsonPrinter),
+        "tab" => Printer::Tab(RfdTabPrinter),
+        other => panic!("Unknown format {}", other)
+    };
 
     let mut node = &root;
     let mut sm = &matches;
@@ -209,7 +228,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 sm = sub_matches;
             }
 
-            let cli = Cli::new_with_override(ctx.client()?.clone(), (), RfdCliPrinter {});
+            let cli = Cli::new_with_override(ctx.client()?.clone(), (), printer);
             cli.execute(node.cmd.unwrap(), sm).await;
         }
     };

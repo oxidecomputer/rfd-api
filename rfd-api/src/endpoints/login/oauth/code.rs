@@ -8,8 +8,7 @@ use http::{
     header::{LOCATION, SET_COOKIE},
     HeaderValue, StatusCode,
 };
-use hyper::{client::HttpConnector, Body, Client, Response};
-use hyper_tls::HttpsConnector;
+use hyper::{Body, Response};
 use oauth2::{
     reqwest::async_http_client, AuthorizationCode, CsrfToken, PkceCodeChallenge, PkceCodeVerifier,
     Scope, TokenResponse,
@@ -480,7 +479,7 @@ pub async fn authz_code_exchange(
 
     // Now that the attempt has been confirmed, use it to fetch user information form the remote
     // provider
-    let info = fetch_user_info(&ctx.https_client, &*provider, &attempt).await?;
+    let info = fetch_user_info(&*provider, &attempt).await?;
 
     tracing::debug!("Retrieved user information from remote provider");
 
@@ -621,7 +620,6 @@ fn verify_login_attempt(
 }
 
 async fn fetch_user_info(
-    https: &Client<HttpsConnector<HttpConnector>, Body>,
     provider: &dyn OAuthProvider,
     attempt: &LoginAttempt,
 ) -> Result<UserInfo, HttpError> {
@@ -652,7 +650,7 @@ async fn fetch_user_info(
 
     // Use the retrieved access token to fetch the user information from the remote API
     let info = provider
-        .get_user_info(&https, response.access_token().secret())
+        .get_user_info(provider.client(), response.access_token().secret())
         .await
         .map_err(LoginError::UserInfo)
         .tap_err(|err| tracing::error!(?err, "Failed to look up user information"))?;

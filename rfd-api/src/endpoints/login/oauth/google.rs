@@ -1,6 +1,7 @@
 use std::fmt;
 
 use hyper::body::Bytes;
+use reqwest::Client;
 use serde::Deserialize;
 
 use crate::endpoints::login::{ExternalUserId, UserInfo, UserInfoError};
@@ -15,6 +16,7 @@ pub struct GoogleOAuthProvider {
     device_private: Option<OAuthPrivateCredentials>,
     web_public: OAuthPublicCredentials,
     web_private: Option<OAuthPrivateCredentials>,
+    client: Client,
 }
 
 impl fmt::Debug for GoogleOAuthProvider {
@@ -43,6 +45,7 @@ impl GoogleOAuthProvider {
             web_private: Some(OAuthPrivateCredentials {
                 client_secret: web_client_secret,
             }),
+            client: Client::new(),
         }
     }
 }
@@ -79,6 +82,10 @@ impl OAuthProvider for GoogleOAuthProvider {
 
     fn scopes(&self) -> Vec<&str> {
         vec!["https://www.googleapis.com/auth/userinfo.email", "openid"]
+    }
+
+    fn client(&self) -> &reqwest::Client {
+        &self.client
     }
 
     fn client_id(&self, client_type: &ClientType) -> &str {

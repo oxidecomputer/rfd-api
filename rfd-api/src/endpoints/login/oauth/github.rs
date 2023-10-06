@@ -1,15 +1,22 @@
 use std::fmt;
 
+use http::{HeaderMap, header::USER_AGENT, HeaderValue};
 use hyper::body::Bytes;
-use serde::{Deserialize, Serialize};
+use reqwest::Client;
+use serde::Deserialize;
 
 use crate::endpoints::login::{ExternalUserId, UserInfo, UserInfoError};
 
-use super::{ClientType, ExtractUserInfo, OAuthProvider, OAuthProviderName};
+use super::{ClientType, ExtractUserInfo, OAuthProvider, OAuthProviderName, OAuthPublicCredentials, OAuthPrivateCredentials};
 
 pub struct GitHubOAuthProvider {
-    public: GitHubPublicProvider,
-    private: Option<GitHubPrivateProvider>,
+    // public: GitHubPublicProvider,
+    // private: Option<GitHubPrivateProvider>,
+    device_public: OAuthPublicCredentials,
+    device_private: Option<OAuthPrivateCredentials>,
+    web_public: OAuthPublicCredentials,
+    web_private: Option<OAuthPrivateCredentials>,
+    client: Client,
 }
 
 impl fmt::Debug for GitHubOAuthProvider {
@@ -18,42 +25,56 @@ impl fmt::Debug for GitHubOAuthProvider {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct GitHubPublicProvider {
-    client_id: String,
-}
-
-pub struct GitHubPrivateProvider {
-    client_secret: String,
-}
-
 impl GitHubOAuthProvider {
-    pub fn new(client_id: String, client_secret: String) -> Self {
+    pub fn new(
+        device_client_id: String,
+        device_client_secret: String,
+        web_client_id: String,
+        web_client_secret: String,
+    ) -> Self {
+        let mut headers = HeaderMap::new();
+        headers.insert(USER_AGENT, HeaderValue::from_static("rfd-api"));
+        let client = Client::builder()
+            .default_headers(headers)
+            .build()
+            .unwrap();
+
         Self {
-            public: GitHubPublicProvider { client_id },
-            private: Some(GitHubPrivateProvider { client_secret }),
+            device_public: OAuthPublicCredentials {
+                client_id: device_client_id,
+            },
+            device_private: Some(OAuthPrivateCredentials {
+                client_secret: device_client_secret,
+            }),
+            web_public: OAuthPublicCredentials {
+                client_id: web_client_id,
+            },
+            web_private: Some(OAuthPrivateCredentials {
+                client_secret: web_client_secret,
+            }),
+            client,
         }
     }
 }
 
 #[derive(Debug, Deserialize)]
 struct GitHubUser {
-    id: String,
+    id: u32,
 }
 
 #[derive(Debug, Deserialize)]
 struct GitHubUserEmails {
     email: String,
     verified: bool,
-    // TODO: Add ability to mask non-visible emails?
-    _visibility: Option<String>,
 }
 
 impl ExtractUserInfo for GitHubOAuthProvider {
     // There should always be as many entries in the data list as there are endpoints. This should
     // be changed in the future to be a static check
     fn extract_user_info(&self, data: &[Bytes]) -> Result<UserInfo, UserInfoError> {
-        let user: GitHubUser = serde_json::from_slice(&data[1])?;
+        tracing::debug!("Extracting user information from GitHub responses");
+
+        let user: GitHubUser = serde_json::from_slice(&data[0])?;
 
         let remote_emails: Vec<GitHubUserEmails> = serde_json::from_slice(&data[1])?;
         let verified_emails = remote_emails
@@ -63,7 +84,7 @@ impl ExtractUserInfo for GitHubOAuthProvider {
             .collect::<Vec<_>>();
 
         Ok(UserInfo {
-            external_id: ExternalUserId::GitHub(user.id),
+            external_id: ExternalUserId::GitHub(user.id.to_string()),
             verified_emails,
         })
     }
@@ -78,14 +99,28 @@ impl OAuthProvider for GitHubOAuthProvider {
         vec!["user:email"]
     }
 
-    fn client_id(&self, _client_type: &ClientType) -> &str {
-        &self.public.client_id
+    fn client(&self) -> &reqwest::Client {
+        &self.client
     }
 
-    fn client_secret(&self, _client_type: &ClientType) -> Option<&str> {
-        self.private
-            .as_ref()
-            .map(|private| private.client_secret.as_str())
+    fn client_id(&self, client_type: &ClientType) -> &str {
+        match client_type {
+            ClientType::Device => &self.device_public.client_id,
+            ClientType::Web => &self.web_public.client_id,
+        }
+    }
+
+    fn client_secret(&self, client_type: &ClientType) -> Option<&str> {
+        match client_type {
+            ClientType::Device => self
+                .device_private
+                .as_ref()
+                .map(|private| private.client_secret.as_str()),
+            ClientType::Web => self
+                .web_private
+                .as_ref()
+                .map(|private| private.client_secret.as_str()),
+        }
     }
 
     fn user_info_endpoints(&self) -> Vec<&str> {

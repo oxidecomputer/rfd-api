@@ -334,7 +334,7 @@ impl Cli {
                     .long("provider")
                     .value_parser(clap::builder::TypedValueParser::map(
                         clap::builder::PossibleValuesParser::new([
-                            types::OAuthProviderName::GitHub.to_string(),
+                            types::OAuthProviderName::Github.to_string(),
                             types::OAuthProviderName::Google.to_string(),
                         ]),
                         |s| types::OAuthProviderName::try_from(s).unwrap(),
@@ -352,6 +352,12 @@ impl Cli {
                     .long("response-type")
                     .value_parser(clap::value_parser!(String))
                     .required(true),
+            )
+            .arg(
+                clap::Arg::new("scope")
+                    .long("scope")
+                    .value_parser(clap::value_parser!(String))
+                    .required(false),
             )
             .arg(
                 clap::Arg::new("state")
@@ -381,7 +387,7 @@ impl Cli {
                     .long("provider")
                     .value_parser(clap::builder::TypedValueParser::map(
                         clap::builder::PossibleValuesParser::new([
-                            types::OAuthProviderName::GitHub.to_string(),
+                            types::OAuthProviderName::Github.to_string(),
                             types::OAuthProviderName::Google.to_string(),
                         ]),
                         |s| types::OAuthProviderName::try_from(s).unwrap(),
@@ -434,7 +440,7 @@ impl Cli {
                     .long("provider")
                     .value_parser(clap::builder::TypedValueParser::map(
                         clap::builder::PossibleValuesParser::new([
-                            types::OAuthProviderName::GitHub.to_string(),
+                            types::OAuthProviderName::Github.to_string(),
                             types::OAuthProviderName::Google.to_string(),
                         ]),
                         |s| types::OAuthProviderName::try_from(s).unwrap(),
@@ -470,7 +476,7 @@ impl Cli {
                 .long("provider")
                 .value_parser(clap::builder::TypedValueParser::map(
                     clap::builder::PossibleValuesParser::new([
-                        types::OAuthProviderName::GitHub.to_string(),
+                        types::OAuthProviderName::Github.to_string(),
                         types::OAuthProviderName::Google.to_string(),
                     ]),
                     |s| types::OAuthProviderName::try_from(s).unwrap(),
@@ -504,7 +510,7 @@ impl Cli {
                     .long("provider")
                     .value_parser(clap::builder::TypedValueParser::map(
                         clap::builder::PossibleValuesParser::new([
-                            types::OAuthProviderName::GitHub.to_string(),
+                            types::OAuthProviderName::Github.to_string(),
                             types::OAuthProviderName::Google.to_string(),
                         ]),
                         |s| types::OAuthProviderName::try_from(s).unwrap(),
@@ -1058,6 +1064,10 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
 
         if let Some(value) = matches.get_one::<String>("response-type") {
             request = request.response_type(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<String>("scope") {
+            request = request.scope(value.clone());
         }
 
         if let Some(value) = matches.get_one::<String>("state") {

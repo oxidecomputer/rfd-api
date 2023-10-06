@@ -1,10 +1,9 @@
 use async_trait::async_trait;
 use dropshot::Method;
-use http::{header, Request};
+use http::header;
 use hyper::{
-    body::{to_bytes, Bytes},
-    client::connect::Connect,
-    Body, Client,
+    body::Bytes,
+    Body
 };
 use oauth2::{basic::BasicClient, url::ParseError, AuthUrl, ClientId, ClientSecret, TokenUrl};
 use rfd_model::OAuthClient;
@@ -46,6 +45,7 @@ pub struct OAuthPrivateCredentials {
 pub trait OAuthProvider: ExtractUserInfo + Debug + Send + Sync {
     fn name(&self) -> OAuthProviderName;
     fn scopes(&self) -> Vec<&str>;
+    fn client(&self) -> &reqwest::Client;
     fn client_id(&self, client_type: &ClientType) -> &str;
     fn client_secret(&self, client_type: &ClientType) -> Option<&str>;
 
@@ -100,32 +100,27 @@ where
     T: OAuthProvider + ExtractUserInfo + Send + Sync + ?Sized,
 {
     #[instrument(skip(client, token))]
-    async fn get_user_info<C>(
+    async fn get_user_info(
         &self,
-        client: &Client<C>,
+        client: &reqwest::Client,
         token: &str,
     ) -> Result<UserInfo, UserInfoError>
-    where
-        C: Connect + Clone + Send + Sync + 'static,
     {
         tracing::trace!("Requesting user information from OAuth provider");
 
         let mut responses = vec![];
 
         for endpoint in self.user_info_endpoints() {
-            let request = Request::builder()
-                .method(Method::GET)
+            let request = client.request(Method::GET, endpoint)
                 .header(header::AUTHORIZATION, format!("Bearer {}", token))
-                .uri(endpoint)
-                .body(Body::empty())?;
+                .body(Body::empty())
+                .build()?;
 
-            let response = client.request(request).await?;
+            let response = client.execute(request).await?;
 
             tracing::trace!(status = ?response.status(), "Received response from OAuth provider");
 
-            let body = response.into_body();
-            let bytes = to_bytes(body).await?;
-
+            let bytes = response.bytes().await?;
             responses.push(bytes);
         }
 
@@ -146,6 +141,7 @@ pub struct OAuthProviderInfo {
 #[derive(Debug, Deserialize, PartialEq, Eq, Hash, Serialize, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
 pub enum OAuthProviderName {
+    #[serde(rename = "github")]
     GitHub,
     Google,
 }
