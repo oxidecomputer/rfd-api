@@ -9,7 +9,7 @@ use oauth2::CsrfToken;
 use partial_struct::partial;
 use rfd_model::{
     permissions::{Caller, Permissions},
-    schema_ext::LoginAttemptState,
+    schema_ext::{LoginAttemptState, Visibility},
     storage::{
         AccessGroupFilter, AccessGroupStore, AccessTokenStore, ApiKeyFilter, ApiKeyStore,
         ApiUserFilter, ApiUserProviderFilter, ApiUserProviderStore, ApiUserStore, JobStore,
@@ -181,6 +181,7 @@ pub struct FullRfd {
     pub committed_at: DateTime<Utc>,
     #[partial(ListRfd(skip))]
     pub pdfs: Vec<FullRfdPdfEntry>,
+    pub visibility: Visibility,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
@@ -468,6 +469,7 @@ impl ApiContext {
                 sha: revision.sha,
                 commit: revision.commit_sha,
                 committed_at: revision.committed_at,
+                visibility: rfd.visibility,
             })
             .collect::<Vec<_>>();
 
@@ -525,6 +527,7 @@ impl ApiContext {
                             link: pdf.link,
                         })
                         .collect(),
+                    visibility: rfd.visibility,
                 }))
             } else {
                 Ok(None)

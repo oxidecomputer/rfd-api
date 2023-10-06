@@ -1743,6 +1743,9 @@
           },
           "title": {
             "type": "string"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           }
         },
         "required": [
@@ -1753,7 +1756,8 @@
           "pdfs",
           "rfd_number",
           "sha",
-          "title"
+          "title",
+          "visibility"
         ]
       },
       "FullRfdPdfEntry": {
@@ -2009,6 +2013,9 @@
           },
           "title": {
             "type": "string"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           }
         },
         "required": [
@@ -2017,7 +2024,8 @@
           "id",
           "rfd_number",
           "sha",
-          "title"
+          "title",
+          "visibility"
         ]
       },
       "OAuthAuthzCodeExchangeBody": {
@@ -2217,6 +2225,13 @@
           "$ref": "#/components/schemas/ApiPermission"
         },
         "uniqueItems": true
+      },
+      "Visibility": {
+        "type": "string",
+        "enum": [
+          "public",
+          "private"
+        ]
       }
     }
   },

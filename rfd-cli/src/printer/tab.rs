@@ -22,12 +22,12 @@ impl CliOutput for RfdTabPrinter {
 
                 writeln!(
                     &mut tw,
-                    "{}Number:\t\x1b[38;5;{}m{}",
+                    "{}Number:\t{}{}",
                     HEADER_COLOR, TEXT_COLOR, rfd.rfd_number,
                 );
                 writeln!(
                     &mut tw,
-                    "{}Title:\t\x1b[38;5;{}m{}",
+                    "{}Title:\t{}{}",
                     HEADER_COLOR, TEXT_COLOR, rfd.title,
                 );
                 writeln!(
@@ -39,35 +39,42 @@ impl CliOutput for RfdTabPrinter {
                 );
                 writeln!(
                     &mut tw,
-                    "{}Authors:\t\x1b[38;5;{}m{}",
+                    "{}Authors:\t{}{}",
                     HEADER_COLOR,
                     TEXT_COLOR,
                     rfd.authors.unwrap_or_default(),
                 );
                 writeln!(
                     &mut tw,
-                    "{}Latest Commit:\t\x1b[38;5;{}m{}",
+                    "{}Latest Commit:\t{}{}",
                     HEADER_COLOR, TEXT_COLOR, rfd.commit,
                 );
                 writeln!(
                     &mut tw,
-                    "{}Updated At:\t\x1b[38;5;{}m{}",
+                    "{}Visibility:\t{}{}",
+                    HEADER_COLOR,
+                    TEXT_COLOR,
+                    rfd.visibility.to_string(),
+                );
+                writeln!(
+                    &mut tw,
+                    "{}Updated At:\t{}{}",
                     HEADER_COLOR, TEXT_COLOR, rfd.committed_at,
                 );
                 writeln!(
                     &mut tw,
-                    "{}Url:\t\x1b[38;5;{}mhttps://rfd.shared.oxide.computer/rfd/{}",
+                    "{}Url:\t{}https://rfd.shared.oxide.computer/rfd/{}",
                     HEADER_COLOR, TEXT_COLOR, rfd.rfd_number,
                 );
                 writeln!(
                     &mut tw,
-                    "{}Discussion Url:\t\x1b[38;5;{}m{}",
+                    "{}Discussion Url:\t{}{}",
                     HEADER_COLOR,
                     TEXT_COLOR,
                     rfd.discussion.unwrap_or_default(),
                 );
                 writeln!(&mut tw, "{}---------------", HEADER_COLOR,);
-                writeln!(&mut tw, "\x1b[38;5;{}m", TEXT_COLOR);
+                writeln!(&mut tw, "{}", TEXT_COLOR);
 
                 let body = print_rfd_html(&rfd.content);
 

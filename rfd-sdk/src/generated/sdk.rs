@@ -280,6 +280,7 @@ pub mod types {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub state: Option<String>,
         pub title: String,
+        pub visibility: Visibility,
     }
 
     impl From<&FullRfd> for FullRfd {
@@ -487,6 +488,7 @@ pub mod types {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub state: Option<String>,
         pub title: String,
+        pub visibility: Visibility,
     }
 
     impl From<&ListRfd> for ListRfd {
@@ -722,6 +724,73 @@ pub mod types {
     impl From<Vec<ApiPermission>> for PermissionsForApiPermission {
         fn from(value: Vec<ApiPermission>) -> Self {
             Self(value)
+        }
+    }
+
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        Deserialize,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        Serialize,
+        schemars :: JsonSchema,
+    )]
+    pub enum Visibility {
+        #[serde(rename = "public")]
+        Public,
+        #[serde(rename = "private")]
+        Private,
+    }
+
+    impl From<&Visibility> for Visibility {
+        fn from(value: &Visibility) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ToString for Visibility {
+        fn to_string(&self) -> String {
+            match *self {
+                Self::Public => "public".to_string(),
+                Self::Private => "private".to_string(),
+            }
+        }
+    }
+
+    impl std::str::FromStr for Visibility {
+        type Err = &'static str;
+        fn from_str(value: &str) -> Result<Self, &'static str> {
+            match value {
+                "public" => Ok(Self::Public),
+                "private" => Ok(Self::Private),
+                _ => Err("invalid value"),
+            }
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for Visibility {
+        type Error = &'static str;
+        fn try_from(value: &str) -> Result<Self, &'static str> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for Visibility {
+        type Error = &'static str;
+        fn try_from(value: &String) -> Result<Self, &'static str> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for Visibility {
+        type Error = &'static str;
+        fn try_from(value: String) -> Result<Self, &'static str> {
+            value.parse()
         }
     }
 
@@ -1436,6 +1505,7 @@ pub mod types {
             sha: Result<String, String>,
             state: Result<Option<String>, String>,
             title: Result<String, String>,
+            visibility: Result<super::Visibility, String>,
         }
 
         impl Default for FullRfd {
@@ -1453,6 +1523,7 @@ pub mod types {
                     sha: Err("no value supplied for sha".to_string()),
                     state: Ok(Default::default()),
                     title: Err("no value supplied for title".to_string()),
+                    visibility: Err("no value supplied for visibility".to_string()),
                 }
             }
         }
@@ -1578,6 +1649,16 @@ pub mod types {
                     .map_err(|e| format!("error converting supplied value for title: {}", e));
                 self
             }
+            pub fn visibility<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::Visibility>,
+                T::Error: std::fmt::Display,
+            {
+                self.visibility = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for visibility: {}", e));
+                self
+            }
         }
 
         impl std::convert::TryFrom<FullRfd> for super::FullRfd {
@@ -1596,6 +1677,7 @@ pub mod types {
                     sha: value.sha?,
                     state: value.state?,
                     title: value.title?,
+                    visibility: value.visibility?,
                 })
             }
         }
@@ -1615,6 +1697,7 @@ pub mod types {
                     sha: Ok(value.sha),
                     state: Ok(value.state),
                     title: Ok(value.title),
+                    visibility: Ok(value.visibility),
                 }
             }
         }
@@ -2342,6 +2425,7 @@ pub mod types {
             sha: Result<String, String>,
             state: Result<Option<String>, String>,
             title: Result<String, String>,
+            visibility: Result<super::Visibility, String>,
         }
 
         impl Default for ListRfd {
@@ -2357,6 +2441,7 @@ pub mod types {
                     sha: Err("no value supplied for sha".to_string()),
                     state: Ok(Default::default()),
                     title: Err("no value supplied for title".to_string()),
+                    visibility: Err("no value supplied for visibility".to_string()),
                 }
             }
         }
@@ -2462,6 +2547,16 @@ pub mod types {
                     .map_err(|e| format!("error converting supplied value for title: {}", e));
                 self
             }
+            pub fn visibility<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::Visibility>,
+                T::Error: std::fmt::Display,
+            {
+                self.visibility = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for visibility: {}", e));
+                self
+            }
         }
 
         impl std::convert::TryFrom<ListRfd> for super::ListRfd {
@@ -2478,6 +2573,7 @@ pub mod types {
                     sha: value.sha?,
                     state: value.state?,
                     title: value.title?,
+                    visibility: value.visibility?,
                 })
             }
         }
@@ -2495,6 +2591,7 @@ pub mod types {
                     sha: Ok(value.sha),
                     state: Ok(value.state),
                     title: Ok(value.title),
+                    visibility: Ok(value.visibility),
                 }
             }
         }
