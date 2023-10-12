@@ -825,7 +825,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "serde",
- "serde_tokenstream",
+ "serde_tokenstream 0.2.0",
  "syn 2.0.37",
 ]
 
@@ -2421,12 +2421,29 @@ dependencies = [
 
 [[package]]
 name = "progenitor"
-version = "0.4.0"
+version = "0.2.1-dev"
 dependencies = [
- "progenitor-client 0.4.0",
+ "anyhow",
+ "clap",
+ "openapiv3",
+ "progenitor-client 0.2.1-dev",
  "progenitor-impl",
  "progenitor-macro",
+ "serde",
  "serde_json",
+]
+
+[[package]]
+name = "progenitor-client"
+version = "0.2.1-dev"
+dependencies = [
+ "bytes",
+ "futures-core",
+ "percent-encoding 2.3.0",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "serde_urlencoded",
 ]
 
 [[package]]
@@ -2444,34 +2461,21 @@ dependencies = [
 ]
 
 [[package]]
-name = "progenitor-client"
-version = "0.4.0"
-dependencies = [
- "bytes",
- "futures-core",
- "percent-encoding 2.3.0",
- "reqwest",
- "serde",
- "serde_json",
- "serde_urlencoded",
-]
-
-[[package]]
 name = "progenitor-impl"
-version = "0.4.0"
+version = "0.2.1-dev"
 dependencies = [
  "getopts",
  "heck",
- "http",
- "indexmap 2.0.1",
+ "indexmap 1.9.3",
  "openapiv3",
  "proc-macro2",
  "quote",
  "regex",
+ "rustfmt-wrapper",
  "schemars",
  "serde",
  "serde_json",
- "syn 2.0.37",
+ "syn 1.0.109",
  "thiserror",
  "typify",
  "unicode-ident",
@@ -2479,18 +2483,16 @@ dependencies = [
 
 [[package]]
 name = "progenitor-macro"
-version = "0.4.0"
+version = "0.2.1-dev"
 dependencies = [
  "openapiv3",
  "proc-macro2",
  "progenitor-impl",
  "quote",
- "schemars",
  "serde",
  "serde_json",
- "serde_tokenstream",
- "serde_yaml",
- "syn 2.0.37",
+ "serde_tokenstream 0.1.7",
+ "syn 1.0.109",
 ]
 
 [[package]]
@@ -3052,9 +3054,9 @@ dependencies = [
 
 [[package]]
 name = "rustls-webpki"
-version = "0.101.4"
+version = "0.101.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7d93931baf2d282fff8d3a532bbfd7653f734643161b87e3e01e59a04439bf0d"
+checksum = "3c7d5dece342910d9ba34d259310cae3e0154b873b35408b787b59bce53d34fe"
 dependencies = [
  "ring",
  "untrusted",
@@ -3268,6 +3270,17 @@ dependencies = [
 
 [[package]]
 name = "serde_tokenstream"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "797ba1d80299b264f3aac68ab5d12e5825a561749db4df7cd7c8083900c5d4e9"
+dependencies = [
+ "proc-macro2",
+ "serde",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "serde_tokenstream"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a00ffd23fd882d096f09fcaae2a9de8329a328628e86027e049ee051dc1621f"
@@ -3316,19 +3329,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.37",
-]
-
-[[package]]
-name = "serde_yaml"
-version = "0.9.25"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a49e178e4452f45cb61d0cd8cebc1b0fafd3e41929e996cef79aa3aca91f574"
-dependencies = [
- "indexmap 2.0.1",
- "itoa",
- "ryu",
- "serde",
- "unsafe-libyaml",
 ]
 
 [[package]]
@@ -4021,7 +4021,7 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
- "serde_tokenstream",
+ "serde_tokenstream 0.2.0",
  "syn 2.0.37",
  "typify-impl",
 ]
@@ -4079,12 +4079,6 @@ name = "unicode-width"
 version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e51733f11c9c4f72aa0c160008246859e340b00807569a0da0e7a1079b27ba85"
-
-[[package]]
-name = "unsafe-libyaml"
-version = "0.2.9"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f28467d3e1d3c6586d8f25fa243f544f5800fec42d97032474e17222c2b75cfa"
 
 [[package]]
 name = "untrusted"
