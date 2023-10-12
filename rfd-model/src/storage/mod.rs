@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 pub use async_bb8_diesel::{ConnectionError, PoolError};
 use async_trait::async_trait;
+use bb8::RunError;
 pub use diesel::result::Error as DbError;
 #[cfg(feature = "mock")]
 use mockall::automock;
@@ -23,7 +24,7 @@ pub mod postgres;
 #[derive(Debug, Error)]
 pub enum StoreError {
     #[error("Connection failure: {0}")]
-    Conn(#[from] ConnectionError),
+    Conn(#[from] RunError<ConnectionError>),
     #[error("Database failure: {0}")]
     Db(#[from] DbError),
     #[error("Connection pool failure: {0}")]

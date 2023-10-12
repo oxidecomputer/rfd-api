@@ -19,13 +19,13 @@ anyhow = "1.0.68"
 async-bb8-diesel = { git = "https://github.com/oxidecomputer/async-bb8-diesel" }
 async-trait = "0.1.61"
 base64 = "0.21.0"
-bb8 = "0.8.0"
+bb8 = "0.8"
 chrono = "0.4.22"
 clap = { version = "4.1.11", features = ["derive", "string", "env"] }
 config = { version = "0.13.1", features = ["toml"] }
 cookie = { version = "0.17.0" }
 crc32c = "0.6.3"
-diesel = { version = "2.0.0", features = ["postgres"] }
+diesel = { version = "2.1.1", features = ["postgres"] }
 dirs = "5.0.0"
 dropshot = { git = "https://github.com/oxidecomputer/dropshot" }
 dropshot-verified-body = { git = "https://github.com/oxidecomputer/dropshot-verified-body", branch = "dropshot-dev" }

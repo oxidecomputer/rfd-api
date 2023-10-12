@@ -1,4 +1,4 @@
-use async_bb8_diesel::{AsyncRunQueryDsl, ConnectionError, ConnectionManager, OptionalExtension};
+use async_bb8_diesel::{AsyncRunQueryDsl, ConnectionError, ConnectionManager};
 use async_trait::async_trait;
 use bb8::Pool;
 use chrono::Utc;
@@ -9,6 +9,7 @@ use diesel::{
     update,
     upsert::{excluded, on_constraint},
     ExpressionMethods, PgArrayExpressionMethods,
+    OptionalExtension as OptionalExtension2,
 };
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -50,7 +51,7 @@ use super::{
 pub type DbPool = Pool<ConnectionManager<PgConnection>>;
 
 pub struct PostgresStore {
-    conn: DbPool,
+    pool: DbPool,
 }
 
 #[derive(Debug)]
@@ -69,7 +70,7 @@ impl PostgresStore {
         let manager = ConnectionManager::<PgConnection>::new(url);
 
         Ok(Self {
-            conn: Pool::builder()
+            pool: Pool::builder()
                 .connection_timeout(Duration::from_secs(5))
                 .build(manager)
                 .await?,
@@ -120,7 +121,7 @@ impl RfdStore for PostgresStore {
             .offset(pagination.offset)
             .limit(pagination.limit)
             .order(rfd::rfd_number.desc())
-            .get_results_async::<RfdModel>(&self.conn)
+            .get_results_async::<RfdModel>(&*self.pool.get().await?)
             .await?;
 
         tracing::trace!(count = ?results.len(), "Found RFDs");
@@ -144,7 +145,7 @@ impl RfdStore for PostgresStore {
                 rfd::updated_at.eq(Utc::now()),
                 rfd::visibility.eq(excluded(rfd::visibility)),
             ))
-            .get_result_async(&self.conn)
+            .get_result_async(&*self.pool.get().await?)
             .await?;
 
         Ok(rfd.into())
@@ -154,7 +155,7 @@ impl RfdStore for PostgresStore {
         let _ = update(rfd::dsl::rfd)
             .filter(rfd::id.eq(*id))
             .set(rfd::deleted_at.eq(Utc::now()))
-            .execute_async(&self.conn)
+            .execute_async(&*self.pool.get().await?)
             .await?;
 
         RfdStore::get(self, id, true).await
@@ -211,7 +212,7 @@ impl RfdRevisionStore for PostgresStore {
             .offset(pagination.offset)
             .limit(pagination.limit)
             .order(rfd_revision::created_at.desc())
-            .get_results_async::<RfdRevisionModel>(&self.conn)
+            .get_results_async::<RfdRevisionModel>(&*self.pool.get().await?)
             .await?;
 
         Ok(results
@@ -259,7 +260,7 @@ impl RfdRevisionStore for PostgresStore {
             .offset(pagination.offset)
             .limit(pagination.limit)
             .order(rfd_revision::rfd_id.asc())
-            .get_results_async::<RfdRevisionModel>(&self.conn)
+            .get_results_async::<RfdRevisionModel>(&*self.pool.get().await?)
             .await?;
 
         tracing::trace!(count = ?results.len(), "Found unique RFD revisions");
@@ -300,7 +301,7 @@ impl RfdRevisionStore for PostgresStore {
                 rfd_revision::committed_at.eq(excluded(rfd_revision::committed_at)),
                 rfd_revision::updated_at.eq(Utc::now()),
             ))
-            .get_result_async(&self.conn)
+            .get_result_async(&*self.pool.get().await?)
             .await?;
 
         Ok(rfd.into())
@@ -310,7 +311,7 @@ impl RfdRevisionStore for PostgresStore {
         let _ = update(rfd_revision::dsl::rfd_revision)
             .filter(rfd_revision::id.eq(*id))
             .set(rfd_revision::deleted_at.eq(Utc::now()))
-            .execute_async(&self.conn)
+            .execute_async(&*self.pool.get().await?)
             .await?;
 
         RfdRevisionStore::get(self, id, true).await
@@ -365,7 +366,7 @@ impl RfdPdfStore for PostgresStore {
             .offset(pagination.offset)
             .limit(pagination.limit)
             .order(rfd_pdf::created_at.desc())
-            .get_results_async::<RfdPdfModel>(&self.conn)
+            .get_results_async::<RfdPdfModel>(&*self.pool.get().await?)
             .await?;
 
         Ok(results
@@ -384,7 +385,7 @@ impl RfdPdfStore for PostgresStore {
             ))
             .on_conflict(on_constraint("revision_links_unique"))
             .do_nothing()
-            .get_result_async(&self.conn)
+            .get_result_async(&*self.pool.get().await?)
             .await?;
 
         Ok(rfd.into())
@@ -394,7 +395,7 @@ impl RfdPdfStore for PostgresStore {
         let _ = update(rfd_pdf::dsl::rfd_pdf)
             .filter(rfd_pdf::id.eq(*id))
             .set(rfd_pdf::deleted_at.eq(Utc::now()))
-            .execute_async(&self.conn)
+            .execute_async(&*self.pool.get().await?)
             .await?;
 
         RfdPdfStore::get(self, id, true).await
@@ -440,7 +441,7 @@ impl JobStore for PostgresStore {
             .order(job::processed.asc())
             .order(job::committed_at.asc())
             .order(job::created_at.asc())
-            .get_results_async::<JobModel>(&self.conn)
+            .get_results_async::<JobModel>(&*self.pool.get().await?)
             .await?;
 
         Ok(results.into_iter().map(|job| job.into()).collect())
@@ -458,7 +459,7 @@ impl JobStore for PostgresStore {
                 job::processed.eq(false),
                 job::committed_at.eq(new_job.committed_at.clone()),
             ))
-            .get_result_async(&self.conn)
+            .get_result_async(&*self.pool.get().await?)
             .await?;
 
         Ok(rfd.into())
@@ -468,7 +469,7 @@ impl JobStore for PostgresStore {
         let _ = update(job::dsl::job)
             .filter(job::id.eq(id))
             .set(job::processed.eq(true))
-            .execute_async(&self.conn)
+            .execute_async(&*self.pool.get().await?)
             .await?;
 
         JobStore::get(self, id).await
@@ -531,7 +532,7 @@ where
             .offset(pagination.offset)
             .limit(pagination.limit)
             .order(api_user::created_at.asc())
-            .get_results_async::<(ApiUserModel<T>, Option<ApiUserProviderModel>)>(&self.conn)
+            .get_results_async::<(ApiUserModel<T>, Option<ApiUserProviderModel>)>(&*self.pool.get().await?)
             .await?;
 
         Ok(results
@@ -564,7 +565,7 @@ where
                 api_user::groups.eq(excluded(api_user::groups)),
                 api_user::updated_at.eq(Utc::now()),
             ))
-            .get_result_async(&self.conn)
+            .get_result_async(&*self.pool.get().await?)
             .await?;
 
         Ok(ApiUser {
@@ -581,7 +582,7 @@ where
         let _ = update(api_user::dsl::api_user)
             .filter(api_user::id.eq(*id))
             .set(api_user::deleted_at.eq(Utc::now()))
-            .execute_async(&self.conn)
+            .execute_async(&*self.pool.get().await?)
             .await?;
 
         ApiUserStore::get(self, id, true).await
@@ -603,7 +604,7 @@ where
         }
 
         let result = query
-            .get_result_async::<ApiKeyModel<T>>(&self.conn)
+            .get_result_async::<ApiKeyModel<T>>(&*self.pool.get().await?)
             .await
             .optional()?;
 
@@ -658,7 +659,7 @@ where
             .offset(pagination.offset)
             .limit(pagination.limit)
             .order(api_key::created_at.desc())
-            .get_results_async::<ApiKeyModel<T>>(&self.conn)
+            .get_results_async::<ApiKeyModel<T>>(&*self.pool.get().await?)
             .await?;
 
         Ok(results
@@ -706,7 +707,7 @@ where
                 api_key::expires_at.eq(key.expires_at),
                 api_key::permissions.eq(permissions),
             ))
-            .get_result_async(&self.conn)
+            .get_result_async(&*self.pool.get().await?)
             .await?;
 
         Ok(ApiKey {
@@ -725,7 +726,7 @@ where
         let _ = update(api_key::dsl::api_key)
             .filter(api_key::id.eq(*id))
             .set(api_key::deleted_at.eq(Utc::now()))
-            .execute_async(&self.conn)
+            .execute_async(&*self.pool.get().await?)
             .await?;
 
         ApiKeyStore::get(self, id, true).await
@@ -795,7 +796,7 @@ impl ApiUserProviderStore for PostgresStore {
             .offset(pagination.offset)
             .limit(pagination.limit)
             .order(api_user_provider::created_at.desc())
-            .get_results_async::<ApiUserProviderModel>(&self.conn)
+            .get_results_async::<ApiUserProviderModel>(&*self.pool.get().await?)
             .await?;
 
         Ok(results
@@ -831,7 +832,7 @@ impl ApiUserProviderStore for PostgresStore {
                     api_user_provider::emails.eq(excluded(api_user_provider::emails)),
                     api_user_provider::updated_at.eq(Utc::now()),
                 ))
-                .get_result_async(&self.conn)
+                .get_result_async(&*self.pool.get().await?)
                 .await?;
 
         Ok(ApiUserProvider {
@@ -860,7 +861,7 @@ impl ApiUserProviderStore for PostgresStore {
             ))
             .filter(api_user_provider::id.eq(provider.id))
             .filter(api_user_provider::api_user_id.eq(current_api_user_id))
-            .get_result_async(&self.conn)
+            .get_result_async(&*self.pool.get().await?)
             .await?;
 
         Ok(ApiUserProvider {
@@ -879,7 +880,7 @@ impl ApiUserProviderStore for PostgresStore {
         let _ = update(api_user::dsl::api_user)
             .filter(api_user::id.eq(*id))
             .set(api_user::deleted_at.eq(Utc::now()))
-            .execute_async(&self.conn)
+            .execute_async(&*self.pool.get().await?)
             .await?;
 
         ApiUserProviderStore::get(self, id, true).await
@@ -898,7 +899,7 @@ impl AccessTokenStore for PostgresStore {
         }
 
         let result = query
-            .get_result_async::<ApiUserAccessTokenModel>(&self.conn)
+            .get_result_async::<ApiUserAccessTokenModel>(&*self.pool.get().await?)
             .await
             .optional()?;
 
@@ -940,7 +941,7 @@ impl AccessTokenStore for PostgresStore {
             .offset(pagination.offset)
             .limit(pagination.limit)
             .order(api_user_access_token::created_at.desc())
-            .get_results_async::<ApiUserAccessTokenModel>(&self.conn)
+            .get_results_async::<ApiUserAccessTokenModel>(&*self.pool.get().await?)
             .await?;
 
         Ok(results
@@ -967,7 +968,7 @@ impl AccessTokenStore for PostgresStore {
                 .do_update()
                 .set((api_user_access_token::revoked_at
                     .eq(excluded(api_user_access_token::revoked_at)),))
-                .get_result_async(&self.conn)
+                .get_result_async(&*self.pool.get().await?)
                 .await?;
 
         Ok(AccessToken {
@@ -988,7 +989,7 @@ impl LoginAttemptStore for PostgresStore {
             .filter(login_attempt::id.eq(*id));
 
         let result = query
-            .get_result_async::<LoginAttemptModel>(&self.conn)
+            .get_result_async::<LoginAttemptModel>(&*self.pool.get().await?)
             .await
             .optional()?;
 
@@ -1029,7 +1030,7 @@ impl LoginAttemptStore for PostgresStore {
             .offset(pagination.offset)
             .limit(pagination.limit)
             .order(login_attempt::created_at.desc())
-            .get_results_async::<LoginAttemptModel>(&self.conn)
+            .get_results_async::<LoginAttemptModel>(&*self.pool.get().await?)
             .await?;
 
         Ok(results.into_iter().map(|model| model.into()).collect())
@@ -1060,7 +1061,7 @@ impl LoginAttemptStore for PostgresStore {
                 login_attempt::provider_authz_code.eq(excluded(login_attempt::provider_authz_code)),
                 login_attempt::updated_at.eq(Utc::now()),
             ))
-            .get_result_async(&self.conn)
+            .get_result_async(&*self.pool.get().await?)
             .await?;
 
         Ok(attempt_m.into())
@@ -1111,7 +1112,7 @@ impl OAuthClientStore for PostgresStore {
                 OAuthClientModel,
                 Option<OAuthClientSecretModel>,
                 Option<OAuthClientRedirectUriModel>,
-            )>(&self.conn)
+            )>(&*self.pool.get().await?)
             .await?
             .into_iter()
             .fold(
@@ -1150,7 +1151,7 @@ impl OAuthClientStore for PostgresStore {
     async fn upsert(&self, client: NewOAuthClient) -> Result<OAuthClient, StoreError> {
         let client_m: OAuthClientModel = insert_into(oauth_client::dsl::oauth_client)
             .values(oauth_client::id.eq(client.id))
-            .get_result_async(&self.conn)
+            .get_result_async(&*self.pool.get().await?)
             .await?;
 
         Ok(OAuthClient {
@@ -1166,7 +1167,7 @@ impl OAuthClientStore for PostgresStore {
         let _ = update(oauth_client::dsl::oauth_client)
             .filter(oauth_client::id.eq(*id))
             .set(oauth_client::deleted_at.eq(Utc::now()))
-            .execute_async(&self.conn)
+            .execute_async(&*self.pool.get().await?)
             .await?;
 
         OAuthClientStore::get(self, id, true).await
@@ -1183,7 +1184,7 @@ impl OAuthClientSecretStore for PostgresStore {
                     oauth_client_secret::oauth_client_id.eq(secret.oauth_client_id),
                     oauth_client_secret::secret_signature.eq(secret.secret_signature),
                 ))
-                .get_result_async(&self.conn)
+                .get_result_async(&*self.pool.get().await?)
                 .await?;
 
         Ok(OAuthClientSecret {
@@ -1199,7 +1200,7 @@ impl OAuthClientSecretStore for PostgresStore {
         let _ = update(oauth_client_secret::dsl::oauth_client_secret)
             .filter(oauth_client_secret::id.eq(*id))
             .set(oauth_client_secret::deleted_at.eq(Utc::now()))
-            .execute_async(&self.conn)
+            .execute_async(&*self.pool.get().await?)
             .await?;
 
         let query = oauth_client_secret::dsl::oauth_client_secret
@@ -1207,7 +1208,7 @@ impl OAuthClientSecretStore for PostgresStore {
             .filter(oauth_client_secret::id.eq(*id));
 
         let result = query
-            .get_result_async::<OAuthClientSecretModel>(&self.conn)
+            .get_result_async::<OAuthClientSecretModel>(&*self.pool.get().await?)
             .await
             .optional()?;
 
@@ -1228,7 +1229,7 @@ impl OAuthClientRedirectUriStore for PostgresStore {
                     oauth_client_redirect_uri::oauth_client_id.eq(redirect_uri.oauth_client_id),
                     oauth_client_redirect_uri::redirect_uri.eq(redirect_uri.redirect_uri),
                 ))
-                .get_result_async(&self.conn)
+                .get_result_async(&*self.pool.get().await?)
                 .await?;
 
         Ok(OAuthClientRedirectUri {
@@ -1244,7 +1245,7 @@ impl OAuthClientRedirectUriStore for PostgresStore {
         let _ = update(oauth_client_redirect_uri::dsl::oauth_client_redirect_uri)
             .filter(oauth_client_redirect_uri::id.eq(*id))
             .set(oauth_client_redirect_uri::deleted_at.eq(Utc::now()))
-            .execute_async(&self.conn)
+            .execute_async(&*self.pool.get().await?)
             .await?;
 
         let query = oauth_client_redirect_uri::dsl::oauth_client_redirect_uri
@@ -1252,7 +1253,7 @@ impl OAuthClientRedirectUriStore for PostgresStore {
             .filter(oauth_client_redirect_uri::id.eq(*id));
 
         let result = query
-            .get_result_async::<OAuthClientRedirectUriModel>(&self.conn)
+            .get_result_async::<OAuthClientRedirectUriModel>(&*self.pool.get().await?)
             .await
             .optional()?;
 
@@ -1305,7 +1306,7 @@ where
             .offset(pagination.offset)
             .limit(pagination.limit)
             .order(access_groups::created_at.desc())
-            .get_results_async::<AccessGroupModel<T>>(&self.conn)
+            .get_results_async::<AccessGroupModel<T>>(&*self.pool.get().await?)
             .await?;
 
         Ok(results.into_iter().map(|model| model.into()).collect())
@@ -1325,7 +1326,7 @@ where
                 access_groups::permissions.eq(excluded(access_groups::permissions)),
                 access_groups::updated_at.eq(Utc::now()),
             ))
-            .get_result_async(&self.conn)
+            .get_result_async(&*self.pool.get().await?)
             .await?;
 
         Ok(group_m.into())
@@ -1335,7 +1336,7 @@ where
         let _ = update(access_groups::dsl::access_groups)
             .filter(access_groups::id.eq(*id))
             .set(access_groups::deleted_at.eq(Utc::now()))
-            .execute_async(&self.conn)
+            .execute_async(&*self.pool.get().await?)
             .await?;
 
         AccessGroupStore::get(self, id, true).await
@@ -1405,7 +1406,7 @@ impl MapperStore for PostgresStore {
             .offset(pagination.offset)
             .limit(pagination.limit)
             .order(mapper::created_at.desc())
-            .get_results_async::<MapperModel>(&self.conn)
+            .get_results_async::<MapperModel>(&*self.pool.get().await?)
             .await?;
 
         Ok(results.into_iter().map(|model| model.into()).collect())
@@ -1435,7 +1436,7 @@ impl MapperStore for PostgresStore {
                 mapper::activations.eq(excluded(mapper::activations)),
                 mapper::depleted_at.eq(excluded(mapper::depleted_at)),
             ))
-            .get_result_async(&self.conn)
+            .get_result_async(&*self.pool.get().await?)
             .await?;
 
         Ok(mapper_m.into())
@@ -1448,7 +1449,7 @@ impl MapperStore for PostgresStore {
         let _ = update(mapper::dsl::mapper)
             .filter(mapper::id.eq(*id))
             .set(mapper::deleted_at.eq(Utc::now()))
-            .execute_async(&self.conn)
+            .execute_async(&*self.pool.get().await?)
             .await?;
 
         MapperStore::get(self, id, false, true).await
@@ -1524,7 +1525,7 @@ impl LinkRequestStore for PostgresStore {
             .offset(pagination.offset)
             .limit(pagination.limit)
             .order(link_request::created_at.desc())
-            .get_results_async::<LinkRequestModel>(&self.conn)
+            .get_results_async::<LinkRequestModel>(&*self.pool.get().await?)
             .await?;
 
         Ok(results.into_iter().map(|model| model.into()).collect())
@@ -1548,7 +1549,7 @@ impl LinkRequestStore for PostgresStore {
             .on_conflict(link_request::id)
             .do_update()
             .set((link_request::completed_at.eq(excluded(link_request::completed_at)),))
-            .get_result_async(&self.conn)
+            .get_result_async(&*self.pool.get().await?)
             .await?;
 
         Ok(link_request_m.into())
