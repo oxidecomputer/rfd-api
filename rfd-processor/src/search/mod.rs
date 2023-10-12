@@ -34,7 +34,7 @@ impl RfdSearchIndex {
         index: impl Into<String>,
     ) -> Self {
         Self {
-            client: Client::new(host, api_key),
+            client: Client::new(host, Some(api_key)),
             index: index.into(),
         }
     }

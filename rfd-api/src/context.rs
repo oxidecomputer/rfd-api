@@ -227,7 +227,7 @@ impl ApiContext {
             },
             oauth_providers: HashMap::new(),
             search: SearchContext {
-                client: SearchClient::new(search.host, search.key),
+                client: SearchClient::new(search.host, Some(search.key)),
                 index: search.index,
             },
         })
