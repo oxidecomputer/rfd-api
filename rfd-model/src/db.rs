@@ -8,8 +8,8 @@ use crate::{
     permissions::Permissions,
     schema::{
         access_groups, api_key, api_user, api_user_access_token, api_user_provider, job,
-        login_attempt, mapper, oauth_client, oauth_client_redirect_uri, oauth_client_secret, rfd,
-        rfd_pdf, rfd_revision,
+        link_request, login_attempt, mapper, oauth_client, oauth_client_redirect_uri,
+        oauth_client_secret, rfd, rfd_pdf, rfd_revision,
     },
     schema_ext::{ContentFormat, LoginAttemptState, PdfSource, Visibility},
 };
@@ -191,4 +191,17 @@ pub struct MapperModel {
     pub depleted_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[diesel(table_name = link_request)]
+pub struct LinkRequestModel {
+    pub id: Uuid,
+    pub source_provider_id: Uuid,
+    pub source_api_user_id: Uuid,
+    pub target_api_user_id: Uuid,
+    pub secret_signature: String,
+    pub created_at: DateTime<Utc>,
+    pub expires_at: DateTime<Utc>,
+    pub completed_at: Option<DateTime<Utc>>,
 }

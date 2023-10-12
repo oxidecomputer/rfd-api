@@ -41,28 +41,33 @@ impl Context {
         })
     }
 
+    pub fn new_client(token: Result<&str>, host: &str) -> Result<Client> {
+        let mut default_headers = HeaderMap::new();
+
+        if let Ok(token) = token {
+            let mut auth_header =
+                HeaderValue::from_str(&format!("Bearer {}", token))?;
+            auth_header.set_sensitive(true);
+            default_headers.insert(AUTHORIZATION, auth_header);
+        }
+
+        let http_client = reqwest::Client::builder()
+            .default_headers(default_headers)
+            .connect_timeout(Duration::from_secs(5))
+            .timeout(Duration::from_secs(10))
+            .build()?;
+
+        Ok(Client::new_with_client(host, http_client))
+    }
+
     pub fn client(&mut self) -> Result<&Client> {
         if self.client.is_none() {
-            let mut default_headers = HeaderMap::new();
-
-            if let Ok(token) = self.config.token() {
-                let mut auth_header =
-                    HeaderValue::from_str(&format!("Bearer {}", self.config.token()?))?;
-                auth_header.set_sensitive(true);
-                default_headers.insert(AUTHORIZATION, auth_header);
-            }
-
-            let http_client = reqwest::Client::builder()
-                .default_headers(default_headers)
-                .connect_timeout(Duration::from_secs(5))
-                .timeout(Duration::from_secs(10))
-                .build()?;
-            self.client = Some(Client::new_with_client(self.config.host()?, http_client));
+            self.client = Some(Self::new_client(self.config.token(), self.config.host()?)?);
         }
 
         self.client
             .as_ref()
-            .ok_or_else(|| anyhow!("Failed to construct client"))
+            .ok_or_else(|| anyhow!("Failed to construct client"))        
     }
 }
 
@@ -106,6 +111,10 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::ListApiUserTokens => Some("user token list"),
         CliCommand::UpdateApiUser => Some("user update"),
 
+        // Link commands are handled separately
+        CliCommand::CreateLinkToken => None,
+        CliCommand::LinkProvider => None,
+
         // Group commands
         CliCommand::GetGroups => Some("group list"),
         CliCommand::CreateGroup => Some("group create"),
@@ -134,6 +143,8 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::AuthzCodeCallback => None,
         CliCommand::AuthzCodeExchange => None,
         CliCommand::GithubWebhook => None,
+        CliCommand::OpenidConfiguration => None,
+        CliCommand::JwksJson => None,
     }
 }
 
@@ -190,6 +201,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         );
 
     cmd = cmd.subcommand(cmd::config::ConfigCmd::command());
+    cmd = cmd.subcommand(auth::Link::command());
     cmd = cmd.subcommand(auth::Login::command());
 
     let mut ctx = Context::new()?;
@@ -213,6 +225,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
     match matches.subcommand() {
         Some(("config", sub_matches)) => {
             cmd::config::ConfigCmd::from_arg_matches(sub_matches)
+                .unwrap()
+                .run(&mut ctx)
+                .await?;
+        }
+        Some(("link", sub_matches)) => {
+            let _ = auth::Link::from_arg_matches(sub_matches)
                 .unwrap()
                 .run(&mut ctx)
                 .await?;

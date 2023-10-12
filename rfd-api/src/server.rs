@@ -11,9 +11,10 @@ use crate::{
     endpoints::{
         api_user::{
             add_api_user_to_group, create_api_user, create_api_user_token, delete_api_user_token,
-            get_api_user, get_api_user_token, get_self, list_api_user_tokens,
-            remove_api_user_from_group, update_api_user, link_provider,
+            get_api_user, get_api_user_token, get_self, link_provider, list_api_user_tokens,
+            remove_api_user_from_group, update_api_user,
         },
+        api_user_provider::create_link_token,
         group::{create_group, delete_group, get_groups, update_group},
         login::oauth::{
             client::{
@@ -25,7 +26,7 @@ use crate::{
             device_token::{exchange_device_token, get_device_provider},
         },
         rfd::{get_rfd, get_rfds, search_rfds},
-        webhook::github_webhook, api_user_provider::create_link_token,
+        webhook::github_webhook, well_known::{openid_configuration, jwks_json},
     },
 };
 
@@ -71,6 +72,10 @@ pub fn server(
         endpoint_tag_policy: EndpointTagPolicy::Any,
         tag_definitions,
     });
+
+    // .well-known
+    api.register(openid_configuration).unwrap();
+    api.register(jwks_json).unwrap();
 
     // RFDs
     api.register(get_rfds).unwrap();

@@ -20,8 +20,8 @@ CREATE TABLE api_key (
 CREATE TABLE api_user_provider (
   id UUID PRIMARY KEY,
   api_user_id UUID REFERENCES api_user (id) NOT NULL,
-  provider VARCHAR UNIQUE NOT NULL,
-  provider_id VARCHAR UNIQUE NOT NULL,
+  provider VARCHAR NOT NULL,
+  provider_id VARCHAR NOT NULL,
   emails TEXT[] NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),

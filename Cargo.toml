@@ -83,8 +83,8 @@ uuid = "1.2.2"
 valuable = "0.1.0"
 yup-oauth2 = "8.1.0"
 
-# [patch."https://github.com/oxidecomputer/progenitor"]
-# progenitor = { path = "../progenitor/progenitor" }
+[patch."https://github.com/oxidecomputer/progenitor"]
+progenitor = { path = "../progenitor/progenitor" }
 
 # [patch."https://github.com/oxidecomputer/typify"]
 # typify = { path = "../typify/typify" }

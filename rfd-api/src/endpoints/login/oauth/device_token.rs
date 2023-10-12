@@ -185,15 +185,17 @@ pub async fn exchange_device_token(
 
                     tracing::debug!("Verified and validated OAuth user");
 
-                    let api_user = ctx.register_api_user(info).await?;
+                    let (api_user, api_user_provider) = ctx.register_api_user(info).await?;
 
-                    tracing::info!(api_user_id = ?api_user.id, "Retrieved api user to generate device token for");
+                    tracing::info!(api_user_id = ?api_user.id, api_user_provider_id = ?api_user_provider.id, "Retrieved api user to generate device token for");
 
                     let token = ctx
                         .register_access_token(
                             &api_user,
+                            &api_user_provider,
                             vec![
                                 "user:info:r".to_string(),
+                                "user:provider:w".to_string(),
                                 "user:token:r".to_string(),
                                 "user:token:w".to_string(),
                                 "group:r".to_string(),

@@ -1,3 +1,4 @@
+pub mod well_known;
 pub mod api_user;
 pub mod api_user_provider;
 pub mod group;
