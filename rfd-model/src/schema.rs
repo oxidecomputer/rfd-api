@@ -92,6 +92,19 @@ diesel::table! {
 }
 
 diesel::table! {
+    link_request (id) {
+        id -> Uuid,
+        source_provider_id -> Uuid,
+        source_api_user_id -> Uuid,
+        target_api_user_id -> Uuid,
+        secret_signature -> Varchar,
+        created_at -> Timestamptz,
+        expires_at -> Timestamptz,
+        completed_at -> Nullable<Timestamptz>,
+    }
+}
+
+diesel::table! {
     use diesel::sql_types::*;
     use super::sql_types::AttemptState;
 
@@ -224,6 +237,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     api_user_access_token,
     api_user_provider,
     job,
+    link_request,
     login_attempt,
     mapper,
     oauth_client,

@@ -38,6 +38,7 @@ pub struct Jwt {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Claims {
     pub aud: Uuid,
+    pub prv: Uuid,
     pub scp: Vec<String>,
     pub exp: i64,
     pub nbf: i64,

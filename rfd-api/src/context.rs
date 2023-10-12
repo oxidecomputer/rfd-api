@@ -13,20 +13,22 @@ use rfd_model::{
     storage::{
         AccessGroupFilter, AccessGroupStore, AccessTokenStore, ApiKeyFilter, ApiKeyStore,
         ApiUserFilter, ApiUserProviderFilter, ApiUserProviderStore, ApiUserStore, JobStore,
-        ListPagination, LoginAttemptFilter, LoginAttemptStore, MapperFilter, MapperStore,
-        OAuthClientFilter, OAuthClientRedirectUriStore, OAuthClientSecretStore, OAuthClientStore,
-        RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionStore, RfdStore,
-        StoreError,
+        LinkRequestStore, ListPagination, LoginAttemptFilter, LoginAttemptStore, MapperFilter,
+        MapperStore, OAuthClientFilter, OAuthClientRedirectUriStore, OAuthClientSecretStore,
+        OAuthClientStore, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter,
+        RfdRevisionStore, RfdStore, StoreError,
     },
-    AccessGroup, AccessToken, ApiUser, ApiUserProvider, InvalidValueError, Job, LoginAttempt,
-    Mapper, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
-    NewLoginAttempt, NewMapper, NewOAuthClient, NewOAuthClientRedirectUri, NewOAuthClientSecret,
-    OAuthClient, OAuthClientRedirectUri, OAuthClientSecret,
+    AccessGroup, AccessToken, ApiUser, ApiUserProvider, InvalidValueError, Job, LinkRequest,
+    LoginAttempt, Mapper, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser,
+    NewApiUserProvider, NewJob, NewLinkRequest, NewLoginAttempt, NewMapper, NewOAuthClient,
+    NewOAuthClientRedirectUri, NewOAuthClientSecret, OAuthClient, OAuthClientRedirectUri,
+    OAuthClientSecret,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeSet, HashMap},
+    ops::Add,
     sync::Arc,
 };
 use tap::TapFallible;
@@ -37,6 +39,7 @@ use uuid::Uuid;
 use crate::{
     authn::{
         jwt::{Claims, JwtSigner, JwtSignerError},
+        key::{RawApiKey, SignedApiKey},
         AuthError, AuthToken, Signer,
     },
     config::{AsymmetricKey, JwtConfig, SearchConfig},
@@ -68,6 +71,7 @@ pub trait Storage:
     + OAuthClientRedirectUriStore
     + AccessGroupStore<ApiPermission>
     + MapperStore
+    + LinkRequestStore
     + Send
     + Sync
     + 'static
@@ -88,6 +92,7 @@ impl<T> Storage for T where
         + OAuthClientRedirectUriStore
         + AccessGroupStore<ApiPermission>
         + MapperStore
+        + LinkRequestStore
         + Send
         + Sync
         + 'static
@@ -546,7 +551,10 @@ impl ApiContext {
     // Login Operations
 
     #[instrument(skip(self, info), fields(info.external_id))]
-    pub async fn register_api_user(&self, info: UserInfo) -> Result<User, ApiError> {
+    pub async fn register_api_user(
+        &self,
+        info: UserInfo,
+    ) -> Result<(User, ApiUserProvider), ApiError> {
         // Check if we have seen this identity before
         let mut filter = ApiUserProviderFilter::default();
         filter.provider = Some(vec![info.external_id.provider().to_string()]);
@@ -571,25 +579,28 @@ impl ApiContext {
                 let user = self
                     .ensure_api_user(Uuid::new_v4(), mapped_permissions, mapped_groups)
                     .await?;
-                self.update_api_user_provider(NewApiUserProvider {
-                    id: Uuid::new_v4(),
-                    api_user_id: user.id,
-                    emails: info.verified_emails,
-                    provider: info.external_id.provider().to_string(),
-                    provider_id: info.external_id.id().to_string(),
-                })
-                .await?;
+                let user_provider = self
+                    .update_api_user_provider(NewApiUserProvider {
+                        id: Uuid::new_v4(),
+                        api_user_id: user.id,
+                        emails: info.verified_emails,
+                        provider: info.external_id.provider().to_string(),
+                        provider_id: info.external_id.id().to_string(),
+                    })
+                    .await?;
 
-                Ok(user)
+                Ok((user, user_provider))
             }
             1 => {
                 tracing::info!("Found an existing user. Attaching provider.");
 
                 // This branch ensures that there is a 0th indexed item
                 let provider = api_user_providers.into_iter().nth(0).unwrap();
-                Ok(self
-                    .ensure_api_user(provider.api_user_id, mapped_permissions, mapped_groups)
-                    .await?)
+                Ok((
+                    self.ensure_api_user(provider.api_user_id, mapped_permissions, mapped_groups)
+                        .await?,
+                    provider,
+                ))
             }
             _ => {
                 // If we found more than one provider, then we have encountered an inconsistency in
@@ -691,6 +702,7 @@ impl ApiContext {
     pub async fn register_access_token(
         &self,
         api_user: &ApiUser<ApiPermission>,
+        api_user_provider: &ApiUserProvider,
         scope: Vec<String>,
         expires_at: Option<DateTime<Utc>>,
     ) -> Result<RegisteredAccessToken, ApiError> {
@@ -704,6 +716,7 @@ impl ApiContext {
         // Ensure that the token is within the configured limits
         let claims = Claims {
             aud: api_user.id,
+            prv: api_user_provider.id,
             scp: scope,
             exp: expires_at.timestamp(),
             nbf: Utc::now().timestamp(),
@@ -1111,6 +1124,63 @@ impl ApiContext {
         .await
         .map(|_| ())?)
     }
+
+    pub async fn get_link_request(&self, id: &Uuid) -> Result<Option<LinkRequest>, StoreError> {
+        Ok(LinkRequestStore::get(&*self.storage, id, false, false).await?)
+    }
+
+    pub async fn create_link_request_token(
+        &self,
+        source_provider: &Uuid,
+        source_user: &Uuid,
+        target: &Uuid,
+    ) -> Result<SignedApiKey, StoreError> {
+        let link_id = Uuid::new_v4();
+        let secret = RawApiKey::generate::<8>(&link_id);
+        let signed = secret.sign(&*self.secrets.signer).await.unwrap();
+
+        Ok(LinkRequestStore::upsert(
+            &*self.storage,
+            &NewLinkRequest {
+                id: link_id,
+                source_provider_id: *source_provider,
+                source_api_user_id: *source_user,
+                target_api_user_id: *target,
+                secret_signature: signed.signature().to_string(),
+                expires_at: Utc::now().add(Duration::minutes(15)),
+                completed_at: None,
+            },
+        )
+        .await
+        .map(|_| signed)?)
+    }
+
+    pub async fn complete_link_request(
+        &self,
+        link_request: LinkRequest,
+    ) -> Result<Option<ApiUserProvider>, StoreError> {
+        if let Some(mut provider) = self
+            .get_api_user_provider(&link_request.source_provider_id)
+            .await?
+        {
+            provider.api_user_id = link_request.target_api_user_id;
+
+            tracing::info!(?provider, "Created provider update");
+
+            let source_api_user_id = link_request.source_api_user_id;
+            let mut update_request: NewLinkRequest = link_request.into();
+            update_request.completed_at = Some(Utc::now());
+            LinkRequestStore::upsert(&*self.storage, &update_request).await?;
+
+            Ok(Some(
+                ApiUserProviderStore::transfer(&*self.storage, provider.into(), source_api_user_id)
+                    .await?,
+            ))
+        } else {
+            tracing::warn!(?link_request, "Expected to find a provider that was assigned to a link request, but it looks to have gone missing");
+            Ok(None)
+        }
+    }
 }
 
 #[cfg(test)]
@@ -1143,6 +1213,7 @@ mod tests {
         let user_token = ctx.jwt.signers[0]
             .sign(&Claims {
                 aud: user_id,
+                prv: Uuid::new_v4(),
                 scp: scope,
                 exp: Utc::now().add(Duration::seconds(60)).timestamp(),
                 nbf: 0,
@@ -1227,12 +1298,13 @@ pub(crate) mod test_mocks {
         permissions::Caller,
         storage::{
             AccessGroupStore, AccessTokenStore, ApiKeyStore, ApiUserProviderStore, ApiUserStore,
-            JobStore, ListPagination, LoginAttemptStore, MapperStore, MockAccessGroupStore,
-            MockAccessTokenStore, MockApiKeyStore, MockApiUserProviderStore, MockApiUserStore,
-            MockJobStore, MockLoginAttemptStore, MockMapperStore, MockOAuthClientRedirectUriStore,
-            MockOAuthClientSecretStore, MockOAuthClientStore, MockRfdPdfStore,
-            MockRfdRevisionStore, MockRfdStore, OAuthClientRedirectUriStore,
-            OAuthClientSecretStore, OAuthClientStore, RfdPdfStore, RfdRevisionStore, RfdStore,
+            JobStore, LinkRequestStore, ListPagination, LoginAttemptStore, MapperStore,
+            MockAccessGroupStore, MockAccessTokenStore, MockApiKeyStore, MockApiUserProviderStore,
+            MockApiUserStore, MockJobStore, MockLinkRequestStore, MockLoginAttemptStore,
+            MockMapperStore, MockOAuthClientRedirectUriStore, MockOAuthClientSecretStore,
+            MockOAuthClientStore, MockRfdPdfStore, MockRfdRevisionStore, MockRfdStore,
+            OAuthClientRedirectUriStore, OAuthClientSecretStore, OAuthClientStore, RfdPdfStore,
+            RfdRevisionStore, RfdStore,
         },
         ApiKey, ApiUserProvider, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser,
         NewApiUserProvider, NewJob, NewLoginAttempt, NewMapper, NewRfd, NewRfdPdf, NewRfdRevision,
@@ -1296,6 +1368,7 @@ pub(crate) mod test_mocks {
         pub oauth_client_redirect_uri_store: Option<Arc<MockOAuthClientRedirectUriStore>>,
         pub access_group_store: Option<Arc<MockAccessGroupStore<ApiPermission>>>,
         pub mapper_store: Option<Arc<MockMapperStore>>,
+        pub link_request_store: Option<Arc<MockLinkRequestStore>>,
     }
 
     impl MockStorage {
@@ -1316,6 +1389,7 @@ pub(crate) mod test_mocks {
                 oauth_client_redirect_uri_store: None,
                 access_group_store: None,
                 mapper_store: None,
+                link_request_store: None,
             }
         }
     }
@@ -1610,6 +1684,18 @@ pub(crate) mod test_mocks {
                 .await
         }
 
+        async fn transfer(
+            &self,
+            provider: NewApiUserProvider,
+            current_api_user_id: uuid::Uuid,
+        ) -> Result<ApiUserProvider, rfd_model::storage::StoreError> {
+            self.api_user_provider_store
+                .as_ref()
+                .unwrap()
+                .transfer(provider, current_api_user_id)
+                .await
+        }
+
         async fn delete(
             &self,
             id: &uuid::Uuid,
@@ -1876,6 +1962,45 @@ pub(crate) mod test_mocks {
             id: &uuid::Uuid,
         ) -> Result<Option<rfd_model::Mapper>, rfd_model::storage::StoreError> {
             self.mapper_store.as_ref().unwrap().delete(id).await
+        }
+    }
+
+    #[async_trait]
+    impl LinkRequestStore for MockStorage {
+        async fn get(
+            &self,
+            id: &uuid::Uuid,
+            expired: bool,
+            completed: bool,
+        ) -> Result<Option<rfd_model::LinkRequest>, rfd_model::storage::StoreError> {
+            self.link_request_store
+                .as_ref()
+                .unwrap()
+                .get(id, expired, completed)
+                .await
+        }
+
+        async fn list(
+            &self,
+            filter: rfd_model::storage::LinkRequestFilter,
+            pagination: &ListPagination,
+        ) -> Result<Vec<rfd_model::LinkRequest>, rfd_model::storage::StoreError> {
+            self.link_request_store
+                .as_ref()
+                .unwrap()
+                .list(filter, pagination)
+                .await
+        }
+
+        async fn upsert(
+            &self,
+            request: &rfd_model::NewLinkRequest,
+        ) -> Result<rfd_model::LinkRequest, rfd_model::storage::StoreError> {
+            self.link_request_store
+                .as_ref()
+                .unwrap()
+                .upsert(request)
+                .await
         }
     }
 }

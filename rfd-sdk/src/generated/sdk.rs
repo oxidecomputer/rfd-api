@@ -159,8 +159,13 @@ pub mod types {
         UpdateApiUserSelf,
         UpdateApiUserAssigned,
         UpdateApiUserAll,
+        CreateUserApiProviderLinkToken,
         ListGroups,
         CreateGroup,
+        ManageGroupMembershipAssigned,
+        ManageGroupMembershipAll,
+        ManageGroupsAssigned,
+        ManageGroupsAll,
         GetRfdsAssigned,
         GetRfdsAll,
         GetDiscussionsAssigned,
@@ -181,7 +186,11 @@ pub mod types {
         UpdateGroup(uuid::Uuid),
         AddToGroup(uuid::Uuid),
         RemoveFromGroup(uuid::Uuid),
+        ManageGroupMembership(uuid::Uuid),
+        ManageGroupMemberships(Vec<uuid::Uuid>),
         DeleteGroup(uuid::Uuid),
+        ManageGroup(uuid::Uuid),
+        ManageGroups(Vec<uuid::Uuid>),
         GetRfd(i32),
         GetRfds(Vec<i32>),
         GetDiscussion(i32),
@@ -220,6 +229,82 @@ pub mod types {
     impl ApiUserForApiPermission {
         pub fn builder() -> builder::ApiUserForApiPermission {
             builder::ApiUserForApiPermission::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct ApiUserLinkRequestPayload {
+        pub user_identifier: uuid::Uuid,
+    }
+
+    impl From<&ApiUserLinkRequestPayload> for ApiUserLinkRequestPayload {
+        fn from(value: &ApiUserLinkRequestPayload) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ApiUserLinkRequestPayload {
+        pub fn builder() -> builder::ApiUserLinkRequestPayload {
+            builder::ApiUserLinkRequestPayload::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct ApiUserLinkRequestResponse {
+        pub token: String,
+    }
+
+    impl From<&ApiUserLinkRequestResponse> for ApiUserLinkRequestResponse {
+        fn from(value: &ApiUserLinkRequestResponse) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ApiUserLinkRequestResponse {
+        pub fn builder() -> builder::ApiUserLinkRequestResponse {
+            builder::ApiUserLinkRequestResponse::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct ApiUserProvider {
+        pub api_user_id: uuid::Uuid,
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub emails: Vec<String>,
+        pub id: uuid::Uuid,
+        pub provider: String,
+        pub provider_id: String,
+        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
+    }
+
+    impl From<&ApiUserProvider> for ApiUserProvider {
+        fn from(value: &ApiUserProvider) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ApiUserProvider {
+        pub fn builder() -> builder::ApiUserProvider {
+            builder::ApiUserProvider::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct ApiUserProviderLinkPayload {
+        pub token: String,
+    }
+
+    impl From<&ApiUserProviderLinkPayload> for ApiUserProviderLinkPayload {
+        fn from(value: &ApiUserProviderLinkPayload) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ApiUserProviderLinkPayload {
+        pub fn builder() -> builder::ApiUserProviderLinkPayload {
+            builder::ApiUserProviderLinkPayload::default()
         }
     }
 
@@ -310,6 +395,24 @@ pub mod types {
     impl FullRfdPdfEntry {
         pub fn builder() -> builder::FullRfdPdfEntry {
             builder::FullRfdPdfEntry::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct GetApiUserResponse {
+        pub info: ApiUserForApiPermission,
+        pub providers: Vec<ApiUserProvider>,
+    }
+
+    impl From<&GetApiUserResponse> for GetApiUserResponse {
+        fn from(value: &GetApiUserResponse) -> Self {
+            value.clone()
+        }
+    }
+
+    impl GetApiUserResponse {
+        pub fn builder() -> builder::GetApiUserResponse {
+            builder::GetApiUserResponse::default()
         }
     }
 
@@ -469,6 +572,45 @@ pub mod types {
     impl InitialOAuthClientSecretResponse {
         pub fn builder() -> builder::InitialOAuthClientSecretResponse {
             builder::InitialOAuthClientSecretResponse::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct Jwk {
+        pub e: String,
+        pub kid: String,
+        pub kty: String,
+        pub n: String,
+        #[serde(rename = "use")]
+        pub use_: String,
+    }
+
+    impl From<&Jwk> for Jwk {
+        fn from(value: &Jwk) -> Self {
+            value.clone()
+        }
+    }
+
+    impl Jwk {
+        pub fn builder() -> builder::Jwk {
+            builder::Jwk::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct Jwks {
+        pub keys: Vec<Jwk>,
+    }
+
+    impl From<&Jwks> for Jwks {
+        fn from(value: &Jwks) -> Self {
+            value.clone()
+        }
+    }
+
+    impl Jwks {
+        pub fn builder() -> builder::Jwks {
+            builder::Jwks::default()
         }
     }
 
@@ -697,6 +839,23 @@ pub mod types {
         type Error = &'static str;
         fn try_from(value: String) -> Result<Self, &'static str> {
             value.parse()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct OpenIdConfiguration {
+        pub jwks_uri: String,
+    }
+
+    impl From<&OpenIdConfiguration> for OpenIdConfiguration {
+        fn from(value: &OpenIdConfiguration) -> Self {
+            value.clone()
+        }
+    }
+
+    impl OpenIdConfiguration {
+        pub fn builder() -> builder::OpenIdConfiguration {
+            builder::OpenIdConfiguration::default()
         }
     }
 
@@ -1364,6 +1523,276 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
+        pub struct ApiUserLinkRequestPayload {
+            user_identifier: Result<uuid::Uuid, String>,
+        }
+
+        impl Default for ApiUserLinkRequestPayload {
+            fn default() -> Self {
+                Self {
+                    user_identifier: Err("no value supplied for user_identifier".to_string()),
+                }
+            }
+        }
+
+        impl ApiUserLinkRequestPayload {
+            pub fn user_identifier<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<uuid::Uuid>,
+                T::Error: std::fmt::Display,
+            {
+                self.user_identifier = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for user_identifier: {}", e)
+                });
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<ApiUserLinkRequestPayload> for super::ApiUserLinkRequestPayload {
+            type Error = String;
+            fn try_from(value: ApiUserLinkRequestPayload) -> Result<Self, String> {
+                Ok(Self {
+                    user_identifier: value.user_identifier?,
+                })
+            }
+        }
+
+        impl From<super::ApiUserLinkRequestPayload> for ApiUserLinkRequestPayload {
+            fn from(value: super::ApiUserLinkRequestPayload) -> Self {
+                Self {
+                    user_identifier: Ok(value.user_identifier),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct ApiUserLinkRequestResponse {
+            token: Result<String, String>,
+        }
+
+        impl Default for ApiUserLinkRequestResponse {
+            fn default() -> Self {
+                Self {
+                    token: Err("no value supplied for token".to_string()),
+                }
+            }
+        }
+
+        impl ApiUserLinkRequestResponse {
+            pub fn token<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.token = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for token: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<ApiUserLinkRequestResponse> for super::ApiUserLinkRequestResponse {
+            type Error = String;
+            fn try_from(value: ApiUserLinkRequestResponse) -> Result<Self, String> {
+                Ok(Self {
+                    token: value.token?,
+                })
+            }
+        }
+
+        impl From<super::ApiUserLinkRequestResponse> for ApiUserLinkRequestResponse {
+            fn from(value: super::ApiUserLinkRequestResponse) -> Self {
+                Self {
+                    token: Ok(value.token),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct ApiUserProvider {
+            api_user_id: Result<uuid::Uuid, String>,
+            created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+            deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
+            emails: Result<Vec<String>, String>,
+            id: Result<uuid::Uuid, String>,
+            provider: Result<String, String>,
+            provider_id: Result<String, String>,
+            updated_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+        }
+
+        impl Default for ApiUserProvider {
+            fn default() -> Self {
+                Self {
+                    api_user_id: Err("no value supplied for api_user_id".to_string()),
+                    created_at: Err("no value supplied for created_at".to_string()),
+                    deleted_at: Ok(Default::default()),
+                    emails: Err("no value supplied for emails".to_string()),
+                    id: Err("no value supplied for id".to_string()),
+                    provider: Err("no value supplied for provider".to_string()),
+                    provider_id: Err("no value supplied for provider_id".to_string()),
+                    updated_at: Err("no value supplied for updated_at".to_string()),
+                }
+            }
+        }
+
+        impl ApiUserProvider {
+            pub fn api_user_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<uuid::Uuid>,
+                T::Error: std::fmt::Display,
+            {
+                self.api_user_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for api_user_id: {}", e));
+                self
+            }
+            pub fn created_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.created_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                self
+            }
+            pub fn deleted_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<chrono::DateTime<chrono::offset::Utc>>>,
+                T::Error: std::fmt::Display,
+            {
+                self.deleted_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                self
+            }
+            pub fn emails<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Vec<String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.emails = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for emails: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<uuid::Uuid>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn provider<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.provider = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for provider: {}", e));
+                self
+            }
+            pub fn provider_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.provider_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for provider_id: {}", e));
+                self
+            }
+            pub fn updated_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.updated_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for updated_at: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<ApiUserProvider> for super::ApiUserProvider {
+            type Error = String;
+            fn try_from(value: ApiUserProvider) -> Result<Self, String> {
+                Ok(Self {
+                    api_user_id: value.api_user_id?,
+                    created_at: value.created_at?,
+                    deleted_at: value.deleted_at?,
+                    emails: value.emails?,
+                    id: value.id?,
+                    provider: value.provider?,
+                    provider_id: value.provider_id?,
+                    updated_at: value.updated_at?,
+                })
+            }
+        }
+
+        impl From<super::ApiUserProvider> for ApiUserProvider {
+            fn from(value: super::ApiUserProvider) -> Self {
+                Self {
+                    api_user_id: Ok(value.api_user_id),
+                    created_at: Ok(value.created_at),
+                    deleted_at: Ok(value.deleted_at),
+                    emails: Ok(value.emails),
+                    id: Ok(value.id),
+                    provider: Ok(value.provider),
+                    provider_id: Ok(value.provider_id),
+                    updated_at: Ok(value.updated_at),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct ApiUserProviderLinkPayload {
+            token: Result<String, String>,
+        }
+
+        impl Default for ApiUserProviderLinkPayload {
+            fn default() -> Self {
+                Self {
+                    token: Err("no value supplied for token".to_string()),
+                }
+            }
+        }
+
+        impl ApiUserProviderLinkPayload {
+            pub fn token<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.token = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for token: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<ApiUserProviderLinkPayload> for super::ApiUserProviderLinkPayload {
+            type Error = String;
+            fn try_from(value: ApiUserProviderLinkPayload) -> Result<Self, String> {
+                Ok(Self {
+                    token: value.token?,
+                })
+            }
+        }
+
+        impl From<super::ApiUserProviderLinkPayload> for ApiUserProviderLinkPayload {
+            fn from(value: super::ApiUserProviderLinkPayload) -> Self {
+                Self {
+                    token: Ok(value.token),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
         pub struct ApiUserUpdateParams {
             groups: Result<Vec<uuid::Uuid>, String>,
             permissions: Result<super::PermissionsForApiPermission, String>,
@@ -1755,6 +2184,63 @@ pub mod types {
                 Self {
                     link: Ok(value.link),
                     source: Ok(value.source),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct GetApiUserResponse {
+            info: Result<super::ApiUserForApiPermission, String>,
+            providers: Result<Vec<super::ApiUserProvider>, String>,
+        }
+
+        impl Default for GetApiUserResponse {
+            fn default() -> Self {
+                Self {
+                    info: Err("no value supplied for info".to_string()),
+                    providers: Err("no value supplied for providers".to_string()),
+                }
+            }
+        }
+
+        impl GetApiUserResponse {
+            pub fn info<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::ApiUserForApiPermission>,
+                T::Error: std::fmt::Display,
+            {
+                self.info = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for info: {}", e));
+                self
+            }
+            pub fn providers<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Vec<super::ApiUserProvider>>,
+                T::Error: std::fmt::Display,
+            {
+                self.providers = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for providers: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<GetApiUserResponse> for super::GetApiUserResponse {
+            type Error = String;
+            fn try_from(value: GetApiUserResponse) -> Result<Self, String> {
+                Ok(Self {
+                    info: value.info?,
+                    providers: value.providers?,
+                })
+            }
+        }
+
+        impl From<super::GetApiUserResponse> for GetApiUserResponse {
+            fn from(value: super::GetApiUserResponse) -> Self {
+                Self {
+                    info: Ok(value.info),
+                    providers: Ok(value.providers),
                 }
             }
         }
@@ -2409,6 +2895,146 @@ pub mod types {
                     created_at: Ok(value.created_at),
                     id: Ok(value.id),
                     key: Ok(value.key),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct Jwk {
+            e: Result<String, String>,
+            kid: Result<String, String>,
+            kty: Result<String, String>,
+            n: Result<String, String>,
+            use_: Result<String, String>,
+        }
+
+        impl Default for Jwk {
+            fn default() -> Self {
+                Self {
+                    e: Err("no value supplied for e".to_string()),
+                    kid: Err("no value supplied for kid".to_string()),
+                    kty: Err("no value supplied for kty".to_string()),
+                    n: Err("no value supplied for n".to_string()),
+                    use_: Err("no value supplied for use_".to_string()),
+                }
+            }
+        }
+
+        impl Jwk {
+            pub fn e<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.e = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for e: {}", e));
+                self
+            }
+            pub fn kid<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.kid = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for kid: {}", e));
+                self
+            }
+            pub fn kty<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.kty = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for kty: {}", e));
+                self
+            }
+            pub fn n<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.n = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for n: {}", e));
+                self
+            }
+            pub fn use_<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.use_ = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for use_: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<Jwk> for super::Jwk {
+            type Error = String;
+            fn try_from(value: Jwk) -> Result<Self, String> {
+                Ok(Self {
+                    e: value.e?,
+                    kid: value.kid?,
+                    kty: value.kty?,
+                    n: value.n?,
+                    use_: value.use_?,
+                })
+            }
+        }
+
+        impl From<super::Jwk> for Jwk {
+            fn from(value: super::Jwk) -> Self {
+                Self {
+                    e: Ok(value.e),
+                    kid: Ok(value.kid),
+                    kty: Ok(value.kty),
+                    n: Ok(value.n),
+                    use_: Ok(value.use_),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct Jwks {
+            keys: Result<Vec<super::Jwk>, String>,
+        }
+
+        impl Default for Jwks {
+            fn default() -> Self {
+                Self {
+                    keys: Err("no value supplied for keys".to_string()),
+                }
+            }
+        }
+
+        impl Jwks {
+            pub fn keys<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Vec<super::Jwk>>,
+                T::Error: std::fmt::Display,
+            {
+                self.keys = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for keys: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<Jwks> for super::Jwks {
+            type Error = String;
+            fn try_from(value: Jwks) -> Result<Self, String> {
+                Ok(Self { keys: value.keys? })
+            }
+        }
+
+        impl From<super::Jwks> for Jwks {
+            fn from(value: super::Jwks) -> Self {
+                Self {
+                    keys: Ok(value.keys),
                 }
             }
         }
@@ -3202,6 +3828,49 @@ pub mod types {
                 }
             }
         }
+
+        #[derive(Clone, Debug)]
+        pub struct OpenIdConfiguration {
+            jwks_uri: Result<String, String>,
+        }
+
+        impl Default for OpenIdConfiguration {
+            fn default() -> Self {
+                Self {
+                    jwks_uri: Err("no value supplied for jwks_uri".to_string()),
+                }
+            }
+        }
+
+        impl OpenIdConfiguration {
+            pub fn jwks_uri<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.jwks_uri = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for jwks_uri: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<OpenIdConfiguration> for super::OpenIdConfiguration {
+            type Error = String;
+            fn try_from(value: OpenIdConfiguration) -> Result<Self, String> {
+                Ok(Self {
+                    jwks_uri: value.jwks_uri?,
+                })
+            }
+        }
+
+        impl From<super::OpenIdConfiguration> for OpenIdConfiguration {
+            fn from(value: super::OpenIdConfiguration) -> Self {
+                Self {
+                    jwks_uri: Ok(value.jwks_uri),
+                }
+            }
+        }
     }
 }
 
@@ -3268,6 +3937,28 @@ impl Client {
 }
 
 impl Client {
+    /// Sends a `GET` request to `/.well-known/jwks.json`
+    ///
+    /// ```ignore
+    /// let response = client.jwks_json()
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn jwks_json(&self) -> builder::JwksJson {
+        builder::JwksJson::new(self)
+    }
+
+    /// Sends a `GET` request to `/.well-known/openid-configuration`
+    ///
+    /// ```ignore
+    /// let response = client.openid_configuration()
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn openid_configuration(&self) -> builder::OpenidConfiguration {
+        builder::OpenidConfiguration::new(self)
+    }
+
     /// Create a new user with a given set of permissions
     ///
     /// Sends a `POST` request to `/api-user`
@@ -3337,6 +4028,21 @@ impl Client {
         builder::RemoveApiUserFromGroup::new(self)
     }
 
+    /// Link an existing login provider to this user
+    ///
+    /// Sends a `POST` request to `/api-user/{identifier}/link`
+    ///
+    /// ```ignore
+    /// let response = client.link_provider()
+    ///    .identifier(identifier)
+    ///    .body(body)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn link_provider(&self) -> builder::LinkProvider {
+        builder::LinkProvider::new(self)
+    }
+
     /// List the active and expired API tokens for a given user
     ///
     /// Sends a `GET` request to `/api-user/{identifier}/token`
@@ -3390,6 +4096,22 @@ impl Client {
     /// ```
     pub fn delete_api_user_token(&self) -> builder::DeleteApiUserToken {
         builder::DeleteApiUserToken::new(self)
+    }
+
+    /// Create a new link token for linking this provider to a different api
+    /// user
+    ///
+    /// Sends a `POST` request to `/api-user-provider/{identifier}/link-token`
+    ///
+    /// ```ignore
+    /// let response = client.create_link_token()
+    ///    .identifier(identifier)
+    ///    .body(body)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn create_link_token(&self) -> builder::CreateLinkToken {
+        builder::CreateLinkToken::new(self)
     }
 
     /// Sends a `GET` request to `/group`
@@ -3696,6 +4418,88 @@ pub mod builder {
     use super::{
         encode_path, ByteStream, Error, HeaderMap, HeaderValue, RequestBuilderExt, ResponseValue,
     };
+    /// Builder for [`Client::jwks_json`]
+    ///
+    /// [`Client::jwks_json`]: super::Client::jwks_json
+    #[derive(Debug, Clone)]
+    pub struct JwksJson<'a> {
+        client: &'a super::Client,
+    }
+
+    impl<'a> JwksJson<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self { client }
+        }
+
+        /// Sends a `GET` request to `/.well-known/jwks.json`
+        pub async fn send(self) -> Result<ResponseValue<types::Jwks>, Error<types::Error>> {
+            let Self { client } = self;
+            let url = format!("{}/.well-known/jwks.json", client.baseurl,);
+            let request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::openid_configuration`]
+    ///
+    /// [`Client::openid_configuration`]: super::Client::openid_configuration
+    #[derive(Debug, Clone)]
+    pub struct OpenidConfiguration<'a> {
+        client: &'a super::Client,
+    }
+
+    impl<'a> OpenidConfiguration<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self { client }
+        }
+
+        /// Sends a `GET` request to `/.well-known/openid-configuration`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::OpenIdConfiguration>, Error<types::Error>> {
+            let Self { client } = self;
+            let url = format!("{}/.well-known/openid-configuration", client.baseurl,);
+            let request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
     /// Builder for [`Client::create_api_user`]
     ///
     /// [`Client::create_api_user`]: super::Client::create_api_user
@@ -3797,7 +4601,7 @@ pub mod builder {
         /// Sends a `GET` request to `/api-user/{identifier}`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::ApiUserForApiPermission>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::GetApiUserResponse>, Error<types::Error>> {
             let Self { client, identifier } = self;
             let identifier = identifier.map_err(Error::InvalidRequest)?;
             let url = format!(
@@ -4079,6 +4883,95 @@ pub mod builder {
             let response = result?;
             match response.status().as_u16() {
                 200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::link_provider`]
+    ///
+    /// [`Client::link_provider`]: super::Client::link_provider
+    #[derive(Debug, Clone)]
+    pub struct LinkProvider<'a> {
+        client: &'a super::Client,
+        identifier: Result<uuid::Uuid, String>,
+        body: Result<types::builder::ApiUserProviderLinkPayload, String>,
+    }
+
+    impl<'a> LinkProvider<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client,
+                identifier: Err("identifier was not initialized".to_string()),
+                body: Ok(types::builder::ApiUserProviderLinkPayload::default()),
+            }
+        }
+
+        pub fn identifier<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<uuid::Uuid>,
+        {
+            self.identifier = value
+                .try_into()
+                .map_err(|_| "conversion to `uuid :: Uuid` for identifier failed".to_string());
+            self
+        }
+
+        pub fn body<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::ApiUserProviderLinkPayload>,
+        {
+            self.body = value.try_into().map(From::from).map_err(|_| {
+                "conversion to `ApiUserProviderLinkPayload` for body failed".to_string()
+            });
+            self
+        }
+
+        pub fn body_map<F>(mut self, f: F) -> Self
+        where
+            F: std::ops::FnOnce(
+                types::builder::ApiUserProviderLinkPayload,
+            ) -> types::builder::ApiUserProviderLinkPayload,
+        {
+            self.body = self.body.map(f);
+            self
+        }
+
+        /// Sends a `POST` request to `/api-user/{identifier}/link`
+        pub async fn send(self) -> Result<ResponseValue<()>, Error<types::Error>> {
+            let Self {
+                client,
+                identifier,
+                body,
+            } = self;
+            let identifier = identifier.map_err(Error::InvalidRequest)?;
+            let body = body
+                .and_then(std::convert::TryInto::<types::ApiUserProviderLinkPayload>::try_into)
+                .map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/api-user/{}/link",
+                client.baseurl,
+                encode_path(&identifier.to_string()),
+            );
+            let request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .json(&body)
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                204u16 => Ok(ResponseValue::empty(response)),
                 400u16..=499u16 => Err(Error::ErrorResponse(
                     ResponseValue::from_response(response).await?,
                 )),
@@ -4387,6 +5280,98 @@ pub mod builder {
                     reqwest::header::ACCEPT,
                     reqwest::header::HeaderValue::from_static("application/json"),
                 )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::create_link_token`]
+    ///
+    /// [`Client::create_link_token`]: super::Client::create_link_token
+    #[derive(Debug, Clone)]
+    pub struct CreateLinkToken<'a> {
+        client: &'a super::Client,
+        identifier: Result<uuid::Uuid, String>,
+        body: Result<types::builder::ApiUserLinkRequestPayload, String>,
+    }
+
+    impl<'a> CreateLinkToken<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client,
+                identifier: Err("identifier was not initialized".to_string()),
+                body: Ok(types::builder::ApiUserLinkRequestPayload::default()),
+            }
+        }
+
+        pub fn identifier<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<uuid::Uuid>,
+        {
+            self.identifier = value
+                .try_into()
+                .map_err(|_| "conversion to `uuid :: Uuid` for identifier failed".to_string());
+            self
+        }
+
+        pub fn body<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::ApiUserLinkRequestPayload>,
+        {
+            self.body = value.try_into().map(From::from).map_err(|_| {
+                "conversion to `ApiUserLinkRequestPayload` for body failed".to_string()
+            });
+            self
+        }
+
+        pub fn body_map<F>(mut self, f: F) -> Self
+        where
+            F: std::ops::FnOnce(
+                types::builder::ApiUserLinkRequestPayload,
+            ) -> types::builder::ApiUserLinkRequestPayload,
+        {
+            self.body = self.body.map(f);
+            self
+        }
+
+        /// Sends a `POST` request to
+        /// `/api-user-provider/{identifier}/link-token`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::ApiUserLinkRequestResponse>, Error<types::Error>> {
+            let Self {
+                client,
+                identifier,
+                body,
+            } = self;
+            let identifier = identifier.map_err(Error::InvalidRequest)?;
+            let body = body
+                .and_then(std::convert::TryInto::<types::ApiUserLinkRequestPayload>::try_into)
+                .map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/api-user-provider/{}/link-token",
+                client.baseurl,
+                encode_path(&identifier.to_string()),
+            );
+            let request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .json(&body)
                 .build()?;
             let result = client.client.execute(request).await;
             let response = result?;
@@ -5835,7 +6820,7 @@ pub mod builder {
         /// Sends a `GET` request to `/self`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::ApiUserForApiPermission>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::GetApiUserResponse>, Error<types::Error>> {
             let Self { client } = self;
             let url = format!("{}/self", client.baseurl,);
             let request = client

@@ -25,7 +25,7 @@ impl CliOutput for RfdJsonPrinter {
 
     fn output_get_api_user(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<types::GetApiUserResponse, progenitor_client::Error<types::Error>>,
     ) {
         print_cli_output(&response)
     }
@@ -224,7 +224,7 @@ impl CliOutput for RfdJsonPrinter {
 
     fn output_get_self(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<types::GetApiUserResponse, progenitor_client::Error<types::Error>>,
     ) {
         print_cli_output(&response)
     }

@@ -19,15 +19,19 @@ impl Cli {
 
     pub fn get_command(cmd: CliCommand) -> clap::Command {
         match cmd {
+            CliCommand::JwksJson => Self::cli_jwks_json(),
+            CliCommand::OpenidConfiguration => Self::cli_openid_configuration(),
             CliCommand::CreateApiUser => Self::cli_create_api_user(),
             CliCommand::GetApiUser => Self::cli_get_api_user(),
             CliCommand::UpdateApiUser => Self::cli_update_api_user(),
             CliCommand::AddApiUserToGroup => Self::cli_add_api_user_to_group(),
             CliCommand::RemoveApiUserFromGroup => Self::cli_remove_api_user_from_group(),
+            CliCommand::LinkProvider => Self::cli_link_provider(),
             CliCommand::ListApiUserTokens => Self::cli_list_api_user_tokens(),
             CliCommand::CreateApiUserToken => Self::cli_create_api_user_token(),
             CliCommand::GetApiUserToken => Self::cli_get_api_user_token(),
             CliCommand::DeleteApiUserToken => Self::cli_delete_api_user_token(),
+            CliCommand::CreateLinkToken => Self::cli_create_link_token(),
             CliCommand::GithubWebhook => Self::cli_github_webhook(),
             CliCommand::GetGroups => Self::cli_get_groups(),
             CliCommand::CreateGroup => Self::cli_create_group(),
@@ -54,6 +58,14 @@ impl Cli {
             CliCommand::SearchRfds => Self::cli_search_rfds(),
             CliCommand::GetSelf => Self::cli_get_self(),
         }
+    }
+
+    pub fn cli_jwks_json() -> clap::Command {
+        clap::Command::new("")
+    }
+
+    pub fn cli_openid_configuration() -> clap::Command {
+        clap::Command::new("")
     }
 
     pub fn cli_create_api_user() -> clap::Command {
@@ -157,6 +169,37 @@ impl Cli {
             )
     }
 
+    pub fn cli_link_provider() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("identifier")
+                    .long("identifier")
+                    .value_parser(clap::value_parser!(uuid::Uuid))
+                    .required(true),
+            )
+            .arg(
+                clap::Arg::new("token")
+                    .long("token")
+                    .value_parser(clap::value_parser!(String))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
+                clap::Arg::new("json-body")
+                    .long("json-body")
+                    .value_name("JSON-FILE")
+                    .required(false)
+                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .help("Path to a file that contains the full json body."),
+            )
+            .arg(
+                clap::Arg::new("json-body-template")
+                    .long("json-body-template")
+                    .action(clap::ArgAction::SetTrue)
+                    .help("XXX"),
+            )
+            .about("Link an existing login provider to this user")
+    }
+
     pub fn cli_list_api_user_tokens() -> clap::Command {
         clap::Command::new("")
             .arg(
@@ -228,6 +271,37 @@ impl Cli {
                     .value_parser(clap::value_parser!(uuid::Uuid))
                     .required(true),
             )
+    }
+
+    pub fn cli_create_link_token() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("identifier")
+                    .long("identifier")
+                    .value_parser(clap::value_parser!(uuid::Uuid))
+                    .required(true),
+            )
+            .arg(
+                clap::Arg::new("user-identifier")
+                    .long("user-identifier")
+                    .value_parser(clap::value_parser!(uuid::Uuid))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
+                clap::Arg::new("json-body")
+                    .long("json-body")
+                    .value_name("JSON-FILE")
+                    .required(false)
+                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .help("Path to a file that contains the full json body."),
+            )
+            .arg(
+                clap::Arg::new("json-body-template")
+                    .long("json-body-template")
+                    .action(clap::ArgAction::SetTrue)
+                    .help("XXX"),
+            )
+            .about("Create a new link token for linking this provider to a different api user")
     }
 
     pub fn cli_github_webhook() -> clap::Command {
@@ -670,6 +744,12 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
 
     pub async fn execute(&self, cmd: CliCommand, matches: &clap::ArgMatches) {
         match cmd {
+            CliCommand::JwksJson => {
+                self.execute_jwks_json(matches).await;
+            }
+            CliCommand::OpenidConfiguration => {
+                self.execute_openid_configuration(matches).await;
+            }
             CliCommand::CreateApiUser => {
                 self.execute_create_api_user(matches).await;
             }
@@ -685,6 +765,9 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             CliCommand::RemoveApiUserFromGroup => {
                 self.execute_remove_api_user_from_group(matches).await;
             }
+            CliCommand::LinkProvider => {
+                self.execute_link_provider(matches).await;
+            }
             CliCommand::ListApiUserTokens => {
                 self.execute_list_api_user_tokens(matches).await;
             }
@@ -696,6 +779,9 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             }
             CliCommand::DeleteApiUserToken => {
                 self.execute_delete_api_user_token(matches).await;
+            }
+            CliCommand::CreateLinkToken => {
+                self.execute_create_link_token(matches).await;
             }
             CliCommand::GithubWebhook => {
                 self.execute_github_webhook(matches).await;
@@ -760,6 +846,28 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             CliCommand::GetSelf => {
                 self.execute_get_self(matches).await;
             }
+        }
+    }
+
+    pub async fn execute_jwks_json(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.jwks_json();
+        self.over.execute_jwks_json(matches, &mut request).unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => self.output.output_jwks_json(Ok(r.into_inner())),
+            Err(r) => self.output.output_jwks_json(Err(r)),
+        }
+    }
+
+    pub async fn execute_openid_configuration(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.openid_configuration();
+        self.over
+            .execute_openid_configuration(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => self.output.output_openid_configuration(Ok(r.into_inner())),
+            Err(r) => self.output.output_openid_configuration(Err(r)),
         }
     }
 
@@ -867,6 +975,33 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
         }
     }
 
+    pub async fn execute_link_provider(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.link_provider();
+        if let Some(value) = matches.get_one::<uuid::Uuid>("identifier") {
+            request = request.identifier(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<String>("token") {
+            request = request.body_map(|body| body.token(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value =
+                serde_json::from_str::<types::ApiUserProviderLinkPayload>(&body_txt).unwrap();
+            request = request.body(body_value);
+        }
+
+        self.over
+            .execute_link_provider(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => self.output.output_link_provider(Ok(r.into_inner())),
+            Err(r) => self.output.output_link_provider(Err(r)),
+        }
+    }
+
     pub async fn execute_list_api_user_tokens(&self, matches: &clap::ArgMatches) {
         let mut request = self.client.list_api_user_tokens();
         if let Some(value) = matches.get_one::<uuid::Uuid>("identifier") {
@@ -947,6 +1082,33 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
         match result {
             Ok(r) => self.output.output_delete_api_user_token(Ok(r.into_inner())),
             Err(r) => self.output.output_delete_api_user_token(Err(r)),
+        }
+    }
+
+    pub async fn execute_create_link_token(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.create_link_token();
+        if let Some(value) = matches.get_one::<uuid::Uuid>("identifier") {
+            request = request.identifier(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<uuid::Uuid>("user-identifier") {
+            request = request.body_map(|body| body.user_identifier(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value =
+                serde_json::from_str::<types::ApiUserLinkRequestPayload>(&body_txt).unwrap();
+            request = request.body(body_value);
+        }
+
+        self.over
+            .execute_create_link_token(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => self.output.output_create_link_token(Ok(r.into_inner())),
+            Err(r) => self.output.output_create_link_token(Err(r)),
         }
     }
 
@@ -1404,6 +1566,22 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
 }
 
 pub trait CliOverride {
+    fn execute_jwks_json(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::JwksJson,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn execute_openid_configuration(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::OpenidConfiguration,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
     fn execute_create_api_user(
         &self,
         matches: &clap::ArgMatches,
@@ -1444,6 +1622,14 @@ pub trait CliOverride {
         Ok(())
     }
 
+    fn execute_link_provider(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::LinkProvider,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
     fn execute_list_api_user_tokens(
         &self,
         matches: &clap::ArgMatches,
@@ -1472,6 +1658,14 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::DeleteApiUserToken,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn execute_create_link_token(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::CreateLinkToken,
     ) -> Result<(), String> {
         Ok(())
     }
@@ -1648,6 +1842,18 @@ pub trait CliOverride {
 impl CliOverride for () {}
 
 pub trait CliOutput {
+    fn output_jwks_json(
+        &self,
+        response: Result<types::Jwks, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_openid_configuration(
+        &self,
+        response: Result<types::OpenIdConfiguration, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
     fn output_create_api_user(
         &self,
         response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
@@ -1656,7 +1862,7 @@ pub trait CliOutput {
 
     fn output_get_api_user(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<types::GetApiUserResponse, progenitor_client::Error<types::Error>>,
     ) {
     }
 
@@ -1677,6 +1883,8 @@ pub trait CliOutput {
         response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
     ) {
     }
+
+    fn output_link_provider(&self, response: Result<(), progenitor_client::Error<types::Error>>) {}
 
     fn output_list_api_user_tokens(
         &self,
@@ -1699,6 +1907,12 @@ pub trait CliOutput {
     fn output_delete_api_user_token(
         &self,
         response: Result<types::ApiKeyResponse, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_create_link_token(
+        &self,
+        response: Result<types::ApiUserLinkRequestResponse, progenitor_client::Error<types::Error>>,
     ) {
     }
 
@@ -1830,7 +2044,7 @@ pub trait CliOutput {
 
     fn output_get_self(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<types::GetApiUserResponse, progenitor_client::Error<types::Error>>,
     ) {
     }
 }
@@ -1839,15 +2053,19 @@ impl CliOutput for () {}
 
 #[derive(Copy, Clone, Debug)]
 pub enum CliCommand {
+    JwksJson,
+    OpenidConfiguration,
     CreateApiUser,
     GetApiUser,
     UpdateApiUser,
     AddApiUserToGroup,
     RemoveApiUserFromGroup,
+    LinkProvider,
     ListApiUserTokens,
     CreateApiUserToken,
     GetApiUserToken,
     DeleteApiUserToken,
+    CreateLinkToken,
     GithubWebhook,
     GetGroups,
     CreateGroup,
@@ -1874,15 +2092,19 @@ pub enum CliCommand {
 impl CliCommand {
     pub fn iter() -> impl Iterator<Item = CliCommand> {
         vec![
+            CliCommand::JwksJson,
+            CliCommand::OpenidConfiguration,
             CliCommand::CreateApiUser,
             CliCommand::GetApiUser,
             CliCommand::UpdateApiUser,
             CliCommand::AddApiUserToGroup,
             CliCommand::RemoveApiUserFromGroup,
+            CliCommand::LinkProvider,
             CliCommand::ListApiUserTokens,
             CliCommand::CreateApiUserToken,
             CliCommand::GetApiUserToken,
             CliCommand::DeleteApiUserToken,
+            CliCommand::CreateLinkToken,
             CliCommand::GithubWebhook,
             CliCommand::GetGroups,
             CliCommand::CreateGroup,

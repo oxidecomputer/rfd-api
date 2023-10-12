@@ -30,12 +30,35 @@ impl Display for ApiPermission {
             Self::UpdateApiUserSelf => write!(f, "update-user-self"),
             Self::UpdateApiUserAssigned => write!(f, "update-user-assigned"),
             Self::UpdateApiUserAll => write!(f, "update-user-all"),
+            Self::CreateUserApiProviderLinkToken => write!(f, "create-link-request"),
             Self::ListGroups => write!(f, "list-groups"),
             Self::CreateGroup => write!(f, "create-group"),
             Self::UpdateGroup(id) => write!(f, "update-group:{}", id),
             Self::AddToGroup(id) => write!(f, "add-group-membership:{}", id),
             Self::RemoveFromGroup(id) => write!(f, "remove-group-membership:{}", id),
+            Self::ManageGroupMembership(id) => write!(f, "manage-group-membership:{}", id),
+            Self::ManageGroupMemberships(ids) => write!(
+                f,
+                "manage-group-memberships:{}",
+                ids.iter()
+                    .map(|i| i.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            Self::ManageGroupMembershipAssigned => write!(f, "manage-group-membership-assigned"),
+            Self::ManageGroupMembershipAll => write!(f, "manage-group-membership-all"),
             Self::DeleteGroup(id) => write!(f, "delete-group:{}", id),
+            Self::ManageGroup(id) => write!(f, "manage-group:{}", id),
+            Self::ManageGroups(ids) => write!(
+                f,
+                "manage-groups:{}",
+                ids.iter()
+                    .map(|i| i.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            Self::ManageGroupsAssigned => write!(f, "manage-groups-assigned"),
+            Self::ManageGroupsAll => write!(f, "manage-groups-all"),
             Self::GetRfd(number) => write!(f, "get-rfd:{}", number),
             Self::GetRfds(numbers) => write!(
                 f,

@@ -5,8 +5,8 @@ use std::{
 
 use chrono::{DateTime, Utc};
 use db::{
-    AccessGroupModel, JobModel, LoginAttemptModel, MapperModel, OAuthClientRedirectUriModel,
-    OAuthClientSecretModel, RfdModel, RfdPdfModel, RfdRevisionModel,
+    AccessGroupModel, JobModel, LinkRequestModel, LoginAttemptModel, MapperModel,
+    OAuthClientRedirectUriModel, OAuthClientSecretModel, RfdModel, RfdPdfModel, RfdRevisionModel,
 };
 use partial_struct::partial;
 use permissions::Permissions;
@@ -450,6 +450,35 @@ impl From<MapperModel> for Mapper {
             depleted_at: value.depleted_at,
             created_at: value.created_at,
             deleted_at: value.deleted_at,
+        }
+    }
+}
+
+#[partial(NewLinkRequest)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct LinkRequest {
+    pub id: Uuid,
+    pub source_provider_id: Uuid,
+    pub source_api_user_id: Uuid,
+    pub target_api_user_id: Uuid,
+    pub secret_signature: String,
+    #[partial(NewLinkRequest(skip))]
+    pub created_at: DateTime<Utc>,
+    pub expires_at: DateTime<Utc>,
+    pub completed_at: Option<DateTime<Utc>>,
+}
+
+impl From<LinkRequestModel> for LinkRequest {
+    fn from(value: LinkRequestModel) -> Self {
+        LinkRequest {
+            id: value.id,
+            source_provider_id: value.source_provider_id,
+            source_api_user_id: value.source_api_user_id,
+            target_api_user_id: value.target_api_user_id,
+            secret_signature: value.secret_signature,
+            created_at: value.created_at,
+            expires_at: value.expires_at,
+            completed_at: value.completed_at,
         }
     }
 }

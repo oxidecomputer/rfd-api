@@ -20,21 +20,22 @@ use uuid::Uuid;
 use crate::{
     db::{
         AccessGroupModel, ApiKeyModel, ApiUserAccessTokenModel, ApiUserModel, ApiUserProviderModel,
-        JobModel, LoginAttemptModel, MapperModel, OAuthClientModel, OAuthClientRedirectUriModel,
-        OAuthClientSecretModel, RfdModel, RfdPdfModel, RfdRevisionModel,
+        JobModel, LinkRequestModel, LoginAttemptModel, MapperModel, OAuthClientModel,
+        OAuthClientRedirectUriModel, OAuthClientSecretModel, RfdModel, RfdPdfModel,
+        RfdRevisionModel,
     },
     permissions::{Permission, Permissions},
     schema::{
         access_groups, api_key, api_user, api_user_access_token, api_user_provider, job,
-        login_attempt, mapper, oauth_client, oauth_client_redirect_uri, oauth_client_secret, rfd,
-        rfd_pdf, rfd_revision,
+        link_request, login_attempt, mapper, oauth_client, oauth_client_redirect_uri,
+        oauth_client_secret, rfd, rfd_pdf, rfd_revision,
     },
-    storage::StoreError,
-    AccessGroup, AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LoginAttempt, Mapper,
-    NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
-    NewLoginAttempt, NewMapper, NewOAuthClient, NewOAuthClientRedirectUri, NewOAuthClientSecret,
-    NewRfd, NewRfdPdf, NewRfdRevision, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, Rfd,
-    RfdPdf, RfdRevision,
+    storage::{LinkRequestFilter, LinkRequestStore, StoreError},
+    AccessGroup, AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LinkRequest, LoginAttempt,
+    Mapper, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
+    NewLinkRequest, NewLoginAttempt, NewMapper, NewOAuthClient, NewOAuthClientRedirectUri,
+    NewOAuthClientSecret, NewRfd, NewRfdPdf, NewRfdRevision, OAuthClient, OAuthClientRedirectUri,
+    OAuthClientSecret, Rfd, RfdPdf, RfdRevision,
 };
 
 use super::{
@@ -813,7 +814,7 @@ impl ApiUserProviderStore for PostgresStore {
     }
 
     async fn upsert(&self, provider: NewApiUserProvider) -> Result<ApiUserProvider, StoreError> {
-        tracing::info!(id = ?provider.id, api_user_id = ?provider.api_user_id, provider = ?provider, "Upserting user provider");
+        tracing::trace!(id = ?provider.id, api_user_id = ?provider.api_user_id, provider = ?provider, "Inserting user provider");
 
         let provider_m: ApiUserProviderModel =
             insert_into(api_user_provider::dsl::api_user_provider)
@@ -827,11 +828,40 @@ impl ApiUserProviderStore for PostgresStore {
                 .on_conflict(api_user_provider::id)
                 .do_update()
                 .set((
-                    api_user_provider::api_user_id.eq(excluded(api_user_provider::api_user_id)),
+                    api_user_provider::emails.eq(excluded(api_user_provider::emails)),
                     api_user_provider::updated_at.eq(Utc::now()),
                 ))
                 .get_result_async(&self.conn)
                 .await?;
+
+        Ok(ApiUserProvider {
+            id: provider_m.id,
+            api_user_id: provider_m.api_user_id,
+            provider: provider_m.provider,
+            provider_id: provider_m.provider_id,
+            emails: provider_m.emails.into_iter().filter_map(|e| e).collect(),
+            created_at: provider_m.created_at,
+            updated_at: provider_m.updated_at,
+            deleted_at: provider_m.deleted_at,
+        })
+    }
+
+    async fn transfer(
+        &self,
+        provider: NewApiUserProvider,
+        current_api_user_id: Uuid,
+    ) -> Result<ApiUserProvider, StoreError> {
+        tracing::trace!(id = ?provider.id, api_user_id = ?provider.api_user_id, provider = ?provider, "Updating user provider");
+
+        let provider_m: ApiUserProviderModel = update(api_user_provider::dsl::api_user_provider)
+            .set((
+                api_user_provider::api_user_id.eq(provider.api_user_id),
+                api_user_provider::updated_at.eq(Utc::now()),
+            ))
+            .filter(api_user_provider::id.eq(provider.id))
+            .filter(api_user_provider::api_user_id.eq(current_api_user_id))
+            .get_result_async(&self.conn)
+            .await?;
 
         Ok(ApiUserProvider {
             id: provider_m.id,
@@ -1422,5 +1452,105 @@ impl MapperStore for PostgresStore {
             .await?;
 
         MapperStore::get(self, id, false, true).await
+    }
+}
+
+#[async_trait]
+impl LinkRequestStore for PostgresStore {
+    #[instrument(skip(self), err(Debug))]
+    async fn get(
+        &self,
+        id: &Uuid,
+        expired: bool,
+        completed: bool,
+    ) -> Result<Option<LinkRequest>, StoreError> {
+        tracing::trace!("Get link request");
+
+        let client = LinkRequestStore::list(
+            self,
+            LinkRequestFilter {
+                id: Some(vec![*id]),
+                provider_id: None,
+                user_id: None,
+                expired,
+                completed,
+            },
+            &ListPagination::default().limit(1),
+        )
+        .await?;
+
+        Ok(client.into_iter().nth(0))
+    }
+
+    #[instrument(skip(self), err(Debug))]
+    async fn list(
+        &self,
+        filter: LinkRequestFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<LinkRequest>, StoreError> {
+        tracing::trace!("Listing link requests");
+
+        let mut query = link_request::dsl::link_request.into_boxed();
+
+        let LinkRequestFilter {
+            id,
+            provider_id,
+            user_id,
+            expired,
+            completed,
+        } = filter;
+
+        if let Some(id) = id {
+            query = query.filter(link_request::id.eq_any(id));
+        }
+
+        if let Some(provider_id) = provider_id {
+            query = query.filter(link_request::source_provider_id.eq_any(provider_id));
+        }
+
+        if let Some(user_id) = user_id {
+            query = query.filter(link_request::target_api_user_id.eq_any(user_id));
+        }
+
+        if !expired {
+            query = query.filter(link_request::expires_at.gt(Utc::now()));
+        }
+
+        if !completed {
+            query = query.filter(link_request::completed_at.is_null());
+        }
+
+        let results = query
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+            .order(link_request::created_at.desc())
+            .get_results_async::<LinkRequestModel>(&self.conn)
+            .await?;
+
+        Ok(results.into_iter().map(|model| model.into()).collect())
+    }
+
+    #[instrument(skip(self), err(Debug))]
+    async fn upsert(&self, request: &NewLinkRequest) -> Result<LinkRequest, StoreError> {
+        tracing::trace!("Upserting link request");
+
+        let link_request_m: LinkRequestModel = insert_into(link_request::dsl::link_request)
+            .values((
+                link_request::id.eq(request.id),
+                link_request::source_provider_id.eq(request.source_provider_id),
+                link_request::source_api_user_id.eq(request.source_api_user_id),
+                link_request::target_api_user_id.eq(request.target_api_user_id),
+                link_request::secret_signature.eq(request.secret_signature.clone()),
+                link_request::created_at.eq(Utc::now()),
+                link_request::expires_at.eq(request.expires_at),
+                link_request::completed_at.eq(request.completed_at),
+            ))
+            .on_conflict(link_request::id)
+            .do_update()
+            .set((link_request::completed_at.eq(excluded(link_request::completed_at)),))
+            .get_result_async(&self.conn)
+            .await?;
+
+        Ok(link_request_m.into())
     }
 }

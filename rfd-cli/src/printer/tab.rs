@@ -1,5 +1,7 @@
 use itertools::{EitherOrBoth, Itertools};
-use rfd_sdk::types::{AccessGroupForApiPermission, ApiUserForApiPermission, Error, ListRfd};
+use rfd_sdk::types::{
+    AccessGroupForApiPermission, ApiUserForApiPermission, Error, GetApiUserResponse, ListRfd,
+};
 use std::{fs::File, io::Write, process::Command};
 use tabwriter::TabWriter;
 
@@ -121,7 +123,7 @@ impl CliOutput for RfdTabPrinter {
 
     fn output_get_self(
         &self,
-        response: Result<rfd_sdk::types::ApiUserForApiPermission, progenitor_client::Error<Error>>,
+        response: Result<rfd_sdk::types::GetApiUserResponse, progenitor_client::Error<Error>>,
     ) {
         match response {
             Ok(user) => print_user(&user),
@@ -131,7 +133,7 @@ impl CliOutput for RfdTabPrinter {
 
     fn output_get_api_user(
         &self,
-        response: Result<rfd_sdk::types::ApiUserForApiPermission, progenitor_client::Error<Error>>,
+        response: Result<rfd_sdk::types::GetApiUserResponse, progenitor_client::Error<Error>>,
     ) {
         match response {
             Ok(user) => print_user(&user),
@@ -219,7 +221,7 @@ fn print_error(error: progenitor_client::Error<Error>) {
     println!("{}", written);
 }
 
-fn print_user(user: &ApiUserForApiPermission) {
+fn print_user(user: &GetApiUserResponse) {
     let mut tw = TabWriter::new(vec![]).ansi(true);
 
     writeln!(
@@ -233,7 +235,11 @@ fn print_user(user: &ApiUserForApiPermission) {
         HEADER_COLOR
     );
 
-    let lines = user.permissions.iter().zip_longest(user.groups.iter());
+    let lines = user
+        .info
+        .permissions
+        .iter()
+        .zip_longest(user.info.groups.iter());
 
     for (i, line) in lines.enumerate() {
         let inner = match line {
@@ -247,13 +253,13 @@ fn print_user(user: &ApiUserForApiPermission) {
             "{}{}\t{}\t{}",
             TEXT_COLOR,
             if i == 0 {
-                user.id.to_string()
+                user.info.id.to_string()
             } else {
                 String::new()
             },
             inner,
             if i == 0 {
-                user.created_at.to_string()
+                user.info.created_at.to_string()
             } else {
                 String::new()
             },

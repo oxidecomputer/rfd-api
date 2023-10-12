@@ -11,11 +11,11 @@ use uuid::Uuid;
 use crate::{
     permissions::Permission,
     schema_ext::{LoginAttemptState, PdfSource},
-    AccessGroup, AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LoginAttempt, Mapper,
-    NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
-    NewLoginAttempt, NewMapper, NewOAuthClient, NewOAuthClientRedirectUri, NewOAuthClientSecret,
-    NewRfd, NewRfdPdf, NewRfdRevision, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, Rfd,
-    RfdPdf, RfdRevision,
+    AccessGroup, AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LinkRequest, LoginAttempt,
+    Mapper, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
+    NewLinkRequest, NewLoginAttempt, NewMapper, NewOAuthClient, NewOAuthClientRedirectUri,
+    NewOAuthClientSecret, NewRfd, NewRfdPdf, NewRfdRevision, OAuthClient, OAuthClientRedirectUri,
+    OAuthClientSecret, Rfd, RfdPdf, RfdRevision,
 };
 
 pub mod postgres;
@@ -304,6 +304,11 @@ pub trait ApiUserProviderStore {
         pagination: &ListPagination,
     ) -> Result<Vec<ApiUserProvider>, StoreError>;
     async fn upsert(&self, api_user: NewApiUserProvider) -> Result<ApiUserProvider, StoreError>;
+    async fn transfer(
+        &self,
+        api_user: NewApiUserProvider,
+        current_api_user_id: Uuid,
+    ) -> Result<ApiUserProvider, StoreError>;
     async fn delete(&self, id: &Uuid) -> Result<Option<ApiUserProvider>, StoreError>;
 }
 
@@ -426,4 +431,30 @@ pub trait MapperStore {
     ) -> Result<Vec<Mapper>, StoreError>;
     async fn upsert(&self, new_mapper: &NewMapper) -> Result<Mapper, StoreError>;
     async fn delete(&self, id: &Uuid) -> Result<Option<Mapper>, StoreError>;
+}
+
+#[derive(Debug, Default, PartialEq)]
+pub struct LinkRequestFilter {
+    pub id: Option<Vec<Uuid>>,
+    pub provider_id: Option<Vec<Uuid>>,
+    pub user_id: Option<Vec<Uuid>>,
+    pub expired: bool,
+    pub completed: bool,
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait LinkRequestStore {
+    async fn get(
+        &self,
+        id: &Uuid,
+        expired: bool,
+        completed: bool,
+    ) -> Result<Option<LinkRequest>, StoreError>;
+    async fn list(
+        &self,
+        filter: LinkRequestFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<LinkRequest>, StoreError>;
+    async fn upsert(&self, request: &NewLinkRequest) -> Result<LinkRequest, StoreError>;
 }

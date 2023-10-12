@@ -25,7 +25,7 @@ impl CliOutput for Printer {
 
     fn output_get_api_user(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<types::GetApiUserResponse, progenitor_client::Error<types::Error>>,
     ) {
         match self {
             Printer::Json(printer) => printer.output_get_api_user(response),
@@ -314,7 +314,7 @@ impl CliOutput for Printer {
 
     fn output_get_self(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<types::GetApiUserResponse, progenitor_client::Error<types::Error>>,
     ) {
         match self {
             Printer::Json(printer) => printer.output_get_self(response),

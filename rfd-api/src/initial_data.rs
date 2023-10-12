@@ -53,12 +53,20 @@ impl InitialData {
     }
 
     pub async fn initialize(self, ctx: &ApiContext) -> Result<(), InitError> {
+        let existing_groups = ctx.get_groups().await?;
+
         for group in self.groups {
             let span = tracing::info_span!("Initializing group", group = ?group);
 
             async {
+                let id = existing_groups
+                    .iter()
+                    .find(|g| g.name == group.name)
+                    .map(|g| g.id)
+                    .unwrap_or(Uuid::new_v4());
+
                 ctx.create_group(NewAccessGroup {
-                    id: Uuid::new_v4(),
+                    id,
                     name: group.name,
                     permissions: group.permissions,
                 })

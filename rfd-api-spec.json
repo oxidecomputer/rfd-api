@@ -10,6 +10,52 @@
     "version": ""
   },
   "paths": {
+    "/.well-known/jwks.json": {
+      "get": {
+        "operationId": "jwks_json",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Jwks"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/.well-known/openid-configuration": {
+      "get": {
+        "operationId": "openid_configuration",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenIdConfiguration"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
     "/api-user": {
       "post": {
         "summary": "Create a new user with a given set of permissions",
@@ -65,7 +111,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiUser_for_ApiPermission"
+                  "$ref": "#/components/schemas/GetApiUserResponse"
                 }
               }
             }
@@ -199,6 +245,44 @@
                 }
               }
             }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api-user/{identifier}/link": {
+      "post": {
+        "summary": "Link an existing login provider to this user",
+        "operationId": "link_provider",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiUserProviderLinkPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "resource updated"
           },
           "4XX": {
             "$ref": "#/components/responses/Error"
@@ -361,6 +445,51 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiKeyResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api-user-provider/{identifier}/link-token": {
+      "post": {
+        "summary": "Create a new link token for linking this provider to a different api user",
+        "operationId": "create_link_token",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiUserLinkRequestPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiUserLinkRequestResponse"
                 }
               }
             }
@@ -1151,7 +1280,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiUser_for_ApiPermission"
+                  "$ref": "#/components/schemas/GetApiUserResponse"
                 }
               }
             }
@@ -1331,8 +1460,13 @@
               "UpdateApiUserSelf",
               "UpdateApiUserAssigned",
               "UpdateApiUserAll",
+              "CreateUserApiProviderLinkToken",
               "ListGroups",
               "CreateGroup",
+              "ManageGroupMembershipAssigned",
+              "ManageGroupMembershipAll",
+              "ManageGroupsAssigned",
+              "ManageGroupsAll",
               "GetRfdsAssigned",
               "GetRfdsAll",
               "GetDiscussionsAssigned",
@@ -1454,6 +1588,36 @@
           {
             "type": "object",
             "properties": {
+              "ManageGroupMembership": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "ManageGroupMembership"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "ManageGroupMemberships": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "ManageGroupMemberships"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
               "DeleteGroup": {
                 "type": "string",
                 "format": "uuid"
@@ -1461,6 +1625,36 @@
             },
             "required": [
               "DeleteGroup"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "ManageGroup": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "ManageGroup"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "ManageGroups": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "ManageGroups"
             ],
             "additionalProperties": false
           },
@@ -1614,6 +1808,87 @@
             ],
             "additionalProperties": false
           }
+        ]
+      },
+      "ApiUserLinkRequestPayload": {
+        "type": "object",
+        "properties": {
+          "user_identifier": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "user_identifier"
+        ]
+      },
+      "ApiUserLinkRequestResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "ApiUserProvider": {
+        "type": "object",
+        "properties": {
+          "api_user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "emails": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "provider": {
+            "type": "string"
+          },
+          "provider_id": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "api_user_id",
+          "created_at",
+          "emails",
+          "id",
+          "provider",
+          "provider_id",
+          "updated_at"
+        ]
+      },
+      "ApiUserProviderLinkPayload": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
         ]
       },
       "ApiUserUpdateParams": {
@@ -1773,6 +2048,24 @@
         "required": [
           "link",
           "source"
+        ]
+      },
+      "GetApiUserResponse": {
+        "type": "object",
+        "properties": {
+          "info": {
+            "$ref": "#/components/schemas/ApiUser_for_ApiPermission"
+          },
+          "providers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiUserProvider"
+            }
+          }
+        },
+        "required": [
+          "info",
+          "providers"
         ]
       },
       "GitHubCommit": {
@@ -1972,6 +2265,47 @@
           "created_at",
           "id",
           "key"
+        ]
+      },
+      "Jwk": {
+        "type": "object",
+        "properties": {
+          "e": {
+            "type": "string"
+          },
+          "kid": {
+            "type": "string"
+          },
+          "kty": {
+            "type": "string"
+          },
+          "n": {
+            "type": "string"
+          },
+          "use": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "e",
+          "kid",
+          "kty",
+          "n",
+          "use"
+        ]
+      },
+      "Jwks": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Jwk"
+            }
+          }
+        },
+        "required": [
+          "keys"
         ]
       },
       "ListRfd": {
@@ -2217,6 +2551,17 @@
         "enum": [
           "github",
           "google"
+        ]
+      },
+      "OpenIdConfiguration": {
+        "type": "object",
+        "properties": {
+          "jwks_uri": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "jwks_uri"
         ]
       },
       "Permissions_for_ApiPermission": {

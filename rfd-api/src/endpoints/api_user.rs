@@ -2,12 +2,17 @@ use std::collections::BTreeSet;
 
 use chrono::{DateTime, Utc};
 use dropshot::{
-    endpoint, HttpError, HttpResponseCreated, HttpResponseOk, Path, RequestContext, TypedBody,
+    endpoint, HttpError, HttpResponseCreated, HttpResponseOk, HttpResponseUpdatedNoContent, Path,
+    RequestContext, TypedBody,
 };
 use partial_struct::partial;
-use rfd_model::{storage::ListPagination, ApiUser, NewApiKey, NewApiUser};
+use rfd_model::{
+    storage::{ApiUserProviderFilter, ListPagination},
+    ApiUser, ApiUserProvider, NewApiKey, NewApiUser,
+};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use tap::TapFallible;
 use trace_request::trace_request;
 use tracing::instrument;
 use uuid::Uuid;
@@ -17,9 +22,17 @@ use crate::{
     context::ApiContext,
     error::ApiError,
     permissions::ApiPermission,
-    util::response::{forbidden, not_found, to_internal_error},
+    util::response::{
+        bad_request, forbidden, internal_error, not_found, to_internal_error, unauthorized,
+    },
     ApiCaller, ApiPermissions, User,
 };
+
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+pub struct GetApiUserResponse {
+    info: ApiUser<ApiPermission>,
+    providers: Vec<ApiUserProvider>,
+}
 
 /// Retrieve the user information of the calling user
 #[trace_request]
@@ -30,7 +43,7 @@ use crate::{
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn get_self(
     rqctx: RequestContext<ApiContext>,
-) -> Result<HttpResponseOk<ApiUser<ApiPermission>>, HttpError> {
+) -> Result<HttpResponseOk<GetApiUserResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await;
     let caller = ctx.get_caller(&auth?).await?;
@@ -47,7 +60,7 @@ pub async fn get_self(
 pub async fn get_api_user(
     rqctx: RequestContext<ApiContext>,
     path: Path<ApiUserPath>,
-) -> Result<HttpResponseOk<User>, HttpError> {
+) -> Result<HttpResponseOk<GetApiUserResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     get_api_user_op(
@@ -63,7 +76,7 @@ async fn get_api_user_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
     user_id: &Uuid,
-) -> Result<HttpResponseOk<User>, HttpError> {
+) -> Result<HttpResponseOk<GetApiUserResponse>, HttpError> {
     if caller.any(&[
         &ApiPermission::GetApiUser(caller.id).into(),
         &ApiPermission::GetApiUserAll.into(),
@@ -73,10 +86,20 @@ async fn get_api_user_op(
             .await
             .map_err(ApiError::Storage)?;
 
+        let mut filter = ApiUserProviderFilter::default();
+        filter.api_user_id = Some(vec![caller.id]);
+        let providers = ctx
+            .list_api_user_provider(filter, &ListPagination::default().limit(10))
+            .await
+            .map_err(ApiError::Storage)?;
+
         if let Some(user) = user {
             tracing::trace!(user = ?serde_json::to_string(&user), "Found user");
 
-            Ok(HttpResponseOk(user))
+            Ok(HttpResponseOk(GetApiUserResponse {
+                info: user,
+                providers,
+            }))
         } else {
             tracing::error!("Failed to find api user record for authenticated user");
             Err(not_found("Failed to find"))
@@ -467,6 +490,79 @@ pub async fn remove_api_user_from_group(
             .ok_or_else(|| not_found("User does not exist"))
     } else {
         Err(forbidden())
+    }
+}
+
+// TODO: Needs to be implemented
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct ApiUserProviderLinkPayload {
+    token: String,
+}
+
+/// Link an existing login provider to this user
+#[trace_request]
+#[endpoint {
+    method = POST,
+    path = "/api-user/{identifier}/link",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn link_provider(
+    rqctx: RequestContext<ApiContext>,
+    path: Path<ApiUserPath>,
+    body: TypedBody<ApiUserProviderLinkPayload>,
+) -> Result<HttpResponseUpdatedNoContent, HttpError> {
+    let ctx = rqctx.context();
+    let auth = ctx.authn_token(&rqctx).await?;
+    let caller = ctx.get_caller(&auth).await?;
+    let path = path.into_inner();
+    let body = body.into_inner();
+
+    // This endpoint can only be called by the user themselves, it can not be performed on behalf
+    // of a user
+    if path.identifier == caller.id {
+        let secret = RawApiKey::try_from(body.token.as_str()).map_err(|err| {
+            tracing::debug!(?err, "Invalid link request token");
+            bad_request("Malformed link request token")
+        })?;
+        let link_request_id = Uuid::from_slice(secret.id()).map_err(|err| {
+            tracing::debug!(?err, "Failed to parse link request id from token");
+            bad_request("Invalid link request token")
+        })?;
+        let link_request = ctx
+            .get_link_request(&link_request_id)
+            .await
+            .map_err(ApiError::Storage)?
+            .ok_or_else(|| not_found("Failed to find identifier"))?;
+
+        // Verify that the found link request is assigned to the user calling the endpoint and that
+        // the token provided matches the stored signature
+        if link_request.target_api_user_id == caller.id
+            && secret
+                .verify(
+                    &*ctx.secrets.signer,
+                    link_request.secret_signature.as_bytes(),
+                )
+                .is_ok()
+        {
+            let result = ctx
+                .complete_link_request(link_request)
+                .await
+                .tap_err(|err| tracing::error!(?err, "Failed to complete link request"))
+                .map_err(ApiError::Storage)?;
+
+            match result {
+                Some(provider) => {
+                    tracing::info!(?provider, "Completed link request");
+                    Ok(HttpResponseUpdatedNoContent())
+                }
+                None => Err(internal_error("Failed to update provider")),
+            }
+        } else {
+            Err(unauthorized())
+        }
+    } else {
+        Err(unauthorized())
     }
 }
 
