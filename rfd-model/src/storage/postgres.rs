@@ -846,19 +846,22 @@ impl ApiUserProviderStore for PostgresStore {
         })
     }
 
-    async fn transfer(&self, provider: NewApiUserProvider, current_api_user_id: Uuid) -> Result<ApiUserProvider, StoreError> {
+    async fn transfer(
+        &self,
+        provider: NewApiUserProvider,
+        current_api_user_id: Uuid,
+    ) -> Result<ApiUserProvider, StoreError> {
         tracing::trace!(id = ?provider.id, api_user_id = ?provider.api_user_id, provider = ?provider, "Updating user provider");
 
-        let provider_m: ApiUserProviderModel =
-            update(api_user_provider::dsl::api_user_provider)
-                .set((
-                    api_user_provider::api_user_id.eq(provider.api_user_id),
-                    api_user_provider::updated_at.eq(Utc::now()),
-                ))
-                .filter(api_user_provider::id.eq(provider.id))
-                .filter(api_user_provider::api_user_id.eq(current_api_user_id))
-                .get_result_async(&self.conn)
-                .await?;
+        let provider_m: ApiUserProviderModel = update(api_user_provider::dsl::api_user_provider)
+            .set((
+                api_user_provider::api_user_id.eq(provider.api_user_id),
+                api_user_provider::updated_at.eq(Utc::now()),
+            ))
+            .filter(api_user_provider::id.eq(provider.id))
+            .filter(api_user_provider::api_user_id.eq(current_api_user_id))
+            .get_result_async(&self.conn)
+            .await?;
 
         Ok(ApiUserProvider {
             id: provider_m.id,

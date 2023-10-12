@@ -1,5 +1,5 @@
-use dropshot::{RequestContext, HttpResponseOk, HttpError, endpoint};
-use jsonwebtoken::jwk::{JwkSet, AlgorithmParameters, PublicKeyUse};
+use dropshot::{endpoint, HttpError, HttpResponseOk, RequestContext};
+use jsonwebtoken::jwk::{AlgorithmParameters, JwkSet, PublicKeyUse};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use trace_request::trace_request;
@@ -19,10 +19,10 @@ pub struct OpenIdConfiguration {
 }]
 #[instrument(skip(rqctx), err(Debug))]
 pub async fn openid_configuration(
-    rqctx: RequestContext<ApiContext>
+    rqctx: RequestContext<ApiContext>,
 ) -> Result<HttpResponseOk<OpenIdConfiguration>, HttpError> {
     Ok(HttpResponseOk(OpenIdConfiguration {
-        jwks_uri: format!("{}/.well-known/jwks.json", &rqctx.context().public_url)
+        jwks_uri: format!("{}/.well-known/jwks.json", &rqctx.context().public_url),
     }))
 }
 
@@ -57,25 +57,29 @@ pub async fn jwks_json(
 impl From<&JwkSet> for Jwks {
     fn from(value: &JwkSet) -> Self {
         Self {
-            keys: value.keys.iter().map(|jwk| {
-                let (algo, n, e) = match &jwk.algorithm {
-                    AlgorithmParameters::RSA(params) => {
-                        ("RSA".to_string(), params.n.clone(), params.e.clone())
-                    }
-                    _ => panic!("Unexpected key type"),
-                };
+            keys: value
+                .keys
+                .iter()
+                .map(|jwk| {
+                    let (algo, n, e) = match &jwk.algorithm {
+                        AlgorithmParameters::RSA(params) => {
+                            ("RSA".to_string(), params.n.clone(), params.e.clone())
+                        }
+                        _ => panic!("Unexpected key type"),
+                    };
 
-                Jwk {
-                    kty: algo,
-                    kid: jwk.common.key_id.as_ref().unwrap().clone(),
-                    use_: match jwk.common.public_key_use {
-                        Some(PublicKeyUse::Signature) => "sig".to_string(),
-                        _ => panic!("Unexpected key use"),
-                    },
-                    n,
-                    e,
-                }
-            }).collect()
+                    Jwk {
+                        kty: algo,
+                        kid: jwk.common.key_id.as_ref().unwrap().clone(),
+                        use_: match jwk.common.public_key_use {
+                            Some(PublicKeyUse::Signature) => "sig".to_string(),
+                            _ => panic!("Unexpected key use"),
+                        },
+                        n,
+                        e,
+                    }
+                })
+                .collect(),
         }
     }
 }

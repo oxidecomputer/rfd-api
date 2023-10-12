@@ -6,7 +6,10 @@ use dropshot::{
     RequestContext, TypedBody,
 };
 use partial_struct::partial;
-use rfd_model::{storage::{ListPagination, ApiUserProviderFilter}, ApiUser, NewApiKey, NewApiUser, ApiUserProvider};
+use rfd_model::{
+    storage::{ApiUserProviderFilter, ListPagination},
+    ApiUser, ApiUserProvider, NewApiKey, NewApiUser,
+};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use tap::TapFallible;

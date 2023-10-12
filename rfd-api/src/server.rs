@@ -26,7 +26,8 @@ use crate::{
             device_token::{exchange_device_token, get_device_provider},
         },
         rfd::{get_rfd, get_rfds, search_rfds},
-        webhook::github_webhook, well_known::{openid_configuration, jwks_json},
+        webhook::github_webhook,
+        well_known::{jwks_json, openid_configuration},
     },
 };
 

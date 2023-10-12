@@ -42,15 +42,17 @@ pub async fn create_link_token(
     let path = path.into_inner();
     let body = body.into_inner();
 
-    let provider = ctx.get_api_user_provider(&path.identifier).await.map_err(ApiError::Storage)?;
+    let provider = ctx
+        .get_api_user_provider(&path.identifier)
+        .await
+        .map_err(ApiError::Storage)?;
 
     if let Some(provider) = provider {
-        if provider.api_user_id == caller.id && caller.can(&ApiPermission::CreateUserApiProviderLinkToken) {
+        if provider.api_user_id == caller.id
+            && caller.can(&ApiPermission::CreateUserApiProviderLinkToken)
+        {
             let token = ctx
-                .create_link_request_token(
-                    &path.identifier,
-                    &caller.id,
-                    &body.user_identifier)
+                .create_link_request_token(&path.identifier, &caller.id, &body.user_identifier)
                 .await
                 .map_err(ApiError::Storage)?;
 

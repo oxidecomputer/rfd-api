@@ -551,7 +551,10 @@ impl ApiContext {
     // Login Operations
 
     #[instrument(skip(self, info), fields(info.external_id))]
-    pub async fn register_api_user(&self, info: UserInfo) -> Result<(User, ApiUserProvider), ApiError> {
+    pub async fn register_api_user(
+        &self,
+        info: UserInfo,
+    ) -> Result<(User, ApiUserProvider), ApiError> {
         // Check if we have seen this identity before
         let mut filter = ApiUserProviderFilter::default();
         filter.provider = Some(vec![info.external_id.provider().to_string()]);
@@ -576,14 +579,15 @@ impl ApiContext {
                 let user = self
                     .ensure_api_user(Uuid::new_v4(), mapped_permissions, mapped_groups)
                     .await?;
-                let user_provider = self.update_api_user_provider(NewApiUserProvider {
-                    id: Uuid::new_v4(),
-                    api_user_id: user.id,
-                    emails: info.verified_emails,
-                    provider: info.external_id.provider().to_string(),
-                    provider_id: info.external_id.id().to_string(),
-                })
-                .await?;
+                let user_provider = self
+                    .update_api_user_provider(NewApiUserProvider {
+                        id: Uuid::new_v4(),
+                        api_user_id: user.id,
+                        emails: info.verified_emails,
+                        provider: info.external_id.provider().to_string(),
+                        provider_id: info.external_id.id().to_string(),
+                    })
+                    .await?;
 
                 Ok((user, user_provider))
             }
@@ -592,9 +596,11 @@ impl ApiContext {
 
                 // This branch ensures that there is a 0th indexed item
                 let provider = api_user_providers.into_iter().nth(0).unwrap();
-                Ok((self
-                    .ensure_api_user(provider.api_user_id, mapped_permissions, mapped_groups)
-                    .await?, provider))
+                Ok((
+                    self.ensure_api_user(provider.api_user_id, mapped_permissions, mapped_groups)
+                        .await?,
+                    provider,
+                ))
             }
             _ => {
                 // If we found more than one provider, then we have encountered an inconsistency in
@@ -1166,7 +1172,10 @@ impl ApiContext {
             update_request.completed_at = Some(Utc::now());
             LinkRequestStore::upsert(&*self.storage, &update_request).await?;
 
-            Ok(Some(ApiUserProviderStore::transfer(&*self.storage, provider.into(), source_api_user_id).await?))
+            Ok(Some(
+                ApiUserProviderStore::transfer(&*self.storage, provider.into(), source_api_user_id)
+                    .await?,
+            ))
         } else {
             tracing::warn!(?link_request, "Expected to find a provider that was assigned to a link request, but it looks to have gone missing");
             Ok(None)

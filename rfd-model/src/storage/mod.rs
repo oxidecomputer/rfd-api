@@ -303,8 +303,12 @@ pub trait ApiUserProviderStore {
         filter: ApiUserProviderFilter,
         pagination: &ListPagination,
     ) -> Result<Vec<ApiUserProvider>, StoreError>;
-    async fn upsert(&self, api_user: NewApiUserProvider,) -> Result<ApiUserProvider, StoreError>;
-    async fn transfer(&self, api_user: NewApiUserProvider, current_api_user_id: Uuid) -> Result<ApiUserProvider, StoreError>;
+    async fn upsert(&self, api_user: NewApiUserProvider) -> Result<ApiUserProvider, StoreError>;
+    async fn transfer(
+        &self,
+        api_user: NewApiUserProvider,
+        current_api_user_id: Uuid,
+    ) -> Result<ApiUserProvider, StoreError>;
     async fn delete(&self, id: &Uuid) -> Result<Option<ApiUserProvider>, StoreError>;
 }
 

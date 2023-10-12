@@ -1,5 +1,7 @@
 use itertools::{EitherOrBoth, Itertools};
-use rfd_sdk::types::{AccessGroupForApiPermission, ApiUserForApiPermission, Error, ListRfd, GetApiUserResponse};
+use rfd_sdk::types::{
+    AccessGroupForApiPermission, ApiUserForApiPermission, Error, GetApiUserResponse, ListRfd,
+};
 use std::{fs::File, io::Write, process::Command};
 use tabwriter::TabWriter;
 
@@ -233,7 +235,11 @@ fn print_user(user: &GetApiUserResponse) {
         HEADER_COLOR
     );
 
-    let lines = user.info.permissions.iter().zip_longest(user.info.groups.iter());
+    let lines = user
+        .info
+        .permissions
+        .iter()
+        .zip_longest(user.info.groups.iter());
 
     for (i, line) in lines.enumerate() {
         let inner = match line {

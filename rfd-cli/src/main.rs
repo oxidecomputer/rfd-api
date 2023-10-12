@@ -45,8 +45,7 @@ impl Context {
         let mut default_headers = HeaderMap::new();
 
         if let Ok(token) = token {
-            let mut auth_header =
-                HeaderValue::from_str(&format!("Bearer {}", token))?;
+            let mut auth_header = HeaderValue::from_str(&format!("Bearer {}", token))?;
             auth_header.set_sensitive(true);
             default_headers.insert(AUTHORIZATION, auth_header);
         }
@@ -67,7 +66,7 @@ impl Context {
 
         self.client
             .as_ref()
-            .ok_or_else(|| anyhow!("Failed to construct client"))        
+            .ok_or_else(|| anyhow!("Failed to construct client"))
     }
 }
 

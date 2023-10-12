@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand};
 use oauth2::TokenResponse;
 use rfd_sdk::types::OAuthProviderName;
 
-use crate::{Context, auth::oauth};
+use crate::{auth::oauth, Context};
 
 // Authenticates and generates an access token for interacting with the api
 #[derive(Parser, Debug)]

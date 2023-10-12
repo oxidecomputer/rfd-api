@@ -307,7 +307,9 @@ impl PermissionStorage for Permissions<ApiPermission> {
             }
         }
 
-        contracted.push(ApiPermission::ManageGroupMemberships(manage_group_memberships));
+        contracted.push(ApiPermission::ManageGroupMemberships(
+            manage_group_memberships,
+        ));
         contracted.push(ApiPermission::ManageGroups(manage_groups));
         contracted.push(ApiPermission::GetRfds(rfds));
         contracted.push(ApiPermission::GetDiscussions(discussions));

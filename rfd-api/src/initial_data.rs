@@ -59,7 +59,11 @@ impl InitialData {
             let span = tracing::info_span!("Initializing group", group = ?group);
 
             async {
-                let id = existing_groups.iter().find(|g| g.name == group.name).map(|g| g.id).unwrap_or(Uuid::new_v4());
+                let id = existing_groups
+                    .iter()
+                    .find(|g| g.name == group.name)
+                    .map(|g| g.id)
+                    .unwrap_or(Uuid::new_v4());
 
                 ctx.create_group(NewAccessGroup {
                     id,
