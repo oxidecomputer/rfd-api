@@ -1,4 +1,4 @@
-DROP TABLE api_user_token;
+DROP TABLE api_key;
 
 DROP TABLE api_user_provider;
 

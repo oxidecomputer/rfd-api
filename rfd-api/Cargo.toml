@@ -6,28 +6,33 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-argon2 = { workspace = true }
 async-trait = { workspace = true }
 base64 = { workspace = true }
 chrono = { workspace = true, features = ["serde"] }
 config = { workspace = true }
+cookie = { workspace = true }
 crc32c = { workspace = true }
 dropshot = { workspace = true }
 dropshot-authorization-header = { path = "../dropshot-authorization-header" }
 dropshot-verified-body = { workspace = true, features = ["github"] }
 google-cloudkms1 = { workspace = true }
+hex = { workspace = true }
 http = { workspace = true }
 hyper = { workspace = true }
 hyper-tls = { workspace = true }
 jsonwebtoken = { workspace = true }
+meilisearch-sdk = { workspace = true }
 oauth2 = { workspace = true }
 octorust = { workspace = true }
+openssl = { workspace = true }
 partial-struct = { workspace = true }
+rand = { workspace = true, features = ["std"] }
 rand_core = { workspace = true, features = ["std"] }
 regex = { workspace = true }
 reqwest = { workspace = true }
+ring = { workspace = true }
 rfd-model = { path = "../rfd-model" }
-rsa = { workspace = true }
+rsa = { workspace = true, features = ["sha2"] }
 schemars = { workspace = true, features = ["chrono"] }
 sha2 = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
@@ -51,3 +56,4 @@ yup-oauth2 = { workspace = true }
 async-trait = { workspace = true }
 mockall = { workspace = true }
 rfd-model = { path = "../rfd-model", features = ["mock"] }
+rsa = { workspace = true, features = ["pem"] }

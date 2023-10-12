@@ -1,158 +1,135 @@
-use argon2::{
-    password_hash::{
-        rand_core::{OsRng, RngCore},
-        PasswordHash, PasswordHasher, PasswordVerifier, SaltString,
-    },
-    Argon2, ParamsBuilder, Version,
-};
-use base64::{prelude::BASE64_URL_SAFE_NO_PAD, Engine};
-use std::time::Instant;
+use hex::FromHexError;
+use rand::{rngs::OsRng, RngCore};
+use thiserror::Error;
 use uuid::Uuid;
 
-// Parameters and algorithm are based on recommendations in:
-// https://soatok.blog/2022/12/29/what-we-do-in-the-etc-shadow-cryptography-with-passwords/
-// https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
-fn argon2() -> Argon2<'static> {
-    // Given that our parameters are static, we should never fail to build an instance
-    let mut params = ParamsBuilder::new();
-    params.m_cost(24 * 1024).unwrap();
-    params.t_cost(6).unwrap();
-    params.p_cost(1).unwrap();
+use super::{Signer, SigningKeyError};
 
-    Argon2::new(
-        argon2::Algorithm::Argon2id,
-        Version::default(),
-        params.params().unwrap(),
-    )
+#[derive(Debug)]
+pub struct RawApiKey {
+    clear: Vec<u8>,
 }
 
-pub struct NewApiKey {
-    clear: String,
-    hash: String,
+#[derive(Debug, Error)]
+pub enum ApiKeyError {
+    #[error("Failed to decode component: {0}")]
+    Decode(#[from] FromHexError),
+    #[error("Failed to parse API key")]
+    FailedToParse,
+    #[error("Signature is malformed: {0}")]
+    MalformedSignature(#[from] rsa::signature::Error),
+    #[error("Failed to sign API key: {0}")]
+    Signing(SigningKeyError),
+    #[error("Failed to sign API key: {0}")]
+    Verify(SigningKeyError),
 }
 
-impl NewApiKey {
-    // Generate a new API key along with its hashed form
+impl RawApiKey {
+    // Generate a new API key
     pub fn generate<const N: usize>(id: &Uuid) -> Self {
         // Generate random data to extend the token id with
         let mut token_raw = [0; N];
         OsRng.fill_bytes(&mut token_raw);
 
-        // Append the random data to the token's id
-        let mut to_encode = id.as_bytes().to_vec();
-        to_encode.extend(token_raw);
+        let mut clear = id.as_bytes().to_vec();
+        clear.append(&mut token_raw.to_vec());
 
-        let clear = BASE64_URL_SAFE_NO_PAD.encode(to_encode);
-        let salt = SaltString::generate(&mut OsRng);
-
-        // Given that our Argon2 parameters are static, and our passwords are always the same size,
-        // we should not be able to actually hit an error case here
-        let hash = argon2()
-            .hash_password(clear.as_bytes(), &salt)
-            .unwrap()
-            .to_string();
-
-        Self { clear, hash }
+        Self { clear }
     }
 
-    // To get the token and hash out of an API key it must be consumed so that it can not be used
-    // again
-    pub fn consume(self) -> (String, String) {
-        (self.clear, self.hash)
-    }
-}
-
-pub struct ApiKey {
-    id: Uuid,
-    token: String,
-}
-
-impl ApiKey {
-    pub fn id(&self) -> &Uuid {
-        &self.id
+    pub fn id(&self) -> &[u8] {
+        &self.clear[0..16]
     }
 
-    pub fn verify(&self, hash: &str) -> bool {
-        // If we somehow stored an invalid hash, immediately fail
-        let start = Instant::now();
+    pub async fn sign(self, signer: &dyn Signer) -> Result<SignedApiKey, ApiKeyError> {
+        let signature = hex::encode(
+            signer
+                .sign(&self.clear)
+                .await
+                .map_err(ApiKeyError::Signing)?,
+        );
+        Ok(SignedApiKey::new(hex::encode(self.clear), signature))
+    }
 
-        let result = PasswordHash::new(hash)
-            .ok()
-            .and_then(|parsed_hash| {
-                argon2()
-                    .verify_password(self.token.as_bytes(), &parsed_hash)
-                    .ok()
-            })
-            .is_some();
-
-        let end = Instant::now();
-        let duration = end - start;
-
-        tracing::debug!(?duration, "Api key verification measurement");
-
-        result
+    pub fn verify(&self, signer: &dyn Signer, signature: &[u8]) -> Result<(), ApiKeyError> {
+        let signature = hex::decode(signature)?;
+        Ok(signer
+            .verify(&self.clear, &signature)
+            .map_err(ApiKeyError::Verify)?)
     }
 }
 
-#[derive(Debug)]
-pub struct FailedToParseToken {}
+impl TryFrom<&str> for RawApiKey {
+    type Error = ApiKeyError;
 
-impl TryFrom<&str> for ApiKey {
-    type Error = FailedToParseToken;
-    fn try_from(token: &str) -> Result<Self, Self::Error> {
-        BASE64_URL_SAFE_NO_PAD
-            .decode(&token)
-            .ok()
-            .map(|decoded| (token, decoded))
-            .and_then(|(token, decoded)| {
-                tracing::trace!("Decoded token {:?} {:?}", token, decoded);
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let decoded = hex::decode(value)?;
 
-                if let Some(id) = Uuid::from_slice(&decoded[0..16]).ok() {
-                    Some(ApiKey {
-                        id,
-                        token: token.to_string(),
-                    })
-                } else {
-                    tracing::info!("Failed to decode token");
-                    None
-                }
-            })
-            .ok_or(FailedToParseToken {})
+        if decoded.len() > 16 {
+            Ok(RawApiKey { clear: decoded })
+        } else {
+            tracing::debug!(len = ?decoded.len(), "API key is too short");
+            Err(ApiKeyError::FailedToParse)
+        }
+    }
+}
+
+pub struct SignedApiKey {
+    key: String,
+    signature: String,
+}
+
+impl SignedApiKey {
+    fn new(key: String, signature: String) -> Self {
+        Self { key, signature }
+    }
+
+    pub fn key(self) -> String {
+        self.key
+    }
+
+    pub fn signature(&self) -> &str {
+        &self.signature
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{ApiKey, NewApiKey};
-    use dropshot_authorization_header::bearer::BearerAuth;
     use uuid::Uuid;
 
-    #[test]
-    fn test_decodes_token() {
+    use super::RawApiKey;
+    use crate::util::tests::mock_key;
+
+    #[tokio::test]
+    async fn test_verifies_signature() {
         let id = Uuid::new_v4();
-        let (token, hash) = NewApiKey::generate::<24>(&id).consume();
+        let signer = mock_key().as_signer().await.unwrap();
 
-        let bearer = BearerAuth::new(token);
+        let raw = RawApiKey::generate::<8>(&id);
+        println!("{:?}", raw);
 
-        let authn: ApiKey = bearer.key().unwrap().try_into().unwrap();
+        let signed = raw.sign(&*signer).await.unwrap();
 
-        let verified = authn.verify(&hash);
+        let raw2 = RawApiKey::try_from(signed.key.as_str()).unwrap();
+        println!("{:?}", raw2);
 
-        assert!(verified);
+        assert_eq!(
+            (),
+            raw2.verify(&*signer, signed.signature.as_bytes()).unwrap()
+        )
     }
 
-    #[test]
-    fn test_fails_to_decode_invalid_token() {
+    #[tokio::test]
+    async fn test_generates_signatures() {
         let id = Uuid::new_v4();
-        let (token1, _hash1) = NewApiKey::generate::<24>(&id).consume();
-        let (_token2, hash2) = NewApiKey::generate::<24>(&id).consume();
+        let signer = mock_key().as_signer().await.unwrap();
 
-        let bearer = BearerAuth::new(token1);
+        let raw1 = RawApiKey::generate::<8>(&id);
+        let signed1 = raw1.sign(&*signer).await.unwrap();
 
-        let authn: ApiKey = bearer.key().unwrap().try_into().unwrap();
+        let raw2 = RawApiKey::generate::<8>(&id);
+        let signed2 = raw2.sign(&*signer).await.unwrap();
 
-        let verified = authn.verify(&hash2);
-
-        assert!(!verified);
+        assert_ne!(signed1.signature(), signed2.signature())
     }
 }

@@ -30,85 +30,56 @@ pub mod types {
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct AccessTokenProviderLogin {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub expiration: Option<chrono::DateTime<chrono::offset::Utc>>,
-        pub permissions: LoginPermissions,
-        pub token: String,
+    pub struct AddOAuthClientRedirectBody {
+        pub redirect_uri: String,
     }
 
-    impl From<&AccessTokenProviderLogin> for AccessTokenProviderLogin {
-        fn from(value: &AccessTokenProviderLogin) -> Self {
+    impl From<&AddOAuthClientRedirectBody> for AddOAuthClientRedirectBody {
+        fn from(value: &AddOAuthClientRedirectBody) -> Self {
             value.clone()
         }
     }
 
-    impl AccessTokenProviderLogin {
-        pub fn builder() -> builder::AccessTokenProviderLogin {
-            builder::AccessTokenProviderLogin::default()
+    impl AddOAuthClientRedirectBody {
+        pub fn builder() -> builder::AddOAuthClientRedirectBody {
+            builder::AddOAuthClientRedirectBody::default()
         }
     }
 
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        Deserialize,
-        Eq,
-        Hash,
-        Ord,
-        PartialEq,
-        PartialOrd,
-        Serialize,
-        schemars :: JsonSchema,
-    )]
-    pub enum AccessTokenProviderName {
-        #[serde(rename = "github")]
-        Github,
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct ApiKeyCreateParams {
+        pub expires_at: chrono::DateTime<chrono::offset::Utc>,
+        pub permissions: PermissionsForApiPermission,
     }
 
-    impl From<&AccessTokenProviderName> for AccessTokenProviderName {
-        fn from(value: &AccessTokenProviderName) -> Self {
+    impl From<&ApiKeyCreateParams> for ApiKeyCreateParams {
+        fn from(value: &ApiKeyCreateParams) -> Self {
             value.clone()
         }
     }
 
-    impl ToString for AccessTokenProviderName {
-        fn to_string(&self) -> String {
-            match *self {
-                Self::Github => "github".to_string(),
-            }
+    impl ApiKeyCreateParams {
+        pub fn builder() -> builder::ApiKeyCreateParams {
+            builder::ApiKeyCreateParams::default()
         }
     }
 
-    impl std::str::FromStr for AccessTokenProviderName {
-        type Err = &'static str;
-        fn from_str(value: &str) -> Result<Self, &'static str> {
-            match value {
-                "github" => Ok(Self::Github),
-                _ => Err("invalid value"),
-            }
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct ApiKeyResponse {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub id: uuid::Uuid,
+        pub permissions: PermissionsForApiPermission,
+    }
+
+    impl From<&ApiKeyResponse> for ApiKeyResponse {
+        fn from(value: &ApiKeyResponse) -> Self {
+            value.clone()
         }
     }
 
-    impl std::convert::TryFrom<&str> for AccessTokenProviderName {
-        type Error = &'static str;
-        fn try_from(value: &str) -> Result<Self, &'static str> {
-            value.parse()
-        }
-    }
-
-    impl std::convert::TryFrom<&String> for AccessTokenProviderName {
-        type Error = &'static str;
-        fn try_from(value: &String) -> Result<Self, &'static str> {
-            value.parse()
-        }
-    }
-
-    impl std::convert::TryFrom<String> for AccessTokenProviderName {
-        type Error = &'static str;
-        fn try_from(value: String) -> Result<Self, &'static str> {
-            value.parse()
+    impl ApiKeyResponse {
+        pub fn builder() -> builder::ApiKeyResponse {
+            builder::ApiKeyResponse::default()
         }
     }
 
@@ -126,23 +97,33 @@ pub mod types {
         UpdateApiUserAll,
         GetAllRfds,
         GetAssignedRfds,
+        GetAllDiscussions,
+        GetAssignedDiscussions,
+        SearchRfds,
+        CreateOAuthClient,
+        GetAssignedOAuthClients,
+        UpdateAssignedOAuthClients,
+        DeleteAssignedOAuthClients,
         CreateApiUserToken(uuid::Uuid),
         GetApiUser(uuid::Uuid),
         GetApiUserToken(uuid::Uuid),
         DeleteApiUserToken(uuid::Uuid),
         UpdateApiUser(uuid::Uuid),
-        GetRfd(Vec<i32>),
+        GetRfd(i32),
+        GetRfds(Vec<i32>),
+        GetDiscussion(i32),
+        GetDiscussions(Vec<i32>),
+        GetOAuthClient(uuid::Uuid),
+        GetOAuthClients(Vec<uuid::Uuid>),
+        UpdateOAuthClient(uuid::Uuid),
+        UpdateOAuthClients(Vec<uuid::Uuid>),
+        DeleteOAuthClient(uuid::Uuid),
+        DeleteOAuthClients(Vec<uuid::Uuid>),
     }
 
     impl From<&ApiPermission> for ApiPermission {
         fn from(value: &ApiPermission) -> Self {
             value.clone()
-        }
-    }
-
-    impl From<Vec<i32>> for ApiPermission {
-        fn from(value: Vec<i32>) -> Self {
-            Self::GetRfd(value)
         }
     }
 
@@ -165,43 +146,6 @@ pub mod types {
     impl ApiUserForApiPermission {
         pub fn builder() -> builder::ApiUserForApiPermission {
             builder::ApiUserForApiPermission::default()
-        }
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct ApiUserTokenCreateParams {
-        pub expires_at: chrono::DateTime<chrono::offset::Utc>,
-        pub permissions: PermissionsForApiPermission,
-    }
-
-    impl From<&ApiUserTokenCreateParams> for ApiUserTokenCreateParams {
-        fn from(value: &ApiUserTokenCreateParams) -> Self {
-            value.clone()
-        }
-    }
-
-    impl ApiUserTokenCreateParams {
-        pub fn builder() -> builder::ApiUserTokenCreateParams {
-            builder::ApiUserTokenCreateParams::default()
-        }
-    }
-
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct ApiUserTokenResponse {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
-        pub id: uuid::Uuid,
-        pub permissions: PermissionsForApiPermission,
-    }
-
-    impl From<&ApiUserTokenResponse> for ApiUserTokenResponse {
-        fn from(value: &ApiUserTokenResponse) -> Self {
-            value.clone()
-        }
-    }
-
-    impl ApiUserTokenResponse {
-        pub fn builder() -> builder::ApiUserTokenResponse {
-            builder::ApiUserTokenResponse::default()
         }
     }
 
@@ -414,140 +358,160 @@ pub mod types {
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct InitialApiUserTokenResponse {
+    pub struct InitialApiKeyResponse {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
         pub id: uuid::Uuid,
+        pub key: String,
         pub permissions: PermissionsForApiPermission,
-        pub token: String,
     }
 
-    impl From<&InitialApiUserTokenResponse> for InitialApiUserTokenResponse {
-        fn from(value: &InitialApiUserTokenResponse) -> Self {
+    impl From<&InitialApiKeyResponse> for InitialApiKeyResponse {
+        fn from(value: &InitialApiKeyResponse) -> Self {
             value.clone()
         }
     }
 
-    impl InitialApiUserTokenResponse {
-        pub fn builder() -> builder::InitialApiUserTokenResponse {
-            builder::InitialApiUserTokenResponse::default()
+    impl InitialApiKeyResponse {
+        pub fn builder() -> builder::InitialApiKeyResponse {
+            builder::InitialApiKeyResponse::default()
         }
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct JwtProviderLogin {
+    pub struct ListRfd {
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub expiration: Option<chrono::DateTime<chrono::offset::Utc>>,
-        pub permissions: LoginPermissions,
-        pub token: String,
+        pub authors: Option<String>,
+        pub commit: String,
+        pub committed_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub discussion: Option<String>,
+        pub id: uuid::Uuid,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub link: Option<String>,
+        pub rfd_number: i32,
+        pub sha: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub state: Option<String>,
+        pub title: String,
     }
 
-    impl From<&JwtProviderLogin> for JwtProviderLogin {
-        fn from(value: &JwtProviderLogin) -> Self {
+    impl From<&ListRfd> for ListRfd {
+        fn from(value: &ListRfd) -> Self {
             value.clone()
         }
     }
 
-    impl JwtProviderLogin {
-        pub fn builder() -> builder::JwtProviderLogin {
-            builder::JwtProviderLogin::default()
-        }
-    }
-
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        Deserialize,
-        Eq,
-        Hash,
-        Ord,
-        PartialEq,
-        PartialOrd,
-        Serialize,
-        schemars :: JsonSchema,
-    )]
-    pub enum JwtProviderName {
-        #[serde(rename = "google")]
-        Google,
-    }
-
-    impl From<&JwtProviderName> for JwtProviderName {
-        fn from(value: &JwtProviderName) -> Self {
-            value.clone()
-        }
-    }
-
-    impl ToString for JwtProviderName {
-        fn to_string(&self) -> String {
-            match *self {
-                Self::Google => "google".to_string(),
-            }
-        }
-    }
-
-    impl std::str::FromStr for JwtProviderName {
-        type Err = &'static str;
-        fn from_str(value: &str) -> Result<Self, &'static str> {
-            match value {
-                "google" => Ok(Self::Google),
-                _ => Err("invalid value"),
-            }
-        }
-    }
-
-    impl std::convert::TryFrom<&str> for JwtProviderName {
-        type Error = &'static str;
-        fn try_from(value: &str) -> Result<Self, &'static str> {
-            value.parse()
-        }
-    }
-
-    impl std::convert::TryFrom<&String> for JwtProviderName {
-        type Error = &'static str;
-        fn try_from(value: &String) -> Result<Self, &'static str> {
-            value.parse()
-        }
-    }
-
-    impl std::convert::TryFrom<String> for JwtProviderName {
-        type Error = &'static str;
-        fn try_from(value: String) -> Result<Self, &'static str> {
-            value.parse()
+    impl ListRfd {
+        pub fn builder() -> builder::ListRfd {
+            builder::ListRfd::default()
         }
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub enum LoginPermissions {
-        All,
-        Specific(Vec<ApiPermission>),
+    pub struct OAuthAuthzCodeExchangeBody {
+        pub client_id: uuid::Uuid,
+        pub client_secret: String,
+        pub code: String,
+        pub grant_type: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub pkce_verifier: Option<String>,
+        pub redirect_uri: String,
     }
 
-    impl From<&LoginPermissions> for LoginPermissions {
-        fn from(value: &LoginPermissions) -> Self {
+    impl From<&OAuthAuthzCodeExchangeBody> for OAuthAuthzCodeExchangeBody {
+        fn from(value: &OAuthAuthzCodeExchangeBody) -> Self {
             value.clone()
         }
     }
 
-    impl From<Vec<ApiPermission>> for LoginPermissions {
-        fn from(value: Vec<ApiPermission>) -> Self {
-            Self::Specific(value)
+    impl OAuthAuthzCodeExchangeBody {
+        pub fn builder() -> builder::OAuthAuthzCodeExchangeBody {
+            builder::OAuthAuthzCodeExchangeBody::default()
         }
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct LoginTokenResponse {
-        pub token: String,
+    pub struct OAuthAuthzCodeExchangeResponse {
+        pub access_token: String,
+        pub expires_in: i64,
+        pub token_type: String,
     }
 
-    impl From<&LoginTokenResponse> for LoginTokenResponse {
-        fn from(value: &LoginTokenResponse) -> Self {
+    impl From<&OAuthAuthzCodeExchangeResponse> for OAuthAuthzCodeExchangeResponse {
+        fn from(value: &OAuthAuthzCodeExchangeResponse) -> Self {
             value.clone()
         }
     }
 
-    impl LoginTokenResponse {
-        pub fn builder() -> builder::LoginTokenResponse {
-            builder::LoginTokenResponse::default()
+    impl OAuthAuthzCodeExchangeResponse {
+        pub fn builder() -> builder::OAuthAuthzCodeExchangeResponse {
+            builder::OAuthAuthzCodeExchangeResponse::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct OAuthClient {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub id: uuid::Uuid,
+        pub redirect_uris: Vec<OAuthClientRedirectUri>,
+        pub secrets: Vec<OAuthClientSecret>,
+    }
+
+    impl From<&OAuthClient> for OAuthClient {
+        fn from(value: &OAuthClient) -> Self {
+            value.clone()
+        }
+    }
+
+    impl OAuthClient {
+        pub fn builder() -> builder::OAuthClient {
+            builder::OAuthClient::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct OAuthClientRedirectUri {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub id: uuid::Uuid,
+        pub oauth_client_id: uuid::Uuid,
+        pub redirect_uri: String,
+    }
+
+    impl From<&OAuthClientRedirectUri> for OAuthClientRedirectUri {
+        fn from(value: &OAuthClientRedirectUri) -> Self {
+            value.clone()
+        }
+    }
+
+    impl OAuthClientRedirectUri {
+        pub fn builder() -> builder::OAuthClientRedirectUri {
+            builder::OAuthClientRedirectUri::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct OAuthClientSecret {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub id: uuid::Uuid,
+        pub oauth_client_id: uuid::Uuid,
+        pub secret_signature: String,
+    }
+
+    impl From<&OAuthClientSecret> for OAuthClientSecret {
+        fn from(value: &OAuthClientSecret) -> Self {
+            value.clone()
+        }
+    }
+
+    impl OAuthClientSecret {
+        pub fn builder() -> builder::OAuthClientSecret {
+            builder::OAuthClientSecret::default()
         }
     }
 
@@ -587,6 +551,8 @@ pub mod types {
         schemars :: JsonSchema,
     )]
     pub enum OAuthProviderName {
+        #[serde(rename = "git-hub")]
+        GitHub,
         #[serde(rename = "google")]
         Google,
     }
@@ -600,6 +566,7 @@ pub mod types {
     impl ToString for OAuthProviderName {
         fn to_string(&self) -> String {
             match *self {
+                Self::GitHub => "git-hub".to_string(),
                 Self::Google => "google".to_string(),
             }
         }
@@ -609,6 +576,7 @@ pub mod types {
         type Err = &'static str;
         fn from_str(value: &str) -> Result<Self, &'static str> {
             match value {
+                "git-hub" => Ok(Self::GitHub),
                 "google" => Ok(Self::Google),
                 _ => Err("invalid value"),
             }
@@ -736,36 +704,77 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
-        pub struct AccessTokenProviderLogin {
-            expiration: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
-            permissions: Result<super::LoginPermissions, String>,
-            token: Result<String, String>,
+        pub struct AddOAuthClientRedirectBody {
+            redirect_uri: Result<String, String>,
         }
 
-        impl Default for AccessTokenProviderLogin {
+        impl Default for AddOAuthClientRedirectBody {
             fn default() -> Self {
                 Self {
-                    expiration: Ok(Default::default()),
-                    permissions: Err("no value supplied for permissions".to_string()),
-                    token: Err("no value supplied for token".to_string()),
+                    redirect_uri: Err("no value supplied for redirect_uri".to_string()),
                 }
             }
         }
 
-        impl AccessTokenProviderLogin {
-            pub fn expiration<T>(mut self, value: T) -> Self
+        impl AddOAuthClientRedirectBody {
+            pub fn redirect_uri<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<Option<chrono::DateTime<chrono::offset::Utc>>>,
+                T: std::convert::TryInto<String>,
                 T::Error: std::fmt::Display,
             {
-                self.expiration = value
+                self.redirect_uri = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for redirect_uri: {}", e)
+                });
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<AddOAuthClientRedirectBody> for super::AddOAuthClientRedirectBody {
+            type Error = String;
+            fn try_from(value: AddOAuthClientRedirectBody) -> Result<Self, String> {
+                Ok(Self {
+                    redirect_uri: value.redirect_uri?,
+                })
+            }
+        }
+
+        impl From<super::AddOAuthClientRedirectBody> for AddOAuthClientRedirectBody {
+            fn from(value: super::AddOAuthClientRedirectBody) -> Self {
+                Self {
+                    redirect_uri: Ok(value.redirect_uri),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct ApiKeyCreateParams {
+            expires_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+            permissions: Result<super::PermissionsForApiPermission, String>,
+        }
+
+        impl Default for ApiKeyCreateParams {
+            fn default() -> Self {
+                Self {
+                    expires_at: Err("no value supplied for expires_at".to_string()),
+                    permissions: Err("no value supplied for permissions".to_string()),
+                }
+            }
+        }
+
+        impl ApiKeyCreateParams {
+            pub fn expires_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.expires_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for expiration: {}", e));
+                    .map_err(|e| format!("error converting supplied value for expires_at: {}", e));
                 self
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::LoginPermissions>,
+                T: std::convert::TryInto<super::PermissionsForApiPermission>,
                 T::Error: std::fmt::Display,
             {
                 self.permissions = value
@@ -773,35 +782,94 @@ pub mod types {
                     .map_err(|e| format!("error converting supplied value for permissions: {}", e));
                 self
             }
-            pub fn token<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<String>,
-                T::Error: std::fmt::Display,
-            {
-                self.token = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for token: {}", e));
-                self
-            }
         }
 
-        impl std::convert::TryFrom<AccessTokenProviderLogin> for super::AccessTokenProviderLogin {
+        impl std::convert::TryFrom<ApiKeyCreateParams> for super::ApiKeyCreateParams {
             type Error = String;
-            fn try_from(value: AccessTokenProviderLogin) -> Result<Self, String> {
+            fn try_from(value: ApiKeyCreateParams) -> Result<Self, String> {
                 Ok(Self {
-                    expiration: value.expiration?,
+                    expires_at: value.expires_at?,
                     permissions: value.permissions?,
-                    token: value.token?,
                 })
             }
         }
 
-        impl From<super::AccessTokenProviderLogin> for AccessTokenProviderLogin {
-            fn from(value: super::AccessTokenProviderLogin) -> Self {
+        impl From<super::ApiKeyCreateParams> for ApiKeyCreateParams {
+            fn from(value: super::ApiKeyCreateParams) -> Self {
                 Self {
-                    expiration: Ok(value.expiration),
+                    expires_at: Ok(value.expires_at),
                     permissions: Ok(value.permissions),
-                    token: Ok(value.token),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct ApiKeyResponse {
+            created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+            id: Result<uuid::Uuid, String>,
+            permissions: Result<super::PermissionsForApiPermission, String>,
+        }
+
+        impl Default for ApiKeyResponse {
+            fn default() -> Self {
+                Self {
+                    created_at: Err("no value supplied for created_at".to_string()),
+                    id: Err("no value supplied for id".to_string()),
+                    permissions: Err("no value supplied for permissions".to_string()),
+                }
+            }
+        }
+
+        impl ApiKeyResponse {
+            pub fn created_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.created_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<uuid::Uuid>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn permissions<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::PermissionsForApiPermission>,
+                T::Error: std::fmt::Display,
+            {
+                self.permissions = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for permissions: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<ApiKeyResponse> for super::ApiKeyResponse {
+            type Error = String;
+            fn try_from(value: ApiKeyResponse) -> Result<Self, String> {
+                Ok(Self {
+                    created_at: value.created_at?,
+                    id: value.id?,
+                    permissions: value.permissions?,
+                })
+            }
+        }
+
+        impl From<super::ApiKeyResponse> for ApiKeyResponse {
+            fn from(value: super::ApiKeyResponse) -> Self {
+                Self {
+                    created_at: Ok(value.created_at),
+                    id: Ok(value.id),
+                    permissions: Ok(value.permissions),
                 }
             }
         }
@@ -901,134 +969,6 @@ pub mod types {
                     id: Ok(value.id),
                     permissions: Ok(value.permissions),
                     updated_at: Ok(value.updated_at),
-                }
-            }
-        }
-
-        #[derive(Clone, Debug)]
-        pub struct ApiUserTokenCreateParams {
-            expires_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
-            permissions: Result<super::PermissionsForApiPermission, String>,
-        }
-
-        impl Default for ApiUserTokenCreateParams {
-            fn default() -> Self {
-                Self {
-                    expires_at: Err("no value supplied for expires_at".to_string()),
-                    permissions: Err("no value supplied for permissions".to_string()),
-                }
-            }
-        }
-
-        impl ApiUserTokenCreateParams {
-            pub fn expires_at<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
-            {
-                self.expires_at = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for expires_at: {}", e));
-                self
-            }
-            pub fn permissions<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<super::PermissionsForApiPermission>,
-                T::Error: std::fmt::Display,
-            {
-                self.permissions = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for permissions: {}", e));
-                self
-            }
-        }
-
-        impl std::convert::TryFrom<ApiUserTokenCreateParams> for super::ApiUserTokenCreateParams {
-            type Error = String;
-            fn try_from(value: ApiUserTokenCreateParams) -> Result<Self, String> {
-                Ok(Self {
-                    expires_at: value.expires_at?,
-                    permissions: value.permissions?,
-                })
-            }
-        }
-
-        impl From<super::ApiUserTokenCreateParams> for ApiUserTokenCreateParams {
-            fn from(value: super::ApiUserTokenCreateParams) -> Self {
-                Self {
-                    expires_at: Ok(value.expires_at),
-                    permissions: Ok(value.permissions),
-                }
-            }
-        }
-
-        #[derive(Clone, Debug)]
-        pub struct ApiUserTokenResponse {
-            created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
-            id: Result<uuid::Uuid, String>,
-            permissions: Result<super::PermissionsForApiPermission, String>,
-        }
-
-        impl Default for ApiUserTokenResponse {
-            fn default() -> Self {
-                Self {
-                    created_at: Err("no value supplied for created_at".to_string()),
-                    id: Err("no value supplied for id".to_string()),
-                    permissions: Err("no value supplied for permissions".to_string()),
-                }
-            }
-        }
-
-        impl ApiUserTokenResponse {
-            pub fn created_at<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
-            {
-                self.created_at = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
-                self
-            }
-            pub fn id<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<uuid::Uuid>,
-                T::Error: std::fmt::Display,
-            {
-                self.id = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
-                self
-            }
-            pub fn permissions<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<super::PermissionsForApiPermission>,
-                T::Error: std::fmt::Display,
-            {
-                self.permissions = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for permissions: {}", e));
-                self
-            }
-        }
-
-        impl std::convert::TryFrom<ApiUserTokenResponse> for super::ApiUserTokenResponse {
-            type Error = String;
-            fn try_from(value: ApiUserTokenResponse) -> Result<Self, String> {
-                Ok(Self {
-                    created_at: value.created_at?,
-                    id: value.id?,
-                    permissions: value.permissions?,
-                })
-            }
-        }
-
-        impl From<super::ApiUserTokenResponse> for ApiUserTokenResponse {
-            fn from(value: super::ApiUserTokenResponse) -> Self {
-                Self {
-                    created_at: Ok(value.created_at),
-                    id: Ok(value.id),
-                    permissions: Ok(value.permissions),
                 }
             }
         }
@@ -1898,25 +1838,25 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
-        pub struct InitialApiUserTokenResponse {
+        pub struct InitialApiKeyResponse {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             id: Result<uuid::Uuid, String>,
+            key: Result<String, String>,
             permissions: Result<super::PermissionsForApiPermission, String>,
-            token: Result<String, String>,
         }
 
-        impl Default for InitialApiUserTokenResponse {
+        impl Default for InitialApiKeyResponse {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
                     id: Err("no value supplied for id".to_string()),
+                    key: Err("no value supplied for key".to_string()),
                     permissions: Err("no value supplied for permissions".to_string()),
-                    token: Err("no value supplied for token".to_string()),
                 }
             }
         }
 
-        impl InitialApiUserTokenResponse {
+        impl InitialApiKeyResponse {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
                 T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
@@ -1937,6 +1877,16 @@ pub mod types {
                     .map_err(|e| format!("error converting supplied value for id: {}", e));
                 self
             }
+            pub fn key<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.key = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for key: {}", e));
+                self
+            }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
                 T: std::convert::TryInto<super::PermissionsForApiPermission>,
@@ -1947,151 +1897,682 @@ pub mod types {
                     .map_err(|e| format!("error converting supplied value for permissions: {}", e));
                 self
             }
-            pub fn token<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<String>,
-                T::Error: std::fmt::Display,
-            {
-                self.token = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for token: {}", e));
-                self
-            }
         }
 
-        impl std::convert::TryFrom<InitialApiUserTokenResponse> for super::InitialApiUserTokenResponse {
+        impl std::convert::TryFrom<InitialApiKeyResponse> for super::InitialApiKeyResponse {
             type Error = String;
-            fn try_from(value: InitialApiUserTokenResponse) -> Result<Self, String> {
+            fn try_from(value: InitialApiKeyResponse) -> Result<Self, String> {
                 Ok(Self {
                     created_at: value.created_at?,
                     id: value.id?,
+                    key: value.key?,
                     permissions: value.permissions?,
-                    token: value.token?,
                 })
             }
         }
 
-        impl From<super::InitialApiUserTokenResponse> for InitialApiUserTokenResponse {
-            fn from(value: super::InitialApiUserTokenResponse) -> Self {
+        impl From<super::InitialApiKeyResponse> for InitialApiKeyResponse {
+            fn from(value: super::InitialApiKeyResponse) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
                     id: Ok(value.id),
+                    key: Ok(value.key),
                     permissions: Ok(value.permissions),
-                    token: Ok(value.token),
                 }
             }
         }
 
         #[derive(Clone, Debug)]
-        pub struct JwtProviderLogin {
-            expiration: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
-            permissions: Result<super::LoginPermissions, String>,
-            token: Result<String, String>,
+        pub struct ListRfd {
+            authors: Result<Option<String>, String>,
+            commit: Result<String, String>,
+            committed_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+            discussion: Result<Option<String>, String>,
+            id: Result<uuid::Uuid, String>,
+            link: Result<Option<String>, String>,
+            rfd_number: Result<i32, String>,
+            sha: Result<String, String>,
+            state: Result<Option<String>, String>,
+            title: Result<String, String>,
         }
 
-        impl Default for JwtProviderLogin {
+        impl Default for ListRfd {
             fn default() -> Self {
                 Self {
-                    expiration: Ok(Default::default()),
-                    permissions: Err("no value supplied for permissions".to_string()),
-                    token: Err("no value supplied for token".to_string()),
+                    authors: Ok(Default::default()),
+                    commit: Err("no value supplied for commit".to_string()),
+                    committed_at: Err("no value supplied for committed_at".to_string()),
+                    discussion: Ok(Default::default()),
+                    id: Err("no value supplied for id".to_string()),
+                    link: Ok(Default::default()),
+                    rfd_number: Err("no value supplied for rfd_number".to_string()),
+                    sha: Err("no value supplied for sha".to_string()),
+                    state: Ok(Default::default()),
+                    title: Err("no value supplied for title".to_string()),
                 }
             }
         }
 
-        impl JwtProviderLogin {
-            pub fn expiration<T>(mut self, value: T) -> Self
+        impl ListRfd {
+            pub fn authors<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.authors = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for authors: {}", e));
+                self
+            }
+            pub fn commit<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.commit = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for commit: {}", e));
+                self
+            }
+            pub fn committed_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.committed_at = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for committed_at: {}", e)
+                });
+                self
+            }
+            pub fn discussion<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.discussion = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for discussion: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<uuid::Uuid>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn link<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.link = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for link: {}", e));
+                self
+            }
+            pub fn rfd_number<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<i32>,
+                T::Error: std::fmt::Display,
+            {
+                self.rfd_number = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for rfd_number: {}", e));
+                self
+            }
+            pub fn sha<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.sha = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for sha: {}", e));
+                self
+            }
+            pub fn state<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.state = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for state: {}", e));
+                self
+            }
+            pub fn title<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.title = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for title: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<ListRfd> for super::ListRfd {
+            type Error = String;
+            fn try_from(value: ListRfd) -> Result<Self, String> {
+                Ok(Self {
+                    authors: value.authors?,
+                    commit: value.commit?,
+                    committed_at: value.committed_at?,
+                    discussion: value.discussion?,
+                    id: value.id?,
+                    link: value.link?,
+                    rfd_number: value.rfd_number?,
+                    sha: value.sha?,
+                    state: value.state?,
+                    title: value.title?,
+                })
+            }
+        }
+
+        impl From<super::ListRfd> for ListRfd {
+            fn from(value: super::ListRfd) -> Self {
+                Self {
+                    authors: Ok(value.authors),
+                    commit: Ok(value.commit),
+                    committed_at: Ok(value.committed_at),
+                    discussion: Ok(value.discussion),
+                    id: Ok(value.id),
+                    link: Ok(value.link),
+                    rfd_number: Ok(value.rfd_number),
+                    sha: Ok(value.sha),
+                    state: Ok(value.state),
+                    title: Ok(value.title),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct OAuthAuthzCodeExchangeBody {
+            client_id: Result<uuid::Uuid, String>,
+            client_secret: Result<String, String>,
+            code: Result<String, String>,
+            grant_type: Result<String, String>,
+            pkce_verifier: Result<Option<String>, String>,
+            redirect_uri: Result<String, String>,
+        }
+
+        impl Default for OAuthAuthzCodeExchangeBody {
+            fn default() -> Self {
+                Self {
+                    client_id: Err("no value supplied for client_id".to_string()),
+                    client_secret: Err("no value supplied for client_secret".to_string()),
+                    code: Err("no value supplied for code".to_string()),
+                    grant_type: Err("no value supplied for grant_type".to_string()),
+                    pkce_verifier: Ok(Default::default()),
+                    redirect_uri: Err("no value supplied for redirect_uri".to_string()),
+                }
+            }
+        }
+
+        impl OAuthAuthzCodeExchangeBody {
+            pub fn client_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<uuid::Uuid>,
+                T::Error: std::fmt::Display,
+            {
+                self.client_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for client_id: {}", e));
+                self
+            }
+            pub fn client_secret<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.client_secret = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for client_secret: {}", e)
+                });
+                self
+            }
+            pub fn code<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.code = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for code: {}", e));
+                self
+            }
+            pub fn grant_type<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.grant_type = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for grant_type: {}", e));
+                self
+            }
+            pub fn pkce_verifier<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.pkce_verifier = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for pkce_verifier: {}", e)
+                });
+                self
+            }
+            pub fn redirect_uri<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.redirect_uri = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for redirect_uri: {}", e)
+                });
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<OAuthAuthzCodeExchangeBody> for super::OAuthAuthzCodeExchangeBody {
+            type Error = String;
+            fn try_from(value: OAuthAuthzCodeExchangeBody) -> Result<Self, String> {
+                Ok(Self {
+                    client_id: value.client_id?,
+                    client_secret: value.client_secret?,
+                    code: value.code?,
+                    grant_type: value.grant_type?,
+                    pkce_verifier: value.pkce_verifier?,
+                    redirect_uri: value.redirect_uri?,
+                })
+            }
+        }
+
+        impl From<super::OAuthAuthzCodeExchangeBody> for OAuthAuthzCodeExchangeBody {
+            fn from(value: super::OAuthAuthzCodeExchangeBody) -> Self {
+                Self {
+                    client_id: Ok(value.client_id),
+                    client_secret: Ok(value.client_secret),
+                    code: Ok(value.code),
+                    grant_type: Ok(value.grant_type),
+                    pkce_verifier: Ok(value.pkce_verifier),
+                    redirect_uri: Ok(value.redirect_uri),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct OAuthAuthzCodeExchangeResponse {
+            access_token: Result<String, String>,
+            expires_in: Result<i64, String>,
+            token_type: Result<String, String>,
+        }
+
+        impl Default for OAuthAuthzCodeExchangeResponse {
+            fn default() -> Self {
+                Self {
+                    access_token: Err("no value supplied for access_token".to_string()),
+                    expires_in: Err("no value supplied for expires_in".to_string()),
+                    token_type: Err("no value supplied for token_type".to_string()),
+                }
+            }
+        }
+
+        impl OAuthAuthzCodeExchangeResponse {
+            pub fn access_token<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.access_token = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for access_token: {}", e)
+                });
+                self
+            }
+            pub fn expires_in<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<i64>,
+                T::Error: std::fmt::Display,
+            {
+                self.expires_in = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for expires_in: {}", e));
+                self
+            }
+            pub fn token_type<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.token_type = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for token_type: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<OAuthAuthzCodeExchangeResponse>
+            for super::OAuthAuthzCodeExchangeResponse
+        {
+            type Error = String;
+            fn try_from(value: OAuthAuthzCodeExchangeResponse) -> Result<Self, String> {
+                Ok(Self {
+                    access_token: value.access_token?,
+                    expires_in: value.expires_in?,
+                    token_type: value.token_type?,
+                })
+            }
+        }
+
+        impl From<super::OAuthAuthzCodeExchangeResponse> for OAuthAuthzCodeExchangeResponse {
+            fn from(value: super::OAuthAuthzCodeExchangeResponse) -> Self {
+                Self {
+                    access_token: Ok(value.access_token),
+                    expires_in: Ok(value.expires_in),
+                    token_type: Ok(value.token_type),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct OAuthClient {
+            created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+            deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
+            id: Result<uuid::Uuid, String>,
+            redirect_uris: Result<Vec<super::OAuthClientRedirectUri>, String>,
+            secrets: Result<Vec<super::OAuthClientSecret>, String>,
+        }
+
+        impl Default for OAuthClient {
+            fn default() -> Self {
+                Self {
+                    created_at: Err("no value supplied for created_at".to_string()),
+                    deleted_at: Ok(Default::default()),
+                    id: Err("no value supplied for id".to_string()),
+                    redirect_uris: Err("no value supplied for redirect_uris".to_string()),
+                    secrets: Err("no value supplied for secrets".to_string()),
+                }
+            }
+        }
+
+        impl OAuthClient {
+            pub fn created_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.created_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                self
+            }
+            pub fn deleted_at<T>(mut self, value: T) -> Self
             where
                 T: std::convert::TryInto<Option<chrono::DateTime<chrono::offset::Utc>>>,
                 T::Error: std::fmt::Display,
             {
-                self.expiration = value
+                self.deleted_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for expiration: {}", e));
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
                 self
             }
-            pub fn permissions<T>(mut self, value: T) -> Self
+            pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::LoginPermissions>,
+                T: std::convert::TryInto<uuid::Uuid>,
                 T::Error: std::fmt::Display,
             {
-                self.permissions = value
+                self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for permissions: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
                 self
             }
-            pub fn token<T>(mut self, value: T) -> Self
+            pub fn redirect_uris<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<String>,
+                T: std::convert::TryInto<Vec<super::OAuthClientRedirectUri>>,
                 T::Error: std::fmt::Display,
             {
-                self.token = value
+                self.redirect_uris = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for redirect_uris: {}", e)
+                });
+                self
+            }
+            pub fn secrets<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Vec<super::OAuthClientSecret>>,
+                T::Error: std::fmt::Display,
+            {
+                self.secrets = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for token: {}", e));
+                    .map_err(|e| format!("error converting supplied value for secrets: {}", e));
                 self
             }
         }
 
-        impl std::convert::TryFrom<JwtProviderLogin> for super::JwtProviderLogin {
+        impl std::convert::TryFrom<OAuthClient> for super::OAuthClient {
             type Error = String;
-            fn try_from(value: JwtProviderLogin) -> Result<Self, String> {
+            fn try_from(value: OAuthClient) -> Result<Self, String> {
                 Ok(Self {
-                    expiration: value.expiration?,
-                    permissions: value.permissions?,
-                    token: value.token?,
+                    created_at: value.created_at?,
+                    deleted_at: value.deleted_at?,
+                    id: value.id?,
+                    redirect_uris: value.redirect_uris?,
+                    secrets: value.secrets?,
                 })
             }
         }
 
-        impl From<super::JwtProviderLogin> for JwtProviderLogin {
-            fn from(value: super::JwtProviderLogin) -> Self {
+        impl From<super::OAuthClient> for OAuthClient {
+            fn from(value: super::OAuthClient) -> Self {
                 Self {
-                    expiration: Ok(value.expiration),
-                    permissions: Ok(value.permissions),
-                    token: Ok(value.token),
+                    created_at: Ok(value.created_at),
+                    deleted_at: Ok(value.deleted_at),
+                    id: Ok(value.id),
+                    redirect_uris: Ok(value.redirect_uris),
+                    secrets: Ok(value.secrets),
                 }
             }
         }
 
         #[derive(Clone, Debug)]
-        pub struct LoginTokenResponse {
-            token: Result<String, String>,
+        pub struct OAuthClientRedirectUri {
+            created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+            deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
+            id: Result<uuid::Uuid, String>,
+            oauth_client_id: Result<uuid::Uuid, String>,
+            redirect_uri: Result<String, String>,
         }
 
-        impl Default for LoginTokenResponse {
+        impl Default for OAuthClientRedirectUri {
             fn default() -> Self {
                 Self {
-                    token: Err("no value supplied for token".to_string()),
+                    created_at: Err("no value supplied for created_at".to_string()),
+                    deleted_at: Ok(Default::default()),
+                    id: Err("no value supplied for id".to_string()),
+                    oauth_client_id: Err("no value supplied for oauth_client_id".to_string()),
+                    redirect_uri: Err("no value supplied for redirect_uri".to_string()),
                 }
             }
         }
 
-        impl LoginTokenResponse {
-            pub fn token<T>(mut self, value: T) -> Self
+        impl OAuthClientRedirectUri {
+            pub fn created_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.created_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                self
+            }
+            pub fn deleted_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<chrono::DateTime<chrono::offset::Utc>>>,
+                T::Error: std::fmt::Display,
+            {
+                self.deleted_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<uuid::Uuid>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn oauth_client_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<uuid::Uuid>,
+                T::Error: std::fmt::Display,
+            {
+                self.oauth_client_id = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for oauth_client_id: {}", e)
+                });
+                self
+            }
+            pub fn redirect_uri<T>(mut self, value: T) -> Self
             where
                 T: std::convert::TryInto<String>,
                 T::Error: std::fmt::Display,
             {
-                self.token = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for token: {}", e));
+                self.redirect_uri = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for redirect_uri: {}", e)
+                });
                 self
             }
         }
 
-        impl std::convert::TryFrom<LoginTokenResponse> for super::LoginTokenResponse {
+        impl std::convert::TryFrom<OAuthClientRedirectUri> for super::OAuthClientRedirectUri {
             type Error = String;
-            fn try_from(value: LoginTokenResponse) -> Result<Self, String> {
+            fn try_from(value: OAuthClientRedirectUri) -> Result<Self, String> {
                 Ok(Self {
-                    token: value.token?,
+                    created_at: value.created_at?,
+                    deleted_at: value.deleted_at?,
+                    id: value.id?,
+                    oauth_client_id: value.oauth_client_id?,
+                    redirect_uri: value.redirect_uri?,
                 })
             }
         }
 
-        impl From<super::LoginTokenResponse> for LoginTokenResponse {
-            fn from(value: super::LoginTokenResponse) -> Self {
+        impl From<super::OAuthClientRedirectUri> for OAuthClientRedirectUri {
+            fn from(value: super::OAuthClientRedirectUri) -> Self {
                 Self {
-                    token: Ok(value.token),
+                    created_at: Ok(value.created_at),
+                    deleted_at: Ok(value.deleted_at),
+                    id: Ok(value.id),
+                    oauth_client_id: Ok(value.oauth_client_id),
+                    redirect_uri: Ok(value.redirect_uri),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct OAuthClientSecret {
+            created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+            deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
+            id: Result<uuid::Uuid, String>,
+            oauth_client_id: Result<uuid::Uuid, String>,
+            secret_signature: Result<String, String>,
+        }
+
+        impl Default for OAuthClientSecret {
+            fn default() -> Self {
+                Self {
+                    created_at: Err("no value supplied for created_at".to_string()),
+                    deleted_at: Ok(Default::default()),
+                    id: Err("no value supplied for id".to_string()),
+                    oauth_client_id: Err("no value supplied for oauth_client_id".to_string()),
+                    secret_signature: Err("no value supplied for secret_signature".to_string()),
+                }
+            }
+        }
+
+        impl OAuthClientSecret {
+            pub fn created_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.created_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                self
+            }
+            pub fn deleted_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<chrono::DateTime<chrono::offset::Utc>>>,
+                T::Error: std::fmt::Display,
+            {
+                self.deleted_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<uuid::Uuid>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn oauth_client_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<uuid::Uuid>,
+                T::Error: std::fmt::Display,
+            {
+                self.oauth_client_id = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for oauth_client_id: {}", e)
+                });
+                self
+            }
+            pub fn secret_signature<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.secret_signature = value.try_into().map_err(|e| {
+                    format!(
+                        "error converting supplied value for secret_signature: {}",
+                        e
+                    )
+                });
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<OAuthClientSecret> for super::OAuthClientSecret {
+            type Error = String;
+            fn try_from(value: OAuthClientSecret) -> Result<Self, String> {
+                Ok(Self {
+                    created_at: value.created_at?,
+                    deleted_at: value.deleted_at?,
+                    id: value.id?,
+                    oauth_client_id: value.oauth_client_id?,
+                    secret_signature: value.secret_signature?,
+                })
+            }
+        }
+
+        impl From<super::OAuthClientSecret> for OAuthClientSecret {
+            fn from(value: super::OAuthClientSecret) -> Self {
+                Self {
+                    created_at: Ok(value.created_at),
+                    deleted_at: Ok(value.deleted_at),
+                    id: Ok(value.id),
+                    oauth_client_id: Ok(value.oauth_client_id),
+                    secret_signature: Ok(value.secret_signature),
                 }
             }
         }
@@ -2380,30 +2861,54 @@ impl Client {
         builder::DeleteApiUserToken::new(self)
     }
 
-    /// Sends a `POST` request to `/login/access-token/{provider}`
+    /// Generate the remote provider login url and redirect the user
+    ///
+    /// Sends a `GET` request to `/login/oauth/{provider}/code/authorize`
     ///
     /// ```ignore
-    /// let response = client.access_token_login()
+    /// let response = client.authz_code_redirect()
     ///    .provider(provider)
-    ///    .body(body)
+    ///    .client_id(client_id)
+    ///    .redirect_uri(redirect_uri)
+    ///    .response_type(response_type)
+    ///    .state(state)
     ///    .send()
     ///    .await;
     /// ```
-    pub fn access_token_login(&self) -> builder::AccessTokenLogin {
-        builder::AccessTokenLogin::new(self)
+    pub fn authz_code_redirect(&self) -> builder::AuthzCodeRedirect {
+        builder::AuthzCodeRedirect::new(self)
     }
 
-    /// Sends a `POST` request to `/login/jwt/{provider}`
+    /// Handle return calls from a remote OAuth provider
+    ///
+    /// Sends a `GET` request to `/login/oauth/{provider}/code/callback`
     ///
     /// ```ignore
-    /// let response = client.jwt_login()
+    /// let response = client.authz_code_callback()
+    ///    .provider(provider)
+    ///    .code(code)
+    ///    .error(error)
+    ///    .state(state)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn authz_code_callback(&self) -> builder::AuthzCodeCallback {
+        builder::AuthzCodeCallback::new(self)
+    }
+
+    /// Exchange an authorization code for an access token
+    ///
+    /// Sends a `POST` request to `/login/oauth/{provider}/code/token`
+    ///
+    /// ```ignore
+    /// let response = client.authz_code_exchange()
     ///    .provider(provider)
     ///    .body(body)
     ///    .send()
     ///    .await;
     /// ```
-    pub fn jwt_login(&self) -> builder::JwtLogin {
-        builder::JwtLogin::new(self)
+    pub fn authz_code_exchange(&self) -> builder::AuthzCodeExchange {
+        builder::AuthzCodeExchange::new(self)
     }
 
     /// Sends a `GET` request to `/login/oauth/{provider}/device`
@@ -2431,6 +2936,122 @@ impl Client {
         builder::ExchangeDeviceToken::new(self)
     }
 
+    /// List OAuth clients
+    ///
+    /// Sends a `GET` request to `/oauth/client`
+    ///
+    /// ```ignore
+    /// let response = client.list_oauth_clients()
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn list_oauth_clients(&self) -> builder::ListOauthClients {
+        builder::ListOauthClients::new(self)
+    }
+
+    /// Create a new OAuth Client
+    ///
+    /// Sends a `POST` request to `/oauth/client`
+    ///
+    /// ```ignore
+    /// let response = client.create_oauth_client()
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn create_oauth_client(&self) -> builder::CreateOauthClient {
+        builder::CreateOauthClient::new(self)
+    }
+
+    /// Get an new OAuth Client
+    ///
+    /// Sends a `GET` request to `/oauth/client/{client_id}`
+    ///
+    /// ```ignore
+    /// let response = client.get_oauth_client()
+    ///    .client_id(client_id)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn get_oauth_client(&self) -> builder::GetOauthClient {
+        builder::GetOauthClient::new(self)
+    }
+
+    /// Add an OAuth client redirect uri
+    ///
+    /// Sends a `POST` request to `/oauth/client/{client_id}/redirect_uri`
+    ///
+    /// ```ignore
+    /// let response = client.create_oauth_client_redirect_uri()
+    ///    .client_id(client_id)
+    ///    .body(body)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn create_oauth_client_redirect_uri(&self) -> builder::CreateOauthClientRedirectUri {
+        builder::CreateOauthClientRedirectUri::new(self)
+    }
+
+    /// Delete an OAuth client redirect uri
+    ///
+    /// Sends a `DELETE` request to
+    /// `/oauth/client/{client_id}/redirect_uri/{redirect_uri_id}`
+    ///
+    /// ```ignore
+    /// let response = client.delete_oauth_client_redirect_uri()
+    ///    .client_id(client_id)
+    ///    .redirect_uri_id(redirect_uri_id)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn delete_oauth_client_redirect_uri(&self) -> builder::DeleteOauthClientRedirectUri {
+        builder::DeleteOauthClientRedirectUri::new(self)
+    }
+
+    /// Add an OAuth client secret
+    ///
+    /// Sends a `POST` request to `/oauth/client/{client_id}/secret`
+    ///
+    /// ```ignore
+    /// let response = client.create_oauth_client_secret()
+    ///    .client_id(client_id)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn create_oauth_client_secret(&self) -> builder::CreateOauthClientSecret {
+        builder::CreateOauthClientSecret::new(self)
+    }
+
+    /// Delete an OAuth client secret
+    ///
+    /// Sends a `DELETE` request to
+    /// `/oauth/client/{client_id}/secret/{secret_id}`
+    ///
+    /// ```ignore
+    /// let response = client.delete_oauth_client_secret()
+    ///    .client_id(client_id)
+    ///    .secret_id(secret_id)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn delete_oauth_client_secret(&self) -> builder::DeleteOauthClientSecret {
+        builder::DeleteOauthClientSecret::new(self)
+    }
+
+    /// List all available RFDs
+    ///
+    /// Sends a `GET` request to `/rfd`
+    ///
+    /// ```ignore
+    /// let response = client.get_rfds()
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn get_rfds(&self) -> builder::GetRfds {
+        builder::GetRfds::new(self)
+    }
+
+    /// Get the latest representation of an RFD
+    ///
     /// Sends a `GET` request to `/rfd/{number}`
     ///
     /// ```ignore
@@ -2441,6 +3062,20 @@ impl Client {
     /// ```
     pub fn get_rfd(&self) -> builder::GetRfd {
         builder::GetRfd::new(self)
+    }
+
+    /// Search the RFD index and get a list of results
+    ///
+    /// Sends a `GET` request to `/rfd-search`
+    ///
+    /// ```ignore
+    /// let response = client.search_rfds()
+    ///    .q(q)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn search_rfds(&self) -> builder::SearchRfds {
+        builder::SearchRfds::new(self)
     }
 
     /// Retrieve the user information of the calling user
@@ -2735,7 +3370,7 @@ pub mod builder {
         /// Sends a `GET` request to `/api-user/{identifier}/token`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<Vec<types::ApiUserTokenResponse>>, Error<types::Error>> {
+        ) -> Result<ResponseValue<Vec<types::ApiKeyResponse>>, Error<types::Error>> {
             let Self { client, identifier } = self;
             let identifier = identifier.map_err(Error::InvalidRequest)?;
             let url = format!(
@@ -2773,7 +3408,7 @@ pub mod builder {
     pub struct CreateApiUserToken<'a> {
         client: &'a super::Client,
         identifier: Result<uuid::Uuid, String>,
-        body: Result<types::builder::ApiUserTokenCreateParams, String>,
+        body: Result<types::builder::ApiKeyCreateParams, String>,
     }
 
     impl<'a> CreateApiUserToken<'a> {
@@ -2781,7 +3416,7 @@ pub mod builder {
             Self {
                 client,
                 identifier: Err("identifier was not initialized".to_string()),
-                body: Ok(types::builder::ApiUserTokenCreateParams::default()),
+                body: Ok(types::builder::ApiKeyCreateParams::default()),
             }
         }
 
@@ -2797,19 +3432,20 @@ pub mod builder {
 
         pub fn body<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<types::ApiUserTokenCreateParams>,
+            V: std::convert::TryInto<types::ApiKeyCreateParams>,
         {
-            self.body = value.try_into().map(From::from).map_err(|_| {
-                "conversion to `ApiUserTokenCreateParams` for body failed".to_string()
-            });
+            self.body = value
+                .try_into()
+                .map(From::from)
+                .map_err(|_| "conversion to `ApiKeyCreateParams` for body failed".to_string());
             self
         }
 
         pub fn body_map<F>(mut self, f: F) -> Self
         where
             F: std::ops::FnOnce(
-                types::builder::ApiUserTokenCreateParams,
-            ) -> types::builder::ApiUserTokenCreateParams,
+                types::builder::ApiKeyCreateParams,
+            ) -> types::builder::ApiKeyCreateParams,
         {
             self.body = self.body.map(f);
             self
@@ -2818,8 +3454,7 @@ pub mod builder {
         /// Sends a `POST` request to `/api-user/{identifier}/token`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::InitialApiUserTokenResponse>, Error<types::Error>>
-        {
+        ) -> Result<ResponseValue<types::InitialApiKeyResponse>, Error<types::Error>> {
             let Self {
                 client,
                 identifier,
@@ -2827,7 +3462,7 @@ pub mod builder {
             } = self;
             let identifier = identifier.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::ApiUserTokenCreateParams>::try_into)
+                .and_then(std::convert::TryInto::<types::ApiKeyCreateParams>::try_into)
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/api-user/{}/token",
@@ -2901,7 +3536,7 @@ pub mod builder {
         /// `/api-user/{identifier}/token/{token_identifier}`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::ApiUserTokenResponse>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::ApiKeyResponse>, Error<types::Error>> {
             let Self {
                 client,
                 identifier,
@@ -2981,7 +3616,7 @@ pub mod builder {
         /// `/api-user/{identifier}/token/{token_identifier}`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::ApiUserTokenResponse>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::ApiKeyResponse>, Error<types::Error>> {
             let Self {
                 client,
                 identifier,
@@ -3087,86 +3722,215 @@ pub mod builder {
         }
     }
 
-    /// Builder for [`Client::access_token_login`]
+    /// Builder for [`Client::authz_code_redirect`]
     ///
-    /// [`Client::access_token_login`]: super::Client::access_token_login
+    /// [`Client::authz_code_redirect`]: super::Client::authz_code_redirect
     #[derive(Debug, Clone)]
-    pub struct AccessTokenLogin<'a> {
+    pub struct AuthzCodeRedirect<'a> {
         client: &'a super::Client,
-        provider: Result<types::AccessTokenProviderName, String>,
-        body: Result<types::builder::AccessTokenProviderLogin, String>,
+        provider: Result<types::OAuthProviderName, String>,
+        client_id: Result<uuid::Uuid, String>,
+        redirect_uri: Result<String, String>,
+        response_type: Result<String, String>,
+        state: Result<String, String>,
     }
 
-    impl<'a> AccessTokenLogin<'a> {
+    impl<'a> AuthzCodeRedirect<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client,
                 provider: Err("provider was not initialized".to_string()),
-                body: Ok(types::builder::AccessTokenProviderLogin::default()),
+                client_id: Err("client_id was not initialized".to_string()),
+                redirect_uri: Err("redirect_uri was not initialized".to_string()),
+                response_type: Err("response_type was not initialized".to_string()),
+                state: Err("state was not initialized".to_string()),
             }
         }
 
         pub fn provider<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<types::AccessTokenProviderName>,
+            V: std::convert::TryInto<types::OAuthProviderName>,
         {
-            self.provider = value.try_into().map_err(|_| {
-                "conversion to `AccessTokenProviderName` for provider failed".to_string()
-            });
+            self.provider = value
+                .try_into()
+                .map_err(|_| "conversion to `OAuthProviderName` for provider failed".to_string());
             self
         }
 
-        pub fn body<V>(mut self, value: V) -> Self
+        pub fn client_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<types::AccessTokenProviderLogin>,
+            V: std::convert::TryInto<uuid::Uuid>,
         {
-            self.body = value.try_into().map(From::from).map_err(|_| {
-                "conversion to `AccessTokenProviderLogin` for body failed".to_string()
-            });
+            self.client_id = value
+                .try_into()
+                .map_err(|_| "conversion to `uuid :: Uuid` for client_id failed".to_string());
             self
         }
 
-        pub fn body_map<F>(mut self, f: F) -> Self
+        pub fn redirect_uri<V>(mut self, value: V) -> Self
         where
-            F: std::ops::FnOnce(
-                types::builder::AccessTokenProviderLogin,
-            ) -> types::builder::AccessTokenProviderLogin,
+            V: std::convert::TryInto<String>,
         {
-            self.body = self.body.map(f);
+            self.redirect_uri = value
+                .try_into()
+                .map_err(|_| "conversion to `String` for redirect_uri failed".to_string());
             self
         }
 
-        /// Sends a `POST` request to `/login/access-token/{provider}`
-        pub async fn send(
-            self,
-        ) -> Result<ResponseValue<types::LoginTokenResponse>, Error<types::Error>> {
+        pub fn response_type<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<String>,
+        {
+            self.response_type = value
+                .try_into()
+                .map_err(|_| "conversion to `String` for response_type failed".to_string());
+            self
+        }
+
+        pub fn state<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<String>,
+        {
+            self.state = value
+                .try_into()
+                .map_err(|_| "conversion to `String` for state failed".to_string());
+            self
+        }
+
+        /// Sends a `GET` request to `/login/oauth/{provider}/code/authorize`
+        pub async fn send(self) -> Result<ResponseValue<ByteStream>, Error<ByteStream>> {
             let Self {
                 client,
                 provider,
-                body,
+                client_id,
+                redirect_uri,
+                response_type,
+                state,
             } = self;
             let provider = provider.map_err(Error::InvalidRequest)?;
-            let body = body
-                .and_then(std::convert::TryInto::<types::AccessTokenProviderLogin>::try_into)
-                .map_err(Error::InvalidRequest)?;
+            let client_id = client_id.map_err(Error::InvalidRequest)?;
+            let redirect_uri = redirect_uri.map_err(Error::InvalidRequest)?;
+            let response_type = response_type.map_err(Error::InvalidRequest)?;
+            let state = state.map_err(Error::InvalidRequest)?;
             let url = format!(
-                "{}/login/access-token/{}",
+                "{}/login/oauth/{}/code/authorize",
                 client.baseurl,
                 encode_path(&provider.to_string()),
             );
-            let request = client
-                .client
-                .post(url)
-                .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
-                )
-                .json(&body)
-                .build()?;
+            let mut query = Vec::with_capacity(4usize);
+            query.push(("client_id", client_id.to_string()));
+            query.push(("redirect_uri", redirect_uri.to_string()));
+            query.push(("response_type", response_type.to_string()));
+            query.push(("state", state.to_string()));
+            let request = client.client.get(url).query(&query).build()?;
             let result = client.client.execute(request).await;
             let response = result?;
             match response.status().as_u16() {
-                201u16 => ResponseValue::from_response(response).await,
+                200..=299 => Ok(ResponseValue::stream(response)),
+                _ => Err(Error::ErrorResponse(ResponseValue::stream(response))),
+            }
+        }
+    }
+
+    /// Builder for [`Client::authz_code_callback`]
+    ///
+    /// [`Client::authz_code_callback`]: super::Client::authz_code_callback
+    #[derive(Debug, Clone)]
+    pub struct AuthzCodeCallback<'a> {
+        client: &'a super::Client,
+        provider: Result<types::OAuthProviderName, String>,
+        code: Result<Option<String>, String>,
+        error: Result<Option<String>, String>,
+        state: Result<Option<String>, String>,
+    }
+
+    impl<'a> AuthzCodeCallback<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client,
+                provider: Err("provider was not initialized".to_string()),
+                code: Ok(None),
+                error: Ok(None),
+                state: Ok(None),
+            }
+        }
+
+        pub fn provider<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::OAuthProviderName>,
+        {
+            self.provider = value
+                .try_into()
+                .map_err(|_| "conversion to `OAuthProviderName` for provider failed".to_string());
+            self
+        }
+
+        pub fn code<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<String>,
+        {
+            self.code = value
+                .try_into()
+                .map(Some)
+                .map_err(|_| "conversion to `String` for code failed".to_string());
+            self
+        }
+
+        pub fn error<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<String>,
+        {
+            self.error = value
+                .try_into()
+                .map(Some)
+                .map_err(|_| "conversion to `String` for error failed".to_string());
+            self
+        }
+
+        pub fn state<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<String>,
+        {
+            self.state = value
+                .try_into()
+                .map(Some)
+                .map_err(|_| "conversion to `String` for state failed".to_string());
+            self
+        }
+
+        /// Sends a `GET` request to `/login/oauth/{provider}/code/callback`
+        pub async fn send(self) -> Result<ResponseValue<ByteStream>, Error<types::Error>> {
+            let Self {
+                client,
+                provider,
+                code,
+                error,
+                state,
+            } = self;
+            let provider = provider.map_err(Error::InvalidRequest)?;
+            let code = code.map_err(Error::InvalidRequest)?;
+            let error = error.map_err(Error::InvalidRequest)?;
+            let state = state.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/login/oauth/{}/code/callback",
+                client.baseurl,
+                encode_path(&provider.to_string()),
+            );
+            let mut query = Vec::with_capacity(3usize);
+            if let Some(v) = &code {
+                query.push(("code", v.to_string()));
+            }
+            if let Some(v) = &error {
+                query.push(("error", v.to_string()));
+            }
+            if let Some(v) = &state {
+                query.push(("state", v.to_string()));
+            }
+            let request = client.client.get(url).query(&query).build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200..=299 => Ok(ResponseValue::stream(response)),
                 400u16..=499u16 => Err(Error::ErrorResponse(
                     ResponseValue::from_response(response).await?,
                 )),
@@ -3178,60 +3942,60 @@ pub mod builder {
         }
     }
 
-    /// Builder for [`Client::jwt_login`]
+    /// Builder for [`Client::authz_code_exchange`]
     ///
-    /// [`Client::jwt_login`]: super::Client::jwt_login
+    /// [`Client::authz_code_exchange`]: super::Client::authz_code_exchange
     #[derive(Debug, Clone)]
-    pub struct JwtLogin<'a> {
+    pub struct AuthzCodeExchange<'a> {
         client: &'a super::Client,
-        provider: Result<types::JwtProviderName, String>,
-        body: Result<types::builder::JwtProviderLogin, String>,
+        provider: Result<types::OAuthProviderName, String>,
+        body: Result<types::builder::OAuthAuthzCodeExchangeBody, String>,
     }
 
-    impl<'a> JwtLogin<'a> {
+    impl<'a> AuthzCodeExchange<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client,
                 provider: Err("provider was not initialized".to_string()),
-                body: Ok(types::builder::JwtProviderLogin::default()),
+                body: Ok(types::builder::OAuthAuthzCodeExchangeBody::default()),
             }
         }
 
         pub fn provider<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<types::JwtProviderName>,
+            V: std::convert::TryInto<types::OAuthProviderName>,
         {
             self.provider = value
                 .try_into()
-                .map_err(|_| "conversion to `JwtProviderName` for provider failed".to_string());
+                .map_err(|_| "conversion to `OAuthProviderName` for provider failed".to_string());
             self
         }
 
         pub fn body<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<types::JwtProviderLogin>,
+            V: std::convert::TryInto<types::OAuthAuthzCodeExchangeBody>,
         {
-            self.body = value
-                .try_into()
-                .map(From::from)
-                .map_err(|_| "conversion to `JwtProviderLogin` for body failed".to_string());
+            self.body = value.try_into().map(From::from).map_err(|_| {
+                "conversion to `OAuthAuthzCodeExchangeBody` for body failed".to_string()
+            });
             self
         }
 
         pub fn body_map<F>(mut self, f: F) -> Self
         where
             F: std::ops::FnOnce(
-                types::builder::JwtProviderLogin,
-            ) -> types::builder::JwtProviderLogin,
+                types::builder::OAuthAuthzCodeExchangeBody,
+            ) -> types::builder::OAuthAuthzCodeExchangeBody,
         {
             self.body = self.body.map(f);
             self
         }
 
-        /// Sends a `POST` request to `/login/jwt/{provider}`
+        /// Sends a `POST` request to `/login/oauth/{provider}/code/token`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::LoginTokenResponse>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::OAuthAuthzCodeExchangeResponse>, Error<types::Error>>
+        {
             let Self {
                 client,
                 provider,
@@ -3239,10 +4003,10 @@ pub mod builder {
             } = self;
             let provider = provider.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::JwtProviderLogin>::try_into)
+                .and_then(std::convert::TryInto::<types::OAuthAuthzCodeExchangeBody>::try_into)
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
-                "{}/login/jwt/{}",
+                "{}/login/oauth/{}/code/token",
                 client.baseurl,
                 encode_path(&provider.to_string()),
             );
@@ -3253,12 +4017,12 @@ pub mod builder {
                     reqwest::header::ACCEPT,
                     reqwest::header::HeaderValue::from_static("application/json"),
                 )
-                .json(&body)
+                .form_urlencoded(&body)?
                 .build()?;
             let result = client.client.execute(request).await;
             let response = result?;
             match response.status().as_u16() {
-                201u16 => ResponseValue::from_response(response).await,
+                200u16 => ResponseValue::from_response(response).await,
                 400u16..=499u16 => Err(Error::ErrorResponse(
                     ResponseValue::from_response(response).await?,
                 )),
@@ -3406,6 +4170,499 @@ pub mod builder {
         }
     }
 
+    /// Builder for [`Client::list_oauth_clients`]
+    ///
+    /// [`Client::list_oauth_clients`]: super::Client::list_oauth_clients
+    #[derive(Debug, Clone)]
+    pub struct ListOauthClients<'a> {
+        client: &'a super::Client,
+    }
+
+    impl<'a> ListOauthClients<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self { client }
+        }
+
+        /// Sends a `GET` request to `/oauth/client`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<Vec<types::OAuthClient>>, Error<types::Error>> {
+            let Self { client } = self;
+            let url = format!("{}/oauth/client", client.baseurl,);
+            let request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::create_oauth_client`]
+    ///
+    /// [`Client::create_oauth_client`]: super::Client::create_oauth_client
+    #[derive(Debug, Clone)]
+    pub struct CreateOauthClient<'a> {
+        client: &'a super::Client,
+    }
+
+    impl<'a> CreateOauthClient<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self { client }
+        }
+
+        /// Sends a `POST` request to `/oauth/client`
+        pub async fn send(self) -> Result<ResponseValue<types::OAuthClient>, Error<types::Error>> {
+            let Self { client } = self;
+            let url = format!("{}/oauth/client", client.baseurl,);
+            let request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::get_oauth_client`]
+    ///
+    /// [`Client::get_oauth_client`]: super::Client::get_oauth_client
+    #[derive(Debug, Clone)]
+    pub struct GetOauthClient<'a> {
+        client: &'a super::Client,
+        client_id: Result<uuid::Uuid, String>,
+    }
+
+    impl<'a> GetOauthClient<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client,
+                client_id: Err("client_id was not initialized".to_string()),
+            }
+        }
+
+        pub fn client_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<uuid::Uuid>,
+        {
+            self.client_id = value
+                .try_into()
+                .map_err(|_| "conversion to `uuid :: Uuid` for client_id failed".to_string());
+            self
+        }
+
+        /// Sends a `GET` request to `/oauth/client/{client_id}`
+        pub async fn send(self) -> Result<ResponseValue<types::OAuthClient>, Error<types::Error>> {
+            let Self { client, client_id } = self;
+            let client_id = client_id.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/oauth/client/{}",
+                client.baseurl,
+                encode_path(&client_id.to_string()),
+            );
+            let request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::create_oauth_client_redirect_uri`]
+    ///
+    /// [`Client::create_oauth_client_redirect_uri`]: super::Client::create_oauth_client_redirect_uri
+    #[derive(Debug, Clone)]
+    pub struct CreateOauthClientRedirectUri<'a> {
+        client: &'a super::Client,
+        client_id: Result<uuid::Uuid, String>,
+        body: Result<types::builder::AddOAuthClientRedirectBody, String>,
+    }
+
+    impl<'a> CreateOauthClientRedirectUri<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client,
+                client_id: Err("client_id was not initialized".to_string()),
+                body: Ok(types::builder::AddOAuthClientRedirectBody::default()),
+            }
+        }
+
+        pub fn client_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<uuid::Uuid>,
+        {
+            self.client_id = value
+                .try_into()
+                .map_err(|_| "conversion to `uuid :: Uuid` for client_id failed".to_string());
+            self
+        }
+
+        pub fn body<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::AddOAuthClientRedirectBody>,
+        {
+            self.body = value.try_into().map(From::from).map_err(|_| {
+                "conversion to `AddOAuthClientRedirectBody` for body failed".to_string()
+            });
+            self
+        }
+
+        pub fn body_map<F>(mut self, f: F) -> Self
+        where
+            F: std::ops::FnOnce(
+                types::builder::AddOAuthClientRedirectBody,
+            ) -> types::builder::AddOAuthClientRedirectBody,
+        {
+            self.body = self.body.map(f);
+            self
+        }
+
+        /// Sends a `POST` request to `/oauth/client/{client_id}/redirect_uri`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::OAuthClientRedirectUri>, Error<types::Error>> {
+            let Self {
+                client,
+                client_id,
+                body,
+            } = self;
+            let client_id = client_id.map_err(Error::InvalidRequest)?;
+            let body = body
+                .and_then(std::convert::TryInto::<types::AddOAuthClientRedirectBody>::try_into)
+                .map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/oauth/client/{}/redirect_uri",
+                client.baseurl,
+                encode_path(&client_id.to_string()),
+            );
+            let request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .json(&body)
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::delete_oauth_client_redirect_uri`]
+    ///
+    /// [`Client::delete_oauth_client_redirect_uri`]: super::Client::delete_oauth_client_redirect_uri
+    #[derive(Debug, Clone)]
+    pub struct DeleteOauthClientRedirectUri<'a> {
+        client: &'a super::Client,
+        client_id: Result<uuid::Uuid, String>,
+        redirect_uri_id: Result<uuid::Uuid, String>,
+    }
+
+    impl<'a> DeleteOauthClientRedirectUri<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client,
+                client_id: Err("client_id was not initialized".to_string()),
+                redirect_uri_id: Err("redirect_uri_id was not initialized".to_string()),
+            }
+        }
+
+        pub fn client_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<uuid::Uuid>,
+        {
+            self.client_id = value
+                .try_into()
+                .map_err(|_| "conversion to `uuid :: Uuid` for client_id failed".to_string());
+            self
+        }
+
+        pub fn redirect_uri_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<uuid::Uuid>,
+        {
+            self.redirect_uri_id = value
+                .try_into()
+                .map_err(|_| "conversion to `uuid :: Uuid` for redirect_uri_id failed".to_string());
+            self
+        }
+
+        /// Sends a `DELETE` request to
+        /// `/oauth/client/{client_id}/redirect_uri/{redirect_uri_id}`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::OAuthClientRedirectUri>, Error<types::Error>> {
+            let Self {
+                client,
+                client_id,
+                redirect_uri_id,
+            } = self;
+            let client_id = client_id.map_err(Error::InvalidRequest)?;
+            let redirect_uri_id = redirect_uri_id.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/oauth/client/{}/redirect_uri/{}",
+                client.baseurl,
+                encode_path(&client_id.to_string()),
+                encode_path(&redirect_uri_id.to_string()),
+            );
+            let request = client
+                .client
+                .delete(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::create_oauth_client_secret`]
+    ///
+    /// [`Client::create_oauth_client_secret`]: super::Client::create_oauth_client_secret
+    #[derive(Debug, Clone)]
+    pub struct CreateOauthClientSecret<'a> {
+        client: &'a super::Client,
+        client_id: Result<uuid::Uuid, String>,
+    }
+
+    impl<'a> CreateOauthClientSecret<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client,
+                client_id: Err("client_id was not initialized".to_string()),
+            }
+        }
+
+        pub fn client_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<uuid::Uuid>,
+        {
+            self.client_id = value
+                .try_into()
+                .map_err(|_| "conversion to `uuid :: Uuid` for client_id failed".to_string());
+            self
+        }
+
+        /// Sends a `POST` request to `/oauth/client/{client_id}/secret`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::OAuthClientSecret>, Error<types::Error>> {
+            let Self { client, client_id } = self;
+            let client_id = client_id.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/oauth/client/{}/secret",
+                client.baseurl,
+                encode_path(&client_id.to_string()),
+            );
+            let request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::delete_oauth_client_secret`]
+    ///
+    /// [`Client::delete_oauth_client_secret`]: super::Client::delete_oauth_client_secret
+    #[derive(Debug, Clone)]
+    pub struct DeleteOauthClientSecret<'a> {
+        client: &'a super::Client,
+        client_id: Result<uuid::Uuid, String>,
+        secret_id: Result<uuid::Uuid, String>,
+    }
+
+    impl<'a> DeleteOauthClientSecret<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client,
+                client_id: Err("client_id was not initialized".to_string()),
+                secret_id: Err("secret_id was not initialized".to_string()),
+            }
+        }
+
+        pub fn client_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<uuid::Uuid>,
+        {
+            self.client_id = value
+                .try_into()
+                .map_err(|_| "conversion to `uuid :: Uuid` for client_id failed".to_string());
+            self
+        }
+
+        pub fn secret_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<uuid::Uuid>,
+        {
+            self.secret_id = value
+                .try_into()
+                .map_err(|_| "conversion to `uuid :: Uuid` for secret_id failed".to_string());
+            self
+        }
+
+        /// Sends a `DELETE` request to
+        /// `/oauth/client/{client_id}/secret/{secret_id}`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::OAuthClientSecret>, Error<types::Error>> {
+            let Self {
+                client,
+                client_id,
+                secret_id,
+            } = self;
+            let client_id = client_id.map_err(Error::InvalidRequest)?;
+            let secret_id = secret_id.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/oauth/client/{}/secret/{}",
+                client.baseurl,
+                encode_path(&client_id.to_string()),
+                encode_path(&secret_id.to_string()),
+            );
+            let request = client
+                .client
+                .delete(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::get_rfds`]
+    ///
+    /// [`Client::get_rfds`]: super::Client::get_rfds
+    #[derive(Debug, Clone)]
+    pub struct GetRfds<'a> {
+        client: &'a super::Client,
+    }
+
+    impl<'a> GetRfds<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self { client }
+        }
+
+        /// Sends a `GET` request to `/rfd`
+        pub async fn send(self) -> Result<ResponseValue<Vec<types::ListRfd>>, Error<types::Error>> {
+            let Self { client } = self;
+            let url = format!("{}/rfd", client.baseurl,);
+            let request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
     /// Builder for [`Client::get_rfd`]
     ///
     /// [`Client::get_rfd`]: super::Client::get_rfd
@@ -3449,6 +4706,64 @@ pub mod builder {
                     reqwest::header::ACCEPT,
                     reqwest::header::HeaderValue::from_static("application/json"),
                 )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::search_rfds`]
+    ///
+    /// [`Client::search_rfds`]: super::Client::search_rfds
+    #[derive(Debug, Clone)]
+    pub struct SearchRfds<'a> {
+        client: &'a super::Client,
+        q: Result<String, String>,
+    }
+
+    impl<'a> SearchRfds<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client,
+                q: Err("q was not initialized".to_string()),
+            }
+        }
+
+        pub fn q<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<String>,
+        {
+            self.q = value
+                .try_into()
+                .map_err(|_| "conversion to `String` for q failed".to_string());
+            self
+        }
+
+        /// Sends a `GET` request to `/rfd-search`
+        pub async fn send(self) -> Result<ResponseValue<Vec<types::ListRfd>>, Error<types::Error>> {
+            let Self { client, q } = self;
+            let q = q.map_err(Error::InvalidRequest)?;
+            let url = format!("{}/rfd-search", client.baseurl,);
+            let mut query = Vec::with_capacity(1usize);
+            query.push(("q", q.to_string()));
+            let request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .query(&query)
                 .build()?;
             let result = client.client.execute(request).await;
             let response = result?;

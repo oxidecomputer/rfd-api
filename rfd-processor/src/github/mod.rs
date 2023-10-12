@@ -114,7 +114,7 @@ impl GitHubRfdRepo {
 
         // Each RFD should exist at a path that looks like rfd/{number}/README.adoc
         for entry in rfd_files {
-            tracing::trace!(?entry.name, ?entry.path, "Processing file on default branch");
+            tracing::trace!(?entry.name, ?entry.path, ?entry, ?entry.sha, "Processing file on default branch");
 
             let path_parts = entry.path.split('/').collect::<Vec<&str>>();
 
@@ -193,13 +193,13 @@ impl GitHubRfdRepo {
 
                         let rfd_number = RfdNumber::from(number);
 
-                        // Only interesting in exactly the RFD file that matches the branch name
+                        // Only interested in exactly the RFD file that matches the branch name
                         let response = client.repos().get_content_file(&self.owner, &self.repo, &format!("rfd/{}/README.adoc", rfd_number.as_number_string()), &branch.commit.sha).await;
 
                         // 404s are returned as errors, but that should not stop processing. This only
                         // means that the branch should be skipped
                         match response {
-                            Ok(Response { body: file, status, .. }) if status == StatusCode::OK => {
+                            Ok(Response { body: file, status, .. }) if status == StatusCode::OK || status == StatusCode::NOT_MODIFIED => {
                                 tracing::debug!(?file.path, "Retrieved RFD file contents");
 
                                 let path_parts = file.path.split('/').collect::<Vec<&str>>();
@@ -259,7 +259,11 @@ impl GitHubRfdLocation {
         let mut path = format!("{}/README.adoc", dir);
         let response = self.fetch_content(&client, &path, &self.commit).await;
 
-        if response.is_err() {
+        if let Err(err) = response {
+            tracing::trace!(
+                ?err,
+                "Failed to find asciidoc README, falling back to markdown"
+            );
             path = format!("{}/README.md", dir);
         }
 
@@ -282,9 +286,9 @@ impl GitHubRfdLocation {
         client: &Client,
         rfd_number: &RfdNumber,
     ) -> Result<GitHubRfdReadme<'a>, GitHubError> {
-        tracing::info!("Fetch readme contents");
-
         let readme_path = self.readme_path(client, rfd_number).await;
+        tracing::info!(?readme_path, "Fetch readme contents");
+
         let is_markdown = readme_path.ends_with(".md");
         let FetchedRfdContent {
             parsed, sha, url, ..
@@ -326,7 +330,7 @@ impl GitHubRfdLocation {
     ) -> Result<FetchedRfdContent, GitHubError> {
         let file = client
             .repos()
-            .get_content_blob(&self.owner, &self.repo, path, ref_)
+            .get_content_blob(&self.owner, &self.repo, ref_, path)
             .await?;
 
         let decoded = decode_base64(&file.content)?;
@@ -541,7 +545,7 @@ pub struct GitHubRfdReadmeLocation {
     pub branch: GitHubRfdLocation,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GitHubRfdUpdate {
     pub number: RfdNumber,
     pub location: GitHubRfdLocation,

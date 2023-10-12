@@ -1,14 +1,16 @@
-use dropshot::{endpoint, HttpError, HttpResponseOk, Path, RequestContext};
+use dropshot::{endpoint, HttpError, HttpResponseOk, Path, Query, RequestContext};
 use http::StatusCode;
+use rfd_model::storage::RfdFilter;
 use schemars::JsonSchema;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use trace_request::trace_request;
 use tracing::instrument;
 
 use crate::{
-    context::{ApiContext, FullRfd},
+    context::{ApiContext, FullRfd, ListRfd},
+    error::ApiError,
     permissions::ApiPermission,
-    util::response::{client_error, internal_error, not_found},
+    util::response::{client_error, internal_error, not_found, unauthorized},
     ApiCaller,
 };
 
@@ -17,7 +19,34 @@ pub struct RfdPathParams {
     number: String,
 }
 
-// Get the latest known representation of an RFD
+/// List all available RFDs
+#[trace_request]
+#[endpoint {
+    method = GET,
+    path = "/rfd",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn get_rfds(
+    rqctx: RequestContext<ApiContext>,
+) -> Result<HttpResponseOk<Vec<ListRfd>>, HttpError> {
+    let ctx = rqctx.context();
+    let auth = ctx.authn_token(&rqctx).await?;
+    get_rfds_op(ctx, &ctx.get_caller(&auth).await?).await
+}
+
+#[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
+async fn get_rfds_op(
+    ctx: &ApiContext,
+    caller: &ApiCaller,
+) -> Result<HttpResponseOk<Vec<ListRfd>>, HttpError> {
+    let rfds = ctx
+        .list_rfds(caller, None)
+        .await
+        .map_err(ApiError::Storage)?;
+    Ok(HttpResponseOk(rfds))
+}
+
+/// Get the latest representation of an RFD
 #[trace_request]
 #[endpoint {
     method = GET,
@@ -41,7 +70,7 @@ async fn get_rfd_op(
 ) -> Result<HttpResponseOk<FullRfd>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
         if caller.any(&[
-            &ApiPermission::get_rfd(rfd_number).into(),
+            &ApiPermission::GetRfd(rfd_number).into(),
             &ApiPermission::GetAllRfds.into(),
         ]) {
             match ctx.get_rfd(rfd_number, None).await {
@@ -63,5 +92,74 @@ async fn get_rfd_op(
             StatusCode::UNPROCESSABLE_ENTITY,
             "Malformed RFD number",
         ))
+    }
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct RfdSearchQuery {
+    q: String,
+}
+
+/// Search the RFD index and get a list of results
+#[trace_request]
+#[endpoint {
+    method = GET,
+    path = "/rfd-search",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn search_rfds(
+    rqctx: RequestContext<ApiContext>,
+    query: Query<RfdSearchQuery>,
+) -> Result<HttpResponseOk<Vec<ListRfd>>, HttpError> {
+    let ctx = rqctx.context();
+    let auth = ctx.authn_token(&rqctx).await?;
+    search_rfds_op(ctx, &ctx.get_caller(&auth).await?, query.into_inner()).await
+}
+
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
+struct MinimalSearchResult {
+    rfd_number: i32,
+}
+
+#[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
+async fn search_rfds_op(
+    ctx: &ApiContext,
+    caller: &ApiCaller,
+    query: RfdSearchQuery,
+) -> Result<HttpResponseOk<Vec<ListRfd>>, HttpError> {
+    if caller.can(&ApiPermission::SearchRfds) {
+        let results = ctx
+            .search
+            .client
+            .index(&ctx.search.index)
+            .search()
+            .with_query(&query.q)
+            .with_limit(999999)
+            .execute::<MinimalSearchResult>()
+            .await;
+        tracing::trace!(?results, "Fetched search results from remote");
+
+        match results {
+            Ok(results) => {
+                let rfds = results
+                    .hits
+                    .into_iter()
+                    .map(|result| result.result.rfd_number)
+                    .collect::<Vec<_>>();
+
+                let found_rfds = ctx
+                    .list_rfds(caller, Some(RfdFilter::default().rfd_number(Some(rfds))))
+                    .await
+                    .map_err(ApiError::Storage)?;
+
+                Ok(HttpResponseOk(found_rfds))
+            }
+            Err(err) => {
+                tracing::error!(?err, "Search request failed");
+                Err(internal_error("Search failed".to_string()))
+            }
+        }
+    } else {
+        Err(unauthorized())
     }
 }

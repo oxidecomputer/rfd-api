@@ -20,9 +20,11 @@ pub struct AppConfig {
     pub server_port: u16,
     pub database_url: String,
     pub permissions: PermissionsConfig,
+    pub keys: Vec<AsymmetricKey>,
     pub jwt: JwtConfig,
     pub spec: Option<SpecConfig>,
     pub authn: AuthnProviders,
+    pub search: SearchConfig,
 }
 
 #[derive(Debug)]
@@ -70,16 +72,15 @@ pub struct PermissionsConfig {
 pub struct JwtConfig {
     pub default_expiration: i64,
     pub max_expiration: i64,
-    pub keys: Vec<JwtKey>,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(tag = "kind", rename_all = "lowercase")]
-pub enum JwtKey {
+pub enum AsymmetricKey {
     Local {
         kid: String,
-        #[serde(with = "serde_bytes")]
-        private: Vec<u8>,
+        // #[serde(with = "serde_bytes")]
+        private: String,
         public: String,
     },
     // Kms {
@@ -95,38 +96,64 @@ pub enum JwtKey {
     },
 }
 
+impl AsymmetricKey {
+    pub fn kid(&self) -> &str {
+        match self {
+            Self::Local { kid, .. } => kid,
+            Self::Ckms { kid, .. } => kid,
+        }
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct AuthnProviders {
-    pub jwt: JwtProviders,
     pub oauth: OAuthProviders,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct JwtProviders {
-    pub google: Option<GoogleJwtConfig>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct GoogleJwtConfig {
-    pub issuer: String,
-    pub well_known_uri: String,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct OAuthProviders {
+    pub github: Option<GitHubOAuthConfig>,
     pub google: Option<GoogleOAuthConfig>,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct GoogleOAuthConfig {
+pub struct GitHubOAuthConfig {
     pub client_id: String,
     pub client_secret: String,
+    pub redirect_uri: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GoogleOAuthConfig {
+    pub device: GoogleOAuthDeviceConfig,
+    pub web: GoogleOAuthWebConfig,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GoogleOAuthDeviceConfig {
+    pub client_id: String,
+    pub client_secret: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GoogleOAuthWebConfig {
+    pub client_id: String,
+    pub client_secret: String,
+    pub redirect_uri: String,
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct SearchConfig {
+    pub host: String,
+    pub key: String,
+    pub index: String,
 }
 
 impl AppConfig {
     pub fn new() -> Result<Self, ConfigError> {
         let config = Config::builder()
-            .add_source(File::with_name("config.toml"))
+            .add_source(File::with_name("config.toml").required(false))
+            .add_source(File::with_name("rfd-api/config.toml").required(false))
             .add_source(Environment::default())
             .build()?;
 

@@ -13,10 +13,10 @@ use crate::{
     util::response::{bad_request, internal_error},
 };
 
-use self::access_token::AccessTokenError;
+// use self::access_token::AccessTokenError;
 
-pub mod access_token;
-pub mod jwt;
+// pub mod access_token;
+// pub mod jwt;
 pub mod oauth;
 
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
@@ -27,8 +27,8 @@ pub enum LoginPermissions {
 
 #[derive(Debug, Error)]
 pub enum LoginError {
-    #[error(transparent)]
-    AccessTokenError(#[from] AccessTokenError),
+    // #[error(transparent)]
+    // AccessTokenError(#[from] AccessTokenError),
     #[error("Requested token lifetime exceeds maximum configuration duration")]
     ExcessTokenExpiration,
     #[error("Failed to parse access token {0}")]
@@ -42,9 +42,6 @@ pub enum LoginError {
 impl From<LoginError> for HttpError {
     fn from(err: LoginError) -> Self {
         match err {
-            LoginError::AccessTokenError(_) => {
-                internal_error("Failed to construct internal client to authenticate")
-            }
             LoginError::ExcessTokenExpiration => {
                 let mut err =
                     bad_request("Requested expiration exceeds maximum allowed token duration");
@@ -151,12 +148,14 @@ pub struct UserInfo {
 
 #[derive(Debug, Error)]
 pub enum UserInfoError {
+    #[error("Failed to deserialize user info {0}")]
+    Deserialize(#[from] serde_json::Error),
     #[error("Failed to create user info request {0}")]
     Http(#[from] http::Error),
     #[error("Failed to send user info request {0}")]
     Hyper(#[from] hyper::Error),
-    #[error("Failed to deserialize user info {0}")]
-    Deserialize(#[from] serde_json::Error),
+    #[error("User information is missing")]
+    MissingUserInfoData(String),
 }
 
 #[async_trait]

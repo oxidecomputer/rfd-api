@@ -24,6 +24,9 @@ mod util;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct AppConfig {
+    pub processor_batch_size: i64,
+    pub processor_interval: u64,
+    pub scanner_interval: u64,
     pub database_url: String,
     pub actions: Vec<String>,
     pub auth: AuthConfig,
@@ -74,7 +77,8 @@ pub struct SearchConfig {
 impl AppConfig {
     pub fn new() -> Result<Self, ConfigError> {
         let config = Config::builder()
-            .add_source(File::with_name("config.toml"))
+            .add_source(File::with_name("config.toml").required(false))
+            .add_source(File::with_name("rfd-processor/config.toml").required(false))
             .add_source(Environment::default())
             .build()?;
 
@@ -110,11 +114,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Tasks should run for the lifetime of the program. If any of them complete for any reason
     // then the entire application should exit
     select! {
-        value = scanner_handle => {
-            tracing::info!(?value, "Scanner task exited")
-        }
         value = processor_handle => {
             tracing::info!(?value, "Processor task exited")
+        }
+        value = scanner_handle => {
+            tracing::info!(?value, "Scanner task exited")
         }
     };
 

@@ -13,12 +13,16 @@ use crate::{
             create_api_user, create_api_user_token, delete_api_user_token, get_api_user,
             get_api_user_token, get_self, list_api_user_tokens, update_api_user,
         },
-        login::{
-            access_token::access_token_login,
-            jwt::jwt_login,
-            oauth::{exchange_device_token, get_device_provider},
+        login::oauth::{
+            client::{
+                create_oauth_client, create_oauth_client_redirect_uri, create_oauth_client_secret,
+                delete_oauth_client_redirect_uri, delete_oauth_client_secret, get_oauth_client,
+                list_oauth_clients,
+            },
+            code::{authz_code_callback, authz_code_exchange, authz_code_redirect},
+            device_token::{exchange_device_token, get_device_provider},
         },
-        rfd::get_rfd,
+        rfd::{get_rfd, get_rfds, search_rfds},
         webhook::github_webhook,
     },
 };
@@ -67,7 +71,9 @@ pub fn server(
     });
 
     // RFDs
+    api.register(get_rfds).unwrap();
     api.register(get_rfd).unwrap();
+    api.register(search_rfds).unwrap();
 
     // Webhooks
     api.register(github_webhook).unwrap();
@@ -82,11 +88,19 @@ pub fn server(
     api.register(create_api_user_token).unwrap();
     api.register(delete_api_user_token).unwrap();
 
-    // Access Token Login
-    api.register(access_token_login).unwrap();
+    // OAuth Client Management
+    api.register(list_oauth_clients).unwrap();
+    api.register(create_oauth_client).unwrap();
+    api.register(get_oauth_client).unwrap();
+    api.register(create_oauth_client_secret).unwrap();
+    api.register(delete_oauth_client_secret).unwrap();
+    api.register(create_oauth_client_redirect_uri).unwrap();
+    api.register(delete_oauth_client_redirect_uri).unwrap();
 
-    // JWT Login
-    api.register(jwt_login).unwrap();
+    // OAuth Authorization Login
+    api.register(authz_code_redirect).unwrap();
+    api.register(authz_code_callback).unwrap();
+    api.register(authz_code_exchange).unwrap();
 
     // OAuth Device Login
     api.register(get_device_provider).unwrap();

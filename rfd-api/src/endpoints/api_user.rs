@@ -4,7 +4,7 @@ use dropshot::{
 };
 use http::StatusCode;
 use partial_struct::partial;
-use rfd_model::{storage::ListPagination, ApiUser, NewApiUser, NewApiUserToken};
+use rfd_model::{storage::ListPagination, ApiUser, NewApiKey, NewApiUser};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use trace_request::trace_request;
@@ -12,11 +12,11 @@ use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
-    authn::key::NewApiKey,
+    authn::key::RawApiKey,
     context::ApiContext,
     error::ApiError,
     permissions::ApiPermission,
-    util::response::{client_error, not_found},
+    util::response::{client_error, not_found, to_internal_error},
     ApiCaller, ApiPermissions, User,
 };
 
@@ -185,7 +185,7 @@ async fn update_api_user_op(
 pub async fn list_api_user_tokens(
     rqctx: RequestContext<ApiContext>,
     path: Path<ApiUserPath>,
-) -> Result<HttpResponseOk<Vec<ApiUserTokenResponse>>, HttpError> {
+) -> Result<HttpResponseOk<Vec<ApiKeyResponse>>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(&auth).await?;
@@ -197,7 +197,7 @@ async fn list_api_user_tokens_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
     path: &ApiUserPath,
-) -> Result<HttpResponseOk<Vec<ApiUserTokenResponse>>, HttpError> {
+) -> Result<HttpResponseOk<Vec<ApiKeyResponse>>, HttpError> {
     if caller.can(&ApiPermission::GetApiUserToken(path.identifier).into()) {
         tracing::info!("Fetch token list");
 
@@ -211,7 +211,7 @@ async fn list_api_user_tokens_op(
         Ok(HttpResponseOk(
             tokens
                 .into_iter()
-                .map(|token| ApiUserTokenResponse {
+                .map(|token| ApiKeyResponse {
                     id: token.id,
                     permissions: token.permissions,
                     created_at: token.created_at,
@@ -224,17 +224,17 @@ async fn list_api_user_tokens_op(
 }
 
 #[derive(Debug, Clone, Deserialize, JsonSchema)]
-pub struct ApiUserTokenCreateParams {
+pub struct ApiKeyCreateParams {
     permissions: ApiPermissions,
     expires_at: DateTime<Utc>,
 }
 
-#[partial(ApiUserTokenResponse)]
+#[partial(ApiKeyResponse)]
 #[derive(Debug, Serialize, JsonSchema)]
-pub struct InitialApiUserTokenResponse {
+pub struct InitialApiKeyResponse {
     pub id: Uuid,
-    #[partial(ApiUserTokenResponse(skip))]
-    pub token: String,
+    #[partial(ApiKeyResponse(skip))]
+    pub key: String,
     pub permissions: ApiPermissions,
     pub created_at: DateTime<Utc>,
 }
@@ -250,8 +250,8 @@ pub struct InitialApiUserTokenResponse {
 pub async fn create_api_user_token(
     rqctx: RequestContext<ApiContext>,
     path: Path<ApiUserPath>,
-    body: TypedBody<ApiUserTokenCreateParams>,
-) -> Result<HttpResponseCreated<InitialApiUserTokenResponse>, HttpError> {
+    body: TypedBody<ApiKeyCreateParams>,
+) -> Result<HttpResponseCreated<InitialApiKeyResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(&auth).await?;
@@ -263,8 +263,8 @@ async fn create_api_user_token_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
     path: &ApiUserPath,
-    body: ApiUserTokenCreateParams,
-) -> Result<HttpResponseCreated<InitialApiUserTokenResponse>, HttpError> {
+    body: ApiKeyCreateParams,
+) -> Result<HttpResponseCreated<InitialApiKeyResponse>, HttpError> {
     if caller.can(&ApiPermission::CreateApiUserToken(path.identifier).into()) {
         let api_user = ctx
             .get_api_user(&path.identifier)
@@ -272,16 +272,19 @@ async fn create_api_user_token_op(
             .map_err(ApiError::Storage)?;
 
         if let Some(api_user) = api_user {
-            let token_id = Uuid::new_v4();
+            let key_id = Uuid::new_v4();
 
-            let (token, hash) = NewApiKey::generate::<24>(&token_id).consume();
+            let key = RawApiKey::generate::<24>(&key_id)
+                .sign(&*ctx.secrets.signer)
+                .await
+                .map_err(to_internal_error)?;
 
-            let user_token = ctx
+            let user_key = ctx
                 .create_api_user_token(
-                    NewApiUserToken {
-                        id: token_id,
+                    NewApiKey {
+                        id: key_id,
                         api_user_id: path.identifier,
-                        token: hash,
+                        key_signature: key.signature().to_string(),
                         permissions: body.permissions,
                         expires_at: body.expires_at,
                     },
@@ -292,11 +295,11 @@ async fn create_api_user_token_op(
 
             // Creating an api token will return the hashed version, but we need to return the
             // plaintext token as we do not store a copy
-            Ok(HttpResponseCreated(InitialApiUserTokenResponse {
-                id: user_token.id,
-                token,
-                permissions: user_token.permissions,
-                created_at: user_token.created_at,
+            Ok(HttpResponseCreated(InitialApiKeyResponse {
+                id: user_key.id,
+                key: key.key(),
+                permissions: user_key.permissions,
+                created_at: user_key.created_at,
             }))
         } else {
             Err(not_found("Failed to find api user"))
@@ -322,7 +325,7 @@ pub struct ApiUserTokenPath {
 pub async fn get_api_user_token(
     rqctx: RequestContext<ApiContext>,
     path: Path<ApiUserTokenPath>,
-) -> Result<HttpResponseOk<ApiUserTokenResponse>, HttpError> {
+) -> Result<HttpResponseOk<ApiKeyResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(&auth).await?;
@@ -334,7 +337,7 @@ async fn get_api_user_token_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
     path: &ApiUserTokenPath,
-) -> Result<HttpResponseOk<ApiUserTokenResponse>, HttpError> {
+) -> Result<HttpResponseOk<ApiKeyResponse>, HttpError> {
     if caller.can(&ApiPermission::GetApiUserToken(path.identifier).into()) {
         let token = ctx
             .get_api_user_token(&path.token_identifier)
@@ -342,7 +345,7 @@ async fn get_api_user_token_op(
             .map_err(ApiError::Storage)?;
 
         if let Some(token) = token {
-            Ok(HttpResponseOk(ApiUserTokenResponse {
+            Ok(HttpResponseOk(ApiKeyResponse {
                 id: token.id,
                 permissions: token.permissions,
                 created_at: token.created_at,
@@ -365,7 +368,7 @@ async fn get_api_user_token_op(
 pub async fn delete_api_user_token(
     rqctx: RequestContext<ApiContext>,
     path: Path<ApiUserTokenPath>,
-) -> Result<HttpResponseOk<ApiUserTokenResponse>, HttpError> {
+) -> Result<HttpResponseOk<ApiKeyResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(&auth).await?;
@@ -377,7 +380,7 @@ async fn delete_api_user_token_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
     path: &ApiUserTokenPath,
-) -> Result<HttpResponseOk<ApiUserTokenResponse>, HttpError> {
+) -> Result<HttpResponseOk<ApiKeyResponse>, HttpError> {
     if caller.can(&ApiPermission::DeleteApiUserToken(path.identifier).into()) {
         let token = ctx
             .delete_api_user_token(&path.token_identifier)
@@ -385,7 +388,7 @@ async fn delete_api_user_token_op(
             .map_err(ApiError::Storage)?;
 
         if let Some(token) = token {
-            Ok(HttpResponseOk(ApiUserTokenResponse {
+            Ok(HttpResponseOk(ApiKeyResponse {
                 id: token.id,
                 permissions: token.permissions,
                 created_at: token.created_at,
@@ -406,27 +409,34 @@ mod tests {
     use http::StatusCode;
     use mockall::predicate::eq;
     use rfd_model::{
-        storage::{
-            ApiUserTokenFilter, ListPagination, MockApiUserStore, MockApiUserTokenStore, StoreError,
-        },
-        ApiUser, ApiUserToken, NewApiUser,
+        storage::{ApiKeyFilter, ListPagination, MockApiKeyStore, MockApiUserStore, StoreError},
+        ApiKey, ApiUser, NewApiUser,
     };
     use uuid::Uuid;
 
     use crate::{
-        config::{JwtConfig, PermissionsConfig},
-        context::{tests::MockStorage, ApiContext},
+        context::tests::{mock_context, MockStorage},
         endpoints::api_user::{
             create_api_user_token_op, delete_api_user_token_op, get_api_user_token_op,
-            list_api_user_tokens_op, update_api_user_op, ApiUserPath, ApiUserTokenCreateParams,
+            list_api_user_tokens_op, update_api_user_op, ApiKeyCreateParams, ApiUserPath,
             ApiUserTokenPath,
         },
         permissions::ApiPermission,
-        util::tests::{get_status, AnyEmailValidator},
+        util::tests::get_status,
         ApiCaller,
     };
 
     use super::{create_api_user_op, ApiUserUpdateParams};
+
+    fn mock_user() -> ApiUser<ApiPermission> {
+        ApiUser {
+            id: Uuid::new_v4(),
+            permissions: vec![].into(),
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+            deleted_at: None,
+        }
+    }
 
     #[tokio::test]
     async fn test_create_api_user_permissions() {
@@ -463,20 +473,15 @@ mod tests {
         let mut storage = MockStorage::new();
         storage.api_user_store = Some(Arc::new(store));
 
-        let ctx = ApiContext::new(
-            Arc::new(AnyEmailValidator),
-            "".to_string(),
-            Arc::new(storage),
-            PermissionsConfig::default(),
-            JwtConfig::default(),
-        )
-        .await
-        .unwrap();
+        let ctx = mock_context(storage).await;
+
+        let user1 = mock_user();
 
         // 1. Fail to create due to lack of permissions
         let no_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user1.id,
             permissions: Vec::new().into(),
+            user: user1,
         };
 
         let resp = create_api_user_op(&ctx, &no_permissions, successful_update.clone()).await;
@@ -484,10 +489,13 @@ mod tests {
         assert!(resp.is_err());
         assert_eq!(get_status(&resp), StatusCode::FORBIDDEN);
 
+        let user2 = mock_user();
+
         // 2. Succeed in creating new api user
         let with_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user2.id,
             permissions: vec![ApiPermission::CreateApiUser.into()].into(),
+            user: user2,
         };
 
         let resp = create_api_user_op(&ctx, &with_permissions, successful_update.clone()).await;
@@ -535,15 +543,7 @@ mod tests {
         let mut storage = MockStorage::new();
         storage.api_user_store = Some(Arc::new(store));
 
-        let ctx = ApiContext::new(
-            Arc::new(AnyEmailValidator),
-            "".to_string(),
-            Arc::new(storage),
-            PermissionsConfig::default(),
-            JwtConfig::default(),
-        )
-        .await
-        .unwrap();
+        let ctx = mock_context(storage).await;
 
         let success_path = ApiUserPath {
             identifier: success_id,
@@ -552,10 +552,13 @@ mod tests {
             identifier: failure_id,
         };
 
+        let user1 = mock_user();
+
         // 1. Fail to create due to lack of permissions
         let no_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user1.id,
             permissions: Vec::new().into(),
+            user: user1,
         };
 
         let resp = update_api_user_op(
@@ -569,10 +572,13 @@ mod tests {
         assert!(resp.is_err());
         assert_eq!(get_status(&resp), StatusCode::FORBIDDEN);
 
+        let user2 = mock_user();
+
         // 2. Succeed in updating api user with direct permission
         let with_specific_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user2.id,
             permissions: vec![ApiPermission::UpdateApiUser(success_path.identifier).into()].into(),
+            user: user2,
         };
 
         let resp = update_api_user_op(
@@ -586,10 +592,13 @@ mod tests {
         assert!(resp.is_ok());
         assert_eq!(get_status(&resp), StatusCode::OK);
 
+        let user3 = mock_user();
+
         // 3. Succeed in updating api user with general permission
         let with_general_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user3.id,
             permissions: vec![ApiPermission::UpdateApiUserAll.into()].into(),
+            user: user3,
         };
 
         let resp = update_api_user_op(
@@ -621,10 +630,10 @@ mod tests {
         let success_id = Uuid::new_v4();
         let failure_id = Uuid::new_v4();
 
-        let mut store = MockApiUserTokenStore::new();
+        let mut store = MockApiKeyStore::new();
         store
             .expect_list()
-            .withf(move |x: &ApiUserTokenFilter, _: &ListPagination| {
+            .withf(move |x: &ApiKeyFilter, _: &ListPagination| {
                 x.api_user_id
                     .as_ref()
                     .map(|id| id.contains(&success_id))
@@ -633,7 +642,7 @@ mod tests {
             .returning(|_, _| Ok(vec![]));
         store
             .expect_list()
-            .withf(move |x: &ApiUserTokenFilter, _: &ListPagination| {
+            .withf(move |x: &ApiKeyFilter, _: &ListPagination| {
                 x.api_user_id
                     .as_ref()
                     .map(|id| id.contains(&failure_id))
@@ -644,20 +653,15 @@ mod tests {
         let mut storage = MockStorage::new();
         storage.api_user_token_store = Some(Arc::new(store));
 
-        let ctx = ApiContext::new(
-            Arc::new(AnyEmailValidator),
-            "".to_string(),
-            Arc::new(storage),
-            PermissionsConfig::default(),
-            JwtConfig::default(),
-        )
-        .await
-        .unwrap();
+        let ctx = mock_context(storage).await;
+
+        let user1 = mock_user();
 
         // 1. Fail to list due to lack of permissions
         let no_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user1.id,
             permissions: Vec::new().into(),
+            user: user1,
         };
 
         let resp = list_api_user_tokens_op(
@@ -672,10 +676,13 @@ mod tests {
         assert!(resp.is_err());
         assert_eq!(get_status(&resp), StatusCode::FORBIDDEN);
 
+        let user2 = mock_user();
+
         // 2. Fail to list due to incorrect permissions
         let incorrect_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user2.id,
             permissions: vec![ApiPermission::GetApiUserToken(Uuid::new_v4()).into()].into(),
+            user: user2,
         };
 
         let resp = list_api_user_tokens_op(
@@ -690,10 +697,13 @@ mod tests {
         assert!(resp.is_err());
         assert_eq!(get_status(&resp), StatusCode::FORBIDDEN);
 
+        let user3 = mock_user();
+
         // 3. Succeed in list tokens
         let success_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user3.id,
             permissions: vec![ApiPermission::GetApiUserToken(success_id).into()].into(),
+            user: user3,
         };
 
         let resp = list_api_user_tokens_op(
@@ -708,10 +718,13 @@ mod tests {
         assert!(resp.is_ok());
         assert_eq!(get_status(&resp), StatusCode::OK);
 
+        let user4 = mock_user();
+
         // 4. Handle storage failure and return error
         let failure_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user4.id,
             permissions: vec![ApiPermission::GetApiUserToken(failure_id).into()].into(),
+            user: user4,
         };
 
         let resp = list_api_user_tokens_op(
@@ -751,7 +764,7 @@ mod tests {
             identifier: Uuid::new_v4(),
         };
 
-        let new_token = ApiUserTokenCreateParams {
+        let new_token = ApiKeyCreateParams {
             permissions: Vec::new().into(),
             expires_at: Utc::now() + Duration::seconds(5 * 60),
         };
@@ -770,17 +783,17 @@ mod tests {
             .with(eq(unknown_api_user_path.identifier), eq(false))
             .returning(move |_, _| Ok(None));
 
-        let mut token_store = MockApiUserTokenStore::new();
+        let mut token_store = MockApiKeyStore::new();
         token_store
             .expect_upsert()
             .withf(move |_, user| user.id == api_user_id)
-            .returning(|token, user| {
-                Ok(ApiUserToken {
+            .returning(|key, user| {
+                Ok(ApiKey {
                     id: Uuid::new_v4(),
                     api_user_id: user.id,
-                    token: token.token,
-                    permissions: token.permissions,
-                    expires_at: token.expires_at,
+                    key_signature: key.key_signature,
+                    permissions: key.permissions,
+                    expires_at: key.expires_at,
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,
@@ -791,20 +804,15 @@ mod tests {
         storage.api_user_store = Some(Arc::new(api_user_store));
         storage.api_user_token_store = Some(Arc::new(token_store));
 
-        let ctx = ApiContext::new(
-            Arc::new(AnyEmailValidator),
-            "".to_string(),
-            Arc::new(storage),
-            PermissionsConfig::default(),
-            JwtConfig::default(),
-        )
-        .await
-        .unwrap();
+        let ctx = mock_context(storage).await;
+
+        let user1 = mock_user();
 
         // 1. Fail to create due to lack of permissions
         let no_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user1.id,
             permissions: Vec::new().into(),
+            user: user1,
         };
 
         let resp =
@@ -814,10 +822,13 @@ mod tests {
         assert!(resp.is_err());
         assert_eq!(get_status(&resp), StatusCode::FORBIDDEN);
 
+        let user2 = mock_user();
+
         // 2. Fail to create due to incorrect permissions
         let incorrect_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user2.id,
             permissions: vec![ApiPermission::CreateApiUserToken(Uuid::new_v4()).into()].into(),
+            user: user2,
         };
 
         let resp = create_api_user_token_op(
@@ -831,13 +842,16 @@ mod tests {
         assert!(resp.is_err());
         assert_eq!(get_status(&resp), StatusCode::FORBIDDEN);
 
+        let user3 = mock_user();
+
         // 3. Fail to create due to unknown user
         let incorrect_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user3.id,
             permissions: vec![
                 ApiPermission::CreateApiUserToken(unknown_api_user_path.identifier).into(),
             ]
             .into(),
+            user: user3,
         };
 
         let resp = create_api_user_token_op(
@@ -851,11 +865,14 @@ mod tests {
         assert!(resp.is_err());
         assert_eq!(get_status(&resp), StatusCode::NOT_FOUND);
 
+        let user4 = mock_user();
+
         // 4. Succeed in creating token
         let success_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user4.id,
             permissions: vec![ApiPermission::CreateApiUserToken(api_user_path.identifier).into()]
                 .into(),
+            user: user4,
         };
 
         let resp = create_api_user_token_op(
@@ -870,13 +887,16 @@ mod tests {
         assert_eq!(get_status(&resp), StatusCode::CREATED);
         assert_eq!(resp.as_ref().unwrap().0.permissions, new_token.permissions);
 
+        let user5 = mock_user();
+
         // 5. Handle storage failure and return error
         let failure_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user5.id,
             permissions: vec![
                 ApiPermission::CreateApiUserToken(failure_api_user_path.identifier).into(),
             ]
             .into(),
+            user: user5,
         };
 
         let resp = create_api_user_token_op(
@@ -895,10 +915,10 @@ mod tests {
     async fn test_get_api_user_token_permissions() {
         let api_user_id = Uuid::new_v4();
 
-        let token = ApiUserToken {
+        let token = ApiKey {
             id: Uuid::new_v4(),
             api_user_id: api_user_id,
-            token: "hashed_token".to_string(),
+            key_signature: "encrypted_key".to_string(),
             permissions: Vec::new().into(),
             expires_at: Utc::now() + Duration::seconds(5 * 60),
             created_at: Utc::now(),
@@ -921,7 +941,7 @@ mod tests {
             token_identifier: Uuid::new_v4(),
         };
 
-        let mut token_store = MockApiUserTokenStore::new();
+        let mut token_store = MockApiKeyStore::new();
         token_store
             .expect_get()
             .with(eq(api_user_token_path.token_identifier), eq(false))
@@ -938,20 +958,15 @@ mod tests {
         let mut storage = MockStorage::new();
         storage.api_user_token_store = Some(Arc::new(token_store));
 
-        let ctx = ApiContext::new(
-            Arc::new(AnyEmailValidator),
-            "".to_string(),
-            Arc::new(storage),
-            PermissionsConfig::default(),
-            JwtConfig::default(),
-        )
-        .await
-        .unwrap();
+        let ctx = mock_context(storage).await;
+
+        let user1 = mock_user();
 
         // 1. Fail to get due to lack of permissions
         let no_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user1.id,
             permissions: Vec::new().into(),
+            user: user1,
         };
 
         let resp = get_api_user_token_op(&ctx, &no_permissions, &api_user_token_path).await;
@@ -959,10 +974,13 @@ mod tests {
         assert!(resp.is_err());
         assert_eq!(get_status(&resp), StatusCode::FORBIDDEN);
 
+        let user2 = mock_user();
+
         // 2. Fail to get due to incorrect permissions
         let incorrect_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user2.id,
             permissions: vec![ApiPermission::GetApiUserToken(Uuid::new_v4()).into()].into(),
+            user: user2,
         };
 
         let resp = get_api_user_token_op(&ctx, &incorrect_permissions, &api_user_token_path).await;
@@ -970,14 +988,17 @@ mod tests {
         assert!(resp.is_err());
         assert_eq!(get_status(&resp), StatusCode::FORBIDDEN);
 
+        let user3 = mock_user();
+
         // 3. Fail to get due to unknown token id
         let incorrect_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user3.id,
             permissions: vec![ApiPermission::GetApiUserToken(
                 unknown_api_user_token_path.identifier,
             )
             .into()]
             .into(),
+            user: user3,
         };
 
         let resp =
@@ -986,13 +1007,16 @@ mod tests {
         assert!(resp.is_err());
         assert_eq!(get_status(&resp), StatusCode::NOT_FOUND);
 
+        let user4 = mock_user();
+
         // 4. Succeed in getting token
         let success_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user4.id,
             permissions: vec![
                 ApiPermission::GetApiUserToken(api_user_token_path.identifier).into(),
             ]
             .into(),
+            user: user4,
         };
 
         let resp = get_api_user_token_op(&ctx, &success_permissions, &api_user_token_path).await;
@@ -1000,14 +1024,17 @@ mod tests {
         assert!(resp.is_ok());
         assert_eq!(get_status(&resp), StatusCode::OK);
 
+        let user5 = mock_user();
+
         // 5. Handle storage failure and return error
         let failure_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user5.id,
             permissions: vec![ApiPermission::GetApiUserToken(
                 failure_api_user_token_path.identifier,
             )
             .into()]
             .into(),
+            user: user5,
         };
 
         let resp =
@@ -1021,10 +1048,10 @@ mod tests {
     async fn test_delete_api_user_token_permissions() {
         let api_user_id = Uuid::new_v4();
 
-        let token = ApiUserToken {
+        let token = ApiKey {
             id: Uuid::new_v4(),
             api_user_id: api_user_id,
-            token: "hashed_token".to_string(),
+            key_signature: "encrypted_key".to_string(),
             permissions: Vec::new().into(),
             expires_at: Utc::now() + Duration::seconds(5 * 60),
             created_at: Utc::now(),
@@ -1047,7 +1074,7 @@ mod tests {
             token_identifier: Uuid::new_v4(),
         };
 
-        let mut token_store = MockApiUserTokenStore::new();
+        let mut token_store = MockApiKeyStore::new();
         token_store
             .expect_delete()
             .with(eq(api_user_token_path.token_identifier))
@@ -1064,20 +1091,15 @@ mod tests {
         let mut storage = MockStorage::new();
         storage.api_user_token_store = Some(Arc::new(token_store));
 
-        let ctx = ApiContext::new(
-            Arc::new(AnyEmailValidator),
-            "".to_string(),
-            Arc::new(storage),
-            PermissionsConfig::default(),
-            JwtConfig::default(),
-        )
-        .await
-        .unwrap();
+        let ctx = mock_context(storage).await;
+
+        let user1 = mock_user();
 
         // 1. Fail to get due to lack of permissions
         let no_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user1.id,
             permissions: Vec::new().into(),
+            user: user1,
         };
 
         let resp = delete_api_user_token_op(&ctx, &no_permissions, &api_user_token_path).await;
@@ -1085,10 +1107,13 @@ mod tests {
         assert!(resp.is_err());
         assert_eq!(get_status(&resp), StatusCode::FORBIDDEN);
 
+        let user2 = mock_user();
+
         // 2. Fail to get due to incorrect permissions
         let incorrect_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user2.id,
             permissions: vec![ApiPermission::DeleteApiUserToken(Uuid::new_v4()).into()].into(),
+            user: user2,
         };
 
         let resp =
@@ -1097,14 +1122,17 @@ mod tests {
         assert!(resp.is_err());
         assert_eq!(get_status(&resp), StatusCode::FORBIDDEN);
 
+        let user3 = mock_user();
+
         // 3. Fail to get due to unknown token id
         let incorrect_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user3.id,
             permissions: vec![ApiPermission::DeleteApiUserToken(
                 unknown_api_user_token_path.identifier,
             )
             .into()]
             .into(),
+            user: user3,
         };
 
         let resp =
@@ -1114,13 +1142,16 @@ mod tests {
         assert!(resp.is_err());
         assert_eq!(get_status(&resp), StatusCode::NOT_FOUND);
 
+        let user4 = mock_user();
+
         // 4. Succeed in getting token
         let success_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user4.id,
             permissions: vec![
                 ApiPermission::DeleteApiUserToken(api_user_token_path.identifier).into(),
             ]
             .into(),
+            user: user4,
         };
 
         let resp = delete_api_user_token_op(&ctx, &success_permissions, &api_user_token_path).await;
@@ -1128,14 +1159,17 @@ mod tests {
         assert!(resp.is_ok());
         assert_eq!(get_status(&resp), StatusCode::OK);
 
+        let user5 = mock_user();
+
         // 5. Handle storage failure and return error
         let failure_permissions = ApiCaller {
-            id: Uuid::new_v4(),
+            id: user5.id,
             permissions: vec![ApiPermission::DeleteApiUserToken(
                 failure_api_user_token_path.identifier,
             )
             .into()]
             .into(),
+            user: user5,
         };
 
         let resp =

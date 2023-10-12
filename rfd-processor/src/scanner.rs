@@ -2,7 +2,7 @@ use rfd_model::{
     storage::{JobStore, StoreError},
     NewJob,
 };
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 use thiserror::Error;
 use tokio::time::interval;
 
@@ -20,7 +20,7 @@ pub enum ScannerError {
 }
 
 pub async fn scanner(ctx: Arc<Context>) -> Result<(), ScannerError> {
-    let mut interval = interval(Duration::from_secs(1));
+    let mut interval = interval(ctx.scanner.interval);
     interval.tick().await;
 
     loop {
@@ -31,7 +31,14 @@ pub async fn scanner(ctx: Arc<Context>) -> Result<(), ScannerError> {
             .await?;
 
         for update in updates {
-            JobStore::upsert(&ctx.db.storage, update.into()).await?;
+            match JobStore::upsert(&ctx.db.storage, update.clone().into()).await {
+                Ok(job) => tracing::trace!(?job.id, "Added job to the queue"),
+                Err(err) => {
+                    // TODO: Do not warn on uniqueness violations. It is expected that the scanner
+                    // picks ups redundant jobs for RFDs that have not changed since the last scan
+                    tracing::warn!(?err, ?update, "Failed to add job")
+                }
+            }
         }
     }
 }

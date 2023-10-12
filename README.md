@@ -2,6 +2,10 @@
 
 Work in progress replacement for RFD processing and programmatic access.
 
+## TODO
+
+Add job state and locking
+
 ## Authentication
 
 Rough sketch of how users can authenticate to the RFD API

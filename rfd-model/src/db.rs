@@ -6,10 +6,10 @@ use uuid::Uuid;
 use crate::{
     permissions::Permissions,
     schema::{
-        api_user, api_user_access_token, api_user_provider, api_user_token, job, rfd, rfd_pdf,
-        rfd_revision,
+        api_key, api_user, api_user_access_token, api_user_provider, job, login_attempt,
+        oauth_client, oauth_client_redirect_uri, oauth_client_secret, rfd, rfd_pdf, rfd_revision,
     },
-    schema_ext::{ContentFormat, PdfSource},
+    schema_ext::{ContentFormat, LoginAttemptState, PdfSource},
 };
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
@@ -73,7 +73,7 @@ pub struct JobModel {
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
 #[diesel(table_name = api_user)]
-pub struct ApiUserModel<T> {
+pub struct ApiUserModel<T: Ord> {
     pub id: Uuid,
     pub permissions: Permissions<T>,
     pub created_at: DateTime<Utc>,
@@ -82,11 +82,11 @@ pub struct ApiUserModel<T> {
 }
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
-#[diesel(table_name = api_user_token)]
-pub struct ApiUserTokenModel<T> {
+#[diesel(table_name = api_key)]
+pub struct ApiKeyModel<T: Ord> {
     pub id: Uuid,
     pub api_user_id: Uuid,
-    pub token: String,
+    pub key_signature: String,
     pub permissions: Permissions<T>,
     pub expires_at: DateTime<Utc>,
     pub created_at: DateTime<Utc>,
@@ -115,4 +115,53 @@ pub struct ApiUserAccessTokenModel {
     pub revoked_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[diesel(table_name = login_attempt)]
+pub struct LoginAttemptModel {
+    pub id: Uuid,
+    pub attempt_state: LoginAttemptState,
+    pub client_id: Uuid,
+    pub redirect_uri: String,
+    pub state: Option<String>,
+    pub pkce_challenge: Option<String>,
+    pub pkce_challenge_method: Option<String>,
+    pub authz_code: Option<String>,
+    pub expires_at: Option<DateTime<Utc>>,
+    pub error: Option<String>,
+    pub provider: String,
+    pub provider_pkce_verifier: Option<String>,
+    pub provider_authz_code: Option<String>,
+    pub provider_error: Option<String>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[diesel(table_name = oauth_client)]
+pub struct OAuthClientModel {
+    pub id: Uuid,
+    pub created_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[diesel(table_name = oauth_client_secret)]
+pub struct OAuthClientSecretModel {
+    pub id: Uuid,
+    pub oauth_client_id: Uuid,
+    pub secret_signature: String,
+    pub created_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[diesel(table_name = oauth_client_redirect_uri)]
+pub struct OAuthClientRedirectUriModel {
+    pub id: Uuid,
+    pub oauth_client_id: Uuid,
+    pub redirect_uri: String,
+    pub created_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
 }
