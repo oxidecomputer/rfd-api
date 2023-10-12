@@ -825,7 +825,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "serde",
- "serde_tokenstream 0.2.0",
+ "serde_tokenstream",
  "syn 2.0.37",
 ]
 
@@ -2421,35 +2421,19 @@ dependencies = [
 
 [[package]]
 name = "progenitor"
-version = "0.2.1-dev"
+version = "0.3.0"
+source = "git+https://github.com/oxidecomputer/progenitor?branch=print-example#424f7b34de7debfd4028b10cdcdf34b3192150e1"
 dependencies = [
- "anyhow",
- "clap",
- "openapiv3",
- "progenitor-client 0.2.1-dev",
+ "progenitor-client",
  "progenitor-impl",
  "progenitor-macro",
- "serde",
  "serde_json",
-]
-
-[[package]]
-name = "progenitor-client"
-version = "0.2.1-dev"
-dependencies = [
- "bytes",
- "futures-core",
- "percent-encoding 2.3.0",
- "reqwest",
- "serde",
- "serde_json",
- "serde_urlencoded",
 ]
 
 [[package]]
 name = "progenitor-client"
 version = "0.3.0"
-source = "git+https://github.com/oxidecomputer/progenitor?branch=print-example#032b1bcc2f672af6abdbd0678d04d0405c7701ae"
+source = "git+https://github.com/oxidecomputer/progenitor?branch=print-example#424f7b34de7debfd4028b10cdcdf34b3192150e1"
 dependencies = [
  "bytes",
  "futures-core",
@@ -2462,20 +2446,21 @@ dependencies = [
 
 [[package]]
 name = "progenitor-impl"
-version = "0.2.1-dev"
+version = "0.3.0"
+source = "git+https://github.com/oxidecomputer/progenitor?branch=print-example#424f7b34de7debfd4028b10cdcdf34b3192150e1"
 dependencies = [
  "getopts",
  "heck",
- "indexmap 1.9.3",
+ "http",
+ "indexmap 2.0.1",
  "openapiv3",
  "proc-macro2",
  "quote",
  "regex",
- "rustfmt-wrapper",
  "schemars",
  "serde",
  "serde_json",
- "syn 1.0.109",
+ "syn 2.0.37",
  "thiserror",
  "typify",
  "unicode-ident",
@@ -2483,16 +2468,19 @@ dependencies = [
 
 [[package]]
 name = "progenitor-macro"
-version = "0.2.1-dev"
+version = "0.3.0"
+source = "git+https://github.com/oxidecomputer/progenitor?branch=print-example#424f7b34de7debfd4028b10cdcdf34b3192150e1"
 dependencies = [
  "openapiv3",
  "proc-macro2",
  "progenitor-impl",
  "quote",
+ "schemars",
  "serde",
  "serde_json",
- "serde_tokenstream 0.1.7",
- "syn 1.0.109",
+ "serde_tokenstream",
+ "serde_yaml",
+ "syn 2.0.37",
 ]
 
 [[package]]
@@ -2815,7 +2803,7 @@ dependencies = [
  "itertools 0.11.0",
  "jsonwebtoken",
  "oauth2",
- "progenitor-client 0.3.0",
+ "progenitor-client",
  "reqwest",
  "rfd-sdk",
  "serde",
@@ -2912,7 +2900,7 @@ name = "rfd-sdk"
 version = "0.1.0"
 dependencies = [
  "chrono",
- "progenitor-client 0.3.0",
+ "progenitor-client",
  "reqwest",
  "schemars",
  "serde",
@@ -3270,17 +3258,6 @@ dependencies = [
 
 [[package]]
 name = "serde_tokenstream"
-version = "0.1.7"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "797ba1d80299b264f3aac68ab5d12e5825a561749db4df7cd7c8083900c5d4e9"
-dependencies = [
- "proc-macro2",
- "serde",
- "syn 1.0.109",
-]
-
-[[package]]
-name = "serde_tokenstream"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a00ffd23fd882d096f09fcaae2a9de8329a328628e86027e049ee051dc1621f"
@@ -3329,6 +3306,19 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.37",
+]
+
+[[package]]
+name = "serde_yaml"
+version = "0.9.25"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a49e178e4452f45cb61d0cd8cebc1b0fafd3e41929e996cef79aa3aca91f574"
+dependencies = [
+ "indexmap 2.0.1",
+ "itoa",
+ "ryu",
+ "serde",
+ "unsafe-libyaml",
 ]
 
 [[package]]
@@ -4021,7 +4011,7 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
- "serde_tokenstream 0.2.0",
+ "serde_tokenstream",
  "syn 2.0.37",
  "typify-impl",
 ]
@@ -4079,6 +4069,12 @@ name = "unicode-width"
 version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e51733f11c9c4f72aa0c160008246859e340b00807569a0da0e7a1079b27ba85"
+
+[[package]]
+name = "unsafe-libyaml"
+version = "0.2.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f28467d3e1d3c6586d8f25fa243f544f5800fec42d97032474e17222c2b75cfa"
 
 [[package]]
 name = "untrusted"
