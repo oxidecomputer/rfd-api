@@ -1098,7 +1098,7 @@ dependencies = [
  "chrono",
  "http",
  "hyper",
- "itertools",
+ "itertools 0.10.5",
  "mime",
  "serde",
  "serde_json",
@@ -1120,7 +1120,7 @@ dependencies = [
  "http",
  "hyper",
  "hyper-rustls",
- "itertools",
+ "itertools 0.10.5",
  "mime",
  "serde",
  "serde_json",
@@ -1175,7 +1175,7 @@ dependencies = [
  "http",
  "hyper",
  "hyper-rustls",
- "itertools",
+ "itertools 0.10.5",
  "mime",
  "serde",
  "serde_json",
@@ -1501,6 +1501,15 @@ name = "itertools"
 version = "0.10.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b0fd2260e829bddf4cb6ea802289de2f86d6a7a690192fbe91b3f46e0f2c8473"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
+version = "0.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1c173a5686ce8bfa551b3563d0c2170bf24ca44da99c7ca4bfdab5418c3fe57"
 dependencies = [
  "either",
 ]
@@ -2379,7 +2388,7 @@ checksum = "59230a63c37f3e18569bdb90e4a89cbf5bf8b06fea0b84e65ea10cc4df47addd"
 dependencies = [
  "difflib",
  "float-cmp",
- "itertools",
+ "itertools 0.10.5",
  "normalize-line-endings",
  "predicates-core",
  "regex",
@@ -2739,6 +2748,7 @@ dependencies = [
  "config",
  "cookie",
  "crc32c",
+ "diesel",
  "dropshot",
  "dropshot-authorization-header",
  "dropshot-verified-body",
@@ -2790,6 +2800,7 @@ dependencies = [
  "clap",
  "config",
  "dirs 5.0.1",
+ "itertools 0.11.0",
  "oauth2",
  "progenitor-client",
  "reqwest",
@@ -4449,7 +4460,7 @@ dependencies = [
  "http",
  "hyper",
  "hyper-rustls",
- "itertools",
+ "itertools 0.10.5",
  "log",
  "percent-encoding 2.3.0",
  "rustls",

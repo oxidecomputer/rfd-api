@@ -20,12 +20,12 @@ type DeviceCodeExchangeError = RequestTokenError<
     StandardErrorResponse<DeviceCodeErrorResponseType>,
 >;
 
-pub struct GoogleDeviceAuth {
+pub struct DeviceOAuth {
     client: BasicClient,
     scopes: Vec<String>,
 }
 
-impl GoogleDeviceAuth {
+impl DeviceOAuth {
     pub fn new(provider: OAuthProviderInfo) -> Result<Self> {
         let device_auth_url = DeviceAuthorizationUrl::new(provider.device_code_endpoint)?;
 
@@ -52,10 +52,11 @@ impl GoogleDeviceAuth {
         let token = self
             .client
             .exchange_device_access_token(&details)
+            .set_max_backoff_interval(details.interval())
             .request_async(
                 async_http_client,
                 tokio::time::sleep,
-                Some(Duration::from_secs(30)),
+                Some(details.expires_in()),
             )
             .await;
 

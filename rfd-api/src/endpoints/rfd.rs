@@ -1,6 +1,6 @@
 use dropshot::{endpoint, HttpError, HttpResponseOk, Path, Query, RequestContext};
 use http::StatusCode;
-use rfd_model::storage::RfdFilter;
+use rfd_model::{schema_ext::Visibility, storage::RfdFilter};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use trace_request::trace_request;
@@ -69,27 +69,37 @@ async fn get_rfd_op(
     number: String,
 ) -> Result<HttpResponseOk<FullRfd>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
-        if caller.any(&[
-            &ApiPermission::GetRfd(rfd_number).into(),
-            &ApiPermission::GetAllRfds.into(),
-        ]) {
-            match ctx.get_rfd(rfd_number, None).await {
-                Ok(Some(rfd)) => Ok(HttpResponseOk(rfd)),
-                Ok(None) => {
+        // Lookup occurs before permission checks, as visibility controls are stored on the RFD
+        // itself. This would be better if we could perform all authz checks prior to retrieving
+        // the RFD. As-is we leak the how many RFDs exist
+        match ctx.get_rfd(rfd_number, None).await {
+            Ok(result) => match result {
+                Some(rfd) => {
+                    let visible = rfd.visibility == Visibility::Public
+                        || caller.any(&[
+                            &ApiPermission::GetRfd(rfd_number).into(),
+                            &ApiPermission::GetRfdsAll.into(),
+                        ]);
+
+                    if visible {
+                        Ok(HttpResponseOk(rfd))
+                    } else {
+                        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
+                    }
+                }
+                None => {
                     tracing::error!(?rfd_number, "Failed to find RFD");
                     Err(not_found("Failed to find RFD"))
                 }
-                Err(err) => {
-                    tracing::error!(?rfd_number, ?err, "Looking up RFD failed");
-                    Err(internal_error("Failed to lookup RFD"))
-                }
+            },
+            Err(err) => {
+                tracing::error!(?rfd_number, ?err, "Looking up RFD failed");
+                Err(internal_error("Failed to lookup RFD"))
             }
-        } else {
-            Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
         }
     } else {
         Err(client_error(
-            StatusCode::UNPROCESSABLE_ENTITY,
+            StatusCode::BAD_REQUEST,
             "Malformed RFD number",
         ))
     }

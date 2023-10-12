@@ -15,18 +15,19 @@ use tracing_subscriber::EnvFilter;
 
 use crate::{
     config::{AppConfig, ServerLogFormat},
-    email_validator::DomainValidator,
     endpoints::login::oauth::{
         github::GitHubOAuthProvider, google::GoogleOAuthProvider, OAuthProviderName,
     },
+    initial_data::InitialData,
 };
 
 mod authn;
 mod config;
 mod context;
-mod email_validator;
 mod endpoints;
 mod error;
+mod initial_data;
+mod mapper;
 mod permissions;
 mod server;
 mod util;
@@ -51,7 +52,6 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     };
 
     let mut context = ApiContext::new(
-        Arc::new(DomainValidator::new(vec![])),
         config.public_url,
         Arc::new(
             PostgresStore::new(&config.database_url)
@@ -60,20 +60,24 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     format!("Failed to establish initial database connection: {:?}", err)
                 })?,
         ),
-        config.permissions,
         config.jwt,
         config.keys,
         config.search,
     )
     .await?;
 
+    let init_data = InitialData::new()?;
+    init_data.initialize(&context).await?;
+
     if let Some(github) = config.authn.oauth.github {
         context.insert_oauth_provider(
             OAuthProviderName::GitHub,
             Box::new(move || {
                 Box::new(GitHubOAuthProvider::new(
-                    github.client_id.clone(),
-                    github.client_secret.clone(),
+                    github.device.client_id.clone(),
+                    github.device.client_secret.clone(),
+                    github.web.client_id.clone(),
+                    github.web.client_secret.clone(),
                 ))
             }),
         )

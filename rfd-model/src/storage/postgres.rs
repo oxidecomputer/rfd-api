@@ -1,8 +1,3 @@
-use std::{
-    collections::{BTreeMap, BTreeSet},
-    time::Duration,
-};
-
 use async_bb8_diesel::{AsyncRunQueryDsl, ConnectionError, ConnectionManager, OptionalExtension};
 use async_trait::async_trait;
 use bb8::Pool;
@@ -15,33 +10,40 @@ use diesel::{
     upsert::{excluded, on_constraint},
     ExpressionMethods, PgArrayExpressionMethods,
 };
-
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    time::Duration,
+};
+use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
     db::{
-        ApiKeyModel, ApiUserAccessTokenModel, ApiUserModel, ApiUserProviderModel, JobModel,
-        LoginAttemptModel, OAuthClientModel, OAuthClientRedirectUriModel, OAuthClientSecretModel,
-        RfdModel, RfdPdfModel, RfdRevisionModel,
+        AccessGroupModel, ApiKeyModel, ApiUserAccessTokenModel, ApiUserModel, ApiUserProviderModel,
+        JobModel, LoginAttemptModel, MapperModel, OAuthClientModel, OAuthClientRedirectUriModel,
+        OAuthClientSecretModel, RfdModel, RfdPdfModel, RfdRevisionModel,
     },
     permissions::{Permission, Permissions},
     schema::{
-        api_key, api_user, api_user_access_token, api_user_provider, job, login_attempt,
-        oauth_client, oauth_client_redirect_uri, oauth_client_secret, rfd, rfd_pdf, rfd_revision,
+        access_groups, api_key, api_user, api_user_access_token, api_user_provider, job,
+        login_attempt, mapper, oauth_client, oauth_client_redirect_uri, oauth_client_secret, rfd,
+        rfd_pdf, rfd_revision,
     },
     storage::StoreError,
-    AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LoginAttempt, NewAccessToken, NewApiKey,
-    NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt, NewOAuthClient,
-    NewOAuthClientRedirectUri, NewOAuthClientSecret, NewRfd, NewRfdPdf, NewRfdRevision,
-    OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, Rfd, RfdPdf, RfdRevision,
+    AccessGroup, AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LoginAttempt, Mapper,
+    NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
+    NewLoginAttempt, NewMapper, NewOAuthClient, NewOAuthClientRedirectUri, NewOAuthClientSecret,
+    NewRfd, NewRfdPdf, NewRfdRevision, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, Rfd,
+    RfdPdf, RfdRevision,
 };
 
 use super::{
-    AccessTokenFilter, AccessTokenStore, ApiKeyFilter, ApiKeyStore, ApiUserFilter,
-    ApiUserProviderFilter, ApiUserProviderStore, ApiUserStore, JobFilter, JobStore, ListPagination,
-    LoginAttemptFilter, LoginAttemptStore, OAuthClientFilter, OAuthClientRedirectUriStore,
-    OAuthClientSecretStore, OAuthClientStore, RfdFilter, RfdPdfFilter, RfdPdfStore,
-    RfdRevisionFilter, RfdRevisionStore, RfdStore,
+    AccessGroupFilter, AccessGroupStore, AccessTokenFilter, AccessTokenStore, ApiKeyFilter,
+    ApiKeyStore, ApiUserFilter, ApiUserProviderFilter, ApiUserProviderStore, ApiUserStore,
+    JobFilter, JobStore, ListPagination, LoginAttemptFilter, LoginAttemptStore, MapperFilter,
+    MapperStore, OAuthClientFilter, OAuthClientRedirectUriStore, OAuthClientSecretStore,
+    OAuthClientStore, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionStore,
+    RfdStore,
 };
 
 pub type DbPool = Pool<ConnectionManager<PgConnection>>;
@@ -71,10 +73,6 @@ impl PostgresStore {
                 .build(manager)
                 .await?,
         })
-    }
-
-    pub fn connection(&self) -> &DbPool {
-        &self.conn
     }
 }
 
@@ -135,17 +133,15 @@ impl RfdStore for PostgresStore {
                 rfd::id.eq(new_rfd.id),
                 rfd::rfd_number.eq(new_rfd.rfd_number.clone()),
                 rfd::link.eq(new_rfd.link.clone()),
-                // rfd::relevant_components.eq(new_rfd.relevant_components.clone()),
-                // rfd::milestones.eq(new_rfd.milestones.clone()),
+                rfd::visibility.eq(new_rfd.visibility.clone()),
             ))
             .on_conflict(rfd::id)
             .do_update()
             .set((
                 rfd::rfd_number.eq(excluded(rfd::rfd_number)),
                 rfd::link.eq(excluded(rfd::link)),
-                // rfd::relevant_components.eq(excluded(rfd::relevant_components)),
-                // rfd::milestones.eq(excluded(rfd::milestones)),
                 rfd::updated_at.eq(Utc::now()),
+                rfd::visibility.eq(excluded(rfd::visibility)),
             ))
             .get_result_async(&self.conn)
             .await?;
@@ -489,6 +485,7 @@ where
             ApiUserFilter {
                 id: Some(vec![*id]),
                 email: None,
+                groups: None,
                 deleted,
             },
             &ListPagination::default().limit(1),
@@ -506,7 +503,12 @@ where
             .left_join(api_user_provider::dsl::api_user_provider)
             .into_boxed();
 
-        let ApiUserFilter { id, email, deleted } = filter;
+        let ApiUserFilter {
+            id,
+            email,
+            groups,
+            deleted,
+        } = filter;
 
         if let Some(id) = id {
             query = query.filter(api_user::id.eq_any(id));
@@ -514,6 +516,10 @@ where
 
         if let Some(email) = email {
             query = query.filter(api_user_provider::emails.contains(email));
+        }
+
+        if let Some(groups) = groups {
+            query = query.filter(api_user::groups.overlaps_with(groups));
         }
 
         if !deleted {
@@ -532,6 +538,7 @@ where
             .map(|(user, _)| ApiUser {
                 id: user.id,
                 permissions: user.permissions,
+                groups: user.groups.into_iter().filter_map(|g| g).collect(),
                 created_at: user.created_at,
                 updated_at: user.updated_at,
                 deleted_at: user.deleted_at,
@@ -539,18 +546,21 @@ where
             .collect())
     }
 
+    #[instrument(skip(self), fields(id = ?user.id, permissions = ?user.permissions, groups = ?user.groups))]
     async fn upsert(&self, user: NewApiUser<T>) -> Result<ApiUser<T>, StoreError> {
-        tracing::info!(id = ?user.id, permissions = ?user.permissions, "Upserting user");
+        tracing::trace!("Upserting user");
 
         let user_m: ApiUserModel<T> = insert_into(api_user::dsl::api_user)
             .values((
                 api_user::id.eq(user.id),
                 api_user::permissions.eq(user.permissions.clone()),
+                api_user::groups.eq(user.groups.into_iter().collect::<Vec<_>>()),
             ))
             .on_conflict(api_user::id)
             .do_update()
             .set((
                 api_user::permissions.eq(excluded(api_user::permissions)),
+                api_user::groups.eq(excluded(api_user::groups)),
                 api_user::updated_at.eq(Utc::now()),
             ))
             .get_result_async(&self.conn)
@@ -559,6 +569,7 @@ where
         Ok(ApiUser {
             id: user_m.id,
             permissions: user_m.permissions,
+            groups: user_m.groups.into_iter().filter_map(|g| g).collect(),
             created_at: user_m.created_at,
             updated_at: user_m.updated_at,
             deleted_at: user_m.deleted_at,
@@ -1216,5 +1227,200 @@ impl OAuthClientRedirectUriStore for PostgresStore {
             .optional()?;
 
         Ok(result.map(|redirect| redirect.into()))
+    }
+}
+
+#[async_trait]
+impl<T> AccessGroupStore<T> for PostgresStore
+where
+    T: Permission + Ord,
+{
+    async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<AccessGroup<T>>, StoreError> {
+        let client = AccessGroupStore::list(
+            self,
+            AccessGroupFilter {
+                id: Some(vec![*id]),
+                name: None,
+                deleted,
+            },
+            &ListPagination::default().limit(1),
+        )
+        .await?;
+
+        Ok(client.into_iter().nth(0))
+    }
+
+    async fn list(
+        &self,
+        filter: AccessGroupFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<AccessGroup<T>>, StoreError> {
+        let mut query = access_groups::dsl::access_groups.into_boxed();
+
+        let AccessGroupFilter { id, name, deleted } = filter;
+
+        if let Some(id) = id {
+            query = query.filter(access_groups::id.eq_any(id));
+        }
+
+        if let Some(name) = name {
+            query = query.filter(access_groups::name.eq_any(name));
+        }
+
+        if !deleted {
+            query = query.filter(access_groups::deleted_at.is_null());
+        }
+
+        let results = query
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+            .order(access_groups::created_at.desc())
+            .get_results_async::<AccessGroupModel<T>>(&self.conn)
+            .await?;
+
+        Ok(results.into_iter().map(|model| model.into()).collect())
+    }
+
+    async fn upsert(&self, group: &NewAccessGroup<T>) -> Result<AccessGroup<T>, StoreError> {
+        let group_m: AccessGroupModel<T> = insert_into(access_groups::dsl::access_groups)
+            .values((
+                access_groups::id.eq(group.id),
+                access_groups::name.eq(group.name.clone()),
+                access_groups::permissions.eq(group.permissions.clone()),
+            ))
+            .on_conflict(access_groups::id)
+            .do_update()
+            .set((
+                access_groups::name.eq(excluded(access_groups::name)),
+                access_groups::permissions.eq(excluded(access_groups::permissions)),
+                access_groups::updated_at.eq(Utc::now()),
+            ))
+            .get_result_async(&self.conn)
+            .await?;
+
+        Ok(group_m.into())
+    }
+
+    async fn delete(&self, id: &Uuid) -> Result<Option<AccessGroup<T>>, StoreError> {
+        let _ = update(access_groups::dsl::access_groups)
+            .filter(access_groups::id.eq(*id))
+            .set(access_groups::deleted_at.eq(Utc::now()))
+            .execute_async(&self.conn)
+            .await?;
+
+        AccessGroupStore::get(self, id, true).await
+    }
+}
+
+#[async_trait]
+impl MapperStore for PostgresStore {
+    #[instrument(skip(self), err(Debug))]
+    async fn get(
+        &self,
+        id: &Uuid,
+        depleted: bool,
+        deleted: bool,
+    ) -> Result<Option<Mapper>, StoreError> {
+        tracing::trace!("Get mapper");
+
+        let client = MapperStore::list(
+            self,
+            MapperFilter {
+                id: Some(vec![*id]),
+                name: None,
+                depleted,
+                deleted,
+            },
+            &ListPagination::default().limit(1),
+        )
+        .await?;
+
+        Ok(client.into_iter().nth(0))
+    }
+
+    #[instrument(skip(self), err(Debug))]
+    async fn list(
+        &self,
+        filter: MapperFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<Mapper>, StoreError> {
+        tracing::trace!("Listing mappers");
+
+        let mut query = mapper::dsl::mapper.into_boxed();
+
+        let MapperFilter {
+            id,
+            name,
+            depleted,
+            deleted,
+        } = filter;
+
+        if let Some(id) = id {
+            query = query.filter(mapper::id.eq_any(id));
+        }
+
+        if let Some(name) = name {
+            query = query.filter(mapper::name.eq_any(name));
+        }
+
+        if !depleted {
+            query = query.filter(mapper::depleted_at.is_null());
+        }
+
+        if !deleted {
+            query = query.filter(mapper::deleted_at.is_null());
+        }
+
+        let results = query
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+            .order(mapper::created_at.desc())
+            .get_results_async::<MapperModel>(&self.conn)
+            .await?;
+
+        Ok(results.into_iter().map(|model| model.into()).collect())
+    }
+
+    #[instrument(skip(self), err(Debug))]
+    async fn upsert(&self, new_mapper: &NewMapper) -> Result<Mapper, StoreError> {
+        tracing::trace!("Upserting mapper");
+
+        let depleted = new_mapper
+            .max_activations
+            .map(|max| new_mapper.activations.unwrap_or(0) == max)
+            .unwrap_or(false);
+
+        let mapper_m: MapperModel = insert_into(mapper::dsl::mapper)
+            .values((
+                mapper::id.eq(new_mapper.id),
+                mapper::name.eq(new_mapper.name.clone()),
+                mapper::rule.eq(new_mapper.rule.clone()),
+                mapper::activations.eq(new_mapper.activations),
+                mapper::max_activations.eq(new_mapper.max_activations),
+                mapper::depleted_at.eq(if depleted { Some(Utc::now()) } else { None }),
+            ))
+            .on_conflict(mapper::id)
+            .do_update()
+            .set((
+                mapper::activations.eq(excluded(mapper::activations)),
+                mapper::depleted_at.eq(excluded(mapper::depleted_at)),
+            ))
+            .get_result_async(&self.conn)
+            .await?;
+
+        Ok(mapper_m.into())
+    }
+
+    #[instrument(skip(self), err(Debug))]
+    async fn delete(&self, id: &Uuid) -> Result<Option<Mapper>, StoreError> {
+        tracing::trace!("Deleting mapper");
+
+        let _ = update(mapper::dsl::mapper)
+            .filter(mapper::id.eq(*id))
+            .set(mapper::deleted_at.eq(Utc::now()))
+            .execute_async(&self.conn)
+            .await?;
+
+        MapperStore::get(self, id, false, true).await
     }
 }

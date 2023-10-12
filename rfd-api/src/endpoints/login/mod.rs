@@ -1,6 +1,5 @@
 use async_trait::async_trait;
 use dropshot::HttpError;
-use hyper::{client::connect::Connect, Client};
 use schemars::JsonSchema;
 use serde::{
     de::{self, Visitor},
@@ -13,10 +12,6 @@ use crate::{
     util::response::{bad_request, internal_error},
 };
 
-// use self::access_token::AccessTokenError;
-
-// pub mod access_token;
-// pub mod jwt;
 pub mod oauth;
 
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
@@ -27,8 +22,6 @@ pub enum LoginPermissions {
 
 #[derive(Debug, Error)]
 pub enum LoginError {
-    // #[error(transparent)]
-    // AccessTokenError(#[from] AccessTokenError),
     #[error("Requested token lifetime exceeds maximum configuration duration")]
     ExcessTokenExpiration,
     #[error("Failed to parse access token {0}")]
@@ -144,6 +137,7 @@ impl<'de> Deserialize<'de> for ExternalUserId {
 pub struct UserInfo {
     pub external_id: ExternalUserId,
     pub verified_emails: Vec<String>,
+    pub github_username: Option<String>,
 }
 
 #[derive(Debug, Error)]
@@ -152,6 +146,8 @@ pub enum UserInfoError {
     Deserialize(#[from] serde_json::Error),
     #[error("Failed to create user info request {0}")]
     Http(#[from] http::Error),
+    #[error(transparent)]
+    Inner(#[from] reqwest::Error),
     #[error("Failed to send user info request {0}")]
     Hyper(#[from] hyper::Error),
     #[error("User information is missing")]
@@ -160,11 +156,9 @@ pub enum UserInfoError {
 
 #[async_trait]
 pub trait UserInfoProvider {
-    async fn get_user_info<C>(
+    async fn get_user_info(
         &self,
-        client: &Client<C>,
+        client: &reqwest::Client,
         token: &str,
-    ) -> Result<UserInfo, UserInfoError>
-    where
-        C: Connect + Clone + Send + Sync + 'static;
+    ) -> Result<UserInfo, UserInfoError>;
 }

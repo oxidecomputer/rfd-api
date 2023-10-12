@@ -75,7 +75,7 @@ async fn create_oauth_client_op(
 
         // Give the caller permission to perform actions on the client
         ctx.add_permissions_to_user(
-            &caller.user,
+            &caller.id,
             vec![
                 ApiPermission::GetOAuthClient(client.id),
                 ApiPermission::UpdateOAuthClient(client.id),
@@ -315,9 +315,13 @@ async fn delete_oauth_client_redirect_uri_op(
 
 #[cfg(test)]
 mod tests {
-    use std::sync::{Arc, Mutex};
+    use std::{
+        collections::BTreeSet,
+        sync::{Arc, Mutex},
+    };
 
     use chrono::Utc;
+    use mockall::predicate::eq;
     use rfd_model::{
         storage::{MockApiUserStore, MockOAuthClientSecretStore, MockOAuthClientStore},
         ApiUser, OAuthClient, OAuthClientSecret,
@@ -326,7 +330,7 @@ mod tests {
 
     use crate::{
         authn::key::RawApiKey,
-        context::tests::{mock_context, MockStorage},
+        context::test_mocks::{mock_context, MockStorage},
         endpoints::login::oauth::CheckOAuthClient,
         permissions::ApiPermission,
         ApiCaller,
@@ -338,6 +342,7 @@ mod tests {
         ApiUser {
             id: Uuid::new_v4(),
             permissions: vec![ApiPermission::CreateOAuthClient].into(),
+            groups: BTreeSet::new(),
             created_at: Utc::now(),
             updated_at: Utc::now(),
             deleted_at: None,
@@ -346,11 +351,22 @@ mod tests {
 
     #[tokio::test]
     async fn test_create_client_with_secret() {
+        let user = mock_user();
+        let mut caller = ApiCaller {
+            id: user.id,
+            permissions: user.permissions.clone(),
+        };
+
         let mut user_store = MockApiUserStore::new();
+        user_store
+            .expect_get()
+            .with(eq(user.id), eq(false))
+            .returning(move |_, _| Ok(Some(user.clone())));
         user_store.expect_upsert().returning(|user| {
             Ok(ApiUser {
                 id: user.id,
                 permissions: user.permissions,
+                groups: user.groups,
                 created_at: Utc::now(),
                 updated_at: Utc::now(),
                 deleted_at: None,
@@ -394,12 +410,6 @@ mod tests {
         storage.oauth_client_secret_store = Some(Arc::new(secret_store));
 
         let ctx = mock_context(storage).await;
-        let user = mock_user();
-        let mut caller = ApiCaller {
-            id: user.id,
-            permissions: user.permissions.clone(),
-            user,
-        };
 
         let mut client = create_oauth_client_op(&ctx, &caller).await.unwrap().0;
         caller

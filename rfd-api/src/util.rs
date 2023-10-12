@@ -44,6 +44,10 @@ pub mod response {
         client_error(StatusCode::UNAUTHORIZED, "Unauthorized")
     }
 
+    pub fn forbidden() -> HttpError {
+        client_error(StatusCode::FORBIDDEN, "Unauthorized")
+    }
+
     pub fn client_error<S>(status_code: StatusCode, message: S) -> HttpError
     where
         S: ToString,
@@ -137,7 +141,7 @@ pub mod tests {
         RsaPrivateKey, RsaPublicKey,
     };
 
-    use crate::{config::AsymmetricKey, email_validator::EmailValidator};
+    use crate::config::AsymmetricKey;
 
     pub fn get_status<T>(res: &Result<T, HttpError>) -> StatusCode
     where
@@ -146,13 +150,6 @@ pub mod tests {
         match res {
             Ok(_) => T::STATUS_CODE,
             Err(err) => err.status_code,
-        }
-    }
-
-    pub struct AnyEmailValidator;
-    impl EmailValidator for AnyEmailValidator {
-        fn validate(&self, _email: &str) -> bool {
-            true
         }
     }
 

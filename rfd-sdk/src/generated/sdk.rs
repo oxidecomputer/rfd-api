@@ -10,6 +10,47 @@ pub mod types {
     #[allow(unused_imports)]
     use std::convert::TryFrom;
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct AccessGroupForApiPermission {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub id: uuid::Uuid,
+        pub name: String,
+        pub permissions: PermissionsForApiPermission,
+        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
+    }
+
+    impl From<&AccessGroupForApiPermission> for AccessGroupForApiPermission {
+        fn from(value: &AccessGroupForApiPermission) -> Self {
+            value.clone()
+        }
+    }
+
+    impl AccessGroupForApiPermission {
+        pub fn builder() -> builder::AccessGroupForApiPermission {
+            builder::AccessGroupForApiPermission::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct AccessGroupUpdateParams {
+        pub name: String,
+        pub permissions: PermissionsForApiPermission,
+    }
+
+    impl From<&AccessGroupUpdateParams> for AccessGroupUpdateParams {
+        fn from(value: &AccessGroupUpdateParams) -> Self {
+            value.clone()
+        }
+    }
+
+    impl AccessGroupUpdateParams {
+        pub fn builder() -> builder::AccessGroupUpdateParams {
+            builder::AccessGroupUpdateParams::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct AccessTokenExchangeRequest {
         pub device_code: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -26,6 +67,23 @@ pub mod types {
     impl AccessTokenExchangeRequest {
         pub fn builder() -> builder::AccessTokenExchangeRequest {
             builder::AccessTokenExchangeRequest::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct AddGroupBody {
+        pub group_id: uuid::Uuid,
+    }
+
+    impl From<&AddGroupBody> for AddGroupBody {
+        fn from(value: &AddGroupBody) -> Self {
+            value.clone()
+        }
+    }
+
+    impl AddGroupBody {
+        pub fn builder() -> builder::AddGroupBody {
+            builder::AddGroupBody::default()
         }
     }
 
@@ -86,29 +144,44 @@ pub mod types {
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub enum ApiPermission {
         CreateApiUserTokenSelf,
+        CreateApiUserTokenAssigned,
         CreateApiUserTokenAll,
         GetApiUserSelf,
+        GetApiUserAssigned,
         GetApiUserAll,
         GetApiUserTokenSelf,
+        GetApiUserTokenAssigned,
+        GetApiUserTokenAll,
         DeleteApiUserTokenSelf,
+        DeleteApiUserTokenAssigned,
         DeleteApiUserTokenAll,
         CreateApiUser,
         UpdateApiUserSelf,
+        UpdateApiUserAssigned,
         UpdateApiUserAll,
-        GetAllRfds,
-        GetAssignedRfds,
-        GetAllDiscussions,
-        GetAssignedDiscussions,
+        ListGroups,
+        CreateGroup,
+        GetRfdsAssigned,
+        GetRfdsAll,
+        GetDiscussionsAssigned,
+        GetDiscussionsAll,
         SearchRfds,
         CreateOAuthClient,
-        GetAssignedOAuthClients,
-        UpdateAssignedOAuthClients,
-        DeleteAssignedOAuthClients,
+        GetOAuthClientsAssigned,
+        GetOAuthClientsAll,
+        UpdateOAuthClientsAssigned,
+        UpdateOAuthClientsAll,
+        DeleteOAuthClientsAssigned,
+        DeleteOAuthClientsAll,
         CreateApiUserToken(uuid::Uuid),
         GetApiUser(uuid::Uuid),
         GetApiUserToken(uuid::Uuid),
         DeleteApiUserToken(uuid::Uuid),
         UpdateApiUser(uuid::Uuid),
+        UpdateGroup(uuid::Uuid),
+        AddToGroup(uuid::Uuid),
+        RemoveFromGroup(uuid::Uuid),
+        DeleteGroup(uuid::Uuid),
         GetRfd(i32),
         GetRfds(Vec<i32>),
         GetDiscussion(i32),
@@ -132,6 +205,7 @@ pub mod types {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub groups: Vec<uuid::Uuid>,
         pub id: uuid::Uuid,
         pub permissions: PermissionsForApiPermission,
         pub updated_at: chrono::DateTime<chrono::offset::Utc>,
@@ -151,6 +225,7 @@ pub mod types {
 
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct ApiUserUpdateParams {
+        pub groups: Vec<uuid::Uuid>,
         pub permissions: PermissionsForApiPermission,
     }
 
@@ -205,6 +280,7 @@ pub mod types {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub state: Option<String>,
         pub title: String,
+        pub visibility: Visibility,
     }
 
     impl From<&FullRfd> for FullRfd {
@@ -378,6 +454,25 @@ pub mod types {
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct InitialOAuthClientSecretResponse {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub id: uuid::Uuid,
+        pub key: String,
+    }
+
+    impl From<&InitialOAuthClientSecretResponse> for InitialOAuthClientSecretResponse {
+        fn from(value: &InitialOAuthClientSecretResponse) -> Self {
+            value.clone()
+        }
+    }
+
+    impl InitialOAuthClientSecretResponse {
+        pub fn builder() -> builder::InitialOAuthClientSecretResponse {
+            builder::InitialOAuthClientSecretResponse::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct ListRfd {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub authors: Option<String>,
@@ -393,6 +488,7 @@ pub mod types {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub state: Option<String>,
         pub title: String,
+        pub visibility: Visibility,
     }
 
     impl From<&ListRfd> for ListRfd {
@@ -551,8 +647,8 @@ pub mod types {
         schemars :: JsonSchema,
     )]
     pub enum OAuthProviderName {
-        #[serde(rename = "git-hub")]
-        GitHub,
+        #[serde(rename = "github")]
+        Github,
         #[serde(rename = "google")]
         Google,
     }
@@ -566,7 +662,7 @@ pub mod types {
     impl ToString for OAuthProviderName {
         fn to_string(&self) -> String {
             match *self {
-                Self::GitHub => "git-hub".to_string(),
+                Self::Github => "github".to_string(),
                 Self::Google => "google".to_string(),
             }
         }
@@ -576,7 +672,7 @@ pub mod types {
         type Err = &'static str;
         fn from_str(value: &str) -> Result<Self, &'static str> {
             match value {
-                "git-hub" => Ok(Self::GitHub),
+                "github" => Ok(Self::Github),
                 "google" => Ok(Self::Google),
                 _ => Err("invalid value"),
             }
@@ -631,7 +727,244 @@ pub mod types {
         }
     }
 
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        Deserialize,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        Serialize,
+        schemars :: JsonSchema,
+    )]
+    pub enum Visibility {
+        #[serde(rename = "public")]
+        Public,
+        #[serde(rename = "private")]
+        Private,
+    }
+
+    impl From<&Visibility> for Visibility {
+        fn from(value: &Visibility) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ToString for Visibility {
+        fn to_string(&self) -> String {
+            match *self {
+                Self::Public => "public".to_string(),
+                Self::Private => "private".to_string(),
+            }
+        }
+    }
+
+    impl std::str::FromStr for Visibility {
+        type Err = &'static str;
+        fn from_str(value: &str) -> Result<Self, &'static str> {
+            match value {
+                "public" => Ok(Self::Public),
+                "private" => Ok(Self::Private),
+                _ => Err("invalid value"),
+            }
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for Visibility {
+        type Error = &'static str;
+        fn try_from(value: &str) -> Result<Self, &'static str> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for Visibility {
+        type Error = &'static str;
+        fn try_from(value: &String) -> Result<Self, &'static str> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for Visibility {
+        type Error = &'static str;
+        fn try_from(value: String) -> Result<Self, &'static str> {
+            value.parse()
+        }
+    }
+
     pub mod builder {
+        #[derive(Clone, Debug)]
+        pub struct AccessGroupForApiPermission {
+            created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+            deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
+            id: Result<uuid::Uuid, String>,
+            name: Result<String, String>,
+            permissions: Result<super::PermissionsForApiPermission, String>,
+            updated_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+        }
+
+        impl Default for AccessGroupForApiPermission {
+            fn default() -> Self {
+                Self {
+                    created_at: Err("no value supplied for created_at".to_string()),
+                    deleted_at: Ok(Default::default()),
+                    id: Err("no value supplied for id".to_string()),
+                    name: Err("no value supplied for name".to_string()),
+                    permissions: Err("no value supplied for permissions".to_string()),
+                    updated_at: Err("no value supplied for updated_at".to_string()),
+                }
+            }
+        }
+
+        impl AccessGroupForApiPermission {
+            pub fn created_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.created_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                self
+            }
+            pub fn deleted_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<chrono::DateTime<chrono::offset::Utc>>>,
+                T::Error: std::fmt::Display,
+            {
+                self.deleted_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<uuid::Uuid>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn name<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.name = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for name: {}", e));
+                self
+            }
+            pub fn permissions<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::PermissionsForApiPermission>,
+                T::Error: std::fmt::Display,
+            {
+                self.permissions = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for permissions: {}", e));
+                self
+            }
+            pub fn updated_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.updated_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for updated_at: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<AccessGroupForApiPermission> for super::AccessGroupForApiPermission {
+            type Error = String;
+            fn try_from(value: AccessGroupForApiPermission) -> Result<Self, String> {
+                Ok(Self {
+                    created_at: value.created_at?,
+                    deleted_at: value.deleted_at?,
+                    id: value.id?,
+                    name: value.name?,
+                    permissions: value.permissions?,
+                    updated_at: value.updated_at?,
+                })
+            }
+        }
+
+        impl From<super::AccessGroupForApiPermission> for AccessGroupForApiPermission {
+            fn from(value: super::AccessGroupForApiPermission) -> Self {
+                Self {
+                    created_at: Ok(value.created_at),
+                    deleted_at: Ok(value.deleted_at),
+                    id: Ok(value.id),
+                    name: Ok(value.name),
+                    permissions: Ok(value.permissions),
+                    updated_at: Ok(value.updated_at),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct AccessGroupUpdateParams {
+            name: Result<String, String>,
+            permissions: Result<super::PermissionsForApiPermission, String>,
+        }
+
+        impl Default for AccessGroupUpdateParams {
+            fn default() -> Self {
+                Self {
+                    name: Err("no value supplied for name".to_string()),
+                    permissions: Err("no value supplied for permissions".to_string()),
+                }
+            }
+        }
+
+        impl AccessGroupUpdateParams {
+            pub fn name<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.name = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for name: {}", e));
+                self
+            }
+            pub fn permissions<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::PermissionsForApiPermission>,
+                T::Error: std::fmt::Display,
+            {
+                self.permissions = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for permissions: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<AccessGroupUpdateParams> for super::AccessGroupUpdateParams {
+            type Error = String;
+            fn try_from(value: AccessGroupUpdateParams) -> Result<Self, String> {
+                Ok(Self {
+                    name: value.name?,
+                    permissions: value.permissions?,
+                })
+            }
+        }
+
+        impl From<super::AccessGroupUpdateParams> for AccessGroupUpdateParams {
+            fn from(value: super::AccessGroupUpdateParams) -> Self {
+                Self {
+                    name: Ok(value.name),
+                    permissions: Ok(value.permissions),
+                }
+            }
+        }
+
         #[derive(Clone, Debug)]
         pub struct AccessTokenExchangeRequest {
             device_code: Result<String, String>,
@@ -699,6 +1032,49 @@ pub mod types {
                     device_code: Ok(value.device_code),
                     expires_at: Ok(value.expires_at),
                     grant_type: Ok(value.grant_type),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct AddGroupBody {
+            group_id: Result<uuid::Uuid, String>,
+        }
+
+        impl Default for AddGroupBody {
+            fn default() -> Self {
+                Self {
+                    group_id: Err("no value supplied for group_id".to_string()),
+                }
+            }
+        }
+
+        impl AddGroupBody {
+            pub fn group_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<uuid::Uuid>,
+                T::Error: std::fmt::Display,
+            {
+                self.group_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for group_id: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<AddGroupBody> for super::AddGroupBody {
+            type Error = String;
+            fn try_from(value: AddGroupBody) -> Result<Self, String> {
+                Ok(Self {
+                    group_id: value.group_id?,
+                })
+            }
+        }
+
+        impl From<super::AddGroupBody> for AddGroupBody {
+            fn from(value: super::AddGroupBody) -> Self {
+                Self {
+                    group_id: Ok(value.group_id),
                 }
             }
         }
@@ -878,6 +1254,7 @@ pub mod types {
         pub struct ApiUserForApiPermission {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
+            groups: Result<Vec<uuid::Uuid>, String>,
             id: Result<uuid::Uuid, String>,
             permissions: Result<super::PermissionsForApiPermission, String>,
             updated_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
@@ -888,6 +1265,7 @@ pub mod types {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
                     deleted_at: Ok(Default::default()),
+                    groups: Err("no value supplied for groups".to_string()),
                     id: Err("no value supplied for id".to_string()),
                     permissions: Err("no value supplied for permissions".to_string()),
                     updated_at: Err("no value supplied for updated_at".to_string()),
@@ -914,6 +1292,16 @@ pub mod types {
                 self.deleted_at = value
                     .try_into()
                     .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                self
+            }
+            pub fn groups<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Vec<uuid::Uuid>>,
+                T::Error: std::fmt::Display,
+            {
+                self.groups = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for groups: {}", e));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -954,6 +1342,7 @@ pub mod types {
                 Ok(Self {
                     created_at: value.created_at?,
                     deleted_at: value.deleted_at?,
+                    groups: value.groups?,
                     id: value.id?,
                     permissions: value.permissions?,
                     updated_at: value.updated_at?,
@@ -966,6 +1355,7 @@ pub mod types {
                 Self {
                     created_at: Ok(value.created_at),
                     deleted_at: Ok(value.deleted_at),
+                    groups: Ok(value.groups),
                     id: Ok(value.id),
                     permissions: Ok(value.permissions),
                     updated_at: Ok(value.updated_at),
@@ -975,18 +1365,30 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct ApiUserUpdateParams {
+            groups: Result<Vec<uuid::Uuid>, String>,
             permissions: Result<super::PermissionsForApiPermission, String>,
         }
 
         impl Default for ApiUserUpdateParams {
             fn default() -> Self {
                 Self {
+                    groups: Err("no value supplied for groups".to_string()),
                     permissions: Err("no value supplied for permissions".to_string()),
                 }
             }
         }
 
         impl ApiUserUpdateParams {
+            pub fn groups<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Vec<uuid::Uuid>>,
+                T::Error: std::fmt::Display,
+            {
+                self.groups = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for groups: {}", e));
+                self
+            }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
                 T: std::convert::TryInto<super::PermissionsForApiPermission>,
@@ -1003,6 +1405,7 @@ pub mod types {
             type Error = String;
             fn try_from(value: ApiUserUpdateParams) -> Result<Self, String> {
                 Ok(Self {
+                    groups: value.groups?,
                     permissions: value.permissions?,
                 })
             }
@@ -1011,6 +1414,7 @@ pub mod types {
         impl From<super::ApiUserUpdateParams> for ApiUserUpdateParams {
             fn from(value: super::ApiUserUpdateParams) -> Self {
                 Self {
+                    groups: Ok(value.groups),
                     permissions: Ok(value.permissions),
                 }
             }
@@ -1101,6 +1505,7 @@ pub mod types {
             sha: Result<String, String>,
             state: Result<Option<String>, String>,
             title: Result<String, String>,
+            visibility: Result<super::Visibility, String>,
         }
 
         impl Default for FullRfd {
@@ -1118,6 +1523,7 @@ pub mod types {
                     sha: Err("no value supplied for sha".to_string()),
                     state: Ok(Default::default()),
                     title: Err("no value supplied for title".to_string()),
+                    visibility: Err("no value supplied for visibility".to_string()),
                 }
             }
         }
@@ -1243,6 +1649,16 @@ pub mod types {
                     .map_err(|e| format!("error converting supplied value for title: {}", e));
                 self
             }
+            pub fn visibility<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::Visibility>,
+                T::Error: std::fmt::Display,
+            {
+                self.visibility = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for visibility: {}", e));
+                self
+            }
         }
 
         impl std::convert::TryFrom<FullRfd> for super::FullRfd {
@@ -1261,6 +1677,7 @@ pub mod types {
                     sha: value.sha?,
                     state: value.state?,
                     title: value.title?,
+                    visibility: value.visibility?,
                 })
             }
         }
@@ -1280,6 +1697,7 @@ pub mod types {
                     sha: Ok(value.sha),
                     state: Ok(value.state),
                     title: Ok(value.title),
+                    visibility: Ok(value.visibility),
                 }
             }
         }
@@ -1923,6 +2341,79 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
+        pub struct InitialOAuthClientSecretResponse {
+            created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+            id: Result<uuid::Uuid, String>,
+            key: Result<String, String>,
+        }
+
+        impl Default for InitialOAuthClientSecretResponse {
+            fn default() -> Self {
+                Self {
+                    created_at: Err("no value supplied for created_at".to_string()),
+                    id: Err("no value supplied for id".to_string()),
+                    key: Err("no value supplied for key".to_string()),
+                }
+            }
+        }
+
+        impl InitialOAuthClientSecretResponse {
+            pub fn created_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.created_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<uuid::Uuid>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn key<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.key = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for key: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<InitialOAuthClientSecretResponse>
+            for super::InitialOAuthClientSecretResponse
+        {
+            type Error = String;
+            fn try_from(value: InitialOAuthClientSecretResponse) -> Result<Self, String> {
+                Ok(Self {
+                    created_at: value.created_at?,
+                    id: value.id?,
+                    key: value.key?,
+                })
+            }
+        }
+
+        impl From<super::InitialOAuthClientSecretResponse> for InitialOAuthClientSecretResponse {
+            fn from(value: super::InitialOAuthClientSecretResponse) -> Self {
+                Self {
+                    created_at: Ok(value.created_at),
+                    id: Ok(value.id),
+                    key: Ok(value.key),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
         pub struct ListRfd {
             authors: Result<Option<String>, String>,
             commit: Result<String, String>,
@@ -1934,6 +2425,7 @@ pub mod types {
             sha: Result<String, String>,
             state: Result<Option<String>, String>,
             title: Result<String, String>,
+            visibility: Result<super::Visibility, String>,
         }
 
         impl Default for ListRfd {
@@ -1949,6 +2441,7 @@ pub mod types {
                     sha: Err("no value supplied for sha".to_string()),
                     state: Ok(Default::default()),
                     title: Err("no value supplied for title".to_string()),
+                    visibility: Err("no value supplied for visibility".to_string()),
                 }
             }
         }
@@ -2054,6 +2547,16 @@ pub mod types {
                     .map_err(|e| format!("error converting supplied value for title: {}", e));
                 self
             }
+            pub fn visibility<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::Visibility>,
+                T::Error: std::fmt::Display,
+            {
+                self.visibility = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for visibility: {}", e));
+                self
+            }
         }
 
         impl std::convert::TryFrom<ListRfd> for super::ListRfd {
@@ -2070,6 +2573,7 @@ pub mod types {
                     sha: value.sha?,
                     state: value.state?,
                     title: value.title?,
+                    visibility: value.visibility?,
                 })
             }
         }
@@ -2087,6 +2591,7 @@ pub mod types {
                     sha: Ok(value.sha),
                     state: Ok(value.state),
                     title: Ok(value.title),
+                    visibility: Ok(value.visibility),
                 }
             }
         }
@@ -2806,6 +3311,32 @@ impl Client {
         builder::UpdateApiUser::new(self)
     }
 
+    /// Sends a `POST` request to `/api-user/{identifier}/group`
+    ///
+    /// ```ignore
+    /// let response = client.add_api_user_to_group()
+    ///    .identifier(identifier)
+    ///    .body(body)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn add_api_user_to_group(&self) -> builder::AddApiUserToGroup {
+        builder::AddApiUserToGroup::new(self)
+    }
+
+    /// Sends a `DELETE` request to `/api-user/{identifier}/group/{group_id}`
+    ///
+    /// ```ignore
+    /// let response = client.remove_api_user_from_group()
+    ///    .identifier(identifier)
+    ///    .group_id(group_id)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn remove_api_user_from_group(&self) -> builder::RemoveApiUserFromGroup {
+        builder::RemoveApiUserFromGroup::new(self)
+    }
+
     /// List the active and expired API tokens for a given user
     ///
     /// Sends a `GET` request to `/api-user/{identifier}/token`
@@ -2861,6 +3392,54 @@ impl Client {
         builder::DeleteApiUserToken::new(self)
     }
 
+    /// Sends a `GET` request to `/group`
+    ///
+    /// ```ignore
+    /// let response = client.get_groups()
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn get_groups(&self) -> builder::GetGroups {
+        builder::GetGroups::new(self)
+    }
+
+    /// Sends a `POST` request to `/group`
+    ///
+    /// ```ignore
+    /// let response = client.create_group()
+    ///    .body(body)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn create_group(&self) -> builder::CreateGroup {
+        builder::CreateGroup::new(self)
+    }
+
+    /// Sends a `PUT` request to `/group/{group_id}`
+    ///
+    /// ```ignore
+    /// let response = client.update_group()
+    ///    .group_id(group_id)
+    ///    .body(body)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn update_group(&self) -> builder::UpdateGroup {
+        builder::UpdateGroup::new(self)
+    }
+
+    /// Sends a `DELETE` request to `/group/{group_id}`
+    ///
+    /// ```ignore
+    /// let response = client.delete_group()
+    ///    .group_id(group_id)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn delete_group(&self) -> builder::DeleteGroup {
+        builder::DeleteGroup::new(self)
+    }
+
     /// Generate the remote provider login url and redirect the user
     ///
     /// Sends a `GET` request to `/login/oauth/{provider}/code/authorize`
@@ -2871,6 +3450,7 @@ impl Client {
     ///    .client_id(client_id)
     ///    .redirect_uri(redirect_uri)
     ///    .response_type(response_type)
+    ///    .scope(scope)
     ///    .state(state)
     ///    .send()
     ///    .await;
@@ -3340,6 +3920,176 @@ pub mod builder {
         }
     }
 
+    /// Builder for [`Client::add_api_user_to_group`]
+    ///
+    /// [`Client::add_api_user_to_group`]: super::Client::add_api_user_to_group
+    #[derive(Debug, Clone)]
+    pub struct AddApiUserToGroup<'a> {
+        client: &'a super::Client,
+        identifier: Result<uuid::Uuid, String>,
+        body: Result<types::builder::AddGroupBody, String>,
+    }
+
+    impl<'a> AddApiUserToGroup<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client,
+                identifier: Err("identifier was not initialized".to_string()),
+                body: Ok(types::builder::AddGroupBody::default()),
+            }
+        }
+
+        pub fn identifier<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<uuid::Uuid>,
+        {
+            self.identifier = value
+                .try_into()
+                .map_err(|_| "conversion to `uuid :: Uuid` for identifier failed".to_string());
+            self
+        }
+
+        pub fn body<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::AddGroupBody>,
+        {
+            self.body = value
+                .try_into()
+                .map(From::from)
+                .map_err(|_| "conversion to `AddGroupBody` for body failed".to_string());
+            self
+        }
+
+        pub fn body_map<F>(mut self, f: F) -> Self
+        where
+            F: std::ops::FnOnce(types::builder::AddGroupBody) -> types::builder::AddGroupBody,
+        {
+            self.body = self.body.map(f);
+            self
+        }
+
+        /// Sends a `POST` request to `/api-user/{identifier}/group`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::ApiUserForApiPermission>, Error<types::Error>> {
+            let Self {
+                client,
+                identifier,
+                body,
+            } = self;
+            let identifier = identifier.map_err(Error::InvalidRequest)?;
+            let body = body
+                .and_then(std::convert::TryInto::<types::AddGroupBody>::try_into)
+                .map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/api-user/{}/group",
+                client.baseurl,
+                encode_path(&identifier.to_string()),
+            );
+            let request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .json(&body)
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::remove_api_user_from_group`]
+    ///
+    /// [`Client::remove_api_user_from_group`]: super::Client::remove_api_user_from_group
+    #[derive(Debug, Clone)]
+    pub struct RemoveApiUserFromGroup<'a> {
+        client: &'a super::Client,
+        identifier: Result<uuid::Uuid, String>,
+        group_id: Result<uuid::Uuid, String>,
+    }
+
+    impl<'a> RemoveApiUserFromGroup<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client,
+                identifier: Err("identifier was not initialized".to_string()),
+                group_id: Err("group_id was not initialized".to_string()),
+            }
+        }
+
+        pub fn identifier<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<uuid::Uuid>,
+        {
+            self.identifier = value
+                .try_into()
+                .map_err(|_| "conversion to `uuid :: Uuid` for identifier failed".to_string());
+            self
+        }
+
+        pub fn group_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<uuid::Uuid>,
+        {
+            self.group_id = value
+                .try_into()
+                .map_err(|_| "conversion to `uuid :: Uuid` for group_id failed".to_string());
+            self
+        }
+
+        /// Sends a `DELETE` request to
+        /// `/api-user/{identifier}/group/{group_id}`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::ApiUserForApiPermission>, Error<types::Error>> {
+            let Self {
+                client,
+                identifier,
+                group_id,
+            } = self;
+            let identifier = identifier.map_err(Error::InvalidRequest)?;
+            let group_id = group_id.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/api-user/{}/group/{}",
+                client.baseurl,
+                encode_path(&identifier.to_string()),
+                encode_path(&group_id.to_string()),
+            );
+            let request = client
+                .client
+                .delete(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
     /// Builder for [`Client::list_api_user_tokens`]
     ///
     /// [`Client::list_api_user_tokens`]: super::Client::list_api_user_tokens
@@ -3722,6 +4472,276 @@ pub mod builder {
         }
     }
 
+    /// Builder for [`Client::get_groups`]
+    ///
+    /// [`Client::get_groups`]: super::Client::get_groups
+    #[derive(Debug, Clone)]
+    pub struct GetGroups<'a> {
+        client: &'a super::Client,
+    }
+
+    impl<'a> GetGroups<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self { client }
+        }
+
+        /// Sends a `GET` request to `/group`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<Vec<types::AccessGroupForApiPermission>>, Error<types::Error>>
+        {
+            let Self { client } = self;
+            let url = format!("{}/group", client.baseurl,);
+            let request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::create_group`]
+    ///
+    /// [`Client::create_group`]: super::Client::create_group
+    #[derive(Debug, Clone)]
+    pub struct CreateGroup<'a> {
+        client: &'a super::Client,
+        body: Result<types::builder::AccessGroupUpdateParams, String>,
+    }
+
+    impl<'a> CreateGroup<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client,
+                body: Ok(types::builder::AccessGroupUpdateParams::default()),
+            }
+        }
+
+        pub fn body<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::AccessGroupUpdateParams>,
+        {
+            self.body = value
+                .try_into()
+                .map(From::from)
+                .map_err(|_| "conversion to `AccessGroupUpdateParams` for body failed".to_string());
+            self
+        }
+
+        pub fn body_map<F>(mut self, f: F) -> Self
+        where
+            F: std::ops::FnOnce(
+                types::builder::AccessGroupUpdateParams,
+            ) -> types::builder::AccessGroupUpdateParams,
+        {
+            self.body = self.body.map(f);
+            self
+        }
+
+        /// Sends a `POST` request to `/group`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::AccessGroupForApiPermission>, Error<types::Error>>
+        {
+            let Self { client, body } = self;
+            let body = body
+                .and_then(std::convert::TryInto::<types::AccessGroupUpdateParams>::try_into)
+                .map_err(Error::InvalidRequest)?;
+            let url = format!("{}/group", client.baseurl,);
+            let request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .json(&body)
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::update_group`]
+    ///
+    /// [`Client::update_group`]: super::Client::update_group
+    #[derive(Debug, Clone)]
+    pub struct UpdateGroup<'a> {
+        client: &'a super::Client,
+        group_id: Result<uuid::Uuid, String>,
+        body: Result<types::builder::AccessGroupUpdateParams, String>,
+    }
+
+    impl<'a> UpdateGroup<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client,
+                group_id: Err("group_id was not initialized".to_string()),
+                body: Ok(types::builder::AccessGroupUpdateParams::default()),
+            }
+        }
+
+        pub fn group_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<uuid::Uuid>,
+        {
+            self.group_id = value
+                .try_into()
+                .map_err(|_| "conversion to `uuid :: Uuid` for group_id failed".to_string());
+            self
+        }
+
+        pub fn body<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::AccessGroupUpdateParams>,
+        {
+            self.body = value
+                .try_into()
+                .map(From::from)
+                .map_err(|_| "conversion to `AccessGroupUpdateParams` for body failed".to_string());
+            self
+        }
+
+        pub fn body_map<F>(mut self, f: F) -> Self
+        where
+            F: std::ops::FnOnce(
+                types::builder::AccessGroupUpdateParams,
+            ) -> types::builder::AccessGroupUpdateParams,
+        {
+            self.body = self.body.map(f);
+            self
+        }
+
+        /// Sends a `PUT` request to `/group/{group_id}`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::AccessGroupForApiPermission>, Error<types::Error>>
+        {
+            let Self {
+                client,
+                group_id,
+                body,
+            } = self;
+            let group_id = group_id.map_err(Error::InvalidRequest)?;
+            let body = body
+                .and_then(std::convert::TryInto::<types::AccessGroupUpdateParams>::try_into)
+                .map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/group/{}",
+                client.baseurl,
+                encode_path(&group_id.to_string()),
+            );
+            let request = client
+                .client
+                .put(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .json(&body)
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::delete_group`]
+    ///
+    /// [`Client::delete_group`]: super::Client::delete_group
+    #[derive(Debug, Clone)]
+    pub struct DeleteGroup<'a> {
+        client: &'a super::Client,
+        group_id: Result<uuid::Uuid, String>,
+    }
+
+    impl<'a> DeleteGroup<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client,
+                group_id: Err("group_id was not initialized".to_string()),
+            }
+        }
+
+        pub fn group_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<uuid::Uuid>,
+        {
+            self.group_id = value
+                .try_into()
+                .map_err(|_| "conversion to `uuid :: Uuid` for group_id failed".to_string());
+            self
+        }
+
+        /// Sends a `DELETE` request to `/group/{group_id}`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::AccessGroupForApiPermission>, Error<types::Error>>
+        {
+            let Self { client, group_id } = self;
+            let group_id = group_id.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/group/{}",
+                client.baseurl,
+                encode_path(&group_id.to_string()),
+            );
+            let request = client
+                .client
+                .delete(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
     /// Builder for [`Client::authz_code_redirect`]
     ///
     /// [`Client::authz_code_redirect`]: super::Client::authz_code_redirect
@@ -3732,6 +4752,7 @@ pub mod builder {
         client_id: Result<uuid::Uuid, String>,
         redirect_uri: Result<String, String>,
         response_type: Result<String, String>,
+        scope: Result<Option<String>, String>,
         state: Result<String, String>,
     }
 
@@ -3743,6 +4764,7 @@ pub mod builder {
                 client_id: Err("client_id was not initialized".to_string()),
                 redirect_uri: Err("redirect_uri was not initialized".to_string()),
                 response_type: Err("response_type was not initialized".to_string()),
+                scope: Ok(None),
                 state: Err("state was not initialized".to_string()),
             }
         }
@@ -3787,6 +4809,17 @@ pub mod builder {
             self
         }
 
+        pub fn scope<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<String>,
+        {
+            self.scope = value
+                .try_into()
+                .map(Some)
+                .map_err(|_| "conversion to `String` for scope failed".to_string());
+            self
+        }
+
         pub fn state<V>(mut self, value: V) -> Self
         where
             V: std::convert::TryInto<String>,
@@ -3805,22 +4838,27 @@ pub mod builder {
                 client_id,
                 redirect_uri,
                 response_type,
+                scope,
                 state,
             } = self;
             let provider = provider.map_err(Error::InvalidRequest)?;
             let client_id = client_id.map_err(Error::InvalidRequest)?;
             let redirect_uri = redirect_uri.map_err(Error::InvalidRequest)?;
             let response_type = response_type.map_err(Error::InvalidRequest)?;
+            let scope = scope.map_err(Error::InvalidRequest)?;
             let state = state.map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/login/oauth/{}/code/authorize",
                 client.baseurl,
                 encode_path(&provider.to_string()),
             );
-            let mut query = Vec::with_capacity(4usize);
+            let mut query = Vec::with_capacity(5usize);
             query.push(("client_id", client_id.to_string()));
             query.push(("redirect_uri", redirect_uri.to_string()));
             query.push(("response_type", response_type.to_string()));
+            if let Some(v) = &scope {
+                query.push(("scope", v.to_string()));
+            }
             query.push(("state", state.to_string()));
             let request = client.client.get(url).query(&query).build()?;
             let result = client.client.execute(request).await;
@@ -4512,7 +5550,8 @@ pub mod builder {
         /// Sends a `POST` request to `/oauth/client/{client_id}/secret`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::OAuthClientSecret>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::InitialOAuthClientSecretResponse>, Error<types::Error>>
+        {
             let Self { client, client_id } = self;
             let client_id = client_id.map_err(Error::InvalidRequest)?;
             let url = format!(

@@ -5,7 +5,7 @@ use serde::{
 };
 use thiserror::Error;
 
-use crate::{permissions::ApiPermission, server::SpecConfig};
+use crate::server::SpecConfig;
 
 #[derive(Debug, Error)]
 pub enum AppConfigError {
@@ -19,7 +19,6 @@ pub struct AppConfig {
     pub public_url: String,
     pub server_port: u16,
     pub database_url: String,
-    pub permissions: PermissionsConfig,
     pub keys: Vec<AsymmetricKey>,
     pub jwt: JwtConfig,
     pub spec: Option<SpecConfig>,
@@ -61,11 +60,6 @@ impl<'de> Deserialize<'de> for ServerLogFormat {
 
         deserializer.deserialize_any(ExternalId)
     }
-}
-
-#[derive(Debug, Default, Deserialize)]
-pub struct PermissionsConfig {
-    pub default: Vec<ApiPermission>,
 }
 
 #[derive(Debug, Default, Deserialize)]
@@ -112,31 +106,24 @@ pub struct AuthnProviders {
 
 #[derive(Debug, Deserialize)]
 pub struct OAuthProviders {
-    pub github: Option<GitHubOAuthConfig>,
-    pub google: Option<GoogleOAuthConfig>,
+    pub github: Option<OAuthConfig>,
+    pub google: Option<OAuthConfig>,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct GitHubOAuthConfig {
-    pub client_id: String,
-    pub client_secret: String,
-    pub redirect_uri: String,
+pub struct OAuthConfig {
+    pub device: OAuthDeviceConfig,
+    pub web: OAuthWebConfig,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct GoogleOAuthConfig {
-    pub device: GoogleOAuthDeviceConfig,
-    pub web: GoogleOAuthWebConfig,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct GoogleOAuthDeviceConfig {
+pub struct OAuthDeviceConfig {
     pub client_id: String,
     pub client_secret: String,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct GoogleOAuthWebConfig {
+pub struct OAuthWebConfig {
     pub client_id: String,
     pub client_secret: String,
     pub redirect_uri: String,

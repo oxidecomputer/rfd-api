@@ -1,8 +1,9 @@
+use std::collections::BTreeSet;
+
 use chrono::{DateTime, Utc};
 use dropshot::{
     endpoint, HttpError, HttpResponseCreated, HttpResponseOk, Path, RequestContext, TypedBody,
 };
-use http::StatusCode;
 use partial_struct::partial;
 use rfd_model::{storage::ListPagination, ApiUser, NewApiKey, NewApiUser};
 use schemars::JsonSchema;
@@ -16,7 +17,7 @@ use crate::{
     context::ApiContext,
     error::ApiError,
     permissions::ApiPermission,
-    util::response::{client_error, not_found, to_internal_error},
+    util::response::{forbidden, not_found, to_internal_error},
     ApiCaller, ApiPermissions, User,
 };
 
@@ -81,13 +82,14 @@ async fn get_api_user_op(
             Err(not_found("Failed to find"))
         }
     } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
+        Err(forbidden())
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, JsonSchema)]
 pub struct ApiUserUpdateParams {
     permissions: ApiPermissions,
+    groups: BTreeSet<Uuid>,
 }
 
 /// Create a new user with a given set of permissions
@@ -117,13 +119,14 @@ async fn create_api_user_op(
             .update_api_user(NewApiUser {
                 id: Uuid::new_v4(),
                 permissions: body.permissions,
+                groups: body.groups,
             })
             .await
             .map_err(ApiError::Storage)?;
 
         Ok(HttpResponseCreated(user))
     } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
+        Err(forbidden())
     }
 }
 
@@ -165,13 +168,14 @@ async fn update_api_user_op(
             .update_api_user(NewApiUser {
                 id: path.identifier,
                 permissions: body.permissions,
+                groups: body.groups,
             })
             .await
             .map_err(ApiError::Storage)?;
 
         Ok(HttpResponseOk(user))
     } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
+        Err(forbidden())
     }
 }
 
@@ -219,7 +223,7 @@ async fn list_api_user_tokens_op(
                 .collect(),
         ))
     } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
+        Err(forbidden())
     }
 }
 
@@ -305,7 +309,7 @@ async fn create_api_user_token_op(
             Err(not_found("Failed to find api user"))
         }
     } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
+        Err(forbidden())
     }
 }
 
@@ -354,7 +358,7 @@ async fn get_api_user_token_op(
             Err(not_found("Failed to find token"))
         }
     } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
+        Err(forbidden())
     }
 }
 
@@ -397,13 +401,78 @@ async fn delete_api_user_token_op(
             Err(not_found("Failed to find token"))
         }
     } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
+        Err(forbidden())
+    }
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct AddGroupBody {
+    group_id: Uuid,
+}
+
+#[trace_request]
+#[endpoint {
+    method = POST,
+    path = "/api-user/{identifier}/group",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn add_api_user_to_group(
+    rqctx: RequestContext<ApiContext>,
+    path: Path<ApiUserPath>,
+    body: TypedBody<AddGroupBody>,
+) -> Result<HttpResponseOk<ApiUser<ApiPermission>>, HttpError> {
+    let ctx = rqctx.context();
+    let auth = ctx.authn_token(&rqctx).await?;
+    let caller = ctx.get_caller(&auth).await?;
+    let path = path.into_inner();
+    let body = body.into_inner();
+
+    if caller.can(&ApiPermission::AddToGroup(body.group_id)) {
+        ctx.add_api_user_to_group(&path.identifier, &body.group_id)
+            .await
+            .map_err(ApiError::Storage)?
+            .map(HttpResponseOk)
+            .ok_or_else(|| not_found("User does not exist"))
+    } else {
+        Err(forbidden())
+    }
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct ApiUserRemoveGroupPath {
+    identifier: Uuid,
+    group_id: Uuid,
+}
+
+#[trace_request]
+#[endpoint {
+    method = DELETE,
+    path = "/api-user/{identifier}/group/{group_id}",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn remove_api_user_from_group(
+    rqctx: RequestContext<ApiContext>,
+    path: Path<ApiUserRemoveGroupPath>,
+) -> Result<HttpResponseOk<ApiUser<ApiPermission>>, HttpError> {
+    let ctx = rqctx.context();
+    let auth = ctx.authn_token(&rqctx).await?;
+    let caller = ctx.get_caller(&auth).await?;
+    let path = path.into_inner();
+
+    if caller.can(&ApiPermission::RemoveFromGroup(path.group_id)) {
+        ctx.remove_api_user_from_group(&path.identifier, &path.group_id)
+            .await
+            .map_err(ApiError::Storage)?
+            .map(HttpResponseOk)
+            .ok_or_else(|| not_found("User does not exist"))
+    } else {
+        Err(forbidden())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
+    use std::{collections::BTreeSet, sync::Arc};
 
     use chrono::{Duration, Utc};
     use http::StatusCode;
@@ -415,7 +484,7 @@ mod tests {
     use uuid::Uuid;
 
     use crate::{
-        context::tests::{mock_context, MockStorage},
+        context::test_mocks::{mock_context, MockStorage},
         endpoints::api_user::{
             create_api_user_token_op, delete_api_user_token_op, get_api_user_token_op,
             list_api_user_tokens_op, update_api_user_op, ApiKeyCreateParams, ApiUserPath,
@@ -432,6 +501,7 @@ mod tests {
         ApiUser {
             id: Uuid::new_v4(),
             permissions: vec![].into(),
+            groups: BTreeSet::new(),
             created_at: Utc::now(),
             updated_at: Utc::now(),
             deleted_at: None,
@@ -442,10 +512,12 @@ mod tests {
     async fn test_create_api_user_permissions() {
         let successful_update = ApiUserUpdateParams {
             permissions: vec![ApiPermission::CreateApiUser.into()].into(),
+            groups: BTreeSet::new(),
         };
 
         let failure_update = ApiUserUpdateParams {
             permissions: vec![ApiPermission::GetApiUserAll.into()].into(),
+            groups: BTreeSet::new(),
         };
 
         let mut store = MockApiUserStore::new();
@@ -458,6 +530,7 @@ mod tests {
                 Ok(ApiUser {
                     id: user.id,
                     permissions: user.permissions,
+                    groups: BTreeSet::new(),
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,
@@ -481,7 +554,6 @@ mod tests {
         let no_permissions = ApiCaller {
             id: user1.id,
             permissions: Vec::new().into(),
-            user: user1,
         };
 
         let resp = create_api_user_op(&ctx, &no_permissions, successful_update.clone()).await;
@@ -495,7 +567,6 @@ mod tests {
         let with_permissions = ApiCaller {
             id: user2.id,
             permissions: vec![ApiPermission::CreateApiUser.into()].into(),
-            user: user2,
         };
 
         let resp = create_api_user_op(&ctx, &with_permissions, successful_update.clone()).await;
@@ -515,11 +586,13 @@ mod tests {
         let success_id = Uuid::new_v4();
         let successful_update = ApiUserUpdateParams {
             permissions: Vec::new().into(),
+            groups: BTreeSet::new(),
         };
 
         let failure_id = Uuid::new_v4();
         let failure_update = ApiUserUpdateParams {
             permissions: Vec::new().into(),
+            groups: BTreeSet::new(),
         };
 
         let mut store = MockApiUserStore::new();
@@ -530,6 +603,7 @@ mod tests {
                 Ok(ApiUser {
                     id: user.id,
                     permissions: user.permissions,
+                    groups: BTreeSet::new(),
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,
@@ -558,7 +632,6 @@ mod tests {
         let no_permissions = ApiCaller {
             id: user1.id,
             permissions: Vec::new().into(),
-            user: user1,
         };
 
         let resp = update_api_user_op(
@@ -578,7 +651,6 @@ mod tests {
         let with_specific_permissions = ApiCaller {
             id: user2.id,
             permissions: vec![ApiPermission::UpdateApiUser(success_path.identifier).into()].into(),
-            user: user2,
         };
 
         let resp = update_api_user_op(
@@ -598,7 +670,6 @@ mod tests {
         let with_general_permissions = ApiCaller {
             id: user3.id,
             permissions: vec![ApiPermission::UpdateApiUserAll.into()].into(),
-            user: user3,
         };
 
         let resp = update_api_user_op(
@@ -661,7 +732,6 @@ mod tests {
         let no_permissions = ApiCaller {
             id: user1.id,
             permissions: Vec::new().into(),
-            user: user1,
         };
 
         let resp = list_api_user_tokens_op(
@@ -682,7 +752,6 @@ mod tests {
         let incorrect_permissions = ApiCaller {
             id: user2.id,
             permissions: vec![ApiPermission::GetApiUserToken(Uuid::new_v4()).into()].into(),
-            user: user2,
         };
 
         let resp = list_api_user_tokens_op(
@@ -703,7 +772,6 @@ mod tests {
         let success_permissions = ApiCaller {
             id: user3.id,
             permissions: vec![ApiPermission::GetApiUserToken(success_id).into()].into(),
-            user: user3,
         };
 
         let resp = list_api_user_tokens_op(
@@ -724,7 +792,6 @@ mod tests {
         let failure_permissions = ApiCaller {
             id: user4.id,
             permissions: vec![ApiPermission::GetApiUserToken(failure_id).into()].into(),
-            user: user4,
         };
 
         let resp = list_api_user_tokens_op(
@@ -747,6 +814,7 @@ mod tests {
         let api_user = ApiUser {
             id: api_user_id,
             permissions: vec![ApiPermission::GetApiUserToken(api_user_id).into()].into(),
+            groups: BTreeSet::new(),
             created_at: Utc::now(),
             updated_at: Utc::now(),
             deleted_at: None,
@@ -812,7 +880,6 @@ mod tests {
         let no_permissions = ApiCaller {
             id: user1.id,
             permissions: Vec::new().into(),
-            user: user1,
         };
 
         let resp =
@@ -828,7 +895,6 @@ mod tests {
         let incorrect_permissions = ApiCaller {
             id: user2.id,
             permissions: vec![ApiPermission::CreateApiUserToken(Uuid::new_v4()).into()].into(),
-            user: user2,
         };
 
         let resp = create_api_user_token_op(
@@ -851,7 +917,6 @@ mod tests {
                 ApiPermission::CreateApiUserToken(unknown_api_user_path.identifier).into(),
             ]
             .into(),
-            user: user3,
         };
 
         let resp = create_api_user_token_op(
@@ -872,7 +937,6 @@ mod tests {
             id: user4.id,
             permissions: vec![ApiPermission::CreateApiUserToken(api_user_path.identifier).into()]
                 .into(),
-            user: user4,
         };
 
         let resp = create_api_user_token_op(
@@ -896,7 +960,6 @@ mod tests {
                 ApiPermission::CreateApiUserToken(failure_api_user_path.identifier).into(),
             ]
             .into(),
-            user: user5,
         };
 
         let resp = create_api_user_token_op(
@@ -966,7 +1029,6 @@ mod tests {
         let no_permissions = ApiCaller {
             id: user1.id,
             permissions: Vec::new().into(),
-            user: user1,
         };
 
         let resp = get_api_user_token_op(&ctx, &no_permissions, &api_user_token_path).await;
@@ -980,7 +1042,6 @@ mod tests {
         let incorrect_permissions = ApiCaller {
             id: user2.id,
             permissions: vec![ApiPermission::GetApiUserToken(Uuid::new_v4()).into()].into(),
-            user: user2,
         };
 
         let resp = get_api_user_token_op(&ctx, &incorrect_permissions, &api_user_token_path).await;
@@ -998,7 +1059,6 @@ mod tests {
             )
             .into()]
             .into(),
-            user: user3,
         };
 
         let resp =
@@ -1016,7 +1076,6 @@ mod tests {
                 ApiPermission::GetApiUserToken(api_user_token_path.identifier).into(),
             ]
             .into(),
-            user: user4,
         };
 
         let resp = get_api_user_token_op(&ctx, &success_permissions, &api_user_token_path).await;
@@ -1034,7 +1093,6 @@ mod tests {
             )
             .into()]
             .into(),
-            user: user5,
         };
 
         let resp =
@@ -1099,7 +1157,6 @@ mod tests {
         let no_permissions = ApiCaller {
             id: user1.id,
             permissions: Vec::new().into(),
-            user: user1,
         };
 
         let resp = delete_api_user_token_op(&ctx, &no_permissions, &api_user_token_path).await;
@@ -1113,7 +1170,6 @@ mod tests {
         let incorrect_permissions = ApiCaller {
             id: user2.id,
             permissions: vec![ApiPermission::DeleteApiUserToken(Uuid::new_v4()).into()].into(),
-            user: user2,
         };
 
         let resp =
@@ -1132,7 +1188,6 @@ mod tests {
             )
             .into()]
             .into(),
-            user: user3,
         };
 
         let resp =
@@ -1151,7 +1206,6 @@ mod tests {
                 ApiPermission::DeleteApiUserToken(api_user_token_path.identifier).into(),
             ]
             .into(),
-            user: user4,
         };
 
         let resp = delete_api_user_token_op(&ctx, &success_permissions, &api_user_token_path).await;
@@ -1169,7 +1223,6 @@ mod tests {
             )
             .into()]
             .into(),
-            user: user5,
         };
 
         let resp =

@@ -1,16 +1,17 @@
-use rfd_sdk::types::{Error, ListRfd};
+use itertools::{EitherOrBoth, Itertools};
+use rfd_sdk::types::{AccessGroupForApiPermission, ApiUserForApiPermission, Error, ListRfd};
 use std::{fs::File, io::Write, process::Command};
 use tabwriter::TabWriter;
 
 use crate::generated::cli::CliOutput;
 
 static HEADER_COLOR: &str = "\x1b[38;5;245m";
-static TEXT_COLOR: &str = "253";
+static TEXT_COLOR: &str = "\x1b[38;5;253m";
 static ERROR_COLOR: &str = "\x1b[38;2;251;110;136m";
 static RESET_COLOR: &str = "\x1b[0m";
-pub struct RfdCliPrinter {}
+pub struct RfdTabPrinter;
 
-impl CliOutput for RfdCliPrinter {
+impl CliOutput for RfdTabPrinter {
     fn output_get_rfd(
         &self,
         response: Result<rfd_sdk::types::FullRfd, progenitor_client::Error<Error>>,
@@ -21,12 +22,12 @@ impl CliOutput for RfdCliPrinter {
 
                 writeln!(
                     &mut tw,
-                    "{}Number:\t\x1b[38;5;{}m{}",
+                    "{}Number:\t{}{}",
                     HEADER_COLOR, TEXT_COLOR, rfd.rfd_number,
                 );
                 writeln!(
                     &mut tw,
-                    "{}Title:\t\x1b[38;5;{}m{}",
+                    "{}Title:\t{}{}",
                     HEADER_COLOR, TEXT_COLOR, rfd.title,
                 );
                 writeln!(
@@ -38,35 +39,42 @@ impl CliOutput for RfdCliPrinter {
                 );
                 writeln!(
                     &mut tw,
-                    "{}Authors:\t\x1b[38;5;{}m{}",
+                    "{}Authors:\t{}{}",
                     HEADER_COLOR,
                     TEXT_COLOR,
                     rfd.authors.unwrap_or_default(),
                 );
                 writeln!(
                     &mut tw,
-                    "{}Latest Commit:\t\x1b[38;5;{}m{}",
+                    "{}Latest Commit:\t{}{}",
                     HEADER_COLOR, TEXT_COLOR, rfd.commit,
                 );
                 writeln!(
                     &mut tw,
-                    "{}Updated At:\t\x1b[38;5;{}m{}",
+                    "{}Visibility:\t{}{}",
+                    HEADER_COLOR,
+                    TEXT_COLOR,
+                    rfd.visibility.to_string(),
+                );
+                writeln!(
+                    &mut tw,
+                    "{}Updated At:\t{}{}",
                     HEADER_COLOR, TEXT_COLOR, rfd.committed_at,
                 );
                 writeln!(
                     &mut tw,
-                    "{}Url:\t\x1b[38;5;{}mhttps://rfd.shared.oxide.computer/rfd/{}",
+                    "{}Url:\t{}https://rfd.shared.oxide.computer/rfd/{}",
                     HEADER_COLOR, TEXT_COLOR, rfd.rfd_number,
                 );
                 writeln!(
                     &mut tw,
-                    "{}Discussion Url:\t\x1b[38;5;{}m{}",
+                    "{}Discussion Url:\t{}{}",
                     HEADER_COLOR,
                     TEXT_COLOR,
                     rfd.discussion.unwrap_or_default(),
                 );
                 writeln!(&mut tw, "{}---------------", HEADER_COLOR,);
-                writeln!(&mut tw, "\x1b[38;5;{}m", TEXT_COLOR);
+                writeln!(&mut tw, "{}", TEXT_COLOR);
 
                 let body = print_rfd_html(&rfd.content);
 
@@ -115,12 +123,33 @@ impl CliOutput for RfdCliPrinter {
         &self,
         response: Result<rfd_sdk::types::ApiUserForApiPermission, progenitor_client::Error<Error>>,
     ) {
+        match response {
+            Ok(user) => print_user(&user),
+            Err(err) => print_error(err),
+        }
     }
 
     fn output_get_api_user(
         &self,
         response: Result<rfd_sdk::types::ApiUserForApiPermission, progenitor_client::Error<Error>>,
     ) {
+        match response {
+            Ok(user) => print_user(&user),
+            Err(err) => print_error(err),
+        }
+    }
+
+    fn output_get_groups(
+        &self,
+        response: Result<
+            Vec<rfd_sdk::types::AccessGroupForApiPermission>,
+            progenitor_client::Error<rfd_sdk::types::Error>,
+        >,
+    ) {
+        match response {
+            Ok(groups) => print_groups(&groups),
+            Err(err) => print_error(err),
+        }
     }
 }
 
@@ -190,6 +219,91 @@ fn print_error(error: progenitor_client::Error<Error>) {
     println!("{}", written);
 }
 
+fn print_user(user: &ApiUserForApiPermission) {
+    let mut tw = TabWriter::new(vec![]).ansi(true);
+
+    writeln!(
+        &mut tw,
+        "{}Id\tPermissions\tGroups\tCreated At",
+        HEADER_COLOR
+    );
+    writeln!(
+        &mut tw,
+        "{}--\t-----------\t------\t----------",
+        HEADER_COLOR
+    );
+
+    let lines = user.permissions.iter().zip_longest(user.groups.iter());
+
+    for (i, line) in lines.enumerate() {
+        let inner = match line {
+            EitherOrBoth::Left(permission) => format!("{}\t", permission),
+            EitherOrBoth::Right(group) => format!("\t{}", group),
+            EitherOrBoth::Both(permission, group) => format!("{}\t{}", permission, group),
+        };
+
+        writeln!(
+            &mut tw,
+            "{}{}\t{}\t{}",
+            TEXT_COLOR,
+            if i == 0 {
+                user.id.to_string()
+            } else {
+                String::new()
+            },
+            inner,
+            if i == 0 {
+                user.created_at.to_string()
+            } else {
+                String::new()
+            },
+        );
+    }
+
+    tw.flush().unwrap();
+
+    let written = String::from_utf8(tw.into_inner().unwrap()).unwrap();
+    println!("{}", written);
+}
+
+fn print_groups(groups: &Vec<AccessGroupForApiPermission>) {
+    let mut tw = TabWriter::new(vec![]).ansi(true);
+
+    writeln!(&mut tw, "{}Id\tName\tPermissions\tCreated At", HEADER_COLOR);
+    writeln!(&mut tw, "{}--\t----\t-----------\t----------", HEADER_COLOR);
+
+    for group in groups {
+        for (i, permission) in group.permissions.iter().enumerate() {
+            writeln!(
+                &mut tw,
+                "{}{}\t{}\t{}\t{}",
+                TEXT_COLOR,
+                if i == 0 {
+                    group.id.to_string()
+                } else {
+                    String::new()
+                },
+                if i == 0 {
+                    group.name.to_string()
+                } else {
+                    String::new()
+                },
+                permission,
+                if i == 0 {
+                    group.created_at.to_string()
+                } else {
+                    String::new()
+                },
+            );
+        }
+    }
+
+    tw.flush().unwrap();
+
+    let written = String::from_utf8(tw.into_inner().unwrap()).unwrap();
+    println!("{}", written);
+}
+
 fn print_rfd_html(content: &str) -> String {
     let mut tmp_content = File::create("adoc-source.adoc").unwrap();
     tmp_content.write_all(content.as_bytes());
@@ -221,12 +335,12 @@ fn print_rfd_list(rfds: &mut [ListRfd]) {
 
     writeln!(
         &mut tw,
-        "\x1b[38;5;{}mNumber\tTitle\tState\tLatest Commit\tUpdated At",
+        "{}Number\tTitle\tState\tLatest Commit\tUpdated At",
         HEADER_COLOR
     );
     writeln!(
         &mut tw,
-        "\x1b[38;5;{}m------\t-----\t-----\t-------------\t----------",
+        "{}------\t-----\t-----\t-------------\t----------",
         HEADER_COLOR
     );
 
@@ -235,7 +349,7 @@ fn print_rfd_list(rfds: &mut [ListRfd]) {
 
         writeln!(
             &mut tw,
-            "\x1b[38;5;{}m{}\t{}\t{}{}\t\x1b[38;5;{}m{}",
+            "{}{}\t{}\t{}{}\t{}{}",
             TEXT_COLOR,
             rfd.rfd_number,
             rfd.title,

@@ -1,41 +1,19 @@
-use rfd_model::{permissions::Permissions, ApiUser, NewApiUser};
+use rfd_model::permissions::Permissions;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
+use thiserror::Error;
 use uuid::Uuid;
 
+use crate::ApiPermissions;
+
 pub trait PermissionStorage {
-    fn contract(&self, user: &impl UserPermissionHolder) -> Self;
-    fn expand(&self, user: &impl UserPermissionHolder) -> Self;
-}
-
-pub trait UserPermissionHolder {
-    fn id(&self) -> &Uuid;
-    fn permissions(&self) -> &Permissions<ApiPermission>;
-}
-
-impl UserPermissionHolder for ApiUser<ApiPermission> {
-    fn id(&self) -> &Uuid {
-        &self.id
-    }
-
-    fn permissions(&self) -> &Permissions<ApiPermission> {
-        &self.permissions
-    }
-}
-
-impl UserPermissionHolder for NewApiUser<ApiPermission> {
-    fn id(&self) -> &Uuid {
-        &self.id
-    }
-
-    fn permissions(&self) -> &Permissions<ApiPermission> {
-        &self.permissions
-    }
+    fn contract(&self, owner: &Uuid) -> Self;
+    fn expand(&self, owner: &Uuid, owner_permissions: Option<&ApiPermissions>) -> Self;
 }
 
 impl PermissionStorage for Permissions<ApiPermission> {
-    fn contract(&self, user: &impl UserPermissionHolder) -> Self {
+    fn contract(&self, owner: &Uuid) -> Self {
         let mut contracted = Vec::new();
 
         let mut rfds = BTreeSet::<i32>::new();
@@ -62,27 +40,27 @@ impl PermissionStorage for Permissions<ApiPermission> {
                     delete_oauth_clients.insert(*id);
                 }
 
-                ApiPermission::GetApiUser(id) => contracted.push(if id == user.id() {
+                ApiPermission::GetApiUser(id) => contracted.push(if id == owner {
                     ApiPermission::GetApiUserSelf
                 } else {
                     ApiPermission::GetApiUser(*id)
                 }),
-                ApiPermission::CreateApiUserToken(id) => contracted.push(if id == user.id() {
+                ApiPermission::CreateApiUserToken(id) => contracted.push(if id == owner {
                     ApiPermission::CreateApiUserTokenSelf
                 } else {
                     ApiPermission::CreateApiUserToken(*id)
                 }),
-                ApiPermission::GetApiUserToken(id) => contracted.push(if id == user.id() {
+                ApiPermission::GetApiUserToken(id) => contracted.push(if id == owner {
                     ApiPermission::GetApiUserTokenSelf
                 } else {
                     ApiPermission::GetApiUserToken(*id)
                 }),
-                ApiPermission::DeleteApiUserToken(id) => contracted.push(if id == user.id() {
+                ApiPermission::DeleteApiUserToken(id) => contracted.push(if id == owner {
                     ApiPermission::DeleteApiUserTokenSelf
                 } else {
                     ApiPermission::DeleteApiUserToken(*id)
                 }),
-                ApiPermission::UpdateApiUser(id) => contracted.push(if id == user.id() {
+                ApiPermission::UpdateApiUser(id) => contracted.push(if id == owner {
                     ApiPermission::UpdateApiUserSelf
                 } else {
                     ApiPermission::UpdateApiUser(*id)
@@ -101,7 +79,7 @@ impl PermissionStorage for Permissions<ApiPermission> {
         contracted.into()
     }
 
-    fn expand(&self, user: &impl UserPermissionHolder) -> Self {
+    fn expand(&self, owner: &Uuid, owner_permissions: Option<&ApiPermissions>) -> Self {
         let mut expanded = Vec::new();
 
         for p in self.iter() {
@@ -132,70 +110,82 @@ impl PermissionStorage for Permissions<ApiPermission> {
                     }
                 }
 
-                ApiPermission::GetAssignedRfds => {
+                ApiPermission::GetRfdsAssigned => {
                     expanded.push(p.clone());
-                    for p in user.permissions().iter() {
-                        match p {
-                            ApiPermission::GetRfd(number) => {
-                                expanded.push(ApiPermission::GetRfd(*number))
+
+                    if let Some(owner_permissions) = owner_permissions {
+                        for p in owner_permissions.iter() {
+                            match p {
+                                ApiPermission::GetRfd(number) => {
+                                    expanded.push(ApiPermission::GetRfd(*number))
+                                }
+                                _ => (),
                             }
-                            _ => (),
                         }
                     }
                 }
-                ApiPermission::GetAssignedOAuthClients => {
+                ApiPermission::GetOAuthClientsAssigned => {
                     expanded.push(p.clone());
-                    for p in user.permissions().iter() {
-                        match p {
-                            ApiPermission::GetOAuthClient(id) => {
-                                expanded.push(ApiPermission::GetOAuthClient(*id))
+
+                    if let Some(owner_permissions) = owner_permissions {
+                        for p in owner_permissions.iter() {
+                            match p {
+                                ApiPermission::GetOAuthClient(id) => {
+                                    expanded.push(ApiPermission::GetOAuthClient(*id))
+                                }
+                                _ => (),
                             }
-                            _ => (),
                         }
                     }
                 }
-                ApiPermission::UpdateAssignedOAuthClients => {
+                ApiPermission::UpdateOAuthClientsAssigned => {
                     expanded.push(p.clone());
-                    for p in user.permissions().iter() {
-                        match p {
-                            ApiPermission::UpdateOAuthClient(id) => {
-                                expanded.push(ApiPermission::UpdateOAuthClient(*id))
+
+                    if let Some(owner_permissions) = owner_permissions {
+                        for p in owner_permissions.iter() {
+                            match p {
+                                ApiPermission::UpdateOAuthClient(id) => {
+                                    expanded.push(ApiPermission::UpdateOAuthClient(*id))
+                                }
+                                _ => (),
                             }
-                            _ => (),
                         }
                     }
                 }
-                ApiPermission::DeleteAssignedOAuthClients => {
+                ApiPermission::DeleteOAuthClientsAssigned => {
                     expanded.push(p.clone());
-                    for p in user.permissions().iter() {
-                        match p {
-                            ApiPermission::DeleteOAuthClient(id) => {
-                                expanded.push(ApiPermission::DeleteOAuthClient(*id))
+
+                    if let Some(owner_permissions) = owner_permissions {
+                        for p in owner_permissions.iter() {
+                            match p {
+                                ApiPermission::DeleteOAuthClient(id) => {
+                                    expanded.push(ApiPermission::DeleteOAuthClient(*id))
+                                }
+                                _ => (),
                             }
-                            _ => (),
                         }
                     }
                 }
 
                 ApiPermission::GetApiUserSelf => {
                     expanded.push(p.clone());
-                    expanded.push(ApiPermission::GetApiUser(*user.id()))
+                    expanded.push(ApiPermission::GetApiUser(*owner))
                 }
                 ApiPermission::CreateApiUserTokenSelf => {
                     expanded.push(p.clone());
-                    expanded.push(ApiPermission::CreateApiUserToken(*user.id()))
+                    expanded.push(ApiPermission::CreateApiUserToken(*owner))
                 }
                 ApiPermission::GetApiUserTokenSelf => {
                     expanded.push(p.clone());
-                    expanded.push(ApiPermission::GetApiUserToken(*user.id()))
+                    expanded.push(ApiPermission::GetApiUserToken(*owner))
                 }
                 ApiPermission::DeleteApiUserTokenSelf => {
                     expanded.push(p.clone());
-                    expanded.push(ApiPermission::DeleteApiUserToken(*user.id()))
+                    expanded.push(ApiPermission::DeleteApiUserToken(*owner))
                 }
                 ApiPermission::UpdateApiUserSelf => {
                     expanded.push(p.clone());
-                    expanded.push(ApiPermission::UpdateApiUser(*user.id()))
+                    expanded.push(ApiPermission::UpdateApiUser(*owner))
                 }
 
                 other => expanded.push(other.clone()),
@@ -213,40 +203,198 @@ pub enum ApiPermission {
     // User information permissions
     CreateApiUserToken(Uuid),
     CreateApiUserTokenSelf,
+    CreateApiUserTokenAssigned,
     CreateApiUserTokenAll,
     GetApiUser(Uuid),
     GetApiUserSelf,
+    GetApiUserAssigned,
     GetApiUserAll,
     GetApiUserToken(Uuid),
     GetApiUserTokenSelf,
+    GetApiUserTokenAssigned,
+    GetApiUserTokenAll,
     DeleteApiUserToken(Uuid),
     DeleteApiUserTokenSelf,
+    DeleteApiUserTokenAssigned,
     DeleteApiUserTokenAll,
     CreateApiUser,
     UpdateApiUser(Uuid),
     UpdateApiUserSelf,
+    UpdateApiUserAssigned,
     UpdateApiUserAll,
+
+    // Group permissions,
+    ListGroups,
+    CreateGroup,
+    UpdateGroup(Uuid),
+    AddToGroup(Uuid),
+    RemoveFromGroup(Uuid),
+    DeleteGroup(Uuid),
 
     // RFD access permissions
     GetRfd(i32),
     GetRfds(BTreeSet<i32>),
-    GetAllRfds,
-    GetAssignedRfds,
+    GetRfdsAssigned,
+    GetRfdsAll,
     GetDiscussion(i32),
     GetDiscussions(BTreeSet<i32>),
-    GetAllDiscussions,
-    GetAssignedDiscussions,
+    GetDiscussionsAssigned,
+    GetDiscussionsAll,
     SearchRfds,
 
     // OAuth client manage permissions
     CreateOAuthClient,
     GetOAuthClient(Uuid),
     GetOAuthClients(BTreeSet<Uuid>),
-    GetAssignedOAuthClients,
+    GetOAuthClientsAssigned,
+    GetOAuthClientsAll,
     UpdateOAuthClient(Uuid),
     UpdateOAuthClients(BTreeSet<Uuid>),
-    UpdateAssignedOAuthClients,
+    UpdateOAuthClientsAssigned,
+    UpdateOAuthClientsAll,
     DeleteOAuthClient(Uuid),
     DeleteOAuthClients(BTreeSet<Uuid>),
-    DeleteAssignedOAuthClients,
+    DeleteOAuthClientsAssigned,
+    DeleteOAuthClientsAll,
+}
+
+#[derive(Debug, Error)]
+pub enum ApiPermissionError {
+    #[error("Scope is invalid: {0}")]
+    InvalidScope(String),
+}
+
+impl ApiPermission {
+    pub fn as_scope(&self) -> &str {
+        match self {
+            ApiPermission::CreateApiUserToken(_) => "user:token:w",
+            ApiPermission::CreateApiUserTokenSelf => "user:token:w",
+            ApiPermission::CreateApiUserTokenAssigned => "user:token:w",
+            ApiPermission::CreateApiUserTokenAll => "user:token:w",
+            ApiPermission::GetApiUser(_) => "user:info:r",
+            ApiPermission::GetApiUserSelf => "user:info:r",
+            ApiPermission::GetApiUserAssigned => "user:info:r",
+            ApiPermission::GetApiUserAll => "user:info:r",
+            ApiPermission::GetApiUserToken(_) => "user:token:r",
+            ApiPermission::GetApiUserTokenSelf => "user:token:r",
+            ApiPermission::GetApiUserTokenAssigned => "user:token:r",
+            ApiPermission::GetApiUserTokenAll => "user:token:r",
+            ApiPermission::DeleteApiUserToken(_) => "user:token:w",
+            ApiPermission::DeleteApiUserTokenSelf => "user:token:w",
+            ApiPermission::DeleteApiUserTokenAssigned => "user:token:w",
+            ApiPermission::DeleteApiUserTokenAll => "user:token:w",
+            ApiPermission::CreateApiUser => "user:token:w",
+            ApiPermission::UpdateApiUser(_) => "user:token:w",
+            ApiPermission::UpdateApiUserSelf => "user:info:w",
+            ApiPermission::UpdateApiUserAssigned => "user:info:w",
+            ApiPermission::UpdateApiUserAll => "user:info:w",
+
+            ApiPermission::ListGroups => "group:r",
+            ApiPermission::CreateGroup => "group:w",
+            ApiPermission::UpdateGroup(_) => "group:w",
+            ApiPermission::AddToGroup(_) => "group:membership:w",
+            ApiPermission::RemoveFromGroup(_) => "group:membership:w",
+            ApiPermission::DeleteGroup(_) => "group:w",
+
+            ApiPermission::GetRfd(_) => "rfd:content:r",
+            ApiPermission::GetRfds(_) => "rfd:content:r",
+            ApiPermission::GetRfdsAll => "rfd:content:r",
+            ApiPermission::GetRfdsAssigned => "rfd:content:r",
+            ApiPermission::GetDiscussion(_) => "rfd:discussion:r",
+            ApiPermission::GetDiscussions(_) => "rfd:discussion:r",
+            ApiPermission::GetDiscussionsAll => "rfd:discussion:r",
+            ApiPermission::GetDiscussionsAssigned => "rfd:discussion:r",
+            ApiPermission::SearchRfds => "search",
+
+            ApiPermission::CreateOAuthClient => "oauth:client:w",
+            ApiPermission::GetOAuthClient(_) => "oauth:client:r",
+            ApiPermission::GetOAuthClients(_) => "oauth:client:r",
+            ApiPermission::GetOAuthClientsAssigned => "oauth:client:r",
+            ApiPermission::GetOAuthClientsAll => "oauth:client:r",
+            ApiPermission::UpdateOAuthClient(_) => "oauth:client:w",
+            ApiPermission::UpdateOAuthClients(_) => "oauth:client:w",
+            ApiPermission::UpdateOAuthClientsAssigned => "oauth:client:w",
+            ApiPermission::UpdateOAuthClientsAll => "oauth:client:w",
+            ApiPermission::DeleteOAuthClient(_) => "oauth:client:w",
+            ApiPermission::DeleteOAuthClients(_) => "oauth:client:w",
+            ApiPermission::DeleteOAuthClientsAssigned => "oauth:client:w",
+            ApiPermission::DeleteOAuthClientsAll => "oauth:client:w",
+        }
+    }
+
+    pub fn from_scope_arg(scope_arg: &str) -> Result<ApiPermissions, ApiPermissionError> {
+        Self::from_scope(scope_arg.split(' '))
+    }
+
+    pub fn from_scope<S>(
+        scope: impl Iterator<Item = S>,
+    ) -> Result<ApiPermissions, ApiPermissionError>
+    where
+        S: AsRef<str>,
+    {
+        let mut permissions = ApiPermissions::new();
+
+        for entry in scope {
+            match entry.as_ref() {
+                "user:info:r" => {
+                    permissions.insert(ApiPermission::GetApiUserSelf);
+                    permissions.insert(ApiPermission::GetApiUserAll);
+                }
+                "user:info:w" => {
+                    permissions.insert(ApiPermission::UpdateApiUserSelf);
+                    permissions.insert(ApiPermission::UpdateApiUserAssigned);
+                    permissions.insert(ApiPermission::UpdateApiUserAll);
+                }
+                "user:token:r" => {
+                    permissions.insert(ApiPermission::GetApiUserTokenSelf);
+                    permissions.insert(ApiPermission::GetApiUserTokenAssigned);
+                    permissions.insert(ApiPermission::GetApiUserTokenAll);
+                }
+                "user:token:w" => {
+                    permissions.insert(ApiPermission::CreateApiUserTokenSelf);
+                    permissions.insert(ApiPermission::CreateApiUserTokenAssigned);
+                    permissions.insert(ApiPermission::CreateApiUserTokenAll);
+                    permissions.insert(ApiPermission::DeleteApiUserTokenSelf);
+                    permissions.insert(ApiPermission::DeleteApiUserTokenAssigned);
+                    permissions.insert(ApiPermission::DeleteApiUserTokenAll);
+                }
+                "group:r" => {
+                    permissions.insert(ApiPermission::ListGroups);
+                }
+                "group:w" => {
+                    permissions.insert(ApiPermission::CreateGroup);
+
+                    // TODO: Need new permissions to support non-create actions
+                }
+                "group:membership:w" => {
+                    // TODO: Need new permissions to support this
+                }
+                "rfd:content:r" => {
+                    permissions.insert(ApiPermission::GetRfdsAssigned);
+                    permissions.insert(ApiPermission::GetRfdsAll);
+                }
+                "rfd:discussion:r" => {
+                    permissions.insert(ApiPermission::GetDiscussionsAssigned);
+                    permissions.insert(ApiPermission::GetDiscussionsAll);
+                }
+                "search" => {
+                    permissions.insert(ApiPermission::SearchRfds);
+                }
+                "oauth:client:r" => {
+                    permissions.insert(ApiPermission::GetOAuthClientsAssigned);
+                    permissions.insert(ApiPermission::GetOAuthClientsAll);
+                }
+                "oauth:client:w" => {
+                    permissions.insert(ApiPermission::CreateOAuthClient);
+                    permissions.insert(ApiPermission::UpdateOAuthClientsAssigned);
+                    permissions.insert(ApiPermission::UpdateOAuthClientsAll);
+                    permissions.insert(ApiPermission::DeleteOAuthClientsAssigned);
+                    permissions.insert(ApiPermission::DeleteOAuthClientsAll);
+                }
+                other => return Err(ApiPermissionError::InvalidScope(other.to_string())),
+            }
+        }
+
+        Ok(permissions)
+    }
 }

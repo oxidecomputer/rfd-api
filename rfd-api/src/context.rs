@@ -9,22 +9,26 @@ use oauth2::CsrfToken;
 use partial_struct::partial;
 use rfd_model::{
     permissions::{Caller, Permissions},
-    schema_ext::LoginAttemptState,
+    schema_ext::{LoginAttemptState, Visibility},
     storage::{
-        AccessTokenStore, ApiKeyFilter, ApiKeyStore, ApiUserFilter, ApiUserProviderFilter,
-        ApiUserProviderStore, ApiUserStore, JobStore, ListPagination, LoginAttemptFilter,
-        LoginAttemptStore, OAuthClientFilter, OAuthClientRedirectUriStore, OAuthClientSecretStore,
-        OAuthClientStore, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter,
-        RfdRevisionStore, RfdStore, StoreError,
+        AccessGroupFilter, AccessGroupStore, AccessTokenStore, ApiKeyFilter, ApiKeyStore,
+        ApiUserFilter, ApiUserProviderFilter, ApiUserProviderStore, ApiUserStore, JobStore,
+        ListPagination, LoginAttemptFilter, LoginAttemptStore, MapperFilter, MapperStore,
+        OAuthClientFilter, OAuthClientRedirectUriStore, OAuthClientSecretStore, OAuthClientStore,
+        RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionStore, RfdStore,
+        StoreError,
     },
-    AccessToken, ApiUser, ApiUserProvider, InvalidValueError, Job, LoginAttempt, NewAccessToken,
-    NewApiKey, NewApiUser, NewApiUserProvider, NewJob, NewLoginAttempt, NewOAuthClient,
-    NewOAuthClientRedirectUri, NewOAuthClientSecret, OAuthClient, OAuthClientRedirectUri,
-    OAuthClientSecret,
+    AccessGroup, AccessToken, ApiUser, ApiUserProvider, InvalidValueError, Job, LoginAttempt,
+    Mapper, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
+    NewLoginAttempt, NewMapper, NewOAuthClient, NewOAuthClientRedirectUri, NewOAuthClientSecret,
+    OAuthClient, OAuthClientRedirectUri, OAuthClientSecret,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::{BTreeSet, HashMap},
+    sync::Arc,
+};
 use tap::TapFallible;
 use thiserror::Error;
 use tracing::{info_span, instrument, Instrument};
@@ -35,15 +39,15 @@ use crate::{
         jwt::{Claims, JwtSigner, JwtSignerError},
         AuthError, AuthToken, Signer,
     },
-    config::{AsymmetricKey, JwtConfig, PermissionsConfig, SearchConfig},
-    email_validator::EmailValidator,
+    config::{AsymmetricKey, JwtConfig, SearchConfig},
     endpoints::login::{
         oauth::{OAuthProvider, OAuthProviderError, OAuthProviderFn, OAuthProviderName},
         LoginError, UserInfo,
     },
     error::{ApiError, AppError},
-    permissions::{ApiPermission, PermissionStorage},
-    util::response::{client_error, internal_error},
+    mapper::{MapperRule, Mapping},
+    permissions::{ApiPermission, ApiPermissionError, PermissionStorage},
+    util::response::{bad_request, client_error, internal_error},
     ApiCaller, ApiPermissions, User, UserToken,
 };
 
@@ -62,6 +66,8 @@ pub trait Storage:
     + OAuthClientStore
     + OAuthClientSecretStore
     + OAuthClientRedirectUriStore
+    + AccessGroupStore<ApiPermission>
+    + MapperStore
     + Send
     + Sync
     + 'static
@@ -80,6 +86,8 @@ impl<T> Storage for T where
         + OAuthClientStore
         + OAuthClientSecretStore
         + OAuthClientRedirectUriStore
+        + AccessGroupStore<ApiPermission>
+        + MapperStore
         + Send
         + Sync
         + 'static
@@ -87,19 +95,13 @@ impl<T> Storage for T where
 }
 
 pub struct ApiContext {
-    pub email_validator: Arc<dyn EmailValidator + Send + Sync>,
     pub https_client: Client<HttpsConnector<HttpConnector>, Body>,
     pub public_url: String,
     pub storage: Arc<dyn Storage>,
-    pub permissions: PermissionsContext,
     pub jwt: JwtContext,
     pub secrets: SecretContext,
     pub oauth_providers: HashMap<OAuthProviderName, Box<dyn OAuthProviderFn>>,
     pub search: SearchContext,
-}
-
-pub struct PermissionsContext {
-    pub default: ApiPermissions,
 }
 
 pub struct JwtContext {
@@ -131,6 +133,8 @@ pub enum CallerError {
     FailedToAuthenticate,
     #[error("Supplied API key is invalid")]
     InvalidKey,
+    #[error("Invalid scope: {0}")]
+    Scope(#[from] ApiPermissionError),
     #[error("Inner storage failure: {0}")]
     Storage(#[from] StoreError),
 }
@@ -146,6 +150,7 @@ impl From<CallerError> for HttpError {
             CallerError::InvalidKey => {
                 client_error(StatusCode::UNAUTHORIZED, "Failed to authenticate")
             }
+            CallerError::Scope(_) => bad_request("Invalid scope"),
             CallerError::Storage(_) => internal_error("Internal storage failed"),
         }
     }
@@ -176,6 +181,7 @@ pub struct FullRfd {
     pub committed_at: DateTime<Utc>,
     #[partial(ListRfd(skip))]
     pub pdfs: Vec<FullRfdPdfEntry>,
+    pub visibility: Visibility,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
@@ -186,10 +192,8 @@ pub struct FullRfdPdfEntry {
 
 impl ApiContext {
     pub async fn new(
-        email_validator: Arc<dyn EmailValidator + Send + Sync>,
         public_url: String,
         storage: Arc<dyn Storage>,
-        permissions: PermissionsConfig,
         jwt: JwtConfig,
         keys: Vec<AsymmetricKey>,
         search: SearchConfig,
@@ -201,13 +205,9 @@ impl ApiContext {
         }
 
         Ok(Self {
-            email_validator,
             https_client: hyper::Client::builder().build(HttpsConnector::new()),
             public_url,
             storage,
-            permissions: PermissionsContext {
-                default: permissions.default.into(),
-            },
 
             jwt: JwtContext {
                 default_expiration: jwt.default_expiration,
@@ -255,7 +255,37 @@ impl ApiContext {
 
     #[instrument(skip(self, auth))]
     pub async fn get_caller(&self, auth: &AuthToken) -> Result<ApiCaller, CallerError> {
-        let (api_user_id, permissions) = match auth {
+        let (api_user_id, permissions) = self.get_base_permissions(&auth).await?;
+
+        // The permissions for the caller is the intersection of the user's permissions and the tokens permissions
+        if let Some(user) = self.get_api_user(&api_user_id).await? {
+            let user_permissions = self.get_user_permissions(&user).await?;
+            let token_permissions = permissions.expand(&user.id, Some(&user_permissions));
+
+            let combined_permissions = token_permissions.intersect(&user_permissions);
+
+            tracing::info!(token = ?token_permissions, user = ?user_permissions, combined = ?combined_permissions, "Computed caller permissions");
+
+            let caller = Caller {
+                id: api_user_id,
+                permissions: combined_permissions,
+                // user,
+            };
+
+            tracing::info!(?caller, "Resolved caller");
+
+            Ok(caller)
+        } else {
+            tracing::error!("User for verified token does not exist");
+            Err(CallerError::FailedToAuthenticate)
+        }
+    }
+
+    async fn get_base_permissions(
+        &self,
+        auth: &AuthToken,
+    ) -> Result<(Uuid, Permissions<ApiPermission>), CallerError> {
+        Ok(match auth {
             AuthToken::ApiKey(api_key) => {
                 async {
                     tracing::debug!("Attempt to authenticate");
@@ -300,25 +330,54 @@ impl ApiContext {
             }
             AuthToken::Jwt(jwt) => {
                 // AuthnToken::Jwt can only be generated from a verified JWT
-                Ok((jwt.claims.aud, jwt.claims.prm.clone()))
+                let permissions = ApiPermission::from_scope(jwt.claims.scp.iter())?;
+                Ok((jwt.claims.aud, permissions))
             }
-        }?;
+        }?)
+    }
 
-        // The permissions for the caller is the intersection of the user's permissions and the tokens permissions
-        if let Some(user) = self.get_api_user(&api_user_id).await? {
-            let caller = Caller {
-                id: api_user_id,
-                permissions: permissions.expand(&user).intersect(&user.permissions),
-                user,
-            };
+    #[instrument(skip(self), fields(user_id = ?user.id, groups = ?user.groups))]
+    async fn get_user_permissions(
+        &self,
+        user: &ApiUser<ApiPermission>,
+    ) -> Result<ApiPermissions, StoreError> {
+        let mut group_permissions = self.get_user_group_permissions(&user).await?;
+        let mut permissions = user.permissions.clone();
+        permissions.append(&mut group_permissions);
 
-            tracing::info!(?caller, "Resolved caller");
+        Ok(permissions)
+    }
 
-            Ok(caller)
-        } else {
-            tracing::error!("User for verified token does not exist");
-            Err(CallerError::FailedToAuthenticate)
-        }
+    async fn get_user_group_permissions(
+        &self,
+        user: &ApiUser<ApiPermission>,
+    ) -> Result<Permissions<ApiPermission>, StoreError> {
+        tracing::debug!("Expanding groups into permissions");
+
+        let groups = AccessGroupStore::list(
+            &*self.storage,
+            AccessGroupFilter {
+                id: Some(user.groups.iter().copied().collect()),
+                ..Default::default()
+            },
+            &ListPagination::default().limit(UNLIMITED),
+        )
+        .await?;
+
+        tracing::debug!(?groups, "Found groups to map to permissions");
+
+        let permissions = groups
+            .into_iter()
+            .fold(ApiPermissions::new(), |mut aggregate, group| {
+                let mut expanded = group.permissions.expand(&user.id, Some(&user.permissions));
+
+                tracing::trace!(group_id = ?group.id, group_name = ?group.name, permissions = ?expanded, "Transformed group into permission set");
+                aggregate.append(&mut expanded);
+
+                aggregate
+            });
+
+        Ok(permissions)
     }
 
     pub async fn is_empty(&self) -> Result<bool, StoreError> {
@@ -364,7 +423,7 @@ impl ApiContext {
     ) -> Result<Vec<ListRfd>, StoreError> {
         let mut filter = filter.unwrap_or_default();
 
-        if !caller.can(&ApiPermission::GetAllRfds) {
+        if !caller.can(&ApiPermission::GetRfdsAll) {
             let numbers = caller
                 .permissions
                 .iter()
@@ -410,6 +469,7 @@ impl ApiContext {
                 sha: revision.sha,
                 commit: revision.commit_sha,
                 committed_at: revision.committed_at,
+                visibility: rfd.visibility,
             })
             .collect::<Vec<_>>();
 
@@ -467,6 +527,7 @@ impl ApiContext {
                             link: pdf.link,
                         })
                         .collect(),
+                    visibility: rfd.visibility,
                 }))
             } else {
                 Ok(None)
@@ -497,11 +558,19 @@ impl ApiContext {
             .list_api_user_provider(filter, &ListPagination::latest())
             .await?;
 
+        let (mapped_permissions, mapped_groups) = self.get_mapped_fields(&info).await?;
+
         match api_user_providers.len() {
             0 => {
-                tracing::info!("Did not find any existing users. Registering a new user.");
+                tracing::info!(
+                    ?mapped_permissions,
+                    ?mapped_groups,
+                    "Did not find any existing users. Registering a new user."
+                );
 
-                let user = self.ensure_api_user(Uuid::new_v4()).await?;
+                let user = self
+                    .ensure_api_user(Uuid::new_v4(), mapped_permissions, mapped_groups)
+                    .await?;
                 self.update_api_user_provider(NewApiUserProvider {
                     id: Uuid::new_v4(),
                     api_user_id: user.id,
@@ -518,7 +587,9 @@ impl ApiContext {
 
                 // This branch ensures that there is a 0th indexed item
                 let provider = api_user_providers.into_iter().nth(0).unwrap();
-                Ok(self.ensure_api_user(provider.api_user_id).await?)
+                Ok(self
+                    .ensure_api_user(provider.api_user_id, mapped_permissions, mapped_groups)
+                    .await?)
             }
             _ => {
                 // If we found more than one provider, then we have encountered an inconsistency in
@@ -536,13 +607,75 @@ impl ApiContext {
         }
     }
 
-    async fn ensure_api_user(&self, api_user_id: Uuid) -> Result<User, ApiError> {
+    async fn get_mapped_fields(
+        &self,
+        info: &UserInfo,
+    ) -> Result<(ApiPermissions, BTreeSet<Uuid>), StoreError> {
+        let mut mapped_permissions = ApiPermissions::new();
+        let mut mapped_groups = BTreeSet::new();
+
+        // We optimistically load mappers here. We do not want to take a lock on the mappers and
+        // instead handle mappers that become depleted before we can evaluate them at evaluation
+        // time.
+        for mapping in self.get_mappers().await? {
+            let (permissions, groups) = (
+                mapping.rule.permissions_for(&self, &info).await?,
+                mapping.rule.groups_for(&self, &info).await?,
+            );
+
+            // If a rule is set to apply a permission or group to a user, then the rule needs to be
+            // checked for usage. If it does not have an activation limit then nothing is needed.
+            // If it does have a limit then we need to attempt to consume an activation. If the
+            // consumption works then we add the permissions. If they fail then we do not, but we
+            // do not fail the entire mapping process
+            let apply = if !permissions.is_empty() || !groups.is_empty() {
+                if mapping.max_activations.is_some() {
+                    match self.consume_mapping_activation(&mapping).await {
+                        Ok(_) => true,
+                        Err(err) => {
+                            // TODO: Inspect the error. We expect to see a conflict error, and
+                            // should is expected to be seen. Other errors are problematic.
+                            tracing::warn!(?err, "Login may have attempted to use depleted mapper. This may be ok if it is an isolated occurrence, but should occur repeatedly.");
+                            false
+                        }
+                    }
+                } else {
+                    true
+                }
+            } else {
+                false
+            };
+
+            if apply {
+                mapped_permissions.append(&mut mapping.rule.permissions_for(&self, &info).await?);
+                mapped_groups.append(&mut mapping.rule.groups_for(&self, &info).await?);
+            }
+        }
+
+        Ok((mapped_permissions, mapped_groups))
+    }
+
+    #[instrument(skip(self), err(Debug))]
+    async fn ensure_api_user(
+        &self,
+        api_user_id: Uuid,
+        mut mapped_permissions: ApiPermissions,
+        mut mapped_groups: BTreeSet<Uuid>,
+    ) -> Result<User, ApiError> {
         match self.get_api_user(&api_user_id).await? {
-            Some(api_user) => Ok(api_user),
+            Some(api_user) => {
+                // Ensure that the existing user has "at least" the mapped permissions
+                let mut update: NewApiUser<ApiPermission> = api_user.into();
+                update.permissions.append(&mut mapped_permissions);
+                update.groups.append(&mut mapped_groups);
+
+                Ok(ApiUserStore::upsert(&*self.storage, update).await?)
+            }
             None => self
                 .update_api_user(NewApiUser {
                     id: api_user_id,
-                    permissions: self.permissions.default.clone(),
+                    permissions: mapped_permissions,
+                    groups: mapped_groups,
                 })
                 .await
                 .map_err(ApiError::Storage)
@@ -558,7 +691,7 @@ impl ApiContext {
     pub async fn register_access_token(
         &self,
         api_user: &ApiUser<ApiPermission>,
-        requested_permissions: &Permissions<ApiPermission>,
+        scope: Vec<String>,
         expires_at: Option<DateTime<Utc>>,
     ) -> Result<RegisteredAccessToken, ApiError> {
         let expires_at = expires_at
@@ -568,14 +701,10 @@ impl ApiContext {
             return Err(ApiError::Login(LoginError::ExcessTokenExpiration));
         }
 
-        // Take the intersection of the api user permissions and the requested permissions. Tokens
-        // should never have permissions that are wider than the user's permissions
-        let permissions = requested_permissions.intersect(&api_user.permissions);
-
         // Ensure that the token is within the configured limits
         let claims = Claims {
             aud: api_user.id,
-            prm: permissions,
+            scp: scope,
             exp: expires_at.timestamp(),
             nbf: Utc::now().timestamp(),
             jti: Uuid::new_v4(),
@@ -604,7 +733,7 @@ impl ApiContext {
         let user = ApiUserStore::get(&*self.storage, id, false)
             .await?
             .map(|mut user| {
-                user.permissions = user.permissions.expand(&user);
+                user.permissions = user.permissions.expand(&user.id, None);
                 user
             });
 
@@ -619,26 +748,32 @@ impl ApiContext {
         ApiUserStore::list(&*self.storage, filter, pagination).await
     }
 
+    #[instrument(skip(self))]
     pub async fn update_api_user(
         &self,
         mut api_user: NewApiUser<ApiPermission>,
     ) -> Result<User, StoreError> {
-        api_user.permissions = api_user.permissions.contract(&api_user);
+        api_user.permissions = api_user.permissions.contract(&api_user.id);
         ApiUserStore::upsert(&*self.storage, api_user).await
     }
 
     pub async fn add_permissions_to_user(
         &self,
-        api_user: &ApiUser<ApiPermission>,
+        user_id: &Uuid,
         new_permissions: Permissions<ApiPermission>,
-    ) -> Result<User, StoreError> {
-        let mut user_update: NewApiUser<ApiPermission> = api_user.clone().into();
-        for permission in new_permissions.into_iter() {
-            tracing::info!(id = ?api_user.id, ?permission, "Adding permission to user");
-            user_update.permissions.insert(permission);
-        }
+    ) -> Result<Option<User>, StoreError> {
+        Ok(match self.get_api_user(user_id).await? {
+            Some(user) => {
+                let mut user_update: NewApiUser<ApiPermission> = user.into();
+                for permission in new_permissions.into_iter() {
+                    tracing::info!(id = ?user_id, ?permission, "Adding permission to user");
+                    user_update.permissions.insert(permission);
+                }
 
-        self.update_api_user(user_update).await
+                Some(self.update_api_user(user_update).await?)
+            }
+            None => None,
+        })
     }
 
     pub async fn remove_permissions_from_user(
@@ -718,6 +853,8 @@ impl ApiContext {
         AccessTokenStore::upsert(&*self.storage, access_token).await
     }
 
+    // Login Attempt Operations
+
     pub async fn create_login_attempt(
         &self,
         attempt: NewLoginAttempt,
@@ -779,6 +916,8 @@ impl ApiContext {
         attempt.provider_error = provider_error.map(|s| s.to_string());
         LoginAttemptStore::upsert(&*self.storage, attempt).await
     }
+
+    // OAuth Client Operations
 
     pub async fn create_oauth_client(&self) -> Result<OAuthClient, StoreError> {
         OAuthClientStore::upsert(&*self.storage, NewOAuthClient { id: Uuid::new_v4() }).await
@@ -846,32 +985,266 @@ impl ApiContext {
     ) -> Result<Option<OAuthClientRedirectUri>, StoreError> {
         OAuthClientRedirectUriStore::delete(&*self.storage, id).await
     }
+
+    // Group Operations
+    pub async fn get_groups(&self) -> Result<Vec<AccessGroup<ApiPermission>>, StoreError> {
+        Ok(AccessGroupStore::list(
+            &*self.storage,
+            AccessGroupFilter {
+                id: None,
+                name: None,
+                deleted: false,
+            },
+            &ListPagination::default().limit(UNLIMITED),
+        )
+        .await?)
+    }
+
+    pub async fn create_group(
+        &self,
+        group: NewAccessGroup<ApiPermission>,
+    ) -> Result<AccessGroup<ApiPermission>, StoreError> {
+        AccessGroupStore::upsert(&*self.storage, &group).await
+    }
+
+    pub async fn update_group(
+        &self,
+        group: NewAccessGroup<ApiPermission>,
+    ) -> Result<AccessGroup<ApiPermission>, StoreError> {
+        AccessGroupStore::upsert(&*self.storage, &group).await
+    }
+
+    pub async fn delete_group(
+        &self,
+        group_id: &Uuid,
+    ) -> Result<Option<AccessGroup<ApiPermission>>, StoreError> {
+        AccessGroupStore::delete(&*self.storage, &group_id).await
+    }
+
+    pub async fn add_api_user_to_group(
+        &self,
+        api_user_id: &Uuid,
+        group_id: &Uuid,
+    ) -> Result<Option<ApiUser<ApiPermission>>, StoreError> {
+        // TODO: This needs to be wrapped in a transaction. That requires reworking the way the
+        // store traits are handled. Ideally we could have an API that still abstracts away the
+        // underlying connection management while allowing for transactions. Possibly something
+        // that takes a closure and passes in a connection that implements all of the expected
+        // data store traits
+        let user = ApiUserStore::get(&*self.storage, api_user_id, false).await?;
+
+        Ok(if let Some(user) = user {
+            let mut update: NewApiUser<ApiPermission> = user.into();
+            update.groups.insert(*group_id);
+
+            Some(ApiUserStore::upsert(&*self.storage, update).await?)
+        } else {
+            None
+        })
+    }
+
+    pub async fn remove_api_user_from_group(
+        &self,
+        api_user_id: &Uuid,
+        group_id: &Uuid,
+    ) -> Result<Option<ApiUser<ApiPermission>>, StoreError> {
+        // TODO: This needs to be wrapped in a transaction. That requires reworking the way the
+        // store traits are handled. Ideally we could have an API that still abstracts away the
+        // underlying connection management while allowing for transactions. Possibly something
+        // that takes a closure and passes in a connection that implements all of the expected
+        // data store traits
+        let user = ApiUserStore::get(&*self.storage, api_user_id, false).await?;
+
+        Ok(if let Some(user) = user {
+            let mut update: NewApiUser<ApiPermission> = user.into();
+            update.groups.retain(|id| id != group_id);
+
+            Some(ApiUserStore::upsert(&*self.storage, update).await?)
+        } else {
+            None
+        })
+    }
+
+    // Mapper Operations
+
+    pub async fn get_mappers(&self) -> Result<Vec<Mapping>, StoreError> {
+        let mappers = MapperStore::list(
+            &*self.storage,
+            MapperFilter::default(),
+            &ListPagination::default().limit(UNLIMITED),
+        )
+        .await?
+        .into_iter()
+        .filter_map(|mapper| mapper.try_into().ok())
+        .collect::<Vec<_>>();
+
+        tracing::trace!(?mappers, "Fetched list of mappers to test");
+
+        Ok(mappers)
+    }
+
+    pub async fn add_mapper(&self, new_mapper: &NewMapper) -> Result<Mapper, StoreError> {
+        Ok(MapperStore::upsert(&*self.storage, new_mapper).await?)
+    }
+
+    async fn consume_mapping_activation(&self, mapping: &Mapping) -> Result<(), StoreError> {
+        // Activations are only incremented if the rule actually has a max activation value
+        let activations = mapping
+            .max_activations
+            .map(|_| mapping.activations.unwrap_or(0) + 1);
+
+        Ok(MapperStore::upsert(
+            &*self.storage,
+            &NewMapper {
+                id: mapping.id,
+                name: mapping.name.clone(),
+                // If a rule fails to serialize, then something critical has gone wrong. Rules should
+                // never be modified after they are created, and rules must be persisted before they
+                // can be used for an activation. So if a rule fails to serialize, then the stored rule
+                // has become corrupted or something in the application has manipulated the rule.
+                rule: serde_json::to_value(&mapping.rule)
+                    .expect("Store rules must be able to be re-serialized"),
+                activations: activations,
+                max_activations: mapping.max_activations,
+            },
+        )
+        .await
+        .map(|_| ())?)
+    }
 }
 
 #[cfg(test)]
-pub(crate) mod tests {
+mod tests {
+    use chrono::{Duration, Utc};
+    use mockall::predicate::eq;
+    use rfd_model::{
+        storage::{AccessGroupFilter, ListPagination, MockAccessGroupStore, MockApiUserStore},
+        AccessGroup, ApiUser,
+    };
+    use std::{collections::BTreeSet, ops::Add, sync::Arc};
+    use uuid::Uuid;
+
+    use crate::{
+        authn::{
+            jwt::{Claims, Jwt},
+            AuthToken,
+        },
+        context::UNLIMITED,
+        permissions::ApiPermission,
+        ApiPermissions,
+    };
+
+    use super::{
+        test_mocks::{mock_context, MockStorage},
+        ApiContext,
+    };
+
+    async fn create_token(ctx: &ApiContext, user_id: Uuid, scope: Vec<String>) -> AuthToken {
+        let user_token = ctx.jwt.signers[0]
+            .sign(&Claims {
+                aud: user_id,
+                scp: scope,
+                exp: Utc::now().add(Duration::seconds(60)).timestamp(),
+                nbf: 0,
+                jti: Uuid::new_v4(),
+            })
+            .await
+            .unwrap();
+
+        let jwt = AuthToken::Jwt(Jwt::new(&ctx, &user_token).await.unwrap());
+
+        jwt
+    }
+
+    #[tokio::test]
+    async fn test_jwt_permissions() {
+        let mut storage = MockStorage::new();
+
+        let group_id = Uuid::new_v4();
+        let group_permissions: ApiPermissions = vec![ApiPermission::GetRfd(10)].into();
+        let group = AccessGroup {
+            id: group_id,
+            name: "TestGroup".to_string(),
+            permissions: group_permissions.clone(),
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+            deleted_at: None,
+        };
+        let pagination = ListPagination::default().limit(UNLIMITED);
+        let mut group_store = MockAccessGroupStore::new();
+        group_store
+            .expect_list()
+            .with(
+                eq(AccessGroupFilter {
+                    id: Some(vec![group_id]),
+                    ..Default::default()
+                }),
+                eq(pagination),
+            )
+            .returning(move |_, _| Ok(vec![group.clone()]));
+
+        let user_id = Uuid::new_v4();
+        let user_permissions: ApiPermissions = vec![ApiPermission::GetRfd(5)].into();
+        let mut groups = BTreeSet::new();
+        groups.insert(group_id);
+        let user = ApiUser {
+            id: user_id,
+            permissions: user_permissions.clone(),
+            groups,
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+            deleted_at: None,
+        };
+
+        let mut user_store = MockApiUserStore::new();
+        user_store
+            .expect_get()
+            .with(eq(user.id), eq(false))
+            .returning(move |_, _| Ok(Some(user.clone())));
+
+        storage.access_group_store = Some(Arc::new(group_store));
+        storage.api_user_store = Some(Arc::new(user_store));
+        let ctx = mock_context(storage).await;
+
+        let token_with_no_scope = create_token(&ctx, user_id, vec![]).await;
+        let permissions = ctx.get_caller(&token_with_no_scope).await.unwrap();
+        assert_eq!(ApiPermissions::new(), permissions.permissions);
+
+        let token_with_rfd_read_scope =
+            create_token(&ctx, user_id, vec!["rfd:content:r".to_string()]).await;
+        let permissions = ctx.get_caller(&token_with_rfd_read_scope).await.unwrap();
+        assert_eq!(
+            ApiPermissions::from(vec![ApiPermission::GetRfd(5), ApiPermission::GetRfd(10)]),
+            permissions.permissions
+        );
+    }
+}
+
+#[cfg(test)]
+pub(crate) mod test_mocks {
     use async_trait::async_trait;
     use rfd_model::{
         permissions::Caller,
         storage::{
-            AccessTokenStore, ApiKeyStore, ApiUserProviderStore, ApiUserStore, JobStore,
-            ListPagination, LoginAttemptStore, MockAccessTokenStore, MockApiKeyStore,
-            MockApiUserProviderStore, MockApiUserStore, MockJobStore, MockLoginAttemptStore,
-            MockOAuthClientRedirectUriStore, MockOAuthClientSecretStore, MockOAuthClientStore,
-            MockRfdPdfStore, MockRfdRevisionStore, MockRfdStore, OAuthClientRedirectUriStore,
+            AccessGroupStore, AccessTokenStore, ApiKeyStore, ApiUserProviderStore, ApiUserStore,
+            JobStore, ListPagination, LoginAttemptStore, MapperStore, MockAccessGroupStore,
+            MockAccessTokenStore, MockApiKeyStore, MockApiUserProviderStore, MockApiUserStore,
+            MockJobStore, MockLoginAttemptStore, MockMapperStore, MockOAuthClientRedirectUriStore,
+            MockOAuthClientSecretStore, MockOAuthClientStore, MockRfdPdfStore,
+            MockRfdRevisionStore, MockRfdStore, OAuthClientRedirectUriStore,
             OAuthClientSecretStore, OAuthClientStore, RfdPdfStore, RfdRevisionStore, RfdStore,
         },
-        ApiKey, ApiUserProvider, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
-        NewLoginAttempt, NewRfd, NewRfdPdf, NewRfdRevision,
+        ApiKey, ApiUserProvider, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser,
+        NewApiUserProvider, NewJob, NewLoginAttempt, NewMapper, NewRfd, NewRfdPdf, NewRfdRevision,
     };
 
     use std::sync::Arc;
 
     use crate::{
-        config::{JwtConfig, PermissionsConfig, SearchConfig},
+        config::{JwtConfig, SearchConfig},
         endpoints::login::oauth::{google::GoogleOAuthProvider, OAuthProviderName},
         permissions::ApiPermission,
-        util::tests::{mock_key, AnyEmailValidator},
+        util::tests::mock_key,
     };
 
     use super::ApiContext;
@@ -879,10 +1252,8 @@ pub(crate) mod tests {
     // Construct a mock context that can be used in tests
     pub async fn mock_context(storage: MockStorage) -> ApiContext {
         let mut ctx = ApiContext::new(
-            Arc::new(AnyEmailValidator),
             "".to_string(),
             Arc::new(storage),
-            PermissionsConfig::default(),
             JwtConfig::default(),
             vec![
                 // We are in the context of a test and do not care about the key leaking
@@ -923,6 +1294,8 @@ pub(crate) mod tests {
         pub oauth_client_store: Option<Arc<MockOAuthClientStore>>,
         pub oauth_client_secret_store: Option<Arc<MockOAuthClientSecretStore>>,
         pub oauth_client_redirect_uri_store: Option<Arc<MockOAuthClientRedirectUriStore>>,
+        pub access_group_store: Option<Arc<MockAccessGroupStore<ApiPermission>>>,
+        pub mapper_store: Option<Arc<MockMapperStore>>,
     }
 
     impl MockStorage {
@@ -941,6 +1314,8 @@ pub(crate) mod tests {
                 oauth_client_store: None,
                 oauth_client_secret_store: None,
                 oauth_client_redirect_uri_store: None,
+                access_group_store: None,
+                mapper_store: None,
             }
         }
     }
@@ -1411,6 +1786,96 @@ pub(crate) mod tests {
                 .unwrap()
                 .delete(id)
                 .await
+        }
+    }
+
+    #[async_trait]
+    impl AccessGroupStore<ApiPermission> for MockStorage {
+        async fn get(
+            &self,
+            id: &uuid::Uuid,
+            deleted: bool,
+        ) -> Result<Option<rfd_model::AccessGroup<ApiPermission>>, rfd_model::storage::StoreError>
+        {
+            self.access_group_store
+                .as_ref()
+                .unwrap()
+                .get(id, deleted)
+                .await
+        }
+
+        async fn list(
+            &self,
+            filter: rfd_model::storage::AccessGroupFilter,
+            pagination: &ListPagination,
+        ) -> Result<Vec<rfd_model::AccessGroup<ApiPermission>>, rfd_model::storage::StoreError>
+        {
+            self.access_group_store
+                .as_ref()
+                .unwrap()
+                .list(filter, pagination)
+                .await
+        }
+
+        async fn upsert(
+            &self,
+            group: &NewAccessGroup<ApiPermission>,
+        ) -> Result<rfd_model::AccessGroup<ApiPermission>, rfd_model::storage::StoreError> {
+            self.access_group_store
+                .as_ref()
+                .unwrap()
+                .upsert(group)
+                .await
+        }
+
+        async fn delete(
+            &self,
+            id: &uuid::Uuid,
+        ) -> Result<Option<rfd_model::AccessGroup<ApiPermission>>, rfd_model::storage::StoreError>
+        {
+            self.access_group_store.as_ref().unwrap().delete(id).await
+        }
+    }
+
+    #[async_trait]
+    impl MapperStore for MockStorage {
+        async fn get(
+            &self,
+            id: &uuid::Uuid,
+            used: bool,
+            deleted: bool,
+        ) -> Result<Option<rfd_model::Mapper>, rfd_model::storage::StoreError> {
+            self.mapper_store
+                .as_ref()
+                .unwrap()
+                .get(id, used, deleted)
+                .await
+        }
+
+        async fn list(
+            &self,
+            filter: rfd_model::storage::MapperFilter,
+            pagination: &ListPagination,
+        ) -> Result<Vec<rfd_model::Mapper>, rfd_model::storage::StoreError> {
+            self.mapper_store
+                .as_ref()
+                .unwrap()
+                .list(filter, pagination)
+                .await
+        }
+
+        async fn upsert(
+            &self,
+            new_mapper: &NewMapper,
+        ) -> Result<rfd_model::Mapper, rfd_model::storage::StoreError> {
+            self.mapper_store.as_ref().unwrap().upsert(new_mapper).await
+        }
+
+        async fn delete(
+            &self,
+            id: &uuid::Uuid,
+        ) -> Result<Option<rfd_model::Mapper>, rfd_model::storage::StoreError> {
+            self.mapper_store.as_ref().unwrap().delete(id).await
         }
     }
 }

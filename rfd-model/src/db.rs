@@ -1,15 +1,17 @@
 use chrono::{DateTime, Utc};
 use diesel::{Insertable, Queryable};
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use uuid::Uuid;
 
 use crate::{
     permissions::Permissions,
     schema::{
-        api_key, api_user, api_user_access_token, api_user_provider, job, login_attempt,
-        oauth_client, oauth_client_redirect_uri, oauth_client_secret, rfd, rfd_pdf, rfd_revision,
+        access_groups, api_key, api_user, api_user_access_token, api_user_provider, job,
+        login_attempt, mapper, oauth_client, oauth_client_redirect_uri, oauth_client_secret, rfd,
+        rfd_pdf, rfd_revision,
     },
-    schema_ext::{ContentFormat, LoginAttemptState, PdfSource},
+    schema_ext::{ContentFormat, LoginAttemptState, PdfSource, Visibility},
 };
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
@@ -18,11 +20,10 @@ pub struct RfdModel {
     pub id: Uuid,
     pub rfd_number: i32,
     pub link: Option<String>,
-    // pub relevant_components: Vec<Option<String>>,
-    // pub milestones: Vec<Option<String>>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
+    pub visibility: Visibility,
 }
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
@@ -79,6 +80,7 @@ pub struct ApiUserModel<T: Ord> {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
+    pub groups: Vec<Option<Uuid>>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
@@ -136,6 +138,7 @@ pub struct LoginAttemptModel {
     pub provider_error: Option<String>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+    pub scope: String,
 }
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
@@ -162,6 +165,30 @@ pub struct OAuthClientRedirectUriModel {
     pub id: Uuid,
     pub oauth_client_id: Uuid,
     pub redirect_uri: String,
+    pub created_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[diesel(table_name = access_groups)]
+pub struct AccessGroupModel<T: Ord> {
+    pub id: Uuid,
+    pub name: String,
+    pub permissions: Permissions<T>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[diesel(table_name = mapper)]
+pub struct MapperModel {
+    pub id: Uuid,
+    pub name: String,
+    pub rule: Value,
+    pub activations: Option<i32>,
+    pub max_activations: Option<i32>,
+    pub depleted_at: Option<DateTime<Utc>>,
     pub created_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
 }

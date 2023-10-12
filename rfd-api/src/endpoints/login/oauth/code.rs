@@ -8,8 +8,7 @@ use http::{
     header::{LOCATION, SET_COOKIE},
     HeaderValue, StatusCode,
 };
-use hyper::{client::HttpConnector, Body, Client, Response};
-use hyper_tls::HttpsConnector;
+use hyper::{Body, Response};
 use oauth2::{
     reqwest::async_http_client, AuthorizationCode, CsrfToken, PkceCodeChallenge, PkceCodeVerifier,
     Scope, TokenResponse,
@@ -18,8 +17,7 @@ use rfd_model::{schema_ext::LoginAttemptState, LoginAttempt, NewLoginAttempt, OA
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::fmt::Debug;
-use std::ops::Add;
+use std::{fmt::Debug, ops::Add};
 use tap::TapFallible;
 use tracing::instrument;
 use uuid::Uuid;
@@ -33,6 +31,7 @@ use crate::{
         LoginError, UserInfo,
     },
     error::ApiError,
+    permissions::ApiPermission,
     util::{
         request::RequestCookies,
         response::{internal_error, to_internal_error, unauthorized},
@@ -40,6 +39,7 @@ use crate::{
 };
 
 static LOGIN_ATTEMPT_COOKIE: &str = "__rfd_login";
+static DEFAULT_SCOPE: &str = "user:info:r";
 
 #[derive(Debug, Deserialize, JsonSchema, Serialize, PartialEq, Eq)]
 struct OAuthError {
@@ -89,6 +89,7 @@ pub struct OAuthAuthzCodeQuery {
     pub redirect_uri: String,
     pub response_type: String,
     pub state: String,
+    pub scope: Option<String>,
 }
 
 #[derive(Debug, Deserialize, JsonSchema, Serialize)]
@@ -164,17 +165,31 @@ pub async fn authz_code_redirect(
 
     tracing::debug!(provider = ?provider.name(), "Acquired OAuth provider for authz code login");
 
+    // Check that the passed in scopes are valid. The scopes are not currently restricted by client
+    let scope = query.scope.unwrap_or_else(|| DEFAULT_SCOPE.to_string());
+    let scope_error = ApiPermission::from_scope_arg(&scope)
+        .err()
+        .map(|_| "invalid_scope".to_string());
+
     // Construct a new login attempt with the minimum required values
     let mut attempt = NewLoginAttempt::new(
         query.client_id,
         query.redirect_uri,
         provider.name().to_string(),
+        scope,
     )
     .map_err(|err| {
         tracing::error!(?err, "Attempted to construct invalid login attempt");
         internal_error("Attempted to construct invalid login attempt".to_string())
     })?;
 
+    // Assign any scope errors that arose
+    attempt.error = scope_error;
+
+    // Add in the user defined state and redirect uri
+    attempt.state = Some(query.state);
+
+    // If the remote provider supports pkce, set up a challenge
     let pkce_challenge = if provider.supports_pkce() {
         let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
         attempt.provider_pkce_verifier = Some(pkce_verifier.secret().to_string());
@@ -182,9 +197,6 @@ pub async fn authz_code_redirect(
     } else {
         None
     };
-
-    // Add in the user defined state and redirect uri
-    attempt.state = Some(query.state);
 
     // Store the generated attempt
     let attempt = ctx
@@ -467,7 +479,7 @@ pub async fn authz_code_exchange(
 
     // Now that the attempt has been confirmed, use it to fetch user information form the remote
     // provider
-    let info = fetch_user_info(&ctx.https_client, &*provider, &attempt).await?;
+    let info = fetch_user_info(&*provider, &attempt).await?;
 
     tracing::debug!("Retrieved user information from remote provider");
 
@@ -476,12 +488,18 @@ pub async fn authz_code_exchange(
 
     tracing::info!(api_user_id = ?api_user.id, "Retrieved api user to generate access token for");
 
+    let scope = attempt
+        .scope
+        .split(' ')
+        .map(|s| s.to_string())
+        .collect::<Vec<_>>();
+
     // Generate a new access token for the user with an expiration matching the value given to us
     // by the remote service
     let token = ctx
         .register_access_token(
             &api_user,
-            &api_user.permissions,
+            scope,
             Some(Utc::now().add(Duration::seconds(7 * 24 * 60 * 60))),
         )
         .await?;
@@ -602,7 +620,6 @@ fn verify_login_attempt(
 }
 
 async fn fetch_user_info(
-    https: &Client<HttpsConnector<HttpConnector>, Body>,
     provider: &dyn OAuthProvider,
     attempt: &LoginAttempt,
 ) -> Result<UserInfo, HttpError> {
@@ -633,7 +650,7 @@ async fn fetch_user_info(
 
     // Use the retrieved access token to fetch the user information from the remote API
     let info = provider
-        .get_user_info(&https, response.access_token().secret())
+        .get_user_info(provider.client(), response.access_token().secret())
         .await
         .map_err(LoginError::UserInfo)
         .tap_err(|err| tracing::error!(?err, "Failed to look up user information"))?;
@@ -676,7 +693,7 @@ mod tests {
     use crate::{
         authn::key::RawApiKey,
         context::{
-            tests::{mock_context, MockStorage},
+            test_mocks::{mock_context, MockStorage},
             ApiContext,
         },
         endpoints::login::oauth::{
@@ -791,6 +808,7 @@ mod tests {
             provider_error: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
+            scope: String::new(),
         };
 
         let response = oauth_redirect_response(
@@ -932,6 +950,7 @@ mod tests {
                 provider_error: None,
                 created_at: Utc::now(),
                 updated_at: Utc::now(),
+                scope: String::new(),
             };
 
             let mut storage = MockStorage::new();
@@ -971,6 +990,7 @@ mod tests {
             provider_error: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
+            scope: String::new(),
         };
 
         let mut attempt_store = MockLoginAttemptStore::new();
@@ -1030,6 +1050,7 @@ mod tests {
             provider_error: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
+            scope: String::new(),
         };
 
         let mut attempt_store = MockLoginAttemptStore::new();
@@ -1089,6 +1110,7 @@ mod tests {
             provider_error: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
+            scope: String::new(),
         };
 
         let mut attempt_store = MockLoginAttemptStore::new();
@@ -1328,6 +1350,7 @@ mod tests {
             provider_error: None,
             created_at: Utc::now(),
             updated_at: Utc::now(),
+            scope: String::new(),
         };
 
         let bad_client_id = LoginAttempt {

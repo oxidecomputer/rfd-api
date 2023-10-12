@@ -16,7 +16,7 @@ use std::{
 
 use crate::{
     permissions::Permissions,
-    schema::sql_types::{AttemptState, RfdContentFormat, RfdPdfSource},
+    schema::sql_types::{AttemptState, RfdContentFormat, RfdPdfSource, RfdVisibility},
 };
 
 macro_rules! sql_conversion {
@@ -148,5 +148,28 @@ impl Display for LoginAttemptState {
 impl Default for LoginAttemptState {
     fn default() -> Self {
         Self::New
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, FromSqlRow, AsExpression, Serialize, Deserialize, JsonSchema)]
+#[diesel(sql_type = RfdVisibility)]
+#[serde(rename_all = "lowercase")]
+pub enum Visibility {
+    Public,
+    Private,
+}
+
+sql_conversion! {
+    RfdVisibility => Visibility,
+    Public => b"public",
+    Private => b"private",
+}
+
+impl Display for Visibility {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Visibility::Public => write!(f, "public"),
+            Visibility::Private => write!(f, "private"),
+        }
     }
 }

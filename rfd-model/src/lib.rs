@@ -1,15 +1,19 @@
-use std::{collections::BTreeMap, fmt::Display};
+use std::{
+    collections::{BTreeMap, BTreeSet},
+    fmt::Display,
+};
 
 use chrono::{DateTime, Utc};
 use db::{
-    JobModel, LoginAttemptModel, OAuthClientRedirectUriModel, OAuthClientSecretModel, RfdModel,
-    RfdPdfModel, RfdRevisionModel,
+    AccessGroupModel, JobModel, LoginAttemptModel, MapperModel, OAuthClientRedirectUriModel,
+    OAuthClientSecretModel, RfdModel, RfdPdfModel, RfdRevisionModel,
 };
 use partial_struct::partial;
 use permissions::Permissions;
-use schema_ext::{ContentFormat, LoginAttemptState, PdfSource};
+use schema_ext::{ContentFormat, LoginAttemptState, PdfSource, Visibility};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use thiserror::Error;
 use uuid::Uuid;
 
@@ -26,14 +30,13 @@ pub struct Rfd {
     pub id: Uuid,
     pub rfd_number: i32,
     pub link: Option<String>,
-    // pub relevant_components: Vec<Option<String>>,
-    // pub milestones: Vec<Option<String>>,
     #[partial(NewRfd(skip))]
     pub created_at: DateTime<Utc>,
     #[partial(NewRfd(skip))]
     pub updated_at: DateTime<Utc>,
     #[partial(NewRfd(skip))]
     pub deleted_at: Option<DateTime<Utc>>,
+    pub visibility: Visibility,
 }
 
 impl From<RfdModel> for Rfd {
@@ -42,11 +45,10 @@ impl From<RfdModel> for Rfd {
             id: value.id,
             rfd_number: value.rfd_number,
             link: value.link,
-            // relevant_components: value.relevant_components,
-            // milestones: value.milestones,
             created_at: value.created_at,
             updated_at: value.updated_at,
             deleted_at: value.deleted_at,
+            visibility: value.visibility,
         }
     }
 }
@@ -163,6 +165,7 @@ impl From<JobModel> for Job {
 pub struct ApiUser<T: Ord> {
     pub id: Uuid,
     pub permissions: Permissions<T>,
+    pub groups: BTreeSet<Uuid>,
     #[partial(NewApiUser(skip))]
     pub created_at: DateTime<Utc>,
     #[partial(NewApiUser(skip))]
@@ -236,6 +239,7 @@ pub struct LoginAttempt {
     pub created_at: DateTime<Utc>,
     #[partial(NewLoginAttempt(skip))]
     pub updated_at: DateTime<Utc>,
+    pub scope: String,
 }
 
 impl LoginAttempt {
@@ -280,6 +284,7 @@ impl NewLoginAttempt {
     pub fn new(
         client_id: Uuid,
         redirect_uri: String,
+        scope: String,
         provider: String,
     ) -> Result<Self, InvalidValueError> {
         Ok(Self {
@@ -297,6 +302,7 @@ impl NewLoginAttempt {
             provider_pkce_verifier: None,
             provider_authz_code: None,
             provider_error: None,
+            scope,
         })
     }
 }
@@ -320,6 +326,7 @@ impl From<LoginAttemptModel> for LoginAttempt {
             provider_error: value.provider_error,
             created_at: value.created_at,
             updated_at: value.updated_at,
+            scope: value.scope,
         }
     }
 }
@@ -380,6 +387,67 @@ impl From<OAuthClientRedirectUriModel> for OAuthClientRedirectUri {
             id: value.id,
             oauth_client_id: value.oauth_client_id,
             redirect_uri: value.redirect_uri,
+            created_at: value.created_at,
+            deleted_at: value.deleted_at,
+        }
+    }
+}
+
+#[partial(NewAccessGroup)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct AccessGroup<T: Ord> {
+    pub id: Uuid,
+    pub name: String,
+    pub permissions: Permissions<T>,
+    #[partial(NewAccessGroup(skip))]
+    pub created_at: DateTime<Utc>,
+    #[partial(NewAccessGroup(skip))]
+    pub updated_at: DateTime<Utc>,
+    #[partial(NewAccessGroup(skip))]
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+impl<T> From<AccessGroupModel<T>> for AccessGroup<T>
+where
+    T: Ord,
+{
+    fn from(value: AccessGroupModel<T>) -> Self {
+        AccessGroup {
+            id: value.id,
+            name: value.name,
+            permissions: value.permissions,
+            created_at: value.created_at,
+            updated_at: value.updated_at,
+            deleted_at: value.deleted_at,
+        }
+    }
+}
+
+#[partial(NewMapper)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct Mapper {
+    pub id: Uuid,
+    pub name: String,
+    pub rule: Value,
+    pub activations: Option<i32>,
+    pub max_activations: Option<i32>,
+    #[partial(NewMapper(skip))]
+    pub depleted_at: Option<DateTime<Utc>>,
+    #[partial(NewMapper(skip))]
+    pub created_at: DateTime<Utc>,
+    #[partial(NewMapper(skip))]
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+impl From<MapperModel> for Mapper {
+    fn from(value: MapperModel) -> Self {
+        Mapper {
+            id: value.id,
+            name: value.name,
+            rule: value.rule,
+            activations: value.activations,
+            max_activations: value.max_activations,
+            depleted_at: value.depleted_at,
             created_at: value.created_at,
             deleted_at: value.deleted_at,
         }

@@ -22,11 +22,17 @@ impl Cli {
             CliCommand::CreateApiUser => Self::cli_create_api_user(),
             CliCommand::GetApiUser => Self::cli_get_api_user(),
             CliCommand::UpdateApiUser => Self::cli_update_api_user(),
+            CliCommand::AddApiUserToGroup => Self::cli_add_api_user_to_group(),
+            CliCommand::RemoveApiUserFromGroup => Self::cli_remove_api_user_from_group(),
             CliCommand::ListApiUserTokens => Self::cli_list_api_user_tokens(),
             CliCommand::CreateApiUserToken => Self::cli_create_api_user_token(),
             CliCommand::GetApiUserToken => Self::cli_get_api_user_token(),
             CliCommand::DeleteApiUserToken => Self::cli_delete_api_user_token(),
             CliCommand::GithubWebhook => Self::cli_github_webhook(),
+            CliCommand::GetGroups => Self::cli_get_groups(),
+            CliCommand::CreateGroup => Self::cli_create_group(),
+            CliCommand::UpdateGroup => Self::cli_update_group(),
+            CliCommand::DeleteGroup => Self::cli_delete_group(),
             CliCommand::AuthzCodeRedirect => Self::cli_authz_code_redirect(),
             CliCommand::AuthzCodeCallback => Self::cli_authz_code_callback(),
             CliCommand::AuthzCodeExchange => Self::cli_authz_code_exchange(),
@@ -103,6 +109,52 @@ impl Cli {
                     .help("XXX"),
             )
             .about("Update the permissions assigned to a given user")
+    }
+
+    pub fn cli_add_api_user_to_group() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("group-id")
+                    .long("group-id")
+                    .value_parser(clap::value_parser!(uuid::Uuid))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
+                clap::Arg::new("identifier")
+                    .long("identifier")
+                    .value_parser(clap::value_parser!(uuid::Uuid))
+                    .required(true),
+            )
+            .arg(
+                clap::Arg::new("json-body")
+                    .long("json-body")
+                    .value_name("JSON-FILE")
+                    .required(false)
+                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .help("Path to a file that contains the full json body."),
+            )
+            .arg(
+                clap::Arg::new("json-body-template")
+                    .long("json-body-template")
+                    .action(clap::ArgAction::SetTrue)
+                    .help("XXX"),
+            )
+    }
+
+    pub fn cli_remove_api_user_from_group() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("group-id")
+                    .long("group-id")
+                    .value_parser(clap::value_parser!(uuid::Uuid))
+                    .required(true),
+            )
+            .arg(
+                clap::Arg::new("identifier")
+                    .long("identifier")
+                    .value_parser(clap::value_parser!(uuid::Uuid))
+                    .required(true),
+            )
     }
 
     pub fn cli_list_api_user_tokens() -> clap::Command {
@@ -202,6 +254,73 @@ impl Cli {
             )
     }
 
+    pub fn cli_get_groups() -> clap::Command {
+        clap::Command::new("")
+    }
+
+    pub fn cli_create_group() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("name")
+                    .long("name")
+                    .value_parser(clap::value_parser!(String))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
+                clap::Arg::new("json-body")
+                    .long("json-body")
+                    .value_name("JSON-FILE")
+                    .required(true)
+                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .help("Path to a file that contains the full json body."),
+            )
+            .arg(
+                clap::Arg::new("json-body-template")
+                    .long("json-body-template")
+                    .action(clap::ArgAction::SetTrue)
+                    .help("XXX"),
+            )
+    }
+
+    pub fn cli_update_group() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("group-id")
+                    .long("group-id")
+                    .value_parser(clap::value_parser!(uuid::Uuid))
+                    .required(true),
+            )
+            .arg(
+                clap::Arg::new("name")
+                    .long("name")
+                    .value_parser(clap::value_parser!(String))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
+                clap::Arg::new("json-body")
+                    .long("json-body")
+                    .value_name("JSON-FILE")
+                    .required(true)
+                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .help("Path to a file that contains the full json body."),
+            )
+            .arg(
+                clap::Arg::new("json-body-template")
+                    .long("json-body-template")
+                    .action(clap::ArgAction::SetTrue)
+                    .help("XXX"),
+            )
+    }
+
+    pub fn cli_delete_group() -> clap::Command {
+        clap::Command::new("").arg(
+            clap::Arg::new("group-id")
+                .long("group-id")
+                .value_parser(clap::value_parser!(uuid::Uuid))
+                .required(true),
+        )
+    }
+
     pub fn cli_authz_code_redirect() -> clap::Command {
         clap::Command::new("")
             .arg(
@@ -215,7 +334,7 @@ impl Cli {
                     .long("provider")
                     .value_parser(clap::builder::TypedValueParser::map(
                         clap::builder::PossibleValuesParser::new([
-                            types::OAuthProviderName::GitHub.to_string(),
+                            types::OAuthProviderName::Github.to_string(),
                             types::OAuthProviderName::Google.to_string(),
                         ]),
                         |s| types::OAuthProviderName::try_from(s).unwrap(),
@@ -233,6 +352,12 @@ impl Cli {
                     .long("response-type")
                     .value_parser(clap::value_parser!(String))
                     .required(true),
+            )
+            .arg(
+                clap::Arg::new("scope")
+                    .long("scope")
+                    .value_parser(clap::value_parser!(String))
+                    .required(false),
             )
             .arg(
                 clap::Arg::new("state")
@@ -262,7 +387,7 @@ impl Cli {
                     .long("provider")
                     .value_parser(clap::builder::TypedValueParser::map(
                         clap::builder::PossibleValuesParser::new([
-                            types::OAuthProviderName::GitHub.to_string(),
+                            types::OAuthProviderName::Github.to_string(),
                             types::OAuthProviderName::Google.to_string(),
                         ]),
                         |s| types::OAuthProviderName::try_from(s).unwrap(),
@@ -315,7 +440,7 @@ impl Cli {
                     .long("provider")
                     .value_parser(clap::builder::TypedValueParser::map(
                         clap::builder::PossibleValuesParser::new([
-                            types::OAuthProviderName::GitHub.to_string(),
+                            types::OAuthProviderName::Github.to_string(),
                             types::OAuthProviderName::Google.to_string(),
                         ]),
                         |s| types::OAuthProviderName::try_from(s).unwrap(),
@@ -351,7 +476,7 @@ impl Cli {
                 .long("provider")
                 .value_parser(clap::builder::TypedValueParser::map(
                     clap::builder::PossibleValuesParser::new([
-                        types::OAuthProviderName::GitHub.to_string(),
+                        types::OAuthProviderName::Github.to_string(),
                         types::OAuthProviderName::Google.to_string(),
                     ]),
                     |s| types::OAuthProviderName::try_from(s).unwrap(),
@@ -385,7 +510,7 @@ impl Cli {
                     .long("provider")
                     .value_parser(clap::builder::TypedValueParser::map(
                         clap::builder::PossibleValuesParser::new([
-                            types::OAuthProviderName::GitHub.to_string(),
+                            types::OAuthProviderName::Github.to_string(),
                             types::OAuthProviderName::Google.to_string(),
                         ]),
                         |s| types::OAuthProviderName::try_from(s).unwrap(),
@@ -554,6 +679,12 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             CliCommand::UpdateApiUser => {
                 self.execute_update_api_user(matches).await;
             }
+            CliCommand::AddApiUserToGroup => {
+                self.execute_add_api_user_to_group(matches).await;
+            }
+            CliCommand::RemoveApiUserFromGroup => {
+                self.execute_remove_api_user_from_group(matches).await;
+            }
             CliCommand::ListApiUserTokens => {
                 self.execute_list_api_user_tokens(matches).await;
             }
@@ -568,6 +699,18 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             }
             CliCommand::GithubWebhook => {
                 self.execute_github_webhook(matches).await;
+            }
+            CliCommand::GetGroups => {
+                self.execute_get_groups(matches).await;
+            }
+            CliCommand::CreateGroup => {
+                self.execute_create_group(matches).await;
+            }
+            CliCommand::UpdateGroup => {
+                self.execute_update_group(matches).await;
+            }
+            CliCommand::DeleteGroup => {
+                self.execute_delete_group(matches).await;
             }
             CliCommand::AuthzCodeRedirect => {
                 self.execute_authz_code_redirect(matches).await;
@@ -676,6 +819,54 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
         }
     }
 
+    pub async fn execute_add_api_user_to_group(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.add_api_user_to_group();
+        if let Some(value) = matches.get_one::<uuid::Uuid>("group-id") {
+            request = request.body_map(|body| body.group_id(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<uuid::Uuid>("identifier") {
+            request = request.identifier(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value = serde_json::from_str::<types::AddGroupBody>(&body_txt).unwrap();
+            request = request.body(body_value);
+        }
+
+        self.over
+            .execute_add_api_user_to_group(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => self.output.output_add_api_user_to_group(Ok(r.into_inner())),
+            Err(r) => self.output.output_add_api_user_to_group(Err(r)),
+        }
+    }
+
+    pub async fn execute_remove_api_user_from_group(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.remove_api_user_from_group();
+        if let Some(value) = matches.get_one::<uuid::Uuid>("group-id") {
+            request = request.group_id(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<uuid::Uuid>("identifier") {
+            request = request.identifier(value.clone());
+        }
+
+        self.over
+            .execute_remove_api_user_from_group(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => self
+                .output
+                .output_remove_api_user_from_group(Ok(r.into_inner())),
+            Err(r) => self.output.output_remove_api_user_from_group(Err(r)),
+        }
+    }
+
     pub async fn execute_list_api_user_tokens(&self, matches: &clap::ArgMatches) {
         let mut request = self.client.list_api_user_tokens();
         if let Some(value) = matches.get_one::<uuid::Uuid>("identifier") {
@@ -781,6 +972,82 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
         }
     }
 
+    pub async fn execute_get_groups(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.get_groups();
+        self.over.execute_get_groups(matches, &mut request).unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => self.output.output_get_groups(Ok(r.into_inner())),
+            Err(r) => self.output.output_get_groups(Err(r)),
+        }
+    }
+
+    pub async fn execute_create_group(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.create_group();
+        if let Some(value) = matches.get_one::<String>("name") {
+            request = request.body_map(|body| body.name(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value =
+                serde_json::from_str::<types::AccessGroupUpdateParams>(&body_txt).unwrap();
+            request = request.body(body_value);
+        }
+
+        self.over
+            .execute_create_group(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => self.output.output_create_group(Ok(r.into_inner())),
+            Err(r) => self.output.output_create_group(Err(r)),
+        }
+    }
+
+    pub async fn execute_update_group(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.update_group();
+        if let Some(value) = matches.get_one::<uuid::Uuid>("group-id") {
+            request = request.group_id(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<String>("name") {
+            request = request.body_map(|body| body.name(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value =
+                serde_json::from_str::<types::AccessGroupUpdateParams>(&body_txt).unwrap();
+            request = request.body(body_value);
+        }
+
+        self.over
+            .execute_update_group(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => self.output.output_update_group(Ok(r.into_inner())),
+            Err(r) => self.output.output_update_group(Err(r)),
+        }
+    }
+
+    pub async fn execute_delete_group(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.delete_group();
+        if let Some(value) = matches.get_one::<uuid::Uuid>("group-id") {
+            request = request.group_id(value.clone());
+        }
+
+        self.over
+            .execute_delete_group(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => self.output.output_delete_group(Ok(r.into_inner())),
+            Err(r) => self.output.output_delete_group(Err(r)),
+        }
+    }
+
     pub async fn execute_authz_code_redirect(&self, matches: &clap::ArgMatches) {
         let mut request = self.client.authz_code_redirect();
         if let Some(value) = matches.get_one::<uuid::Uuid>("client-id") {
@@ -797,6 +1064,10 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
 
         if let Some(value) = matches.get_one::<String>("response-type") {
             request = request.response_type(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<String>("scope") {
+            request = request.scope(value.clone());
         }
 
         if let Some(value) = matches.get_one::<String>("state") {
@@ -1157,6 +1428,22 @@ pub trait CliOverride {
         Ok(())
     }
 
+    fn execute_add_api_user_to_group(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::AddApiUserToGroup,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn execute_remove_api_user_from_group(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::RemoveApiUserFromGroup,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
     fn execute_list_api_user_tokens(
         &self,
         matches: &clap::ArgMatches,
@@ -1193,6 +1480,38 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::GithubWebhook,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn execute_get_groups(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::GetGroups,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn execute_create_group(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::CreateGroup,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn execute_update_group(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::UpdateGroup,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn execute_delete_group(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::DeleteGroup,
     ) -> Result<(), String> {
         Ok(())
     }
@@ -1347,6 +1666,18 @@ pub trait CliOutput {
     ) {
     }
 
+    fn output_add_api_user_to_group(
+        &self,
+        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_remove_api_user_from_group(
+        &self,
+        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
     fn output_list_api_user_tokens(
         &self,
         response: Result<Vec<types::ApiKeyResponse>, progenitor_client::Error<types::Error>>,
@@ -1372,6 +1703,42 @@ pub trait CliOutput {
     }
 
     fn output_github_webhook(&self, response: Result<(), progenitor_client::Error<types::Error>>) {}
+
+    fn output_get_groups(
+        &self,
+        response: Result<
+            Vec<types::AccessGroupForApiPermission>,
+            progenitor_client::Error<types::Error>,
+        >,
+    ) {
+    }
+
+    fn output_create_group(
+        &self,
+        response: Result<
+            types::AccessGroupForApiPermission,
+            progenitor_client::Error<types::Error>,
+        >,
+    ) {
+    }
+
+    fn output_update_group(
+        &self,
+        response: Result<
+            types::AccessGroupForApiPermission,
+            progenitor_client::Error<types::Error>,
+        >,
+    ) {
+    }
+
+    fn output_delete_group(
+        &self,
+        response: Result<
+            types::AccessGroupForApiPermission,
+            progenitor_client::Error<types::Error>,
+        >,
+    ) {
+    }
 
     fn output_authz_code_redirect(&self, response: Result<(), progenitor_client::Error<()>>) {}
 
@@ -1430,7 +1797,10 @@ pub trait CliOutput {
 
     fn output_create_oauth_client_secret(
         &self,
-        response: Result<types::OAuthClientSecret, progenitor_client::Error<types::Error>>,
+        response: Result<
+            types::InitialOAuthClientSecretResponse,
+            progenitor_client::Error<types::Error>,
+        >,
     ) {
     }
 
@@ -1472,11 +1842,17 @@ pub enum CliCommand {
     CreateApiUser,
     GetApiUser,
     UpdateApiUser,
+    AddApiUserToGroup,
+    RemoveApiUserFromGroup,
     ListApiUserTokens,
     CreateApiUserToken,
     GetApiUserToken,
     DeleteApiUserToken,
     GithubWebhook,
+    GetGroups,
+    CreateGroup,
+    UpdateGroup,
+    DeleteGroup,
     AuthzCodeRedirect,
     AuthzCodeCallback,
     AuthzCodeExchange,
@@ -1501,11 +1877,17 @@ impl CliCommand {
             CliCommand::CreateApiUser,
             CliCommand::GetApiUser,
             CliCommand::UpdateApiUser,
+            CliCommand::AddApiUserToGroup,
+            CliCommand::RemoveApiUserFromGroup,
             CliCommand::ListApiUserTokens,
             CliCommand::CreateApiUserToken,
             CliCommand::GetApiUserToken,
             CliCommand::DeleteApiUserToken,
             CliCommand::GithubWebhook,
+            CliCommand::GetGroups,
+            CliCommand::CreateGroup,
+            CliCommand::UpdateGroup,
+            CliCommand::DeleteGroup,
             CliCommand::AuthzCodeRedirect,
             CliCommand::AuthzCodeCallback,
             CliCommand::AuthzCodeExchange,

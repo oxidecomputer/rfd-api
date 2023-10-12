@@ -35,22 +35,29 @@ impl Login {
 #[derive(Subcommand, Debug)]
 pub enum LoginProvider {
     /// Login via GitHub
-    // #[command(subcommand, name = "github")]
-    // GitHub,
+    #[command(name = "github")]
+    GitHub,
     /// Login via Google
     Google,
 }
 
 impl LoginProvider {
+    fn as_name(&self) -> OAuthProviderName {
+        match self {
+            Self::GitHub => OAuthProviderName::Github,
+            Self::Google => OAuthProviderName::Google,
+        }
+    }
+
     async fn run(&self, ctx: &mut Context) -> Result<String> {
         let provider = ctx
             .client()?
             .get_device_provider()
-            .provider(OAuthProviderName::Google)
+            .provider(self.as_name())
             .send()
             .await?;
 
-        let oauth_client = oauth::GoogleDeviceAuth::new(provider.into_inner())?;
+        let oauth_client = oauth::DeviceOAuth::new(provider.into_inner())?;
         let details = oauth_client.get_device_authorization().await?;
 
         println!(

@@ -12,6 +12,21 @@ pub mod sql_types {
     #[derive(diesel::sql_types::SqlType)]
     #[diesel(postgres_type(name = "rfd_pdf_source"))]
     pub struct RfdPdfSource;
+
+    #[derive(diesel::sql_types::SqlType)]
+    #[diesel(postgres_type(name = "rfd_visibility"))]
+    pub struct RfdVisibility;
+}
+
+diesel::table! {
+    access_groups (id) {
+        id -> Uuid,
+        name -> Varchar,
+        permissions -> Jsonb,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+        deleted_at -> Nullable<Timestamptz>,
+    }
 }
 
 diesel::table! {
@@ -34,6 +49,7 @@ diesel::table! {
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
         deleted_at -> Nullable<Timestamptz>,
+        groups -> Array<Nullable<Uuid>>,
     }
 }
 
@@ -96,6 +112,20 @@ diesel::table! {
         provider_error -> Nullable<Varchar>,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
+        scope -> Varchar,
+    }
+}
+
+diesel::table! {
+    mapper (id) {
+        id -> Uuid,
+        name -> Varchar,
+        rule -> Jsonb,
+        activations -> Nullable<Int4>,
+        max_activations -> Nullable<Int4>,
+        depleted_at -> Nullable<Timestamptz>,
+        created_at -> Timestamptz,
+        deleted_at -> Nullable<Timestamptz>,
     }
 }
 
@@ -128,6 +158,9 @@ diesel::table! {
 }
 
 diesel::table! {
+    use diesel::sql_types::*;
+    use super::sql_types::RfdVisibility;
+
     rfd (id) {
         id -> Uuid,
         rfd_number -> Int4,
@@ -135,6 +168,7 @@ diesel::table! {
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
         deleted_at -> Nullable<Timestamptz>,
+        visibility -> RfdVisibility,
     }
 }
 
@@ -184,12 +218,14 @@ diesel::joinable!(rfd_pdf -> rfd_revision (rfd_revision_id));
 diesel::joinable!(rfd_revision -> rfd (rfd_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    access_groups,
     api_key,
     api_user,
     api_user_access_token,
     api_user_provider,
     job,
     login_attempt,
+    mapper,
     oauth_client,
     oauth_client_redirect_uri,
     oauth_client_secret,
