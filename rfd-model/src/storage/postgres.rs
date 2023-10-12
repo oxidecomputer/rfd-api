@@ -8,8 +8,7 @@ use diesel::{
     query_dsl::QueryDsl,
     update,
     upsert::{excluded, on_constraint},
-    ExpressionMethods, PgArrayExpressionMethods,
-    OptionalExtension as OptionalExtension2,
+    ExpressionMethods, OptionalExtension as OptionalExtension2, PgArrayExpressionMethods,
 };
 use std::{
     collections::{BTreeMap, BTreeSet},
@@ -532,7 +531,9 @@ where
             .offset(pagination.offset)
             .limit(pagination.limit)
             .order(api_user::created_at.asc())
-            .get_results_async::<(ApiUserModel<T>, Option<ApiUserProviderModel>)>(&*self.pool.get().await?)
+            .get_results_async::<(ApiUserModel<T>, Option<ApiUserProviderModel>)>(
+                &*self.pool.get().await?,
+            )
             .await?;
 
         Ok(results
