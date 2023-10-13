@@ -2,8 +2,6 @@
 
 Work in progress replacement for RFD processing and programmatic access.
 
-## Granting access to external users
-
 ## RFD Model
 
 ```
@@ -41,14 +39,42 @@ Work in progress replacement for RFD processing and programmatic access.
 │ branch* ├─┘
 └─────────┘
 ```
-* Scanner and Webhook operations that occur on the default branch do not use the branch name for
-determining the RFD number to update. Instead they use the numeric portion of the `rfd/{number}/README.adoc` path.
+Note: Scanner and Webhook operations that occur on the default branch do not use the branch name for
+determining the RFD number to update. Instead they use the numeric portion of the 
+`rfd/{number}/README.adoc` path.
 
 ### Revisions
 
+Every revision is tied to a commit* against an RFD readme file. There is no guarantee though that
+there exists a revision though for every commit. While the RFD API will attempt to create a revision
+for every commit, outages, missing webhooks, or internal errors can result in missing revisions.
+Currently the background periodic processor does not attempt to backfill missing revisions, it only
+ensures that there is a revision for the latest commit it sees during its run.
+
+Note: Force pushes may result in the removal of the commit that triggered a revision.
+
 ## RFD Processing
 
+The RFD processors primary purpose is the implement and maintain the specifications defined in RFD 1.
+As internal needs have grown though, so has the processor. Each step of the processor is implemented
+as a separate action. Currently the supported actions are:
+
+| Action                 | Purpose |
+|------------------------|------------
+| copy_images_to_storage | Copies images and static files associated with an RFD to cloud storage
+| create_pull_request    | Create a PR for the RFD if it does not have one and the RFD is in discussion
+| ensure_default_state   | Checks that RFDs on the default branch have appropriate states
+| ensure_pr_state        | Updates the state attribute for RFDs not on the default branch as needed
+| update_discussion_url  | Updates the discussion url attribute in the RFD contents
+| update_pdfs            | Create and upload a PDF version of the RFD revision
+| update_pull_request    | Update pull request titles and labels so they align with the RFD content
+| update_search_index    | Update the RFD search index with the new RFD contents
+
 ### Triggers
+
+Scanner - 
+
+Webhook - 
 
 ### Periodic Schedule
 
@@ -100,7 +126,10 @@ this endpoint with an `identifier == caller_identifier`.
 ### OAuth2
 
 Users can authenticate to the RFD API via OAuth2. The RFD APIs OAuth implementation is backed by remote
-providers. Currently two providers are supported (both of which are OAuth2 providers themselves): GitHub and Google. Authenticating against the RFD API will return an access token that is valid for TBD. Refresh tokens are not supported by the RFD API. For application contexts where longer term access is required, fine-grained API tokens should be used instead.
+providers. Currently two providers are supported (both of which are OAuth2 providers themselves): GitHub
+and Google. Authenticating against the RFD API will return an access token that is valid for TBD.
+Refresh tokens are not supported by the RFD API. For application contexts where longer term access is
+required, fine-grained API tokens should be used instead.
 
 ### OAuth2 Scopes
 
@@ -122,7 +151,8 @@ providers. Currently two providers are supported (both of which are OAuth2 provi
 
 ### OAuth2 Authorization Code
 
-The RFD API supports the OAuth2 authorization code flow via two remote providers: GitHub and Google. A caller can choose which remote provider to send a user to by using the corresponding endpoint:
+The RFD API supports the OAuth2 authorization code flow via two remote providers: GitHub and Google.
+A caller can choose which remote provider to send a user to by using the corresponding endpoint:
 
 `/login/oauth/github/code/authorize` - Authenticate with GitHub
 
@@ -177,7 +207,7 @@ Browser                Client                    RFD API                        
    │                    │    Use access token to    │                             │
    │                    │    fetch user info and    │                             │
    │                    │    perform authn based    │                             │
-   │                    │    on verified emails     │                             │
+   │                    │    on remote user id      │                             │
    │                    │    into the RFD API.      │                             │
    │                    │    Return RFD API token   │                             │
    │                    │                           │                             │
@@ -188,7 +218,9 @@ Browser                Client                    RFD API                        
 
 ### Permissions
 
-Permissions can be assigned to both users and groups (see below). Permissions are always additive, and a callers full permissions are the combined set of their directly assigned permissions and their group permissions.
+Permissions can be assigned to both users and groups (see below). Permissions are always additive,
+and a callers full permissions are the combined set of their directly assigned permissions and their
+group permissions.
 
 [Api Permissions](rfd-api/src/permissions.rs)
 
@@ -236,7 +268,8 @@ the RFD API.
 
 #### Supported Mappers
 
-**Email Address** - Maps from a fully specified email address to a list of permissions and/or list of groups. This mapper can be used with GitHub or Google.
+**Email Address** - Maps from a fully specified email address to a list of permissions and/or list
+of groups. This mapper can be used with GitHub or Google.
 
 ```toml
 [[mappers]]
@@ -248,7 +281,8 @@ groups = [
 ]
 ```
 
-**Email Domain** - Maps from a email domain to a list of permissions and/or list of groups. This mapper can be
+**Email Domain** - Maps from a email domain to a list of permissions and/or list of groups. This
+mapper can be
 used with GitHub or Google.
 
 ```toml
@@ -261,9 +295,8 @@ groups = [
 ]
 ```
 
-**GitHub Username** - Maps from a GitHub username to a list of permissions and/or list of groups. As expected,
-this mapper can only succeed with a GitHub provider.
-
+**GitHub Username** - Maps from a GitHub username to a list of permissions and/or list of groups.
+As expected, this mapper can only succeed with a GitHub provider.
 
 ```toml
 [[mappers]]
