@@ -190,7 +190,7 @@ Browser                Client                    RFD API                        
 
 Permissions can be assigned to both users and groups (see below). Permissions are always additive, and a callers full permissions are the combined set of their directly assigned permissions and their group permissions.
 
-// TODO: List permissions
+[Api Permissions](rfd-api/src/permissions.rs)
 
 ### Groups
 
