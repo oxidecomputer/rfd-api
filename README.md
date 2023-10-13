@@ -188,12 +188,56 @@ Browser                Client                    RFD API                        
 
 ### Permissions
 
+Permissions can be assigned to both users and groups (see below). Permissions are always additive, and a callers full permissions are the combined set of their directly assigned permissions and their group permissions.
+
+// TODO: List permissions
+
 ### Groups
+
+Groups are a way to manage sets of permissions and assigned them to one or more users. Permissions
+from multiple groups are always additive. Users can be assigned to any number of groups, and group
+assignments are stored on user records. Sub-groups are not supported.
+
+```
+                  ┌──────────────┐
+                  │              │
+                  │ access_group │
+                  ├──────────────┤
+┌─────────────┐ ┌─┤ id           │
+│             │ │ ├──────────────┤
+│ api_user    │ │ │ permissions  │
+├─────────────┤ │ └──────────────┘
+│ permissions │ │
+├─────────────┤ │ ┌──────────────┐
+│ groups      ├─┤ │              │
+└─────────────┘ │ │ access_group │
+                │ ├──────────────┤
+                └─┤ id           │
+                  ├──────────────┤
+                  │ permissions  │
+                  └──────────────┘
+```
 
 ### Mappers
 
+By default, new accounts do not have any permissions. The only thing they can do is login. Mappers
+can be used to assign default permissions to accounts immediately upon login. Mappers apply to both
+existing and new accounts. Mappers are currently only additive. They can assign permissions and
+groups, but they can not remove them. Mappers that remove assignments may be supported in the future.
+
+A mapper contains a `condition` and a set of values to apply. The `condition` is tested against the
+user information returned from a remote provider, if it returns true then the values are applied to
+the user account associated with the user provider.
+
+Notably this means that mappers explicitly only run when a user authenticates via a remote provider.
+
 #### Supported Mappers
 
-Email Address - 
-Email Domain - 
-GitHub Username - 
+Email Address - Maps from a fully specified email address to a list of permissions and/or list of groups.
+This mapper can be used with GitHub or Google.
+
+Email Domain - Maps from a email domain to a list of permissions and/or list of groups. This mapper can be
+used with GitHub or Google.
+
+GitHub Username - Maps from a GitHub username to a list of permissions and/or list of groups. As expected,
+this mapper can only succeed with a GitHub provider.
