@@ -1,7 +1,7 @@
 use config::{Config, ConfigError, Environment, File};
 use diesel::result::{DatabaseErrorKind, Error as DieselError};
 use rfd_model::{
-    storage::{ConnectionError, PoolError, StoreError},
+    storage::StoreError,
     NewAccessGroup, NewMapper,
 };
 use serde::Deserialize;
@@ -106,9 +106,7 @@ impl InitialData {
 
 fn handle_unique_violation_error(err: StoreError) -> Result<(), StoreError> {
     match err {
-        StoreError::Pool(PoolError::Connection(ConnectionError::Query(
-            DieselError::DatabaseError(DatabaseErrorKind::UniqueViolation, info),
-        ))) => {
+        StoreError::Db(DieselError::DatabaseError(DatabaseErrorKind::UniqueViolation, info)) => {
             tracing::info!(?info, "Record already exists. Skipping.");
             Ok(())
         }
