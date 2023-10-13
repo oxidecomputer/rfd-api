@@ -14,7 +14,7 @@ use syn::{
     parse::{Parse, ParseStream, Parser},
     parse_macro_input,
     punctuated::Punctuated,
-    AttributeArgs, Block, DeriveInput, Ident, ItemFn, LitStr, Result, Token, Type,
+    Block, DeriveInput, Ident, ItemFn, LitStr, Result, Token, Type,
 };
 
 #[proc_macro_attribute]
