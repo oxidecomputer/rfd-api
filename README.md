@@ -6,6 +6,44 @@ Work in progress replacement for RFD processing and programmatic access.
 
 ## RFD Model
 
+```
+                                    ┌─────────────────┐ ┌─────────────────┐
+                                    │                 │ │                 │
+                ┌─────────────────┐ │ PDF cccccc Src1 │ │ PDF cccccc Src2 │
+                │                 │ │                 │ │                 │
+                │ PDF aaaaaa Src1 │ └────────┬────────┘ └────────┬────────┘
+                │                 │          │                   │
+                └────────┬────────┘          ├───────────────────┘
+                         │                   │
+                ┌────────┴────────┐ ┌────────┴────────┐
+                │                 │ │                 │
+                │ Revision aaaaaa │ │ Revision cccccc │
+                ├─────────────────┤ ├─────────────────┤
+              ┌─┤ sha             │ │ sha             │
+              │ └────────┬────────┘ └────────┬────────┘
+              │          │                   │
+              │          └───────────────────┤
+┌─────────┐   │                              │
+│         │   └─────────────────┐            │
+│ Scanner │                     │   ┌────────┴────────┐
+├─────────┤     ┌────────────┐  │   │                 │
+│ sha     ├───┐ │            │  │   │  RFD 123        │
+├─────────┤   │ │ Job 1      │  │   │                 │
+│ branch* ├─┐ │ ├────────────┤  │   ├─────────────────┤
+└─────────┘ │ ├─┤ sha        ├──┘   │ id              │
+            │ │ ├────────────┤      ├─────────────────┤
+┌─────────┐ ├─┼─┤ rfd_number ├──────┤ rfd_number      │
+│         │ │ │ └────────────┘      └─────────────────┘
+│ Webhook │ │ │
+├─────────┤ │ │
+│ sha     ├─┼─┘
+├─────────┤ │
+│ branch* ├─┘
+└─────────┘
+```
+* Scanner and Webhook operations that occur on the default branch do not use the branch name for
+determining the RFD number to update. Instead they use the numeric portion of the `rfd/{number}/README.adoc` path.
+
 ### Revisions
 
 ## RFD Processing
