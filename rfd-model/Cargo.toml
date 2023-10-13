@@ -25,5 +25,5 @@ tracing = { workspace = true }
 uuid = { workspace = true, features = ["v4", "serde"]  }
 
 [dev-dependencies]
-diesel_migrations = { version = "2.0.0", features = ["postgres"] }
+diesel_migrations = { version = "2.1.0", features = ["postgres"] }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
