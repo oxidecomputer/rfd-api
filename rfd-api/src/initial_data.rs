@@ -1,9 +1,6 @@
 use config::{Config, ConfigError, Environment, File};
 use diesel::result::{DatabaseErrorKind, Error as DieselError};
-use rfd_model::{
-    storage::StoreError,
-    NewAccessGroup, NewMapper,
-};
+use rfd_model::{storage::StoreError, NewAccessGroup, NewMapper};
 use serde::Deserialize;
 use thiserror::Error;
 use tracing::Instrument;
