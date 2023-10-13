@@ -104,21 +104,21 @@ providers. Currently two providers are supported (both of which are OAuth2 provi
 
 ### OAuth2 Scopes
 
-|Scope                 | Description                                      |
-|----------------------|--------------------------------------------------|
-| "user:info:r"        | Read information about users and their providers |
-| "user:info:w"        | Update information about users                   |
-| "user:provider:w"    | Update user providers                            |
-| "user:token:r"       | Read API token information for users             |
-| "user:token:w"       | Create API tokens for users                      |
-| "group:r"            | Read group information                           |
-| "group:w"            | Create, update, and delete groups                |
-| "group:membership:w" | Add and remove users from groups                 |
-| "rfd:content:r"      | List and fetch RFDs                              |
-| "rfd:discussion:r"   | Fetch RFD discussions                            |
-| "search"             | Search for RFDs                                  |
-| "oauth:client:r"     | List OAuth clients                               |
-| "oauth:client:w"     | Create and update OAuth clients                  |
+|Scope               | Description                                      |
+|--------------------|--------------------------------------------------|
+| user:info:r        | Read information about users and their providers |
+| user:info:w        | Update information about users                   |
+| user:provider:w    | Update user providers                            |
+| user:token:r       | Read API token information for users             |
+| user:token:w       | Create API tokens for users                      |
+| group:r            | Read group information                           |
+| group:w            | Create, update, and delete groups                |
+| group:membership:w | Add and remove users from groups                 |
+| rfd:content:r      | List and fetch RFDs                              |
+| rfd:discussion:r   | Fetch RFD discussions                            |
+| search             | Search for RFDs                                  |
+| oauth:client:r     | List OAuth clients                               |
+| oauth:client:w     | Create and update OAuth clients                  |
 
 ### OAuth2 Authorization Code
 
