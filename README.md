@@ -231,13 +231,46 @@ the user account associated with the user provider.
 
 Notably this means that mappers explicitly only run when a user authenticates via a remote provider.
 
+A `mappers.toml` file can be used to configure mappers that should be installed during startup of
+the RFD API.
+
 #### Supported Mappers
 
-Email Address - Maps from a fully specified email address to a list of permissions and/or list of groups.
-This mapper can be used with GitHub or Google.
+**Email Address** - Maps from a fully specified email address to a list of permissions and/or list of groups. This mapper can be used with GitHub or Google.
 
-Email Domain - Maps from a email domain to a list of permissions and/or list of groups. This mapper can be
+```toml
+[[mappers]]
+name = "Initial admin"
+rule = "email_address"
+email = "user@domain.com"
+groups = [
+  "admin"
+]
+```
+
+**Email Domain** - Maps from a email domain to a list of permissions and/or list of groups. This mapper can be
 used with GitHub or Google.
 
-GitHub Username - Maps from a GitHub username to a list of permissions and/or list of groups. As expected,
+```toml
+[[mappers]]
+name = "Employees"
+rule = "email_domain"
+domain = "domain.com"
+groups = [
+  "company-employee"
+]
+```
+
+**GitHub Username** - Maps from a GitHub username to a list of permissions and/or list of groups. As expected,
 this mapper can only succeed with a GitHub provider.
+
+
+```toml
+[[mappers]]
+name = "Friend"
+rule = "github_username"
+domain = "githubuser"
+groups = [
+  "friend-of-company"
+]
+```
