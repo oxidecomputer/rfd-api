@@ -2669,7 +2669,7 @@
               "rule": {
                 "type": "string",
                 "enum": [
-                  "git_hub_username"
+                  "github_username"
                 ]
               }
             },

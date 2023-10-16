@@ -720,12 +720,12 @@ pub mod types {
             #[serde(default = "defaults::mapping_rules_email_domain_permissions")]
             permissions: PermissionsForApiPermission,
         },
-        #[serde(rename = "git_hub_username")]
-        GitHubUsername {
+        #[serde(rename = "github_username")]
+        GithubUsername {
             github_username: String,
             #[serde(default, skip_serializing_if = "Vec::is_empty")]
             groups: Vec<String>,
-            #[serde(default = "defaults::mapping_rules_git_hub_username_permissions")]
+            #[serde(default = "defaults::mapping_rules_github_username_permissions")]
             permissions: PermissionsForApiPermission,
         },
     }
@@ -4187,7 +4187,7 @@ pub mod types {
             super::PermissionsForApiPermission(vec![])
         }
 
-        pub(super) fn mapping_rules_git_hub_username_permissions(
+        pub(super) fn mapping_rules_github_username_permissions(
         ) -> super::PermissionsForApiPermission {
             super::PermissionsForApiPermission(vec![])
         }

@@ -381,7 +381,7 @@ cargo run -p rfd-cli mapper create --json-body /dev/stdin <<EOM
   "name": "add_github_user",
   "max_activations": 1,
   "rule": {
-    "rule": "git_hub_username",
+    "rule": "github_username",
     "github_username": "githubuser",
     "groups": [
       "friend-of-company"

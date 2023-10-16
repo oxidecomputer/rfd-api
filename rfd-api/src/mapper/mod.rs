@@ -64,6 +64,7 @@ impl TryFrom<Mapper> for Mapping {
 pub enum MappingRules {
     EmailAddress(EmailAddressMapper),
     EmailDomain(EmailDomainMapper),
+    #[serde(rename = "github_username")]
     GitHubUsername(GitHubUsernameMapper),
 }
 
