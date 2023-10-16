@@ -70,13 +70,48 @@ as a separate action. Currently the supported actions are:
 | update_pull_request    | Update pull request titles and labels so they align with the RFD content
 | update_search_index    | Update the RFD search index with the new RFD contents
 
-### Triggers
+### Content Updates
+
+RFD processing manipulates both internally stored state as well as the source content document of
+the RFD it is processing. The two cases where the processor will update the contents of an RFD are:
+
+1. An RFD has an incorrect discussion url
+2. An RFD is in an incorrect state
+
+The first update is the easier of the two. For any RFD that has an open discussion PR, the processor
+will check that the `discussion` attribute in the RFD document matches the url of the discussion PR.
+Note though that there is a bug here currently related to the order in which revisions may be processed.
+
+State checking is a bit more complex. For an RFD that has an open discussion PR, the processor will
+ensure that the RFD state is set to `discussion`. For RFDs that are merged to the default branch
+though, there is not a good determination as to which of the final states to assign them. Instead
+the processor will emit a warning when it encounters such a case.
+
+### Update Runners
+
+RFD updates occur via two mechanism. The first of which is in response to GitHub webhook calls for
+pushes against the RFD repo. The RFDs that are updated in response to a webhook depend on the branch
+that was updated and the contents of the commit. RFDs are also updated via a periodic processor so
+that the processor can account for webhook calls that were either missed, dropped, or failed due to
+some internal error.
+
+### Webhooks
+
+Webhook calls are accepted by the `rfd-api` server which validates the call and determines the RFDs
+to update. Pushes to the default branch will allow for updates to occur to any RFD number. So if a
+commit contains an update to RFD 1, RFD 2, and RFD 3, then three update jobs will be scheduled. In
+contrast to this, if the commit is made against a specific branch (i.e. 0123) then a job will only
+be scheduled if a change is made to RFD 123.
+
+Note that the `rfd-api` server does not perform RFD updates. It is responsible only for validating
+calls and scheduling update jobs. Once scheduled, the job will be processed by the `rfd-processor`.
 
 Scanner - 
 
-Webhook - 
-
 ### Periodic Schedule
+
+The scanner can be run at a configurable interval which is largely dependent on the size of the RFD
+repo itself, and GitHub rate limits. Currently we run the scanner on a 15 minute interval.
 
 ## Authentication
 
