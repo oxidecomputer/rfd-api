@@ -7,7 +7,14 @@ use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
-    context::ApiContext, error::ApiError, permissions::ApiPermission, util::{response::{unauthorized, conflict}, is_uniqueness_error}, mapper::MappingRules,
+    context::ApiContext,
+    error::ApiError,
+    mapper::MappingRules,
+    permissions::ApiPermission,
+    util::{
+        is_uniqueness_error,
+        response::{conflict, unauthorized},
+    },
 };
 
 #[trace_request]
@@ -55,14 +62,16 @@ pub async fn create_mapper(
 
     if caller.can(&ApiPermission::CreateMapper) {
         let body = body.into_inner();
-        let res = ctx.add_mapper(&NewMapper {
-            id: Uuid::new_v4(),
-            name: body.name,
-            // This was just unserialized from json, so it can be serialized back to a value
-            rule: serde_json::to_value(body.rule).unwrap(),
-            activations: body.max_activations.map(|_| 0),
-            max_activations: body.max_activations,
-        }).await;
+        let res = ctx
+            .add_mapper(&NewMapper {
+                id: Uuid::new_v4(),
+                name: body.name,
+                // This was just unserialized from json, so it can be serialized back to a value
+                rule: serde_json::to_value(body.rule).unwrap(),
+                activations: body.max_activations.map(|_| 0),
+                max_activations: body.max_activations,
+            })
+            .await;
 
         res.map(HttpResponseOk).map_err(|err| {
             if is_uniqueness_error(&err) {

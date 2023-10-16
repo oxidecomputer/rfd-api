@@ -122,23 +122,23 @@ impl CliOutput for RfdJsonPrinter {
     }
 
     fn output_get_mappers(
-            &self,
-            response: Result<Vec<types::Mapper>, progenitor_client::Error<types::Error>>,
-        ) {
+        &self,
+        response: Result<Vec<types::Mapper>, progenitor_client::Error<types::Error>>,
+    ) {
         print_cli_output(&response)
     }
 
     fn output_create_mapper(
-            &self,
-            response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
-        ) {
+        &self,
+        response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
+    ) {
         print_cli_output(&response)
     }
 
     fn output_delete_mapper(
-            &self,
-            response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
-        ) {
+        &self,
+        response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
+    ) {
         print_cli_output(&response)
     }
 

@@ -163,9 +163,9 @@ impl CliOutput for Printer {
     }
 
     fn output_get_mappers(
-            &self,
-            response: Result<Vec<types::Mapper>, progenitor_client::Error<types::Error>>,
-        ) {
+        &self,
+        response: Result<Vec<types::Mapper>, progenitor_client::Error<types::Error>>,
+    ) {
         match self {
             Printer::Json(printer) => printer.output_get_mappers(response),
             Printer::Tab(printer) => printer.output_get_mappers(response),
@@ -173,9 +173,9 @@ impl CliOutput for Printer {
     }
 
     fn output_create_mapper(
-            &self,
-            response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
-        ) {
+        &self,
+        response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
+    ) {
         match self {
             Printer::Json(printer) => printer.output_create_mapper(response),
             Printer::Tab(printer) => printer.output_create_mapper(response),
@@ -183,9 +183,9 @@ impl CliOutput for Printer {
     }
 
     fn output_delete_mapper(
-            &self,
-            response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
-        ) {
+        &self,
+        response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
+    ) {
         match self {
             Printer::Json(printer) => printer.output_delete_mapper(response),
             Printer::Tab(printer) => printer.output_delete_mapper(response),
