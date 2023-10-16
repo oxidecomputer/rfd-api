@@ -917,6 +917,98 @@
         }
       }
     },
+    "/mapper": {
+      "get": {
+        "operationId": "get_mappers",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Array_of_Mapper",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Mapper"
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "operationId": "create_mapper",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMapper"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mapper"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/mapper/{identifier}": {
+      "delete": {
+        "operationId": "delete_mapper",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mapper"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
     "/oauth/client": {
       "get": {
         "summary": "List OAuth clients",
@@ -1467,6 +1559,10 @@
               "ManageGroupMembershipAll",
               "ManageGroupsAssigned",
               "ManageGroupsAll",
+              "ListMappers",
+              "CreateMapper",
+              "ManageMappersAssigned",
+              "ManageMappersAll",
               "GetRfdsAssigned",
               "GetRfdsAll",
               "GetDiscussionsAssigned",
@@ -1655,6 +1751,62 @@
             },
             "required": [
               "ManageGroups"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "UpdateMapper": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "UpdateMapper"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "DeleteMapper": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "DeleteMapper"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "ManageMapper": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "ManageMapper"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "ManageMappers": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "ManageMappers"
             ],
             "additionalProperties": false
           },
@@ -1949,6 +2101,26 @@
           "id",
           "permissions",
           "updated_at"
+        ]
+      },
+      "CreateMapper": {
+        "type": "object",
+        "properties": {
+          "max_activations": {
+            "nullable": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rule": {
+            "$ref": "#/components/schemas/MappingRules"
+          }
+        },
+        "required": [
+          "name",
+          "rule"
         ]
       },
       "Error": {
@@ -2360,6 +2532,152 @@
           "sha",
           "title",
           "visibility"
+        ]
+      },
+      "Mapper": {
+        "type": "object",
+        "properties": {
+          "activations": {
+            "nullable": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "depleted_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "max_activations": {
+            "nullable": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rule": {}
+        },
+        "required": [
+          "created_at",
+          "id",
+          "name",
+          "rule"
+        ]
+      },
+      "MappingRules": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string"
+              },
+              "groups": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "permissions": {
+                "default": [],
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+                  }
+                ]
+              },
+              "rule": {
+                "type": "string",
+                "enum": [
+                  "email_address"
+                ]
+              }
+            },
+            "required": [
+              "email",
+              "rule"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "domain": {
+                "type": "string"
+              },
+              "groups": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "permissions": {
+                "default": [],
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+                  }
+                ]
+              },
+              "rule": {
+                "type": "string",
+                "enum": [
+                  "email_domain"
+                ]
+              }
+            },
+            "required": [
+              "domain",
+              "rule"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "github_username": {
+                "type": "string"
+              },
+              "groups": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "permissions": {
+                "default": [],
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+                  }
+                ]
+              },
+              "rule": {
+                "type": "string",
+                "enum": [
+                  "git_hub_username"
+                ]
+              }
+            },
+            "required": [
+              "github_username",
+              "rule"
+            ]
+          }
         ]
       },
       "OAuthAuthzCodeExchangeBody": {

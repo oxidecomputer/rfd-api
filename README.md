@@ -316,6 +316,22 @@ groups = [
 ]
 ```
 
+```bash
+cargo run -p rfd-cli mapper create --json-body /dev/stdin <<EOM
+{
+  "name": "add_email_address",
+  "max_activations": 1,
+  "rule": {
+    "rule": "email_address",
+    "email": "user@domain.com",
+    "groups": [
+      "admin"
+    ]
+  }
+}
+EOM
+```
+
 **Email Domain** - Maps from a email domain to a list of permissions and/or list of groups. This
 mapper can be
 used with GitHub or Google.
@@ -330,6 +346,22 @@ groups = [
 ]
 ```
 
+```bash
+cargo run -p rfd-cli mapper create --json-body /dev/stdin <<EOM
+{
+  "name": "add_email_domain",
+  "max_activations": 5,
+  "rule": {
+    "rule": "email_domain",
+    "domain": "domain.com",
+    "groups": [
+      "company-employee"
+    ]
+  }
+}
+EOM
+```
+
 **GitHub Username** - Maps from a GitHub username to a list of permissions and/or list of groups.
 As expected, this mapper can only succeed with a GitHub provider.
 
@@ -341,4 +373,20 @@ domain = "githubuser"
 groups = [
   "friend-of-company"
 ]
+```
+
+```bash
+cargo run -p rfd-cli mapper create --json-body /dev/stdin <<EOM
+{
+  "name": "add_github_user",
+  "max_activations": 1,
+  "rule": {
+    "rule": "git_hub_username",
+    "github_username": "githubuser",
+    "groups": [
+      "friend-of-company"
+    ]
+  }
+}
+EOM
 ```

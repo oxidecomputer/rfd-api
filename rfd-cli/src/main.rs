@@ -6,6 +6,7 @@ use generated::cli::*;
 use printer::{Printer, RfdJsonPrinter, RfdTabPrinter};
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
 use rfd_sdk::Client;
+use rfd_sdk::types::MappingRules;
 use std::time::Duration;
 use std::{collections::HashMap, error::Error};
 use store::CliConfig;
@@ -119,6 +120,11 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::CreateGroup => Some("group create"),
         CliCommand::UpdateGroup => Some("group update"),
         CliCommand::DeleteGroup => Some("group delete"),
+
+        // Mapper commands
+        CliCommand::GetMappers => Some("mapper list"),
+        CliCommand::CreateMapper => Some("mapper create"),
+        CliCommand::DeleteMapper => Some("mapper delete"),
 
         // User admin commands
         CliCommand::AddApiUserToGroup => Some("group membership add"),

@@ -2,6 +2,7 @@ use std::collections::BTreeSet;
 
 use async_trait::async_trait;
 use rfd_model::{storage::StoreError, Mapper};
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use tap::TapFallible;
 use uuid::Uuid;
@@ -58,7 +59,7 @@ impl TryFrom<Mapper> for Mapping {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
 #[serde(tag = "rule", rename_all = "snake_case")]
 pub enum MappingRules {
     EmailAddress(EmailAddressMapper),

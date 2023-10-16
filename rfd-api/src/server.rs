@@ -25,6 +25,7 @@ use crate::{
             code::{authz_code_callback, authz_code_exchange, authz_code_redirect},
             device_token::{exchange_device_token, get_device_provider},
         },
+        mappers::{create_mapper, delete_mapper, get_mappers},
         rfd::{get_rfd, get_rfds, search_rfds},
         webhook::github_webhook,
         well_known::{jwks_json, openid_configuration},
@@ -105,6 +106,11 @@ pub fn server(
     api.register(create_group).unwrap();
     api.register(update_group).unwrap();
     api.register(delete_group).unwrap();
+
+    // Mapper Management
+    api.register(get_mappers).unwrap();
+    api.register(create_mapper).unwrap();
+    api.register(delete_mapper).unwrap();
 
     // OAuth Client Management
     api.register(list_oauth_clients).unwrap();

@@ -166,6 +166,10 @@ pub mod types {
         ManageGroupMembershipAll,
         ManageGroupsAssigned,
         ManageGroupsAll,
+        ListMappers,
+        CreateMapper,
+        ManageMappersAssigned,
+        ManageMappersAll,
         GetRfdsAssigned,
         GetRfdsAll,
         GetDiscussionsAssigned,
@@ -191,6 +195,10 @@ pub mod types {
         DeleteGroup(uuid::Uuid),
         ManageGroup(uuid::Uuid),
         ManageGroups(Vec<uuid::Uuid>),
+        UpdateMapper(uuid::Uuid),
+        DeleteMapper(uuid::Uuid),
+        ManageMapper(uuid::Uuid),
+        ManageMappers(Vec<uuid::Uuid>),
         GetRfd(i32),
         GetRfds(Vec<i32>),
         GetDiscussion(i32),
@@ -323,6 +331,26 @@ pub mod types {
     impl ApiUserUpdateParams {
         pub fn builder() -> builder::ApiUserUpdateParams {
             builder::ApiUserUpdateParams::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct CreateMapper {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub max_activations: Option<i32>,
+        pub name: String,
+        pub rule: MappingRules,
+    }
+
+    impl From<&CreateMapper> for CreateMapper {
+        fn from(value: &CreateMapper) -> Self {
+            value.clone()
+        }
+    }
+
+    impl CreateMapper {
+        pub fn builder() -> builder::CreateMapper {
+            builder::CreateMapper::default()
         }
     }
 
@@ -642,6 +670,69 @@ pub mod types {
     impl ListRfd {
         pub fn builder() -> builder::ListRfd {
             builder::ListRfd::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct Mapper {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub activations: Option<i32>,
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub depleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub id: uuid::Uuid,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub max_activations: Option<i32>,
+        pub name: String,
+        pub rule: serde_json::Value,
+    }
+
+    impl From<&Mapper> for Mapper {
+        fn from(value: &Mapper) -> Self {
+            value.clone()
+        }
+    }
+
+    impl Mapper {
+        pub fn builder() -> builder::Mapper {
+            builder::Mapper::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    #[serde(tag = "rule")]
+    pub enum MappingRules {
+        #[serde(rename = "email_address")]
+        EmailAddress {
+            email: String,
+            #[serde(default, skip_serializing_if = "Vec::is_empty")]
+            groups: Vec<String>,
+            #[serde(default = "defaults::mapping_rules_email_address_permissions")]
+            permissions: PermissionsForApiPermission,
+        },
+        #[serde(rename = "email_domain")]
+        EmailDomain {
+            domain: String,
+            #[serde(default, skip_serializing_if = "Vec::is_empty")]
+            groups: Vec<String>,
+            #[serde(default = "defaults::mapping_rules_email_domain_permissions")]
+            permissions: PermissionsForApiPermission,
+        },
+        #[serde(rename = "git_hub_username")]
+        GitHubUsername {
+            github_username: String,
+            #[serde(default, skip_serializing_if = "Vec::is_empty")]
+            groups: Vec<String>,
+            #[serde(default = "defaults::mapping_rules_git_hub_username_permissions")]
+            permissions: PermissionsForApiPermission,
+        },
+    }
+
+    impl From<&MappingRules> for MappingRules {
+        fn from(value: &MappingRules) -> Self {
+            value.clone()
         }
     }
 
@@ -1845,6 +1936,77 @@ pub mod types {
                 Self {
                     groups: Ok(value.groups),
                     permissions: Ok(value.permissions),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct CreateMapper {
+            max_activations: Result<Option<i32>, String>,
+            name: Result<String, String>,
+            rule: Result<super::MappingRules, String>,
+        }
+
+        impl Default for CreateMapper {
+            fn default() -> Self {
+                Self {
+                    max_activations: Ok(Default::default()),
+                    name: Err("no value supplied for name".to_string()),
+                    rule: Err("no value supplied for rule".to_string()),
+                }
+            }
+        }
+
+        impl CreateMapper {
+            pub fn max_activations<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<i32>>,
+                T::Error: std::fmt::Display,
+            {
+                self.max_activations = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for max_activations: {}", e)
+                });
+                self
+            }
+            pub fn name<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.name = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for name: {}", e));
+                self
+            }
+            pub fn rule<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::MappingRules>,
+                T::Error: std::fmt::Display,
+            {
+                self.rule = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for rule: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<CreateMapper> for super::CreateMapper {
+            type Error = String;
+            fn try_from(value: CreateMapper) -> Result<Self, String> {
+                Ok(Self {
+                    max_activations: value.max_activations?,
+                    name: value.name?,
+                    rule: value.rule?,
+                })
+            }
+        }
+
+        impl From<super::CreateMapper> for CreateMapper {
+            fn from(value: super::CreateMapper) -> Self {
+                Self {
+                    max_activations: Ok(value.max_activations),
+                    name: Ok(value.name),
+                    rule: Ok(value.rule),
                 }
             }
         }
@@ -3223,6 +3385,147 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
+        pub struct Mapper {
+            activations: Result<Option<i32>, String>,
+            created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+            deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
+            depleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
+            id: Result<uuid::Uuid, String>,
+            max_activations: Result<Option<i32>, String>,
+            name: Result<String, String>,
+            rule: Result<serde_json::Value, String>,
+        }
+
+        impl Default for Mapper {
+            fn default() -> Self {
+                Self {
+                    activations: Ok(Default::default()),
+                    created_at: Err("no value supplied for created_at".to_string()),
+                    deleted_at: Ok(Default::default()),
+                    depleted_at: Ok(Default::default()),
+                    id: Err("no value supplied for id".to_string()),
+                    max_activations: Ok(Default::default()),
+                    name: Err("no value supplied for name".to_string()),
+                    rule: Err("no value supplied for rule".to_string()),
+                }
+            }
+        }
+
+        impl Mapper {
+            pub fn activations<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<i32>>,
+                T::Error: std::fmt::Display,
+            {
+                self.activations = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for activations: {}", e));
+                self
+            }
+            pub fn created_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.created_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                self
+            }
+            pub fn deleted_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<chrono::DateTime<chrono::offset::Utc>>>,
+                T::Error: std::fmt::Display,
+            {
+                self.deleted_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                self
+            }
+            pub fn depleted_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<chrono::DateTime<chrono::offset::Utc>>>,
+                T::Error: std::fmt::Display,
+            {
+                self.depleted_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for depleted_at: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<uuid::Uuid>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn max_activations<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<i32>>,
+                T::Error: std::fmt::Display,
+            {
+                self.max_activations = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for max_activations: {}", e)
+                });
+                self
+            }
+            pub fn name<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.name = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for name: {}", e));
+                self
+            }
+            pub fn rule<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<serde_json::Value>,
+                T::Error: std::fmt::Display,
+            {
+                self.rule = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for rule: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<Mapper> for super::Mapper {
+            type Error = String;
+            fn try_from(value: Mapper) -> Result<Self, String> {
+                Ok(Self {
+                    activations: value.activations?,
+                    created_at: value.created_at?,
+                    deleted_at: value.deleted_at?,
+                    depleted_at: value.depleted_at?,
+                    id: value.id?,
+                    max_activations: value.max_activations?,
+                    name: value.name?,
+                    rule: value.rule?,
+                })
+            }
+        }
+
+        impl From<super::Mapper> for Mapper {
+            fn from(value: super::Mapper) -> Self {
+                Self {
+                    activations: Ok(value.activations),
+                    created_at: Ok(value.created_at),
+                    deleted_at: Ok(value.deleted_at),
+                    depleted_at: Ok(value.depleted_at),
+                    id: Ok(value.id),
+                    max_activations: Ok(value.max_activations),
+                    name: Ok(value.name),
+                    rule: Ok(value.rule),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
         pub struct OAuthAuthzCodeExchangeBody {
             client_id: Result<uuid::Uuid, String>,
             client_secret: Result<String, String>,
@@ -3872,6 +4175,23 @@ pub mod types {
             }
         }
     }
+
+    pub mod defaults {
+        pub(super) fn mapping_rules_email_address_permissions() -> super::PermissionsForApiPermission
+        {
+            super::PermissionsForApiPermission(vec![])
+        }
+
+        pub(super) fn mapping_rules_email_domain_permissions() -> super::PermissionsForApiPermission
+        {
+            super::PermissionsForApiPermission(vec![])
+        }
+
+        pub(super) fn mapping_rules_git_hub_username_permissions(
+        ) -> super::PermissionsForApiPermission {
+            super::PermissionsForApiPermission(vec![])
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -4236,6 +4556,41 @@ impl Client {
     /// ```
     pub fn exchange_device_token(&self) -> builder::ExchangeDeviceToken {
         builder::ExchangeDeviceToken::new(self)
+    }
+
+    /// Sends a `GET` request to `/mapper`
+    ///
+    /// ```ignore
+    /// let response = client.get_mappers()
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn get_mappers(&self) -> builder::GetMappers {
+        builder::GetMappers::new(self)
+    }
+
+    /// Sends a `POST` request to `/mapper`
+    ///
+    /// ```ignore
+    /// let response = client.create_mapper()
+    ///    .body(body)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn create_mapper(&self) -> builder::CreateMapper {
+        builder::CreateMapper::new(self)
+    }
+
+    /// Sends a `DELETE` request to `/mapper/{identifier}`
+    ///
+    /// ```ignore
+    /// let response = client.delete_mapper()
+    ///    .identifier(identifier)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn delete_mapper(&self) -> builder::DeleteMapper {
+        builder::DeleteMapper::new(self)
     }
 
     /// List OAuth clients
@@ -6189,6 +6544,172 @@ pub mod builder {
             match response.status().as_u16() {
                 200..=299 => Ok(ResponseValue::stream(response)),
                 _ => Err(Error::ErrorResponse(ResponseValue::stream(response))),
+            }
+        }
+    }
+
+    /// Builder for [`Client::get_mappers`]
+    ///
+    /// [`Client::get_mappers`]: super::Client::get_mappers
+    #[derive(Debug, Clone)]
+    pub struct GetMappers<'a> {
+        client: &'a super::Client,
+    }
+
+    impl<'a> GetMappers<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self { client }
+        }
+
+        /// Sends a `GET` request to `/mapper`
+        pub async fn send(self) -> Result<ResponseValue<Vec<types::Mapper>>, Error<types::Error>> {
+            let Self { client } = self;
+            let url = format!("{}/mapper", client.baseurl,);
+            let request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::create_mapper`]
+    ///
+    /// [`Client::create_mapper`]: super::Client::create_mapper
+    #[derive(Debug, Clone)]
+    pub struct CreateMapper<'a> {
+        client: &'a super::Client,
+        body: Result<types::builder::CreateMapper, String>,
+    }
+
+    impl<'a> CreateMapper<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client,
+                body: Ok(types::builder::CreateMapper::default()),
+            }
+        }
+
+        pub fn body<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::CreateMapper>,
+        {
+            self.body = value
+                .try_into()
+                .map(From::from)
+                .map_err(|_| "conversion to `CreateMapper` for body failed".to_string());
+            self
+        }
+
+        pub fn body_map<F>(mut self, f: F) -> Self
+        where
+            F: std::ops::FnOnce(types::builder::CreateMapper) -> types::builder::CreateMapper,
+        {
+            self.body = self.body.map(f);
+            self
+        }
+
+        /// Sends a `POST` request to `/mapper`
+        pub async fn send(self) -> Result<ResponseValue<types::Mapper>, Error<types::Error>> {
+            let Self { client, body } = self;
+            let body = body
+                .and_then(std::convert::TryInto::<types::CreateMapper>::try_into)
+                .map_err(Error::InvalidRequest)?;
+            let url = format!("{}/mapper", client.baseurl,);
+            let request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .json(&body)
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::delete_mapper`]
+    ///
+    /// [`Client::delete_mapper`]: super::Client::delete_mapper
+    #[derive(Debug, Clone)]
+    pub struct DeleteMapper<'a> {
+        client: &'a super::Client,
+        identifier: Result<uuid::Uuid, String>,
+    }
+
+    impl<'a> DeleteMapper<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client,
+                identifier: Err("identifier was not initialized".to_string()),
+            }
+        }
+
+        pub fn identifier<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<uuid::Uuid>,
+        {
+            self.identifier = value
+                .try_into()
+                .map_err(|_| "conversion to `uuid :: Uuid` for identifier failed".to_string());
+            self
+        }
+
+        /// Sends a `DELETE` request to `/mapper/{identifier}`
+        pub async fn send(self) -> Result<ResponseValue<types::Mapper>, Error<types::Error>> {
+            let Self { client, identifier } = self;
+            let identifier = identifier.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/mapper/{}",
+                client.baseurl,
+                encode_path(&identifier.to_string()),
+            );
+            let request = client
+                .client
+                .delete(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
             }
         }
     }

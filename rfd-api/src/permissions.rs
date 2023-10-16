@@ -59,6 +59,16 @@ pub enum ApiPermission {
     ManageGroupsAssigned,
     ManageGroupsAll,
 
+    // Mapper permissions
+    ListMappers,
+    CreateMapper,
+    UpdateMapper(Uuid),
+    DeleteMapper(Uuid),
+    ManageMapper(Uuid),
+    ManageMappers(BTreeSet<Uuid>),
+    ManageMappersAssigned,
+    ManageMappersAll,
+
     // RFD access permissions
     GetRfd(i32),
     GetRfds(BTreeSet<i32>),
@@ -127,6 +137,15 @@ impl ApiPermission {
             ApiPermission::ManageGroups(_) => "group:w",
             ApiPermission::ManageGroupsAssigned => "group:w",
             ApiPermission::ManageGroupsAll => "group:w",
+
+            ApiPermission::ListMappers => "mapper:r",
+            ApiPermission::CreateMapper => "mapper:w",
+            ApiPermission::UpdateMapper(_) => "mapper:w",
+            ApiPermission::DeleteMapper(_) => "mapper:w",
+            ApiPermission::ManageMapper(_) => "mapper:w",
+            ApiPermission::ManageMappers(_) => "mapper:w",
+            ApiPermission::ManageMappersAssigned => "mapper:w",
+            ApiPermission::ManageMappersAll => "mapper:w",
 
             ApiPermission::GetRfd(_) => "rfd:content:r",
             ApiPermission::GetRfds(_) => "rfd:content:r",
@@ -204,6 +223,14 @@ impl ApiPermission {
                 "group:membership:w" => {
                     permissions.insert(ApiPermission::ManageGroupMembershipAssigned);
                     permissions.insert(ApiPermission::ManageGroupMembershipAll);
+                }
+                "mapper:r" => {
+                    permissions.insert(ApiPermission::ListMappers);
+                }
+                "mapper:w" => {
+                    permissions.insert(ApiPermission::CreateMapper);
+                    permissions.insert(ApiPermission::ManageMappersAssigned);
+                    permissions.insert(ApiPermission::ManageMappersAll);
                 }
                 "rfd:content:r" => {
                     permissions.insert(ApiPermission::GetRfdsAssigned);

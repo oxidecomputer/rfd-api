@@ -162,6 +162,36 @@ impl CliOutput for Printer {
         }
     }
 
+    fn output_get_mappers(
+            &self,
+            response: Result<Vec<types::Mapper>, progenitor_client::Error<types::Error>>,
+        ) {
+        match self {
+            Printer::Json(printer) => printer.output_get_mappers(response),
+            Printer::Tab(printer) => printer.output_get_mappers(response),
+        }
+    }
+
+    fn output_create_mapper(
+            &self,
+            response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
+        ) {
+        match self {
+            Printer::Json(printer) => printer.output_create_mapper(response),
+            Printer::Tab(printer) => printer.output_create_mapper(response),
+        }
+    }
+
+    fn output_delete_mapper(
+            &self,
+            response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
+        ) {
+        match self {
+            Printer::Json(printer) => printer.output_delete_mapper(response),
+            Printer::Tab(printer) => printer.output_delete_mapper(response),
+        }
+    }
+
     fn output_authz_code_redirect(&self, response: Result<(), progenitor_client::Error<()>>) {
         match self {
             Printer::Json(printer) => printer.output_authz_code_redirect(response),

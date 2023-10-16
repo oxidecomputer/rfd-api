@@ -628,7 +628,7 @@ impl ApiContext {
         // We optimistically load mappers here. We do not want to take a lock on the mappers and
         // instead handle mappers that become depleted before we can evaluate them at evaluation
         // time.
-        for mapping in self.get_mappers().await? {
+        for mapping in self.get_mappings().await? {
             let (permissions, groups) = (
                 mapping.rule.permissions_for(&self, &info).await?,
                 mapping.rule.groups_for(&self, &info).await?,
@@ -1080,24 +1080,34 @@ impl ApiContext {
 
     // Mapper Operations
 
-    pub async fn get_mappers(&self) -> Result<Vec<Mapping>, StoreError> {
-        let mappers = MapperStore::list(
-            &*self.storage,
-            MapperFilter::default(),
-            &ListPagination::default().limit(UNLIMITED),
-        )
-        .await?
-        .into_iter()
-        .filter_map(|mapper| mapper.try_into().ok())
-        .collect::<Vec<_>>();
+    async fn get_mappings(&self) -> Result<Vec<Mapping>, StoreError> {
+        let mappers = self
+            .get_mappers()
+            .await?
+            .into_iter()
+            .filter_map(|mapper| mapper.try_into().ok())
+            .collect::<Vec<_>>();
 
         tracing::trace!(?mappers, "Fetched list of mappers to test");
 
         Ok(mappers)
     }
 
+    pub async fn get_mappers(&self) -> Result<Vec<Mapper>, StoreError> {
+        Ok(MapperStore::list(
+            &*self.storage,
+            MapperFilter::default(),
+            &ListPagination::default().limit(UNLIMITED),
+        )
+        .await?)
+    }
+
     pub async fn add_mapper(&self, new_mapper: &NewMapper) -> Result<Mapper, StoreError> {
         Ok(MapperStore::upsert(&*self.storage, new_mapper).await?)
+    }
+
+    pub async fn remove_mapper(&self, id: &Uuid) -> Result<Option<Mapper>, StoreError> {
+        Ok(MapperStore::delete(&*self.storage, id).await?)
     }
 
     async fn consume_mapping_activation(&self, mapping: &Mapping) -> Result<(), StoreError> {

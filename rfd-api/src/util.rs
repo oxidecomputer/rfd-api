@@ -1,8 +1,10 @@
+use diesel::result::{DatabaseErrorKind, Error as DieselError};
 use google_cloudkms1::{
     hyper_rustls::{self, HttpsConnector},
     CloudKMS,
 };
 use hyper::client::HttpConnector;
+use rfd_model::storage::StoreError;
 
 use crate::authn::CloudKmsError;
 
@@ -39,6 +41,10 @@ pub mod response {
     use dropshot::HttpError;
     use http::StatusCode;
     use std::error::Error;
+
+    pub fn conflict() -> HttpError {
+        client_error(StatusCode::CONFLICT, "Already exists")
+    }
 
     pub fn unauthorized() -> HttpError {
         client_error(StatusCode::UNAUTHORIZED, "Unauthorized")
@@ -79,6 +85,13 @@ pub mod response {
         S: ToString,
     {
         HttpError::for_internal_error(internal_message.to_string())
+    }
+}
+
+pub fn is_uniqueness_error(err: &StoreError) -> bool {
+    match err {
+        StoreError::Db(DieselError::DatabaseError(DatabaseErrorKind::UniqueViolation, _)) => true,
+        _ => false,
     }
 }
 

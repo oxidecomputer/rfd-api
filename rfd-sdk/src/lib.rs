@@ -59,6 +59,21 @@ impl Display for ApiPermission {
             ),
             Self::ManageGroupsAssigned => write!(f, "manage-groups-assigned"),
             Self::ManageGroupsAll => write!(f, "manage-groups-all"),
+            Self::ListMappers => write!(f, "list-mappers"),
+            Self::CreateMapper => write!(f, "create-mapper"),
+            Self::UpdateMapper(id) => write!(f, "update-mapper:{}", id),
+            Self::DeleteMapper(id) => write!(f, "delete-mapper:{}", id),
+            Self::ManageMapper(id) => write!(f, "manage-mapper:{}", id),
+            Self::ManageMappers(ids) => write!(
+                f,
+                "manage-mappers:{}",
+                ids.iter()
+                    .map(|i| i.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            Self::ManageMappersAssigned => write!(f, "manage-mappers-assigned"),
+            Self::ManageMappersAll => write!(f, "manage-mappers-all"),
             Self::GetRfd(number) => write!(f, "get-rfd:{}", number),
             Self::GetRfds(numbers) => write!(
                 f,

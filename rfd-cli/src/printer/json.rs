@@ -121,6 +121,27 @@ impl CliOutput for RfdJsonPrinter {
         print_cli_output(&response)
     }
 
+    fn output_get_mappers(
+            &self,
+            response: Result<Vec<types::Mapper>, progenitor_client::Error<types::Error>>,
+        ) {
+        print_cli_output(&response)
+    }
+
+    fn output_create_mapper(
+            &self,
+            response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
+        ) {
+        print_cli_output(&response)
+    }
+
+    fn output_delete_mapper(
+            &self,
+            response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
+        ) {
+        print_cli_output(&response)
+    }
+
     fn output_authz_code_redirect(&self, response: Result<(), progenitor_client::Error<()>>) {}
 
     fn output_authz_code_callback(

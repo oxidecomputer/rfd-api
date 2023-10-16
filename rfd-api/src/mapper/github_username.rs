@@ -2,6 +2,7 @@ use std::collections::BTreeSet;
 
 use async_trait::async_trait;
 use rfd_model::storage::StoreError;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -9,7 +10,7 @@ use crate::{context::ApiContext, endpoints::login::UserInfo, ApiPermissions};
 
 use super::MapperRule;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
 pub struct GitHubUsernameMapper {
     github_username: String,
     #[serde(default)]

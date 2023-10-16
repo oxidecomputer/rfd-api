@@ -42,6 +42,9 @@ impl Cli {
             CliCommand::AuthzCodeExchange => Self::cli_authz_code_exchange(),
             CliCommand::GetDeviceProvider => Self::cli_get_device_provider(),
             CliCommand::ExchangeDeviceToken => Self::cli_exchange_device_token(),
+            CliCommand::GetMappers => Self::cli_get_mappers(),
+            CliCommand::CreateMapper => Self::cli_create_mapper(),
+            CliCommand::DeleteMapper => Self::cli_delete_mapper(),
             CliCommand::ListOauthClients => Self::cli_list_oauth_clients(),
             CliCommand::CreateOauthClient => Self::cli_create_oauth_client(),
             CliCommand::GetOauthClient => Self::cli_get_oauth_client(),
@@ -607,6 +610,49 @@ impl Cli {
             )
     }
 
+    pub fn cli_get_mappers() -> clap::Command {
+        clap::Command::new("")
+    }
+
+    pub fn cli_create_mapper() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("max-activations")
+                    .long("max-activations")
+                    .value_parser(clap::value_parser!(i32))
+                    .required(false),
+            )
+            .arg(
+                clap::Arg::new("name")
+                    .long("name")
+                    .value_parser(clap::value_parser!(String))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
+                clap::Arg::new("json-body")
+                    .long("json-body")
+                    .value_name("JSON-FILE")
+                    .required(true)
+                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .help("Path to a file that contains the full json body."),
+            )
+            .arg(
+                clap::Arg::new("json-body-template")
+                    .long("json-body-template")
+                    .action(clap::ArgAction::SetTrue)
+                    .help("XXX"),
+            )
+    }
+
+    pub fn cli_delete_mapper() -> clap::Command {
+        clap::Command::new("").arg(
+            clap::Arg::new("identifier")
+                .long("identifier")
+                .value_parser(clap::value_parser!(uuid::Uuid))
+                .required(true),
+        )
+    }
+
     pub fn cli_list_oauth_clients() -> clap::Command {
         clap::Command::new("").about("List OAuth clients")
     }
@@ -812,6 +858,15 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             }
             CliCommand::ExchangeDeviceToken => {
                 self.execute_exchange_device_token(matches).await;
+            }
+            CliCommand::GetMappers => {
+                self.execute_get_mappers(matches).await;
+            }
+            CliCommand::CreateMapper => {
+                self.execute_create_mapper(matches).await;
+            }
+            CliCommand::DeleteMapper => {
+                self.execute_delete_mapper(matches).await;
             }
             CliCommand::ListOauthClients => {
                 self.execute_list_oauth_clients(matches).await;
@@ -1383,6 +1438,60 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
         }
     }
 
+    pub async fn execute_get_mappers(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.get_mappers();
+        self.over
+            .execute_get_mappers(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => self.output.output_get_mappers(Ok(r.into_inner())),
+            Err(r) => self.output.output_get_mappers(Err(r)),
+        }
+    }
+
+    pub async fn execute_create_mapper(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.create_mapper();
+        if let Some(value) = matches.get_one::<i32>("max-activations") {
+            request = request.body_map(|body| body.max_activations(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<String>("name") {
+            request = request.body_map(|body| body.name(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value = serde_json::from_str::<types::CreateMapper>(&body_txt).unwrap();
+            request = request.body(body_value);
+        }
+
+        self.over
+            .execute_create_mapper(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => self.output.output_create_mapper(Ok(r.into_inner())),
+            Err(r) => self.output.output_create_mapper(Err(r)),
+        }
+    }
+
+    pub async fn execute_delete_mapper(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.delete_mapper();
+        if let Some(value) = matches.get_one::<uuid::Uuid>("identifier") {
+            request = request.identifier(value.clone());
+        }
+
+        self.over
+            .execute_delete_mapper(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => self.output.output_delete_mapper(Ok(r.into_inner())),
+            Err(r) => self.output.output_delete_mapper(Err(r)),
+        }
+    }
+
     pub async fn execute_list_oauth_clients(&self, matches: &clap::ArgMatches) {
         let mut request = self.client.list_oauth_clients();
         self.over
@@ -1750,6 +1859,30 @@ pub trait CliOverride {
         Ok(())
     }
 
+    fn execute_get_mappers(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::GetMappers,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn execute_create_mapper(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::CreateMapper,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
+    fn execute_delete_mapper(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::DeleteMapper,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
     fn execute_list_oauth_clients(
         &self,
         matches: &clap::ArgMatches,
@@ -1979,6 +2112,24 @@ pub trait CliOutput {
 
     fn output_exchange_device_token(&self, response: Result<(), progenitor_client::Error<()>>) {}
 
+    fn output_get_mappers(
+        &self,
+        response: Result<Vec<types::Mapper>, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_create_mapper(
+        &self,
+        response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
+    fn output_delete_mapper(
+        &self,
+        response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
     fn output_list_oauth_clients(
         &self,
         response: Result<Vec<types::OAuthClient>, progenitor_client::Error<types::Error>>,
@@ -2076,6 +2227,9 @@ pub enum CliCommand {
     AuthzCodeExchange,
     GetDeviceProvider,
     ExchangeDeviceToken,
+    GetMappers,
+    CreateMapper,
+    DeleteMapper,
     ListOauthClients,
     CreateOauthClient,
     GetOauthClient,
@@ -2115,6 +2269,9 @@ impl CliCommand {
             CliCommand::AuthzCodeExchange,
             CliCommand::GetDeviceProvider,
             CliCommand::ExchangeDeviceToken,
+            CliCommand::GetMappers,
+            CliCommand::CreateMapper,
+            CliCommand::DeleteMapper,
             CliCommand::ListOauthClients,
             CliCommand::CreateOauthClient,
             CliCommand::GetOauthClient,
