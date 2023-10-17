@@ -206,7 +206,6 @@ pub async fn exchange_device_token(
                                 "rfd:discussion:r".to_string(),
                                 "search".to_string(),
                             ],
-                            exchange.expires_at,
                         )
                         .await?;
 

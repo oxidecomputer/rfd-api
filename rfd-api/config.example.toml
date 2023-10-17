@@ -1,35 +1,70 @@
+# Allowed values: json, pretty
 log_format = ""
+
+# Public url of the service. This should include the protocol, host, and port that a user would use
+# to connect to the server via
 public_url = ""
+
+# Port for the server to run on
 server_port = 8080
+
+# Full url of the Postgres database to connect to
 database_url = ""
 
+# Settings for JWT management
+[jwt]
+
+# Duration that a JWT is valid for
+default_expiration = 3600
+
+# Deprecated: To be removed
+max_expiration = 1209600
+
+# Keys for signing JWTs and generating secrets. Currently GCP Cloud KMS keys and local static keys
+# are supported
+
+# Cloud KMS
+[[keys]]
+kind = "ckms" # Static identifier indicating Cloud KMS
+kid = "" # Unique key identifer, that will be used in JWKS
+version = 1 # KMS key version
+key = "" # KMS key name
+keyring = "" # KMS keying name
+location = "" # KMS region
+project = "" # GCP project containing Cloud KMS
+
+# Local key
+[[keys]]
+kind = "local" # Static identifier indicating a local key
+kid = "" # Unique key identifer, that will be used in JWKS
+private = """""" # PEM encoded private key
+public = """""" # PEM encoded public key
+
+# OAuth Providers
+# Google and GitHub are supported. An OAuth provider needs to have both a web and device config
+
+[authn.oauth.google.device]
+client_id = ""
+client_secret = ""
+
+[authn.oauth.google.web]
+client_id = ""
+client_secret = ""
+redirect_uri = ""
+
+# Search configuration
+[search]
+# Remote url of the search service
+host = ""
+# Read-only search key
+key = ""
+# Index to perform searches against
+index = "rfd"
+
+# Fields for use in generating the OpenAPI spec file
 [spec]
 title = ""
 description = ""
 contact_url = ""
 contact_email = ""
 output_path = ""
-
-[permissions]
-default = [
-  "GetApiUserSelf",
-  "UpdateApiUserSelf",
-  "CreateApiUserTokenSelf",
-  "GetApiUserTokenSelf",
-  "DeleteApiUserTokenSelf",
-
-  "GetAssignedRfds",
-]
-
-[jwt]
-default_expiration = 3600
-max_expiration = 1209600
-keys = []
-
-[authn.jwt.google]
-issuer = ""
-well_known_uri = ""
-
-[authn.oauth.google]
-client_id = "
-client_secret = "

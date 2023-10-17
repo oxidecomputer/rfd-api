@@ -1,5 +1,5 @@
 use base64::{prelude::BASE64_URL_SAFE_NO_PAD, Engine};
-use chrono::{Duration, Utc};
+use chrono::Utc;
 use dropshot::{
     endpoint, http_response_temporary_redirect, HttpError, HttpResponseOk,
     HttpResponseTemporaryRedirect, Path, Query, RequestContext, RequestInfo, TypedBody,
@@ -17,7 +17,7 @@ use rfd_model::{schema_ext::LoginAttemptState, LoginAttempt, NewLoginAttempt, OA
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::{fmt::Debug, ops::Add};
+use std::fmt::Debug;
 use tap::TapFallible;
 use tracing::instrument;
 use uuid::Uuid;
@@ -501,7 +501,6 @@ pub async fn authz_code_exchange(
             &api_user,
             &api_user_provider,
             scope,
-            Some(Utc::now().add(Duration::seconds(7 * 24 * 60 * 60))),
         )
         .await?;
 

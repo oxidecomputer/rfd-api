@@ -45,7 +45,7 @@ use crate::{
     config::{AsymmetricKey, JwtConfig, SearchConfig},
     endpoints::login::{
         oauth::{OAuthProvider, OAuthProviderError, OAuthProviderFn, OAuthProviderName},
-        LoginError, UserInfo,
+        UserInfo,
     },
     error::{ApiError, AppError},
     mapper::{MapperRule, Mapping},
@@ -704,14 +704,8 @@ impl ApiContext {
         api_user: &ApiUser<ApiPermission>,
         api_user_provider: &ApiUserProvider,
         scope: Vec<String>,
-        expires_at: Option<DateTime<Utc>>,
     ) -> Result<RegisteredAccessToken, ApiError> {
-        let expires_at = expires_at
-            .unwrap_or_else(|| Utc::now() + Duration::seconds(self.default_jwt_expiration()));
-
-        if expires_at > Utc::now() + Duration::seconds(self.max_jwt_expiration()) {
-            return Err(ApiError::Login(LoginError::ExcessTokenExpiration));
-        }
+        let expires_at = Utc::now() + Duration::seconds(self.default_jwt_expiration());
 
         // Ensure that the token is within the configured limits
         let claims = Claims {
