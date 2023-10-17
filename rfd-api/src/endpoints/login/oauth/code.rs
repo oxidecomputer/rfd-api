@@ -497,11 +497,7 @@ pub async fn authz_code_exchange(
     // Generate a new access token for the user with an expiration matching the value given to us
     // by the remote service
     let token = ctx
-        .register_access_token(
-            &api_user,
-            &api_user_provider,
-            scope,
-        )
+        .register_access_token(&api_user, &api_user_provider, scope)
         .await?;
 
     tracing::info!(provider = ?path.provider, api_user_id = ?api_user.id, "Generated access token");
