@@ -1,6 +1,9 @@
 # Allowed values: json, pretty
 log_format = ""
 
+# Optional directory to write log files to. If not specified, they are written to stdout
+log_directory = ""
+
 # Public url of the service. This should include the protocol, host, and port that a user would use
 # to connect to the server via
 public_url = ""

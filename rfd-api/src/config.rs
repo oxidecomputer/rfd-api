@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use config::{Config, ConfigError, Environment, File};
 use serde::{
     de::{self, Visitor},
@@ -16,6 +18,7 @@ pub enum AppConfigError {
 #[derive(Debug, Deserialize)]
 pub struct AppConfig {
     pub log_format: ServerLogFormat,
+    pub log_directory: Option<PathBuf>,
     pub public_url: String,
     pub server_port: u16,
     pub database_url: String,
@@ -137,13 +140,16 @@ pub struct SearchConfig {
 }
 
 impl AppConfig {
-    pub fn new() -> Result<Self, ConfigError> {
-        let config = Config::builder()
+    pub fn new(config_sources: Option<Vec<String>>) -> Result<Self, ConfigError> {
+        let mut config = Config::builder()
             .add_source(File::with_name("config.toml").required(false))
-            .add_source(File::with_name("rfd-api/config.toml").required(false))
-            .add_source(Environment::default())
-            .build()?;
+            .add_source(File::with_name("rfd-api/config.toml").required(false));
 
-        config.try_deserialize()
+        for source in config_sources.unwrap_or_default() {
+            config = config.add_source(File::with_name(&source).required(false));
+        }
+
+        config.add_source(Environment::default())
+            .build()?.try_deserialize()
     }
 }

@@ -48,6 +48,7 @@ tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 toml = { workspace = true }
 trace-request = { path = "../trace-request" }
 tracing = { workspace = true }
+tracing-appender = { workspace = true }
 tracing-slog = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter", "fmt", "json"] }
 uuid = { workspace = true, features = ["v4", "serde"]  }

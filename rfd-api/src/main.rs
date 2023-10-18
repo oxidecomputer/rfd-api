@@ -6,6 +6,7 @@ use rfd_model::{
     ApiKey, ApiUser,
 };
 use server::{server, ServerConfig};
+use tracing_appender::non_blocking::NonBlocking;
 use std::{
     error::Error,
     net::{SocketAddr, SocketAddrV4},
@@ -39,12 +40,24 @@ pub type UserToken = ApiKey<ApiPermission>;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
-    let config = AppConfig::new()?;
+    let mut args = std::env::args();
+    let _ = args.next();
+    let config_path = args.next();
+
+    let config = AppConfig::new(config_path.map(|path| vec![path]))?;
+
+    let (writer, _guard) = if let Some(log_directory) = config.log_directory {
+        let file_appender = tracing_appender::rolling::daily(log_directory, "rfd-api.log");
+        tracing_appender::non_blocking(file_appender)
+    } else {
+        NonBlocking::new(std::io::stdout())
+    };
 
     let subscriber = tracing_subscriber::fmt()
         .with_file(false)
         .with_line_number(false)
-        .with_env_filter(EnvFilter::from_default_env());
+        .with_env_filter(EnvFilter::from_default_env())
+        .with_writer(writer);
 
     match config.log_format {
         ServerLogFormat::Json => subscriber.json().init(),
