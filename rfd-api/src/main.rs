@@ -6,12 +6,12 @@ use rfd_model::{
     ApiKey, ApiUser,
 };
 use server::{server, ServerConfig};
-use tracing_appender::non_blocking::NonBlocking;
 use std::{
     error::Error,
     net::{SocketAddr, SocketAddrV4},
     sync::Arc,
 };
+use tracing_appender::non_blocking::NonBlocking;
 use tracing_subscriber::EnvFilter;
 
 use crate::{

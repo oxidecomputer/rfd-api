@@ -149,7 +149,9 @@ impl AppConfig {
             config = config.add_source(File::with_name(&source).required(false));
         }
 
-        config.add_source(Environment::default())
-            .build()?.try_deserialize()
+        config
+            .add_source(Environment::default())
+            .build()?
+            .try_deserialize()
     }
 }
