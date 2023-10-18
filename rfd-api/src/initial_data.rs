@@ -39,14 +39,19 @@ pub enum InitError {
 }
 
 impl InitialData {
-    pub fn new() -> Result<Self, InitError> {
-        let config = Config::builder()
+    pub fn new(config_sources: Option<Vec<String>>) -> Result<Self, InitError> {
+        let mut config = Config::builder()
             .add_source(File::with_name("mappers.toml").required(false))
-            .add_source(File::with_name("rfd-api/mappers.toml").required(false))
-            .add_source(Environment::default())
-            .build()?;
+            .add_source(File::with_name("rfd-api/mappers.toml").required(false));
 
-        Ok(config.try_deserialize()?)
+        for source in config_sources.unwrap_or_default() {
+            config = config.add_source(File::with_name(&source).required(false));
+        }
+
+        Ok(config
+            .add_source(Environment::default())
+            .build()?
+            .try_deserialize()?)
     }
 
     pub async fn initialize(self, ctx: &ApiContext) -> Result<(), InitError> {

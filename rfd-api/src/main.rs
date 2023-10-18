@@ -79,7 +79,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     )
     .await?;
 
-    let init_data = InitialData::new()?;
+    let init_data = InitialData::new(config.initial_mappers.map(|p| vec![p]))?;
     init_data.initialize(&context).await?;
 
     if let Some(github) = config.authn.oauth.github {

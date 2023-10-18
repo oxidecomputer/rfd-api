@@ -19,6 +19,7 @@ pub enum AppConfigError {
 pub struct AppConfig {
     pub log_format: ServerLogFormat,
     pub log_directory: Option<PathBuf>,
+    pub initial_mappers: Option<String>,
     pub public_url: String,
     pub server_port: u16,
     pub database_url: String,
