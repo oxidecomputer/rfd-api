@@ -24,3 +24,6 @@ textwrap = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 toml = { workspace = true }
 uuid = { workspace = true, features = ["serde", "v4"] }
+
+[package.metadata.dist]
+targets = ["x86_64-unknown-linux-gnu", "aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-pc-windows-msvc"]
