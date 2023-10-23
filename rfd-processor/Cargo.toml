@@ -35,3 +35,6 @@ tracing = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter", "fmt", "json"] }
 uuid = { workspace = true }
 yup-oauth2 = { workspace = true }
+
+[package.metadata.dist]
+targets = ["x86_64-unknown-linux-gnu"]
