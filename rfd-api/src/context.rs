@@ -2,7 +2,7 @@ use chrono::{DateTime, Duration, Utc};
 use dropshot::{HttpError, RequestContext};
 use http::StatusCode;
 use hyper::{client::HttpConnector, Body, Client};
-use hyper_rustls::{HttpsConnectorBuilder, HttpsConnector};
+use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
 use jsonwebtoken::jwk::JwkSet;
 use meilisearch_sdk::Client as SearchClient;
 use oauth2::CsrfToken;
@@ -210,11 +210,13 @@ impl ApiContext {
         }
 
         Ok(Self {
-            https_client: hyper::Client::builder().build(HttpsConnectorBuilder::new()
-            .with_native_roots()
-    .https_only()
-    .enable_http1()
-    .build()),
+            https_client: hyper::Client::builder().build(
+                HttpsConnectorBuilder::new()
+                    .with_native_roots()
+                    .https_only()
+                    .enable_http1()
+                    .build(),
+            ),
             public_url,
             storage,
 
