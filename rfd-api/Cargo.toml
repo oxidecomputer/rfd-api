@@ -21,12 +21,11 @@ google-cloudkms1 = { workspace = true }
 hex = { workspace = true }
 http = { workspace = true }
 hyper = { workspace = true }
-hyper-tls = { workspace = true }
+hyper-rustls = { workspace = true }
 jsonwebtoken = { workspace = true }
 meilisearch-sdk = { workspace = true }
 oauth2 = { workspace = true }
 octorust = { workspace = true }
-openssl = { workspace = true }
 partial-struct = { workspace = true }
 rand = { workspace = true, features = ["std"] }
 rand_core = { workspace = true, features = ["std"] }
