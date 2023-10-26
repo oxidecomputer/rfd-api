@@ -2468,7 +2468,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-api"
-version = "0.0.0-alpha.10"
+version = "0.0.0-alpha.11"
 dependencies = [
  "async-trait",
  "base64 0.21.4",
@@ -2521,7 +2521,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-cli"
-version = "0.0.0-alpha.10"
+version = "0.0.0-alpha.11"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2571,7 +2571,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-processor"
-version = "0.0.0-alpha.10"
+version = "0.0.0-alpha.11"
 dependencies = [
  "async-trait",
  "base64 0.21.4",
@@ -2608,7 +2608,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-redirect"
-version = "0.0.0-alpha.10"
+version = "0.0.0-alpha.11"
 dependencies = [
  "config",
  "dropshot",
@@ -4184,6 +4184,7 @@ dependencies = [
  "progenitor",
  "regex",
  "rustfmt-wrapper",
+ "semver 1.0.20",
  "serde",
  "serde_json",
  "sha2",

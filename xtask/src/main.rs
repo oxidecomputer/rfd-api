@@ -1,8 +1,10 @@
-use std::{fs::File, io::Write, path::PathBuf};
+use std::{fs::{File, self}, io::Write, path::PathBuf};
 
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use newline_converter::dos2unix;
 use progenitor::{GenerationSettings, Generator, TagStyle};
+use regex::Regex;
+use semver::{Version, Prerelease};
 use similar::{Algorithm, ChangeTag, TextDiff};
 
 #[derive(Parser)]
@@ -10,6 +12,11 @@ use similar::{Algorithm, ChangeTag, TextDiff};
 #[command(about = "build tasks")]
 
 enum Xtask {
+    #[command(about = "bump the global version number")]
+    Bump {
+        #[clap(long)]
+        place: VersionPlace,
+    },
     #[command(about = "generate RFD sdk")]
     Generate {
         #[clap(long)]
@@ -19,11 +26,72 @@ enum Xtask {
     },
 }
 
+#[derive(Clone, ValueEnum)]
+enum VersionPlace {
+    Minor,
+    Major,
+    Patch,
+    Pre,
+}
+
 fn main() -> Result<(), String> {
     let xtask = Xtask::parse();
 
     match xtask {
+        Xtask::Bump { place } => bump_package_versions(&place),
         Xtask::Generate { check, verbose } => generate(check, verbose),
+    }
+}
+
+fn bump_package_versions(place: &VersionPlace) -> Result<(), String> {
+    let packages = vec![
+        "rfd-api",
+        "rfd-cli",
+        "rfd-processor",
+        "rfd-redirect",
+    ];
+
+    let version_pattern = Regex::new(r#"(?m)^version = "(.*)"$"#).unwrap();
+
+    for package in packages {
+        let path = format!("{}/Cargo.toml", package);
+        let contents = fs::read_to_string(&path).unwrap();
+        let version_line = version_pattern.captures(&contents).unwrap();
+        let mut version: Version = version_line.get(1).unwrap().as_str().parse().unwrap();
+        version = version.up(place);
+
+        let old_version_line = version_line.get(0).unwrap().as_str();
+        let new_version_line = format!(r#"version = "{}""#, version);
+        let new_contents = contents.replace(old_version_line, &new_version_line);
+
+        fs::write(path, new_contents).unwrap();
+
+        println!("Updated {} to {}", package, version);
+    }
+
+    Ok(())
+}
+
+trait Bump {
+    fn up(self, place: &VersionPlace) -> Self;
+}
+
+impl Bump for Version {
+    fn up(mut self, place: &VersionPlace) -> Self {
+        match place {
+            VersionPlace::Major => self.major = self.major + 1,
+            VersionPlace::Minor => self.minor = self.minor + 1,
+            VersionPlace::Patch => self.patch = self.patch + 1,
+            VersionPlace::Pre => match self.pre.as_str().split_once('.') {
+                Some((label, number)) => {
+                    let num = number.parse::<u64>().unwrap();
+                    self.pre = Prerelease::new(&format!("{}.{}", label, num + 1)).unwrap();
+                },
+                None => panic!("Found unexpected prelease format: {}", self.pre)
+            },
+        }
+
+        self
     }
 }
 
