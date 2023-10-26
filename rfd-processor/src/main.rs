@@ -3,6 +3,7 @@ use processor::{processor, JobError};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::select;
+use tracing_appender::non_blocking::NonBlocking;
 use tracing_subscriber::EnvFilter;
 
 use crate::{
@@ -24,6 +25,7 @@ mod util;
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct AppConfig {
+    pub log_directory: Option<String>,
     pub processor_batch_size: i64,
     pub processor_interval: u64,
     pub scanner_interval: u64,
@@ -83,27 +85,44 @@ pub struct SearchConfig {
 }
 
 impl AppConfig {
-    pub fn new() -> Result<Self, ConfigError> {
-        let config = Config::builder()
+    pub fn new(config_sources: Option<Vec<String>>) -> Result<Self, ConfigError> {
+        let mut config = Config::builder()
             .add_source(File::with_name("config.toml").required(false))
-            .add_source(File::with_name("rfd-processor/config.toml").required(false))
-            .add_source(Environment::default())
-            .build()?;
+            .add_source(File::with_name("rfd-processor/config.toml").required(false));
 
-        config.try_deserialize()
+        for source in config_sources.unwrap_or_default() {
+            config = config.add_source(File::with_name(&source).required(false));
+        }
+
+        config
+            .add_source(Environment::default())
+            .build()?
+            .try_deserialize()
     }
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut args = std::env::args();
+    let _ = args.next();
+    let config_path = args.next();
+
+    let config = AppConfig::new(config_path.map(|path| vec![path]))?;
+
+    let (writer, _guard) = if let Some(log_directory) = &config.log_directory {
+        let file_appender = tracing_appender::rolling::daily(log_directory, "rfd-processor.log");
+        tracing_appender::non_blocking(file_appender)
+    } else {
+        NonBlocking::new(std::io::stdout())
+    };
+
     let _subscriber = tracing_subscriber::fmt()
         .with_file(false)
         .with_line_number(false)
         .with_env_filter(EnvFilter::from_default_env())
-        .pretty()
+        .with_writer(writer)
+        .json()
         .init();
-
-    let config = AppConfig::new()?;
 
     let ctx = Arc::new(Context::new(Database::new(&config.database_url).await, &config).await?);
 
