@@ -45,8 +45,16 @@ pub struct AuthConfig {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct GitHubAuthConfig {
-    pub token: String,
+#[serde(untagged)]
+pub enum GitHubAuthConfig {
+    Installation {
+        app_id: i64,
+        installation_id: i64,
+        private_key: String,
+    },
+    User {
+        token: String,
+    },
 }
 
 #[derive(Debug, Deserialize, Serialize)]

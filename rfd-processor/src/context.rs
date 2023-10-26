@@ -6,10 +6,11 @@ use google_storage1::{
     hyper, hyper::client::HttpConnector, hyper_rustls, hyper_rustls::HttpsConnector, Storage,
 };
 use octorust::{
-    auth::Credentials, http_cache::FileBasedCache, Client as GitHubClient, ClientError,
+    auth::{Credentials, JWTCredentials, InstallationTokenGenerator}, http_cache::FileBasedCache, Client as GitHubClient, ClientError,
 };
 use reqwest::Error as ReqwestError;
 use rfd_model::storage::postgres::PostgresStore;
+use rsa::{RsaPrivateKey, pkcs1::{DecodeRsaPrivateKey, EncodeRsaPrivateKey}};
 use thiserror::Error;
 
 use crate::{
@@ -18,7 +19,7 @@ use crate::{
     pdf::{PdfFileLocation, PdfStorage, RfdPdf, RfdPdfError},
     search::RfdSearchIndex,
     updater::{BoxedAction, RfdUpdaterError},
-    AppConfig, PdfStorageConfig, SearchConfig, StaticStorageConfig,
+    AppConfig, PdfStorageConfig, SearchConfig, StaticStorageConfig, GitHubAuthConfig,
 };
 
 pub struct Database {
@@ -47,9 +48,11 @@ pub enum ContextError {
     #[error("Failed to find GCP credentials {0}")]
     FailedToFindGcpCredentials(std::io::Error),
     #[error(transparent)]
+    GitHub(#[from] GitHubError),
+    #[error(transparent)]
     InvalidAction(#[from] RfdUpdaterError),
     #[error(transparent)]
-    GitHub(#[from] GitHubError),
+    InvalidGitHubPrivateKey(#[from] rsa::pkcs1::Error),
 }
 
 pub struct Context {
@@ -80,12 +83,27 @@ impl Context {
             .build();
         let http_cache = Box::new(FileBasedCache::new("/tmp/.cache/github"));
 
-        let github_client = GitHubClient::custom(
-            "rfd-processor",
-            Credentials::Token(config.auth.github.token.to_string()),
-            client,
-            http_cache,
-        );
+        let github_client = match &config.auth.github {
+            GitHubAuthConfig::Installation { app_id, installation_id, private_key } => {
+                GitHubClient::custom(
+                    "rfd-processor",
+                    Credentials::InstallationToken(InstallationTokenGenerator::new(
+                        *installation_id,
+                        JWTCredentials::new(*app_id, RsaPrivateKey::from_pkcs1_pem(private_key)?.to_pkcs1_der()?.to_bytes().to_vec())?,
+                    )),
+                    client,
+                    http_cache,
+                )
+            },
+            GitHubAuthConfig::User { token } => {
+                GitHubClient::custom(
+                    "rfd-processor",
+                    Credentials::Token(token.to_string()),
+                    client,
+                    http_cache,
+                )
+            }
+        };
 
         let repository = GitHubRfdRepo::new(
             &github_client,
