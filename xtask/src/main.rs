@@ -1,10 +1,14 @@
-use std::{fs::{File, self}, io::Write, path::PathBuf};
+use std::{
+    fs::{self, File},
+    io::Write,
+    path::PathBuf,
+};
 
 use clap::{Parser, ValueEnum};
 use newline_converter::dos2unix;
 use progenitor::{GenerationSettings, Generator, TagStyle};
 use regex::Regex;
-use semver::{Version, Prerelease};
+use semver::{Prerelease, Version};
 use similar::{Algorithm, ChangeTag, TextDiff};
 
 #[derive(Parser)]
@@ -44,12 +48,7 @@ fn main() -> Result<(), String> {
 }
 
 fn bump_package_versions(place: &VersionPlace) -> Result<(), String> {
-    let packages = vec![
-        "rfd-api",
-        "rfd-cli",
-        "rfd-processor",
-        "rfd-redirect",
-    ];
+    let packages = vec!["rfd-api", "rfd-cli", "rfd-processor", "rfd-redirect"];
 
     let version_pattern = Regex::new(r#"(?m)^version = "(.*)"$"#).unwrap();
 
@@ -86,8 +85,8 @@ impl Bump for Version {
                 Some((label, number)) => {
                     let num = number.parse::<u64>().unwrap();
                     self.pre = Prerelease::new(&format!("{}.{}", label, num + 1)).unwrap();
-                },
-                None => panic!("Found unexpected prelease format: {}", self.pre)
+                }
+                None => panic!("Found unexpected prelease format: {}", self.pre),
             },
         }
 
