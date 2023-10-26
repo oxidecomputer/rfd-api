@@ -40,6 +40,8 @@ pub async fn scanner(ctx: Arc<Context>) -> Result<(), ScannerError> {
                 }
             }
         }
+
+        interval.tick().await;
     }
 }
 
