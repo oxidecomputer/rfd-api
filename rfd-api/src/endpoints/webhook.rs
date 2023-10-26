@@ -54,7 +54,7 @@ pub struct GitHubCommitPayload {
     #[serde(rename = "ref")]
     pub ref_: String,
     pub commits: Vec<GitHubCommit>,
-    pub head_commit: GitHubCommit,
+    pub head_commit: Option<GitHubCommit>,
     pub repository: GitHubRepository,
     pub sender: GitHubSender,
     pub installation: GitHubInstallation,
@@ -64,14 +64,20 @@ impl GitHubCommitPayload {
     pub fn create_jobs(&self, delivery_id: Uuid) -> Vec<NewJob> {
         self.affected_rfds()
             .into_iter()
-            .map(|rfd| NewJob {
-                owner: self.repository.owner.login.clone(),
-                repository: self.repository.name.clone(),
-                branch: self.branch().to_string(),
-                sha: self.head_commit.id.clone(),
-                rfd,
-                webhook_delivery_id: Some(delivery_id),
-                committed_at: self.head_commit.timestamp.clone(),
+            .filter_map(|rfd| {
+                if let Some(head_commit) = &self.head_commit {
+                    Some(NewJob {
+                        owner: self.repository.owner.login.clone(),
+                        repository: self.repository.name.clone(),
+                        branch: self.branch().to_string(),
+                        sha: head_commit.id.clone(),
+                        rfd,
+                        webhook_delivery_id: Some(delivery_id),
+                        committed_at: head_commit.timestamp.clone(),
+                    })
+                } else {
+                    None
+                }
             })
             .collect()
     }
