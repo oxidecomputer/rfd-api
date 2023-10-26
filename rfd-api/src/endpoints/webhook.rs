@@ -51,6 +51,7 @@ pub async fn github_webhook(
 
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
 pub struct GitHubCommitPayload {
+    #[serde(rename = "ref")]
     pub ref_: String,
     pub commits: Vec<GitHubCommit>,
     pub head_commit: GitHubCommit,
