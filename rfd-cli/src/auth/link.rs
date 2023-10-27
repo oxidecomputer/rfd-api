@@ -13,7 +13,7 @@ use crate::{auth::oauth, Context};
 use super::login::LoginProvider;
 
 // Authenticates and generates an access token for interacting with the api
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 #[clap(name = "link")]
 pub struct Link {
     #[command(subcommand)]

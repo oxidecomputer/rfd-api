@@ -7,10 +7,17 @@ use tabwriter::TabWriter;
 
 use crate::generated::cli::CliOutput;
 
-static HEADER_COLOR: &str = "\x1b[38;5;245m";
-static TEXT_COLOR: &str = "\x1b[38;5;253m";
-static ERROR_COLOR: &str = "\x1b[38;2;251;110;136m";
-static RESET_COLOR: &str = "\x1b[0m";
+// Determine an implementation for colorized output and controls
+// static HEADER_COLOR: &str = "\x1b[38;5;245m";
+// static TEXT_COLOR: &str = "\x1b[38;5;253m";
+// static ERROR_COLOR: &str = "\x1b[38;2;251;110;136m";
+// static RESET_COLOR: &str = "\x1b[0m";
+
+static HEADER_COLOR: &str = "";
+static TEXT_COLOR: &str = "";
+static ERROR_COLOR: &str = "";
+static RESET_COLOR: &str = "";
+
 pub struct RfdTabPrinter;
 
 impl CliOutput for RfdTabPrinter {
@@ -36,7 +43,7 @@ impl CliOutput for RfdTabPrinter {
                     &mut tw,
                     "{}State:\t{}{}",
                     HEADER_COLOR,
-                    state_color(&rfd.state),
+                    "", // State color
                     rfd.state.unwrap_or_default(),
                 );
                 writeln!(
@@ -78,20 +85,12 @@ impl CliOutput for RfdTabPrinter {
                 writeln!(&mut tw, "{}---------------", HEADER_COLOR,);
                 writeln!(&mut tw, "{}", TEXT_COLOR);
 
-                let body = print_rfd_html(&rfd.content);
+                let body = rfd.content;
 
                 if let Some((header, body)) = body.split_once("State") {
-                    for line in textwrap::wrap(body.trim_start(), 200).iter().skip(1) {
+                    for line in body.lines().skip(1) {
                         writeln!(&mut tw, "{}", line);
                     }
-
-                    writeln!(&mut tw, "{}---------------", HEADER_COLOR,);
-                    writeln!(&mut tw, "");
-                    writeln!(
-                        &mut tw,
-                        "{}...someday the content will be nicely formatted once I can render AsciiDoc to a terminal...",
-                        HEADER_COLOR,
-                    );
                 }
 
                 let written = String::from_utf8(tw.into_inner().unwrap()).unwrap();
@@ -359,7 +358,7 @@ fn print_rfd_list(rfds: &mut [ListRfd]) {
             TEXT_COLOR,
             rfd.rfd_number,
             rfd.title,
-            state_color(&rfd.state),
+            "", // State color
             rfd.state.as_deref().unwrap_or_default(),
             TEXT_COLOR,
             // rfd.sha,

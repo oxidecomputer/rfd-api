@@ -104,12 +104,14 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::DeleteApiUserToken => Some("user token delete"),
         CliCommand::GetApiUser => Some("user get"),
         CliCommand::GetApiUserToken => Some("user token get"),
-        CliCommand::GetRfd => Some("rfd get"),
-        CliCommand::GetRfds => Some("rfd list"),
-        CliCommand::SearchRfds => Some("rfd search"),
-        CliCommand::GetSelf => Some("self"),
         CliCommand::ListApiUserTokens => Some("user token list"),
         CliCommand::UpdateApiUser => Some("user update"),
+        CliCommand::GetSelf => Some("user self"),
+
+        // RFD commands
+        CliCommand::GetRfd => Some("get"),
+        CliCommand::GetRfds => Some("list"),
+        CliCommand::SearchRfds => Some("search"),
 
         // Link commands are handled separately
         CliCommand::CreateLinkToken => None,
@@ -121,14 +123,14 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::UpdateGroup => Some("group update"),
         CliCommand::DeleteGroup => Some("group delete"),
 
+        // User admin commands
+        CliCommand::AddApiUserToGroup => Some("group membership add"),
+        CliCommand::RemoveApiUserFromGroup => Some("group membership remove"),
+
         // Mapper commands
         CliCommand::GetMappers => Some("mapper list"),
         CliCommand::CreateMapper => Some("mapper create"),
         CliCommand::DeleteMapper => Some("mapper delete"),
-
-        // User admin commands
-        CliCommand::AddApiUserToGroup => Some("group membership add"),
-        CliCommand::RemoveApiUserFromGroup => Some("group membership remove"),
 
         // OAuth client commands
         CliCommand::ListOauthClients => None,
@@ -206,8 +208,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
         );
 
     cmd = cmd.subcommand(cmd::config::ConfigCmd::command());
-    cmd = cmd.subcommand(auth::Link::command());
-    cmd = cmd.subcommand(auth::Login::command());
+    cmd = cmd.subcommand(auth::Auth::command());
 
     let mut ctx = Context::new()?;
 
@@ -234,14 +235,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .run(&mut ctx)
                 .await?;
         }
-        Some(("link", sub_matches)) => {
-            let _ = auth::Link::from_arg_matches(sub_matches)
-                .unwrap()
-                .run(&mut ctx)
-                .await?;
-        }
-        Some(("login", sub_matches)) => {
-            let _ = auth::Login::from_arg_matches(sub_matches)
+        Some(("auth", sub_matches)) => {
+            let _ = auth::Auth::from_arg_matches(sub_matches)
                 .unwrap()
                 .run(&mut ctx)
                 .await?;

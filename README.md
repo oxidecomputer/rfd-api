@@ -2,6 +2,12 @@
 
 Work in progress replacement for RFD processing and programmatic access.
 
+## Getting Started
+
+1. Download the latest release of `rfd-cli` or run `cargo run -p rfd-cli`
+2. Configure the API host with `rfd-cli config set host https://rfd-api.shared.oxide.computer`
+3. Authenticate against the API with `rfd-cli auth login google`
+
 ## RFD Model
 
 ```
@@ -106,9 +112,7 @@ be scheduled if a change is made to RFD 123.
 Note that the `rfd-api` server does not perform RFD updates. It is responsible only for validating
 calls and scheduling update jobs. Once scheduled, the job will be processed by the `rfd-processor`.
 
-Scanner - 
-
-### Periodic Schedule
+### Scanner
 
 The scanner can be run at a configurable interval which is largely dependent on the size of the RFD
 repo itself, and GitHub rate limits. Currently we run the scanner on a 15 minute interval.

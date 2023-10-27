@@ -6,7 +6,7 @@ use rfd_sdk::types::OAuthProviderName;
 use crate::{auth::oauth, Context};
 
 // Authenticates and generates an access token for interacting with the api
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 #[clap(name = "login")]
 pub struct Login {
     #[command(subcommand)]
@@ -24,7 +24,7 @@ impl Login {
     }
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum LoginProvider {
     /// Login via GitHub
     #[command(name = "github")]

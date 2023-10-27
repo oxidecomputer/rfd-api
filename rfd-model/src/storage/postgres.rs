@@ -230,7 +230,7 @@ impl RfdRevisionStore for PostgresStore {
             .distinct_on(rfd_revision::rfd_id)
             .into_boxed();
 
-        tracing::trace!(?filter, "Lookup unique RFD revisions");
+        tracing::trace!(rfd_ids = ?filter.rfd.as_ref().map(|list| list.len()), "Lookup unique RFD revisions");
 
         let RfdRevisionFilter {
             id,
