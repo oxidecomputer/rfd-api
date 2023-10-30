@@ -14,6 +14,7 @@ dirs = { workspace = true }
 itertools = { workspace = true }
 jsonwebtoken = { workspace = true }
 oauth2 = { workspace = true }
+owo-colors = { workspace = true }
 progenitor-client = { workspace = true }
 reqwest = { workspace = true }
 rfd-sdk = { path = "../rfd-sdk" }

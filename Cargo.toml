@@ -46,6 +46,7 @@ mockall = "0.11.4"
 newline-converter = "0.3.0"
 oauth2 = "4.4.2"
 octorust = "0.7.0"
+owo-colors = "3.5.0"
 partial-struct = { git = "https://github.com/oxidecomputer/partial-struct" }
 progenitor = { git = "https://github.com/oxidecomputer/progenitor", branch = "print-example" }
 progenitor-client = { git = "https://github.com/oxidecomputer/progenitor", branch = "print-example" }

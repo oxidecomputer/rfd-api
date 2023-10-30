@@ -1,384 +1,518 @@
 use itertools::{EitherOrBoth, Itertools};
+use owo_colors::{Style, OwoColorize};
 use rfd_sdk::types::{
-    AccessGroupForApiPermission, ApiUserForApiPermission, Error, GetApiUserResponse, ListRfd,
+    self,
+    AccessGroupForApiPermission, ApiUserForApiPermission, Error, GetApiUserResponse, ListRfd, ApiKeyResponse, InitialApiKeyResponse, Mapper, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, InitialOAuthClientSecretResponse, Visibility, FullRfd, FullRfdPdfEntry,
 };
-use std::{fs::File, io::Write, process::Command};
+use std::{fs::File, io::Write, process::Command, collections::HashMap, fmt::Display};
 use tabwriter::TabWriter;
 
 use crate::generated::cli::CliOutput;
 
-// Determine an implementation for colorized output and controls
-// static HEADER_COLOR: &str = "\x1b[38;5;245m";
-// static TEXT_COLOR: &str = "\x1b[38;5;253m";
-// static ERROR_COLOR: &str = "\x1b[38;2;251;110;136m";
-// static RESET_COLOR: &str = "\x1b[0m";
+pub struct Styles {
+    label: Style,
+    value: Style,
+}
 
-static HEADER_COLOR: &str = "";
-static TEXT_COLOR: &str = "";
-static ERROR_COLOR: &str = "";
-static RESET_COLOR: &str = "";
+impl Default for Styles {
+    fn default() -> Self {
+        Styles {
+            label: Style::new().bold(),
+            value: Style::new(),
+        }
+    }
+}
 
-pub struct RfdTabPrinter;
+#[derive(Default)]
+pub struct RfdTabPrinter {
+    stylesheet: Styles,
+}
 
 impl CliOutput for RfdTabPrinter {
-    fn output_get_rfd(
+    fn output_create_api_user(
         &self,
-        response: Result<rfd_sdk::types::FullRfd, progenitor_client::Error<Error>>,
+        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
     ) {
-        match response {
-            Ok(rfd) => {
-                let mut tw = TabWriter::new(vec![]).ansi(true);
-
-                writeln!(
-                    &mut tw,
-                    "{}Number:\t{}{}",
-                    HEADER_COLOR, TEXT_COLOR, rfd.rfd_number,
-                );
-                writeln!(
-                    &mut tw,
-                    "{}Title:\t{}{}",
-                    HEADER_COLOR, TEXT_COLOR, rfd.title,
-                );
-                writeln!(
-                    &mut tw,
-                    "{}State:\t{}{}",
-                    HEADER_COLOR,
-                    "", // State color
-                    rfd.state.unwrap_or_default(),
-                );
-                writeln!(
-                    &mut tw,
-                    "{}Authors:\t{}{}",
-                    HEADER_COLOR,
-                    TEXT_COLOR,
-                    rfd.authors.unwrap_or_default(),
-                );
-                writeln!(
-                    &mut tw,
-                    "{}Latest Commit:\t{}{}",
-                    HEADER_COLOR, TEXT_COLOR, rfd.commit,
-                );
-                writeln!(
-                    &mut tw,
-                    "{}Visibility:\t{}{}",
-                    HEADER_COLOR,
-                    TEXT_COLOR,
-                    rfd.visibility.to_string(),
-                );
-                writeln!(
-                    &mut tw,
-                    "{}Updated At:\t{}{}",
-                    HEADER_COLOR, TEXT_COLOR, rfd.committed_at,
-                );
-                writeln!(
-                    &mut tw,
-                    "{}Url:\t{}https://rfd.shared.oxide.computer/rfd/{}",
-                    HEADER_COLOR, TEXT_COLOR, rfd.rfd_number,
-                );
-                writeln!(
-                    &mut tw,
-                    "{}Discussion Url:\t{}{}",
-                    HEADER_COLOR,
-                    TEXT_COLOR,
-                    rfd.discussion.unwrap_or_default(),
-                );
-                writeln!(&mut tw, "{}---------------", HEADER_COLOR,);
-                writeln!(&mut tw, "{}", TEXT_COLOR);
-
-                let body = rfd.content;
-
-                if let Some((header, body)) = body.split_once("State") {
-                    for line in body.lines().skip(1) {
-                        writeln!(&mut tw, "{}", line);
-                    }
-                }
-
-                let written = String::from_utf8(tw.into_inner().unwrap()).unwrap();
-                println!("{}", written);
-            }
-            Err(err) => print_error(err),
-        }
-    }
-
-    fn output_get_rfds(
-        &self,
-        mut response: Result<Vec<rfd_sdk::types::ListRfd>, progenitor_client::Error<Error>>,
-    ) {
-        match response {
-            Ok(mut response) => print_rfd_list(&mut response),
-            Err(err) => print_error(err),
-        }
-    }
-
-    fn output_search_rfds(
-        &self,
-        response: Result<Vec<rfd_sdk::types::ListRfd>, progenitor_client::Error<Error>>,
-    ) {
-        match response {
-            Ok(mut response) => print_rfd_list(&mut response),
-            Err(err) => print_error(err),
-        }
-    }
-
-    fn output_get_self(
-        &self,
-        response: Result<rfd_sdk::types::GetApiUserResponse, progenitor_client::Error<Error>>,
-    ) {
-        match response {
-            Ok(user) => print_user(&user),
-            Err(err) => print_error(err),
-        }
+        self.print_cli_output(&response, None);
     }
 
     fn output_get_api_user(
         &self,
-        response: Result<rfd_sdk::types::GetApiUserResponse, progenitor_client::Error<Error>>,
+        response: Result<types::GetApiUserResponse, progenitor_client::Error<types::Error>>,
     ) {
+        let mut tw = TabWriter::new(vec![]).ansi(true);
+
         match response {
-            Ok(user) => print_user(&user),
-            Err(err) => print_error(err),
+            Ok(response) => {
+                response.info.display(&mut tw, 0, self);
+
+                self.print_field(&mut tw, 0, "providers", &"");
+                for provider in response.providers {
+                    self.print_field(&mut tw, 1, "id", &provider.id);
+                    self.print_field(&mut tw, 1, "provider", &provider.provider);
+                    self.print_field(&mut tw, 1, "provider_id", &provider.provider_id);
+                    self.print_list(&mut tw, 1, "emails", &provider.emails);
+                    self.print_field(&mut tw, 1, "created_at", &provider.created_at);
+                    self.print_field(&mut tw, 1, "updated_at", &provider.updated_at);
+                    self.print_field(&mut tw, 1, "deleted_at", &response.info.deleted_at.map(|d| d.to_string()).unwrap_or_default());
+                }
+            }
+            Err(err) => {
+                self.print_error(&mut tw, &err);
+            }
         }
+
+        output_writer(tw);
     }
+
+    fn output_update_api_user(
+        &self,
+        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, None);
+    }
+
+    fn output_add_api_user_to_group(
+        &self,
+        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, None);
+    }
+
+    fn output_remove_api_user_from_group(
+        &self,
+        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, None);
+    }
+
+    fn output_list_api_user_tokens(
+        &self,
+        response: Result<Vec<types::ApiKeyResponse>, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, Some("providers".to_string()));
+    }
+
+    fn output_create_api_user_token(
+        &self,
+        response: Result<types::InitialApiKeyResponse, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, None);
+    }
+
+    fn output_get_api_user_token(
+        &self,
+        response: Result<types::ApiKeyResponse, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, None);
+    }
+
+    fn output_delete_api_user_token(
+        &self,
+        response: Result<types::ApiKeyResponse, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, None);
+    }
+
+    fn output_github_webhook(&self, response: Result<(), progenitor_client::Error<types::Error>>) {}
 
     fn output_get_groups(
         &self,
         response: Result<
-            Vec<rfd_sdk::types::AccessGroupForApiPermission>,
-            progenitor_client::Error<rfd_sdk::types::Error>,
+            Vec<types::AccessGroupForApiPermission>,
+            progenitor_client::Error<types::Error>,
         >,
     ) {
+        self.print_cli_output(&response, Some("groups".to_string()));
+    }
+
+    fn output_create_group(
+        &self,
+        response: Result<
+            types::AccessGroupForApiPermission,
+            progenitor_client::Error<types::Error>,
+        >,
+    ) {
+        self.print_cli_output(&response, None);
+    }
+
+    fn output_update_group(
+        &self,
+        response: Result<
+            types::AccessGroupForApiPermission,
+            progenitor_client::Error<types::Error>,
+        >,
+    ) {
+        self.print_cli_output(&response, None);
+    }
+
+    fn output_delete_group(
+        &self,
+        response: Result<
+            types::AccessGroupForApiPermission,
+            progenitor_client::Error<types::Error>,
+        >,
+    ) {
+        self.print_cli_output(&response, None);
+    }
+
+    fn output_get_mappers(
+        &self,
+        response: Result<Vec<types::Mapper>, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, Some("mappers".to_string()));
+    }
+
+    fn output_create_mapper(
+        &self,
+        response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, None);
+    }
+
+    fn output_delete_mapper(
+        &self,
+        response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, None);
+    }
+
+    fn output_list_oauth_clients(
+        &self,
+        response: Result<Vec<types::OAuthClient>, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, Some("clients".to_string()));
+    }
+
+    fn output_create_oauth_client(
+        &self,
+        response: Result<types::OAuthClient, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, None);
+    }
+
+    fn output_get_oauth_client(
+        &self,
+        response: Result<types::OAuthClient, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, None);
+    }
+
+    fn output_create_oauth_client_redirect_uri(
+        &self,
+        response: Result<types::OAuthClientRedirectUri, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, None);
+    }
+
+    fn output_delete_oauth_client_redirect_uri(
+        &self,
+        response: Result<types::OAuthClientRedirectUri, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, None);
+    }
+
+    fn output_create_oauth_client_secret(
+        &self,
+        response: Result<
+            types::InitialOAuthClientSecretResponse,
+            progenitor_client::Error<types::Error>,
+        >,
+    ) {
+        self.print_cli_output(&response, None);
+    }
+
+    fn output_delete_oauth_client_secret(
+        &self,
+        response: Result<types::OAuthClientSecret, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, None);
+    }
+
+    fn output_get_rfds(
+        &self,
+        response: Result<Vec<types::ListRfd>, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, Some("rfds".to_string()));
+    }
+
+    fn output_get_rfd(
+        &self,
+        response: Result<types::FullRfd, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, None);
+    }
+
+    fn output_search_rfds(
+        &self,
+        response: Result<Vec<types::ListRfd>, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, Some("rfds".to_string()));
+    }
+
+    fn output_get_self(
+        &self,
+        response: Result<types::GetApiUserResponse, progenitor_client::Error<types::Error>>,
+    ) {
+        self.output_get_api_user(response);
+    }
+}
+
+trait TabDisplay {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter);
+}
+
+impl TabDisplay for ApiUserForApiPermission {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &self.id);
+        printer.print_list(tw, level, "permissions", &Vec::from(self.permissions.clone()).iter().map(|p| p.to_string()).collect_vec());
+        printer.print_list(tw, level, "groups", &self.groups.iter().map(|g| g.to_string()).collect_vec());
+        printer.print_field(tw, level, "created_at", &self.created_at);
+        printer.print_field(tw, level, "updated_at", &self.updated_at);
+        printer.print_field(tw, level, "deleted_at", &self.deleted_at.map(|d| d.to_string()).unwrap_or_default());
+    }
+}
+
+impl TabDisplay for ApiKeyResponse {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &self.id);
+        printer.print_list(tw, level, "permissions", &Vec::from(self.permissions.clone()).iter().map(|p| p.to_string()).collect_vec());
+        printer.print_field(tw, level, "created_at", &self.created_at);
+    }
+}
+
+impl TabDisplay for InitialApiKeyResponse {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &self.id);
+        printer.print_field(tw, level, "key", &self.key);
+        printer.print_list(tw, level, "permissions", &Vec::from(self.permissions.clone()).iter().map(|p| p.to_string()).collect_vec());
+        printer.print_field(tw, level, "created_at", &self.created_at);
+    }
+}
+
+impl TabDisplay for AccessGroupForApiPermission {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &self.id);
+        printer.print_field(tw, level, "name", &self.name);
+        printer.print_list(tw, level, "permissions", &Vec::from(self.permissions.clone()).iter().map(|p| p.to_string()).collect_vec());
+        printer.print_field(tw, level, "created_at", &self.created_at);
+        printer.print_field(tw, level, "updated_at", &self.updated_at);
+        printer.print_field(tw, level, "deleted_at", &self.deleted_at.map(|d| d.to_string()).unwrap_or_default());
+    }
+}
+
+impl TabDisplay for Mapper {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &self.id);
+        printer.print_field(tw, level, "name", &self.name);
+        printer.print_field(tw, level, "activations", &self.activations.map(|i| i.to_string()).unwrap_or_default());
+        printer.print_field(tw, level, "max_activations", &self.max_activations.map(|i| i.to_string()).unwrap_or_default());
+        printer.print_field(tw, level, "rule", &serde_json::to_string(&self.rule).unwrap());
+        printer.print_field(tw, level, "created_at", &self.created_at);
+        printer.print_field(tw, level, "depleted_at", &self.depleted_at.map(|d| d.to_string()).unwrap_or_default());
+        printer.print_field(tw, level, "deleted_at", &self.deleted_at.map(|d| d.to_string()).unwrap_or_default());
+    }
+}
+
+impl TabDisplay for OAuthClient {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &self.id);
+        printer.print_field(tw, level, "secrets", &"");
+        self.secrets.display(tw, level + 1, printer);
+        printer.print_field(tw, level, "redirect_uris", &"");
+        self.redirect_uris.display(tw, level + 1, printer);
+        printer.print_field(tw, level, "created_at", &self.created_at);
+        printer.print_field(tw, level, "deleted_at", &self.deleted_at.map(|d| d.to_string()).unwrap_or_default());
+    }
+}
+
+impl TabDisplay for OAuthClientRedirectUri {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &self.id);
+        printer.print_field(tw, level, "oauth_client_id", &self.oauth_client_id);
+        printer.print_field(tw, level, "redirect_uri", &self.redirect_uri);
+        printer.print_field(tw, level, "created_at", &self.created_at);
+        printer.print_field(tw, level, "deleted_at", &self.deleted_at.map(|d| d.to_string()).unwrap_or_default());
+    }
+}
+
+impl TabDisplay for OAuthClientSecret {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &self.id);
+        printer.print_field(tw, level, "oauth_client_id", &self.oauth_client_id);
+        printer.print_field(tw, level, "secret_signature", &self.secret_signature);
+        printer.print_field(tw, level, "created_at", &self.created_at);
+        printer.print_field(tw, level, "deleted_at", &self.deleted_at.map(|d| d.to_string()).unwrap_or_default());
+    }
+}
+
+impl TabDisplay for InitialOAuthClientSecretResponse {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &self.id);
+        printer.print_field(tw, level, "key", &self.key);
+        printer.print_field(tw, level, "created_at", &self.created_at);
+    }
+}
+
+impl TabDisplay for ListRfd {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &self.id);
+        printer.print_field(tw, level, "rfd_number", &self.rfd_number);
+        printer.print_field(tw, level, "title", &self.title);
+        printer.print_field(tw, level, "state", &self.state.as_ref().map(|s| s.as_str()).unwrap_or(""));
+        printer.print_field(tw, level, "visibility", match self.visibility {
+            Visibility::Private => &"private",
+            Visibility::Public => &"public",
+        });
+        printer.print_field(tw, level, "authors", &self.authors.as_ref().map(|s| s.as_str()).unwrap_or(""));
+        printer.print_field(tw, level, "link", &self.link.as_ref().map(|s| s.as_str()).unwrap_or(""));
+        printer.print_field(tw, level, "discussion", &self.discussion.as_ref().map(|s| s.as_str()).unwrap_or(""));
+        printer.print_field(tw, level, "sha", &self.sha);
+        printer.print_field(tw, level, "commit", &self.commit);
+        printer.print_field(tw, level, "committed_at", &self.committed_at);
+    }
+}
+
+impl TabDisplay for FullRfd {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &self.id);
+        printer.print_field(tw, level, "rfd_number", &self.rfd_number);
+        printer.print_field(tw, level, "title", &self.title);
+        printer.print_field(tw, level, "state", &self.state.as_ref().map(|s| s.as_str()).unwrap_or(""));
+        printer.print_field(tw, level, "visibility", match self.visibility {
+            Visibility::Private => &"private",
+            Visibility::Public => &"public",
+        });
+        printer.print_field(tw, level, "authors", &self.authors.as_ref().map(|s| s.as_str()).unwrap_or(""));
+        printer.print_field(tw, level, "link", &self.link.as_ref().map(|s| s.as_str()).unwrap_or(""));
+        printer.print_field(tw, level, "discussion", &self.discussion.as_ref().map(|s| s.as_str()).unwrap_or(""));
+        printer.print_field(tw, level, "pdfs", &"");
+        self.pdfs.display(tw, level + 1, printer);
+        printer.print_field(tw, level, "sha", &self.sha);
+        printer.print_field(tw, level, "commit", &self.commit);
+        printer.print_field(tw, level, "committed_at", &self.committed_at);
+        writeln!(tw, "");
+        writeln!(tw, "{}", self.content);
+    }
+}
+
+impl TabDisplay for FullRfdPdfEntry {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "link", &self.link);
+        printer.print_field(tw, level, "source", &self.source);
+    }
+}
+
+impl<T> TabDisplay for Vec<T> where T: TabDisplay {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        for entry in self {
+            entry.display(tw, level, printer);
+            writeln!(tw, "");
+        }
+    }
+}
+
+impl RfdTabPrinter {
+    fn print_cli_output<T>(&self, response: &Result<T, progenitor_client::Error<types::Error>>, heading: Option<String>) where T: TabDisplay {
+        let mut tw = TabWriter::new(vec![]).ansi(true);
+    
         match response {
-            Ok(groups) => print_groups(&groups),
-            Err(err) => print_error(err),
+            Ok(response) => {
+                if let Some(heading) = &heading {
+                    self.print_field(&mut tw, 0, heading, &"");
+                }
+
+                response.display(&mut tw, if heading.is_some() { 1 } else { 0 }, self);
+            },
+            Err(err) => self.print_error(&mut tw, err),
+        }
+    
+        output_writer(tw);
+    }
+
+    fn print_field<T>(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, key: &str, value: &T) where T: Display {
+        writeln!(tw, "{}{}:\t{}", prefix(level), key.style(self.stylesheet.label), value.style(self.stylesheet.value));
+    }
+
+    fn print_list<T>(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, key: &str, list: &Vec<T>) where T: Display {
+        let pre = prefix(level);
+        for (i, entry) in list.iter().enumerate() {
+            writeln!(tw, "{}{}{}\t{}", pre, if i == 0 { key } else { "" }.style(self.stylesheet.label), if i == 0 { ":" } else { "" }, entry.style(self.stylesheet.value));
         }
     }
-}
 
-fn print_error(error: progenitor_client::Error<Error>) {
-    let mut tw = TabWriter::new(vec![]).ansi(true);
-
-    match error {
-        progenitor_client::Error::CommunicationError(err) => {
-            writeln!(
-                &mut tw,
-                "{}Failed to reach the API server{}",
-                ERROR_COLOR, RESET_COLOR
-            );
-            writeln!(&mut tw, "{:#?}", err);
-        }
-        progenitor_client::Error::ErrorResponse(err) => {
-            writeln!(
-                &mut tw,
-                "{}Received error from the remote API{}",
-                ERROR_COLOR, RESET_COLOR
-            );
-            writeln!(
-                &mut tw,
-                "{}Message\t{}{}",
-                HEADER_COLOR, RESET_COLOR, err.message
-            );
-            if let Some(code) = &err.error_code {
-                writeln!(&mut tw, "{}Code\t{}{}", HEADER_COLOR, RESET_COLOR, code);
+    fn print_error(&self, tw: &mut TabWriter<Vec<u8>>, error: &progenitor_client::Error<Error>) {
+        match error {
+            progenitor_client::Error::CommunicationError(err) => {
+                writeln!(
+                    tw,
+                    "Failed to reach the API server"
+                );
+                writeln!(tw, "{:#?}", err);
             }
-            writeln!(
-                &mut tw,
-                "{}Request\t{}{}",
-                HEADER_COLOR, RESET_COLOR, err.request_id
-            );
-        }
-        progenitor_client::Error::InvalidRequest(err) => {
-            writeln!(&mut tw, "{}Internal CLI error{}", ERROR_COLOR, RESET_COLOR);
-            writeln!(&mut tw, "{:?}", err);
-            writeln!(
-                &mut tw,
-                "{}Please report this as a bug against the rfd-api{}",
-                HEADER_COLOR, RESET_COLOR
-            );
-        }
-        progenitor_client::Error::InvalidResponsePayload(err) => {
-            writeln!(&mut tw, "{}Internal CLI error{}", ERROR_COLOR, RESET_COLOR);
-            writeln!(&mut tw, "{:?}", err);
-            writeln!(
-                &mut tw,
-                "{}Please report this as a bug against the rfd-api{}",
-                HEADER_COLOR, RESET_COLOR
-            );
-        }
-        progenitor_client::Error::UnexpectedResponse(err) => {
-            writeln!(&mut tw, "{}Internal CLI error{}", ERROR_COLOR, RESET_COLOR);
-            writeln!(&mut tw, "{:?}", err);
-            writeln!(
-                &mut tw,
-                "{}Please report this as a bug against the rfd-api{}",
-                HEADER_COLOR, RESET_COLOR
-            );
+            progenitor_client::Error::ErrorResponse(err) => {
+                writeln!(
+                    tw,
+                    "Received error from the remote API",
+                );
+                writeln!(
+                    tw,
+                    "Message\t{}", err.message
+                );
+                if let Some(code) = &err.error_code {
+                    writeln!(tw, "Code\t{}", code);
+                }
+                writeln!(
+                    tw,
+                    "Request\t{}", err.request_id
+                );
+            }
+            progenitor_client::Error::InvalidRequest(err) => {
+                writeln!(tw, "Internal CLI error");
+                writeln!(tw, "{:?}", err);
+                writeln!(
+                    tw,
+                    "Please report this as a bug against the rfd-api"
+                );
+            }
+            progenitor_client::Error::InvalidResponsePayload(err) => {
+                writeln!(tw, "Internal CLI error");
+                writeln!(tw, "{:?}", err);
+                writeln!(
+                    tw,
+                    "Please report this as a bug against the rfd-api"
+                );
+            }
+            progenitor_client::Error::UnexpectedResponse(err) => {
+                writeln!(tw, "Internal CLI error");
+                writeln!(tw, "{:?}", err);
+                writeln!(
+                    tw,
+                    "Please report this as a bug against the rfd-api",
+                );
+            }
         }
     }
-    tw.flush().unwrap();
+}
 
+fn prefix(level: u8) -> String {
+    "    ".repeat(level as usize)
+}
+
+fn output_writer(mut tw: TabWriter<Vec<u8>>) {
+    tw.flush().unwrap();
     let written = String::from_utf8(tw.into_inner().unwrap()).unwrap();
     println!("{}", written);
 }
 
-fn print_user(user: &GetApiUserResponse) {
-    let mut tw = TabWriter::new(vec![]).ansi(true);
-
-    writeln!(
-        &mut tw,
-        "{}Id\tPermissions\tGroups\tCreated At",
-        HEADER_COLOR
-    );
-    writeln!(
-        &mut tw,
-        "{}--\t-----------\t------\t----------",
-        HEADER_COLOR
-    );
-
-    let lines = user
-        .info
-        .permissions
-        .iter()
-        .zip_longest(user.info.groups.iter());
-
-    for (i, line) in lines.enumerate() {
-        let inner = match line {
-            EitherOrBoth::Left(permission) => format!("{}\t", permission),
-            EitherOrBoth::Right(group) => format!("\t{}", group),
-            EitherOrBoth::Both(permission, group) => format!("{}\t{}", permission, group),
-        };
-
-        writeln!(
-            &mut tw,
-            "{}{}\t{}\t{}",
-            TEXT_COLOR,
-            if i == 0 {
-                user.info.id.to_string()
-            } else {
-                String::new()
-            },
-            inner,
-            if i == 0 {
-                user.info.created_at.to_string()
-            } else {
-                String::new()
-            },
-        );
-    }
-
-    tw.flush().unwrap();
-
-    let written = String::from_utf8(tw.into_inner().unwrap()).unwrap();
-    println!("{}", written);
-}
-
-fn print_groups(groups: &Vec<AccessGroupForApiPermission>) {
-    let mut tw = TabWriter::new(vec![]).ansi(true);
-
-    writeln!(&mut tw, "{}Id\tName\tPermissions\tCreated At", HEADER_COLOR);
-    writeln!(&mut tw, "{}--\t----\t-----------\t----------", HEADER_COLOR);
-
-    for group in groups {
-        for (i, permission) in group.permissions.iter().enumerate() {
-            writeln!(
-                &mut tw,
-                "{}{}\t{}\t{}\t{}",
-                TEXT_COLOR,
-                if i == 0 {
-                    group.id.to_string()
-                } else {
-                    String::new()
-                },
-                if i == 0 {
-                    group.name.to_string()
-                } else {
-                    String::new()
-                },
-                permission,
-                if i == 0 {
-                    group.created_at.to_string()
-                } else {
-                    String::new()
-                },
-            );
-        }
-    }
-
-    tw.flush().unwrap();
-
-    let written = String::from_utf8(tw.into_inner().unwrap()).unwrap();
-    println!("{}", written);
-}
-
-fn print_rfd_html(content: &str) -> String {
-    let mut tmp_content = File::create("adoc-source.adoc").unwrap();
-    tmp_content.write_all(content.as_bytes());
-
-    let html = Command::new("asciidoctor")
-        .arg("adoc-source.adoc")
-        .output()
-        .unwrap()
-        .stdout;
-
-    let text = String::from_utf8(
-        Command::new("w3m")
-            .arg("-dump")
-            .arg("adoc-source.html")
-            .output()
-            .unwrap()
-            .stdout,
-    )
-    .unwrap();
-
-    std::fs::remove_file("adoc-source.adoc").unwrap();
-    std::fs::remove_file("adoc-source.html").unwrap();
-
-    text
-}
-
-fn print_rfd_list(rfds: &mut [ListRfd]) {
-    let mut tw = TabWriter::new(vec![]).ansi(true);
-
-    writeln!(
-        &mut tw,
-        "{}Number\tTitle\tState\tLatest Commit\tUpdated At",
-        HEADER_COLOR
-    );
-    writeln!(
-        &mut tw,
-        "{}------\t-----\t-----\t-------------\t----------",
-        HEADER_COLOR
-    );
-
-    for mut rfd in rfds.iter_mut() {
-        rfd.title.truncate(90);
-
-        writeln!(
-            &mut tw,
-            "{}{}\t{}\t{}{}\t{}{}",
-            TEXT_COLOR,
-            rfd.rfd_number,
-            rfd.title,
-            "", // State color
-            rfd.state.as_deref().unwrap_or_default(),
-            TEXT_COLOR,
-            // rfd.sha,
-            rfd.committed_at
-        );
-    }
-    tw.flush().unwrap();
-
-    let written = String::from_utf8(tw.into_inner().unwrap()).unwrap();
-    println!("{}", written);
-}
-
-fn state_color(state: &Option<String>) -> &'static str {
-    match state.as_deref() {
-        Some("published") => "\x1b[38;2;72;213;151m",
-        Some("committed") => "\x1b[38;2;72;213;151m",
-        Some("discussion") => "\x1b[38;2;139;161;255m",
-        Some("prediscussion") => "\x1b[38;2;163;128;203m",
-        Some("ideation") => "\x1b[38;2;245;185;68m",
-        Some("abandoned") => "\x1b[38;2;231;231;232m",
-        _ => "\x1b[38;2;231;231;232m",
-    }
-}
+// fn state_color(state: &Option<String>) -> &'static str {
+//     match state.as_deref() {
+//         Some("published") => "\x1b[38;2;72;213;151m",
+//         Some("committed") => "\x1b[38;2;72;213;151m",
+//         Some("discussion") => "\x1b[38;2;139;161;255m",
+//         Some("prediscussion") => "\x1b[38;2;163;128;203m",
+//         Some("ideation") => "\x1b[38;2;245;185;68m",
+//         Some("abandoned") => "\x1b[38;2;231;231;232m",
+//         _ => "\x1b[38;2;231;231;232m",
+//     }
+// }

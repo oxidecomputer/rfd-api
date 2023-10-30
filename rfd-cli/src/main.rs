@@ -221,7 +221,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let format = matches.try_get_one::<String>("format").unwrap().unwrap();
     let printer = match format.as_str() {
         "json" => Printer::Json(RfdJsonPrinter),
-        "tab" => Printer::Tab(RfdTabPrinter),
+        "tab" => Printer::Tab(RfdTabPrinter::default()),
         other => panic!("Unknown format {}", other),
     };
 
