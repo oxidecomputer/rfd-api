@@ -245,9 +245,15 @@ impl PdfStorageCtx {
         Ok(Self {
             // A client is only needed if files are going to be written
             client: gdrive_client().await?,
-            locations: config.as_ref().map(|config| {
-                vec![PdfStorageLocation { drive_id: config.drive.clone(), folder_id: config.folder.clone() }]
-            }).unwrap_or_default()
+            locations: config
+                .as_ref()
+                .map(|config| {
+                    vec![PdfStorageLocation {
+                        drive_id: config.drive.clone(),
+                        folder_id: config.folder.clone(),
+                    }]
+                })
+                .unwrap_or_default(),
         })
     }
 }
@@ -273,24 +279,20 @@ impl PdfStorage for PdfStorageCtx {
             let stream = Cursor::new(pdf.contents.clone());
 
             let response = match external_id {
-                Some(file_id) => {
-                    self
-                        .client
-                        .files()
-                        .update(req, file_id)
-                        .upload_resumable(stream, "application_pdf".parse().unwrap())
-                        .await
-                        .map_err(RfdPdfError::Remote)
-                },
-                None => {
-                    self
-                        .client
-                        .files()
-                        .create(req)
-                        .upload_resumable(stream, "application_pdf".parse().unwrap())
-                        .await
-                        .map_err(RfdPdfError::Remote)
-                }
+                Some(file_id) => self
+                    .client
+                    .files()
+                    .update(req, file_id)
+                    .upload_resumable(stream, "application_pdf".parse().unwrap())
+                    .await
+                    .map_err(RfdPdfError::Remote),
+                None => self
+                    .client
+                    .files()
+                    .create(req)
+                    .upload_resumable(stream, "application_pdf".parse().unwrap())
+                    .await
+                    .map_err(RfdPdfError::Remote),
             };
 
             vec![response.and_then(|(_, file)| {

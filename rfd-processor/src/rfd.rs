@@ -388,6 +388,11 @@ impl RemoteRfd {
         )
         .await?;
 
-        Ok(PersistedRfd::new(number, rfd, revision, existing_pdf.pop().map(|pdf| pdf.external_id)))
+        Ok(PersistedRfd::new(
+            number,
+            rfd,
+            revision,
+            existing_pdf.pop().map(|pdf| pdf.external_id),
+        ))
     }
 }

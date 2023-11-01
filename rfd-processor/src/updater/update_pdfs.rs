@@ -62,7 +62,11 @@ impl UpdatePdfs {
             RfdUpdateMode::Read => Vec::new(),
             RfdUpdateMode::Write => {
                 ctx.pdf
-                    .store_rfd_pdf(new.pdf_external_id.as_ref().map(|s| s.as_str()), &new.get_pdf_filename(), &pdf)
+                    .store_rfd_pdf(
+                        new.pdf_external_id.as_ref().map(|s| s.as_str()),
+                        &new.get_pdf_filename(),
+                        &pdf,
+                    )
                     .await
             }
         };

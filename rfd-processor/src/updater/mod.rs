@@ -155,7 +155,9 @@ impl<'a> RfdUpdater<'a> {
 
         // Before persisting the new revision, fetch the most recent existing revision. This is
         // provided to further actions for inspecting changes between the two revisions.
-        let existing = PersistedRfd::load(remote.number, &ctx.db.storage).await.map_err(|err| RfdUpdaterError::ExistingLookup(err))?;
+        let existing = PersistedRfd::load(remote.number, &ctx.db.storage)
+            .await
+            .map_err(|err| RfdUpdaterError::ExistingLookup(err))?;
 
         if let Some(existing) = &existing {
             tracing::info!(id = ?existing.rfd.id, number = ?update.number, "Found previous revision for RFD");
