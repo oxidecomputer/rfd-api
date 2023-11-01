@@ -1017,38 +1017,23 @@ dependencies = [
 ]
 
 [[package]]
-name = "google-drive"
-version = "0.7.0"
+name = "google-drive3"
+version = "5.0.3+20230115"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "dc1b3a31edad05993052d107d4e640df7e0b4940a8f9ecb2e4560850fe3d14e7"
+checksum = "ceed0f4299b62993133e1cebb3747500e7565811ad24c9fe69f70077c5dbbd20"
 dependencies = [
- "async-recursion",
- "async-trait",
- "base64 0.21.4",
- "bytes",
- "chrono",
+ "anyhow",
+ "google-apis-common",
  "http",
- "jsonwebtoken",
- "log",
+ "hyper",
+ "hyper-rustls",
+ "itertools 0.10.5",
  "mime",
- "parse_link_header",
- "pem",
- "percent-encoding 2.3.0",
- "reqwest",
- "reqwest-conditional-middleware",
- "reqwest-middleware",
- "reqwest-retry 0.2.3",
- "reqwest-tracing",
- "ring 0.16.20",
- "schemars",
  "serde",
  "serde_json",
- "serde_urlencoded",
- "thiserror",
  "tokio",
- "url 2.4.1",
- "uuid",
- "yup-oauth2",
+ "tower-service",
+ "url 1.7.2",
 ]
 
 [[package]]
@@ -2584,7 +2569,7 @@ dependencies = [
  "base64 0.21.4",
  "chrono",
  "config",
- "google-drive",
+ "google-drive3",
  "google-storage1",
  "hex",
  "hmac",

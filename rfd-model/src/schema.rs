@@ -197,6 +197,8 @@ diesel::table! {
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
         deleted_at -> Nullable<Timestamptz>,
+        rfd_id -> Uuid,
+        external_id -> Varchar,
     }
 }
 
@@ -227,6 +229,7 @@ diesel::joinable!(api_user_access_token -> api_user (api_user_id));
 diesel::joinable!(api_user_provider -> api_user (api_user_id));
 diesel::joinable!(oauth_client_redirect_uri -> oauth_client (oauth_client_id));
 diesel::joinable!(oauth_client_secret -> oauth_client (oauth_client_id));
+diesel::joinable!(rfd_pdf -> rfd (rfd_id));
 diesel::joinable!(rfd_pdf -> rfd_revision (rfd_revision_id));
 diesel::joinable!(rfd_revision -> rfd (rfd_id));
 

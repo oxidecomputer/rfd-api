@@ -55,6 +55,8 @@ pub struct RfdPdfModel {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
+    pub rfd_id: Uuid,
+    pub external_id: String,
 }
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]

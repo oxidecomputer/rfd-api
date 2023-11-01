@@ -103,6 +103,9 @@ pub trait RfdStore {
     async fn delete(&self, id: &Uuid) -> Result<Option<Rfd>, StoreError>;
 }
 
+// TODO: Make the revision store generic over a revision type. We want to be able to have a metadata
+// only version of the revision model so that we do not need to always load content from the db
+
 #[derive(Debug, Default)]
 pub struct RfdRevisionFilter {
     pub id: Option<Vec<Uuid>>,
@@ -164,6 +167,8 @@ pub struct RfdPdfFilter {
     pub rfd_revision: Option<Vec<Uuid>>,
     pub source: Option<Vec<PdfSource>>,
     pub deleted: bool,
+    pub rfd: Option<Vec<Uuid>>,
+    pub external_id: Option<Vec<String>>,
 }
 
 impl RfdPdfFilter {
@@ -184,6 +189,16 @@ impl RfdPdfFilter {
 
     pub fn deleted(mut self, deleted: bool) -> Self {
         self.deleted = deleted;
+        self
+    }
+
+    pub fn rfd(mut self, rfd: Option<Vec<Uuid>>) -> Self {
+        self.rfd = rfd;
+        self
+    }
+
+    pub fn external_id(mut self, external_id: Option<Vec<String>>) -> Self {
+        self.external_id = external_id;
         self
     }
 }

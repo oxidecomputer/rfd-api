@@ -2,16 +2,14 @@ use std::fmt::Debug;
 
 use async_trait::async_trait;
 use octorust::types::{LabelsData, PullRequestData, PullRequestSimple};
-use rfd_model::storage::{
-    ListPagination, RfdFilter, RfdRevisionFilter, RfdRevisionStore, RfdStore, StoreError,
-};
+use rfd_model::storage::StoreError;
+use serde::Deserialize;
 use thiserror::Error;
 use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
     context::Context,
-    features::Feature,
     github::{GitHubError, GitHubRfdUpdate},
     rfd::{FetchRemoteRfdError, PersistedRfd, RemoteRfd, RemoteRfdError, RfdError},
 };
@@ -94,28 +92,14 @@ impl TryFrom<&str> for BoxedAction {
 
 pub struct RfdUpdater<'a> {
     actions: &'a [BoxedAction],
+    mode: RfdUpdateMode,
 }
 
-// impl Default for RfdUpdater {
-//     fn default() -> Self {
-//         Self::new(vec![
-//             Box::new(CopyImagesToStorage),
-//             Box::new(UpdateSearch),
-//             Box::new(UpdatePdfs),
-//             Box::new(CreatePullRequest),
-//             Box::new(UpdatePullRequest),
-//             Box::new(UpdateDiscussionUrl), // Stops on error
-//             Box::new(EnsureRfdWithPullRequestIsInValidState), // Stops on error
-//             Box::new(EnsureRfdOnDefaultIsInValidState), // Stops on error
-//         ])
-//     }
-// }
-
 impl<'a> RfdUpdater<'a> {
-    pub fn new(actions: &'a [BoxedAction]) -> Self {
+    pub fn new(actions: &'a [BoxedAction], mode: RfdUpdateMode) -> Self {
         tracing::info!(?actions, "Configuring new updater");
 
-        Self { actions }
+        Self { actions, mode }
     }
 
     #[instrument(skip(self, ctx, updates), name = "Run update batch", fields(size = updates.len()))]
@@ -171,30 +155,7 @@ impl<'a> RfdUpdater<'a> {
 
         // Before persisting the new revision, fetch the most recent existing revision. This is
         // provided to further actions for inspecting changes between the two revisions.
-        let existing_rfd = RfdStore::list(
-            &ctx.db.storage,
-            RfdFilter::default().rfd_number(Some(vec![remote.number.into()])),
-            &ListPagination::latest(),
-        )
-        .await
-        .map_err(|err| RfdUpdaterError::ExistingLookup(err))?
-        .into_iter()
-        .next();
-        let existing = if let Some(rfd) = existing_rfd {
-            let most_recent_revision = RfdRevisionStore::list(
-                &ctx.db.storage,
-                RfdRevisionFilter::default().rfd(Some(vec![rfd.id])),
-                &ListPagination::latest(),
-            )
-            .await
-            .map_err(|err| RfdUpdaterError::ExistingLookup(err))?
-            .into_iter()
-            .next();
-            most_recent_revision
-                .map(|revision| PersistedRfd::new(rfd.rfd_number.into(), rfd, revision))
-        } else {
-            None
-        };
+        let existing = PersistedRfd::load(remote.number, &ctx.db.storage).await.map_err(|err| RfdUpdaterError::ExistingLookup(err))?;
 
         if let Some(existing) = &existing {
             tracing::info!(id = ?existing.rfd.id, number = ?update.number, "Found previous revision for RFD");
@@ -266,7 +227,7 @@ impl<'a> RfdUpdater<'a> {
         let mut responses = vec![];
 
         for action in self.actions {
-            match action.run(&mut ctx, new).await {
+            match action.run(&mut ctx, new, self.mode).await {
                 Ok(response) => responses.push(response),
                 Err(err) => match err {
                     RfdUpdateActionErr::Continue(action_err) => {
@@ -284,7 +245,7 @@ impl<'a> RfdUpdater<'a> {
 
         tracing::info!(?response, "Computed follow up action for update");
 
-        if response.requires_source_commit && Feature::CommitToGitHub.enabled() {
+        if response.requires_source_commit && self.mode == RfdUpdateMode::Write {
             // Update the file in GitHub.
             update
                 .location
@@ -347,10 +308,17 @@ pub trait RfdUpdateAction: Debug {
         &self,
         ctx: &mut RfdUpdateActionContext,
         new: &mut PersistedRfd,
+        mode: RfdUpdateMode,
     ) -> Result<RfdUpdateActionResponse, RfdUpdateActionErr>;
 }
 
 pub type BoxedAction = Box<dyn RfdUpdateAction + Send + Sync>;
+
+#[derive(Copy, Clone, Debug, Deserialize, PartialEq)]
+pub enum RfdUpdateMode {
+    Read,
+    Write,
+}
 
 #[derive(Debug, Default)]
 pub struct RfdUpdateActionResponse {

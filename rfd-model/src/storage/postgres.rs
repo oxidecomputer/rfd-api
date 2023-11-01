@@ -343,6 +343,8 @@ impl RfdPdfStore for PostgresStore {
             rfd_revision,
             source,
             deleted,
+            rfd,
+            external_id,
         } = filter;
 
         if let Some(id) = id {
@@ -355,6 +357,14 @@ impl RfdPdfStore for PostgresStore {
 
         if let Some(source) = source {
             query = query.filter(rfd_pdf::source.eq_any(source));
+        }
+
+        if let Some(rfd) = rfd {
+            query = query.filter(rfd_pdf::rfd_id.eq_any(rfd));
+        }
+
+        if let Some(external_id) = external_id {
+            query = query.filter(rfd_pdf::external_id.eq_any(external_id));
         }
 
         if !deleted {

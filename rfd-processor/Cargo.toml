@@ -10,7 +10,7 @@ async-trait = { workspace = true }
 base64 = { workspace = true }
 chrono = { workspace = true }
 config = { workspace = true }
-google-drive = { workspace = true }
+google-drive3 = { workspace = true }
 google-storage1 = { workspace = true }
 hex = { workspace = true }
 hmac = { workspace = true }

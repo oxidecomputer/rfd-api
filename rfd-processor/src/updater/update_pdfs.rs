@@ -11,11 +11,14 @@ use crate::{
     content::RfdOutputError,
     context::Context,
     github::GitHubRfdUpdate,
-    pdf::{PdfStorage, RfdPdfError},
+    pdf::{PdfFileLocation, PdfStorage},
     rfd::PersistedRfd,
 };
 
-use super::{RfdUpdateAction, RfdUpdateActionContext, RfdUpdateActionErr, RfdUpdateActionResponse};
+use super::{
+    RfdUpdateAction, RfdUpdateActionContext, RfdUpdateActionErr, RfdUpdateActionResponse,
+    RfdUpdateMode,
+};
 
 #[derive(Debug)]
 pub struct UpdatePdfs;
@@ -25,7 +28,8 @@ impl UpdatePdfs {
         ctx: &Context,
         update: &GitHubRfdUpdate,
         new: &mut PersistedRfd,
-    ) -> Result<Vec<String>, RfdOutputError> {
+        mode: RfdUpdateMode,
+    ) -> Result<Vec<PdfFileLocation>, RfdOutputError> {
         // Generate the PDFs for the RFD
         let pdf = match new
             .content()
@@ -33,7 +37,7 @@ impl UpdatePdfs {
             .await
         {
             Ok(pdf) => {
-                tracing::info!("Uploaded RFD pdf");
+                tracing::info!("Generated RFD pdf");
                 pdf
             }
             Err(err) => {
@@ -54,53 +58,26 @@ impl UpdatePdfs {
         };
 
         // Upload the generate PDF
-        let store_results = ctx.pdf.store_rfd_pdf(&new.get_pdf_filename(), &pdf).await;
+        let store_results = match mode {
+            RfdUpdateMode::Read => Vec::new(),
+            RfdUpdateMode::Write => {
+                ctx.pdf
+                    .store_rfd_pdf(new.pdf_external_id.as_ref().map(|s| s.as_str()), &new.get_pdf_filename(), &pdf)
+                    .await
+            }
+        };
 
         Ok(store_results
             .into_iter()
             .enumerate()
             .filter_map(|(i, result)| match result {
-                Ok(file) => file.url().map(|s| s.to_string()),
+                Ok(file) => Some(file),
                 Err(err) => {
                     tracing::error!(?err, storage_index = i, "Failed to store PDF");
                     None
                 }
             })
             .collect::<Vec<_>>())
-    }
-
-    #[instrument(skip(ctx, previous, new), fields(id = ?new.rfd.id, number = new.rfd.rfd_number))]
-    async fn delete_old(
-        ctx: &Context,
-        update: &GitHubRfdUpdate,
-        previous: &Option<&PersistedRfd>,
-        new: &mut PersistedRfd,
-    ) -> Result<(), Vec<RfdPdfError>> {
-        let old_pdf_filename = previous.map(|rfd| rfd.get_pdf_filename());
-
-        // If the PDF filename has changed (likely due to a title change for an RFD), then ensure
-        // that the old PDF files are deleted
-        if let Some(old_pdf_filename) = old_pdf_filename {
-            let new_pdf_filename = new.get_pdf_filename();
-
-            if old_pdf_filename != new_pdf_filename {
-                // Delete the old filename from drive. It is expected that the target drive and
-                // folder already exist
-                let results = ctx.pdf.remove_rfd_pdf(&old_pdf_filename).await;
-
-                if !results.is_empty() {
-                    return Err(results);
-                }
-
-                tracing::info!(
-                    old_name = old_pdf_filename,
-                    new_name = new_pdf_filename,
-                    "Deleted old pdf file in Google Drive due to differing names",
-                );
-            }
-        }
-
-        Ok(())
     }
 }
 
@@ -111,16 +88,12 @@ impl RfdUpdateAction for UpdatePdfs {
         &self,
         ctx: &mut RfdUpdateActionContext,
         new: &mut PersistedRfd,
+        mode: RfdUpdateMode,
     ) -> Result<RfdUpdateActionResponse, RfdUpdateActionErr> {
-        let RfdUpdateActionContext {
-            ctx,
-            previous,
-            update,
-            ..
-        } = ctx;
+        let RfdUpdateActionContext { ctx, update, .. } = ctx;
 
         // On each update a PDF is uploaded (possibly overwriting an existing file)
-        let urls = Self::upload(ctx, update, new)
+        let pdf_locations = Self::upload(ctx, update, new, mode)
             .await
             .map_err(|err| RfdUpdateActionErr::Continue(Box::new(err)))?;
 
@@ -128,8 +101,8 @@ impl RfdUpdateAction for UpdatePdfs {
         // changed, then this upsert will only create a new rows per revision. In any other case,
         // the upsert will hit a constraint conflict and drop the insert. The upsert call itself
         // should handle this case.
-        for url in urls {
-            tracing::trace!(?new.revision.id, source = ?PdfSource::Google, url, "Attempt to upsert PDF record");
+        for pdf_location in pdf_locations {
+            tracing::trace!(?new.revision.id, source = ?PdfSource::Google, ?pdf_location, "Attempt to upsert PDF record");
 
             let response = RfdPdfStore::upsert(
                 &ctx.db.storage,
@@ -137,7 +110,9 @@ impl RfdUpdateAction for UpdatePdfs {
                     id: Uuid::new_v4(),
                     rfd_revision_id: new.revision.id,
                     source: PdfSource::Google,
-                    link: url,
+                    link: pdf_location.url,
+                    rfd_id: new.rfd.id,
+                    external_id: pdf_location.external_id,
                 },
             )
             .await;
@@ -162,21 +137,6 @@ impl RfdUpdateAction for UpdatePdfs {
                 }
             }
         }
-
-        // Delete will remove any files that no longer match the new PDF filename. This is
-        // problematic when handling updates out of order.
-
-        // TODO: Fix deletes to ensure that current files are never deleted. Should files never be
-        // deleted? There are also no guarantees that the files to be deleted exist at all. If PDFs
-        // are not to be kept indefinitely, the correct option is likely to not run the PDF action
-        Self::delete_old(ctx, update, previous, new)
-            .await
-            .map_err(|err| {
-                RfdUpdateActionErr::Continue(Box::new(err.into_iter().nth(0).unwrap()))
-            })?;
-
-        // TODO: Do database records need to be deleted? If PDFs are not deleted then there is
-        // nothing to do here. If they are deleted records should likely be removed as well.
 
         Ok(RfdUpdateActionResponse::default())
     }
