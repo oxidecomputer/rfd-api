@@ -58,6 +58,8 @@ impl UpdatePdfs {
         };
 
         // Upload the generate PDF
+        tracing::info!(existing_id = ?new.pdf_external_id, filename = ?new.get_pdf_filename(), ?pdf, "Uploading PDF version");
+
         let store_results = match mode {
             RfdUpdateMode::Read => Vec::new(),
             RfdUpdateMode::Write => {
