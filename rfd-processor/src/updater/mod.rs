@@ -150,7 +150,7 @@ impl<'a> RfdUpdater<'a> {
         // Fetch the latest RFD information from GitHub
         let remote = RemoteRfd::new_from_update(&ctx.github.client, update).await?;
 
-        tracing::trace!(?remote, "Created remote RFD");
+        tracing::trace!(?remote.number, ?remote.commit_sha, ?remote.commit_date, "Created remote RFD");
         tracing::info!("Generated RFD from branch on GitHub");
 
         // Before persisting the new revision, fetch the most recent existing revision. This is
