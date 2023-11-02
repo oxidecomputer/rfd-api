@@ -109,6 +109,8 @@ pub struct RfdPdf {
     pub updated_at: DateTime<Utc>,
     #[partial(NewRfdPdf(skip))]
     pub deleted_at: Option<DateTime<Utc>>,
+    pub rfd_id: Uuid,
+    pub external_id: String,
 }
 
 impl From<RfdPdfModel> for RfdPdf {
@@ -121,6 +123,8 @@ impl From<RfdPdfModel> for RfdPdf {
             created_at: value.created_at,
             updated_at: value.updated_at,
             deleted_at: value.deleted_at,
+            rfd_id: value.rfd_id,
+            external_id: value.external_id,
         }
     }
 }

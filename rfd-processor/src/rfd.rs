@@ -6,7 +6,8 @@ use rfd_data::RfdNumber;
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
     storage::{
-        ListPagination, RfdFilter, RfdRevisionFilter, RfdRevisionStore, RfdStore, StoreError,
+        ListPagination, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionStore,
+        RfdStore, StoreError,
     },
     NewRfd, NewRfdRevision, Rfd, RfdRevision,
 };
@@ -23,21 +24,73 @@ pub struct PersistedRfd {
     pub number: RfdNumber,
     pub rfd: Rfd,
     pub revision: RfdRevision,
+    pub pdf_external_id: Option<String>,
     needs_update: Mutex<bool>,
 }
 
 impl PersistedRfd {
-    pub fn new(number: RfdNumber, rfd: Rfd, revision: RfdRevision) -> Self {
+    pub fn new(
+        number: RfdNumber,
+        rfd: Rfd,
+        revision: RfdRevision,
+        pdf_external_id: Option<String>,
+    ) -> Self {
         Self {
             number,
             rfd,
             revision,
+            pdf_external_id,
             needs_update: Mutex::new(false),
         }
     }
 
     pub fn name(&self) -> String {
         format!("RFD {} {}", self.rfd.rfd_number, self.revision.title)
+    }
+
+    pub async fn load<S>(number: RfdNumber, storage: &S) -> Result<Option<Self>, StoreError>
+    where
+        S: RfdStore + RfdRevisionStore + RfdPdfStore,
+    {
+        let existing_rfd = RfdStore::list(
+            storage,
+            RfdFilter::default().rfd_number(Some(vec![number.into()])),
+            &ListPagination::latest(),
+        )
+        .await?
+        .into_iter()
+        .next();
+
+        if let Some(rfd) = existing_rfd {
+            let most_recent_revision = RfdRevisionStore::list(
+                storage,
+                RfdRevisionFilter::default().rfd(Some(vec![rfd.id])),
+                &ListPagination::latest(),
+            )
+            .await?
+            .into_iter()
+            .next();
+
+            let most_recent_pdf = RfdPdfStore::list(
+                storage,
+                RfdPdfFilter::default().rfd(Some(vec![rfd.id])),
+                &ListPagination::latest(),
+            )
+            .await?
+            .into_iter()
+            .next();
+
+            Ok(most_recent_revision.map(|revision| {
+                PersistedRfd::new(
+                    number.into(),
+                    rfd,
+                    revision,
+                    most_recent_pdf.map(|pdf| pdf.external_id),
+                )
+            }))
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn upsert<S>(&self, storage: &S) -> Result<(), RfdError>
@@ -262,7 +315,7 @@ impl RemoteRfd {
 
     pub async fn upsert<S>(self, storage: &S) -> Result<PersistedRfd, RemoteRfdError>
     where
-        S: RfdStore + RfdRevisionStore,
+        S: RfdStore + RfdRevisionStore + RfdPdfStore,
     {
         let number = self.number;
         let payload = self.into_payload()?;
@@ -328,6 +381,18 @@ impl RemoteRfd {
         )
         .await?;
 
-        Ok(PersistedRfd::new(number, rfd, revision))
+        let mut existing_pdf = RfdPdfStore::list(
+            storage,
+            RfdPdfFilter::default().rfd(Some(vec![rfd.id])),
+            &ListPagination::latest(),
+        )
+        .await?;
+
+        Ok(PersistedRfd::new(
+            number,
+            rfd,
+            revision,
+            existing_pdf.pop().map(|pdf| pdf.external_id),
+        ))
     }
 }

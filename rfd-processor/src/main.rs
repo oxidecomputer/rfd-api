@@ -5,6 +5,7 @@ use std::sync::Arc;
 use tokio::select;
 use tracing_appender::non_blocking::NonBlocking;
 use tracing_subscriber::EnvFilter;
+use updater::RfdUpdateMode;
 
 use crate::{
     context::{Context, Database},
@@ -13,7 +14,6 @@ use crate::{
 
 mod content;
 mod context;
-mod features;
 mod github;
 mod pdf;
 mod processor;
@@ -23,11 +23,12 @@ mod search;
 mod updater;
 mod util;
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize)]
 pub struct AppConfig {
     pub log_directory: Option<String>,
     pub processor_batch_size: i64,
     pub processor_interval: u64,
+    pub processor_update_mode: RfdUpdateMode,
     pub scanner_interval: u64,
     pub database_url: String,
     pub actions: Vec<String>,
@@ -36,7 +37,7 @@ pub struct AppConfig {
     #[serde(default)]
     pub static_storage: Vec<StaticStorageConfig>,
     #[serde(default)]
-    pub pdf_storage: Vec<PdfStorageConfig>,
+    pub pdf_storage: Option<PdfStorageConfig>,
     #[serde(default)]
     pub search_storage: Vec<SearchConfig>,
 }

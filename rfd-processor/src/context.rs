@@ -1,7 +1,8 @@
-use std::time::Duration;
+use std::{io::Cursor, time::Duration};
 
 use async_trait::async_trait;
-use google_drive::{traits::FileOps, Client as GDriveClient};
+use google_drive3::{api::File, DriveHub};
+// use google_drive::{traits::FileOps, Client as GDriveClient};
 use google_storage1::{
     hyper, hyper::client::HttpConnector, hyper_rustls, hyper_rustls::HttpsConnector, Storage,
 };
@@ -11,7 +12,7 @@ use octorust::{
     Client as GitHubClient, ClientError,
 };
 use reqwest::Error as ReqwestError;
-use rfd_model::storage::postgres::PostgresStore;
+use rfd_model::{schema_ext::PdfSource, storage::postgres::PostgresStore};
 use rsa::{
     pkcs1::{DecodeRsaPrivateKey, EncodeRsaPrivateKey},
     RsaPrivateKey,
@@ -19,11 +20,11 @@ use rsa::{
 use thiserror::Error;
 
 use crate::{
-    features::Feature,
     github::{GitHubError, GitHubRfdRepo},
     pdf::{PdfFileLocation, PdfStorage, RfdPdf, RfdPdfError},
     search::RfdSearchIndex,
-    updater::{BoxedAction, RfdUpdaterError},
+    updater::{BoxedAction, RfdUpdateMode, RfdUpdaterError},
+    util::{gdrive_client, GDriveError},
     AppConfig, GitHubAuthConfig, PdfStorageConfig, SearchConfig, StaticStorageConfig,
 };
 
@@ -52,6 +53,8 @@ pub enum ContextError {
     FailedToCreateGitHubClient(#[from] ClientError),
     #[error("Failed to find GCP credentials {0}")]
     FailedToFindGcpCredentials(std::io::Error),
+    #[error(transparent)]
+    GDrive(#[from] GDriveError),
     #[error(transparent)]
     GitHub(#[from] GitHubError),
     #[error(transparent)]
@@ -128,6 +131,7 @@ impl Context {
             processor: ProcessorCtx {
                 batch_size: config.processor_batch_size,
                 interval: Duration::from_secs(config.processor_interval),
+                update_mode: config.processor_update_mode,
             },
             scanner: ScannerCtx {
                 interval: Duration::from_secs(config.scanner_interval),
@@ -143,7 +147,7 @@ impl Context {
                 .map(|action| action.as_str().try_into())
                 .collect::<Result<Vec<_>, RfdUpdaterError>>()?,
             assets: StaticAssetStorageCtx::new(&config.static_storage).await?,
-            pdf: PdfStorageCtx::new(&config.pdf_storage),
+            pdf: PdfStorageCtx::new(&config.pdf_storage).await?,
             search: SearchCtx::new(&config.search_storage),
         })
     }
@@ -152,6 +156,7 @@ impl Context {
 pub struct ProcessorCtx {
     pub batch_size: i64,
     pub interval: Duration,
+    pub update_mode: RfdUpdateMode,
 }
 
 pub struct ScannerCtx {
@@ -228,26 +233,28 @@ pub struct StaticAssetLocation {
     pub bucket: String,
 }
 
+pub type GDriveClient = DriveHub<HttpsConnector<HttpConnector>>;
+
 pub struct PdfStorageCtx {
-    client: Option<GDriveClient>,
+    client: GDriveClient,
     locations: Vec<PdfStorageLocation>,
 }
 
 impl PdfStorageCtx {
-    pub fn new(entries: &[PdfStorageConfig]) -> Self {
-        Self {
+    pub async fn new(config: &Option<PdfStorageConfig>) -> Result<Self, GDriveError> {
+        Ok(Self {
             // A client is only needed if files are going to be written
-            client: Feature::WritePdfToDrive
-                .enabled()
-                .then(|| GDriveClient::new("", "", "", "", "")),
-            locations: entries
-                .iter()
-                .map(|e| PdfStorageLocation {
-                    drive_id: e.drive.to_string(),
-                    folder_id: e.folder.to_string(),
+            client: gdrive_client().await?,
+            locations: config
+                .as_ref()
+                .map(|config| {
+                    vec![PdfStorageLocation {
+                        drive_id: config.drive.clone(),
+                        folder_id: config.folder.clone(),
+                    }]
                 })
-                .collect(),
-        }
+                .unwrap_or_default(),
+        })
     }
 }
 
@@ -255,66 +262,51 @@ impl PdfStorageCtx {
 impl PdfStorage for PdfStorageCtx {
     async fn store_rfd_pdf(
         &self,
+        external_id: Option<&str>,
         filename: &str,
         pdf: &RfdPdf,
     ) -> Vec<Result<PdfFileLocation, RfdPdfError>> {
-        let mut results = vec![];
+        if let Some(location) = self.locations.get(0) {
+            let req = File {
+                copy_requires_writer_permission: Some(true),
+                drive_id: Some(location.drive_id.to_string()),
+                parents: Some(vec![location.folder_id.to_string()]),
+                name: Some(filename.to_string()),
+                mime_type: Some("application/pdf".to_string()),
+                ..Default::default()
+            };
 
-        for location in &self.locations {
-            // Write the pdf to storage if it is enabled
-            if let Some(client) = &self.client {
-                results.push(
-                    client
-                        .files()
-                        .create_or_update(
-                            &location.drive_id,
-                            &location.folder_id,
-                            &filename,
-                            "application/pdf",
-                            &pdf.contents,
-                        )
-                        .await
-                        .map(|file| PdfFileLocation {
-                            url: Some(format!("https://drive.google.com/open?id={}", file.body.id)),
-                        })
-                        .map_err(|err| RfdPdfError::from(err)),
-                );
-            } else {
-                // Otherwise just mark the write as a success. The id argument reported will not be
-                // a real id
-                results.push(Ok(PdfFileLocation {
-                    url: Some(format!("https://drive.google.com/open?id={}", filename)),
-                }));
-            }
-        }
+            let stream = Cursor::new(pdf.contents.clone());
 
-        results
-    }
-
-    async fn remove_rfd_pdf(&self, filename: &str) -> Vec<RfdPdfError> {
-        let mut results = vec![];
-
-        for location in &self.locations {
-            if let Some(client) = &self.client {
-                // Delete the old filename from drive. It is expected that the target drive and
-                // folder already exist
-                if let Err(err) = client
+            let response = match external_id {
+                Some(file_id) => self
+                    .client
                     .files()
-                    .delete_by_name(&location.drive_id, &location.folder_id, &filename)
+                    .update(req, file_id)
+                    .upload_resumable(stream, "application_pdf".parse().unwrap())
                     .await
-                {
-                    tracing::warn!(
-                        ?err,
-                        ?location,
-                        ?filename,
-                        "Faileid to remove PDF from drive"
-                    );
-                    results.push(err.into());
-                }
-            }
-        }
+                    .map_err(RfdPdfError::Remote),
+                None => self
+                    .client
+                    .files()
+                    .create(req)
+                    .upload_resumable(stream, "application_pdf".parse().unwrap())
+                    .await
+                    .map_err(RfdPdfError::Remote),
+            };
 
-        results
+            vec![response.and_then(|(_, file)| {
+                file.id
+                    .ok_or_else(|| RfdPdfError::FileIdMissing(filename.to_string()))
+                    .map(|id| PdfFileLocation {
+                        source: PdfSource::Google,
+                        url: format!("https://drive.google.com/open?id={}", id),
+                        external_id: id,
+                    })
+            })]
+        } else {
+            vec![]
+        }
     }
 }
 

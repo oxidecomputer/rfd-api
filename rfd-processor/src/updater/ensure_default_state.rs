@@ -3,7 +3,10 @@ use tracing::instrument;
 
 use crate::rfd::PersistedRfd;
 
-use super::{RfdUpdateAction, RfdUpdateActionContext, RfdUpdateActionErr, RfdUpdateActionResponse};
+use super::{
+    RfdUpdateAction, RfdUpdateActionContext, RfdUpdateActionErr, RfdUpdateActionResponse,
+    RfdUpdateMode,
+};
 
 #[derive(Debug)]
 pub struct EnsureRfdOnDefaultIsInValidState;
@@ -15,6 +18,7 @@ impl RfdUpdateAction for EnsureRfdOnDefaultIsInValidState {
         &self,
         ctx: &mut RfdUpdateActionContext,
         new: &mut PersistedRfd,
+        _mode: RfdUpdateMode,
     ) -> Result<RfdUpdateActionResponse, RfdUpdateActionErr> {
         let RfdUpdateActionContext { update, .. } = ctx;
 

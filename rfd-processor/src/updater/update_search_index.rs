@@ -3,7 +3,10 @@ use tracing::instrument;
 
 use crate::rfd::PersistedRfd;
 
-use super::{RfdUpdateAction, RfdUpdateActionContext, RfdUpdateActionErr, RfdUpdateActionResponse};
+use super::{
+    RfdUpdateAction, RfdUpdateActionContext, RfdUpdateActionErr, RfdUpdateActionResponse,
+    RfdUpdateMode,
+};
 
 #[derive(Debug)]
 pub struct UpdateSearch;
@@ -15,15 +18,20 @@ impl RfdUpdateAction for UpdateSearch {
         &self,
         ctx: &mut RfdUpdateActionContext,
         new: &mut PersistedRfd,
+        mode: RfdUpdateMode,
     ) -> Result<RfdUpdateActionResponse, RfdUpdateActionErr> {
         let RfdUpdateActionContext { ctx, .. } = ctx;
 
         for (i, index) in ctx.search.indexes.iter().enumerate() {
-            if let Err(err) = index
-                .index_rfd(&new.rfd.rfd_number.into(), &new.revision.content)
-                .await
-            {
-                tracing::error!(?err, search_index = i, "Failed to add RFD to search index");
+            tracing::info!("Updating search index");
+
+            if mode == RfdUpdateMode::Write {
+                if let Err(err) = index
+                    .index_rfd(&new.rfd.rfd_number.into(), &new.revision.content)
+                    .await
+                {
+                    tracing::error!(?err, search_index = i, "Failed to add RFD to search index");
+                }
             }
         }
 

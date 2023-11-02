@@ -47,7 +47,7 @@ pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
                     committed_at: job.committed_at,
                 };
 
-                let updater = RfdUpdater::new(&ctx.actions);
+                let updater = RfdUpdater::new(&ctx.actions, ctx.processor.update_mode);
 
                 match updater.handle(&ctx, &[update]).await {
                     Ok(_) => {
