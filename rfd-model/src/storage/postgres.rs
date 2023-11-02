@@ -451,9 +451,9 @@ impl JobStore for PostgresStore {
 
         if let Some(started) = started {
             if started {
-                query = query.filter(job::started_at.is_null());
-            } else {
                 query = query.filter(job::started_at.is_not_null());
+            } else {
+                query = query.filter(job::started_at.is_null());
             }
         }
 
