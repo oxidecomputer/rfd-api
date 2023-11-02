@@ -221,6 +221,7 @@ pub struct JobFilter {
     pub id: Option<Vec<i32>>,
     pub sha: Option<Vec<String>>,
     pub processed: Option<bool>,
+    pub started: Option<bool>,
 }
 
 impl JobFilter {
@@ -238,6 +239,11 @@ impl JobFilter {
         self.processed = processed;
         self
     }
+
+    pub fn started(mut self, started: Option<bool>) -> Self {
+        self.started = started;
+        self
+    }
 }
 
 #[cfg_attr(feature = "mock", automock)]
@@ -250,6 +256,7 @@ pub trait JobStore {
         pagination: &ListPagination,
     ) -> Result<Vec<Job>, StoreError>;
     async fn upsert(&self, new_job: NewJob) -> Result<Job, StoreError>;
+    async fn start(&self, id: i32) -> Result<Option<Job>, StoreError>;
     async fn complete(&self, id: i32) -> Result<Option<Job>, StoreError>;
 }
 

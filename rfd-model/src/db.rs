@@ -72,6 +72,7 @@ pub struct JobModel {
     pub committed_at: DateTime<Utc>,
     pub processed: bool,
     pub created_at: DateTime<Utc>,
+    pub started_at: Option<DateTime<Utc>>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]

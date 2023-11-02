@@ -145,6 +145,8 @@ pub struct Job {
     pub processed: bool,
     #[partial(NewJob(skip))]
     pub created_at: DateTime<Utc>,
+    #[partial(NewJob(skip))]
+    pub started_at: Option<DateTime<Utc>>,
 }
 
 impl From<JobModel> for Job {
@@ -160,6 +162,7 @@ impl From<JobModel> for Job {
             committed_at: value.committed_at,
             processed: value.processed,
             created_at: value.created_at,
+            started_at: value.started_at,
         }
     }
 }

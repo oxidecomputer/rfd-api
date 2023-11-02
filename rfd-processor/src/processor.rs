@@ -25,7 +25,7 @@ pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
     loop {
         let jobs = JobStore::list(
             &ctx.db.storage,
-            JobFilter::default().processed(Some(false)),
+            JobFilter::default().processed(Some(false)).started(Some(false)),
             &pagination,
         )
         .await?;
@@ -33,34 +33,46 @@ pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
         for job in jobs {
             let ctx = ctx.clone();
             tokio::spawn(async move {
-                let location = GitHubRfdLocation {
-                    owner: job.owner.clone(),
-                    repo: job.repository.clone(),
-                    branch: job.branch.clone(),
-                    commit: job.sha.clone(),
-                    default_branch: ctx.github.repository.default_branch.clone(),
-                };
+                // Make the job as started
+                match JobStore::start(&ctx.db.storage, job.id).await {
+                    Ok(Some(job)) => {
 
-                let update = GitHubRfdUpdate {
-                    location,
-                    number: job.rfd.into(),
-                    committed_at: job.committed_at,
-                };
+                        let location = GitHubRfdLocation {
+                            owner: job.owner.clone(),
+                            repo: job.repository.clone(),
+                            branch: job.branch.clone(),
+                            commit: job.sha.clone(),
+                            default_branch: ctx.github.repository.default_branch.clone(),
+                        };
 
-                let updater = RfdUpdater::new(&ctx.actions, ctx.processor.update_mode);
+                        let update = GitHubRfdUpdate {
+                            location,
+                            number: job.rfd.into(),
+                            committed_at: job.committed_at,
+                        };
 
-                match updater.handle(&ctx, &[update]).await {
-                    Ok(_) => {
-                        let _ = JobStore::complete(&ctx.db.storage, job.id)
-                            .await
-                            .tap_err(|err| {
-                                tracing::error!(?err, "Failed to mark job as completed")
-                            });
+                        let updater = RfdUpdater::new(&ctx.actions, ctx.processor.update_mode);
+
+                        match updater.handle(&ctx, &[update]).await {
+                            Ok(_) => {
+                                let _ = JobStore::complete(&ctx.db.storage, job.id)
+                                    .await
+                                    .tap_err(|err| {
+                                        tracing::error!(?err, "Failed to mark job as completed")
+                                    });
+                            }
+                            Err(err) => {
+                                tracing::error!(?err, "RFD update failed");
+
+                                // TODO: Mark job as failed or retry?
+                            }
+                        }
+                    }
+                    Ok(None) => {
+                        tracing::error!(?job, "Job that was scheduled to run has gone missing! Was it started by a different task?");
                     }
                     Err(err) => {
-                        tracing::error!(?err, "RFD update failed");
-
-                        // TODO: Mark job as failed or retry?
+                        tracing::warn!(?job, ?err, "Failed to start job. Was it previously started?");
                     }
                 }
 

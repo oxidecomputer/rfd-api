@@ -88,6 +88,7 @@ diesel::table! {
         committed_at -> Timestamptz,
         processed -> Bool,
         created_at -> Timestamptz,
+        started_at -> Nullable<Timestamptz>,
     }
 }
 

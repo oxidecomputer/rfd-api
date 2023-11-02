@@ -430,7 +430,7 @@ impl JobStore for PostgresStore {
     ) -> Result<Vec<Job>, StoreError> {
         let mut query = job::dsl::job.into_boxed();
 
-        let JobFilter { id, sha, processed } = filter;
+        let JobFilter { id, sha, processed, started } = filter;
 
         if let Some(id) = id {
             query = query.filter(job::id.eq_any(id));
@@ -442,6 +442,14 @@ impl JobStore for PostgresStore {
 
         if let Some(processed) = processed {
             query = query.filter(job::processed.eq(processed));
+        }
+
+        if let Some(started) = started {
+            if started {
+                query = query.filter(job::started_at.is_null());
+            } else {
+                query = query.filter(job::started_at.is_not_null());
+            }
         }
 
         let results = query
@@ -472,6 +480,17 @@ impl JobStore for PostgresStore {
             .await?;
 
         Ok(rfd.into())
+    }
+
+    async fn start(&self, id: i32) -> Result<Option<Job>, StoreError> {
+        let _ = update(job::dsl::job)
+            .filter(job::id.eq(id))
+            .filter(job::started_at.is_null())
+            .set(job::started_at.eq(Utc::now()))
+            .execute_async(&*self.pool.get().await?)
+            .await?;
+
+        JobStore::get(self, id).await
     }
 
     async fn complete(&self, id: i32) -> Result<Option<Job>, StoreError> {
