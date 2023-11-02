@@ -25,7 +25,9 @@ pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
     loop {
         let jobs = JobStore::list(
             &ctx.db.storage,
-            JobFilter::default().processed(Some(false)).started(Some(false)),
+            JobFilter::default()
+                .processed(Some(false))
+                .started(Some(false)),
             &pagination,
         )
         .await?;
@@ -36,7 +38,6 @@ pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
                 // Make the job as started
                 match JobStore::start(&ctx.db.storage, job.id).await {
                     Ok(Some(job)) => {
-
                         let location = GitHubRfdLocation {
                             owner: job.owner.clone(),
                             repo: job.repository.clone(),
@@ -55,11 +56,9 @@ pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
 
                         match updater.handle(&ctx, &[update]).await {
                             Ok(_) => {
-                                let _ = JobStore::complete(&ctx.db.storage, job.id)
-                                    .await
-                                    .tap_err(|err| {
-                                        tracing::error!(?err, "Failed to mark job as completed")
-                                    });
+                                let _ = JobStore::complete(&ctx.db.storage, job.id).await.tap_err(
+                                    |err| tracing::error!(?err, "Failed to mark job as completed"),
+                                );
                             }
                             Err(err) => {
                                 tracing::error!(?err, "RFD update failed");
@@ -72,7 +71,11 @@ pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
                         tracing::error!(?job, "Job that was scheduled to run has gone missing! Was it started by a different task?");
                     }
                     Err(err) => {
-                        tracing::warn!(?job, ?err, "Failed to start job. Was it previously started?");
+                        tracing::warn!(
+                            ?job,
+                            ?err,
+                            "Failed to start job. Was it previously started?"
+                        );
                     }
                 }
 

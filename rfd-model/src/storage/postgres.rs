@@ -430,7 +430,12 @@ impl JobStore for PostgresStore {
     ) -> Result<Vec<Job>, StoreError> {
         let mut query = job::dsl::job.into_boxed();
 
-        let JobFilter { id, sha, processed, started } = filter;
+        let JobFilter {
+            id,
+            sha,
+            processed,
+            started,
+        } = filter;
 
         if let Some(id) = id {
             query = query.filter(job::id.eq_any(id));
