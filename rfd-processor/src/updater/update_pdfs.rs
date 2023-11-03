@@ -96,6 +96,12 @@ impl RfdUpdateAction for UpdatePdfs {
         new: &mut PersistedRfd,
         mode: RfdUpdateMode,
     ) -> Result<RfdUpdateActionResponse, RfdUpdateActionErr> {
+        // TODO: This updater should not upload a new version if there were no material changes to
+        // the RFD. This is slightly tricky as we need to consider the contents of the RFD itself
+        // as well as any external documents that may become embedded in it. It would be great if
+        // we could hash the generated PDF, but from past attempts PDFs generated via asciidoctor-pdf
+        // are not deterministic across systems
+
         let RfdUpdateActionContext { ctx, update, .. } = ctx;
 
         // On each update a PDF is uploaded (possibly overwriting an existing file)

@@ -74,7 +74,7 @@ pub struct StaticStorageConfig {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct PdfStorageConfig {
-    pub drive: String,
+    pub drive: Option<String>,
     pub folder: String,
 }
 

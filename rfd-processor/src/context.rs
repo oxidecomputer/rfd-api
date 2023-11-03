@@ -273,7 +273,7 @@ impl PdfStorage for PdfStorageCtx {
         if let Some(location) = self.locations.get(0) {
             let req = File {
                 copy_requires_writer_permission: Some(true),
-                drive_id: Some(location.drive_id.to_string()),
+                drive_id: location.drive_id.clone(),
                 parents: Some(vec![location.folder_id.to_string()]),
                 name: Some(filename.to_string()),
                 mime_type: Some("application/pdf".to_string()),
@@ -320,7 +320,7 @@ impl PdfStorage for PdfStorageCtx {
 
 #[derive(Debug)]
 pub struct PdfStorageLocation {
-    pub drive_id: String,
+    pub drive_id: Option<String>,
     pub folder_id: String,
 }
 
