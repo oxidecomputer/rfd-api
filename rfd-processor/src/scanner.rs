@@ -1,4 +1,4 @@
-use diesel::result::{Error as DieselError, DatabaseErrorKind};
+use diesel::result::{DatabaseErrorKind, Error as DieselError};
 use rfd_model::{
     storage::{JobStore, StoreError},
     NewJob,
@@ -36,7 +36,10 @@ pub async fn scanner(ctx: Arc<Context>) -> Result<(), ScannerError> {
                 Ok(job) => tracing::trace!(?job.id, "Added job to the queue"),
                 Err(err) => {
                     match err {
-                        StoreError::Db(DieselError::DatabaseError(DatabaseErrorKind::UniqueViolation, _)) => {
+                        StoreError::Db(DieselError::DatabaseError(
+                            DatabaseErrorKind::UniqueViolation,
+                            _,
+                        )) => {
                             // Nothing to do here, we expect uniqueness conflicts. It is expected
                             // that the scanner picks ups redundant jobs for RFDs that have not
                             // changed since the last scan
