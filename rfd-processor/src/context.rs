@@ -130,11 +130,13 @@ impl Context {
 
         Ok(Self {
             processor: ProcessorCtx {
+                enabled: config.processor_enabled,
                 batch_size: config.processor_batch_size,
                 interval: Duration::from_secs(config.processor_interval),
                 update_mode: config.processor_update_mode,
             },
             scanner: ScannerCtx {
+                enabled: config.scanner_enabled,
                 interval: Duration::from_secs(config.scanner_interval),
             },
             db,
@@ -155,12 +157,14 @@ impl Context {
 }
 
 pub struct ProcessorCtx {
+    pub enabled: bool,
     pub batch_size: i64,
     pub interval: Duration,
     pub update_mode: RfdUpdateMode,
 }
 
 pub struct ScannerCtx {
+    pub enabled: bool,
     pub interval: Duration,
 }
 

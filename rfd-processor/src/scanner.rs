@@ -25,27 +25,29 @@ pub async fn scanner(ctx: Arc<Context>) -> Result<(), ScannerError> {
     interval.tick().await;
 
     loop {
-        let updates = ctx
-            .github
-            .repository
-            .get_rfd_sync_updates(&ctx.github.client)
-            .await?;
+        if ctx.scanner.enabled {
+            let updates = ctx
+                .github
+                .repository
+                .get_rfd_sync_updates(&ctx.github.client)
+                .await?;
 
-        for update in updates {
-            match JobStore::upsert(&ctx.db.storage, update.clone().into()).await {
-                Ok(job) => tracing::trace!(?job.id, "Added job to the queue"),
-                Err(err) => {
-                    match err {
-                        StoreError::Db(DieselError::DatabaseError(
-                            DatabaseErrorKind::UniqueViolation,
-                            _,
-                        )) => {
-                            // Nothing to do here, we expect uniqueness conflicts. It is expected
-                            // that the scanner picks ups redundant jobs for RFDs that have not
-                            // changed since the last scan
-                        }
-                        err => {
-                            tracing::warn!(?err, ?update, "Failed to add job")
+            for update in updates {
+                match JobStore::upsert(&ctx.db.storage, update.clone().into()).await {
+                    Ok(job) => tracing::trace!(?job.id, "Added job to the queue"),
+                    Err(err) => {
+                        match err {
+                            StoreError::Db(DieselError::DatabaseError(
+                                DatabaseErrorKind::UniqueViolation,
+                                _,
+                            )) => {
+                                // Nothing to do here, we expect uniqueness conflicts. It is expected
+                                // that the scanner picks ups redundant jobs for RFDs that have not
+                                // changed since the last scan
+                            }
+                            err => {
+                                tracing::warn!(?err, ?update, "Failed to add job")
+                            }
                         }
                     }
                 }

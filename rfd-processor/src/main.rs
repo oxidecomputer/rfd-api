@@ -26,9 +26,11 @@ mod util;
 #[derive(Debug, Deserialize)]
 pub struct AppConfig {
     pub log_directory: Option<String>,
+    pub processor_enabled: bool,
     pub processor_batch_size: i64,
     pub processor_interval: u64,
     pub processor_update_mode: RfdUpdateMode,
+    pub scanner_enabled: bool,
     pub scanner_interval: u64,
     pub database_url: String,
     pub actions: Vec<String>,
