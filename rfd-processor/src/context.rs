@@ -214,8 +214,7 @@ impl StaticAssetStorageCtx {
             hyper::Client::builder().build(
                 hyper_rustls::HttpsConnectorBuilder::new()
                     .with_native_roots()
-                    .https_or_http()
-                    .enable_http1()
+                    .https_only()
                     .enable_http2()
                     .build(),
             ),
@@ -292,7 +291,7 @@ impl PdfStorage for PdfStorageCtx {
                     self.client
                         .files()
                         .update(req, file_id)
-                        .upload_resumable(stream, "application_pdf".parse().unwrap())
+                        .upload(stream, "application_pdf".parse().unwrap())
                         .await
                         .map_err(RfdPdfError::Remote)
                 }
@@ -301,7 +300,7 @@ impl PdfStorage for PdfStorageCtx {
                     self.client
                         .files()
                         .create(req)
-                        .upload_resumable(stream, "application_pdf".parse().unwrap())
+                        .upload(stream, "application_pdf".parse().unwrap())
                         .await
                         .map_err(RfdPdfError::Remote)
                 }

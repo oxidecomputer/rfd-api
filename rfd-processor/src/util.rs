@@ -107,8 +107,8 @@ pub async fn gdrive_client() -> Result<DriveHub<HttpsConnector<HttpConnector>>, 
         hyper::Client::builder().build(
             hyper_rustls::HttpsConnectorBuilder::new()
                 .with_native_roots()
-                .https_or_http()
-                .enable_http1()
+                .https_only()
+                .enable_http2()
                 .build(),
         ),
         gcp_auth,
