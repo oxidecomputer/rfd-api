@@ -18,6 +18,7 @@ use rsa::{
     RsaPrivateKey,
 };
 use thiserror::Error;
+use tracing::instrument;
 
 use crate::{
     github::{GitHubError, GitHubRfdRepo},
@@ -260,12 +261,15 @@ impl PdfStorageCtx {
 
 #[async_trait]
 impl PdfStorage for PdfStorageCtx {
+    #[instrument(skip(self, pdf), fields(locations = ?self.locations))]
     async fn store_rfd_pdf(
         &self,
         external_id: Option<&str>,
         filename: &str,
         pdf: &RfdPdf,
     ) -> Vec<Result<PdfFileLocation, RfdPdfError>> {
+        tracing::info!("Attempt to store PFD");
+
         if let Some(location) = self.locations.get(0) {
             let req = File {
                 copy_requires_writer_permission: Some(true),
@@ -279,20 +283,24 @@ impl PdfStorage for PdfStorageCtx {
             let stream = Cursor::new(pdf.contents.clone());
 
             let response = match external_id {
-                Some(file_id) => self
-                    .client
-                    .files()
-                    .update(req, file_id)
-                    .upload_resumable(stream, "application_pdf".parse().unwrap())
-                    .await
-                    .map_err(RfdPdfError::Remote),
-                None => self
-                    .client
-                    .files()
-                    .create(req)
-                    .upload_resumable(stream, "application_pdf".parse().unwrap())
-                    .await
-                    .map_err(RfdPdfError::Remote),
+                Some(file_id) => {
+                    tracing::info!(?file_id, "Updating existing PDF with new version");
+                    self.client
+                        .files()
+                        .update(req, file_id)
+                        .upload_resumable(stream, "application_pdf".parse().unwrap())
+                        .await
+                        .map_err(RfdPdfError::Remote)
+                }
+                None => {
+                    tracing::info!("Creating new PDF file");
+                    self.client
+                        .files()
+                        .create(req)
+                        .upload_resumable(stream, "application_pdf".parse().unwrap())
+                        .await
+                        .map_err(RfdPdfError::Remote)
+                }
             };
 
             vec![response.and_then(|(_, file)| {
