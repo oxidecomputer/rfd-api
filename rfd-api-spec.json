@@ -2287,12 +2287,17 @@
             }
           },
           "head_commit": {
-            "$ref": "#/components/schemas/GitHubCommit"
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GitHubCommit"
+              }
+            ]
           },
           "installation": {
             "$ref": "#/components/schemas/GitHubInstallation"
           },
-          "ref_": {
+          "ref": {
             "type": "string"
           },
           "repository": {
@@ -2304,9 +2309,8 @@
         },
         "required": [
           "commits",
-          "head_commit",
           "installation",
-          "ref_",
+          "ref",
           "repository",
           "sender"
         ]

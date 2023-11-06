@@ -64,6 +64,8 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         ServerLogFormat::Pretty => subscriber.pretty().init(),
     };
 
+    tracing::info!("Initialized logger");
+
     let mut context = ApiContext::new(
         config.public_url,
         Arc::new(
@@ -79,8 +81,12 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     )
     .await?;
 
+    tracing::info!("Configured server context");
+
     let init_data = InitialData::new(config.initial_mappers.map(|p| vec![p]))?;
     init_data.initialize(&context).await?;
+
+    tracing::info!("Loaded initial data");
 
     if let Some(github) = config.authn.oauth.github {
         context.insert_oauth_provider(
@@ -93,7 +99,9 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     github.web.client_secret.clone(),
                 ))
             }),
-        )
+        );
+
+        tracing::info!("Added GitHub OAuth provider");
     }
 
     if let Some(google) = config.authn.oauth.google {
@@ -107,7 +115,9 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
                     google.web.client_secret.clone(),
                 ))
             }),
-        )
+        );
+
+        tracing::info!("Added Google OAuth provider");
     }
 
     tracing::debug!(?config.spec, "Spec configuration");
