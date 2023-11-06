@@ -17,6 +17,7 @@ use rsa::{
     pkcs1::{DecodeRsaPrivateKey, EncodeRsaPrivateKey},
     RsaPrivateKey,
 };
+use tap::TapFallible;
 use thiserror::Error;
 use tracing::instrument;
 
@@ -291,7 +292,10 @@ impl PdfStorage for PdfStorageCtx {
                     self.client
                         .files()
                         .update(req, file_id)
-                        .upload(stream, "application_pdf".parse().unwrap())
+                        .upload(
+                            stream,
+                            "application/pdf".parse().expect("Failed to parse mimetype"),
+                        )
                         .await
                         .map_err(RfdPdfError::Remote)
                 }
@@ -300,11 +304,20 @@ impl PdfStorage for PdfStorageCtx {
                     self.client
                         .files()
                         .create(req)
-                        .upload(stream, "application_pdf".parse().unwrap())
+                        .upload(
+                            stream,
+                            "application/pdf".parse().expect("Failed to parse mimetype"),
+                        )
                         .await
                         .map_err(RfdPdfError::Remote)
                 }
-            };
+            }
+            .tap_ok(|_| {
+                tracing::info!("Sucessfully uploaded PDF");
+            })
+            .tap_err(|err| {
+                tracing::error!(?err, "Failed to upload PDF");
+            });
 
             vec![response.and_then(|(_, file)| {
                 file.id

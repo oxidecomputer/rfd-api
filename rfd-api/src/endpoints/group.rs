@@ -22,7 +22,7 @@ pub async fn get_groups(
 ) -> Result<HttpResponseOk<Vec<AccessGroup<ApiPermission>>>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
 
     if caller.can(&ApiPermission::ListGroups) {
         Ok(HttpResponseOk(
@@ -51,7 +51,7 @@ pub async fn create_group(
 ) -> Result<HttpResponseOk<AccessGroup<ApiPermission>>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
 
     if caller.can(&ApiPermission::CreateGroup) {
         let body = body.into_inner();
@@ -87,7 +87,7 @@ pub async fn update_group(
 ) -> Result<HttpResponseOk<AccessGroup<ApiPermission>>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     let path = path.into_inner();
 
     if caller.can(&ApiPermission::UpdateGroup(path.group_id)) {
@@ -118,7 +118,7 @@ pub async fn delete_group(
 ) -> Result<HttpResponseOk<Option<AccessGroup<ApiPermission>>>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     let path = path.into_inner();
 
     if caller.can(&ApiPermission::DeleteGroup(path.group_id)) {

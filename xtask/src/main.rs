@@ -83,16 +83,16 @@ impl Bump for Version {
                 self.minor = 0;
                 self.patch = 0;
                 self.pre = Prerelease::EMPTY;
-            },
+            }
             VersionPlace::Minor => {
                 self.minor = self.minor + 1;
                 self.patch = 0;
                 self.pre = Prerelease::EMPTY;
-            },
+            }
             VersionPlace::Patch => {
                 self.patch = self.patch + 1;
                 self.pre = Prerelease::EMPTY;
-            },
+            }
             VersionPlace::Pre => match self.pre.as_str().split_once('.') {
                 Some((label, number)) => {
                     let num = number.parse::<u64>().unwrap();

@@ -38,7 +38,7 @@ pub async fn create_link_token(
 ) -> Result<HttpResponseOk<ApiUserLinkRequestResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     let path = path.into_inner();
     let body = body.into_inner();
 

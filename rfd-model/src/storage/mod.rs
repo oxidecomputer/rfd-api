@@ -70,6 +70,7 @@ impl ListPagination {
 pub struct RfdFilter {
     pub id: Option<Vec<Uuid>>,
     pub rfd_number: Option<Vec<i32>>,
+    pub public: Option<bool>,
     pub deleted: bool,
 }
 
@@ -81,6 +82,11 @@ impl RfdFilter {
 
     pub fn rfd_number(mut self, rfd_number: Option<Vec<i32>>) -> Self {
         self.rfd_number = rfd_number;
+        self
+    }
+
+    pub fn public(mut self, public: Option<bool>) -> Self {
+        self.public = public;
         self
     }
 

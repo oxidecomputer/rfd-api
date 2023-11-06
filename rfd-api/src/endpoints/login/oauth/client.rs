@@ -29,7 +29,7 @@ pub async fn list_oauth_clients(
 ) -> Result<HttpResponseOk<Vec<OAuthClient>>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     list_oauth_clients_op(ctx, &caller).await
 }
 
@@ -60,7 +60,7 @@ pub async fn create_oauth_client(
 ) -> Result<HttpResponseOk<OAuthClient>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     create_oauth_client_op(ctx, &caller).await
 }
 
@@ -110,7 +110,7 @@ pub async fn get_oauth_client(
 ) -> Result<HttpResponseOk<Option<OAuthClient>>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     get_oauth_client_op(ctx, &caller, &path.into_inner()).await
 }
 
@@ -156,7 +156,7 @@ pub async fn create_oauth_client_secret(
 ) -> Result<HttpResponseOk<InitialOAuthClientSecretResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     create_oauth_client_secret_op(ctx, &caller, path.into_inner().client_id).await
 }
 
@@ -206,7 +206,7 @@ pub async fn delete_oauth_client_secret(
 ) -> Result<HttpResponseOk<Option<OAuthClientSecret>>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     delete_oauth_client_secret_op(ctx, &caller, &path.into_inner()).await
 }
 
@@ -251,7 +251,7 @@ pub async fn create_oauth_client_redirect_uri(
 ) -> Result<HttpResponseOk<OAuthClientRedirectUri>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     create_oauth_client_redirect_uri_op(ctx, &caller, &path.into_inner(), body.into_inner()).await
 }
 
@@ -292,7 +292,7 @@ pub async fn delete_oauth_client_redirect_uri(
 ) -> Result<HttpResponseOk<Option<OAuthClientRedirectUri>>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     delete_oauth_client_redirect_uri_op(ctx, &caller, &path.into_inner()).await
 }
 

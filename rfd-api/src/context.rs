@@ -103,6 +103,7 @@ pub struct ApiContext {
     pub https_client: Client<HttpsConnector<HttpConnector>, Body>,
     pub public_url: String,
     pub storage: Arc<dyn Storage>,
+    pub unauthenticated_caller: ApiCaller,
     pub jwt: JwtContext,
     pub secrets: SecretContext,
     pub oauth_providers: HashMap<OAuthProviderName, Box<dyn OAuthProviderFn>>,
@@ -220,6 +221,10 @@ impl ApiContext {
             public_url,
             storage,
 
+            unauthenticated_caller: ApiCaller {
+                id: Uuid::new_v4(),
+                permissions: vec![ApiPermission::SearchRfds].into(),
+            },
             jwt: JwtContext {
                 default_expiration: jwt.default_expiration,
                 max_expiration: jwt.max_expiration,
@@ -243,8 +248,17 @@ impl ApiContext {
         self.storage = storage;
     }
 
-    pub async fn authn_token(&self, rqctx: &RequestContext<Self>) -> Result<AuthToken, AuthError> {
-        AuthToken::extract(rqctx).await
+    pub async fn authn_token(
+        &self,
+        rqctx: &RequestContext<Self>,
+    ) -> Result<Option<AuthToken>, AuthError> {
+        match AuthToken::extract(rqctx).await {
+            Ok(token) => Ok(Some(token)),
+            Err(err) => match err {
+                AuthError::NoToken => Ok(None),
+                other => Err(other),
+            },
+        }
     }
 
     pub fn default_jwt_expiration(&self) -> i64 {
@@ -265,31 +279,40 @@ impl ApiContext {
     }
 
     #[instrument(skip(self, auth))]
-    pub async fn get_caller(&self, auth: &AuthToken) -> Result<ApiCaller, CallerError> {
-        let (api_user_id, permissions) = self.get_base_permissions(&auth).await?;
+    pub async fn get_caller(&self, auth: Option<&AuthToken>) -> Result<ApiCaller, CallerError> {
+        match auth {
+            Some(token) => {
+                let (api_user_id, permissions) = self.get_base_permissions(&token).await?;
 
-        // The permissions for the caller is the intersection of the user's permissions and the tokens permissions
-        if let Some(user) = self.get_api_user(&api_user_id).await? {
-            let user_permissions = self.get_user_permissions(&user).await?;
-            let token_permissions = permissions.expand(&user.id, Some(&user_permissions));
+                // The permissions for the caller is the intersection of the user's permissions and the tokens permissions
+                if let Some(user) = self.get_api_user(&api_user_id).await? {
+                    let user_permissions = self.get_user_permissions(&user).await?;
+                    let token_permissions = permissions.expand(&user.id, Some(&user_permissions));
 
-            let combined_permissions = token_permissions.intersect(&user_permissions);
+                    let combined_permissions = token_permissions.intersect(&user_permissions);
 
-            tracing::info!(token = ?token_permissions, user = ?user_permissions, combined = ?combined_permissions, "Computed caller permissions");
+                    tracing::info!(token = ?token_permissions, user = ?user_permissions, combined = ?combined_permissions, "Computed caller permissions");
 
-            let caller = Caller {
-                id: api_user_id,
-                permissions: combined_permissions,
-                // user,
-            };
+                    let caller = Caller {
+                        id: api_user_id,
+                        permissions: combined_permissions,
+                        // user,
+                    };
 
-            tracing::info!(?caller, "Resolved caller");
+                    tracing::info!(?caller, "Resolved caller");
 
-            Ok(caller)
-        } else {
-            tracing::error!("User for verified token does not exist");
-            Err(CallerError::FailedToAuthenticate)
+                    Ok(caller)
+                } else {
+                    tracing::error!("User for verified token does not exist");
+                    Err(CallerError::FailedToAuthenticate)
+                }
+            }
+            None => Ok(self.get_unauthenticated_caller().clone()),
         }
+    }
+
+    pub fn get_unauthenticated_caller(&self) -> &ApiCaller {
+        &self.unauthenticated_caller
     }
 
     async fn get_base_permissions(
@@ -432,28 +455,32 @@ impl ApiContext {
         caller: &Caller<ApiPermission>,
         filter: Option<RfdFilter>,
     ) -> Result<Vec<ListRfd>, StoreError> {
-        let mut filter = filter.unwrap_or_default();
-
-        if !caller.can(&ApiPermission::GetRfdsAll) {
-            let numbers = caller
-                .permissions
-                .iter()
-                .filter_map(|p| match p {
-                    ApiPermission::GetRfd(number) => Some(*number),
-                    _ => None,
-                })
-                .collect::<Vec<_>>();
-
-            filter = filter.rfd_number(Some(numbers));
-        }
-
+        // List all of the RFDs first and then perform filter. This should be be improved once
+        // filters can be combined to support OR expressions. Effectively we need to be able to
+        // express "Has access to OR is public" with a filter
         let mut rfds = RfdStore::list(
             &*self.storage,
-            filter,
+            filter.unwrap_or_default(),
             &ListPagination::default().limit(UNLIMITED),
         )
         .await
         .tap_err(|err| tracing::error!(?err, "Failed to lookup RFDs"))?;
+
+        // Determine the list of RFDs the caller has direct access to
+        let direct_access_rfds = caller
+            .permissions
+            .iter()
+            .filter_map(|p| match p {
+                ApiPermission::GetRfd(number) => Some(*number),
+                _ => None,
+            })
+            .collect::<BTreeSet<_>>();
+
+        rfds.retain_mut(|rfd| {
+            caller.can(&ApiPermission::GetRfdsAll)
+                || rfd.visibility == Visibility::Public
+                || direct_access_rfds.contains(&rfd.rfd_number)
+        });
 
         let mut rfd_revisions = RfdRevisionStore::list_unique_rfd(
             &*self.storage,
@@ -491,15 +518,16 @@ impl ApiContext {
 
     pub async fn get_rfd(
         &self,
+        caller: &Caller<ApiPermission>,
         rfd_number: i32,
         sha: Option<String>,
     ) -> Result<Option<FullRfd>, StoreError> {
-        let rfds = RfdStore::list(
-            &*self.storage,
-            RfdFilter::default().rfd_number(Some(vec![rfd_number])),
-            &ListPagination::default().limit(1),
-        )
-        .await?;
+        let rfds = self
+            .list_rfds(
+                caller,
+                Some(RfdFilter::default().rfd_number(Some(vec![rfd_number]))),
+            )
+            .await?;
 
         if let Some(rfd) = rfds.into_iter().nth(0) {
             let latest_revision = RfdRevisionStore::list(
@@ -1288,12 +1316,15 @@ mod tests {
         let ctx = mock_context(storage).await;
 
         let token_with_no_scope = create_token(&ctx, user_id, vec![]).await;
-        let permissions = ctx.get_caller(&token_with_no_scope).await.unwrap();
+        let permissions = ctx.get_caller(Some(&token_with_no_scope)).await.unwrap();
         assert_eq!(ApiPermissions::new(), permissions.permissions);
 
         let token_with_rfd_read_scope =
             create_token(&ctx, user_id, vec!["rfd:content:r".to_string()]).await;
-        let permissions = ctx.get_caller(&token_with_rfd_read_scope).await.unwrap();
+        let permissions = ctx
+            .get_caller(Some(&token_with_rfd_read_scope))
+            .await
+            .unwrap();
         assert_eq!(
             ApiPermissions::from(vec![ApiPermission::GetRfd(5), ApiPermission::GetRfd(10)]),
             permissions.permissions
@@ -1561,6 +1592,13 @@ pub(crate) mod test_mocks {
             new_job: NewJob,
         ) -> Result<rfd_model::Job, rfd_model::storage::StoreError> {
             self.job_store.as_ref().unwrap().upsert(new_job).await
+        }
+
+        async fn start(
+            &self,
+            id: i32,
+        ) -> Result<Option<rfd_model::Job>, rfd_model::storage::StoreError> {
+            self.job_store.as_ref().unwrap().start(id).await
         }
 
         async fn complete(

@@ -30,6 +30,7 @@ use crate::{
         link_request, login_attempt, mapper, oauth_client, oauth_client_redirect_uri,
         oauth_client_secret, rfd, rfd_pdf, rfd_revision,
     },
+    schema_ext::Visibility,
     storage::{LinkRequestFilter, LinkRequestStore, StoreError},
     AccessGroup, AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LinkRequest, LoginAttempt,
     Mapper, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
@@ -101,6 +102,7 @@ impl RfdStore for PostgresStore {
         let RfdFilter {
             id,
             rfd_number,
+            public,
             deleted,
         } = filter;
 
@@ -110,6 +112,14 @@ impl RfdStore for PostgresStore {
 
         if let Some(rfd_number) = rfd_number {
             query = query.filter(rfd::rfd_number.eq_any(rfd_number));
+        }
+
+        if let Some(public) = public {
+            query = query.filter(
+                rfd::visibility.eq(public
+                    .then(|| Visibility::Public)
+                    .unwrap_or(Visibility::Private)),
+            );
         }
 
         if !deleted {

@@ -45,8 +45,8 @@ pub async fn get_self(
     rqctx: RequestContext<ApiContext>,
 ) -> Result<HttpResponseOk<GetApiUserResponse>, HttpError> {
     let ctx = rqctx.context();
-    let auth = ctx.authn_token(&rqctx).await;
-    let caller = ctx.get_caller(&auth?).await?;
+    let auth = ctx.authn_token(&rqctx).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     get_api_user_op(ctx, &caller, &caller.id).await
 }
 
@@ -65,7 +65,7 @@ pub async fn get_api_user(
     let auth = ctx.authn_token(&rqctx).await?;
     get_api_user_op(
         ctx,
-        &ctx.get_caller(&auth).await?,
+        &ctx.get_caller(auth.as_ref()).await?,
         &path.into_inner().identifier,
     )
     .await
@@ -128,7 +128,12 @@ pub async fn create_api_user(
 ) -> Result<HttpResponseCreated<User>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    create_api_user_op(ctx, &ctx.get_caller(&auth).await?, body.into_inner()).await
+    create_api_user_op(
+        ctx,
+        &ctx.get_caller(auth.as_ref()).await?,
+        body.into_inner(),
+    )
+    .await
 }
 
 #[instrument(skip(ctx, caller, body), fields(caller = ?caller.id), err(Debug))]
@@ -172,7 +177,7 @@ pub async fn update_api_user(
 ) -> Result<HttpResponseOk<User>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     update_api_user_op(ctx, &caller, &path.into_inner(), body.into_inner()).await
 }
 
@@ -215,7 +220,7 @@ pub async fn list_api_user_tokens(
 ) -> Result<HttpResponseOk<Vec<ApiKeyResponse>>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     list_api_user_tokens_op(ctx, &caller, &path.into_inner()).await
 }
 
@@ -281,7 +286,7 @@ pub async fn create_api_user_token(
 ) -> Result<HttpResponseCreated<InitialApiKeyResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     create_api_user_token_op(ctx, &caller, &path.into_inner(), body.into_inner()).await
 }
 
@@ -355,7 +360,7 @@ pub async fn get_api_user_token(
 ) -> Result<HttpResponseOk<ApiKeyResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     get_api_user_token_op(ctx, &caller, &path.into_inner()).await
 }
 
@@ -398,7 +403,7 @@ pub async fn delete_api_user_token(
 ) -> Result<HttpResponseOk<ApiKeyResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     delete_api_user_token_op(ctx, &caller, &path.into_inner()).await
 }
 
@@ -446,7 +451,7 @@ pub async fn add_api_user_to_group(
 ) -> Result<HttpResponseOk<ApiUser<ApiPermission>>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     let path = path.into_inner();
     let body = body.into_inner();
 
@@ -479,7 +484,7 @@ pub async fn remove_api_user_from_group(
 ) -> Result<HttpResponseOk<ApiUser<ApiPermission>>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     let path = path.into_inner();
 
     if caller.can(&ApiPermission::RemoveFromGroup(path.group_id)) {
@@ -514,7 +519,7 @@ pub async fn link_provider(
 ) -> Result<HttpResponseUpdatedNoContent, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     let path = path.into_inner();
     let body = body.into_inner();
 

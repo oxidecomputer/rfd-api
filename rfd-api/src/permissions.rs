@@ -149,8 +149,8 @@ impl ApiPermission {
 
             ApiPermission::GetRfd(_) => "rfd:content:r",
             ApiPermission::GetRfds(_) => "rfd:content:r",
-            ApiPermission::GetRfdsAll => "rfd:content:r",
             ApiPermission::GetRfdsAssigned => "rfd:content:r",
+            ApiPermission::GetRfdsAll => "rfd:content:r",
             ApiPermission::GetDiscussion(_) => "rfd:discussion:r",
             ApiPermission::GetDiscussions(_) => "rfd:discussion:r",
             ApiPermission::GetDiscussionsAll => "rfd:discussion:r",

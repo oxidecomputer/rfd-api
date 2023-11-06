@@ -14,11 +14,10 @@ impl<T> Permission for T where
 {
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Caller<T: Ord> {
     pub id: Uuid,
     pub permissions: Permissions<T>,
-    // pub user: ApiUser<T>,
 }
 
 impl<T> Caller<T>

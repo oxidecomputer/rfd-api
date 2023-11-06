@@ -28,7 +28,7 @@ pub async fn get_mappers(
 ) -> Result<HttpResponseOk<Vec<Mapper>>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
 
     if caller.can(&ApiPermission::ListMappers) {
         Ok(HttpResponseOk(
@@ -58,7 +58,7 @@ pub async fn create_mapper(
 ) -> Result<HttpResponseOk<Mapper>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
 
     if caller.can(&ApiPermission::CreateMapper) {
         let body = body.into_inner();
@@ -102,7 +102,7 @@ pub async fn delete_mapper(
 ) -> Result<HttpResponseOk<Option<Mapper>>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(&auth).await?;
+    let caller = ctx.get_caller(auth.as_ref()).await?;
     let path = path.into_inner();
 
     if caller.any(&[
