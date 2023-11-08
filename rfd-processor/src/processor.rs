@@ -1,3 +1,4 @@
+use futures::TryFutureExt;
 use rfd_model::storage::{JobFilter, JobStore, ListPagination, StoreError};
 use std::sync::Arc;
 use tap::TapFallible;
@@ -34,8 +35,10 @@ pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
             .await?;
 
             for job in jobs {
+                let job_id = job.id;
+
                 let ctx = ctx.clone();
-                let res = tokio::spawn(async move {
+                tokio::spawn(async move {
                     // Make the job as started
                     match JobStore::start(&ctx.db.storage, job.id).await {
                         Ok(Some(job)) => {
@@ -83,7 +86,12 @@ pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
                     }
 
                     Ok::<_, JobError>(())
-                });
+                }.or_else(move |err| {
+                    async move {
+                        tracing::error!(id = ?job_id, ?err, "Spawned job failed");
+                        Err(err)
+                    }
+                }));
             }
         }
 

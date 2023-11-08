@@ -29,6 +29,7 @@ diesel = { version = "2.1.3", features = ["postgres"] }
 dirs = "5.0.1"
 dropshot = { git = "https://github.com/oxidecomputer/dropshot" }
 dropshot-verified-body = { git = "https://github.com/oxidecomputer/dropshot-verified-body", branch = "dropshot-dev" }
+futures = "0.3.29"
 google-cloudkms1 = "5.0.3"
 google-drive3 = "5.0.3"
 google-storage1 = "5.0.3"
