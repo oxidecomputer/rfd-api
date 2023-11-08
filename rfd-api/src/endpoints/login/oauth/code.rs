@@ -11,13 +11,13 @@ use http::{
 use hyper::{Body, Response};
 use oauth2::{
     reqwest::async_http_client, AuthorizationCode, CsrfToken, PkceCodeChallenge, PkceCodeVerifier,
-    Scope, TokenResponse,
+    RedirectUrl, Scope, TokenResponse,
 };
 use rfd_model::{schema_ext::LoginAttemptState, LoginAttempt, NewLoginAttempt, OAuthClient};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::fmt::Debug;
+use std::{borrow::Cow, fmt::Debug};
 use tap::TapFallible;
 use tracing::instrument;
 use uuid::Uuid;
@@ -207,6 +207,7 @@ pub async fn authz_code_redirect(
     tracing::info!(?attempt.id, "Created login attempt");
 
     Ok(oauth_redirect_response(
+        &ctx.public_url,
         &*provider,
         &attempt,
         pkce_challenge,
@@ -214,6 +215,7 @@ pub async fn authz_code_redirect(
 }
 
 fn oauth_redirect_response(
+    public_url: &str,
     provider: &dyn OAuthProvider,
     attempt: &LoginAttempt,
     code_challenge: Option<PkceCodeChallenge>,
@@ -231,9 +233,18 @@ fn oauth_redirect_response(
     let login_cookie = HeaderValue::from_str(&format!("{}={}", LOGIN_ATTEMPT_COOKIE, attempt.id))
         .map_err(to_internal_error)?;
 
+    // Construct the url for the remote provider to send the user back to
+    let redirect_url = RedirectUrl::new(format!(
+        "{}/login/oauth/{}/code/callback",
+        public_url,
+        provider.name()
+    ))
+    .unwrap();
+
     // Generate the url to the remote provider that the user will be redirected to
     let mut authz_url = client
         .authorize_url(|| CsrfToken::new(attempt.id.to_string()))
+        .set_redirect_uri(Cow::Owned(redirect_url))
         .add_scopes(
             provider
                 .scopes()
@@ -784,7 +795,8 @@ mod tests {
     #[tokio::test]
     async fn test_remote_provider_redirect_url() {
         let storage = MockStorage::new();
-        let ctx = mock_context(storage).await;
+        let mut ctx = mock_context(storage).await;
+        ctx.public_url = "https://api.oxeng.dev".to_string();
 
         let (challenge, _) = PkceCodeChallenge::new_random_sha256();
         let attempt = LoginAttempt {
@@ -808,6 +820,7 @@ mod tests {
         };
 
         let response = oauth_redirect_response(
+            &ctx.public_url,
             &*ctx
                 .get_oauth_provider(&OAuthProviderName::Google)
                 .await
@@ -817,7 +830,7 @@ mod tests {
         )
         .unwrap();
 
-        let expected_location = format!("https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=google_web_client_id&state={}&code_challenge={}&code_challenge_method=S256&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+openid", attempt.id, challenge.as_str());
+        let expected_location = format!("https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=google_web_client_id&state={}&code_challenge={}&code_challenge_method=S256&redirect_uri=https%3A%2F%2Fapi.oxeng.dev%2Flogin%2Foauth%2Fgoogle%2Fcode%2Fcallback&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+openid", attempt.id, challenge.as_str());
 
         assert_eq!(
             expected_location,

@@ -205,6 +205,8 @@ pub async fn exchange_device_token(
                                 "rfd:content:r".to_string(),
                                 "rfd:discussion:r".to_string(),
                                 "search".to_string(),
+                                "oauth:client:r".to_string(),
+                                "oauth:client:w".to_string(),
                             ],
                         )
                         .await?;

@@ -109,7 +109,7 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::GetSelf => Some("user self"),
 
         // RFD commands
-        CliCommand::GetRfd => Some("get"),
+        CliCommand::GetRfd => Some("view"),
         CliCommand::GetRfds => Some("list"),
         CliCommand::SearchRfds => Some("search"),
 
@@ -133,13 +133,13 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::DeleteMapper => Some("mapper delete"),
 
         // OAuth client commands
-        CliCommand::ListOauthClients => None,
-        CliCommand::CreateOauthClient => None,
-        CliCommand::GetOauthClient => None,
-        CliCommand::CreateOauthClientRedirectUri => None,
-        CliCommand::DeleteOauthClientRedirectUri => None,
-        CliCommand::CreateOauthClientSecret => None,
-        CliCommand::DeleteOauthClientSecret => None,
+        CliCommand::ListOauthClients => Some("oauth list"),
+        CliCommand::CreateOauthClient => Some("oauth create"),
+        CliCommand::GetOauthClient => Some("oauth get"),
+        CliCommand::CreateOauthClientRedirectUri => Some("oauth redirect create"),
+        CliCommand::DeleteOauthClientRedirectUri => Some("oauth redirect delete"),
+        CliCommand::CreateOauthClientSecret => Some("oauth secret create"),
+        CliCommand::DeleteOauthClientSecret => Some("oauth secret delete"),
 
         // Authentication is handled separately
         CliCommand::ExchangeDeviceToken => None,
