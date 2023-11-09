@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use config::{Config, ConfigError, Environment, File};
+use secrecy::SecretString;
 use serde::{
     de::{self, Visitor},
     Deserialize, Deserializer,
@@ -123,13 +124,13 @@ pub struct OAuthConfig {
 #[derive(Debug, Deserialize)]
 pub struct OAuthDeviceConfig {
     pub client_id: String,
-    pub client_secret: String,
+    pub client_secret: SecretString,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct OAuthWebConfig {
     pub client_id: String,
-    pub client_secret: String,
+    pub client_secret: SecretString,
     pub redirect_uri: String,
 }
 

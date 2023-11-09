@@ -35,11 +35,12 @@ ring = { workspace = true }
 rfd-model = { path = "../rfd-model" }
 rsa = { workspace = true, features = ["sha2"] }
 schemars = { workspace = true, features = ["chrono"] }
-sha2 = { workspace = true }
+secrecy = { workspace = true, features = ["serde"] }
 serde = { workspace = true, features = ["derive"] }
 serde_bytes = { workspace = true }
 serde_json = { workspace = true }
 serde_urlencoded = { workspace = true }
+sha2 = { workspace = true }
 slog = { workspace = true }
 slog-async = { workspace = true }
 tap = { workspace = true }

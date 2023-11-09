@@ -4,6 +4,7 @@ use http::{header, HeaderValue, Request, Response, StatusCode};
 use hyper::{body::to_bytes, Body};
 use oauth2::{basic::BasicTokenType, EmptyExtraTokenFields, StandardTokenResponse, TokenResponse};
 use schemars::JsonSchema;
+use secrecy::ExposeSecret;
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
 use tap::TapFallible;
@@ -77,7 +78,7 @@ impl AccessTokenExchange {
                     client_id: provider.client_id(&ClientType::Device).to_string(),
                     device_code: req.device_code,
                     grant_type: req.grant_type,
-                    client_secret: client_secret.to_string(),
+                    client_secret: client_secret.expose_secret().to_string(),
                 },
                 expires_at: req.expires_at,
             })

@@ -44,7 +44,7 @@ use crate::{
     },
     config::{AsymmetricKey, JwtConfig, SearchConfig},
     endpoints::login::{
-        oauth::{OAuthProvider, OAuthProviderError, OAuthProviderFn, OAuthProviderName},
+        oauth::{OAuthProvider, OAuthProviderError, OAuthProviderFn, OAuthProviderName, ClientType},
         UserInfo,
     },
     error::{ApiError, AppError},
@@ -242,6 +242,14 @@ impl ApiContext {
                 index: search.index,
             },
         })
+    }
+
+    pub fn device_client(&self) -> ClientType {
+        ClientType::Device
+    }
+
+    pub fn web_client(&self) -> ClientType {
+        ClientType::Web { prefix: self.public_url.to_string() }
     }
 
     pub fn set_storage(&mut self, storage: Arc<dyn Storage>) {
@@ -1382,9 +1390,9 @@ pub(crate) mod test_mocks {
             Box::new(move || {
                 Box::new(GoogleOAuthProvider::new(
                     "google_device_client_id".to_string(),
-                    "google_device_client_secret".to_string(),
+                    "google_device_client_secret".to_string().into(),
                     "google_web_client_id".to_string(),
-                    "google_web_client_secret".to_string(),
+                    "google_web_client_secret".to_string().into(),
                 ))
             }),
         );

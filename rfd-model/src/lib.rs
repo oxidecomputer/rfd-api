@@ -289,10 +289,10 @@ impl Display for InvalidValueError {
 
 impl NewLoginAttempt {
     pub fn new(
+        provider: String,
         client_id: Uuid,
         redirect_uri: String,
         scope: String,
-        provider: String,
     ) -> Result<Self, InvalidValueError> {
         Ok(Self {
             id: Uuid::new_v4(),

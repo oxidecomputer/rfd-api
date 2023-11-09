@@ -2,9 +2,10 @@ use async_trait::async_trait;
 use dropshot::Method;
 use http::header;
 use hyper::{body::Bytes, Body};
-use oauth2::{basic::BasicClient, url::ParseError, AuthUrl, ClientId, ClientSecret, TokenUrl};
+use oauth2::{basic::BasicClient, url::ParseError, AuthUrl, ClientId, ClientSecret, TokenUrl, RedirectUrl, RevocationUrl};
 use rfd_model::OAuthClient;
 use schemars::JsonSchema;
+use secrecy::{SecretString, ExposeSecret};
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
 use thiserror::Error;
@@ -26,9 +27,12 @@ pub enum OAuthProviderError {
     FailToCreateInvalidProvider,
 }
 
+#[derive(Debug)]
 pub enum ClientType {
     Device,
-    Web,
+    Web {
+        prefix: String,
+    },
 }
 
 pub struct OAuthPublicCredentials {
@@ -36,7 +40,7 @@ pub struct OAuthPublicCredentials {
 }
 
 pub struct OAuthPrivateCredentials {
-    client_secret: String,
+    client_secret: SecretString,
 }
 
 pub trait OAuthProvider: ExtractUserInfo + Debug + Send + Sync {
@@ -44,7 +48,7 @@ pub trait OAuthProvider: ExtractUserInfo + Debug + Send + Sync {
     fn scopes(&self) -> Vec<&str>;
     fn client(&self) -> &reqwest::Client;
     fn client_id(&self, client_type: &ClientType) -> &str;
-    fn client_secret(&self, client_type: &ClientType) -> Option<&str>;
+    fn client_secret(&self, client_type: &ClientType) -> Option<&SecretString>;
 
     // TODO: How can user info be change to something statically checked instead of a runtime check
     fn user_info_endpoints(&self) -> Vec<&str>;
@@ -52,6 +56,7 @@ pub trait OAuthProvider: ExtractUserInfo + Debug + Send + Sync {
     fn auth_url_endpoint(&self) -> &str;
     fn token_exchange_content_type(&self) -> &str;
     fn token_exchange_endpoint(&self) -> &str;
+    fn token_revocation_endpoint(&self) -> Option<&str>;
     fn supports_pkce(&self) -> bool;
 
     fn provider_info(&self, public_url: &str, client_type: &ClientType) -> OAuthProviderInfo {
@@ -70,13 +75,31 @@ pub trait OAuthProvider: ExtractUserInfo + Debug + Send + Sync {
     }
 
     fn as_client(&self, client_type: &ClientType) -> Result<BasicClient, ParseError> {
-        Ok(BasicClient::new(
+        let mut client = BasicClient::new(
             ClientId::new(self.client_id(client_type).to_string()),
             self.client_secret(client_type)
-                .map(|s| ClientSecret::new(s.to_string())),
+                .map(|s| ClientSecret::new(s.expose_secret().to_string())),
             AuthUrl::new(self.auth_url_endpoint().to_string())?,
             Some(TokenUrl::new(self.token_exchange_endpoint().to_string())?),
-        ))
+        );
+
+        if let Some(revocation_endpoint) = self.token_revocation_endpoint() {
+            client = client.set_revocation_uri(RevocationUrl::new(revocation_endpoint.to_string())?);
+        }
+
+        // If we are asked for a web client we need to attach a redirect uri
+        Ok(match client_type {
+            ClientType::Web { prefix } => {
+                let redirect_url = RedirectUrl::new(format!(
+                    "{}/login/oauth/{}/code/callback",
+                    prefix,
+                    self.name()
+                ))?;
+
+                client.set_redirect_uri(redirect_url)
+            }
+            _ => client
+        })
     }
 }
 

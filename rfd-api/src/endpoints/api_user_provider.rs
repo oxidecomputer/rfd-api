@@ -6,7 +6,7 @@ use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
-    context::ApiContext, error::ApiError, permissions::ApiPermission, util::response::forbidden,
+    context::ApiContext, error::ApiError, permissions::ApiPermission, util::response::forbidden, secrets::OpenApiSecretString,
 };
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -21,7 +21,7 @@ pub struct ApiUserLinkRequestPayload {
 
 #[derive(Debug, Serialize, JsonSchema)]
 pub struct ApiUserLinkRequestResponse {
-    token: String,
+    token: OpenApiSecretString,
 }
 
 /// Create a new link token for linking this provider to a different api user
@@ -57,7 +57,7 @@ pub async fn create_link_token(
                 .map_err(ApiError::Storage)?;
 
             Ok(HttpResponseOk(ApiUserLinkRequestResponse {
-                token: token.key(),
+                token: token.key().into(),
             }))
         } else {
             tracing::info!(caller = ?caller.id, provider = ?provider.id, provider_user = ?provider.api_user_id, "User does not have permission to modify this provider");

@@ -1,5 +1,5 @@
 use base64::{prelude::BASE64_URL_SAFE_NO_PAD, Engine};
-use chrono::Utc;
+use chrono::{Utc, Duration};
 use dropshot::{
     endpoint, http_response_temporary_redirect, HttpError, HttpResponseOk,
     HttpResponseTemporaryRedirect, Path, Query, RequestContext, RequestInfo, TypedBody,
@@ -11,13 +11,14 @@ use http::{
 use hyper::{Body, Response};
 use oauth2::{
     reqwest::async_http_client, AuthorizationCode, CsrfToken, PkceCodeChallenge, PkceCodeVerifier,
-    RedirectUrl, Scope, TokenResponse,
+    Scope, TokenResponse,
 };
 use rfd_model::{schema_ext::LoginAttemptState, LoginAttempt, NewLoginAttempt, OAuthClient};
 use schemars::JsonSchema;
+use secrecy::SecretString;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::{borrow::Cow, fmt::Debug};
+use std::{fmt::Debug, ops::Add};
 use tap::TapFallible;
 use tracing::instrument;
 use uuid::Uuid;
@@ -35,7 +36,7 @@ use crate::{
     util::{
         request::RequestCookies,
         response::{internal_error, to_internal_error, unauthorized},
-    },
+    }, secrets::OpenApiSecretString,
 };
 
 static LOGIN_ATTEMPT_COOKIE: &str = "__rfd_login";
@@ -173,15 +174,19 @@ pub async fn authz_code_redirect(
 
     // Construct a new login attempt with the minimum required values
     let mut attempt = NewLoginAttempt::new(
+        provider.name().to_string(),
         query.client_id,
         query.redirect_uri,
-        provider.name().to_string(),
         scope,
     )
     .map_err(|err| {
         tracing::error!(?err, "Attempted to construct invalid login attempt");
         internal_error("Attempted to construct invalid login attempt".to_string())
     })?;
+
+    // Set a default expiration for the login attempt
+    // TODO: Make this configurable
+    attempt.expires_at = Some(Utc::now().add(Duration::minutes(5)));
 
     // Assign any scope errors that arose
     attempt.error = scope_error;
@@ -225,7 +230,7 @@ fn oauth_redirect_response(
     // constructing a new client on every request. That said, we need to ensure the client does not
     // maintain state between requests
     let client = provider
-        .as_client(&ClientType::Web)
+        .as_client(&ClientType::Web { prefix: public_url.to_string() })
         .map_err(to_internal_error)?;
 
     // Create an attempt cookie header for storing the login attempt. This also acts as our csrf
@@ -233,18 +238,9 @@ fn oauth_redirect_response(
     let login_cookie = HeaderValue::from_str(&format!("{}={}", LOGIN_ATTEMPT_COOKIE, attempt.id))
         .map_err(to_internal_error)?;
 
-    // Construct the url for the remote provider to send the user back to
-    let redirect_url = RedirectUrl::new(format!(
-        "{}/login/oauth/{}/code/callback",
-        public_url,
-        provider.name()
-    ))
-    .unwrap();
-
     // Generate the url to the remote provider that the user will be redirected to
     let mut authz_url = client
         .authorize_url(|| CsrfToken::new(attempt.id.to_string()))
-        .set_redirect_uri(Cow::Owned(redirect_url))
         .add_scopes(
             provider
                 .scopes()
@@ -417,10 +413,10 @@ pub async fn authz_code_callback_op(
     Ok(attempt.callback_url())
 }
 
-#[derive(Debug, Deserialize, JsonSchema, Serialize)]
+#[derive(Debug, Deserialize, JsonSchema)]
 pub struct OAuthAuthzCodeExchangeBody {
     pub client_id: Uuid,
-    pub client_secret: String,
+    pub client_secret: OpenApiSecretString,
     pub redirect_uri: String,
     pub grant_type: String,
     pub code: String,
@@ -459,7 +455,7 @@ pub async fn authz_code_exchange(
         &ctx,
         &body.grant_type,
         &body.client_id,
-        &body.client_secret,
+        &body.client_secret.0,
         &body.redirect_uri,
     )
     .await?;
@@ -490,7 +486,7 @@ pub async fn authz_code_exchange(
 
     // Now that the attempt has been confirmed, use it to fetch user information form the remote
     // provider
-    let info = fetch_user_info(&*provider, &attempt).await?;
+    let info = fetch_user_info(&ctx.web_client(), &*provider, &attempt).await?;
 
     tracing::debug!("Retrieved user information from remote provider");
 
@@ -524,7 +520,7 @@ async fn authorize_code_exchange(
     ctx: &ApiContext,
     grant_type: &str,
     client_id: &Uuid,
-    client_secret: &str,
+    client_secret: &SecretString,
     redirect_uri: &str,
 ) -> Result<(), OAuthError> {
     let client = get_oauth_client(ctx, &client_id, &redirect_uri).await?;
@@ -626,14 +622,17 @@ fn verify_login_attempt(
     }
 }
 
+#[instrument(skip(attempt))]
 async fn fetch_user_info(
+    client_type: &ClientType,
     provider: &dyn OAuthProvider,
     attempt: &LoginAttempt,
 ) -> Result<UserInfo, HttpError> {
     // Exchange the stored authorization code with the remote provider for a remote access token
     let client = provider
-        .as_client(&ClientType::Web)
+        .as_client(client_type)
         .map_err(to_internal_error)?;
+
     let mut request = client.exchange_code(AuthorizationCode::new(
         attempt
             .provider_authz_code
@@ -662,13 +661,18 @@ async fn fetch_user_info(
         .map_err(LoginError::UserInfo)
         .tap_err(|err| tracing::error!(?err, "Failed to look up user information"))?;
 
-    // Now that we are done with fetching user information from the remote API, we can revoke it
-    client
-        .revoke_token(response.access_token().into())
-        .map_err(internal_error)?
-        .request_async(async_http_client)
-        .await
-        .map_err(internal_error)?;
+    tracing::info!("Fetched user info from remote service");
+
+    // Now that we are done with fetching user information from the remote API, we can revoke it if
+    // the provider supports it
+    if provider.token_revocation_endpoint().is_some() {
+        client
+            .revoke_token(response.access_token().into())
+            .map_err(internal_error)?
+            .request_async(async_http_client)
+            .await
+            .map_err(internal_error)?;
+    }
 
     Ok(info)
 }
@@ -695,6 +699,7 @@ mod tests {
         storage::{MockLoginAttemptStore, MockOAuthClientStore},
         LoginAttempt, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret,
     };
+    use secrecy::SecretString;
     use uuid::Uuid;
 
     use crate::{
@@ -716,7 +721,7 @@ mod tests {
         authorize_code_exchange, authz_code_callback_op, get_oauth_client, oauth_redirect_response,
     };
 
-    async fn mock_client() -> (ApiContext, OAuthClient, String) {
+    async fn mock_client() -> (ApiContext, OAuthClient, SecretString) {
         let ctx = mock_context(MockStorage::new()).await;
         let client_id = Uuid::new_v4();
         let key = RawApiKey::generate::<8>(&Uuid::new_v4())
@@ -1303,7 +1308,7 @@ mod tests {
                 &ctx,
                 "authorization_code",
                 &client_id,
-                "too-short",
+                &"too-short".to_string().into(),
                 &redirect_uri
             )
             .await
@@ -1317,7 +1322,7 @@ mod tests {
                 &ctx,
                 "authorization_code",
                 &client_id,
-                &invalid_secret,
+                &invalid_secret.into(),
                 &redirect_uri
             )
             .await

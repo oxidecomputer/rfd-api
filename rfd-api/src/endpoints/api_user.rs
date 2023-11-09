@@ -25,7 +25,7 @@ use crate::{
     util::response::{
         bad_request, forbidden, internal_error, not_found, to_internal_error, unauthorized,
     },
-    ApiCaller, ApiPermissions, User,
+    ApiCaller, ApiPermissions, User, secrets::OpenApiSecretString,
 };
 
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
@@ -266,7 +266,7 @@ pub struct ApiKeyCreateParams {
 pub struct InitialApiKeyResponse {
     pub id: Uuid,
     #[partial(ApiKeyResponse(skip))]
-    pub key: String,
+    pub key: OpenApiSecretString,
     pub permissions: ApiPermissions,
     pub created_at: DateTime<Utc>,
 }
@@ -329,7 +329,7 @@ async fn create_api_user_token_op(
             // plaintext token as we do not store a copy
             Ok(HttpResponseCreated(InitialApiKeyResponse {
                 id: user_key.id,
-                key: key.key(),
+                key: key.key().into(),
                 permissions: user_key.permissions,
                 created_at: user_key.created_at,
             }))

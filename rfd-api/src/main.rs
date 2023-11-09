@@ -30,6 +30,7 @@ mod error;
 mod initial_data;
 mod mapper;
 mod permissions;
+mod secrets;
 mod server;
 mod util;
 

@@ -3,6 +3,7 @@ use std::fmt;
 use http::{header::USER_AGENT, HeaderMap, HeaderValue};
 use hyper::body::Bytes;
 use reqwest::Client;
+use secrecy::SecretString;
 use serde::Deserialize;
 
 use crate::endpoints::login::{ExternalUserId, UserInfo, UserInfoError};
@@ -31,9 +32,9 @@ impl fmt::Debug for GitHubOAuthProvider {
 impl GitHubOAuthProvider {
     pub fn new(
         device_client_id: String,
-        device_client_secret: String,
+        device_client_secret: SecretString,
         web_client_id: String,
-        web_client_secret: String,
+        web_client_secret: SecretString,
     ) -> Self {
         let mut headers = HeaderMap::new();
         headers.insert(USER_AGENT, HeaderValue::from_static("rfd-api"));
@@ -108,20 +109,20 @@ impl OAuthProvider for GitHubOAuthProvider {
     fn client_id(&self, client_type: &ClientType) -> &str {
         match client_type {
             ClientType::Device => &self.device_public.client_id,
-            ClientType::Web => &self.web_public.client_id,
+            ClientType::Web { .. } => &self.web_public.client_id,
         }
     }
 
-    fn client_secret(&self, client_type: &ClientType) -> Option<&str> {
+    fn client_secret(&self, client_type: &ClientType) -> Option<&SecretString> {
         match client_type {
             ClientType::Device => self
                 .device_private
                 .as_ref()
-                .map(|private| private.client_secret.as_str()),
-            ClientType::Web => self
+                .map(|private| &private.client_secret),
+            ClientType::Web { .. } => self
                 .web_private
                 .as_ref()
-                .map(|private| private.client_secret.as_str()),
+                .map(|private| &private.client_secret),
         }
     }
 
@@ -146,6 +147,10 @@ impl OAuthProvider for GitHubOAuthProvider {
 
     fn token_exchange_endpoint(&self) -> &str {
         "https://github.com/login/oauth/access_token"
+    }
+
+    fn token_revocation_endpoint(&self) -> Option<&str> {
+        None
     }
 
     fn supports_pkce(&self) -> bool {

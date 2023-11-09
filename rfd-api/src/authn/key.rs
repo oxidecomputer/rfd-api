@@ -1,13 +1,13 @@
 use hex::FromHexError;
 use rand::{rngs::OsRng, RngCore};
+use secrecy::{SecretString, ExposeSecret, SecretVec};
 use thiserror::Error;
 use uuid::Uuid;
 
 use super::{Signer, SigningKeyError};
 
-#[derive(Debug)]
 pub struct RawApiKey {
-    clear: Vec<u8>,
+    clear: SecretVec<u8>,
 }
 
 #[derive(Debug, Error)]
@@ -34,27 +34,27 @@ impl RawApiKey {
         let mut clear = id.as_bytes().to_vec();
         clear.append(&mut token_raw.to_vec());
 
-        Self { clear }
+        Self { clear: clear.into() }
     }
 
     pub fn id(&self) -> &[u8] {
-        &self.clear[0..16]
+        &self.clear.expose_secret()[0..16]
     }
 
     pub async fn sign(self, signer: &dyn Signer) -> Result<SignedApiKey, ApiKeyError> {
         let signature = hex::encode(
             signer
-                .sign(&self.clear)
+                .sign(&self.clear.expose_secret())
                 .await
                 .map_err(ApiKeyError::Signing)?,
         );
-        Ok(SignedApiKey::new(hex::encode(self.clear), signature))
+        Ok(SignedApiKey::new(hex::encode(self.clear.expose_secret()).into(), signature))
     }
 
     pub fn verify(&self, signer: &dyn Signer, signature: &[u8]) -> Result<(), ApiKeyError> {
         let signature = hex::decode(signature)?;
         Ok(signer
-            .verify(&self.clear, &signature)
+            .verify(&self.clear.expose_secret(), &signature)
             .map_err(ApiKeyError::Verify)?)
     }
 }
@@ -66,7 +66,22 @@ impl TryFrom<&str> for RawApiKey {
         let decoded = hex::decode(value)?;
 
         if decoded.len() > 16 {
-            Ok(RawApiKey { clear: decoded })
+            Ok(RawApiKey { clear: decoded.into() })
+        } else {
+            tracing::debug!(len = ?decoded.len(), "API key is too short");
+            Err(ApiKeyError::FailedToParse)
+        }
+    }
+}
+
+impl TryFrom<&SecretString> for RawApiKey {
+    type Error = ApiKeyError;
+
+    fn try_from(value: &SecretString) -> Result<Self, Self::Error> {
+        let decoded = hex::decode(value.expose_secret())?;
+
+        if decoded.len() > 16 {
+            Ok(RawApiKey { clear: decoded.into() })
         } else {
             tracing::debug!(len = ?decoded.len(), "API key is too short");
             Err(ApiKeyError::FailedToParse)
@@ -75,16 +90,16 @@ impl TryFrom<&str> for RawApiKey {
 }
 
 pub struct SignedApiKey {
-    key: String,
+    key: SecretString,
     signature: String,
 }
 
 impl SignedApiKey {
-    fn new(key: String, signature: String) -> Self {
+    fn new(key: SecretString, signature: String) -> Self {
         Self { key, signature }
     }
 
-    pub fn key(self) -> String {
+    pub fn key(self) -> SecretString {
         self.key
     }
 
@@ -95,6 +110,7 @@ impl SignedApiKey {
 
 #[cfg(test)]
 mod tests {
+    use secrecy::ExposeSecret;
     use uuid::Uuid;
 
     use super::RawApiKey;
@@ -106,12 +122,9 @@ mod tests {
         let signer = mock_key().as_signer().await.unwrap();
 
         let raw = RawApiKey::generate::<8>(&id);
-        println!("{:?}", raw);
-
         let signed = raw.sign(&*signer).await.unwrap();
 
-        let raw2 = RawApiKey::try_from(signed.key.as_str()).unwrap();
-        println!("{:?}", raw2);
+        let raw2 = RawApiKey::try_from(signed.key.expose_secret().as_str()).unwrap();
 
         assert_eq!(
             (),

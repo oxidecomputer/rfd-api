@@ -14,7 +14,7 @@ use crate::{
     error::ApiError,
     permissions::ApiPermission,
     util::response::{client_error, to_internal_error},
-    ApiCaller,
+    ApiCaller, secrets::OpenApiSecretString,
 };
 
 /// List OAuth clients
@@ -139,7 +139,7 @@ pub struct AddOAuthClientSecretPath {
 #[derive(Debug, Serialize, JsonSchema)]
 pub struct InitialOAuthClientSecretResponse {
     pub id: Uuid,
-    pub key: String,
+    pub key: OpenApiSecretString,
     pub created_at: DateTime<Utc>,
 }
 
@@ -179,7 +179,7 @@ async fn create_oauth_client_secret_op(
 
         Ok(HttpResponseOk(InitialOAuthClientSecretResponse {
             id: client_secret.id,
-            key: secret.key(),
+            key: secret.key().into(),
             created_at: client_secret.created_at,
         }))
     } else {
@@ -424,7 +424,7 @@ mod tests {
             .secrets
             .push(last_stored_secret.lock().unwrap().clone().unwrap());
 
-        let key = RawApiKey::try_from(secret.key.as_str()).unwrap();
+        let key = RawApiKey::try_from(&secret.key.0).unwrap();
 
         assert!(client.is_secret_valid(&key, &*ctx.secrets.signer))
     }

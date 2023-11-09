@@ -41,6 +41,7 @@ pub mod response {
     use dropshot::HttpError;
     use http::StatusCode;
     use std::error::Error;
+    use tracing::instrument;
 
     pub fn conflict() -> HttpError {
         client_error(StatusCode::CONFLICT, "Already exists")
@@ -72,19 +73,22 @@ pub mod response {
         HttpError::for_not_found(None, internal_message.to_string())
     }
 
+    #[instrument(skip(error))]
     pub fn to_internal_error<E>(error: E) -> HttpError
     where
         E: Error,
     {
-        tracing::info!(?error, "Request failed");
-        internal_error(String::new())
+        internal_error(error.to_string())
     }
 
+    #[instrument(skip(internal_message))]
     pub fn internal_error<S>(internal_message: S) -> HttpError
     where
         S: ToString,
     {
-        HttpError::for_internal_error(internal_message.to_string())
+        let internal_message = internal_message.to_string();
+        tracing::error!(internal_message, "Request failed");
+        HttpError::for_internal_error(internal_message)
     }
 }
 

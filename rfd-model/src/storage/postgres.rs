@@ -1093,9 +1093,12 @@ impl LoginAttemptStore for PostgresStore {
                 login_attempt::pkce_challenge_method.eq(attempt.pkce_challenge_method),
                 login_attempt::authz_code.eq(attempt.authz_code),
                 login_attempt::expires_at.eq(attempt.expires_at),
+                login_attempt::error.eq(attempt.error),
                 login_attempt::provider.eq(attempt.provider),
                 login_attempt::provider_pkce_verifier.eq(attempt.provider_pkce_verifier),
                 login_attempt::provider_authz_code.eq(attempt.provider_authz_code),
+                login_attempt::provider_error.eq(attempt.provider_error),
+                login_attempt::scope.eq(attempt.scope),
             ))
             .on_conflict(login_attempt::id)
             .do_update()
@@ -1103,7 +1106,9 @@ impl LoginAttemptStore for PostgresStore {
                 login_attempt::attempt_state.eq(excluded(login_attempt::attempt_state)),
                 login_attempt::authz_code.eq(excluded(login_attempt::authz_code)),
                 login_attempt::expires_at.eq(excluded(login_attempt::expires_at)),
+                login_attempt::error.eq(excluded(login_attempt::error)),
                 login_attempt::provider_authz_code.eq(excluded(login_attempt::provider_authz_code)),
+                login_attempt::provider_error.eq(excluded(login_attempt::provider_error)),
                 login_attempt::updated_at.eq(Utc::now()),
             ))
             .get_result_async(&*self.pool.get().await?)
