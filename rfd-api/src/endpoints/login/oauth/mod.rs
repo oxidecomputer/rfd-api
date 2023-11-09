@@ -177,6 +177,7 @@ impl CheckOAuthClient for OAuthClient {
     }
 
     fn is_redirect_uri_valid(&self, redirect_uri: &str) -> bool {
+        tracing::trace!(?redirect_uri, valid_uris = ?self.redirect_uris, "Checking redirect uri against list of valid uris");
         self.redirect_uris
             .iter()
             .any(|r| r.redirect_uri == redirect_uri)
