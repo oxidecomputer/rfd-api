@@ -320,7 +320,7 @@ impl TabDisplay for ApiKeyResponse {
 impl TabDisplay for InitialApiKeyResponse {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "id", &self.id);
-        printer.print_field(tw, level, "key", &self.key);
+        printer.print_field(tw, level, "key", &self.key.0);
         printer.print_list(
             tw,
             level,
@@ -449,7 +449,7 @@ impl TabDisplay for OAuthClientSecret {
 impl TabDisplay for InitialOAuthClientSecretResponse {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "id", &self.id);
-        printer.print_field(tw, level, "key", &self.key);
+        printer.print_field(tw, level, "key", &self.key.0);
         printer.print_field(tw, level, "created_at", &self.created_at);
     }
 }

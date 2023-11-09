@@ -1978,7 +1978,7 @@
         "type": "object",
         "properties": {
           "token": {
-            "type": "string"
+            "$ref": "#/components/schemas/SecretString"
           }
         },
         "required": [
@@ -2409,7 +2409,7 @@
             "format": "uuid"
           },
           "key": {
-            "type": "string"
+            "$ref": "#/components/schemas/SecretString"
           },
           "permissions": {
             "$ref": "#/components/schemas/Permissions_for_ApiPermission"
@@ -2434,7 +2434,7 @@
             "format": "uuid"
           },
           "key": {
-            "type": "string"
+            "$ref": "#/components/schemas/SecretString"
           }
         },
         "required": [
@@ -2692,7 +2692,7 @@
             "format": "uuid"
           },
           "client_secret": {
-            "type": "string"
+            "$ref": "#/components/schemas/SecretString"
           },
           "code": {
             "type": "string"
@@ -2892,6 +2892,9 @@
           "$ref": "#/components/schemas/ApiPermission"
         },
         "uniqueItems": true
+      },
+      "SecretString": {
+        "type": "string"
       },
       "Visibility": {
         "type": "string",

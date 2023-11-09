@@ -259,7 +259,7 @@ pub mod types {
 
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct ApiUserLinkRequestResponse {
-        pub token: String,
+        pub token: SecretString,
     }
 
     impl From<&ApiUserLinkRequestResponse> for ApiUserLinkRequestResponse {
@@ -468,8 +468,10 @@ pub mod types {
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct GitHubCommitPayload {
         pub commits: Vec<GitHubCommit>,
-        pub head_commit: GitHubCommit,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub head_commit: Option<GitHubCommit>,
         pub installation: GitHubInstallation,
+        #[serde(rename = "ref")]
         pub ref_: String,
         pub repository: GitHubRepository,
         pub sender: GitHubSender,
@@ -568,7 +570,7 @@ pub mod types {
     pub struct InitialApiKeyResponse {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
         pub id: uuid::Uuid,
-        pub key: String,
+        pub key: SecretString,
         pub permissions: PermissionsForApiPermission,
     }
 
@@ -588,7 +590,7 @@ pub mod types {
     pub struct InitialOAuthClientSecretResponse {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
         pub id: uuid::Uuid,
-        pub key: String,
+        pub key: SecretString,
     }
 
     impl From<&InitialOAuthClientSecretResponse> for InitialOAuthClientSecretResponse {
@@ -739,7 +741,7 @@ pub mod types {
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct OAuthAuthzCodeExchangeBody {
         pub client_id: uuid::Uuid,
-        pub client_secret: String,
+        pub client_secret: SecretString,
         pub code: String,
         pub grant_type: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -974,6 +976,57 @@ pub mod types {
     impl From<Vec<ApiPermission>> for PermissionsForApiPermission {
         fn from(value: Vec<ApiPermission>) -> Self {
             Self(value)
+        }
+    }
+
+    #[derive(
+        Clone,
+        Debug,
+        Deserialize,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        Serialize,
+        schemars :: JsonSchema,
+    )]
+    pub struct SecretString(pub String);
+    impl std::ops::Deref for SecretString {
+        type Target = String;
+        fn deref(&self) -> &String {
+            &self.0
+        }
+    }
+
+    impl From<SecretString> for String {
+        fn from(value: SecretString) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&SecretString> for SecretString {
+        fn from(value: &SecretString) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<String> for SecretString {
+        fn from(value: String) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for SecretString {
+        type Err = std::convert::Infallible;
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ToString for SecretString {
+        fn to_string(&self) -> String {
+            self.0.to_string()
         }
     }
 
@@ -1658,7 +1711,7 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct ApiUserLinkRequestResponse {
-            token: Result<String, String>,
+            token: Result<super::SecretString, String>,
         }
 
         impl Default for ApiUserLinkRequestResponse {
@@ -1672,7 +1725,7 @@ pub mod types {
         impl ApiUserLinkRequestResponse {
             pub fn token<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<String>,
+                T: std::convert::TryInto<super::SecretString>,
                 T::Error: std::fmt::Display,
             {
                 self.token = value
@@ -2509,7 +2562,7 @@ pub mod types {
         #[derive(Clone, Debug)]
         pub struct GitHubCommitPayload {
             commits: Result<Vec<super::GitHubCommit>, String>,
-            head_commit: Result<super::GitHubCommit, String>,
+            head_commit: Result<Option<super::GitHubCommit>, String>,
             installation: Result<super::GitHubInstallation, String>,
             ref_: Result<String, String>,
             repository: Result<super::GitHubRepository, String>,
@@ -2520,7 +2573,7 @@ pub mod types {
             fn default() -> Self {
                 Self {
                     commits: Err("no value supplied for commits".to_string()),
-                    head_commit: Err("no value supplied for head_commit".to_string()),
+                    head_commit: Ok(Default::default()),
                     installation: Err("no value supplied for installation".to_string()),
                     ref_: Err("no value supplied for ref_".to_string()),
                     repository: Err("no value supplied for repository".to_string()),
@@ -2542,7 +2595,7 @@ pub mod types {
             }
             pub fn head_commit<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::GitHubCommit>,
+                T: std::convert::TryInto<Option<super::GitHubCommit>>,
                 T::Error: std::fmt::Display,
             {
                 self.head_commit = value
@@ -2907,7 +2960,7 @@ pub mod types {
         pub struct InitialApiKeyResponse {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             id: Result<uuid::Uuid, String>,
-            key: Result<String, String>,
+            key: Result<super::SecretString, String>,
             permissions: Result<super::PermissionsForApiPermission, String>,
         }
 
@@ -2945,7 +2998,7 @@ pub mod types {
             }
             pub fn key<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<String>,
+                T: std::convert::TryInto<super::SecretString>,
                 T::Error: std::fmt::Display,
             {
                 self.key = value
@@ -2992,7 +3045,7 @@ pub mod types {
         pub struct InitialOAuthClientSecretResponse {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             id: Result<uuid::Uuid, String>,
-            key: Result<String, String>,
+            key: Result<super::SecretString, String>,
         }
 
         impl Default for InitialOAuthClientSecretResponse {
@@ -3028,7 +3081,7 @@ pub mod types {
             }
             pub fn key<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<String>,
+                T: std::convert::TryInto<super::SecretString>,
                 T::Error: std::fmt::Display,
             {
                 self.key = value
@@ -3528,7 +3581,7 @@ pub mod types {
         #[derive(Clone, Debug)]
         pub struct OAuthAuthzCodeExchangeBody {
             client_id: Result<uuid::Uuid, String>,
-            client_secret: Result<String, String>,
+            client_secret: Result<super::SecretString, String>,
             code: Result<String, String>,
             grant_type: Result<String, String>,
             pkce_verifier: Result<Option<String>, String>,
@@ -3561,7 +3614,7 @@ pub mod types {
             }
             pub fn client_secret<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<String>,
+                T: std::convert::TryInto<super::SecretString>,
                 T::Error: std::fmt::Display,
             {
                 self.client_secret = value.try_into().map_err(|e| {

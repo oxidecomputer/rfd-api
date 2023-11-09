@@ -491,7 +491,7 @@ impl Cli {
             .arg(
                 clap::Arg::new("client-secret")
                     .long("client-secret")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(clap::value_parser!(types::SecretString))
                     .required_unless_present("json-body"),
             )
             .arg(
@@ -1341,7 +1341,7 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.body_map(|body| body.client_id(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<String>("client-secret") {
+        if let Some(value) = matches.get_one::<types::SecretString>("client-secret") {
             request = request.body_map(|body| body.client_secret(value.clone()))
         }
 
