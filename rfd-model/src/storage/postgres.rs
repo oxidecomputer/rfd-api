@@ -1150,8 +1150,6 @@ impl OAuthClientStore for PostgresStore {
         }
 
         let clients = query
-            .offset(pagination.offset)
-            .limit(pagination.limit)
             .order(oauth_client::created_at.desc())
             .load_async::<(
                 OAuthClientModel,
@@ -1188,6 +1186,8 @@ impl OAuthClientStore for PostgresStore {
                 created_at: client.created_at,
                 deleted_at: client.deleted_at,
             })
+            .skip(pagination.offset as usize)
+            .take(pagination.limit as usize)
             .collect::<Vec<_>>();
 
         Ok(clients)
