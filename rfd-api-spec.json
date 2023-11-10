@@ -920,6 +920,17 @@
     "/mapper": {
       "get": {
         "operationId": "get_mappers",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include_depleted",
+            "description": "Include depleted mappers in the returned results",
+            "schema": {
+              "nullable": true,
+              "type": "boolean"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "successful operation",
@@ -2583,6 +2594,35 @@
       },
       "MappingRules": {
         "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "groups": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "permissions": {
+                "default": [],
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+                  }
+                ]
+              },
+              "rule": {
+                "type": "string",
+                "enum": [
+                  "default"
+                ]
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
           {
             "type": "object",
             "properties": {

@@ -11,7 +11,6 @@ use std::time::Duration;
 use std::{collections::HashMap, error::Error};
 use store::CliConfig;
 
-mod auth;
 mod cmd;
 mod err;
 mod generated;
@@ -28,6 +27,7 @@ pub enum VerbosityLevel {
 pub struct Context {
     config: CliConfig,
     client: Option<Client>,
+    printer: Option<Printer>,
     verbosity: VerbosityLevel,
 }
 
@@ -38,6 +38,7 @@ impl Context {
         Ok(Self {
             config,
             client: None,
+            printer: None,
             verbosity: VerbosityLevel::None,
         })
     }
@@ -68,6 +69,10 @@ impl Context {
         self.client
             .as_ref()
             .ok_or_else(|| anyhow!("Failed to construct client"))
+    }
+
+    pub fn printer(&self) -> Result<&Printer> {
+        self.printer.as_ref().ok_or_else(|| anyhow!("No printer configured"))
     }
 }
 
@@ -207,8 +212,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .action(ArgAction::Set),
         );
 
+    cmd = cmd.subcommand(cmd::auth::Auth::command());
     cmd = cmd.subcommand(cmd::config::ConfigCmd::command());
-    cmd = cmd.subcommand(auth::Auth::command());
+    cmd = cmd.subcommand(cmd::shortcut::ShortcutCmd::command());
 
     let mut ctx = Context::new()?;
 
@@ -219,24 +225,30 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     let format = matches.try_get_one::<String>("format").unwrap().unwrap();
-    let printer = match format.as_str() {
+    ctx.printer = Some(match format.as_str() {
         "json" => Printer::Json(RfdJsonPrinter),
         "tab" => Printer::Tab(RfdTabPrinter::default()),
         other => panic!("Unknown format {}", other),
-    };
+    });
 
     let mut node = &root;
     let mut sm = &matches;
 
     match matches.subcommand() {
+        Some(("auth", sub_matches)) => {
+            cmd::auth::Auth::from_arg_matches(sub_matches)
+                .unwrap()
+                .run(&mut ctx)
+                .await?;
+        }
         Some(("config", sub_matches)) => {
             cmd::config::ConfigCmd::from_arg_matches(sub_matches)
                 .unwrap()
                 .run(&mut ctx)
                 .await?;
         }
-        Some(("auth", sub_matches)) => {
-            let _ = auth::Auth::from_arg_matches(sub_matches)
+        Some(("shortcut", sub_matches)) => {
+            cmd::shortcut::ShortcutCmd::from_arg_matches(sub_matches)
                 .unwrap()
                 .run(&mut ctx)
                 .await?;
@@ -247,7 +259,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 sm = sub_matches;
             }
 
-            let cli = Cli::new_with_override(ctx.client()?.clone(), (), printer);
+            let cli = Cli::new_with_override(ctx.client()?.clone(), (), ctx.printer()?.clone());
             cli.execute(node.cmd.unwrap(), sm).await;
         }
     };

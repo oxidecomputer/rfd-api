@@ -7,6 +7,7 @@ pub use tab::RfdTabPrinter;
 
 use crate::generated::cli::CliOutput;
 
+#[derive(Debug, Clone)]
 pub enum Printer {
     Json(RfdJsonPrinter),
     Tab(RfdTabPrinter),

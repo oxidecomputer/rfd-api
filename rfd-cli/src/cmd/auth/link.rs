@@ -8,7 +8,7 @@ use rfd_sdk::types::OAuthProviderName;
 use serde::Deserialize;
 use uuid::Uuid;
 
-use crate::{auth::oauth, Context};
+use crate::{cmd::auth::oauth, Context};
 
 use super::login::LoginProvider;
 

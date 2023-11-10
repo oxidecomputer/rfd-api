@@ -3,6 +3,7 @@ use serde::Serialize;
 
 use crate::generated::cli::CliOutput;
 
+#[derive(Debug, Clone)]
 pub struct RfdJsonPrinter;
 
 fn print_cli_output<T>(response: &Result<T, progenitor_client::Error<types::Error>>)

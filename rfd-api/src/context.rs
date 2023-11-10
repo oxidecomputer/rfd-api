@@ -1118,7 +1118,7 @@ impl ApiContext {
 
     async fn get_mappings(&self) -> Result<Vec<Mapping>, StoreError> {
         let mappers = self
-            .get_mappers()
+            .get_mappers(false)
             .await?
             .into_iter()
             .filter_map(|mapper| mapper.try_into().ok())
@@ -1129,10 +1129,10 @@ impl ApiContext {
         Ok(mappers)
     }
 
-    pub async fn get_mappers(&self) -> Result<Vec<Mapper>, StoreError> {
+    pub async fn get_mappers(&self, included_depleted: bool) -> Result<Vec<Mapper>, StoreError> {
         Ok(MapperStore::list(
             &*self.storage,
-            MapperFilter::default(),
+            MapperFilter::default().depleted(included_depleted),
             &ListPagination::default().limit(UNLIMITED),
         )
         .await?)

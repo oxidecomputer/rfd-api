@@ -611,7 +611,13 @@ impl Cli {
     }
 
     pub fn cli_get_mappers() -> clap::Command {
-        clap::Command::new("")
+        clap::Command::new("").arg(
+            clap::Arg::new("include-depleted")
+                .long("include-depleted")
+                .value_parser(clap::value_parser!(bool))
+                .required(false)
+                .help("Include depleted mappers in the returned results"),
+        )
     }
 
     pub fn cli_create_mapper() -> clap::Command {
@@ -1440,6 +1446,10 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
 
     pub async fn execute_get_mappers(&self, matches: &clap::ArgMatches) {
         let mut request = self.client.get_mappers();
+        if let Some(value) = matches.get_one::<bool>("include-depleted") {
+            request = request.include_depleted(value.clone());
+        }
+
         self.over
             .execute_get_mappers(matches, &mut request)
             .unwrap();

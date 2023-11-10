@@ -11,9 +11,10 @@ use crate::{context::ApiContext, endpoints::login::UserInfo, ApiPermissions};
 
 use self::{
     email_address::EmailAddressMapper, email_domain::EmailDomainMapper,
-    github_username::GitHubUsernameMapper,
+    github_username::GitHubUsernameMapper, default::DefaultMapper,
 };
 
+pub mod default;
 pub mod email_address;
 pub mod email_domain;
 pub mod github_username;
@@ -62,6 +63,7 @@ impl TryFrom<Mapper> for Mapping {
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 #[serde(tag = "rule", rename_all = "snake_case")]
 pub enum MappingRules {
+    Default(DefaultMapper),
     EmailAddress(EmailAddressMapper),
     EmailDomain(EmailDomainMapper),
     #[serde(rename = "github_username")]
@@ -76,6 +78,7 @@ impl MapperRule for MappingRules {
         user: &UserInfo,
     ) -> Result<ApiPermissions, StoreError> {
         match self {
+            Self::Default(rule) => rule.permissions_for(ctx, user).await,
             Self::EmailAddress(rule) => rule.permissions_for(ctx, user).await,
             Self::EmailDomain(rule) => rule.permissions_for(ctx, user).await,
             Self::GitHubUsername(rule) => rule.permissions_for(ctx, user).await,
@@ -88,6 +91,7 @@ impl MapperRule for MappingRules {
         user: &UserInfo,
     ) -> Result<BTreeSet<Uuid>, StoreError> {
         match self {
+            Self::Default(rule) => rule.groups_for(ctx, user).await,
             Self::EmailAddress(rule) => rule.groups_for(ctx, user).await,
             Self::EmailDomain(rule) => rule.groups_for(ctx, user).await,
             Self::GitHubUsername(rule) => rule.groups_for(ctx, user).await,

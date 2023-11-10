@@ -706,6 +706,13 @@ pub mod types {
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     #[serde(tag = "rule")]
     pub enum MappingRules {
+        #[serde(rename = "default")]
+        Default {
+            #[serde(default, skip_serializing_if = "Vec::is_empty")]
+            groups: Vec<String>,
+            #[serde(default = "defaults::mapping_rules_default_permissions")]
+            permissions: PermissionsForApiPermission,
+        },
         #[serde(rename = "email_address")]
         EmailAddress {
             email: String,
@@ -4230,6 +4237,10 @@ pub mod types {
     }
 
     pub mod defaults {
+        pub(super) fn mapping_rules_default_permissions() -> super::PermissionsForApiPermission {
+            super::PermissionsForApiPermission(vec![])
+        }
+
         pub(super) fn mapping_rules_email_address_permissions() -> super::PermissionsForApiPermission
         {
             super::PermissionsForApiPermission(vec![])
@@ -4613,8 +4624,11 @@ impl Client {
 
     /// Sends a `GET` request to `/mapper`
     ///
+    /// Arguments:
+    /// - `include_depleted`: Include depleted mappers in the returned results
     /// ```ignore
     /// let response = client.get_mappers()
+    ///    .include_depleted(include_depleted)
     ///    .send()
     ///    .await;
     /// ```
@@ -6607,17 +6621,40 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct GetMappers<'a> {
         client: &'a super::Client,
+        include_depleted: Result<Option<bool>, String>,
     }
 
     impl<'a> GetMappers<'a> {
         pub fn new(client: &'a super::Client) -> Self {
-            Self { client }
+            Self {
+                client,
+                include_depleted: Ok(None),
+            }
+        }
+
+        pub fn include_depleted<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<bool>,
+        {
+            self.include_depleted = value
+                .try_into()
+                .map(Some)
+                .map_err(|_| "conversion to `bool` for include_depleted failed".to_string());
+            self
         }
 
         /// Sends a `GET` request to `/mapper`
         pub async fn send(self) -> Result<ResponseValue<Vec<types::Mapper>>, Error<types::Error>> {
-            let Self { client } = self;
+            let Self {
+                client,
+                include_depleted,
+            } = self;
+            let include_depleted = include_depleted.map_err(Error::InvalidRequest)?;
             let url = format!("{}/mapper", client.baseurl,);
+            let mut query = Vec::with_capacity(1usize);
+            if let Some(v) = &include_depleted {
+                query.push(("include_depleted", v.to_string()));
+            }
             let request = client
                 .client
                 .get(url)
@@ -6625,6 +6662,7 @@ pub mod builder {
                     reqwest::header::ACCEPT,
                     reqwest::header::HeaderValue::from_static("application/json"),
                 )
+                .query(&query)
                 .build()?;
             let result = client.client.execute(request).await;
             let response = result?;

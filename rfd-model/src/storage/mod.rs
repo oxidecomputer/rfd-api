@@ -444,6 +444,28 @@ pub struct MapperFilter {
     pub deleted: bool,
 }
 
+impl MapperFilter {
+    pub fn id(mut self, id: Option<Vec<Uuid>>) -> Self {
+        self.id = id;
+        self
+    }
+
+    pub fn name(mut self, name: Option<Vec<String>>) -> Self {
+        self.name = name;
+        self
+    }
+
+    pub fn depleted(mut self, depleted: bool) -> Self {
+        self.depleted = depleted;
+        self
+    }
+
+    pub fn deleted(mut self, deleted: bool) -> Self {
+        self.deleted = deleted;
+        self
+    }
+}
+
 #[cfg_attr(feature = "mock", automock)]
 #[async_trait]
 pub trait MapperStore {
