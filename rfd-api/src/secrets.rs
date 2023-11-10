@@ -1,6 +1,9 @@
-use schemars::{JsonSchema, schema::{SchemaObject, InstanceType}};
-use secrecy::{SecretString, ExposeSecret};
-use serde::{Deserialize, Serializer, Serialize};
+use schemars::{
+    schema::{InstanceType, SchemaObject},
+    JsonSchema,
+};
+use secrecy::{ExposeSecret, SecretString};
+use serde::{Deserialize, Serialize, Serializer};
 use std::borrow::Cow;
 
 #[derive(Debug, Deserialize)]
@@ -21,7 +24,8 @@ impl JsonSchema for OpenApiSecretString {
         SchemaObject {
             instance_type: Some(InstanceType::String.into()),
             ..Default::default()
-        }.into()
+        }
+        .into()
     }
 
     fn schema_id() -> std::borrow::Cow<'static, str> {

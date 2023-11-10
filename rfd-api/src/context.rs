@@ -44,7 +44,9 @@ use crate::{
     },
     config::{AsymmetricKey, JwtConfig, SearchConfig},
     endpoints::login::{
-        oauth::{OAuthProvider, OAuthProviderError, OAuthProviderFn, OAuthProviderName, ClientType},
+        oauth::{
+            ClientType, OAuthProvider, OAuthProviderError, OAuthProviderFn, OAuthProviderName,
+        },
         UserInfo,
     },
     error::{ApiError, AppError},
@@ -249,7 +251,9 @@ impl ApiContext {
     }
 
     pub fn web_client(&self) -> ClientType {
-        ClientType::Web { prefix: self.public_url.to_string() }
+        ClientType::Web {
+            prefix: self.public_url.to_string(),
+        }
     }
 
     pub fn set_storage(&mut self, storage: Arc<dyn Storage>) {

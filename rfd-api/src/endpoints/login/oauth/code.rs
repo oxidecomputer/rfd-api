@@ -1,5 +1,5 @@
 use base64::{prelude::BASE64_URL_SAFE_NO_PAD, Engine};
-use chrono::{Utc, Duration};
+use chrono::{Duration, Utc};
 use dropshot::{
     endpoint, http_response_temporary_redirect, HttpError, HttpResponseOk,
     HttpResponseTemporaryRedirect, Path, Query, RequestContext, RequestInfo, TypedBody,
@@ -33,10 +33,11 @@ use crate::{
     },
     error::ApiError,
     permissions::ApiPermission,
+    secrets::OpenApiSecretString,
     util::{
         request::RequestCookies,
         response::{internal_error, to_internal_error, unauthorized},
-    }, secrets::OpenApiSecretString,
+    },
 };
 
 static LOGIN_ATTEMPT_COOKIE: &str = "__rfd_login";
@@ -230,7 +231,9 @@ fn oauth_redirect_response(
     // constructing a new client on every request. That said, we need to ensure the client does not
     // maintain state between requests
     let client = provider
-        .as_client(&ClientType::Web { prefix: public_url.to_string() })
+        .as_client(&ClientType::Web {
+            prefix: public_url.to_string(),
+        })
         .map_err(to_internal_error)?;
 
     // Create an attempt cookie header for storing the login attempt. This also acts as our csrf
@@ -629,9 +632,7 @@ async fn fetch_user_info(
     attempt: &LoginAttempt,
 ) -> Result<UserInfo, HttpError> {
     // Exchange the stored authorization code with the remote provider for a remote access token
-    let client = provider
-        .as_client(client_type)
-        .map_err(to_internal_error)?;
+    let client = provider.as_client(client_type).map_err(to_internal_error)?;
 
     let mut request = client.exchange_code(AuthorizationCode::new(
         attempt

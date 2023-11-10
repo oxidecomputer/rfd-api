@@ -297,7 +297,10 @@ impl TabDisplay for ApiUserForApiPermission {
             tw,
             level,
             "deleted_at",
-            &self.deleted_at.map(|d| d.to_string()).unwrap_or_else(|| "--".to_string()),
+            &self
+                .deleted_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
         );
     }
 }
@@ -354,7 +357,10 @@ impl TabDisplay for AccessGroupForApiPermission {
             tw,
             level,
             "deleted_at",
-            &self.deleted_at.map(|d| d.to_string()).unwrap_or_else(|| "--".to_string()),
+            &self
+                .deleted_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
         );
     }
 }
@@ -367,7 +373,10 @@ impl TabDisplay for Mapper {
             tw,
             level,
             "activations",
-            &self.activations.map(|i| i.to_string()).unwrap_or_else(|| "--".to_string()),
+            &self
+                .activations
+                .map(|i| i.to_string())
+                .unwrap_or_else(|| "--".to_string()),
         );
         printer.print_field(
             tw,
@@ -389,13 +398,19 @@ impl TabDisplay for Mapper {
             tw,
             level,
             "depleted_at",
-            &self.depleted_at.map(|d| d.to_string()).unwrap_or_else(|| "--".to_string()),
+            &self
+                .depleted_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
         );
         printer.print_field(
             tw,
             level,
             "deleted_at",
-            &self.deleted_at.map(|d| d.to_string()).unwrap_or_else(|| "--".to_string()),
+            &self
+                .deleted_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
         );
     }
 }
@@ -412,7 +427,10 @@ impl TabDisplay for OAuthClient {
             tw,
             level,
             "deleted_at",
-            &self.deleted_at.map(|d| d.to_string()).unwrap_or_else(|| "--".to_string()),
+            &self
+                .deleted_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
         );
     }
 }
@@ -427,7 +445,10 @@ impl TabDisplay for OAuthClientRedirectUri {
             tw,
             level,
             "deleted_at",
-            &self.deleted_at.map(|d| d.to_string()).unwrap_or_else(|| "--".to_string()),
+            &self
+                .deleted_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
         );
     }
 }
@@ -442,7 +463,10 @@ impl TabDisplay for OAuthClientSecret {
             tw,
             level,
             "deleted_at",
-            &self.deleted_at.map(|d| d.to_string()).unwrap_or_else(|| "--".to_string()),
+            &self
+                .deleted_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
         );
     }
 }

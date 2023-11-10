@@ -1,6 +1,6 @@
 use hex::FromHexError;
 use rand::{rngs::OsRng, RngCore};
-use secrecy::{SecretString, ExposeSecret, SecretVec};
+use secrecy::{ExposeSecret, SecretString, SecretVec};
 use thiserror::Error;
 use uuid::Uuid;
 
@@ -34,7 +34,9 @@ impl RawApiKey {
         let mut clear = id.as_bytes().to_vec();
         clear.append(&mut token_raw.to_vec());
 
-        Self { clear: clear.into() }
+        Self {
+            clear: clear.into(),
+        }
     }
 
     pub fn id(&self) -> &[u8] {
@@ -48,7 +50,10 @@ impl RawApiKey {
                 .await
                 .map_err(ApiKeyError::Signing)?,
         );
-        Ok(SignedApiKey::new(hex::encode(self.clear.expose_secret()).into(), signature))
+        Ok(SignedApiKey::new(
+            hex::encode(self.clear.expose_secret()).into(),
+            signature,
+        ))
     }
 
     pub fn verify(&self, signer: &dyn Signer, signature: &[u8]) -> Result<(), ApiKeyError> {
@@ -66,7 +71,9 @@ impl TryFrom<&str> for RawApiKey {
         let decoded = hex::decode(value)?;
 
         if decoded.len() > 16 {
-            Ok(RawApiKey { clear: decoded.into() })
+            Ok(RawApiKey {
+                clear: decoded.into(),
+            })
         } else {
             tracing::debug!(len = ?decoded.len(), "API key is too short");
             Err(ApiKeyError::FailedToParse)
@@ -81,7 +88,9 @@ impl TryFrom<&SecretString> for RawApiKey {
         let decoded = hex::decode(value.expose_secret())?;
 
         if decoded.len() > 16 {
-            Ok(RawApiKey { clear: decoded.into() })
+            Ok(RawApiKey {
+                clear: decoded.into(),
+            })
         } else {
             tracing::debug!(len = ?decoded.len(), "API key is too short");
             Err(ApiKeyError::FailedToParse)

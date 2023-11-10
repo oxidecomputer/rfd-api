@@ -72,7 +72,9 @@ impl Context {
     }
 
     pub fn printer(&self) -> Result<&Printer> {
-        self.printer.as_ref().ok_or_else(|| anyhow!("No printer configured"))
+        self.printer
+            .as_ref()
+            .ok_or_else(|| anyhow!("No printer configured"))
     }
 }
 

@@ -13,8 +13,9 @@ use crate::{
     context::ApiContext,
     error::ApiError,
     permissions::ApiPermission,
+    secrets::OpenApiSecretString,
     util::response::{client_error, to_internal_error},
-    ApiCaller, secrets::OpenApiSecretString,
+    ApiCaller,
 };
 
 /// List OAuth clients

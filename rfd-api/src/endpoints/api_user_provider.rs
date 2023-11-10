@@ -6,7 +6,8 @@ use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
-    context::ApiContext, error::ApiError, permissions::ApiPermission, util::response::forbidden, secrets::OpenApiSecretString,
+    context::ApiContext, error::ApiError, permissions::ApiPermission, secrets::OpenApiSecretString,
+    util::response::forbidden,
 };
 
 #[derive(Debug, Deserialize, JsonSchema)]

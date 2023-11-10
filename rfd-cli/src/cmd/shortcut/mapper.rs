@@ -4,7 +4,7 @@ use progenitor_client::Error;
 use rfd_sdk::types::{self, MappingRules};
 use uuid::Uuid;
 
-use crate::{Context, generated::cli::CliOutput};
+use crate::{generated::cli::CliOutput, Context};
 
 #[derive(Debug, Parser)]
 /// Add a new one-time mapping for for a GitHub user
@@ -32,8 +32,7 @@ impl GitHubMapper {
     pub async fn run(&self, ctx: &mut Context) -> Result<()> {
         let mut request = ctx.client()?.create_mapper();
         request = request.body_map(|body| {
-            body
-                .max_activations(1)
+            body.max_activations(1)
                 .name(format!("map-github-{}", Uuid::new_v4()))
                 .rule(MappingRules::GithubUsername {
                     github_username: self.username.clone(),
@@ -56,8 +55,7 @@ impl EmailMapper {
     pub async fn run(&self, ctx: &mut Context) -> Result<()> {
         let mut request = ctx.client()?.create_mapper();
         request = request.body_map(|body| {
-            body
-                .max_activations(1)
+            body.max_activations(1)
                 .name(format!("map-email-{}", Uuid::new_v4()))
                 .rule(MappingRules::EmailAddress {
                     email: self.email.clone(),

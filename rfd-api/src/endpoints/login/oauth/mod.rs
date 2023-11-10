@@ -2,10 +2,13 @@ use async_trait::async_trait;
 use dropshot::Method;
 use http::header;
 use hyper::{body::Bytes, Body};
-use oauth2::{basic::BasicClient, url::ParseError, AuthUrl, ClientId, ClientSecret, TokenUrl, RedirectUrl, RevocationUrl};
+use oauth2::{
+    basic::BasicClient, url::ParseError, AuthUrl, ClientId, ClientSecret, RedirectUrl,
+    RevocationUrl, TokenUrl,
+};
 use rfd_model::OAuthClient;
 use schemars::JsonSchema;
-use secrecy::{SecretString, ExposeSecret};
+use secrecy::{ExposeSecret, SecretString};
 use serde::{Deserialize, Serialize};
 use std::fmt::{Debug, Display};
 use thiserror::Error;
@@ -30,9 +33,7 @@ pub enum OAuthProviderError {
 #[derive(Debug)]
 pub enum ClientType {
     Device,
-    Web {
-        prefix: String,
-    },
+    Web { prefix: String },
 }
 
 pub struct OAuthPublicCredentials {
@@ -84,7 +85,8 @@ pub trait OAuthProvider: ExtractUserInfo + Debug + Send + Sync {
         );
 
         if let Some(revocation_endpoint) = self.token_revocation_endpoint() {
-            client = client.set_revocation_uri(RevocationUrl::new(revocation_endpoint.to_string())?);
+            client =
+                client.set_revocation_uri(RevocationUrl::new(revocation_endpoint.to_string())?);
         }
 
         // If we are asked for a web client we need to attach a redirect uri
@@ -98,7 +100,7 @@ pub trait OAuthProvider: ExtractUserInfo + Debug + Send + Sync {
 
                 client.set_redirect_uri(redirect_url)
             }
-            _ => client
+            _ => client,
         })
     }
 }

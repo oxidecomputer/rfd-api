@@ -1,4 +1,4 @@
-use dropshot::{endpoint, HttpError, HttpResponseOk, Path, RequestContext, TypedBody, Query};
+use dropshot::{endpoint, HttpError, HttpResponseOk, Path, Query, RequestContext, TypedBody};
 use rfd_model::{Mapper, NewMapper};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -31,7 +31,7 @@ pub struct ListMappersQuery {
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn get_mappers(
     rqctx: RequestContext<ApiContext>,
-    query: Query<ListMappersQuery>
+    query: Query<ListMappersQuery>,
 ) -> Result<HttpResponseOk<Vec<Mapper>>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
@@ -39,7 +39,9 @@ pub async fn get_mappers(
 
     if caller.can(&ApiPermission::ListMappers) {
         Ok(HttpResponseOk(
-            ctx.get_mappers(query.into_inner().include_depleted.unwrap_or(false)).await.map_err(ApiError::Storage)?,
+            ctx.get_mappers(query.into_inner().include_depleted.unwrap_or(false))
+                .await
+                .map_err(ApiError::Storage)?,
         ))
     } else {
         Err(unauthorized())

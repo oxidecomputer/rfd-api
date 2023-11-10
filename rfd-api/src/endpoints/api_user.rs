@@ -22,10 +22,11 @@ use crate::{
     context::ApiContext,
     error::ApiError,
     permissions::ApiPermission,
+    secrets::OpenApiSecretString,
     util::response::{
         bad_request, forbidden, internal_error, not_found, to_internal_error, unauthorized,
     },
-    ApiCaller, ApiPermissions, User, secrets::OpenApiSecretString,
+    ApiCaller, ApiPermissions, User,
 };
 
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
