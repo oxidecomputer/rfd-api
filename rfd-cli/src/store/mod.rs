@@ -27,7 +27,7 @@ impl CliConfig {
 
     fn file() -> Result<(PathBuf, StdFile)> {
         let mut path = dirs::config_dir().expect("Failed to determine configs path");
-        path.push("oxide-rfd");
+        path.push("rfd-cli");
         create_dir_all(&path).expect("Failed to create configs path");
 
         path.push("config.toml");
