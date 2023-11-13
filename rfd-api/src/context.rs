@@ -110,6 +110,7 @@ pub struct ApiContext {
     pub secrets: SecretContext,
     pub oauth_providers: HashMap<OAuthProviderName, Box<dyn OAuthProviderFn>>,
     pub search: SearchContext,
+    pub system_caller: Caller<ApiPermission>,
 }
 
 pub struct JwtContext {
@@ -242,6 +243,10 @@ impl ApiContext {
             search: SearchContext {
                 client: SearchClient::new(search.host, Some(search.key)),
                 index: search.index,
+            },
+            system_caller: Caller {
+                id: Uuid::new_v4(),
+                permissions: vec![ApiPermission::GetGroupsAll].into(),
             },
         })
     }
@@ -1040,14 +1045,38 @@ impl ApiContext {
     }
 
     // Group Operations
-    pub async fn get_groups(&self) -> Result<Vec<AccessGroup<ApiPermission>>, StoreError> {
+    pub async fn get_groups(
+        &self,
+        caller: &Caller<ApiPermission>,
+    ) -> Result<Vec<AccessGroup<ApiPermission>>, StoreError> {
+        // Callers will fall in to one of three permission groups:
+        //   - Has GetGroupAll
+        //   - Has GetGroupJoined
+        //   - No permissions
+        //
+        // Based on this hierarchy we can create a filter that includes only the groups they have
+        // access to.
+        let mut filter = AccessGroupFilter {
+            id: None,
+            name: None,
+            deleted: false,
+        };
+
+        if caller.can(&ApiPermission::GetGroupsAll) {
+            // Nothing we need to do, the filter is already setup for this
+        } else {
+            // If a caller can only view the groups they are a member of then we need to fetch the
+            // callers user record to determine what those are
+            let user = self.get_api_user(&caller.id).await?;
+            filter.id = Some(
+                user.map(|user| user.groups.into_iter().collect::<Vec<_>>())
+                    .unwrap_or_default(),
+            );
+        }
+
         Ok(AccessGroupStore::list(
             &*self.storage,
-            AccessGroupFilter {
-                id: None,
-                name: None,
-                deleted: false,
-            },
+            filter,
             &ListPagination::default().limit(UNLIMITED),
         )
         .await?)

@@ -44,7 +44,8 @@ pub enum ApiPermission {
     CreateUserApiProviderLinkToken,
 
     // Group permissions,
-    ListGroups,
+    GetGroupsJoined,
+    GetGroupsAll,
     CreateGroup,
     UpdateGroup(Uuid),
     AddToGroup(Uuid),
@@ -123,7 +124,8 @@ impl ApiPermission {
 
             ApiPermission::CreateUserApiProviderLinkToken => "user:provider:w",
 
-            ApiPermission::ListGroups => "group:r",
+            ApiPermission::GetGroupsJoined => "group:r",
+            ApiPermission::GetGroupsAll => "group:r",
             ApiPermission::CreateGroup => "group:w",
             ApiPermission::UpdateGroup(_) => "group:w",
             ApiPermission::AddToGroup(_) => "group:membership:w",
@@ -213,7 +215,8 @@ impl ApiPermission {
                     permissions.insert(ApiPermission::DeleteApiUserTokenAll);
                 }
                 "group:r" => {
-                    permissions.insert(ApiPermission::ListGroups);
+                    permissions.insert(ApiPermission::GetGroupsJoined);
+                    permissions.insert(ApiPermission::GetGroupsAll);
                 }
                 "group:w" => {
                     permissions.insert(ApiPermission::CreateGroup);

@@ -41,7 +41,7 @@ impl MapperRule for EmailDomainMapper {
 
         if has_email_in_domain {
             let groups = ctx
-                .get_groups()
+                .get_groups(&ctx.system_caller)
                 .await?
                 .into_iter()
                 .filter_map(|group| {

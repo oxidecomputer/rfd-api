@@ -34,7 +34,7 @@ impl MapperRule for DefaultMapper {
         _user: &UserInfo,
     ) -> Result<BTreeSet<Uuid>, StoreError> {
         let groups = ctx
-            .get_groups()
+            .get_groups(&ctx.system_caller)
             .await?
             .into_iter()
             .filter_map(|group| {

@@ -24,13 +24,9 @@ pub async fn get_groups(
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(auth.as_ref()).await?;
 
-    if caller.can(&ApiPermission::ListGroups) {
-        Ok(HttpResponseOk(
-            ctx.get_groups().await.map_err(ApiError::Storage)?,
-        ))
-    } else {
-        Err(forbidden())
-    }
+    Ok(HttpResponseOk(
+        ctx.get_groups(&caller).await.map_err(ApiError::Storage)?,
+    ))
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, JsonSchema)]

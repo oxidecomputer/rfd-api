@@ -55,7 +55,7 @@ impl InitialData {
     }
 
     pub async fn initialize(self, ctx: &ApiContext) -> Result<(), InitError> {
-        let existing_groups = ctx.get_groups().await?;
+        let existing_groups = ctx.get_groups(&ctx.system_caller).await?;
 
         for group in self.groups {
             let span = tracing::info_span!("Initializing group", group = ?group);
