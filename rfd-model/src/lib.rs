@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use std::{
     collections::{BTreeMap, BTreeSet},
     fmt::Display,
@@ -22,7 +26,6 @@ pub mod permissions;
 pub mod schema;
 pub mod schema_ext;
 pub mod storage;
-mod utils;
 
 #[partial(NewRfd)]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
