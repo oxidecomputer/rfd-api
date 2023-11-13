@@ -35,11 +35,8 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     let config = ServerConfig {
         context: Context {
-            max_number: 100,
-            host_regex: Regex::new(r#"^(\d{1,4}).rfd.oxide.computer$"#)?,
-            github_template:
-                "https://github.com/oxidecomputer/rfd/tree/{rfd_number}/rfd/{rfd_number}"
-                    .to_string(),
+            host_regex: Regex::new(&config.host_regex)?,
+            github_template: config.github_template.to_string(),
         },
         server_address: SocketAddr::V4(SocketAddrV4::new("0.0.0.0".parse()?, config.server_port)),
     };

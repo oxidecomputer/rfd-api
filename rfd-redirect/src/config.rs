@@ -15,6 +15,8 @@ pub enum AppConfigError {
 pub struct AppConfig {
     pub log_format: ServerLogFormat,
     pub server_port: u16,
+    pub host_regex: String,
+    pub github_template: String,
 }
 
 #[derive(Debug)]
