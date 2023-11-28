@@ -23,9 +23,6 @@ database_url = ""
 # Duration that a JWT is valid for
 default_expiration = 3600
 
-# Deprecated: To be removed
-max_expiration = 1209600
-
 # Keys for signing JWTs and generating secrets. Currently GCP Cloud KMS keys and local static keys
 # are supported
 

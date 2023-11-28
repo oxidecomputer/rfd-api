@@ -119,8 +119,6 @@ pub struct ApiContext {
 
 pub struct JwtContext {
     pub default_expiration: i64,
-    pub max_expiration: i64,
-    // pub signers: Vec<Box<dyn JwtSigner<Claims = Claims>>>,
     pub signers: Vec<JwtSigner>,
     pub jwks: JwkSet,
 }
@@ -233,7 +231,6 @@ impl ApiContext {
             },
             jwt: JwtContext {
                 default_expiration: jwt.default_expiration,
-                max_expiration: jwt.max_expiration,
                 jwks: JwkSet {
                     keys: jwt_signers.iter().map(|k| k.jwk()).cloned().collect(),
                 },
@@ -282,10 +279,6 @@ impl ApiContext {
 
     pub fn default_jwt_expiration(&self) -> i64 {
         self.jwt.default_expiration
-    }
-
-    pub fn max_jwt_expiration(&self) -> i64 {
-        self.jwt.max_expiration
     }
 
     pub async fn jwks(&self) -> &JwkSet {

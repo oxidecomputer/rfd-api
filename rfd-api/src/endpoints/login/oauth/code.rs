@@ -508,8 +508,6 @@ pub async fn authz_code_exchange(
         .map(|s| s.to_string())
         .collect::<Vec<_>>();
 
-    // Generate a new access token for the user with an expiration matching the value given to us
-    // by the remote service
     let token = ctx
         .register_access_token(&api_user, &api_user_provider, scope)
         .await?;
