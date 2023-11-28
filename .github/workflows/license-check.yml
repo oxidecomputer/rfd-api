@@ -1,5 +1,11 @@
 name: license-check
-on: pull_request
+
+on:
+  pull_request:
+  push:
+    branch:
+      - main
+
 jobs:
   license:
     runs-on: ubuntu-latest
