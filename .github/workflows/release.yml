@@ -55,7 +55,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RUSTFLAGS: "--cfg tracing_unstable"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
         with:
           submodules: recursive
       - name: Install cargo-dist
@@ -67,7 +67,7 @@ jobs:
           cat dist-manifest.json
           echo "manifest=$(jq -c "." dist-manifest.json)" >> "$GITHUB_OUTPUT"
       - name: "Upload dist-manifest.json"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3
         with:
           name: artifacts
           path: dist-manifest.json
@@ -95,10 +95,10 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       RUSTFLAGS: "--cfg tracing_unstable"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
         with:
           submodules: recursive
-      - uses: swatinem/rust-cache@v2
+      - uses: swatinem/rust-cache@a95ba195448af2da9b00fb742d14ffaaf3c21f43 # v2
       - name: Install cargo-dist
         run: ${{ matrix.install_dist }}
       - name: Build artifacts
@@ -118,7 +118,7 @@ jobs:
           jq --raw-output ".artifacts[]?.path | select( . != null )" dist-manifest.json >> "$GITHUB_OUTPUT"
           echo "EOF" >> "$GITHUB_OUTPUT"
       - name: "Upload artifacts"
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3
         with:
           name: artifacts
           path: ${{ steps.cargo-dist.outputs.paths }}
@@ -140,16 +140,16 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
         with:
           submodules: recursive
       - name: "Download artifacts"
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a # v3
         with:
           name: artifacts
           path: artifacts
       - name: Create Release
-        uses: ncipollo/release-action@v1
+        uses: ncipollo/release-action@6c75be85e571768fa31b40abf38de58ba0397db5 # v1
         with:
           tag: ${{ needs.plan.outputs.tag }}
           name: ${{ fromJson(needs.plan.outputs.val).announcement_title }}
