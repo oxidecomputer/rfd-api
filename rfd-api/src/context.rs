@@ -8,7 +8,6 @@ use http::StatusCode;
 use hyper::{client::HttpConnector, Body, Client};
 use hyper_rustls::{HttpsConnector, HttpsConnectorBuilder};
 use jsonwebtoken::jwk::JwkSet;
-use meilisearch_sdk::Client as SearchClient;
 use oauth2::CsrfToken;
 use partial_struct::partial;
 use rfd_model::{
@@ -56,6 +55,7 @@ use crate::{
     error::{ApiError, AppError},
     mapper::{MapperRule, Mapping},
     permissions::{ApiPermission, ApiPermissionError, PermissionStorage},
+    search::SearchClient,
     util::response::{bad_request, client_error, internal_error},
     ApiCaller, ApiPermissions, User, UserToken,
 };
@@ -131,7 +131,6 @@ pub struct SecretContext {
 
 pub struct SearchContext {
     pub client: SearchClient,
-    pub index: String,
 }
 
 pub struct RegisteredAccessToken {
@@ -245,8 +244,7 @@ impl ApiContext {
             },
             oauth_providers: HashMap::new(),
             search: SearchContext {
-                client: SearchClient::new(search.host, Some(search.key)),
-                index: search.index,
+                client: SearchClient::new(search.host, search.index, search.key),
             },
             system_caller: Caller {
                 id: Uuid::new_v4(),
@@ -312,7 +310,7 @@ impl ApiContext {
 
                     let combined_permissions = token_permissions.intersect(&user_permissions);
 
-                    tracing::info!(token = ?token_permissions, user = ?user_permissions, combined = ?combined_permissions, "Computed caller permissions");
+                    tracing::trace!(token = ?token_permissions, user = ?user_permissions, combined = ?combined_permissions, "Computed caller permissions");
 
                     let caller = Caller {
                         id: api_user_id,
@@ -320,7 +318,7 @@ impl ApiContext {
                         // user,
                     };
 
-                    tracing::info!(?caller, "Resolved caller");
+                    tracing::info!(?caller.id, "Resolved caller");
 
                     Ok(caller)
                 } else {
@@ -407,7 +405,7 @@ impl ApiContext {
         &self,
         user: &ApiUser<ApiPermission>,
     ) -> Result<Permissions<ApiPermission>, StoreError> {
-        tracing::debug!("Expanding groups into permissions");
+        tracing::trace!("Expanding groups into permissions");
 
         let groups = AccessGroupStore::list(
             &*self.storage,
@@ -419,7 +417,7 @@ impl ApiContext {
         )
         .await?;
 
-        tracing::debug!(?groups, "Found groups to map to permissions");
+        tracing::trace!(?groups, "Found groups to map to permissions");
 
         let permissions = groups
             .into_iter()
@@ -1054,8 +1052,8 @@ impl ApiContext {
         caller: &Caller<ApiPermission>,
     ) -> Result<Vec<AccessGroup<ApiPermission>>, StoreError> {
         // Callers will fall in to one of three permission groups:
-        //   - Has GetGroupAll
-        //   - Has GetGroupJoined
+        //   - Has GetGroupsAll
+        //   - Has GetGroupsJoined
         //   - No permissions
         //
         // Based on this hierarchy we can create a filter that includes only the groups they have

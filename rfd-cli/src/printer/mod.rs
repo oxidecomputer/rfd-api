@@ -20,7 +20,7 @@ pub enum Printer {
 impl CliOutput for Printer {
     fn output_create_api_user(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
     ) {
         match self {
             Printer::Json(printer) => printer.output_create_api_user(response),
@@ -30,7 +30,7 @@ impl CliOutput for Printer {
 
     fn output_get_api_user(
         &self,
-        response: Result<types::GetApiUserResponse, progenitor_client::Error<types::Error>>,
+        response: Result<types::GetUserResponse, progenitor_client::Error<types::Error>>,
     ) {
         match self {
             Printer::Json(printer) => printer.output_get_api_user(response),
@@ -40,7 +40,7 @@ impl CliOutput for Printer {
 
     fn output_update_api_user(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
     ) {
         match self {
             Printer::Json(printer) => printer.output_update_api_user(response),
@@ -50,7 +50,7 @@ impl CliOutput for Printer {
 
     fn output_add_api_user_to_group(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
     ) {
         match self {
             Printer::Json(printer) => printer.output_add_api_user_to_group(response),
@@ -60,7 +60,7 @@ impl CliOutput for Printer {
 
     fn output_remove_api_user_from_group(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
     ) {
         match self {
             Printer::Json(printer) => printer.output_remove_api_user_from_group(response),
@@ -118,7 +118,7 @@ impl CliOutput for Printer {
     fn output_get_groups(
         &self,
         response: Result<
-            Vec<types::AccessGroupForApiPermission>,
+            Vec<types::AccessGroupForApiPermissionResponse>,
             progenitor_client::Error<types::Error>,
         >,
     ) {
@@ -131,7 +131,7 @@ impl CliOutput for Printer {
     fn output_create_group(
         &self,
         response: Result<
-            types::AccessGroupForApiPermission,
+            types::AccessGroupForApiPermissionResponse,
             progenitor_client::Error<types::Error>,
         >,
     ) {
@@ -144,7 +144,7 @@ impl CliOutput for Printer {
     fn output_update_group(
         &self,
         response: Result<
-            types::AccessGroupForApiPermission,
+            types::AccessGroupForApiPermissionResponse,
             progenitor_client::Error<types::Error>,
         >,
     ) {
@@ -157,7 +157,7 @@ impl CliOutput for Printer {
     fn output_delete_group(
         &self,
         response: Result<
-            types::AccessGroupForApiPermission,
+            types::AccessGroupForApiPermissionResponse,
             progenitor_client::Error<types::Error>,
         >,
     ) {
@@ -339,7 +339,7 @@ impl CliOutput for Printer {
 
     fn output_search_rfds(
         &self,
-        response: Result<Vec<types::ListRfd>, progenitor_client::Error<types::Error>>,
+        response: Result<types::SearchResults, progenitor_client::Error<types::Error>>,
     ) {
         match self {
             Printer::Json(printer) => printer.output_search_rfds(response),
@@ -349,7 +349,7 @@ impl CliOutput for Printer {
 
     fn output_get_self(
         &self,
-        response: Result<types::GetApiUserResponse, progenitor_client::Error<types::Error>>,
+        response: Result<types::GetUserResponse, progenitor_client::Error<types::Error>>,
     ) {
         match self {
             Printer::Json(printer) => printer.output_get_self(response),

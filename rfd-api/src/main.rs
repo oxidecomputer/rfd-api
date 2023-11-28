@@ -7,7 +7,7 @@ use permissions::ApiPermission;
 use rfd_model::{
     permissions::{Caller, Permissions},
     storage::postgres::PostgresStore,
-    ApiKey, ApiUser,
+    AccessGroup, ApiKey, ApiUser,
 };
 use server::{server, ServerConfig};
 use std::{
@@ -15,6 +15,7 @@ use std::{
     net::{SocketAddr, SocketAddrV4},
     sync::Arc,
 };
+use tap::TapFallible;
 use tracing_appender::non_blocking::NonBlocking;
 use tracing_subscriber::EnvFilter;
 
@@ -27,6 +28,7 @@ use crate::{
 };
 
 mod authn;
+mod caller;
 mod config;
 mod context;
 mod endpoints;
@@ -34,12 +36,14 @@ mod error;
 mod initial_data;
 mod mapper;
 mod permissions;
+mod search;
 mod secrets;
 mod server;
 mod util;
 
 pub type ApiCaller = Caller<ApiPermission>;
 pub type ApiPermissions = Permissions<ApiPermission>;
+pub type Group = AccessGroup<ApiPermission>;
 pub type User = ApiUser<ApiPermission>;
 pub type UserToken = ApiKey<ApiPermission>;
 
@@ -88,8 +92,12 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     tracing::info!("Configured server context");
 
-    let init_data = InitialData::new(config.initial_mappers.map(|p| vec![p]))?;
-    init_data.initialize(&context).await?;
+    let init_data = InitialData::new(config.initial_mappers.map(|p| vec![p])).tap_err(|err| {
+        tracing::error!(?err, "Failed to load initial data from configuration");
+    })?;
+    init_data.initialize(&context).await.tap_err(|err| {
+        tracing::error!(?err, "Failed to install initial data");
+    })?;
 
     tracing::info!("Loaded initial data");
 
@@ -129,13 +137,26 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
     let config = ServerConfig {
         context,
-        server_address: SocketAddr::V4(SocketAddrV4::new("0.0.0.0".parse()?, config.server_port)),
+        server_address: SocketAddr::V4(SocketAddrV4::new(
+            "0.0.0.0"
+                .parse()
+                .tap_err(|err| tracing::error!(?err, "Failed to parse server address"))?,
+            config.server_port,
+        )),
         spec_output: config.spec,
     };
 
-    let server = server(config)?.start();
+    let server = server(config)
+        .tap_err(|err| {
+            tracing::error!(?err, "Failed to construct server");
+        })?
+        .start();
 
-    server.await?;
+    server.await.tap_err(|err| {
+        tracing::error!(?err, "Server exited with an error");
+    })?;
+
+    tracing::error!("Server completed without an error");
 
     Ok(())
 }

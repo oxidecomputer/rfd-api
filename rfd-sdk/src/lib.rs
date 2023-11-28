@@ -6,11 +6,11 @@ mod generated;
 
 use std::fmt::Display;
 
-use generated::sdk::types::ApiPermission;
+use generated::sdk::types::ApiPermissionResponse;
 pub use generated::sdk::*;
 pub use progenitor_client::Error as ProgenitorClientError;
 
-impl Display for ApiPermission {
+impl Display for ApiPermissionResponse {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::CreateApiUserToken(id) => write!(f, "create-token:{}", id),
@@ -35,7 +35,8 @@ impl Display for ApiPermission {
             Self::UpdateApiUserAssigned => write!(f, "update-user-assigned"),
             Self::UpdateApiUserAll => write!(f, "update-user-all"),
             Self::CreateUserApiProviderLinkToken => write!(f, "create-link-request"),
-            Self::ListGroups => write!(f, "list-groups"),
+            Self::GetGroupsJoined => write!(f, "get-groups-joined"),
+            Self::GetGroupsAll => write!(f, "get-groups-all"),
             Self::CreateGroup => write!(f, "create-group"),
             Self::UpdateGroup(id) => write!(f, "update-group:{}", id),
             Self::AddToGroup(id) => write!(f, "add-group-membership:{}", id),
@@ -137,6 +138,7 @@ impl Display for ApiPermission {
             ),
             Self::DeleteOAuthClientsAssigned => write!(f, "delete-oauth-clients-assigned"),
             Self::DeleteOAuthClientsAll => write!(f, "delete-oauth-clients-self"),
+            Self::Removed => Ok(()),
         }
     }
 }

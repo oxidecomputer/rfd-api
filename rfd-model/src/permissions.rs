@@ -42,7 +42,7 @@ where
 
     pub fn can(&self, permission: &T) -> bool {
         let result = self.permissions.can(permission);
-        tracing::debug!(?permission, ?result, "Test if caller can");
+        tracing::trace!(?permission, ?result, "Test if caller can");
         result
     }
 }
@@ -134,8 +134,17 @@ where
     T: Permission + Ord,
 {
     fn from(value: Vec<T>) -> Self {
+        Self::from_iter(value)
+    }
+}
+
+impl<T> FromIterator<T> for Permissions<T>
+where
+    T: Permission + Ord,
+{
+    fn from_iter<Iter: IntoIterator<Item = T>>(iter: Iter) -> Self {
         let mut set = BTreeSet::new();
-        set.extend(value.into_iter());
+        set.extend::<Iter>(iter);
         Self(set)
     }
 }

@@ -23,35 +23,35 @@ where
 impl CliOutput for RfdJsonPrinter {
     fn output_create_api_user(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
     ) {
         print_cli_output(&response)
     }
 
     fn output_get_api_user(
         &self,
-        response: Result<types::GetApiUserResponse, progenitor_client::Error<types::Error>>,
+        response: Result<types::GetUserResponse, progenitor_client::Error<types::Error>>,
     ) {
         print_cli_output(&response)
     }
 
     fn output_update_api_user(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
     ) {
         print_cli_output(&response)
     }
 
     fn output_add_api_user_to_group(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
     ) {
         print_cli_output(&response)
     }
 
     fn output_remove_api_user_from_group(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
     ) {
         print_cli_output(&response)
     }
@@ -89,7 +89,7 @@ impl CliOutput for RfdJsonPrinter {
     fn output_get_groups(
         &self,
         response: Result<
-            Vec<types::AccessGroupForApiPermission>,
+            Vec<types::AccessGroupForApiPermissionResponse>,
             progenitor_client::Error<types::Error>,
         >,
     ) {
@@ -99,7 +99,7 @@ impl CliOutput for RfdJsonPrinter {
     fn output_create_group(
         &self,
         response: Result<
-            types::AccessGroupForApiPermission,
+            types::AccessGroupForApiPermissionResponse,
             progenitor_client::Error<types::Error>,
         >,
     ) {
@@ -109,7 +109,7 @@ impl CliOutput for RfdJsonPrinter {
     fn output_update_group(
         &self,
         response: Result<
-            types::AccessGroupForApiPermission,
+            types::AccessGroupForApiPermissionResponse,
             progenitor_client::Error<types::Error>,
         >,
     ) {
@@ -119,7 +119,7 @@ impl CliOutput for RfdJsonPrinter {
     fn output_delete_group(
         &self,
         response: Result<
-            types::AccessGroupForApiPermission,
+            types::AccessGroupForApiPermissionResponse,
             progenitor_client::Error<types::Error>,
         >,
     ) {
@@ -243,14 +243,14 @@ impl CliOutput for RfdJsonPrinter {
 
     fn output_search_rfds(
         &self,
-        response: Result<Vec<types::ListRfd>, progenitor_client::Error<types::Error>>,
+        response: Result<types::SearchResults, progenitor_client::Error<types::Error>>,
     ) {
         print_cli_output(&response)
     }
 
     fn output_get_self(
         &self,
-        response: Result<types::GetApiUserResponse, progenitor_client::Error<types::Error>>,
+        response: Result<types::GetUserResponse, progenitor_client::Error<types::Error>>,
     ) {
         print_cli_output(&response)
     }

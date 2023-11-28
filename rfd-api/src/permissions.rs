@@ -2,6 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use partial_struct::partial;
 use rfd_model::permissions::Permissions;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -17,6 +18,7 @@ pub enum ApiPermissionError {
     InvalidScope(String),
 }
 
+#[partial(ApiPermissionResponse, attributes(#[serde(tag = "kind", content = "value")]))]
 #[derive(
     Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, PartialOrd, Ord,
 )]
@@ -99,6 +101,10 @@ pub enum ApiPermission {
     DeleteOAuthClients(BTreeSet<Uuid>),
     DeleteOAuthClientsAssigned,
     DeleteOAuthClientsAll,
+
+    // Removed
+    #[serde(other)]
+    Removed,
 }
 
 impl ApiPermission {
@@ -176,6 +182,8 @@ impl ApiPermission {
             ApiPermission::DeleteOAuthClients(_) => "oauth:client:w",
             ApiPermission::DeleteOAuthClientsAssigned => "oauth:client:w",
             ApiPermission::DeleteOAuthClientsAll => "oauth:client:w",
+
+            ApiPermission::Removed => "",
         }
     }
 

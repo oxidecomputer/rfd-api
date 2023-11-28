@@ -43,7 +43,7 @@ pub fn trace_request(_attr: TokenStream, input: TokenStream) -> TokenStream {
             let method = req.method();
 
             async {
-                tracing::info!("Handling request");
+                tracing::info!("Request handler start");
 
                 let start = std::time::Instant::now();
                 let result = async #body_block.await;
@@ -56,7 +56,7 @@ pub fn trace_request(_attr: TokenStream, input: TokenStream) -> TokenStream {
                     Ok(_) => tracing::info!(
                         ?status,
                         ?duration,
-                        "Request complete"
+                        "Request handler complete"
                     ),
                     Err(err) => {
                         tracing::info!(
@@ -64,7 +64,7 @@ pub fn trace_request(_attr: TokenStream, input: TokenStream) -> TokenStream {
                             ?duration,
                             external_message = ?err.external_message,
                             internal_message = ?err.internal_message,
-                            "Request complete"
+                            "Request handler complete"
                         )
                     }
                 };

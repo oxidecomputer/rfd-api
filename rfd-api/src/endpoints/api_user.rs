@@ -11,6 +11,7 @@ use dropshot::{
 };
 use partial_struct::partial;
 use rfd_model::{
+    permissions::Permissions,
     storage::{ApiUserProviderFilter, ListPagination},
     ApiUser, ApiUserProvider, NewApiKey, NewApiUser,
 };
@@ -25,7 +26,7 @@ use crate::{
     authn::key::RawApiKey,
     context::ApiContext,
     error::ApiError,
-    permissions::ApiPermission,
+    permissions::{ApiPermission, ApiPermissionResponse},
     secrets::OpenApiSecretString,
     util::response::{
         bad_request, forbidden, internal_error, not_found, to_internal_error, unauthorized,
@@ -33,10 +34,36 @@ use crate::{
     ApiCaller, ApiPermissions, User,
 };
 
+pub type UserResponse = ApiUser<ApiPermissionResponse>;
+
+fn into_user_response(user: User) -> UserResponse {
+    ApiUser {
+        id: user.id,
+        permissions: user
+            .permissions
+            .into_iter()
+            .map(|p| p.into())
+            .collect::<Permissions<ApiPermissionResponse>>(),
+        groups: user.groups,
+        created_at: user.created_at,
+        updated_at: user.updated_at,
+        deleted_at: user.deleted_at,
+    }
+}
+
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-pub struct GetApiUserResponse {
-    info: ApiUser<ApiPermission>,
+pub struct GetUserResponse {
+    info: ApiUser<ApiPermissionResponse>,
     providers: Vec<ApiUserProvider>,
+}
+
+impl GetUserResponse {
+    pub fn new(user: User, providers: Vec<ApiUserProvider>) -> Self {
+        Self {
+            info: into_user_response(user),
+            providers,
+        }
+    }
 }
 
 /// Retrieve the user information of the calling user
@@ -48,7 +75,7 @@ pub struct GetApiUserResponse {
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn get_self(
     rqctx: RequestContext<ApiContext>,
-) -> Result<HttpResponseOk<GetApiUserResponse>, HttpError> {
+) -> Result<HttpResponseOk<GetUserResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(auth.as_ref()).await?;
@@ -65,7 +92,7 @@ pub async fn get_self(
 pub async fn get_api_user(
     rqctx: RequestContext<ApiContext>,
     path: Path<ApiUserPath>,
-) -> Result<HttpResponseOk<GetApiUserResponse>, HttpError> {
+) -> Result<HttpResponseOk<GetUserResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     get_api_user_op(
@@ -81,7 +108,7 @@ async fn get_api_user_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
     user_id: &Uuid,
-) -> Result<HttpResponseOk<GetApiUserResponse>, HttpError> {
+) -> Result<HttpResponseOk<GetUserResponse>, HttpError> {
     if caller.any(&[
         &ApiPermission::GetApiUser(caller.id).into(),
         &ApiPermission::GetApiUserAll.into(),
@@ -101,10 +128,7 @@ async fn get_api_user_op(
         if let Some(user) = user {
             tracing::trace!(user = ?serde_json::to_string(&user), "Found user");
 
-            Ok(HttpResponseOk(GetApiUserResponse {
-                info: user,
-                providers,
-            }))
+            Ok(HttpResponseOk(GetUserResponse::new(user, providers)))
         } else {
             tracing::error!("Failed to find api user record for authenticated user");
             Err(not_found("Failed to find"))
@@ -130,7 +154,7 @@ pub struct ApiUserUpdateParams {
 pub async fn create_api_user(
     rqctx: RequestContext<ApiContext>,
     body: TypedBody<ApiUserUpdateParams>,
-) -> Result<HttpResponseCreated<User>, HttpError> {
+) -> Result<HttpResponseCreated<UserResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     create_api_user_op(
@@ -146,7 +170,7 @@ async fn create_api_user_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
     body: ApiUserUpdateParams,
-) -> Result<HttpResponseCreated<User>, HttpError> {
+) -> Result<HttpResponseCreated<UserResponse>, HttpError> {
     if caller.can(&ApiPermission::CreateApiUser.into()) {
         let user = ctx
             .update_api_user(NewApiUser {
@@ -157,7 +181,7 @@ async fn create_api_user_op(
             .await
             .map_err(ApiError::Storage)?;
 
-        Ok(HttpResponseCreated(user))
+        Ok(HttpResponseCreated(into_user_response(user)))
     } else {
         Err(forbidden())
     }
@@ -179,7 +203,7 @@ pub async fn update_api_user(
     rqctx: RequestContext<ApiContext>,
     path: Path<ApiUserPath>,
     body: TypedBody<ApiUserUpdateParams>,
-) -> Result<HttpResponseOk<User>, HttpError> {
+) -> Result<HttpResponseOk<UserResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(auth.as_ref()).await?;
@@ -192,7 +216,7 @@ async fn update_api_user_op(
     caller: &ApiCaller,
     path: &ApiUserPath,
     body: ApiUserUpdateParams,
-) -> Result<HttpResponseOk<User>, HttpError> {
+) -> Result<HttpResponseOk<UserResponse>, HttpError> {
     if caller.any(&[
         &ApiPermission::UpdateApiUser(path.identifier).into(),
         &ApiPermission::UpdateApiUserAll.into(),
@@ -206,7 +230,7 @@ async fn update_api_user_op(
             .await
             .map_err(ApiError::Storage)?;
 
-        Ok(HttpResponseOk(user))
+        Ok(HttpResponseOk(into_user_response(user)))
     } else {
         Err(forbidden())
     }
@@ -250,7 +274,7 @@ async fn list_api_user_tokens_op(
                 .into_iter()
                 .map(|token| ApiKeyResponse {
                     id: token.id,
-                    permissions: token.permissions,
+                    permissions: into_permissions_response(token.permissions),
                     created_at: token.created_at,
                 })
                 .collect(),
@@ -262,7 +286,7 @@ async fn list_api_user_tokens_op(
 
 #[derive(Debug, Clone, Deserialize, JsonSchema)]
 pub struct ApiKeyCreateParams {
-    permissions: ApiPermissions,
+    permissions: Permissions<ApiPermissionResponse>,
     expires_at: DateTime<Utc>,
 }
 
@@ -272,7 +296,7 @@ pub struct InitialApiKeyResponse {
     pub id: Uuid,
     #[partial(ApiKeyResponse(skip))]
     pub key: OpenApiSecretString,
-    pub permissions: ApiPermissions,
+    pub permissions: Permissions<ApiPermissionResponse>,
     pub created_at: DateTime<Utc>,
 }
 
@@ -322,7 +346,7 @@ async fn create_api_user_token_op(
                         id: key_id,
                         api_user_id: path.identifier,
                         key_signature: key.signature().to_string(),
-                        permissions: body.permissions,
+                        permissions: into_permissions(body.permissions),
                         expires_at: body.expires_at,
                     },
                     &api_user,
@@ -335,7 +359,7 @@ async fn create_api_user_token_op(
             Ok(HttpResponseCreated(InitialApiKeyResponse {
                 id: user_key.id,
                 key: key.key().into(),
-                permissions: user_key.permissions,
+                permissions: into_permissions_response(user_key.permissions),
                 created_at: user_key.created_at,
             }))
         } else {
@@ -384,7 +408,7 @@ async fn get_api_user_token_op(
         if let Some(token) = token {
             Ok(HttpResponseOk(ApiKeyResponse {
                 id: token.id,
-                permissions: token.permissions,
+                permissions: into_permissions_response(token.permissions),
                 created_at: token.created_at,
             }))
         } else {
@@ -427,7 +451,7 @@ async fn delete_api_user_token_op(
         if let Some(token) = token {
             Ok(HttpResponseOk(ApiKeyResponse {
                 id: token.id,
-                permissions: token.permissions,
+                permissions: into_permissions_response(token.permissions),
                 created_at: token.created_at,
             }))
         } else {
@@ -453,7 +477,7 @@ pub async fn add_api_user_to_group(
     rqctx: RequestContext<ApiContext>,
     path: Path<ApiUserPath>,
     body: TypedBody<AddGroupBody>,
-) -> Result<HttpResponseOk<ApiUser<ApiPermission>>, HttpError> {
+) -> Result<HttpResponseOk<UserResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(auth.as_ref()).await?;
@@ -463,6 +487,7 @@ pub async fn add_api_user_to_group(
     if caller.can(&ApiPermission::AddToGroup(body.group_id)) {
         ctx.add_api_user_to_group(&path.identifier, &body.group_id)
             .await
+            .map(|o| o.map(into_user_response))
             .map_err(ApiError::Storage)?
             .map(HttpResponseOk)
             .ok_or_else(|| not_found("User does not exist"))
@@ -486,7 +511,7 @@ pub struct ApiUserRemoveGroupPath {
 pub async fn remove_api_user_from_group(
     rqctx: RequestContext<ApiContext>,
     path: Path<ApiUserRemoveGroupPath>,
-) -> Result<HttpResponseOk<ApiUser<ApiPermission>>, HttpError> {
+) -> Result<HttpResponseOk<UserResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(auth.as_ref()).await?;
@@ -495,6 +520,7 @@ pub async fn remove_api_user_from_group(
     if caller.can(&ApiPermission::RemoveFromGroup(path.group_id)) {
         ctx.remove_api_user_from_group(&path.identifier, &path.group_id)
             .await
+            .map(|o| o.map(into_user_response))
             .map_err(ApiError::Storage)?
             .map(HttpResponseOk)
             .ok_or_else(|| not_found("User does not exist"))
@@ -576,6 +602,14 @@ pub async fn link_provider(
     }
 }
 
+fn into_permissions(permissions: Permissions<ApiPermissionResponse>) -> ApiPermissions {
+    permissions.into_iter().map(|p| p.into()).collect::<ApiPermissions>()
+}
+
+fn into_permissions_response(permissions: ApiPermissions) -> Permissions<ApiPermissionResponse> {
+    permissions.into_iter().map(|p| p.into()).collect::<Permissions<ApiPermissionResponse>>()
+}
+
 #[cfg(test)]
 mod tests {
     use std::{collections::BTreeSet, sync::Arc};
@@ -594,7 +628,7 @@ mod tests {
         endpoints::api_user::{
             create_api_user_token_op, delete_api_user_token_op, get_api_user_token_op,
             list_api_user_tokens_op, update_api_user_op, ApiKeyCreateParams, ApiUserPath,
-            ApiUserTokenPath,
+            ApiUserTokenPath, into_permissions_response,
         },
         permissions::ApiPermission,
         util::tests::get_status,
@@ -939,7 +973,7 @@ mod tests {
         };
 
         let new_token = ApiKeyCreateParams {
-            permissions: Vec::new().into(),
+            permissions: into_permissions_response(Vec::new().into()),
             expires_at: Utc::now() + Duration::seconds(5 * 60),
         };
 

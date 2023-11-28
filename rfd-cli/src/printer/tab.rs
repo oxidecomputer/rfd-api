@@ -5,9 +5,10 @@
 use itertools::{EitherOrBoth, Itertools};
 use owo_colors::{OwoColorize, Style};
 use rfd_sdk::types::{
-    self, AccessGroupForApiPermission, ApiKeyResponse, ApiUserForApiPermission, Error, FullRfd,
-    FullRfdPdfEntry, GetApiUserResponse, InitialApiKeyResponse, InitialOAuthClientSecretResponse,
-    ListRfd, Mapper, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, Visibility,
+    self, AccessGroupForApiPermissionResponse, ApiKeyResponse, ApiUserForApiPermissionResponse, Error, FullRfd,
+    FullRfdPdfEntry, GetUserResponse, InitialApiKeyResponse, InitialOAuthClientSecretResponse,
+    ListRfd, Mapper, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, SearchResultHit,
+    SearchResults, Visibility,
 };
 use std::{collections::HashMap, fmt::Display, fs::File, io::Write, process::Command};
 use tabwriter::TabWriter;
@@ -37,14 +38,14 @@ pub struct RfdTabPrinter {
 impl CliOutput for RfdTabPrinter {
     fn output_create_api_user(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
     ) {
         self.print_cli_output(&response, None);
     }
 
     fn output_get_api_user(
         &self,
-        response: Result<types::GetApiUserResponse, progenitor_client::Error<types::Error>>,
+        response: Result<types::GetUserResponse, progenitor_client::Error<types::Error>>,
     ) {
         let mut tw = TabWriter::new(vec![]).ansi(true);
 
@@ -82,21 +83,21 @@ impl CliOutput for RfdTabPrinter {
 
     fn output_update_api_user(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
     ) {
         self.print_cli_output(&response, None);
     }
 
     fn output_add_api_user_to_group(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
     ) {
         self.print_cli_output(&response, None);
     }
 
     fn output_remove_api_user_from_group(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
     ) {
         self.print_cli_output(&response, None);
     }
@@ -134,7 +135,7 @@ impl CliOutput for RfdTabPrinter {
     fn output_get_groups(
         &self,
         response: Result<
-            Vec<types::AccessGroupForApiPermission>,
+            Vec<types::AccessGroupForApiPermissionResponse>,
             progenitor_client::Error<types::Error>,
         >,
     ) {
@@ -144,7 +145,7 @@ impl CliOutput for RfdTabPrinter {
     fn output_create_group(
         &self,
         response: Result<
-            types::AccessGroupForApiPermission,
+            types::AccessGroupForApiPermissionResponse,
             progenitor_client::Error<types::Error>,
         >,
     ) {
@@ -154,7 +155,7 @@ impl CliOutput for RfdTabPrinter {
     fn output_update_group(
         &self,
         response: Result<
-            types::AccessGroupForApiPermission,
+            types::AccessGroupForApiPermissionResponse,
             progenitor_client::Error<types::Error>,
         >,
     ) {
@@ -164,7 +165,7 @@ impl CliOutput for RfdTabPrinter {
     fn output_delete_group(
         &self,
         response: Result<
-            types::AccessGroupForApiPermission,
+            types::AccessGroupForApiPermissionResponse,
             progenitor_client::Error<types::Error>,
         >,
     ) {
@@ -260,14 +261,14 @@ impl CliOutput for RfdTabPrinter {
 
     fn output_search_rfds(
         &self,
-        response: Result<Vec<types::ListRfd>, progenitor_client::Error<types::Error>>,
+        response: Result<types::SearchResults, progenitor_client::Error<types::Error>>,
     ) {
-        self.print_cli_output(&response, Some("rfds".to_string()));
+        self.print_cli_output(&response, Some("results".to_string()));
     }
 
     fn output_get_self(
         &self,
-        response: Result<types::GetApiUserResponse, progenitor_client::Error<types::Error>>,
+        response: Result<types::GetUserResponse, progenitor_client::Error<types::Error>>,
     ) {
         self.output_get_api_user(response);
     }
@@ -277,7 +278,7 @@ trait TabDisplay {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter);
 }
 
-impl TabDisplay for ApiUserForApiPermission {
+impl TabDisplay for ApiUserForApiPermissionResponse {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "id", &self.id);
         printer.print_list(
@@ -342,7 +343,7 @@ impl TabDisplay for InitialApiKeyResponse {
     }
 }
 
-impl TabDisplay for AccessGroupForApiPermission {
+impl TabDisplay for AccessGroupForApiPermissionResponse {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "id", &self.id);
         printer.print_field(tw, level, "name", &self.name);
@@ -579,6 +580,57 @@ impl TabDisplay for FullRfdPdfEntry {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "link", &self.link);
         printer.print_field(tw, level, "source", &self.source);
+    }
+}
+
+impl TabDisplay for SearchResults {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "query", &self.query);
+        printer.print_field(
+            tw,
+            level,
+            "total hits",
+            &self
+                .hits
+                .len()
+        );
+        writeln!(tw, "");
+        self.hits.display(tw, level, printer);
+    }
+}
+
+impl TabDisplay for SearchResultHit {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        let mut heading_path = Vec::new();
+
+        if let Some(lvl1) = &self.hierarchy[0] {
+            heading_path.push(lvl1);
+        }
+        if let Some(lvl2) = &self.hierarchy[1] {
+            heading_path.push(lvl2);
+        }
+        if let Some(lvl3) = &self.hierarchy[2] {
+            heading_path.push(lvl3);
+        }
+        if let Some(lvl4) = &self.hierarchy[3] {
+            heading_path.push(lvl4);
+        }
+        if let Some(lvl5) = &self.hierarchy[4] {
+            heading_path.push(lvl5);
+        }
+
+        printer.print_field(tw, level, "rfd", &self.rfd_number.to_string());
+
+        if let Some(lvl0) = &self.hierarchy_radio[0] {
+            printer.print_field(tw, level, "title", lvl0);
+        }
+
+        if let Some(url) = &self.url {
+            printer.print_field(tw, level, "url", url);
+        }
+
+        printer.print_field(tw, level, "location", &heading_path.iter().join(" > "));
+        printer.print_field(tw, level, "content", &&self.content[..255]);
     }
 }
 

@@ -64,7 +64,7 @@ impl Jwt {
         // to use, even in the case that we are using a single key
         let kid = header.kid.ok_or(JwtError::MissingKid)?;
 
-        tracing::debug!(?kid, "JWT with kid present");
+        tracing::trace!(?kid, "JWT with kid present");
 
         // The only JWKs supported are those that are available in the server context
         let jwk = ctx.jwks().await.find(&kid).ok_or(JwtError::NoMatchingKey)?;
@@ -72,11 +72,11 @@ impl Jwt {
             .map(|key| (key, Jwt::algo(&jwk)))
             .map_err(JwtError::InvalidJwk)?;
 
-        tracing::debug!(?jwk, ?algorithm, "Kid matched known decoding key");
+        tracing::trace!(?jwk, ?algorithm, "Kid matched known decoding key");
 
         let data = decode(token, &key, &Validation::new(algorithm?)).map_err(JwtError::Decode)?;
 
-        tracing::debug!("Decoded JWT claims from request");
+        tracing::trace!("Decoded JWT claims from request");
 
         Ok(Jwt {
             claims: data.claims,

@@ -10,25 +10,25 @@ pub mod types {
     #[allow(unused_imports)]
     use std::convert::TryFrom;
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct AccessGroupForApiPermission {
+    pub struct AccessGroupForApiPermissionResponse {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
         pub id: uuid::Uuid,
         pub name: String,
-        pub permissions: PermissionsForApiPermission,
+        pub permissions: PermissionsForApiPermissionResponse,
         pub updated_at: chrono::DateTime<chrono::offset::Utc>,
     }
 
-    impl From<&AccessGroupForApiPermission> for AccessGroupForApiPermission {
-        fn from(value: &AccessGroupForApiPermission) -> Self {
+    impl From<&AccessGroupForApiPermissionResponse> for AccessGroupForApiPermissionResponse {
+        fn from(value: &AccessGroupForApiPermissionResponse) -> Self {
             value.clone()
         }
     }
 
-    impl AccessGroupForApiPermission {
-        pub fn builder() -> builder::AccessGroupForApiPermission {
-            builder::AccessGroupForApiPermission::default()
+    impl AccessGroupForApiPermissionResponse {
+        pub fn builder() -> builder::AccessGroupForApiPermissionResponse {
+            builder::AccessGroupForApiPermissionResponse::default()
         }
     }
 
@@ -107,7 +107,7 @@ pub mod types {
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct ApiKeyCreateParams {
         pub expires_at: chrono::DateTime<chrono::offset::Utc>,
-        pub permissions: PermissionsForApiPermission,
+        pub permissions: PermissionsForApiPermissionResponse,
     }
 
     impl From<&ApiKeyCreateParams> for ApiKeyCreateParams {
@@ -126,7 +126,7 @@ pub mod types {
     pub struct ApiKeyResponse {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
         pub id: uuid::Uuid,
-        pub permissions: PermissionsForApiPermission,
+        pub permissions: PermissionsForApiPermissionResponse,
     }
 
     impl From<&ApiKeyResponse> for ApiKeyResponse {
@@ -160,7 +160,8 @@ pub mod types {
         UpdateApiUserAssigned,
         UpdateApiUserAll,
         CreateUserApiProviderLinkToken,
-        ListGroups,
+        GetGroupsJoined,
+        GetGroupsAll,
         CreateGroup,
         ManageGroupMembershipAssigned,
         ManageGroupMembershipAll,
@@ -182,6 +183,7 @@ pub mod types {
         UpdateOAuthClientsAll,
         DeleteOAuthClientsAssigned,
         DeleteOAuthClientsAll,
+        Removed,
         CreateApiUserToken(uuid::Uuid),
         GetApiUser(uuid::Uuid),
         GetApiUserToken(uuid::Uuid),
@@ -218,25 +220,104 @@ pub mod types {
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct ApiUserForApiPermission {
+    #[serde(tag = "kind", content = "value")]
+    pub enum ApiPermissionResponse {
+        CreateApiUserToken(uuid::Uuid),
+        CreateApiUserTokenSelf,
+        CreateApiUserTokenAssigned,
+        CreateApiUserTokenAll,
+        GetApiUser(uuid::Uuid),
+        GetApiUserSelf,
+        GetApiUserAssigned,
+        GetApiUserAll,
+        GetApiUserToken(uuid::Uuid),
+        GetApiUserTokenSelf,
+        GetApiUserTokenAssigned,
+        GetApiUserTokenAll,
+        DeleteApiUserToken(uuid::Uuid),
+        DeleteApiUserTokenSelf,
+        DeleteApiUserTokenAssigned,
+        DeleteApiUserTokenAll,
+        CreateApiUser,
+        UpdateApiUser(uuid::Uuid),
+        UpdateApiUserSelf,
+        UpdateApiUserAssigned,
+        UpdateApiUserAll,
+        CreateUserApiProviderLinkToken,
+        GetGroupsJoined,
+        GetGroupsAll,
+        CreateGroup,
+        UpdateGroup(uuid::Uuid),
+        AddToGroup(uuid::Uuid),
+        RemoveFromGroup(uuid::Uuid),
+        ManageGroupMembership(uuid::Uuid),
+        ManageGroupMemberships(Vec<uuid::Uuid>),
+        ManageGroupMembershipAssigned,
+        ManageGroupMembershipAll,
+        DeleteGroup(uuid::Uuid),
+        ManageGroup(uuid::Uuid),
+        ManageGroups(Vec<uuid::Uuid>),
+        ManageGroupsAssigned,
+        ManageGroupsAll,
+        ListMappers,
+        CreateMapper,
+        UpdateMapper(uuid::Uuid),
+        DeleteMapper(uuid::Uuid),
+        ManageMapper(uuid::Uuid),
+        ManageMappers(Vec<uuid::Uuid>),
+        ManageMappersAssigned,
+        ManageMappersAll,
+        GetRfd(i32),
+        GetRfds(Vec<i32>),
+        GetRfdsAssigned,
+        GetRfdsAll,
+        GetDiscussion(i32),
+        GetDiscussions(Vec<i32>),
+        GetDiscussionsAssigned,
+        GetDiscussionsAll,
+        SearchRfds,
+        CreateOAuthClient,
+        GetOAuthClient(uuid::Uuid),
+        GetOAuthClients(Vec<uuid::Uuid>),
+        GetOAuthClientsAssigned,
+        GetOAuthClientsAll,
+        UpdateOAuthClient(uuid::Uuid),
+        UpdateOAuthClients(Vec<uuid::Uuid>),
+        UpdateOAuthClientsAssigned,
+        UpdateOAuthClientsAll,
+        DeleteOAuthClient(uuid::Uuid),
+        DeleteOAuthClients(Vec<uuid::Uuid>),
+        DeleteOAuthClientsAssigned,
+        DeleteOAuthClientsAll,
+        Removed,
+    }
+
+    impl From<&ApiPermissionResponse> for ApiPermissionResponse {
+        fn from(value: &ApiPermissionResponse) -> Self {
+            value.clone()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct ApiUserForApiPermissionResponse {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
         pub groups: Vec<uuid::Uuid>,
         pub id: uuid::Uuid,
-        pub permissions: PermissionsForApiPermission,
+        pub permissions: PermissionsForApiPermissionResponse,
         pub updated_at: chrono::DateTime<chrono::offset::Utc>,
     }
 
-    impl From<&ApiUserForApiPermission> for ApiUserForApiPermission {
-        fn from(value: &ApiUserForApiPermission) -> Self {
+    impl From<&ApiUserForApiPermissionResponse> for ApiUserForApiPermissionResponse {
+        fn from(value: &ApiUserForApiPermissionResponse) -> Self {
             value.clone()
         }
     }
 
-    impl ApiUserForApiPermission {
-        pub fn builder() -> builder::ApiUserForApiPermission {
-            builder::ApiUserForApiPermission::default()
+    impl ApiUserForApiPermissionResponse {
+        pub fn builder() -> builder::ApiUserForApiPermissionResponse {
+            builder::ApiUserForApiPermissionResponse::default()
         }
     }
 
@@ -376,6 +457,32 @@ pub mod types {
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct FormattedSearchResultHit {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub anchor: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub content: Option<String>,
+        pub hierarchy: [Option<String>; 6usize],
+        pub hierarchy_radio: [Option<String>; 6usize],
+        pub object_id: String,
+        pub rfd_number: u64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub url: Option<String>,
+    }
+
+    impl From<&FormattedSearchResultHit> for FormattedSearchResultHit {
+        fn from(value: &FormattedSearchResultHit) -> Self {
+            value.clone()
+        }
+    }
+
+    impl FormattedSearchResultHit {
+        pub fn builder() -> builder::FormattedSearchResultHit {
+            builder::FormattedSearchResultHit::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct FullRfd {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub authors: Option<String>,
@@ -427,20 +534,20 @@ pub mod types {
     }
 
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct GetApiUserResponse {
-        pub info: ApiUserForApiPermission,
+    pub struct GetUserResponse {
+        pub info: ApiUserForApiPermissionResponse,
         pub providers: Vec<ApiUserProvider>,
     }
 
-    impl From<&GetApiUserResponse> for GetApiUserResponse {
-        fn from(value: &GetApiUserResponse) -> Self {
+    impl From<&GetUserResponse> for GetUserResponse {
+        fn from(value: &GetUserResponse) -> Self {
             value.clone()
         }
     }
 
-    impl GetApiUserResponse {
-        pub fn builder() -> builder::GetApiUserResponse {
-            builder::GetApiUserResponse::default()
+    impl GetUserResponse {
+        pub fn builder() -> builder::GetUserResponse {
+            builder::GetUserResponse::default()
         }
     }
 
@@ -571,7 +678,7 @@ pub mod types {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
         pub id: uuid::Uuid,
         pub key: SecretString,
-        pub permissions: PermissionsForApiPermission,
+        pub permissions: PermissionsForApiPermissionResponse,
     }
 
     impl From<&InitialApiKeyResponse> for InitialApiKeyResponse {
@@ -986,6 +1093,82 @@ pub mod types {
         }
     }
 
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct PermissionsForApiPermissionResponse(pub Vec<ApiPermissionResponse>);
+    impl std::ops::Deref for PermissionsForApiPermissionResponse {
+        type Target = Vec<ApiPermissionResponse>;
+        fn deref(&self) -> &Vec<ApiPermissionResponse> {
+            &self.0
+        }
+    }
+
+    impl From<PermissionsForApiPermissionResponse> for Vec<ApiPermissionResponse> {
+        fn from(value: PermissionsForApiPermissionResponse) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&PermissionsForApiPermissionResponse> for PermissionsForApiPermissionResponse {
+        fn from(value: &PermissionsForApiPermissionResponse) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<Vec<ApiPermissionResponse>> for PermissionsForApiPermissionResponse {
+        fn from(value: Vec<ApiPermissionResponse>) -> Self {
+            Self(value)
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct SearchResultHit {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub anchor: Option<String>,
+        pub content: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub formatted: Option<FormattedSearchResultHit>,
+        pub hierarchy: [Option<String>; 6usize],
+        pub hierarchy_radio: [Option<String>; 6usize],
+        pub object_id: String,
+        pub rfd_number: u64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub url: Option<String>,
+    }
+
+    impl From<&SearchResultHit> for SearchResultHit {
+        fn from(value: &SearchResultHit) -> Self {
+            value.clone()
+        }
+    }
+
+    impl SearchResultHit {
+        pub fn builder() -> builder::SearchResultHit {
+            builder::SearchResultHit::default()
+        }
+    }
+
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct SearchResults {
+        pub hits: Vec<SearchResultHit>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub limit: Option<u32>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub offset: Option<u32>,
+        pub query: String,
+    }
+
+    impl From<&SearchResults> for SearchResults {
+        fn from(value: &SearchResults) -> Self {
+            value.clone()
+        }
+    }
+
+    impl SearchResults {
+        pub fn builder() -> builder::SearchResults {
+            builder::SearchResults::default()
+        }
+    }
+
     #[derive(
         Clone,
         Debug,
@@ -1106,16 +1289,16 @@ pub mod types {
 
     pub mod builder {
         #[derive(Clone, Debug)]
-        pub struct AccessGroupForApiPermission {
+        pub struct AccessGroupForApiPermissionResponse {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
             id: Result<uuid::Uuid, String>,
             name: Result<String, String>,
-            permissions: Result<super::PermissionsForApiPermission, String>,
+            permissions: Result<super::PermissionsForApiPermissionResponse, String>,
             updated_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
         }
 
-        impl Default for AccessGroupForApiPermission {
+        impl Default for AccessGroupForApiPermissionResponse {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -1128,7 +1311,7 @@ pub mod types {
             }
         }
 
-        impl AccessGroupForApiPermission {
+        impl AccessGroupForApiPermissionResponse {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
                 T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
@@ -1171,7 +1354,7 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::PermissionsForApiPermission>,
+                T: std::convert::TryInto<super::PermissionsForApiPermissionResponse>,
                 T::Error: std::fmt::Display,
             {
                 self.permissions = value
@@ -1191,9 +1374,11 @@ pub mod types {
             }
         }
 
-        impl std::convert::TryFrom<AccessGroupForApiPermission> for super::AccessGroupForApiPermission {
+        impl std::convert::TryFrom<AccessGroupForApiPermissionResponse>
+            for super::AccessGroupForApiPermissionResponse
+        {
             type Error = String;
-            fn try_from(value: AccessGroupForApiPermission) -> Result<Self, String> {
+            fn try_from(value: AccessGroupForApiPermissionResponse) -> Result<Self, String> {
                 Ok(Self {
                     created_at: value.created_at?,
                     deleted_at: value.deleted_at?,
@@ -1205,8 +1390,8 @@ pub mod types {
             }
         }
 
-        impl From<super::AccessGroupForApiPermission> for AccessGroupForApiPermission {
-            fn from(value: super::AccessGroupForApiPermission) -> Self {
+        impl From<super::AccessGroupForApiPermissionResponse> for AccessGroupForApiPermissionResponse {
+            fn from(value: super::AccessGroupForApiPermissionResponse) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
                     deleted_at: Ok(value.deleted_at),
@@ -1435,7 +1620,7 @@ pub mod types {
         #[derive(Clone, Debug)]
         pub struct ApiKeyCreateParams {
             expires_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
-            permissions: Result<super::PermissionsForApiPermission, String>,
+            permissions: Result<super::PermissionsForApiPermissionResponse, String>,
         }
 
         impl Default for ApiKeyCreateParams {
@@ -1460,7 +1645,7 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::PermissionsForApiPermission>,
+                T: std::convert::TryInto<super::PermissionsForApiPermissionResponse>,
                 T::Error: std::fmt::Display,
             {
                 self.permissions = value
@@ -1493,7 +1678,7 @@ pub mod types {
         pub struct ApiKeyResponse {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             id: Result<uuid::Uuid, String>,
-            permissions: Result<super::PermissionsForApiPermission, String>,
+            permissions: Result<super::PermissionsForApiPermissionResponse, String>,
         }
 
         impl Default for ApiKeyResponse {
@@ -1529,7 +1714,7 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::PermissionsForApiPermission>,
+                T: std::convert::TryInto<super::PermissionsForApiPermissionResponse>,
                 T::Error: std::fmt::Display,
             {
                 self.permissions = value
@@ -1561,16 +1746,16 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
-        pub struct ApiUserForApiPermission {
+        pub struct ApiUserForApiPermissionResponse {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
             groups: Result<Vec<uuid::Uuid>, String>,
             id: Result<uuid::Uuid, String>,
-            permissions: Result<super::PermissionsForApiPermission, String>,
+            permissions: Result<super::PermissionsForApiPermissionResponse, String>,
             updated_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
         }
 
-        impl Default for ApiUserForApiPermission {
+        impl Default for ApiUserForApiPermissionResponse {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -1583,7 +1768,7 @@ pub mod types {
             }
         }
 
-        impl ApiUserForApiPermission {
+        impl ApiUserForApiPermissionResponse {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
                 T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
@@ -1626,7 +1811,7 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::PermissionsForApiPermission>,
+                T: std::convert::TryInto<super::PermissionsForApiPermissionResponse>,
                 T::Error: std::fmt::Display,
             {
                 self.permissions = value
@@ -1646,9 +1831,11 @@ pub mod types {
             }
         }
 
-        impl std::convert::TryFrom<ApiUserForApiPermission> for super::ApiUserForApiPermission {
+        impl std::convert::TryFrom<ApiUserForApiPermissionResponse>
+            for super::ApiUserForApiPermissionResponse
+        {
             type Error = String;
-            fn try_from(value: ApiUserForApiPermission) -> Result<Self, String> {
+            fn try_from(value: ApiUserForApiPermissionResponse) -> Result<Self, String> {
                 Ok(Self {
                     created_at: value.created_at?,
                     deleted_at: value.deleted_at?,
@@ -1660,8 +1847,8 @@ pub mod types {
             }
         }
 
-        impl From<super::ApiUserForApiPermission> for ApiUserForApiPermission {
-            fn from(value: super::ApiUserForApiPermission) -> Self {
+        impl From<super::ApiUserForApiPermissionResponse> for ApiUserForApiPermissionResponse {
+            fn from(value: super::ApiUserForApiPermissionResponse) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
                     deleted_at: Ok(value.deleted_at),
@@ -2143,6 +2330,133 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
+        pub struct FormattedSearchResultHit {
+            anchor: Result<Option<String>, String>,
+            content: Result<Option<String>, String>,
+            hierarchy: Result<[Option<String>; 6usize], String>,
+            hierarchy_radio: Result<[Option<String>; 6usize], String>,
+            object_id: Result<String, String>,
+            rfd_number: Result<u64, String>,
+            url: Result<Option<String>, String>,
+        }
+
+        impl Default for FormattedSearchResultHit {
+            fn default() -> Self {
+                Self {
+                    anchor: Ok(Default::default()),
+                    content: Ok(Default::default()),
+                    hierarchy: Err("no value supplied for hierarchy".to_string()),
+                    hierarchy_radio: Err("no value supplied for hierarchy_radio".to_string()),
+                    object_id: Err("no value supplied for object_id".to_string()),
+                    rfd_number: Err("no value supplied for rfd_number".to_string()),
+                    url: Ok(Default::default()),
+                }
+            }
+        }
+
+        impl FormattedSearchResultHit {
+            pub fn anchor<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.anchor = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for anchor: {}", e));
+                self
+            }
+            pub fn content<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.content = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for content: {}", e));
+                self
+            }
+            pub fn hierarchy<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<[Option<String>; 6usize]>,
+                T::Error: std::fmt::Display,
+            {
+                self.hierarchy = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for hierarchy: {}", e));
+                self
+            }
+            pub fn hierarchy_radio<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<[Option<String>; 6usize]>,
+                T::Error: std::fmt::Display,
+            {
+                self.hierarchy_radio = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for hierarchy_radio: {}", e)
+                });
+                self
+            }
+            pub fn object_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.object_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for object_id: {}", e));
+                self
+            }
+            pub fn rfd_number<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<u64>,
+                T::Error: std::fmt::Display,
+            {
+                self.rfd_number = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for rfd_number: {}", e));
+                self
+            }
+            pub fn url<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.url = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for url: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<FormattedSearchResultHit> for super::FormattedSearchResultHit {
+            type Error = String;
+            fn try_from(value: FormattedSearchResultHit) -> Result<Self, String> {
+                Ok(Self {
+                    anchor: value.anchor?,
+                    content: value.content?,
+                    hierarchy: value.hierarchy?,
+                    hierarchy_radio: value.hierarchy_radio?,
+                    object_id: value.object_id?,
+                    rfd_number: value.rfd_number?,
+                    url: value.url?,
+                })
+            }
+        }
+
+        impl From<super::FormattedSearchResultHit> for FormattedSearchResultHit {
+            fn from(value: super::FormattedSearchResultHit) -> Self {
+                Self {
+                    anchor: Ok(value.anchor),
+                    content: Ok(value.content),
+                    hierarchy: Ok(value.hierarchy),
+                    hierarchy_radio: Ok(value.hierarchy_radio),
+                    object_id: Ok(value.object_id),
+                    rfd_number: Ok(value.rfd_number),
+                    url: Ok(value.url),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
         pub struct FullRfd {
             authors: Result<Option<String>, String>,
             commit: Result<String, String>,
@@ -2411,12 +2725,12 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
-        pub struct GetApiUserResponse {
-            info: Result<super::ApiUserForApiPermission, String>,
+        pub struct GetUserResponse {
+            info: Result<super::ApiUserForApiPermissionResponse, String>,
             providers: Result<Vec<super::ApiUserProvider>, String>,
         }
 
-        impl Default for GetApiUserResponse {
+        impl Default for GetUserResponse {
             fn default() -> Self {
                 Self {
                     info: Err("no value supplied for info".to_string()),
@@ -2425,10 +2739,10 @@ pub mod types {
             }
         }
 
-        impl GetApiUserResponse {
+        impl GetUserResponse {
             pub fn info<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::ApiUserForApiPermission>,
+                T: std::convert::TryInto<super::ApiUserForApiPermissionResponse>,
                 T::Error: std::fmt::Display,
             {
                 self.info = value
@@ -2448,9 +2762,9 @@ pub mod types {
             }
         }
 
-        impl std::convert::TryFrom<GetApiUserResponse> for super::GetApiUserResponse {
+        impl std::convert::TryFrom<GetUserResponse> for super::GetUserResponse {
             type Error = String;
-            fn try_from(value: GetApiUserResponse) -> Result<Self, String> {
+            fn try_from(value: GetUserResponse) -> Result<Self, String> {
                 Ok(Self {
                     info: value.info?,
                     providers: value.providers?,
@@ -2458,8 +2772,8 @@ pub mod types {
             }
         }
 
-        impl From<super::GetApiUserResponse> for GetApiUserResponse {
-            fn from(value: super::GetApiUserResponse) -> Self {
+        impl From<super::GetUserResponse> for GetUserResponse {
+            fn from(value: super::GetUserResponse) -> Self {
                 Self {
                     info: Ok(value.info),
                     providers: Ok(value.providers),
@@ -2968,7 +3282,7 @@ pub mod types {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             id: Result<uuid::Uuid, String>,
             key: Result<super::SecretString, String>,
-            permissions: Result<super::PermissionsForApiPermission, String>,
+            permissions: Result<super::PermissionsForApiPermissionResponse, String>,
         }
 
         impl Default for InitialApiKeyResponse {
@@ -3015,7 +3329,7 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::PermissionsForApiPermission>,
+                T: std::convert::TryInto<super::PermissionsForApiPermissionResponse>,
                 T::Error: std::fmt::Display,
             {
                 self.permissions = value
@@ -4234,6 +4548,232 @@ pub mod types {
                 }
             }
         }
+
+        #[derive(Clone, Debug)]
+        pub struct SearchResultHit {
+            anchor: Result<Option<String>, String>,
+            content: Result<String, String>,
+            formatted: Result<Option<super::FormattedSearchResultHit>, String>,
+            hierarchy: Result<[Option<String>; 6usize], String>,
+            hierarchy_radio: Result<[Option<String>; 6usize], String>,
+            object_id: Result<String, String>,
+            rfd_number: Result<u64, String>,
+            url: Result<Option<String>, String>,
+        }
+
+        impl Default for SearchResultHit {
+            fn default() -> Self {
+                Self {
+                    anchor: Ok(Default::default()),
+                    content: Err("no value supplied for content".to_string()),
+                    formatted: Ok(Default::default()),
+                    hierarchy: Err("no value supplied for hierarchy".to_string()),
+                    hierarchy_radio: Err("no value supplied for hierarchy_radio".to_string()),
+                    object_id: Err("no value supplied for object_id".to_string()),
+                    rfd_number: Err("no value supplied for rfd_number".to_string()),
+                    url: Ok(Default::default()),
+                }
+            }
+        }
+
+        impl SearchResultHit {
+            pub fn anchor<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.anchor = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for anchor: {}", e));
+                self
+            }
+            pub fn content<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.content = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for content: {}", e));
+                self
+            }
+            pub fn formatted<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<super::FormattedSearchResultHit>>,
+                T::Error: std::fmt::Display,
+            {
+                self.formatted = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for formatted: {}", e));
+                self
+            }
+            pub fn hierarchy<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<[Option<String>; 6usize]>,
+                T::Error: std::fmt::Display,
+            {
+                self.hierarchy = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for hierarchy: {}", e));
+                self
+            }
+            pub fn hierarchy_radio<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<[Option<String>; 6usize]>,
+                T::Error: std::fmt::Display,
+            {
+                self.hierarchy_radio = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for hierarchy_radio: {}", e)
+                });
+                self
+            }
+            pub fn object_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.object_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for object_id: {}", e));
+                self
+            }
+            pub fn rfd_number<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<u64>,
+                T::Error: std::fmt::Display,
+            {
+                self.rfd_number = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for rfd_number: {}", e));
+                self
+            }
+            pub fn url<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.url = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for url: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<SearchResultHit> for super::SearchResultHit {
+            type Error = String;
+            fn try_from(value: SearchResultHit) -> Result<Self, String> {
+                Ok(Self {
+                    anchor: value.anchor?,
+                    content: value.content?,
+                    formatted: value.formatted?,
+                    hierarchy: value.hierarchy?,
+                    hierarchy_radio: value.hierarchy_radio?,
+                    object_id: value.object_id?,
+                    rfd_number: value.rfd_number?,
+                    url: value.url?,
+                })
+            }
+        }
+
+        impl From<super::SearchResultHit> for SearchResultHit {
+            fn from(value: super::SearchResultHit) -> Self {
+                Self {
+                    anchor: Ok(value.anchor),
+                    content: Ok(value.content),
+                    formatted: Ok(value.formatted),
+                    hierarchy: Ok(value.hierarchy),
+                    hierarchy_radio: Ok(value.hierarchy_radio),
+                    object_id: Ok(value.object_id),
+                    rfd_number: Ok(value.rfd_number),
+                    url: Ok(value.url),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct SearchResults {
+            hits: Result<Vec<super::SearchResultHit>, String>,
+            limit: Result<Option<u32>, String>,
+            offset: Result<Option<u32>, String>,
+            query: Result<String, String>,
+        }
+
+        impl Default for SearchResults {
+            fn default() -> Self {
+                Self {
+                    hits: Err("no value supplied for hits".to_string()),
+                    limit: Ok(Default::default()),
+                    offset: Ok(Default::default()),
+                    query: Err("no value supplied for query".to_string()),
+                }
+            }
+        }
+
+        impl SearchResults {
+            pub fn hits<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Vec<super::SearchResultHit>>,
+                T::Error: std::fmt::Display,
+            {
+                self.hits = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for hits: {}", e));
+                self
+            }
+            pub fn limit<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<u32>>,
+                T::Error: std::fmt::Display,
+            {
+                self.limit = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for limit: {}", e));
+                self
+            }
+            pub fn offset<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<u32>>,
+                T::Error: std::fmt::Display,
+            {
+                self.offset = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for offset: {}", e));
+                self
+            }
+            pub fn query<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.query = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for query: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<SearchResults> for super::SearchResults {
+            type Error = String;
+            fn try_from(value: SearchResults) -> Result<Self, String> {
+                Ok(Self {
+                    hits: value.hits?,
+                    limit: value.limit?,
+                    offset: value.offset?,
+                    query: value.query?,
+                })
+            }
+        }
+
+        impl From<super::SearchResults> for SearchResults {
+            fn from(value: super::SearchResults) -> Self {
+                Self {
+                    hits: Ok(value.hits),
+                    limit: Ok(value.limit),
+                    offset: Ok(value.offset),
+                    query: Ok(value.query),
+                }
+            }
+        }
     }
 
     pub mod defaults {
@@ -4794,6 +5334,11 @@ impl Client {
     ///
     /// ```ignore
     /// let response = client.search_rfds()
+    ///    .attributes_to_crop(attributes_to_crop)
+    ///    .highlight_post_tag(highlight_post_tag)
+    ///    .highlight_pre_tag(highlight_pre_tag)
+    ///    .limit(limit)
+    ///    .offset(offset)
     ///    .q(q)
     ///    .send()
     ///    .await;
@@ -4963,7 +5508,8 @@ pub mod builder {
         /// Sends a `POST` request to `/api-user`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::ApiUserForApiPermission>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::ApiUserForApiPermissionResponse>, Error<types::Error>>
+        {
             let Self { client, body } = self;
             let body = body
                 .and_then(std::convert::TryInto::<types::ApiUserUpdateParams>::try_into)
@@ -5023,7 +5569,7 @@ pub mod builder {
         /// Sends a `GET` request to `/api-user/{identifier}`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::GetApiUserResponse>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::GetUserResponse>, Error<types::Error>> {
             let Self { client, identifier } = self;
             let identifier = identifier.map_err(Error::InvalidRequest)?;
             let url = format!(
@@ -5107,7 +5653,8 @@ pub mod builder {
         /// Sends a `POST` request to `/api-user/{identifier}`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::ApiUserForApiPermission>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::ApiUserForApiPermissionResponse>, Error<types::Error>>
+        {
             let Self {
                 client,
                 identifier,
@@ -5197,7 +5744,8 @@ pub mod builder {
         /// Sends a `POST` request to `/api-user/{identifier}/group`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::ApiUserForApiPermission>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::ApiUserForApiPermissionResponse>, Error<types::Error>>
+        {
             let Self {
                 client,
                 identifier,
@@ -5279,7 +5827,8 @@ pub mod builder {
         /// `/api-user/{identifier}/group/{group_id}`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::ApiUserForApiPermission>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::ApiUserForApiPermissionResponse>, Error<types::Error>>
+        {
             let Self {
                 client,
                 identifier,
@@ -5895,8 +6444,10 @@ pub mod builder {
         /// Sends a `GET` request to `/group`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<Vec<types::AccessGroupForApiPermission>>, Error<types::Error>>
-        {
+        ) -> Result<
+            ResponseValue<Vec<types::AccessGroupForApiPermissionResponse>>,
+            Error<types::Error>,
+        > {
             let Self { client } = self;
             let url = format!("{}/group", client.baseurl,);
             let request = client
@@ -5963,7 +6514,7 @@ pub mod builder {
         /// Sends a `POST` request to `/group`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::AccessGroupForApiPermission>, Error<types::Error>>
+        ) -> Result<ResponseValue<types::AccessGroupForApiPermissionResponse>, Error<types::Error>>
         {
             let Self { client, body } = self;
             let body = body
@@ -6047,7 +6598,7 @@ pub mod builder {
         /// Sends a `PUT` request to `/group/{group_id}`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::AccessGroupForApiPermission>, Error<types::Error>>
+        ) -> Result<ResponseValue<types::AccessGroupForApiPermissionResponse>, Error<types::Error>>
         {
             let Self {
                 client,
@@ -6117,7 +6668,7 @@ pub mod builder {
         /// Sends a `DELETE` request to `/group/{group_id}`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::AccessGroupForApiPermission>, Error<types::Error>>
+        ) -> Result<ResponseValue<types::AccessGroupForApiPermissionResponse>, Error<types::Error>>
         {
             let Self { client, group_id } = self;
             let group_id = group_id.map_err(Error::InvalidRequest)?;
@@ -7364,6 +7915,11 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct SearchRfds<'a> {
         client: &'a super::Client,
+        attributes_to_crop: Result<Option<String>, String>,
+        highlight_post_tag: Result<Option<String>, String>,
+        highlight_pre_tag: Result<Option<String>, String>,
+        limit: Result<Option<u32>, String>,
+        offset: Result<Option<u32>, String>,
         q: Result<String, String>,
     }
 
@@ -7371,8 +7927,68 @@ pub mod builder {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client,
+                attributes_to_crop: Ok(None),
+                highlight_post_tag: Ok(None),
+                highlight_pre_tag: Ok(None),
+                limit: Ok(None),
+                offset: Ok(None),
                 q: Err("q was not initialized".to_string()),
             }
+        }
+
+        pub fn attributes_to_crop<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<String>,
+        {
+            self.attributes_to_crop = value
+                .try_into()
+                .map(Some)
+                .map_err(|_| "conversion to `String` for attributes_to_crop failed".to_string());
+            self
+        }
+
+        pub fn highlight_post_tag<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<String>,
+        {
+            self.highlight_post_tag = value
+                .try_into()
+                .map(Some)
+                .map_err(|_| "conversion to `String` for highlight_post_tag failed".to_string());
+            self
+        }
+
+        pub fn highlight_pre_tag<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<String>,
+        {
+            self.highlight_pre_tag = value
+                .try_into()
+                .map(Some)
+                .map_err(|_| "conversion to `String` for highlight_pre_tag failed".to_string());
+            self
+        }
+
+        pub fn limit<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<u32>,
+        {
+            self.limit = value
+                .try_into()
+                .map(Some)
+                .map_err(|_| "conversion to `u32` for limit failed".to_string());
+            self
+        }
+
+        pub fn offset<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<u32>,
+        {
+            self.offset = value
+                .try_into()
+                .map(Some)
+                .map_err(|_| "conversion to `u32` for offset failed".to_string());
+            self
         }
 
         pub fn q<V>(mut self, value: V) -> Self
@@ -7386,11 +8002,41 @@ pub mod builder {
         }
 
         /// Sends a `GET` request to `/rfd-search`
-        pub async fn send(self) -> Result<ResponseValue<Vec<types::ListRfd>>, Error<types::Error>> {
-            let Self { client, q } = self;
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::SearchResults>, Error<types::Error>> {
+            let Self {
+                client,
+                attributes_to_crop,
+                highlight_post_tag,
+                highlight_pre_tag,
+                limit,
+                offset,
+                q,
+            } = self;
+            let attributes_to_crop = attributes_to_crop.map_err(Error::InvalidRequest)?;
+            let highlight_post_tag = highlight_post_tag.map_err(Error::InvalidRequest)?;
+            let highlight_pre_tag = highlight_pre_tag.map_err(Error::InvalidRequest)?;
+            let limit = limit.map_err(Error::InvalidRequest)?;
+            let offset = offset.map_err(Error::InvalidRequest)?;
             let q = q.map_err(Error::InvalidRequest)?;
             let url = format!("{}/rfd-search", client.baseurl,);
-            let mut query = Vec::with_capacity(1usize);
+            let mut query = Vec::with_capacity(6usize);
+            if let Some(v) = &attributes_to_crop {
+                query.push(("attributes_to_crop", v.to_string()));
+            }
+            if let Some(v) = &highlight_post_tag {
+                query.push(("highlight_post_tag", v.to_string()));
+            }
+            if let Some(v) = &highlight_pre_tag {
+                query.push(("highlight_pre_tag", v.to_string()));
+            }
+            if let Some(v) = &limit {
+                query.push(("limit", v.to_string()));
+            }
+            if let Some(v) = &offset {
+                query.push(("offset", v.to_string()));
+            }
             query.push(("q", q.to_string()));
             let request = client
                 .client
@@ -7432,7 +8078,7 @@ pub mod builder {
         /// Sends a `GET` request to `/self`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::GetApiUserResponse>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::GetUserResponse>, Error<types::Error>> {
             let Self { client } = self;
             let url = format!("{}/self", client.baseurl,);
             let request = client

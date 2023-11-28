@@ -772,6 +772,36 @@ impl Cli {
     pub fn cli_search_rfds() -> clap::Command {
         clap::Command::new("")
             .arg(
+                clap::Arg::new("attributes-to-crop")
+                    .long("attributes-to-crop")
+                    .value_parser(clap::value_parser!(String))
+                    .required(false),
+            )
+            .arg(
+                clap::Arg::new("highlight-post-tag")
+                    .long("highlight-post-tag")
+                    .value_parser(clap::value_parser!(String))
+                    .required(false),
+            )
+            .arg(
+                clap::Arg::new("highlight-pre-tag")
+                    .long("highlight-pre-tag")
+                    .value_parser(clap::value_parser!(String))
+                    .required(false),
+            )
+            .arg(
+                clap::Arg::new("limit")
+                    .long("limit")
+                    .value_parser(clap::value_parser!(u32))
+                    .required(false),
+            )
+            .arg(
+                clap::Arg::new("offset")
+                    .long("offset")
+                    .value_parser(clap::value_parser!(u32))
+                    .required(false),
+            )
+            .arg(
                 clap::Arg::new("q")
                     .long("q")
                     .value_parser(clap::value_parser!(String))
@@ -1659,6 +1689,26 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
 
     pub async fn execute_search_rfds(&self, matches: &clap::ArgMatches) {
         let mut request = self.client.search_rfds();
+        if let Some(value) = matches.get_one::<String>("attributes-to-crop") {
+            request = request.attributes_to_crop(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<String>("highlight-post-tag") {
+            request = request.highlight_post_tag(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<String>("highlight-pre-tag") {
+            request = request.highlight_pre_tag(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<u32>("limit") {
+            request = request.limit(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<u32>("offset") {
+            request = request.offset(value.clone());
+        }
+
         if let Some(value) = matches.get_one::<String>("q") {
             request = request.q(value.clone());
         }
@@ -1999,31 +2049,43 @@ pub trait CliOutput {
 
     fn output_create_api_user(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<
+            types::ApiUserForApiPermissionResponse,
+            progenitor_client::Error<types::Error>,
+        >,
     ) {
     }
 
     fn output_get_api_user(
         &self,
-        response: Result<types::GetApiUserResponse, progenitor_client::Error<types::Error>>,
+        response: Result<types::GetUserResponse, progenitor_client::Error<types::Error>>,
     ) {
     }
 
     fn output_update_api_user(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<
+            types::ApiUserForApiPermissionResponse,
+            progenitor_client::Error<types::Error>,
+        >,
     ) {
     }
 
     fn output_add_api_user_to_group(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<
+            types::ApiUserForApiPermissionResponse,
+            progenitor_client::Error<types::Error>,
+        >,
     ) {
     }
 
     fn output_remove_api_user_from_group(
         &self,
-        response: Result<types::ApiUserForApiPermission, progenitor_client::Error<types::Error>>,
+        response: Result<
+            types::ApiUserForApiPermissionResponse,
+            progenitor_client::Error<types::Error>,
+        >,
     ) {
     }
 
@@ -2064,7 +2126,7 @@ pub trait CliOutput {
     fn output_get_groups(
         &self,
         response: Result<
-            Vec<types::AccessGroupForApiPermission>,
+            Vec<types::AccessGroupForApiPermissionResponse>,
             progenitor_client::Error<types::Error>,
         >,
     ) {
@@ -2073,7 +2135,7 @@ pub trait CliOutput {
     fn output_create_group(
         &self,
         response: Result<
-            types::AccessGroupForApiPermission,
+            types::AccessGroupForApiPermissionResponse,
             progenitor_client::Error<types::Error>,
         >,
     ) {
@@ -2082,7 +2144,7 @@ pub trait CliOutput {
     fn output_update_group(
         &self,
         response: Result<
-            types::AccessGroupForApiPermission,
+            types::AccessGroupForApiPermissionResponse,
             progenitor_client::Error<types::Error>,
         >,
     ) {
@@ -2091,7 +2153,7 @@ pub trait CliOutput {
     fn output_delete_group(
         &self,
         response: Result<
-            types::AccessGroupForApiPermission,
+            types::AccessGroupForApiPermissionResponse,
             progenitor_client::Error<types::Error>,
         >,
     ) {
@@ -2199,13 +2261,13 @@ pub trait CliOutput {
 
     fn output_search_rfds(
         &self,
-        response: Result<Vec<types::ListRfd>, progenitor_client::Error<types::Error>>,
+        response: Result<types::SearchResults, progenitor_client::Error<types::Error>>,
     ) {
     }
 
     fn output_get_self(
         &self,
-        response: Result<types::GetApiUserResponse, progenitor_client::Error<types::Error>>,
+        response: Result<types::GetUserResponse, progenitor_client::Error<types::Error>>,
     ) {
     }
 }
