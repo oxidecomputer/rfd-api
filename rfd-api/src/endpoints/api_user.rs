@@ -603,11 +603,17 @@ pub async fn link_provider(
 }
 
 fn into_permissions(permissions: Permissions<ApiPermissionResponse>) -> ApiPermissions {
-    permissions.into_iter().map(|p| p.into()).collect::<ApiPermissions>()
+    permissions
+        .into_iter()
+        .map(|p| p.into())
+        .collect::<ApiPermissions>()
 }
 
 fn into_permissions_response(permissions: ApiPermissions) -> Permissions<ApiPermissionResponse> {
-    permissions.into_iter().map(|p| p.into()).collect::<Permissions<ApiPermissionResponse>>()
+    permissions
+        .into_iter()
+        .map(|p| p.into())
+        .collect::<Permissions<ApiPermissionResponse>>()
 }
 
 #[cfg(test)]
@@ -627,8 +633,8 @@ mod tests {
         context::test_mocks::{mock_context, MockStorage},
         endpoints::api_user::{
             create_api_user_token_op, delete_api_user_token_op, get_api_user_token_op,
-            list_api_user_tokens_op, update_api_user_op, ApiKeyCreateParams, ApiUserPath,
-            ApiUserTokenPath, into_permissions_response,
+            into_permissions_response, list_api_user_tokens_op, update_api_user_op,
+            ApiKeyCreateParams, ApiUserPath, ApiUserTokenPath,
         },
         permissions::ApiPermission,
         util::tests::get_status,

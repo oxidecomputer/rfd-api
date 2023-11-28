@@ -23,7 +23,10 @@ where
 impl CliOutput for RfdJsonPrinter {
     fn output_create_api_user(
         &self,
-        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
+        response: Result<
+            types::ApiUserForApiPermissionResponse,
+            progenitor_client::Error<types::Error>,
+        >,
     ) {
         print_cli_output(&response)
     }
@@ -37,21 +40,30 @@ impl CliOutput for RfdJsonPrinter {
 
     fn output_update_api_user(
         &self,
-        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
+        response: Result<
+            types::ApiUserForApiPermissionResponse,
+            progenitor_client::Error<types::Error>,
+        >,
     ) {
         print_cli_output(&response)
     }
 
     fn output_add_api_user_to_group(
         &self,
-        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
+        response: Result<
+            types::ApiUserForApiPermissionResponse,
+            progenitor_client::Error<types::Error>,
+        >,
     ) {
         print_cli_output(&response)
     }
 
     fn output_remove_api_user_from_group(
         &self,
-        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
+        response: Result<
+            types::ApiUserForApiPermissionResponse,
+            progenitor_client::Error<types::Error>,
+        >,
     ) {
         print_cli_output(&response)
     }

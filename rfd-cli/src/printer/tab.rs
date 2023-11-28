@@ -5,10 +5,10 @@
 use itertools::{EitherOrBoth, Itertools};
 use owo_colors::{OwoColorize, Style};
 use rfd_sdk::types::{
-    self, AccessGroupForApiPermissionResponse, ApiKeyResponse, ApiUserForApiPermissionResponse, Error, FullRfd,
-    FullRfdPdfEntry, GetUserResponse, InitialApiKeyResponse, InitialOAuthClientSecretResponse,
-    ListRfd, Mapper, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, SearchResultHit,
-    SearchResults, Visibility,
+    self, AccessGroupForApiPermissionResponse, ApiKeyResponse, ApiUserForApiPermissionResponse,
+    Error, FullRfd, FullRfdPdfEntry, GetUserResponse, InitialApiKeyResponse,
+    InitialOAuthClientSecretResponse, ListRfd, Mapper, OAuthClient, OAuthClientRedirectUri,
+    OAuthClientSecret, SearchResultHit, SearchResults, Visibility,
 };
 use std::{collections::HashMap, fmt::Display, fs::File, io::Write, process::Command};
 use tabwriter::TabWriter;
@@ -38,7 +38,10 @@ pub struct RfdTabPrinter {
 impl CliOutput for RfdTabPrinter {
     fn output_create_api_user(
         &self,
-        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
+        response: Result<
+            types::ApiUserForApiPermissionResponse,
+            progenitor_client::Error<types::Error>,
+        >,
     ) {
         self.print_cli_output(&response, None);
     }
@@ -83,21 +86,30 @@ impl CliOutput for RfdTabPrinter {
 
     fn output_update_api_user(
         &self,
-        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
+        response: Result<
+            types::ApiUserForApiPermissionResponse,
+            progenitor_client::Error<types::Error>,
+        >,
     ) {
         self.print_cli_output(&response, None);
     }
 
     fn output_add_api_user_to_group(
         &self,
-        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
+        response: Result<
+            types::ApiUserForApiPermissionResponse,
+            progenitor_client::Error<types::Error>,
+        >,
     ) {
         self.print_cli_output(&response, None);
     }
 
     fn output_remove_api_user_from_group(
         &self,
-        response: Result<types::ApiUserForApiPermissionResponse, progenitor_client::Error<types::Error>>,
+        response: Result<
+            types::ApiUserForApiPermissionResponse,
+            progenitor_client::Error<types::Error>,
+        >,
     ) {
         self.print_cli_output(&response, None);
     }
@@ -586,14 +598,7 @@ impl TabDisplay for FullRfdPdfEntry {
 impl TabDisplay for SearchResults {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "query", &self.query);
-        printer.print_field(
-            tw,
-            level,
-            "total hits",
-            &self
-                .hits
-                .len()
-        );
+        printer.print_field(tw, level, "total hits", &self.hits.len());
         writeln!(tw, "");
         self.hits.display(tw, level, printer);
     }
