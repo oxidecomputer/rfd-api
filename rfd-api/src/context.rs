@@ -377,7 +377,7 @@ impl ApiContext {
             AuthToken::Jwt(jwt) => {
                 // AuthnToken::Jwt can only be generated from a verified JWT
                 let permissions = ApiPermission::from_scope(jwt.claims.scp.iter())?;
-                Ok((jwt.claims.aud, permissions))
+                Ok((jwt.claims.sub, permissions))
             }
         }?)
     }
@@ -753,16 +753,7 @@ impl ApiContext {
     ) -> Result<RegisteredAccessToken, ApiError> {
         let expires_at = Utc::now() + Duration::seconds(self.default_jwt_expiration());
 
-        // Ensure that the token is within the configured limits
-        let claims = Claims {
-            aud: api_user.id,
-            prv: api_user_provider.id,
-            scp: scope,
-            exp: expires_at.timestamp(),
-            nbf: Utc::now().timestamp(),
-            jti: Uuid::new_v4(),
-        };
-
+        let claims = Claims::new(self, &api_user, &api_user_provider, scope, expires_at);
         let token = self
             .create_access_token(NewAccessToken {
                 id: claims.jti,
@@ -1263,7 +1254,7 @@ mod tests {
     use mockall::predicate::eq;
     use rfd_model::{
         storage::{AccessGroupFilter, ListPagination, MockAccessGroupStore, MockApiUserStore},
-        AccessGroup, ApiUser,
+        AccessGroup, ApiUser, ApiUserProvider,
     };
     use std::{collections::BTreeSet, ops::Add, sync::Arc};
     use uuid::Uuid;
@@ -1275,7 +1266,7 @@ mod tests {
         },
         context::UNLIMITED,
         permissions::ApiPermission,
-        ApiPermissions,
+        ApiPermissions, User,
     };
 
     use super::{
@@ -1284,15 +1275,28 @@ mod tests {
     };
 
     async fn create_token(ctx: &ApiContext, user_id: Uuid, scope: Vec<String>) -> AuthToken {
+        let user = User {
+            id: user_id,
+            permissions: vec![].into(),
+            groups: BTreeSet::new(),
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+            deleted_at: None,
+        };
+
+        let provider = ApiUserProvider {
+            id: Uuid::new_v4(),
+            api_user_id: user_id,
+            provider: "test".to_string(),
+            provider_id: "test_id".to_string(),
+            emails: vec![],
+            created_at: Utc::now(),
+            updated_at: Utc::now(),
+            deleted_at: None,
+        };
+
         let user_token = ctx.jwt.signers[0]
-            .sign(&Claims {
-                aud: user_id,
-                prv: Uuid::new_v4(),
-                scp: scope,
-                exp: Utc::now().add(Duration::seconds(60)).timestamp(),
-                nbf: 0,
-                jti: Uuid::new_v4(),
-            })
+            .sign(&Claims::new(ctx, &user, &provider, scope, Utc::now().add(Duration::seconds(300))))
             .await
             .unwrap();
 

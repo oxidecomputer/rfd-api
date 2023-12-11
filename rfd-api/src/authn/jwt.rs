@@ -5,17 +5,20 @@
 use std::sync::Arc;
 
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
+use chrono::{DateTime, Utc};
 use jsonwebtoken::{
     decode, decode_header,
-    jwk::{AlgorithmParameters, CommonParameters, Jwk, PublicKeyUse, RSAKeyParameters, RSAKeyType},
+    jwk::{AlgorithmParameters, CommonParameters, Jwk, PublicKeyUse, RSAKeyParameters, RSAKeyType, KeyAlgorithm},
     Algorithm, DecodingKey, Header, Validation,
 };
+use rfd_model::ApiUserProvider;
+use rsa::traits::PublicKeyParts;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 use tracing::instrument;
 use uuid::Uuid;
 
-use crate::{config::AsymmetricKey, context::ApiContext};
+use crate::{config::AsymmetricKey, context::ApiContext, User};
 
 use super::{Signer, SigningKeyError};
 
@@ -41,12 +44,35 @@ pub struct Jwt {
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Claims {
-    pub aud: Uuid,
+    pub iss: String,
+    pub aud: String,
+    pub sub: Uuid,
     pub prv: Uuid,
     pub scp: Vec<String>,
     pub exp: i64,
     pub nbf: i64,
     pub jti: Uuid,
+}
+
+impl Claims {
+    pub fn new(
+        ctx: &ApiContext,
+        user: &User,
+        provider: &ApiUserProvider,
+        scope: Vec<String>,
+        expires_at: DateTime<Utc>,
+    ) -> Self {
+        Claims {
+            iss: ctx.public_url.to_string(),
+            aud: ctx.public_url.to_string(),
+            sub: user.id,
+            prv: provider.id,
+            scp: scope,
+            exp: expires_at.timestamp(),
+            nbf: Utc::now().timestamp(),
+            jti: Uuid::new_v4(),
+        }
+    }
 }
 
 impl Jwt {
@@ -74,7 +100,11 @@ impl Jwt {
 
         tracing::trace!(?jwk, ?algorithm, "Kid matched known decoding key");
 
-        let data = decode(token, &key, &Validation::new(algorithm?)).map_err(JwtError::Decode)?;
+        let mut validation = Validation::new(algorithm?);
+        validation.set_audience(&[&ctx.public_url]);
+        validation.set_issuer(&[&ctx.public_url]);
+
+        let data = decode(token, &key, &validation).map_err(JwtError::Decode)?;
 
         tracing::trace!("Decoded JWT claims from request");
 
@@ -165,8 +195,6 @@ impl JwtSigner {
     }
 }
 
-use rsa::traits::PublicKeyParts;
-
 impl AsymmetricKey {
     pub async fn as_jwk(&self) -> Result<Jwk, JwtSignerError> {
         let key_id = self.kid();
@@ -179,7 +207,7 @@ impl AsymmetricKey {
             common: CommonParameters {
                 public_key_use: Some(PublicKeyUse::Signature),
                 key_operations: None,
-                algorithm: Some(Algorithm::RS256),
+                key_algorithm: Some(KeyAlgorithm::RS256),
                 key_id: Some(key_id.to_string()),
                 x509_chain: None,
                 x509_sha1_fingerprint: None,
