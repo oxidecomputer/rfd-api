@@ -1296,7 +1296,13 @@ mod tests {
         };
 
         let user_token = ctx.jwt.signers[0]
-            .sign(&Claims::new(ctx, &user, &provider, scope, Utc::now().add(Duration::seconds(300))))
+            .sign(&Claims::new(
+                ctx,
+                &user,
+                &provider,
+                scope,
+                Utc::now().add(Duration::seconds(300)),
+            ))
             .await
             .unwrap();
 

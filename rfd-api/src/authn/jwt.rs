@@ -8,7 +8,10 @@ use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 use chrono::{DateTime, Utc};
 use jsonwebtoken::{
     decode, decode_header,
-    jwk::{AlgorithmParameters, CommonParameters, Jwk, PublicKeyUse, RSAKeyParameters, RSAKeyType, KeyAlgorithm},
+    jwk::{
+        AlgorithmParameters, CommonParameters, Jwk, KeyAlgorithm, PublicKeyUse, RSAKeyParameters,
+        RSAKeyType,
+    },
     Algorithm, DecodingKey, Header, Validation,
 };
 use rfd_model::ApiUserProvider;
