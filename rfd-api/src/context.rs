@@ -308,10 +308,10 @@ impl ApiContext {
                     let caller = Caller {
                         id: api_user_id,
                         permissions: combined_permissions,
-                        // user,
                     };
 
                     tracing::info!(?caller.id, "Resolved caller");
+                    tracing::debug!(?caller.permissions, "Caller permissions");
 
                     Ok(caller)
                 } else {
@@ -1050,7 +1050,7 @@ impl ApiContext {
 
         if caller.can(&ApiPermission::GetGroupsAll) {
             // Nothing we need to do, the filter is already setup for this
-        } else {
+        } else if caller.can(&ApiPermission::GetGroupsJoined) {
             // If a caller can only view the groups they are a member of then we need to fetch the
             // callers user record to determine what those are
             let user = self.get_api_user(&caller.id).await?;
@@ -1058,7 +1058,10 @@ impl ApiContext {
                 user.map(|user| user.groups.into_iter().collect::<Vec<_>>())
                     .unwrap_or_default(),
             );
-        }
+        } else {
+            // The caller does not have any permissions to view groups
+            filter.id = Some(vec![])
+        };
 
         Ok(AccessGroupStore::list(
             &*self.storage,
