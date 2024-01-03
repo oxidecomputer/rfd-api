@@ -2,8 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::time::{Duration, Instant};
-
 use diesel::result::{DatabaseErrorKind, Error as DieselError};
 use google_cloudkms1::{
     hyper_rustls::{self, HttpsConnector},
@@ -13,22 +11,6 @@ use hyper::client::HttpConnector;
 use rfd_model::storage::StoreError;
 
 use crate::authn::CloudKmsError;
-
-pub struct Timer {
-    start: Instant,
-}
-
-impl Timer {
-    pub fn new() -> Self {
-        Self {
-            start: Instant::now(),
-        }
-    }
-
-    pub fn mark(&self) -> Duration {
-        Instant::now() - self.start
-    }
-}
 
 pub mod request {
     use cookie::Cookie;

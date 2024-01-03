@@ -39,6 +39,8 @@ pub async fn github_webhook(
     EventType(event): EventType,
     body: HmacVerifiedBody<GitHubWebhookVerification, GitHubCommitPayload>,
 ) -> Result<HttpResponseAccepted<()>, HttpError> {
+    // The HmacVerifiedBody extractor ensures that we have verified the signature of the incoming
+    // request body
     let new_jobs = body.into_inner()?.create_jobs(delivery_id);
 
     for new_job in new_jobs {

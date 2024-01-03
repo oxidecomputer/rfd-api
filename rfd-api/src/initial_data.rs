@@ -71,11 +71,14 @@ impl InitialData {
                     .map(|g| g.id)
                     .unwrap_or(Uuid::new_v4());
 
-                ctx.create_group(NewAccessGroup {
-                    id,
-                    name: group.name,
-                    permissions: group.permissions,
-                })
+                ctx.create_group(
+                    ctx.builtin_registration_user(),
+                    NewAccessGroup {
+                        id,
+                        name: group.name,
+                        permissions: group.permissions,
+                    },
+                )
                 .await
                 .map(|_| ())
                 .or_else(handle_unique_violation_error)
@@ -95,7 +98,7 @@ impl InitialData {
                     max_activations: mapper.max_activations.map(|i| i as i32),
                 };
 
-                ctx.add_mapper(&new_mapper)
+                ctx.add_mapper(ctx.builtin_registration_user(), &new_mapper)
                     .await
                     .map(|_| ())
                     .or_else(handle_unique_violation_error)?;

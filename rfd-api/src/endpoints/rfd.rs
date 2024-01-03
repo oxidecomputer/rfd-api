@@ -14,11 +14,8 @@ use crate::{
     context::{ApiContext, FullRfd, ListRfd},
     error::ApiError,
     permissions::ApiPermission,
-    search::SearchRequest,
-    util::{
-        response::{client_error, internal_error, not_found, unauthorized},
-        Timer,
-    },
+    search::{MeiliSearchResult, SearchRequest},
+    util::response::{client_error, internal_error, not_found, unauthorized},
     ApiCaller,
 };
 
@@ -85,11 +82,14 @@ async fn get_rfd_op(
         match ctx.get_rfd(caller, rfd_number, None).await {
             Ok(result) => match result {
                 Some(rfd) => Ok(HttpResponseOk(rfd)),
+                // A None will be returned in both the event that the requested RFD does not exist
+                // as well as when the caller does not have access to the requested RFD
                 None => {
                     tracing::error!(?rfd_number, "Failed to find RFD");
                     Err(not_found("Failed to find RFD"))
                 }
             },
+            // Errors are only returned for unexpected events
             Err(err) => {
                 tracing::error!(?rfd_number, ?err, "Looking up RFD failed");
                 Err(internal_error("Failed to lookup RFD"))
@@ -105,12 +105,12 @@ async fn get_rfd_op(
 
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct RfdSearchQuery {
-    q: String,
-    limit: Option<u32>,
-    offset: Option<u32>,
-    highlight_pre_tag: Option<String>,
-    highlight_post_tag: Option<String>,
-    attributes_to_crop: Option<String>,
+    pub q: String,
+    pub limit: Option<u32>,
+    pub offset: Option<u32>,
+    pub highlight_pre_tag: Option<String>,
+    pub highlight_post_tag: Option<String>,
+    pub attributes_to_crop: Option<String>,
 }
 
 /// Search the RFD index and get a list of results
@@ -124,12 +124,10 @@ pub async fn search_rfds(
     rqctx: RequestContext<ApiContext>,
     query: Query<RfdSearchQuery>,
 ) -> Result<HttpResponseOk<SearchResults>, HttpError> {
-    let timer = Timer::new();
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(auth.as_ref()).await?;
-    tracing::info!(elapsed = ?timer.mark(), "Resolved caller");
-    search_rfds_op(ctx, &caller, query.into_inner(), timer).await
+    search_rfds_op(ctx, &caller, query.into_inner()).await
 }
 
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
@@ -144,60 +142,45 @@ pub struct SearchResults {
 // deserialization, serialization, and schema implementations
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 pub struct SearchResultHit {
-    hierarchy: [Option<String>; 6],
-    hierarchy_radio: [Option<String>; 6],
-    content: String,
-    object_id: String,
-    rfd_number: u64,
-    anchor: Option<String>,
-    url: Option<String>,
-    formatted: Option<FormattedSearchResultHit>,
+    pub hierarchy: [Option<String>; 6],
+    pub hierarchy_radio: [Option<String>; 6],
+    pub content: String,
+    pub object_id: String,
+    pub rfd_number: u64,
+    pub anchor: Option<String>,
+    pub url: Option<String>,
+    pub formatted: Option<FormattedSearchResultHit>,
 }
 
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 pub struct FormattedSearchResultHit {
-    hierarchy: [Option<String>; 6],
-    hierarchy_radio: [Option<String>; 6],
-    content: Option<String>,
-    object_id: String,
-    rfd_number: u64,
-    anchor: Option<String>,
-    url: Option<String>,
+    pub hierarchy: [Option<String>; 6],
+    pub hierarchy_radio: [Option<String>; 6],
+    pub content: Option<String>,
+    pub object_id: String,
+    pub rfd_number: u64,
+    pub anchor: Option<String>,
+    pub url: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
-struct MeiliSearchResult {
-    hierarchy_radio_lvl0: Option<String>,
-    hierarchy_radio_lvl1: Option<String>,
-    hierarchy_radio_lvl2: Option<String>,
-    hierarchy_radio_lvl3: Option<String>,
-    hierarchy_radio_lvl4: Option<String>,
-    hierarchy_radio_lvl5: Option<String>,
-    hierarchy_lvl0: Option<String>,
-    hierarchy_lvl1: Option<String>,
-    hierarchy_lvl2: Option<String>,
-    hierarchy_lvl3: Option<String>,
-    hierarchy_lvl4: Option<String>,
-    hierarchy_lvl5: Option<String>,
-    content: String,
-    #[serde(rename = "objectID")]
-    object_id: String,
-    rfd_number: u64,
-    anchor: Option<String>,
-    url: Option<String>,
-}
-
-#[instrument(skip(ctx, caller, timer), fields(caller = ?caller.id), err(Debug))]
+#[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
 async fn search_rfds_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
     query: RfdSearchQuery,
-    timer: Timer,
 ) -> Result<HttpResponseOk<SearchResults>, HttpError> {
+    // Ensure that the user has the search permission before searching
     if caller.can(&ApiPermission::SearchRfds) {
-        tracing::debug!(elapsed = ?timer.mark(), "Fetching from remote search API");
+        tracing::debug!("Fetching from remote search API");
 
-        let filter = if caller.can(&ApiPermission::GetRfdsAll) {
+        // Transform the inbound query into a meilisearch request
+        let mut search_request: SearchRequest = query.into();
+
+        // Construct a meilisearch formatted filter. Either the caller has permission to search across
+        // all RFDs or they access to some smaller set. If we need to filter down the RFD list we
+        // construct a filter that will search across the RFDs the caller has direct access to as
+        // well as any RFDs that are marked as publicly accessible.
+        search_request.filter = if caller.can(&ApiPermission::GetRfdsAll) {
             None
         } else {
             let mut filter = "public = true".to_string();
@@ -215,27 +198,14 @@ async fn search_rfds_op(
             Some(filter)
         };
 
+        // Pass the search request off to the meilisearch backend
         let results = ctx
             .search
             .client
-            .search::<MeiliSearchResult>(&SearchRequest {
-                q: query.q,
-                filter,
-                attributes_to_highlight: vec!["*".to_string()],
-                highlight_pre_tag: query.highlight_pre_tag,
-                highlight_post_tag: query.highlight_post_tag,
-                attributes_to_crop: query
-                    .attributes_to_crop
-                    .unwrap_or_default()
-                    .split(",")
-                    .map(|s| s.to_string())
-                    .collect::<Vec<_>>(),
-                limit: query.limit,
-                offset: query.offset,
-            })
+            .search::<MeiliSearchResult>(&search_request)
             .await;
 
-        tracing::debug!(elapsed = ?timer.mark(), "Fetched results from remote search");
+        tracing::debug!("Fetched results from remote search");
 
         match results {
             Ok(results) => {
@@ -243,91 +213,14 @@ async fn search_rfds_op(
                     hits: results
                         .hits
                         .into_iter()
-                        .map(|hit| SearchResultHit {
-                            hierarchy_radio: [
-                                hit.result.hierarchy_radio_lvl0,
-                                hit.result.hierarchy_radio_lvl1,
-                                hit.result.hierarchy_radio_lvl2,
-                                hit.result.hierarchy_radio_lvl3,
-                                hit.result.hierarchy_radio_lvl4,
-                                hit.result.hierarchy_radio_lvl5,
-                            ],
-                            hierarchy: [
-                                hit.result.hierarchy_lvl0,
-                                hit.result.hierarchy_lvl1,
-                                hit.result.hierarchy_lvl2,
-                                hit.result.hierarchy_lvl3,
-                                hit.result.hierarchy_lvl4,
-                                hit.result.hierarchy_lvl5,
-                            ],
-                            content: hit.result.content,
-                            object_id: hit.result.object_id.clone(),
-                            rfd_number: hit.result.rfd_number.clone(),
-                            anchor: hit.result.anchor,
-                            url: hit.result.url,
-                            formatted: hit.formatted_result.map(|formatted| {
-                                FormattedSearchResultHit {
-                                    hierarchy_radio: [
-                                        formatted
-                                            .get("hierarchy_radio_lvl0")
-                                            .and_then(|v| v.as_str().map(|s| s.to_string())),
-                                        formatted
-                                            .get("hierarchy_radio_lvl1")
-                                            .and_then(|v| v.as_str().map(|s| s.to_string())),
-                                        formatted
-                                            .get("hierarchy_radio_lvl2")
-                                            .and_then(|v| v.as_str().map(|s| s.to_string())),
-                                        formatted
-                                            .get("hierarchy_radio_lvl3")
-                                            .and_then(|v| v.as_str().map(|s| s.to_string())),
-                                        formatted
-                                            .get("hierarchy_radio_lvl4")
-                                            .and_then(|v| v.as_str().map(|s| s.to_string())),
-                                        formatted
-                                            .get("hierarchy_radio_lvl5")
-                                            .and_then(|v| v.as_str().map(|s| s.to_string())),
-                                    ],
-                                    hierarchy: [
-                                        formatted
-                                            .get("hierarchy_lvl0")
-                                            .and_then(|v| v.as_str().map(|s| s.to_string())),
-                                        formatted
-                                            .get("hierarchy_lvl1")
-                                            .and_then(|v| v.as_str().map(|s| s.to_string())),
-                                        formatted
-                                            .get("hierarchy_lvl2")
-                                            .and_then(|v| v.as_str().map(|s| s.to_string())),
-                                        formatted
-                                            .get("hierarchy_lvl3")
-                                            .and_then(|v| v.as_str().map(|s| s.to_string())),
-                                        formatted
-                                            .get("hierarchy_lvl4")
-                                            .and_then(|v| v.as_str().map(|s| s.to_string())),
-                                        formatted
-                                            .get("hierarchy_lvl5")
-                                            .and_then(|v| v.as_str().map(|s| s.to_string())),
-                                    ],
-                                    content: formatted
-                                        .get("content")
-                                        .and_then(|v| v.as_str().map(|s| s.to_string())),
-                                    object_id: hit.result.object_id,
-                                    rfd_number: hit.result.rfd_number,
-                                    anchor: formatted
-                                        .get("anchor")
-                                        .and_then(|v| v.as_str().map(|s| s.to_string())),
-                                    url: formatted
-                                        .get("url")
-                                        .and_then(|v| v.as_str().map(|s| s.to_string())),
-                                }
-                            }),
-                        })
+                        .map(|hit| hit.into())
                         .collect::<Vec<_>>(),
                     query: results.query,
                     limit: results.limit,
                     offset: results.offset,
                 };
 
-                tracing::debug!(count = ?results.hits.len(), elapsed = ?timer.mark(), "Transformed search results");
+                tracing::debug!(count = ?results.hits.len(), "Transformed search results");
 
                 Ok(HttpResponseOk(results))
             }
@@ -596,7 +489,7 @@ mod tests {
     async fn list_rfds_as_unauthenticated() {
         let ctx = ctx().await;
 
-        let HttpResponseOk(rfds) = get_rfds_op(&ctx, &ctx.get_unauthenticated_caller())
+        let HttpResponseOk(rfds) = get_rfds_op(&ctx, &ctx.builtin_unauthenticated_caller())
             .await
             .unwrap();
         assert_eq!(1, rfds.len());
@@ -606,7 +499,7 @@ mod tests {
     #[tokio::test]
     async fn get_rfd_as_unauthenticated() {
         let ctx = ctx().await;
-        let caller = ctx.get_unauthenticated_caller();
+        let caller = ctx.builtin_unauthenticated_caller();
 
         let result = get_rfd_op(&ctx, caller, "0123".to_string()).await;
         match result {

@@ -14,11 +14,7 @@ use crate::{
     context::ApiContext,
     error::ApiError,
     mapper::MappingRules,
-    permissions::ApiPermission,
-    util::{
-        is_uniqueness_error,
-        response::{conflict, unauthorized},
-    },
+    util::{is_uniqueness_error, response::conflict},
 };
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -41,15 +37,14 @@ pub async fn get_mappers(
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(auth.as_ref()).await?;
 
-    if caller.can(&ApiPermission::ListMappers) {
-        Ok(HttpResponseOk(
-            ctx.get_mappers(query.into_inner().include_depleted.unwrap_or(false))
-                .await
-                .map_err(ApiError::Storage)?,
-        ))
-    } else {
-        Err(unauthorized())
-    }
+    Ok(HttpResponseOk(
+        ctx.get_mappers(
+            &caller,
+            query.into_inner().include_depleted.unwrap_or(false),
+        )
+        .await
+        .map_err(ApiError::Storage)?,
+    ))
 }
 
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
@@ -68,34 +63,33 @@ pub struct CreateMapper {
 pub async fn create_mapper(
     rqctx: RequestContext<ApiContext>,
     body: TypedBody<CreateMapper>,
-) -> Result<HttpResponseOk<Mapper>, HttpError> {
+) -> Result<HttpResponseOk<Option<Mapper>>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(auth.as_ref()).await?;
+    let body = body.into_inner();
 
-    if caller.can(&ApiPermission::CreateMapper) {
-        let body = body.into_inner();
-        let res = ctx
-            .add_mapper(&NewMapper {
+    let res = ctx
+        .add_mapper(
+            &caller,
+            &NewMapper {
                 id: Uuid::new_v4(),
                 name: body.name,
                 // This was just unserialized from json, so it can be serialized back to a value
                 rule: serde_json::to_value(body.rule).unwrap(),
                 activations: body.max_activations.map(|_| 0),
                 max_activations: body.max_activations,
-            })
-            .await;
+            },
+        )
+        .await;
 
-        res.map(HttpResponseOk).map_err(|err| {
-            if is_uniqueness_error(&err) {
-                conflict()
-            } else {
-                ApiError::Storage(err).into()
-            }
-        })
-    } else {
-        Err(unauthorized())
-    }
+    res.map(HttpResponseOk).map_err(|err| {
+        if is_uniqueness_error(&err) {
+            conflict()
+        } else {
+            ApiError::Storage(err).into()
+        }
+    })
 }
 
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
@@ -118,17 +112,9 @@ pub async fn delete_mapper(
     let caller = ctx.get_caller(auth.as_ref()).await?;
     let path = path.into_inner();
 
-    if caller.any(&[
-        &ApiPermission::DeleteMapper(path.identifier).into(),
-        &ApiPermission::ManageMapper(path.identifier).into(),
-        &ApiPermission::ManageMappersAll.into(),
-    ]) {
-        Ok(HttpResponseOk(
-            ctx.remove_mapper(&path.identifier)
-                .await
-                .map_err(ApiError::Storage)?,
-        ))
-    } else {
-        Err(unauthorized())
-    }
+    Ok(HttpResponseOk(
+        ctx.remove_mapper(&caller, &path.identifier)
+            .await
+            .map_err(ApiError::Storage)?,
+    ))
 }

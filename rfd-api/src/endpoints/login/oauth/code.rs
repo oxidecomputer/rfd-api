@@ -498,7 +498,9 @@ pub async fn authz_code_exchange(
     tracing::debug!("Retrieved user information from remote provider");
 
     // Register this user as an API user if needed
-    let (api_user, api_user_provider) = ctx.register_api_user(info).await?;
+    let (api_user, api_user_provider) = ctx
+        .register_api_user(&ctx.builtin_registration_user(), info)
+        .await?;
 
     tracing::info!(api_user_id = ?api_user.id, "Retrieved api user to generate access token for");
 

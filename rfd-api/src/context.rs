@@ -109,7 +109,8 @@ pub struct ApiContext {
     pub https_client: Client<HttpsConnector<HttpConnector>, Body>,
     pub public_url: String,
     pub storage: Arc<dyn Storage>,
-    pub unauthenticated_caller: ApiCaller,
+    unauthenticated_caller: ApiCaller,
+    registration_caller: ApiCaller,
     pub jwt: JwtContext,
     pub secrets: SecretContext,
     pub oauth_providers: HashMap<OAuthProviderName, Box<dyn OAuthProviderFn>>,
@@ -226,8 +227,17 @@ impl ApiContext {
             storage,
 
             unauthenticated_caller: ApiCaller {
-                id: Uuid::new_v4(),
+                id: Uuid::parse_str("00000000-0000-4000-8000-000000000000").unwrap(),
                 permissions: vec![ApiPermission::SearchRfds].into(),
+            },
+            registration_caller: ApiCaller {
+                id: Uuid::parse_str("00000000-0000-4000-8000-000000000001").unwrap(),
+                permissions: vec![
+                    ApiPermission::CreateApiUser,
+                    ApiPermission::CreateGroup,
+                    ApiPermission::ListMappers,
+                ]
+                .into(),
             },
             jwt: JwtContext {
                 default_expiration: jwt.default_expiration,
@@ -319,12 +329,16 @@ impl ApiContext {
                     Err(CallerError::FailedToAuthenticate)
                 }
             }
-            None => Ok(self.get_unauthenticated_caller().clone()),
+            None => Ok(self.builtin_unauthenticated_caller().clone()),
         }
     }
 
-    pub fn get_unauthenticated_caller(&self) -> &ApiCaller {
+    pub fn builtin_unauthenticated_caller(&self) -> &ApiCaller {
         &self.unauthenticated_caller
+    }
+
+    pub fn builtin_registration_user(&self) -> &ApiCaller {
+        &self.registration_caller
     }
 
     async fn get_base_permissions(
@@ -464,7 +478,7 @@ impl ApiContext {
 
     pub async fn list_rfds(
         &self,
-        caller: &Caller<ApiPermission>,
+        caller: &ApiCaller,
         filter: Option<RfdFilter>,
     ) -> Result<Vec<ListRfd>, StoreError> {
         // List all of the RFDs first and then perform filter. This should be be improved once
@@ -488,12 +502,14 @@ impl ApiContext {
             })
             .collect::<BTreeSet<_>>();
 
+        // Filter the list of RFDs down to only those that the caller is allowed to access
         rfds.retain_mut(|rfd| {
             caller.can(&ApiPermission::GetRfdsAll)
                 || rfd.visibility == Visibility::Public
                 || direct_access_rfds.contains(&rfd.rfd_number)
         });
 
+        // Fetch the latest revision for each of the RFDs that is to be returned
         let mut rfd_revisions = RfdRevisionStore::list_unique_rfd(
             &*self.storage,
             RfdRevisionFilter::default().rfd(Some(rfds.iter().map(|rfd| rfd.id).collect())),
@@ -502,9 +518,11 @@ impl ApiContext {
         .await
         .tap_err(|err| tracing::error!(?err, "Failed to lookup RFD revisions"))?;
 
+        // Sort both the RFDs and revisions based on their RFD id to ensure they line up
         rfds.sort_by(|a, b| a.id.cmp(&b.id));
         rfd_revisions.sort_by(|a, b| a.rfd_id.cmp(&b.rfd_id));
 
+        // Zip together the RFDs with their associated revision
         let mut rfd_list = rfds
             .into_iter()
             .zip(rfd_revisions)
@@ -523,17 +541,21 @@ impl ApiContext {
             })
             .collect::<Vec<_>>();
 
+        // Finally sort the RFD list by RFD number
         rfd_list.sort_by(|a, b| b.rfd_number.cmp(&a.rfd_number));
 
         Ok(rfd_list)
     }
 
+    #[instrument(skip(self, caller))]
     pub async fn get_rfd(
         &self,
-        caller: &Caller<ApiPermission>,
+        caller: &ApiCaller,
         rfd_number: i32,
         sha: Option<String>,
     ) -> Result<Option<FullRfd>, StoreError> {
+        // list_rfds performs authorization checks, if the caller does not have access to the
+        // requested RFD any empty Vec will be returned
         let rfds = self
             .list_rfds(
                 caller,
@@ -542,6 +564,9 @@ impl ApiContext {
             .await?;
 
         if let Some(rfd) = rfds.into_iter().nth(0) {
+            // If list_rfds returned an RFD, then the caller is allowed to access that RFD and we
+            // can return the full RFD revision. This is sub-optimal as we are required to execute
+            // the revision lookup twice
             let latest_revision = RfdRevisionStore::list(
                 &*self.storage,
                 RfdRevisionFilter::default()
@@ -581,9 +606,13 @@ impl ApiContext {
                     visibility: rfd.visibility,
                 }))
             } else {
+                // It should not be possible to reach this branch. If we have then the database
+                // has entered an inconsistent state
+                tracing::error!("Looking up revision for RFD returned no results");
                 Ok(None)
             }
         } else {
+            // Either the RFD does not exist, or the caller is not allowed to access it
             Ok(None)
         }
     }
@@ -599,6 +628,7 @@ impl ApiContext {
     #[instrument(skip(self, info), fields(info.external_id))]
     pub async fn register_api_user(
         &self,
+        caller: &ApiCaller,
         info: UserInfo,
     ) -> Result<(User, ApiUserProvider), ApiError> {
         // Check if we have seen this identity before
@@ -612,7 +642,7 @@ impl ApiContext {
             .list_api_user_provider(filter, &ListPagination::latest())
             .await?;
 
-        let (mapped_permissions, mapped_groups) = self.get_mapped_fields(&info).await?;
+        let (mapped_permissions, mapped_groups) = self.get_mapped_fields(caller, &info).await?;
 
         match api_user_providers.len() {
             0 => {
@@ -666,6 +696,7 @@ impl ApiContext {
 
     async fn get_mapped_fields(
         &self,
+        caller: &Caller<ApiPermission>,
         info: &UserInfo,
     ) -> Result<(ApiPermissions, BTreeSet<Uuid>), StoreError> {
         let mut mapped_permissions = ApiPermissions::new();
@@ -674,7 +705,7 @@ impl ApiContext {
         // We optimistically load mappers here. We do not want to take a lock on the mappers and
         // instead handle mappers that become depleted before we can evaluate them at evaluation
         // time.
-        for mapping in self.get_mappings().await? {
+        for mapping in self.get_mappings(caller).await? {
             let (permissions, groups) = (
                 mapping.rule.permissions_for(&self, &info).await?,
                 mapping.rule.groups_for(&self, &info).await?,
@@ -1073,23 +1104,42 @@ impl ApiContext {
 
     pub async fn create_group(
         &self,
+        caller: &ApiCaller,
         group: NewAccessGroup<ApiPermission>,
-    ) -> Result<AccessGroup<ApiPermission>, StoreError> {
-        AccessGroupStore::upsert(&*self.storage, &group).await
+    ) -> Result<Option<AccessGroup<ApiPermission>>, StoreError> {
+        if caller.can(&ApiPermission::CreateGroup) {
+            AccessGroupStore::upsert(&*self.storage, &group)
+                .await
+                .map(Option::Some)
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn update_group(
         &self,
+        caller: &ApiCaller,
         group: NewAccessGroup<ApiPermission>,
-    ) -> Result<AccessGroup<ApiPermission>, StoreError> {
-        AccessGroupStore::upsert(&*self.storage, &group).await
+    ) -> Result<Option<AccessGroup<ApiPermission>>, StoreError> {
+        if caller.can(&ApiPermission::UpdateGroup(group.id)) {
+            AccessGroupStore::upsert(&*self.storage, &group)
+                .await
+                .map(Option::Some)
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn delete_group(
         &self,
+        caller: &ApiCaller,
         group_id: &Uuid,
     ) -> Result<Option<AccessGroup<ApiPermission>>, StoreError> {
-        AccessGroupStore::delete(&*self.storage, &group_id).await
+        if caller.can(&ApiPermission::DeleteGroup(*group_id)) {
+            AccessGroupStore::delete(&*self.storage, &group_id).await
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn add_api_user_to_group(
@@ -1138,9 +1188,12 @@ impl ApiContext {
 
     // Mapper Operations
 
-    async fn get_mappings(&self) -> Result<Vec<Mapping>, StoreError> {
+    async fn get_mappings(
+        &self,
+        caller: &Caller<ApiPermission>,
+    ) -> Result<Vec<Mapping>, StoreError> {
         let mappers = self
-            .get_mappers(false)
+            .get_mappers(caller, false)
             .await?
             .into_iter()
             .filter_map(|mapper| mapper.try_into().ok())
@@ -1151,21 +1204,49 @@ impl ApiContext {
         Ok(mappers)
     }
 
-    pub async fn get_mappers(&self, included_depleted: bool) -> Result<Vec<Mapper>, StoreError> {
-        Ok(MapperStore::list(
-            &*self.storage,
-            MapperFilter::default().depleted(included_depleted),
-            &ListPagination::default().limit(UNLIMITED),
-        )
-        .await?)
+    pub async fn get_mappers(
+        &self,
+        caller: &Caller<ApiPermission>,
+        included_depleted: bool,
+    ) -> Result<Vec<Mapper>, StoreError> {
+        if caller.can(&ApiPermission::ListMappers) {
+            Ok(MapperStore::list(
+                &*self.storage,
+                MapperFilter::default().depleted(included_depleted),
+                &ListPagination::default().limit(UNLIMITED),
+            )
+            .await?)
+        } else {
+            Ok(Vec::new())
+        }
     }
 
-    pub async fn add_mapper(&self, new_mapper: &NewMapper) -> Result<Mapper, StoreError> {
-        Ok(MapperStore::upsert(&*self.storage, new_mapper).await?)
+    pub async fn add_mapper(
+        &self,
+        caller: &ApiCaller,
+        new_mapper: &NewMapper,
+    ) -> Result<Option<Mapper>, StoreError> {
+        if caller.can(&ApiPermission::CreateMapper) {
+            Ok(Some(MapperStore::upsert(&*self.storage, new_mapper).await?))
+        } else {
+            Ok(None)
+        }
     }
 
-    pub async fn remove_mapper(&self, id: &Uuid) -> Result<Option<Mapper>, StoreError> {
-        Ok(MapperStore::delete(&*self.storage, id).await?)
+    pub async fn remove_mapper(
+        &self,
+        caller: &ApiCaller,
+        id: &Uuid,
+    ) -> Result<Option<Mapper>, StoreError> {
+        if caller.any(&[
+            &ApiPermission::DeleteMapper(*id).into(),
+            &ApiPermission::ManageMapper(*id).into(),
+            &ApiPermission::ManageMappersAll.into(),
+        ]) {
+            Ok(MapperStore::delete(&*self.storage, id).await?)
+        } else {
+            Ok(None)
+        }
     }
 
     async fn consume_mapping_activation(&self, mapping: &Mapping) -> Result<(), StoreError> {

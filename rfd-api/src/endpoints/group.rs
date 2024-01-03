@@ -20,6 +20,10 @@ use crate::{
 
 pub type GroupResponse = AccessGroup<ApiPermissionResponse>;
 
+fn into_opt_group_response(group: Option<Group>) -> Option<GroupResponse> {
+    group.map(into_group_response)
+}
+
 fn into_group_response(group: Group) -> GroupResponse {
     AccessGroup {
         id: group.id,
@@ -73,26 +77,25 @@ pub struct AccessGroupUpdateParams {
 pub async fn create_group(
     rqctx: RequestContext<ApiContext>,
     body: TypedBody<AccessGroupUpdateParams>,
-) -> Result<HttpResponseOk<GroupResponse>, HttpError> {
+) -> Result<HttpResponseOk<Option<GroupResponse>>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(auth.as_ref()).await?;
+    let body = body.into_inner();
 
-    if caller.can(&ApiPermission::CreateGroup) {
-        let body = body.into_inner();
-        Ok(HttpResponseOk(
-            ctx.create_group(NewAccessGroup {
+    Ok(HttpResponseOk(
+        ctx.create_group(
+            &caller,
+            NewAccessGroup {
                 id: Uuid::new_v4(),
                 name: body.name,
                 permissions: body.permissions,
-            })
-            .await
-            .map(into_group_response)
-            .map_err(ApiError::Storage)?,
-        ))
-    } else {
-        Err(forbidden())
-    }
+            },
+        )
+        .await
+        .map(into_opt_group_response)
+        .map_err(ApiError::Storage)?,
+    ))
 }
 
 #[derive(Debug, Clone, PartialEq, Deserialize, JsonSchema)]
@@ -110,27 +113,26 @@ pub async fn update_group(
     rqctx: RequestContext<ApiContext>,
     path: Path<AccessGroupPath>,
     body: TypedBody<AccessGroupUpdateParams>,
-) -> Result<HttpResponseOk<GroupResponse>, HttpError> {
+) -> Result<HttpResponseOk<Option<GroupResponse>>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(auth.as_ref()).await?;
     let path = path.into_inner();
+    let body = body.into_inner();
 
-    if caller.can(&ApiPermission::UpdateGroup(path.group_id)) {
-        let body = body.into_inner();
-        Ok(HttpResponseOk(
-            ctx.update_group(NewAccessGroup {
+    Ok(HttpResponseOk(
+        ctx.update_group(
+            &caller,
+            NewAccessGroup {
                 id: path.group_id,
                 name: body.name,
                 permissions: body.permissions,
-            })
-            .await
-            .map(into_group_response)
-            .map_err(ApiError::Storage)?,
-        ))
-    } else {
-        Err(forbidden())
-    }
+            },
+        )
+        .await
+        .map(into_opt_group_response)
+        .map_err(ApiError::Storage)?,
+    ))
 }
 
 #[trace_request]
@@ -150,9 +152,9 @@ pub async fn delete_group(
 
     if caller.can(&ApiPermission::DeleteGroup(path.group_id)) {
         Ok(HttpResponseOk(
-            ctx.delete_group(&path.group_id)
+            ctx.delete_group(&caller, &path.group_id)
                 .await
-                .map(|o| o.map(into_group_response))
+                .map(into_opt_group_response)
                 .map_err(ApiError::Storage)?,
         ))
     } else {
