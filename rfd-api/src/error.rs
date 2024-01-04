@@ -9,7 +9,7 @@ use thiserror::Error;
 use crate::{
     authn::{jwt::JwtSignerError, SigningKeyError},
     endpoints::login::{oauth::OAuthProviderError, LoginError},
-    util::response::internal_error,
+    util::response::{forbidden, internal_error, not_found, ResourceError},
 };
 
 #[derive(Debug, Error)]
@@ -22,12 +22,16 @@ pub enum AppError {
 
 #[derive(Debug, Error)]
 pub enum ApiError {
+    #[error("Caller does not have the required permissions")]
+    Forbidden,
     #[error("JWT credential failed: {0}")]
     Jwt(#[from] JwtSignerError),
     #[error("Invalid signing key: {0}")]
     Key(#[from] SigningKeyError),
     #[error(transparent)]
     Login(#[from] LoginError),
+    #[error("Resource could not be found")]
+    NotFound,
     #[error("Internal OAuth provider failed {0}")]
     OAuth(#[from] OAuthProviderError),
     #[error("Internal storage failed {0}")]
@@ -37,11 +41,23 @@ pub enum ApiError {
 impl From<ApiError> for HttpError {
     fn from(error: ApiError) -> Self {
         match error {
+            ApiError::Forbidden => forbidden(),
             ApiError::Jwt(_) => internal_error("JWT operation failed"),
             ApiError::Key(_) => internal_error("User credential signing failed"),
             ApiError::Login(inner) => inner.into(),
+            ApiError::NotFound => not_found(""),
             ApiError::OAuth(_) => internal_error("OAuth provider failed"),
             ApiError::Storage(_) => internal_error("Internal storage failed"),
+        }
+    }
+}
+
+impl From<ResourceError<StoreError>> for ApiError {
+    fn from(value: ResourceError<StoreError>) -> Self {
+        match value {
+            ResourceError::DoesNotExist => ApiError::NotFound,
+            ResourceError::InternalError(err) => ApiError::Storage(err),
+            ResourceError::Restricted => ApiError::Forbidden,
         }
     }
 }

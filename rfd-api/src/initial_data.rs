@@ -10,7 +10,9 @@ use thiserror::Error;
 use tracing::Instrument;
 use uuid::Uuid;
 
-use crate::{context::ApiContext, mapper::MappingRules, ApiPermissions};
+use crate::{
+    context::ApiContext, mapper::MappingRules, util::response::ResourceError, ApiPermissions,
+};
 
 #[derive(Debug, Deserialize)]
 pub struct InitialData {
@@ -36,6 +38,8 @@ pub struct InitialMapper {
 pub enum InitError {
     #[error("Failed to parse configuration file for initial data: {0}")]
     Config(#[from] ConfigError),
+    #[error("Resource operation failed")]
+    Resource(#[from] ResourceError<StoreError>),
     #[error("Failed to serialize rule for storage: {0}")]
     Rule(#[from] serde_json::Error),
     #[error("Failed to store initial rule: {0}")]
@@ -59,7 +63,7 @@ impl InitialData {
     }
 
     pub async fn initialize(self, ctx: &ApiContext) -> Result<(), InitError> {
-        let existing_groups = ctx.get_groups(&ctx.system_caller).await?;
+        let existing_groups = ctx.get_groups(&ctx.builtin_registration_user()).await?;
 
         for group in self.groups {
             let span = tracing::info_span!("Initializing group", group = ?group);
@@ -113,9 +117,14 @@ impl InitialData {
     }
 }
 
-fn handle_unique_violation_error(err: StoreError) -> Result<(), StoreError> {
+fn handle_unique_violation_error(
+    err: ResourceError<StoreError>,
+) -> Result<(), ResourceError<StoreError>> {
     match err {
-        StoreError::Db(DieselError::DatabaseError(DatabaseErrorKind::UniqueViolation, info)) => {
+        ResourceError::InternalError(StoreError::Db(DieselError::DatabaseError(
+            DatabaseErrorKind::UniqueViolation,
+            info,
+        ))) => {
             tracing::info!(?info, "Record already exists. Skipping.");
             Ok(())
         }

@@ -2,7 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use dropshot::{endpoint, HttpError, HttpResponseOk, Path, Query, RequestContext, TypedBody};
+use dropshot::{
+    endpoint, HttpError, HttpResponseCreated, HttpResponseOk, Path, Query, RequestContext,
+    TypedBody,
+};
 use rfd_model::{Mapper, NewMapper};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -12,9 +15,11 @@ use uuid::Uuid;
 
 use crate::{
     context::ApiContext,
-    error::ApiError,
     mapper::MappingRules,
-    util::{is_uniqueness_error, response::conflict},
+    util::{
+        is_uniqueness_error,
+        response::{conflict, ResourceError},
+    },
 };
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -42,8 +47,7 @@ pub async fn get_mappers(
             &caller,
             query.into_inner().include_depleted.unwrap_or(false),
         )
-        .await
-        .map_err(ApiError::Storage)?,
+        .await?,
     ))
 }
 
@@ -63,7 +67,7 @@ pub struct CreateMapper {
 pub async fn create_mapper(
     rqctx: RequestContext<ApiContext>,
     body: TypedBody<CreateMapper>,
-) -> Result<HttpResponseOk<Option<Mapper>>, HttpError> {
+) -> Result<HttpResponseCreated<Mapper>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(auth.as_ref()).await?;
@@ -83,12 +87,14 @@ pub async fn create_mapper(
         )
         .await;
 
-    res.map(HttpResponseOk).map_err(|err| {
-        if is_uniqueness_error(&err) {
-            conflict()
-        } else {
-            ApiError::Storage(err).into()
+    res.map(HttpResponseCreated).map_err(|err| {
+        if let ResourceError::InternalError(err) = &err {
+            if is_uniqueness_error(&err) {
+                return conflict();
+            }
         }
+
+        HttpError::from(err)
     })
 }
 
@@ -106,15 +112,13 @@ pub struct MapperPath {
 pub async fn delete_mapper(
     rqctx: RequestContext<ApiContext>,
     path: Path<MapperPath>,
-) -> Result<HttpResponseOk<Option<Mapper>>, HttpError> {
+) -> Result<HttpResponseOk<Mapper>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(auth.as_ref()).await?;
     let path = path.into_inner();
 
     Ok(HttpResponseOk(
-        ctx.remove_mapper(&caller, &path.identifier)
-            .await
-            .map_err(ApiError::Storage)?,
+        ctx.remove_mapper(&caller, &path.identifier).await?,
     ))
 }

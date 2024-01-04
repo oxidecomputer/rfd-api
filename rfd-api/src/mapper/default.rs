@@ -10,7 +10,9 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{context::ApiContext, endpoints::login::UserInfo, ApiPermissions};
+use crate::{
+    context::ApiContext, endpoints::login::UserInfo, util::response::ResourceResult, ApiPermissions,
+};
 
 use super::MapperRule;
 
@@ -36,9 +38,9 @@ impl MapperRule for DefaultMapper {
         &self,
         ctx: &ApiContext,
         _user: &UserInfo,
-    ) -> Result<BTreeSet<Uuid>, StoreError> {
+    ) -> ResourceResult<BTreeSet<Uuid>, StoreError> {
         let groups = ctx
-            .get_groups(&ctx.system_caller)
+            .get_groups(&ctx.builtin_registration_user())
             .await?
             .into_iter()
             .filter_map(|group| {

@@ -11,7 +11,9 @@ use serde::{Deserialize, Serialize};
 use tap::TapFallible;
 use uuid::Uuid;
 
-use crate::{context::ApiContext, endpoints::login::UserInfo, ApiPermissions};
+use crate::{
+    context::ApiContext, endpoints::login::UserInfo, util::response::ResourceResult, ApiPermissions,
+};
 
 use self::{
     default::DefaultMapper, email_address::EmailAddressMapper, email_domain::EmailDomainMapper,
@@ -34,7 +36,7 @@ pub trait MapperRule: Send + Sync {
         &self,
         ctx: &ApiContext,
         user: &UserInfo,
-    ) -> Result<BTreeSet<Uuid>, StoreError>;
+    ) -> ResourceResult<BTreeSet<Uuid>, StoreError>;
 }
 
 #[derive(Debug, Serialize)]
@@ -93,7 +95,7 @@ impl MapperRule for MappingRules {
         &self,
         ctx: &ApiContext,
         user: &UserInfo,
-    ) -> Result<BTreeSet<Uuid>, StoreError> {
+    ) -> ResourceResult<BTreeSet<Uuid>, StoreError> {
         match self {
             Self::Default(rule) => rule.groups_for(ctx, user).await,
             Self::EmailAddress(rule) => rule.groups_for(ctx, user).await,

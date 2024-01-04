@@ -2,7 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use dropshot::{endpoint, HttpError, HttpResponseOk, Path, RequestContext, TypedBody};
+use dropshot::{
+    endpoint, HttpError, HttpResponseCreated, HttpResponseOk, Path, RequestContext, TypedBody,
+};
 use rfd_model::{permissions::Permissions, AccessGroup, NewAccessGroup};
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -10,19 +12,9 @@ use trace_request::trace_request;
 use tracing::instrument;
 use uuid::Uuid;
 
-use crate::{
-    context::ApiContext,
-    error::ApiError,
-    permissions::{ApiPermission, ApiPermissionResponse},
-    util::response::forbidden,
-    ApiPermissions, Group,
-};
+use crate::{context::ApiContext, permissions::ApiPermissionResponse, ApiPermissions, Group};
 
 pub type GroupResponse = AccessGroup<ApiPermissionResponse>;
-
-fn into_opt_group_response(group: Option<Group>) -> Option<GroupResponse> {
-    group.map(into_group_response)
-}
 
 fn into_group_response(group: Group) -> GroupResponse {
     AccessGroup {
@@ -54,8 +46,7 @@ pub async fn get_groups(
 
     Ok(HttpResponseOk(
         ctx.get_groups(&caller)
-            .await
-            .map_err(ApiError::Storage)?
+            .await?
             .into_iter()
             .map(into_group_response)
             .collect(),
@@ -77,13 +68,13 @@ pub struct AccessGroupUpdateParams {
 pub async fn create_group(
     rqctx: RequestContext<ApiContext>,
     body: TypedBody<AccessGroupUpdateParams>,
-) -> Result<HttpResponseOk<Option<GroupResponse>>, HttpError> {
+) -> Result<HttpResponseCreated<GroupResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(auth.as_ref()).await?;
     let body = body.into_inner();
 
-    Ok(HttpResponseOk(
+    Ok(HttpResponseCreated(
         ctx.create_group(
             &caller,
             NewAccessGroup {
@@ -93,8 +84,7 @@ pub async fn create_group(
             },
         )
         .await
-        .map(into_opt_group_response)
-        .map_err(ApiError::Storage)?,
+        .map(into_group_response)?,
     ))
 }
 
@@ -113,7 +103,7 @@ pub async fn update_group(
     rqctx: RequestContext<ApiContext>,
     path: Path<AccessGroupPath>,
     body: TypedBody<AccessGroupUpdateParams>,
-) -> Result<HttpResponseOk<Option<GroupResponse>>, HttpError> {
+) -> Result<HttpResponseOk<GroupResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(auth.as_ref()).await?;
@@ -130,8 +120,7 @@ pub async fn update_group(
             },
         )
         .await
-        .map(into_opt_group_response)
-        .map_err(ApiError::Storage)?,
+        .map(into_group_response)?,
     ))
 }
 
@@ -144,20 +133,15 @@ pub async fn update_group(
 pub async fn delete_group(
     rqctx: RequestContext<ApiContext>,
     path: Path<AccessGroupPath>,
-) -> Result<HttpResponseOk<Option<GroupResponse>>, HttpError> {
+) -> Result<HttpResponseOk<GroupResponse>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(auth.as_ref()).await?;
     let path = path.into_inner();
 
-    if caller.can(&ApiPermission::DeleteGroup(path.group_id)) {
-        Ok(HttpResponseOk(
-            ctx.delete_group(&caller, &path.group_id)
-                .await
-                .map(into_opt_group_response)
-                .map_err(ApiError::Storage)?,
-        ))
-    } else {
-        Err(forbidden())
-    }
+    Ok(HttpResponseOk(
+        ctx.delete_group(&caller, &path.group_id)
+            .await
+            .map(into_group_response)?,
+    ))
 }

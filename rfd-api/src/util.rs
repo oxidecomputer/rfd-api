@@ -45,6 +45,7 @@ pub mod response {
     use dropshot::HttpError;
     use http::StatusCode;
     use std::error::Error;
+    use thiserror::Error;
     use tracing::instrument;
 
     pub fn conflict() -> HttpError {
@@ -93,6 +94,70 @@ pub mod response {
         let internal_message = internal_message.to_string();
         tracing::error!(internal_message, "Request failed");
         HttpError::for_internal_error(internal_message)
+    }
+
+    pub type ResourceResult<T, E> = Result<T, ResourceError<E>>;
+
+    #[derive(Debug, Error)]
+    pub enum ResourceError<E> {
+        #[error("Resource does not exist")]
+        DoesNotExist,
+        #[error("Caller does not have required access")]
+        Restricted,
+        #[error("Internal server error")]
+        InternalError(#[source] E),
+    }
+
+    pub trait ToResourceResultOpt<T, E> {
+        fn opt_to_resource_result(self) -> ResourceResult<T, E>;
+    }
+
+    impl<T, E> ToResourceResultOpt<T, E> for Result<Option<T>, E> {
+        fn opt_to_resource_result(self) -> ResourceResult<T, E> {
+            match self {
+                Ok(Some(value)) => ResourceResult::Ok(value),
+                Ok(None) => resource_not_found(),
+                Err(err) => resource_error(err),
+            }
+        }
+    }
+
+    pub trait ToResourceResult<T, E> {
+        fn to_resource_result(self) -> ResourceResult<T, E>;
+    }
+
+    impl<T, E> ToResourceResult<T, E> for Result<T, E> {
+        fn to_resource_result(self) -> ResourceResult<T, E> {
+            match self {
+                Ok(value) => ResourceResult::Ok(value),
+                Err(err) => resource_error(err),
+            }
+        }
+    }
+
+    pub fn resource_not_found<T, E>() -> ResourceResult<T, E> {
+        ResourceResult::Err(ResourceError::DoesNotExist)
+    }
+
+    pub fn resource_restricted<T, E>() -> ResourceResult<T, E> {
+        ResourceResult::Err(ResourceError::Restricted)
+    }
+
+    pub fn resource_error<T, E>(err: E) -> ResourceResult<T, E> {
+        ResourceResult::Err(ResourceError::InternalError(err))
+    }
+
+    impl<E> From<ResourceError<E>> for HttpError
+    where
+        E: Error,
+    {
+        fn from(value: ResourceError<E>) -> Self {
+            match value {
+                ResourceError::DoesNotExist => not_found(""),
+                ResourceError::InternalError(err) => to_internal_error(err),
+                ResourceError::Restricted => forbidden(),
+            }
+        }
     }
 }
 

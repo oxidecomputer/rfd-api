@@ -56,7 +56,10 @@ use crate::{
     mapper::{MapperRule, Mapping},
     permissions::{ApiPermission, ApiPermissionError, PermissionStorage},
     search::SearchClient,
-    util::response::{bad_request, client_error, internal_error},
+    util::response::{
+        bad_request, client_error, internal_error, resource_error, resource_restricted,
+        ResourceError, ResourceResult, ToResourceResult, ToResourceResultOpt,
+    },
     ApiCaller, ApiPermissions, User, UserToken,
 };
 
@@ -115,7 +118,6 @@ pub struct ApiContext {
     pub secrets: SecretContext,
     pub oauth_providers: HashMap<OAuthProviderName, Box<dyn OAuthProviderFn>>,
     pub search: SearchContext,
-    pub system_caller: Caller<ApiPermission>,
 }
 
 pub struct JwtContext {
@@ -234,7 +236,10 @@ impl ApiContext {
                 id: Uuid::parse_str("00000000-0000-4000-8000-000000000001").unwrap(),
                 permissions: vec![
                     ApiPermission::CreateApiUser,
+                    ApiPermission::GetApiUserAll,
+                    ApiPermission::UpdateApiUserAll,
                     ApiPermission::CreateGroup,
+                    ApiPermission::GetGroupsAll,
                     ApiPermission::ListMappers,
                 ]
                 .into(),
@@ -252,10 +257,6 @@ impl ApiContext {
             oauth_providers: HashMap::new(),
             search: SearchContext {
                 client: SearchClient::new(search.host, search.index, search.key),
-            },
-            system_caller: Caller {
-                id: Uuid::new_v4(),
-                permissions: vec![ApiPermission::GetGroupsAll].into(),
             },
         })
     }
@@ -306,27 +307,42 @@ impl ApiContext {
             Some(token) => {
                 let (api_user_id, permissions) = self.get_base_permissions(&token).await?;
 
-                // The permissions for the caller is the intersection of the user's permissions and the tokens permissions
-                if let Some(user) = self.get_api_user(&api_user_id).await? {
-                    let user_permissions = self.get_user_permissions(&user).await?;
-                    let token_permissions = permissions.expand(&user.id, Some(&user_permissions));
+                match self
+                    .get_api_user(&self.builtin_registration_user(), &api_user_id)
+                    .await
+                {
+                    ResourceResult::Ok(user) => {
+                        // The permissions for the caller is the intersection of the user's permissions and the tokens permissions
+                        let user_permissions = self.get_user_permissions(&user).await?;
+                        let token_permissions =
+                            permissions.expand(&user.id, Some(&user_permissions));
 
-                    let combined_permissions = token_permissions.intersect(&user_permissions);
+                        let combined_permissions = token_permissions.intersect(&user_permissions);
 
-                    tracing::trace!(token = ?token_permissions, user = ?user_permissions, combined = ?combined_permissions, "Computed caller permissions");
+                        tracing::trace!(token = ?token_permissions, user = ?user_permissions, combined = ?combined_permissions, "Computed caller permissions");
 
-                    let caller = Caller {
-                        id: api_user_id,
-                        permissions: combined_permissions,
-                    };
+                        let caller = Caller {
+                            id: api_user_id,
+                            permissions: combined_permissions,
+                        };
 
-                    tracing::info!(?caller.id, "Resolved caller");
-                    tracing::debug!(?caller.permissions, "Caller permissions");
+                        tracing::info!(?caller.id, "Resolved caller");
+                        tracing::debug!(?caller.permissions, "Caller permissions");
 
-                    Ok(caller)
-                } else {
-                    tracing::error!("User for verified token does not exist");
-                    Err(CallerError::FailedToAuthenticate)
+                        Ok(caller)
+                    }
+                    Err(ResourceError::DoesNotExist) => {
+                        tracing::error!("User for verified token does not exist");
+                        Err(CallerError::FailedToAuthenticate)
+                    }
+                    Err(ResourceError::Restricted) => {
+                        tracing::error!("Built in user did not have permission to retrieve caller");
+                        Err(CallerError::FailedToAuthenticate)
+                    }
+                    Err(ResourceError::InternalError(err)) => {
+                        tracing::error!("Failed to lookup caller");
+                        Err(CallerError::Storage(err))
+                    }
                 }
             }
             None => Ok(self.builtin_unauthenticated_caller().clone()),
@@ -630,7 +646,7 @@ impl ApiContext {
         &self,
         caller: &ApiCaller,
         info: UserInfo,
-    ) -> Result<(User, ApiUserProvider), ApiError> {
+    ) -> ResourceResult<(User, ApiUserProvider), ApiError> {
         // Check if we have seen this identity before
         let mut filter = ApiUserProviderFilter::default();
         filter.provider = Some(vec![info.external_id.provider().to_string()]);
@@ -639,10 +655,16 @@ impl ApiContext {
         tracing::info!("Check for existing users matching the requested external id");
 
         let api_user_providers = self
-            .list_api_user_provider(filter, &ListPagination::latest())
-            .await?;
+            .list_api_user_provider(caller, filter, &ListPagination::latest())
+            .await
+            .map_err(|err| ApiError::from(err))
+            .to_resource_result()?;
 
-        let (mapped_permissions, mapped_groups) = self.get_mapped_fields(caller, &info).await?;
+        let (mut mapped_permissions, mut mapped_groups) = self
+            .get_mapped_fields(caller, &info)
+            .await
+            .map_err(|err| ApiError::from(err))
+            .to_resource_result()?;
 
         match api_user_providers.len() {
             0 => {
@@ -653,28 +675,49 @@ impl ApiContext {
                 );
 
                 let user = self
-                    .ensure_api_user(Uuid::new_v4(), mapped_permissions, mapped_groups)
-                    .await?;
+                    .create_api_user(caller, mapped_permissions, mapped_groups)
+                    .await
+                    .map_err(|err| ApiError::from(err))
+                    .to_resource_result()?;
+
                 let user_provider = self
-                    .update_api_user_provider(NewApiUserProvider {
-                        id: Uuid::new_v4(),
-                        api_user_id: user.id,
-                        emails: info.verified_emails,
-                        provider: info.external_id.provider().to_string(),
-                        provider_id: info.external_id.id().to_string(),
-                    })
-                    .await?;
+                    .update_api_user_provider(
+                        caller,
+                        NewApiUserProvider {
+                            id: Uuid::new_v4(),
+                            api_user_id: user.id,
+                            emails: info.verified_emails,
+                            provider: info.external_id.provider().to_string(),
+                            provider_id: info.external_id.id().to_string(),
+                        },
+                    )
+                    .await
+                    .map_err(|err| ApiError::from(err))
+                    .to_resource_result()?;
 
                 Ok((user, user_provider))
             }
             1 => {
-                tracing::info!("Found an existing user. Attaching provider.");
+                tracing::info!("Found an existing user. Ensuring mapped permissions and groups.");
 
                 // This branch ensures that there is a 0th indexed item
                 let provider = api_user_providers.into_iter().nth(0).unwrap();
+
+                // Update the found user to ensure it has at least the mapped permissions and groups
+                let user = self
+                    .get_api_user(caller, &provider.api_user_id)
+                    .await
+                    .map_err(|err| ApiError::from(err))
+                    .to_resource_result()?;
+                let mut update: NewApiUser<ApiPermission> = user.into();
+                update.permissions.append(&mut mapped_permissions);
+                update.groups.append(&mut mapped_groups);
+
                 Ok((
-                    self.ensure_api_user(provider.api_user_id, mapped_permissions, mapped_groups)
-                        .await?,
+                    self.update_api_user(caller, update)
+                        .await
+                        .map_err(|err| ApiError::from(err))
+                        .to_resource_result()?,
                     provider,
                 ))
             }
@@ -686,10 +729,9 @@ impl ApiContext {
                     "Found multiple providers for external id"
                 );
 
-                Err(StoreError::InvariantFailed(
+                resource_error(ApiError::from(StoreError::InvariantFailed(
                     "Multiple providers for external id found".to_string(),
-                )
-                .into())
+                )))
             }
         }
     }
@@ -698,7 +740,7 @@ impl ApiContext {
         &self,
         caller: &Caller<ApiPermission>,
         info: &UserInfo,
-    ) -> Result<(ApiPermissions, BTreeSet<Uuid>), StoreError> {
+    ) -> ResourceResult<(ApiPermissions, BTreeSet<Uuid>), StoreError> {
         let mut mapped_permissions = ApiPermissions::new();
         let mut mapped_groups = BTreeSet::new();
 
@@ -707,7 +749,11 @@ impl ApiContext {
         // time.
         for mapping in self.get_mappings(caller).await? {
             let (permissions, groups) = (
-                mapping.rule.permissions_for(&self, &info).await?,
+                mapping
+                    .rule
+                    .permissions_for(&self, &info)
+                    .await
+                    .to_resource_result()?,
                 mapping.rule.groups_for(&self, &info).await?,
             );
 
@@ -735,7 +781,13 @@ impl ApiContext {
             };
 
             if apply {
-                mapped_permissions.append(&mut mapping.rule.permissions_for(&self, &info).await?);
+                mapped_permissions.append(
+                    &mut mapping
+                        .rule
+                        .permissions_for(&self, &info)
+                        .await
+                        .to_resource_result()?,
+                );
                 mapped_groups.append(&mut mapping.rule.groups_for(&self, &info).await?);
             }
         }
@@ -746,33 +798,32 @@ impl ApiContext {
     #[instrument(skip(self), err(Debug))]
     async fn ensure_api_user(
         &self,
+        caller: &ApiCaller,
         api_user_id: Uuid,
         mut mapped_permissions: ApiPermissions,
         mut mapped_groups: BTreeSet<Uuid>,
-    ) -> Result<User, ApiError> {
-        match self.get_api_user(&api_user_id).await? {
-            Some(api_user) => {
+    ) -> ResourceResult<User, StoreError> {
+        match self.get_api_user(caller, &api_user_id).await {
+            ResourceResult::Ok(api_user) => {
                 // Ensure that the existing user has "at least" the mapped permissions
                 let mut update: NewApiUser<ApiPermission> = api_user.into();
                 update.permissions.append(&mut mapped_permissions);
                 update.groups.append(&mut mapped_groups);
 
-                Ok(ApiUserStore::upsert(&*self.storage, update).await?)
+                self.update_api_user(caller, update).await
             }
-            None => self
-                .update_api_user(NewApiUser {
-                    id: api_user_id,
-                    permissions: mapped_permissions,
-                    groups: mapped_groups,
-                })
+            ResourceResult::Err(ResourceError::DoesNotExist) => {
+                self.update_api_user(
+                    caller,
+                    NewApiUser {
+                        id: api_user_id,
+                        permissions: mapped_permissions,
+                        groups: mapped_groups,
+                    },
+                )
                 .await
-                .map_err(ApiError::Storage)
-                .tap_err(|err| {
-                    tracing::error!(
-                        ?err,
-                        "Failed to create new api user for OAuth authenticated user"
-                    )
-                }),
+            }
+            other => other,
         }
     }
 
@@ -804,15 +855,27 @@ impl ApiContext {
 
     // API User Operations
 
-    pub async fn get_api_user(&self, id: &Uuid) -> Result<Option<User>, StoreError> {
-        let user = ApiUserStore::get(&*self.storage, id, false)
-            .await?
-            .map(|mut user| {
-                user.permissions = user.permissions.expand(&user.id, None);
-                user
-            });
-
-        Ok(user)
+    pub async fn get_api_user(
+        &self,
+        caller: &ApiCaller,
+        id: &Uuid,
+    ) -> ResourceResult<User, StoreError> {
+        if caller.any(&[
+            &ApiPermission::GetApiUser(*id).into(),
+            &ApiPermission::GetApiUserAll.into(),
+        ]) {
+            ApiUserStore::get(&*self.storage, id, false)
+                .await
+                .map(|opt| {
+                    opt.map(|mut user| {
+                        user.permissions = user.permissions.expand(&user.id, None);
+                        user
+                    })
+                })
+                .opt_to_resource_result()
+        } else {
+            resource_restricted()
+        }
     }
 
     pub async fn list_api_user(
@@ -824,57 +887,95 @@ impl ApiContext {
     }
 
     #[instrument(skip(self))]
+    pub async fn create_api_user(
+        &self,
+        caller: &ApiCaller,
+        permissions: ApiPermissions,
+        groups: BTreeSet<Uuid>,
+    ) -> ResourceResult<User, StoreError> {
+        if caller.can(&ApiPermission::CreateApiUser) {
+            let mut new_user = NewApiUser {
+                id: Uuid::new_v4(),
+                permissions: permissions,
+                groups: groups,
+            };
+            new_user.permissions = new_user.permissions.contract(&new_user.id);
+            ApiUserStore::upsert(&*self.storage, new_user)
+                .await
+                .to_resource_result()
+        } else {
+            resource_restricted()
+        }
+    }
+
+    #[instrument(skip(self))]
     pub async fn update_api_user(
         &self,
+        caller: &ApiCaller,
         mut api_user: NewApiUser<ApiPermission>,
-    ) -> Result<User, StoreError> {
-        api_user.permissions = api_user.permissions.contract(&api_user.id);
-        ApiUserStore::upsert(&*self.storage, api_user).await
+    ) -> ResourceResult<User, StoreError> {
+        if caller.any(&[
+            &ApiPermission::UpdateApiUser(api_user.id).into(),
+            &ApiPermission::UpdateApiUserAll.into(),
+        ]) {
+            api_user.permissions = api_user.permissions.contract(&api_user.id);
+            ApiUserStore::upsert(&*self.storage, api_user)
+                .await
+                .to_resource_result()
+        } else {
+            resource_restricted()
+        }
     }
 
     pub async fn add_permissions_to_user(
         &self,
+        caller: &ApiCaller,
         user_id: &Uuid,
         new_permissions: Permissions<ApiPermission>,
-    ) -> Result<Option<User>, StoreError> {
-        Ok(match self.get_api_user(user_id).await? {
-            Some(user) => {
-                let mut user_update: NewApiUser<ApiPermission> = user.into();
-                for permission in new_permissions.into_iter() {
-                    tracing::info!(id = ?user_id, ?permission, "Adding permission to user");
-                    user_update.permissions.insert(permission);
-                }
+    ) -> ResourceResult<User, StoreError> {
+        if caller.any(&[
+            &ApiPermission::UpdateApiUser(*user_id),
+            &ApiPermission::UpdateApiUserAll,
+        ]) {
+            let user = self.get_api_user(caller, user_id).await?;
 
-                Some(self.update_api_user(user_update).await?)
+            let mut user_update: NewApiUser<ApiPermission> = user.into();
+            for permission in new_permissions.into_iter() {
+                tracing::info!(id = ?user_id, ?permission, "Adding permission to user");
+                user_update.permissions.insert(permission);
             }
-            None => None,
-        })
-    }
 
-    pub async fn remove_permissions_from_user(
-        &self,
-        api_user: &ApiUser<ApiPermission>,
-        new_permissions: Permissions<ApiPermission>,
-    ) -> Result<User, StoreError> {
-        let mut user_update: NewApiUser<ApiPermission> = api_user.clone().into();
-        for permission in new_permissions.into_iter() {
-            tracing::info!(id = ?api_user.id, ?permission, "Removing permission from user");
-            user_update.permissions.remove(&permission);
+            self.update_api_user(caller, user_update).await
+        } else {
+            resource_restricted()
         }
-
-        self.update_api_user(user_update).await
     }
 
     pub async fn create_api_user_token(
         &self,
+        caller: &ApiCaller,
         token: NewApiKey<ApiPermission>,
         api_user: &ApiUser<ApiPermission>,
-    ) -> Result<UserToken, StoreError> {
-        ApiKeyStore::upsert(&*self.storage, token, api_user).await
+    ) -> Result<Option<UserToken>, StoreError> {
+        if caller.can(&ApiPermission::CreateApiUserToken(api_user.id).into()) {
+            ApiKeyStore::upsert(&*self.storage, token, api_user)
+                .await
+                .map(Option::Some)
+        } else {
+            Ok(None)
+        }
     }
 
-    pub async fn get_api_user_token(&self, id: &Uuid) -> Result<Option<UserToken>, StoreError> {
-        ApiKeyStore::get(&*self.storage, id, false).await
+    pub async fn get_api_user_token(
+        &self,
+        caller: &ApiCaller,
+        id: &Uuid,
+    ) -> Result<Option<UserToken>, StoreError> {
+        if caller.can(&ApiPermission::GetApiUserToken(*id).into()) {
+            ApiKeyStore::get(&*self.storage, id, false).await
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn get_api_user_tokens(
@@ -904,21 +1005,51 @@ impl ApiContext {
 
     pub async fn list_api_user_provider(
         &self,
+        caller: &ApiCaller,
         filter: ApiUserProviderFilter,
         pagination: &ListPagination,
-    ) -> Result<Vec<ApiUserProvider>, StoreError> {
-        ApiUserProviderStore::list(&*self.storage, filter, pagination).await
+    ) -> ResourceResult<Vec<ApiUserProvider>, StoreError> {
+        let mut providers = ApiUserProviderStore::list(&*self.storage, filter, pagination)
+            .await
+            .to_resource_result()?;
+
+        providers.retain(|provider| {
+            caller.any(&[
+                &ApiPermission::GetApiUser(provider.api_user_id).into(),
+                &ApiPermission::GetApiUserAll.into(),
+            ])
+        });
+
+        Ok(providers)
     }
 
     pub async fn update_api_user_provider(
         &self,
+        caller: &ApiCaller,
         api_user: NewApiUserProvider,
-    ) -> Result<ApiUserProvider, StoreError> {
-        ApiUserProviderStore::upsert(&*self.storage, api_user).await
+    ) -> ResourceResult<ApiUserProvider, StoreError> {
+        if caller.any(&[
+            &ApiPermission::UpdateApiUser(api_user.id),
+            &ApiPermission::UpdateApiUserAll,
+        ]) {
+            ApiUserProviderStore::upsert(&*self.storage, api_user)
+                .await
+                .to_resource_result()
+        } else {
+            resource_restricted()
+        }
     }
 
-    pub async fn delete_api_user_token(&self, id: &Uuid) -> Result<Option<UserToken>, StoreError> {
-        ApiKeyStore::delete(&*self.storage, id).await
+    pub async fn delete_api_user_token(
+        &self,
+        caller: &ApiCaller,
+        id: &Uuid,
+    ) -> Result<Option<UserToken>, StoreError> {
+        if caller.can(&ApiPermission::DeleteApiUserToken(*id).into()) {
+            ApiKeyStore::delete(&*self.storage, id).await
+        } else {
+            Ok(None)
+        }
     }
 
     pub async fn create_access_token(
@@ -994,8 +1125,17 @@ impl ApiContext {
 
     // OAuth Client Operations
 
-    pub async fn create_oauth_client(&self) -> Result<OAuthClient, StoreError> {
-        OAuthClientStore::upsert(&*self.storage, NewOAuthClient { id: Uuid::new_v4() }).await
+    pub async fn create_oauth_client(
+        &self,
+        caller: &ApiCaller,
+    ) -> ResourceResult<OAuthClient, StoreError> {
+        if caller.can(&ApiPermission::CreateOAuthClient) {
+            OAuthClientStore::upsert(&*self.storage, NewOAuthClient { id: Uuid::new_v4() })
+                .await
+                .to_resource_result()
+        } else {
+            resource_restricted()
+        }
     }
 
     pub async fn get_oauth_client(&self, id: &Uuid) -> Result<Option<OAuthClient>, StoreError> {
@@ -1065,7 +1205,7 @@ impl ApiContext {
     pub async fn get_groups(
         &self,
         caller: &Caller<ApiPermission>,
-    ) -> Result<Vec<AccessGroup<ApiPermission>>, StoreError> {
+    ) -> ResourceResult<Vec<AccessGroup<ApiPermission>>, StoreError> {
         // Callers will fall in to one of three permission groups:
         //   - Has GetGroupsAll
         //   - Has GetGroupsJoined
@@ -1084,35 +1224,33 @@ impl ApiContext {
         } else if caller.can(&ApiPermission::GetGroupsJoined) {
             // If a caller can only view the groups they are a member of then we need to fetch the
             // callers user record to determine what those are
-            let user = self.get_api_user(&caller.id).await?;
-            filter.id = Some(
-                user.map(|user| user.groups.into_iter().collect::<Vec<_>>())
-                    .unwrap_or_default(),
-            );
+            let user = self.get_api_user(caller, &caller.id).await?;
+            filter.id = Some(user.groups.into_iter().collect::<Vec<_>>());
         } else {
             // The caller does not have any permissions to view groups
             filter.id = Some(vec![])
         };
 
-        Ok(AccessGroupStore::list(
+        AccessGroupStore::list(
             &*self.storage,
             filter,
             &ListPagination::default().limit(UNLIMITED),
         )
-        .await?)
+        .await
+        .to_resource_result()
     }
 
     pub async fn create_group(
         &self,
         caller: &ApiCaller,
         group: NewAccessGroup<ApiPermission>,
-    ) -> Result<Option<AccessGroup<ApiPermission>>, StoreError> {
+    ) -> ResourceResult<AccessGroup<ApiPermission>, StoreError> {
         if caller.can(&ApiPermission::CreateGroup) {
             AccessGroupStore::upsert(&*self.storage, &group)
                 .await
-                .map(Option::Some)
+                .to_resource_result()
         } else {
-            Ok(None)
+            resource_restricted()
         }
     }
 
@@ -1120,13 +1258,13 @@ impl ApiContext {
         &self,
         caller: &ApiCaller,
         group: NewAccessGroup<ApiPermission>,
-    ) -> Result<Option<AccessGroup<ApiPermission>>, StoreError> {
+    ) -> ResourceResult<AccessGroup<ApiPermission>, StoreError> {
         if caller.can(&ApiPermission::UpdateGroup(group.id)) {
             AccessGroupStore::upsert(&*self.storage, &group)
                 .await
-                .map(Option::Some)
+                .to_resource_result()
         } else {
-            Ok(None)
+            resource_restricted()
         }
     }
 
@@ -1134,11 +1272,13 @@ impl ApiContext {
         &self,
         caller: &ApiCaller,
         group_id: &Uuid,
-    ) -> Result<Option<AccessGroup<ApiPermission>>, StoreError> {
+    ) -> ResourceResult<AccessGroup<ApiPermission>, StoreError> {
         if caller.can(&ApiPermission::DeleteGroup(*group_id)) {
-            AccessGroupStore::delete(&*self.storage, &group_id).await
+            AccessGroupStore::delete(&*self.storage, &group_id)
+                .await
+                .opt_to_resource_result()
         } else {
-            Ok(None)
+            resource_restricted()
         }
     }
 
@@ -1191,7 +1331,7 @@ impl ApiContext {
     async fn get_mappings(
         &self,
         caller: &Caller<ApiPermission>,
-    ) -> Result<Vec<Mapping>, StoreError> {
+    ) -> ResourceResult<Vec<Mapping>, StoreError> {
         let mappers = self
             .get_mappers(caller, false)
             .await?
@@ -1208,16 +1348,17 @@ impl ApiContext {
         &self,
         caller: &Caller<ApiPermission>,
         included_depleted: bool,
-    ) -> Result<Vec<Mapper>, StoreError> {
+    ) -> ResourceResult<Vec<Mapper>, StoreError> {
         if caller.can(&ApiPermission::ListMappers) {
-            Ok(MapperStore::list(
+            MapperStore::list(
                 &*self.storage,
                 MapperFilter::default().depleted(included_depleted),
                 &ListPagination::default().limit(UNLIMITED),
             )
-            .await?)
+            .await
+            .to_resource_result()
         } else {
-            Ok(Vec::new())
+            resource_restricted()
         }
     }
 
@@ -1225,11 +1366,13 @@ impl ApiContext {
         &self,
         caller: &ApiCaller,
         new_mapper: &NewMapper,
-    ) -> Result<Option<Mapper>, StoreError> {
+    ) -> ResourceResult<Mapper, StoreError> {
         if caller.can(&ApiPermission::CreateMapper) {
-            Ok(Some(MapperStore::upsert(&*self.storage, new_mapper).await?))
+            MapperStore::upsert(&*self.storage, new_mapper)
+                .await
+                .to_resource_result()
         } else {
-            Ok(None)
+            resource_restricted()
         }
     }
 
@@ -1237,15 +1380,17 @@ impl ApiContext {
         &self,
         caller: &ApiCaller,
         id: &Uuid,
-    ) -> Result<Option<Mapper>, StoreError> {
+    ) -> ResourceResult<Mapper, StoreError> {
         if caller.any(&[
             &ApiPermission::DeleteMapper(*id).into(),
             &ApiPermission::ManageMapper(*id).into(),
             &ApiPermission::ManageMappersAll.into(),
         ]) {
-            Ok(MapperStore::delete(&*self.storage, id).await?)
+            MapperStore::delete(&*self.storage, id)
+                .await
+                .opt_to_resource_result()
         } else {
-            Ok(None)
+            resource_restricted()
         }
     }
 

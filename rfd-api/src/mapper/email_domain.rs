@@ -10,7 +10,9 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{context::ApiContext, endpoints::login::UserInfo, ApiPermissions};
+use crate::{
+    context::ApiContext, endpoints::login::UserInfo, util::response::ResourceResult, ApiPermissions,
+};
 
 use super::MapperRule;
 
@@ -37,7 +39,7 @@ impl MapperRule for EmailDomainMapper {
         &self,
         ctx: &ApiContext,
         user: &UserInfo,
-    ) -> Result<BTreeSet<Uuid>, StoreError> {
+    ) -> ResourceResult<BTreeSet<Uuid>, StoreError> {
         let has_email_in_domain = user
             .verified_emails
             .iter()
@@ -45,7 +47,7 @@ impl MapperRule for EmailDomainMapper {
 
         if has_email_in_domain {
             let groups = ctx
-                .get_groups(&ctx.system_caller)
+                .get_groups(&ctx.builtin_registration_user())
                 .await?
                 .into_iter()
                 .filter_map(|group| {

@@ -3,7 +3,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use chrono::{DateTime, Utc};
-use dropshot::{endpoint, HttpError, HttpResponseOk, Path, RequestContext, TypedBody};
+use dropshot::{
+    endpoint, HttpError, HttpResponseCreated, HttpResponseOk, Path, RequestContext, TypedBody,
+};
 use http::StatusCode;
 use rfd_model::{OAuthClient, OAuthClientRedirectUri, OAuthClientSecret};
 use schemars::JsonSchema;
@@ -62,7 +64,7 @@ async fn list_oauth_clients_op(
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn create_oauth_client(
     rqctx: RequestContext<ApiContext>,
-) -> Result<HttpResponseOk<OAuthClient>, HttpError> {
+) -> Result<HttpResponseCreated<OAuthClient>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(auth.as_ref()).await?;
@@ -73,28 +75,24 @@ pub async fn create_oauth_client(
 async fn create_oauth_client_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
-) -> Result<HttpResponseOk<OAuthClient>, HttpError> {
-    if caller.can(&ApiPermission::CreateOAuthClient) {
-        // Create the new client
-        let client = ctx.create_oauth_client().await.map_err(ApiError::Storage)?;
+) -> Result<HttpResponseCreated<OAuthClient>, HttpError> {
+    // Create the new client
+    let client = ctx.create_oauth_client(caller).await?;
 
-        // Give the caller permission to perform actions on the client
-        ctx.add_permissions_to_user(
-            &caller.id,
-            vec![
-                ApiPermission::GetOAuthClient(client.id),
-                ApiPermission::UpdateOAuthClient(client.id),
-                ApiPermission::DeleteOAuthClient(client.id),
-            ]
-            .into(),
-        )
-        .await
-        .map_err(ApiError::Storage)?;
+    // Give the caller permission to perform actions on the client
+    ctx.add_permissions_to_user(
+        caller,
+        &caller.id,
+        vec![
+            ApiPermission::GetOAuthClient(client.id),
+            ApiPermission::UpdateOAuthClient(client.id),
+            ApiPermission::DeleteOAuthClient(client.id),
+        ]
+        .into(),
+    )
+    .await?;
 
-        Ok(HttpResponseOk(client))
-    } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
-    }
+    Ok(HttpResponseCreated(client))
 }
 
 #[derive(Debug, Clone, Deserialize, JsonSchema)]
@@ -344,9 +342,15 @@ mod tests {
     use super::{create_oauth_client_op, create_oauth_client_secret_op};
 
     fn mock_user() -> ApiUser<ApiPermission> {
+        let user_id = Uuid::new_v4();
         ApiUser {
-            id: Uuid::new_v4(),
-            permissions: vec![ApiPermission::CreateOAuthClient].into(),
+            id: user_id,
+            permissions: vec![
+                ApiPermission::CreateOAuthClient,
+                ApiPermission::GetApiUser(user_id),
+                ApiPermission::UpdateApiUser(user_id),
+            ]
+            .into(),
             groups: BTreeSet::new(),
             created_at: Utc::now(),
             updated_at: Utc::now(),
