@@ -9,6 +9,54 @@ pub mod types {
     use serde::{Deserialize, Serialize};
     #[allow(unused_imports)]
     use std::convert::TryFrom;
+    /// AccessGroupForApiPermissionResponse
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "name",
+    ///    "permissions",
+    ///    "updated_at"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "name": {
+    ///      "type": "string"
+    ///    },
+    ///    "permissions": {
+    ///      "$ref":
+    /// "#/components/schemas/Permissions_for_ApiPermissionResponse"
+    ///    },
+    ///    "updated_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct AccessGroupForApiPermissionResponse {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
@@ -28,10 +76,35 @@ pub mod types {
 
     impl AccessGroupForApiPermissionResponse {
         pub fn builder() -> builder::AccessGroupForApiPermissionResponse {
-            builder::AccessGroupForApiPermissionResponse::default()
+            Default::default()
         }
     }
 
+    /// AccessGroupUpdateParams
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "name",
+    ///    "permissions"
+    ///  ],
+    ///  "properties": {
+    ///    "name": {
+    ///      "type": "string"
+    ///    },
+    ///    "permissions": {
+    ///      "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct AccessGroupUpdateParams {
         pub name: String,
@@ -46,10 +119,42 @@ pub mod types {
 
     impl AccessGroupUpdateParams {
         pub fn builder() -> builder::AccessGroupUpdateParams {
-            builder::AccessGroupUpdateParams::default()
+            Default::default()
         }
     }
 
+    /// AccessTokenExchangeRequest
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "device_code",
+    ///    "grant_type"
+    ///  ],
+    ///  "properties": {
+    ///    "device_code": {
+    ///      "type": "string"
+    ///    },
+    ///    "expires_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "grant_type": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct AccessTokenExchangeRequest {
         pub device_code: String,
@@ -66,10 +171,32 @@ pub mod types {
 
     impl AccessTokenExchangeRequest {
         pub fn builder() -> builder::AccessTokenExchangeRequest {
-            builder::AccessTokenExchangeRequest::default()
+            Default::default()
         }
     }
 
+    /// AddGroupBody
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "group_id"
+    ///  ],
+    ///  "properties": {
+    ///    "group_id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct AddGroupBody {
         pub group_id: uuid::Uuid,
@@ -83,10 +210,31 @@ pub mod types {
 
     impl AddGroupBody {
         pub fn builder() -> builder::AddGroupBody {
-            builder::AddGroupBody::default()
+            Default::default()
         }
     }
 
+    /// AddOAuthClientRedirectBody
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "redirect_uri"
+    ///  ],
+    ///  "properties": {
+    ///    "redirect_uri": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct AddOAuthClientRedirectBody {
         pub redirect_uri: String,
@@ -100,10 +248,37 @@ pub mod types {
 
     impl AddOAuthClientRedirectBody {
         pub fn builder() -> builder::AddOAuthClientRedirectBody {
-            builder::AddOAuthClientRedirectBody::default()
+            Default::default()
         }
     }
 
+    /// ApiKeyCreateParams
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "expires_at",
+    ///    "permissions"
+    ///  ],
+    ///  "properties": {
+    ///    "expires_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "permissions": {
+    ///      "$ref":
+    /// "#/components/schemas/Permissions_for_ApiPermissionResponse"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct ApiKeyCreateParams {
         pub expires_at: chrono::DateTime<chrono::offset::Utc>,
@@ -118,10 +293,42 @@ pub mod types {
 
     impl ApiKeyCreateParams {
         pub fn builder() -> builder::ApiKeyCreateParams {
-            builder::ApiKeyCreateParams::default()
+            Default::default()
         }
     }
 
+    /// ApiKeyResponse
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "permissions"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "permissions": {
+    ///      "$ref":
+    /// "#/components/schemas/Permissions_for_ApiPermissionResponse"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct ApiKeyResponse {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
@@ -137,10 +344,479 @@ pub mod types {
 
     impl ApiKeyResponse {
         pub fn builder() -> builder::ApiKeyResponse {
-            builder::ApiKeyResponse::default()
+            Default::default()
         }
     }
 
+    /// ApiPermission
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "oneOf": [
+    ///    {
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "CreateApiUserTokenSelf",
+    ///        "CreateApiUserTokenAssigned",
+    ///        "CreateApiUserTokenAll",
+    ///        "GetApiUserSelf",
+    ///        "GetApiUserAssigned",
+    ///        "GetApiUserAll",
+    ///        "GetApiUserTokenSelf",
+    ///        "GetApiUserTokenAssigned",
+    ///        "GetApiUserTokenAll",
+    ///        "DeleteApiUserTokenSelf",
+    ///        "DeleteApiUserTokenAssigned",
+    ///        "DeleteApiUserTokenAll",
+    ///        "CreateApiUser",
+    ///        "UpdateApiUserSelf",
+    ///        "UpdateApiUserAssigned",
+    ///        "UpdateApiUserAll",
+    ///        "CreateUserApiProviderLinkToken",
+    ///        "GetGroupsJoined",
+    ///        "GetGroupsAll",
+    ///        "CreateGroup",
+    ///        "ManageGroupMembershipAssigned",
+    ///        "ManageGroupMembershipAll",
+    ///        "ManageGroupsAssigned",
+    ///        "ManageGroupsAll",
+    ///        "ListMappers",
+    ///        "CreateMapper",
+    ///        "ManageMappersAssigned",
+    ///        "ManageMappersAll",
+    ///        "GetRfdsAssigned",
+    ///        "GetRfdsAll",
+    ///        "GetDiscussionsAssigned",
+    ///        "GetDiscussionsAll",
+    ///        "SearchRfds",
+    ///        "CreateOAuthClient",
+    ///        "GetOAuthClientsAssigned",
+    ///        "GetOAuthClientsAll",
+    ///        "UpdateOAuthClientsAssigned",
+    ///        "UpdateOAuthClientsAll",
+    ///        "DeleteOAuthClientsAssigned",
+    ///        "DeleteOAuthClientsAll",
+    ///        "Removed"
+    ///      ]
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "CreateApiUserToken"
+    ///      ],
+    ///      "properties": {
+    ///        "CreateApiUserToken": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "GetApiUser"
+    ///      ],
+    ///      "properties": {
+    ///        "GetApiUser": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "GetApiUserToken"
+    ///      ],
+    ///      "properties": {
+    ///        "GetApiUserToken": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "DeleteApiUserToken"
+    ///      ],
+    ///      "properties": {
+    ///        "DeleteApiUserToken": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "UpdateApiUser"
+    ///      ],
+    ///      "properties": {
+    ///        "UpdateApiUser": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "UpdateGroup"
+    ///      ],
+    ///      "properties": {
+    ///        "UpdateGroup": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "AddToGroup"
+    ///      ],
+    ///      "properties": {
+    ///        "AddToGroup": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "RemoveFromGroup"
+    ///      ],
+    ///      "properties": {
+    ///        "RemoveFromGroup": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "ManageGroupMembership"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageGroupMembership": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "ManageGroupMemberships"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageGroupMemberships": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "string",
+    ///            "format": "uuid"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "DeleteGroup"
+    ///      ],
+    ///      "properties": {
+    ///        "DeleteGroup": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "ManageGroup"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageGroup": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "ManageGroups"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageGroups": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "string",
+    ///            "format": "uuid"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "UpdateMapper"
+    ///      ],
+    ///      "properties": {
+    ///        "UpdateMapper": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "DeleteMapper"
+    ///      ],
+    ///      "properties": {
+    ///        "DeleteMapper": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "ManageMapper"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageMapper": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "ManageMappers"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageMappers": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "string",
+    ///            "format": "uuid"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "GetRfd"
+    ///      ],
+    ///      "properties": {
+    ///        "GetRfd": {
+    ///          "type": "integer",
+    ///          "format": "int32"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "GetRfds"
+    ///      ],
+    ///      "properties": {
+    ///        "GetRfds": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "integer",
+    ///            "format": "int32"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "GetDiscussion"
+    ///      ],
+    ///      "properties": {
+    ///        "GetDiscussion": {
+    ///          "type": "integer",
+    ///          "format": "int32"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "GetDiscussions"
+    ///      ],
+    ///      "properties": {
+    ///        "GetDiscussions": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "integer",
+    ///            "format": "int32"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "GetOAuthClient"
+    ///      ],
+    ///      "properties": {
+    ///        "GetOAuthClient": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "GetOAuthClients"
+    ///      ],
+    ///      "properties": {
+    ///        "GetOAuthClients": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "string",
+    ///            "format": "uuid"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "UpdateOAuthClient"
+    ///      ],
+    ///      "properties": {
+    ///        "UpdateOAuthClient": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "UpdateOAuthClients"
+    ///      ],
+    ///      "properties": {
+    ///        "UpdateOAuthClients": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "string",
+    ///            "format": "uuid"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "DeleteOAuthClient"
+    ///      ],
+    ///      "properties": {
+    ///        "DeleteOAuthClient": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "DeleteOAuthClients"
+    ///      ],
+    ///      "properties": {
+    ///        "DeleteOAuthClients": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "string",
+    ///            "format": "uuid"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    }
+
+    ///  ]
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub enum ApiPermission {
         CreateApiUserTokenSelf,
@@ -219,6 +895,1274 @@ pub mod types {
         }
     }
 
+    /// ApiPermissionResponse
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "oneOf": [
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "CreateApiUserToken"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "CreateApiUserTokenSelf"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "CreateApiUserTokenAssigned"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "CreateApiUserTokenAll"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetApiUser"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetApiUserSelf"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetApiUserAssigned"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetApiUserAll"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetApiUserToken"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetApiUserTokenSelf"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetApiUserTokenAssigned"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetApiUserTokenAll"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "DeleteApiUserToken"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "DeleteApiUserTokenSelf"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "DeleteApiUserTokenAssigned"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "DeleteApiUserTokenAll"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "CreateApiUser"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "UpdateApiUser"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "UpdateApiUserSelf"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "UpdateApiUserAssigned"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "UpdateApiUserAll"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "CreateUserApiProviderLinkToken"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetGroupsJoined"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetGroupsAll"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "CreateGroup"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "UpdateGroup"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "AddToGroup"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "RemoveFromGroup"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "ManageGroupMembership"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "ManageGroupMemberships"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "string",
+    ///            "format": "uuid"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "ManageGroupMembershipAssigned"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "ManageGroupMembershipAll"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "DeleteGroup"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "ManageGroup"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "ManageGroups"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "string",
+    ///            "format": "uuid"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "ManageGroupsAssigned"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "ManageGroupsAll"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "ListMappers"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "CreateMapper"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "UpdateMapper"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "DeleteMapper"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "ManageMapper"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "ManageMappers"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "string",
+    ///            "format": "uuid"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "ManageMappersAssigned"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "ManageMappersAll"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetRfd"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "integer",
+    ///          "format": "int32"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetRfds"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "integer",
+    ///            "format": "int32"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetRfdsAssigned"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetRfdsAll"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetDiscussion"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "integer",
+    ///          "format": "int32"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetDiscussions"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "integer",
+    ///            "format": "int32"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetDiscussionsAssigned"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetDiscussionsAll"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "SearchRfds"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "CreateOAuthClient"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetOAuthClient"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetOAuthClients"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "string",
+    ///            "format": "uuid"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetOAuthClientsAssigned"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "GetOAuthClientsAll"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "UpdateOAuthClient"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "UpdateOAuthClients"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "string",
+    ///            "format": "uuid"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "UpdateOAuthClientsAssigned"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "UpdateOAuthClientsAll"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "DeleteOAuthClient"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "string",
+    ///          "format": "uuid"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "DeleteOAuthClients"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "string",
+    ///            "format": "uuid"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "DeleteOAuthClientsAssigned"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "DeleteOAuthClientsAll"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "Removed"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    }
+
+    ///  ]
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     #[serde(tag = "kind", content = "value")]
     pub enum ApiPermissionResponse {
@@ -298,6 +2242,59 @@ pub mod types {
         }
     }
 
+    /// ApiUserForApiPermissionResponse
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "groups",
+    ///    "id",
+    ///    "permissions",
+    ///    "updated_at"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "groups": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string",
+    ///        "format": "uuid"
+    ///      },
+    ///      "uniqueItems": true
+    ///    },
+    ///    "id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "permissions": {
+    ///      "$ref":
+    /// "#/components/schemas/Permissions_for_ApiPermissionResponse"
+    ///    },
+    ///    "updated_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct ApiUserForApiPermissionResponse {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
@@ -317,10 +2314,32 @@ pub mod types {
 
     impl ApiUserForApiPermissionResponse {
         pub fn builder() -> builder::ApiUserForApiPermissionResponse {
-            builder::ApiUserForApiPermissionResponse::default()
+            Default::default()
         }
     }
 
+    /// ApiUserLinkRequestPayload
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "user_identifier"
+    ///  ],
+    ///  "properties": {
+    ///    "user_identifier": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct ApiUserLinkRequestPayload {
         pub user_identifier: uuid::Uuid,
@@ -334,10 +2353,31 @@ pub mod types {
 
     impl ApiUserLinkRequestPayload {
         pub fn builder() -> builder::ApiUserLinkRequestPayload {
-            builder::ApiUserLinkRequestPayload::default()
+            Default::default()
         }
     }
 
+    /// ApiUserLinkRequestResponse
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "token"
+    ///  ],
+    ///  "properties": {
+    ///    "token": {
+    ///      "$ref": "#/components/schemas/SecretString"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct ApiUserLinkRequestResponse {
         pub token: SecretString,
@@ -351,10 +2391,70 @@ pub mod types {
 
     impl ApiUserLinkRequestResponse {
         pub fn builder() -> builder::ApiUserLinkRequestResponse {
-            builder::ApiUserLinkRequestResponse::default()
+            Default::default()
         }
     }
 
+    /// ApiUserProvider
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "api_user_id",
+    ///    "created_at",
+    ///    "emails",
+    ///    "id",
+    ///    "provider",
+    ///    "provider_id",
+    ///    "updated_at"
+    ///  ],
+    ///  "properties": {
+    ///    "api_user_id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "emails": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      }
+
+    ///    },
+    ///    "id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "provider": {
+    ///      "type": "string"
+    ///    },
+    ///    "provider_id": {
+    ///      "type": "string"
+    ///    },
+    ///    "updated_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct ApiUserProvider {
         pub api_user_id: uuid::Uuid,
@@ -376,10 +2476,31 @@ pub mod types {
 
     impl ApiUserProvider {
         pub fn builder() -> builder::ApiUserProvider {
-            builder::ApiUserProvider::default()
+            Default::default()
         }
     }
 
+    /// ApiUserProviderLinkPayload
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "token"
+    ///  ],
+    ///  "properties": {
+    ///    "token": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct ApiUserProviderLinkPayload {
         pub token: String,
@@ -393,10 +2514,40 @@ pub mod types {
 
     impl ApiUserProviderLinkPayload {
         pub fn builder() -> builder::ApiUserProviderLinkPayload {
-            builder::ApiUserProviderLinkPayload::default()
+            Default::default()
         }
     }
 
+    /// ApiUserUpdateParams
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "groups",
+    ///    "permissions"
+    ///  ],
+    ///  "properties": {
+    ///    "groups": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string",
+    ///        "format": "uuid"
+    ///      },
+    ///      "uniqueItems": true
+    ///    },
+    ///    "permissions": {
+    ///      "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct ApiUserUpdateParams {
         pub groups: Vec<uuid::Uuid>,
@@ -411,10 +2562,42 @@ pub mod types {
 
     impl ApiUserUpdateParams {
         pub fn builder() -> builder::ApiUserUpdateParams {
-            builder::ApiUserUpdateParams::default()
+            Default::default()
         }
     }
 
+    /// CreateMapper
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "name",
+    ///    "rule"
+    ///  ],
+    ///  "properties": {
+    ///    "max_activations": {
+    ///      "type": [
+    ///        "integer",
+    ///        "null"
+    ///      ],
+    ///      "format": "int32"
+    ///    },
+    ///    "name": {
+    ///      "type": "string"
+    ///    },
+    ///    "rule": {
+    ///      "$ref": "#/components/schemas/MappingRules"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct CreateMapper {
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -431,11 +2614,39 @@ pub mod types {
 
     impl CreateMapper {
         pub fn builder() -> builder::CreateMapper {
-            builder::CreateMapper::default()
+            Default::default()
         }
     }
 
     /// Error information from a response.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "description": "Error information from a response.",
+    ///  "type": "object",
+    ///  "required": [
+    ///    "message",
+    ///    "request_id"
+    ///  ],
+    ///  "properties": {
+    ///    "error_code": {
+    ///      "type": "string"
+    ///    },
+    ///    "message": {
+    ///      "type": "string"
+    ///    },
+    ///    "request_id": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct Error {
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -452,10 +2663,79 @@ pub mod types {
 
     impl Error {
         pub fn builder() -> builder::Error {
-            builder::Error::default()
+            Default::default()
         }
     }
 
+    /// FormattedSearchResultHit
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "hierarchy",
+    ///    "hierarchy_radio",
+    ///    "object_id",
+    ///    "rfd_number"
+    ///  ],
+    ///  "properties": {
+    ///    "anchor": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "content": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "hierarchy": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": [
+    ///          "string",
+    ///          "null"
+    ///        ]
+    ///      },
+    ///      "maxItems": 6,
+    ///      "minItems": 6
+    ///    },
+    ///    "hierarchy_radio": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": [
+    ///          "string",
+    ///          "null"
+    ///        ]
+    ///      },
+    ///      "maxItems": 6,
+    ///      "minItems": 6
+    ///    },
+    ///    "object_id": {
+    ///      "type": "string"
+    ///    },
+    ///    "rfd_number": {
+    ///      "type": "integer",
+    ///      "format": "uint64",
+    ///      "minimum": 0.0
+    ///    },
+    ///    "url": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct FormattedSearchResultHit {
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -478,10 +2758,94 @@ pub mod types {
 
     impl FormattedSearchResultHit {
         pub fn builder() -> builder::FormattedSearchResultHit {
-            builder::FormattedSearchResultHit::default()
+            Default::default()
         }
     }
 
+    /// FullRfd
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "commit",
+    ///    "committed_at",
+    ///    "content",
+    ///    "id",
+    ///    "pdfs",
+    ///    "rfd_number",
+    ///    "sha",
+    ///    "title",
+    ///    "visibility"
+    ///  ],
+    ///  "properties": {
+    ///    "authors": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "commit": {
+    ///      "type": "string"
+    ///    },
+    ///    "committed_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "content": {
+    ///      "type": "string"
+    ///    },
+    ///    "discussion": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "link": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "pdfs": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/FullRfdPdfEntry"
+    ///      }
+
+    ///    },
+    ///    "rfd_number": {
+    ///      "type": "integer",
+    ///      "format": "int32"
+    ///    },
+    ///    "sha": {
+    ///      "type": "string"
+    ///    },
+    ///    "state": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "title": {
+    ///      "type": "string"
+    ///    },
+    ///    "visibility": {
+    ///      "$ref": "#/components/schemas/Visibility"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct FullRfd {
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -511,10 +2875,35 @@ pub mod types {
 
     impl FullRfd {
         pub fn builder() -> builder::FullRfd {
-            builder::FullRfd::default()
+            Default::default()
         }
     }
 
+    /// FullRfdPdfEntry
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "link",
+    ///    "source"
+    ///  ],
+    ///  "properties": {
+    ///    "link": {
+    ///      "type": "string"
+    ///    },
+    ///    "source": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct FullRfdPdfEntry {
         pub link: String,
@@ -529,10 +2918,39 @@ pub mod types {
 
     impl FullRfdPdfEntry {
         pub fn builder() -> builder::FullRfdPdfEntry {
-            builder::FullRfdPdfEntry::default()
+            Default::default()
         }
     }
 
+    /// GetUserResponse
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "info",
+    ///    "providers"
+    ///  ],
+    ///  "properties": {
+    ///    "info": {
+    ///      "$ref": "#/components/schemas/ApiUser_for_ApiPermissionResponse"
+    ///    },
+    ///    "providers": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/ApiUserProvider"
+    ///      }
+
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct GetUserResponse {
         pub info: ApiUserForApiPermissionResponse,
@@ -547,10 +2965,60 @@ pub mod types {
 
     impl GetUserResponse {
         pub fn builder() -> builder::GetUserResponse {
-            builder::GetUserResponse::default()
+            Default::default()
         }
     }
 
+    /// GitHubCommit
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "added",
+    ///    "id",
+    ///    "modified",
+    ///    "removed",
+    ///    "timestamp"
+    ///  ],
+    ///  "properties": {
+    ///    "added": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      }
+
+    ///    },
+    ///    "id": {
+    ///      "type": "string"
+    ///    },
+    ///    "modified": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      }
+
+    ///    },
+    ///    "removed": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      }
+
+    ///    },
+    ///    "timestamp": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct GitHubCommit {
         pub added: Vec<String>,
@@ -568,10 +3036,59 @@ pub mod types {
 
     impl GitHubCommit {
         pub fn builder() -> builder::GitHubCommit {
-            builder::GitHubCommit::default()
+            Default::default()
         }
     }
 
+    /// GitHubCommitPayload
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "commits",
+    ///    "installation",
+    ///    "ref",
+    ///    "repository",
+    ///    "sender"
+    ///  ],
+    ///  "properties": {
+    ///    "commits": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/GitHubCommit"
+    ///      }
+
+    ///    },
+    ///    "head_commit": {
+    ///      "allOf": [
+    ///        {
+    ///          "$ref": "#/components/schemas/GitHubCommit"
+    ///        }
+
+    ///      ]
+    ///    },
+    ///    "installation": {
+    ///      "$ref": "#/components/schemas/GitHubInstallation"
+    ///    },
+    ///    "ref": {
+    ///      "type": "string"
+    ///    },
+    ///    "repository": {
+    ///      "$ref": "#/components/schemas/GitHubRepository"
+    ///    },
+    ///    "sender": {
+    ///      "$ref": "#/components/schemas/GitHubSender"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct GitHubCommitPayload {
         pub commits: Vec<GitHubCommit>,
@@ -592,10 +3109,37 @@ pub mod types {
 
     impl GitHubCommitPayload {
         pub fn builder() -> builder::GitHubCommitPayload {
-            builder::GitHubCommitPayload::default()
+            Default::default()
         }
     }
 
+    /// GitHubInstallation
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "id",
+    ///    "node_id"
+    ///  ],
+    ///  "properties": {
+    ///    "id": {
+    ///      "type": "integer",
+    ///      "format": "uint64",
+    ///      "minimum": 0.0
+    ///    },
+    ///    "node_id": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct GitHubInstallation {
         pub id: u64,
@@ -610,10 +3154,49 @@ pub mod types {
 
     impl GitHubInstallation {
         pub fn builder() -> builder::GitHubInstallation {
-            builder::GitHubInstallation::default()
+            Default::default()
         }
     }
 
+    /// GitHubRepository
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "default_branch",
+    ///    "id",
+    ///    "name",
+    ///    "node_id",
+    ///    "owner"
+    ///  ],
+    ///  "properties": {
+    ///    "default_branch": {
+    ///      "type": "string"
+    ///    },
+    ///    "id": {
+    ///      "type": "integer",
+    ///      "format": "uint64",
+    ///      "minimum": 0.0
+    ///    },
+    ///    "name": {
+    ///      "type": "string"
+    ///    },
+    ///    "node_id": {
+    ///      "type": "string"
+    ///    },
+    ///    "owner": {
+    ///      "$ref": "#/components/schemas/GitHubRepositoryOwner"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct GitHubRepository {
         pub default_branch: String,
@@ -631,10 +3214,31 @@ pub mod types {
 
     impl GitHubRepository {
         pub fn builder() -> builder::GitHubRepository {
-            builder::GitHubRepository::default()
+            Default::default()
         }
     }
 
+    /// GitHubRepositoryOwner
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "login"
+    ///  ],
+    ///  "properties": {
+    ///    "login": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct GitHubRepositoryOwner {
         pub login: String,
@@ -648,10 +3252,45 @@ pub mod types {
 
     impl GitHubRepositoryOwner {
         pub fn builder() -> builder::GitHubRepositoryOwner {
-            builder::GitHubRepositoryOwner::default()
+            Default::default()
         }
     }
 
+    /// GitHubSender
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "id",
+    ///    "login",
+    ///    "node_id",
+    ///    "type"
+    ///  ],
+    ///  "properties": {
+    ///    "id": {
+    ///      "type": "integer",
+    ///      "format": "uint64",
+    ///      "minimum": 0.0
+    ///    },
+    ///    "login": {
+    ///      "type": "string"
+    ///    },
+    ///    "node_id": {
+    ///      "type": "string"
+    ///    },
+    ///    "type": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct GitHubSender {
         pub id: u64,
@@ -669,10 +3308,46 @@ pub mod types {
 
     impl GitHubSender {
         pub fn builder() -> builder::GitHubSender {
-            builder::GitHubSender::default()
+            Default::default()
         }
     }
 
+    /// InitialApiKeyResponse
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "key",
+    ///    "permissions"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "key": {
+    ///      "$ref": "#/components/schemas/SecretString"
+    ///    },
+    ///    "permissions": {
+    ///      "$ref":
+    /// "#/components/schemas/Permissions_for_ApiPermissionResponse"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct InitialApiKeyResponse {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
@@ -689,10 +3364,41 @@ pub mod types {
 
     impl InitialApiKeyResponse {
         pub fn builder() -> builder::InitialApiKeyResponse {
-            builder::InitialApiKeyResponse::default()
+            Default::default()
         }
     }
 
+    /// InitialOAuthClientSecretResponse
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "key"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "key": {
+    ///      "$ref": "#/components/schemas/SecretString"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct InitialOAuthClientSecretResponse {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
@@ -708,10 +3414,47 @@ pub mod types {
 
     impl InitialOAuthClientSecretResponse {
         pub fn builder() -> builder::InitialOAuthClientSecretResponse {
-            builder::InitialOAuthClientSecretResponse::default()
+            Default::default()
         }
     }
 
+    /// Jwk
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "e",
+    ///    "kid",
+    ///    "kty",
+    ///    "n",
+    ///    "use"
+    ///  ],
+    ///  "properties": {
+    ///    "e": {
+    ///      "type": "string"
+    ///    },
+    ///    "kid": {
+    ///      "type": "string"
+    ///    },
+    ///    "kty": {
+    ///      "type": "string"
+    ///    },
+    ///    "n": {
+    ///      "type": "string"
+    ///    },
+    ///    "use": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct Jwk {
         pub e: String,
@@ -730,10 +3473,35 @@ pub mod types {
 
     impl Jwk {
         pub fn builder() -> builder::Jwk {
-            builder::Jwk::default()
+            Default::default()
         }
     }
 
+    /// Jwks
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "keys"
+    ///  ],
+    ///  "properties": {
+    ///    "keys": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/Jwk"
+    ///      }
+
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct Jwks {
         pub keys: Vec<Jwk>,
@@ -747,10 +3515,82 @@ pub mod types {
 
     impl Jwks {
         pub fn builder() -> builder::Jwks {
-            builder::Jwks::default()
+            Default::default()
         }
     }
 
+    /// ListRfd
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "commit",
+    ///    "committed_at",
+    ///    "id",
+    ///    "rfd_number",
+    ///    "sha",
+    ///    "title",
+    ///    "visibility"
+    ///  ],
+    ///  "properties": {
+    ///    "authors": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "commit": {
+    ///      "type": "string"
+    ///    },
+    ///    "committed_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "discussion": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "link": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "rfd_number": {
+    ///      "type": "integer",
+    ///      "format": "int32"
+    ///    },
+    ///    "sha": {
+    ///      "type": "string"
+    ///    },
+    ///    "state": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "title": {
+    ///      "type": "string"
+    ///    },
+    ///    "visibility": {
+    ///      "$ref": "#/components/schemas/Visibility"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct ListRfd {
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -778,10 +3618,71 @@ pub mod types {
 
     impl ListRfd {
         pub fn builder() -> builder::ListRfd {
-            builder::ListRfd::default()
+            Default::default()
         }
     }
 
+    /// Mapper
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "name",
+    ///    "rule"
+    ///  ],
+    ///  "properties": {
+    ///    "activations": {
+    ///      "type": [
+    ///        "integer",
+    ///        "null"
+    ///      ],
+    ///      "format": "int32"
+    ///    },
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "depleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "max_activations": {
+    ///      "type": [
+    ///        "integer",
+    ///        "null"
+    ///      ],
+    ///      "format": "int32"
+    ///    },
+    ///    "name": {
+    ///      "type": "string"
+    ///    },
+    ///    "rule": {}
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct Mapper {
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -806,10 +3707,171 @@ pub mod types {
 
     impl Mapper {
         pub fn builder() -> builder::Mapper {
-            builder::Mapper::default()
+            Default::default()
         }
     }
 
+    /// MappingRules
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "oneOf": [
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "rule"
+    ///      ],
+    ///      "properties": {
+    ///        "groups": {
+    ///          "default": [],
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "string"
+    ///          }
+
+    ///        },
+    ///        "permissions": {
+    ///          "default": [],
+    ///          "allOf": [
+    ///            {
+    ///              "$ref":
+    /// "#/components/schemas/Permissions_for_ApiPermission"
+    ///            }
+
+    ///          ]
+    ///        },
+    ///        "rule": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "default"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "email",
+    ///        "rule"
+    ///      ],
+    ///      "properties": {
+    ///        "email": {
+    ///          "type": "string"
+    ///        },
+    ///        "groups": {
+    ///          "default": [],
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "string"
+    ///          }
+
+    ///        },
+    ///        "permissions": {
+    ///          "default": [],
+    ///          "allOf": [
+    ///            {
+    ///              "$ref":
+    /// "#/components/schemas/Permissions_for_ApiPermission"
+    ///            }
+
+    ///          ]
+    ///        },
+    ///        "rule": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "email_address"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "domain",
+    ///        "rule"
+    ///      ],
+    ///      "properties": {
+    ///        "domain": {
+    ///          "type": "string"
+    ///        },
+    ///        "groups": {
+    ///          "default": [],
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "string"
+    ///          }
+
+    ///        },
+    ///        "permissions": {
+    ///          "default": [],
+    ///          "allOf": [
+    ///            {
+    ///              "$ref":
+    /// "#/components/schemas/Permissions_for_ApiPermission"
+    ///            }
+
+    ///          ]
+    ///        },
+    ///        "rule": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "email_domain"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "github_username",
+    ///        "rule"
+    ///      ],
+    ///      "properties": {
+    ///        "github_username": {
+    ///          "type": "string"
+    ///        },
+    ///        "groups": {
+    ///          "default": [],
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "string"
+    ///          }
+
+    ///        },
+    ///        "permissions": {
+    ///          "default": [],
+    ///          "allOf": [
+    ///            {
+    ///              "$ref":
+    /// "#/components/schemas/Permissions_for_ApiPermission"
+    ///            }
+
+    ///          ]
+    ///        },
+    ///        "rule": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "github_username"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    }
+
+    ///  ]
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     #[serde(tag = "rule")]
     pub enum MappingRules {
@@ -852,6 +3914,50 @@ pub mod types {
         }
     }
 
+    /// OAuthAuthzCodeExchangeBody
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "client_id",
+    ///    "client_secret",
+    ///    "code",
+    ///    "grant_type",
+    ///    "redirect_uri"
+    ///  ],
+    ///  "properties": {
+    ///    "client_id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "client_secret": {
+    ///      "$ref": "#/components/schemas/SecretString"
+    ///    },
+    ///    "code": {
+    ///      "type": "string"
+    ///    },
+    ///    "grant_type": {
+    ///      "type": "string"
+    ///    },
+    ///    "pkce_verifier": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "redirect_uri": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct OAuthAuthzCodeExchangeBody {
         pub client_id: uuid::Uuid,
@@ -871,10 +3977,40 @@ pub mod types {
 
     impl OAuthAuthzCodeExchangeBody {
         pub fn builder() -> builder::OAuthAuthzCodeExchangeBody {
-            builder::OAuthAuthzCodeExchangeBody::default()
+            Default::default()
         }
     }
 
+    /// OAuthAuthzCodeExchangeResponse
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "access_token",
+    ///    "expires_in",
+    ///    "token_type"
+    ///  ],
+    ///  "properties": {
+    ///    "access_token": {
+    ///      "type": "string"
+    ///    },
+    ///    "expires_in": {
+    ///      "type": "integer",
+    ///      "format": "int64"
+    ///    },
+    ///    "token_type": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct OAuthAuthzCodeExchangeResponse {
         pub access_token: String,
@@ -890,10 +4026,60 @@ pub mod types {
 
     impl OAuthAuthzCodeExchangeResponse {
         pub fn builder() -> builder::OAuthAuthzCodeExchangeResponse {
-            builder::OAuthAuthzCodeExchangeResponse::default()
+            Default::default()
         }
     }
 
+    /// OAuthClient
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "redirect_uris",
+    ///    "secrets"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "redirect_uris": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/OAuthClientRedirectUri"
+    ///      }
+
+    ///    },
+    ///    "secrets": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/OAuthClientSecret"
+    ///      }
+
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct OAuthClient {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
@@ -912,10 +4098,53 @@ pub mod types {
 
     impl OAuthClient {
         pub fn builder() -> builder::OAuthClient {
-            builder::OAuthClient::default()
+            Default::default()
         }
     }
 
+    /// OAuthClientRedirectUri
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "oauth_client_id",
+    ///    "redirect_uri"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "oauth_client_id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "redirect_uri": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct OAuthClientRedirectUri {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
@@ -934,10 +4163,53 @@ pub mod types {
 
     impl OAuthClientRedirectUri {
         pub fn builder() -> builder::OAuthClientRedirectUri {
-            builder::OAuthClientRedirectUri::default()
+            Default::default()
         }
     }
 
+    /// OAuthClientSecret
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "oauth_client_id",
+    ///    "secret_signature"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "oauth_client_id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "secret_signature": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct OAuthClientSecret {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
@@ -956,10 +4228,55 @@ pub mod types {
 
     impl OAuthClientSecret {
         pub fn builder() -> builder::OAuthClientSecret {
-            builder::OAuthClientSecret::default()
+            Default::default()
         }
     }
 
+    /// OAuthProviderInfo
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "auth_url_endpoint",
+    ///    "client_id",
+    ///    "device_code_endpoint",
+    ///    "provider",
+    ///    "scopes",
+    ///    "token_endpoint"
+    ///  ],
+    ///  "properties": {
+    ///    "auth_url_endpoint": {
+    ///      "type": "string"
+    ///    },
+    ///    "client_id": {
+    ///      "type": "string"
+    ///    },
+    ///    "device_code_endpoint": {
+    ///      "type": "string"
+    ///    },
+    ///    "provider": {
+    ///      "$ref": "#/components/schemas/OAuthProviderName"
+    ///    },
+    ///    "scopes": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      }
+
+    ///    },
+    ///    "token_endpoint": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct OAuthProviderInfo {
         pub auth_url_endpoint: String,
@@ -978,10 +4295,25 @@ pub mod types {
 
     impl OAuthProviderInfo {
         pub fn builder() -> builder::OAuthProviderInfo {
-            builder::OAuthProviderInfo::default()
+            Default::default()
         }
     }
 
+    /// OAuthProviderName
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "github",
+    ///    "google"
+    ///  ]
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(
         Clone,
         Copy,
@@ -1049,6 +4381,27 @@ pub mod types {
         }
     }
 
+    /// OpenIdConfiguration
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "jwks_uri"
+    ///  ],
+    ///  "properties": {
+    ///    "jwks_uri": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct OpenIdConfiguration {
         pub jwks_uri: String,
@@ -1062,10 +4415,25 @@ pub mod types {
 
     impl OpenIdConfiguration {
         pub fn builder() -> builder::OpenIdConfiguration {
-            builder::OpenIdConfiguration::default()
+            Default::default()
         }
     }
 
+    /// PermissionsForApiPermission
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "array",
+    ///  "items": {
+    ///    "$ref": "#/components/schemas/ApiPermission"
+    ///  },
+    ///  "uniqueItems": true
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct PermissionsForApiPermission(pub Vec<ApiPermission>);
     impl std::ops::Deref for PermissionsForApiPermission {
@@ -1093,6 +4461,21 @@ pub mod types {
         }
     }
 
+    /// PermissionsForApiPermissionResponse
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "array",
+    ///  "items": {
+    ///    "$ref": "#/components/schemas/ApiPermissionResponse"
+    ///  },
+    ///  "uniqueItems": true
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct PermissionsForApiPermissionResponse(pub Vec<ApiPermissionResponse>);
     impl std::ops::Deref for PermissionsForApiPermissionResponse {
@@ -1120,6 +4503,81 @@ pub mod types {
         }
     }
 
+    /// SearchResultHit
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "content",
+    ///    "hierarchy",
+    ///    "hierarchy_radio",
+    ///    "object_id",
+    ///    "rfd_number"
+    ///  ],
+    ///  "properties": {
+    ///    "anchor": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "content": {
+    ///      "type": "string"
+    ///    },
+    ///    "formatted": {
+    ///      "allOf": [
+    ///        {
+    ///          "$ref": "#/components/schemas/FormattedSearchResultHit"
+    ///        }
+
+    ///      ]
+    ///    },
+    ///    "hierarchy": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": [
+    ///          "string",
+    ///          "null"
+    ///        ]
+    ///      },
+    ///      "maxItems": 6,
+    ///      "minItems": 6
+    ///    },
+    ///    "hierarchy_radio": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": [
+    ///          "string",
+    ///          "null"
+    ///        ]
+    ///      },
+    ///      "maxItems": 6,
+    ///      "minItems": 6
+    ///    },
+    ///    "object_id": {
+    ///      "type": "string"
+    ///    },
+    ///    "rfd_number": {
+    ///      "type": "integer",
+    ///      "format": "uint64",
+    ///      "minimum": 0.0
+    ///    },
+    ///    "url": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct SearchResultHit {
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1143,10 +4601,55 @@ pub mod types {
 
     impl SearchResultHit {
         pub fn builder() -> builder::SearchResultHit {
-            builder::SearchResultHit::default()
+            Default::default()
         }
     }
 
+    /// SearchResults
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "hits",
+    ///    "query"
+    ///  ],
+    ///  "properties": {
+    ///    "hits": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/SearchResultHit"
+    ///      }
+
+    ///    },
+    ///    "limit": {
+    ///      "type": [
+    ///        "integer",
+    ///        "null"
+    ///      ],
+    ///      "format": "uint",
+    ///      "minimum": 0.0
+    ///    },
+    ///    "offset": {
+    ///      "type": [
+    ///        "integer",
+    ///        "null"
+    ///      ],
+    ///      "format": "uint",
+    ///      "minimum": 0.0
+    ///    },
+    ///    "query": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct SearchResults {
         pub hits: Vec<SearchResultHit>,
@@ -1165,10 +4668,21 @@ pub mod types {
 
     impl SearchResults {
         pub fn builder() -> builder::SearchResults {
-            builder::SearchResults::default()
+            Default::default()
         }
     }
 
+    /// SecretString
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string"
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(
         Clone,
         Debug,
@@ -1220,6 +4734,21 @@ pub mod types {
         }
     }
 
+    /// Visibility
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "public",
+    ///    "private"
+    ///  ]
+    /// }
+
+    /// ```
+    /// </details>
     #[derive(
         Clone,
         Copy,
@@ -5395,7 +8924,7 @@ pub mod builder {
 
     impl<'a> JwksJson<'a> {
         pub fn new(client: &'a super::Client) -> Self {
-            Self { client }
+            Self { client: client }
         }
 
         /// Sends a `GET` request to `/.well-known/jwks.json`
@@ -5435,7 +8964,7 @@ pub mod builder {
 
     impl<'a> OpenidConfiguration<'a> {
         pub fn new(client: &'a super::Client) -> Self {
-            Self { client }
+            Self { client: client }
         }
 
         /// Sends a `GET` request to `/.well-known/openid-configuration`
@@ -5479,7 +9008,7 @@ pub mod builder {
     impl<'a> CreateApiUser<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 body: Ok(types::builder::ApiUserUpdateParams::default()),
             }
         }
@@ -5487,11 +9016,12 @@ pub mod builder {
         pub fn body<V>(mut self, value: V) -> Self
         where
             V: std::convert::TryInto<types::ApiUserUpdateParams>,
+            <V as std::convert::TryInto<types::ApiUserUpdateParams>>::Error: std::fmt::Display,
         {
             self.body = value
                 .try_into()
                 .map(From::from)
-                .map_err(|_| "conversion to `ApiUserUpdateParams` for body failed".to_string());
+                .map_err(|s| format!("conversion to `ApiUserUpdateParams` for body failed: {}", s));
             self
         }
 
@@ -5551,7 +9081,7 @@ pub mod builder {
     impl<'a> GetApiUser<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 identifier: Err("identifier was not initialized".to_string()),
             }
         }
@@ -5613,7 +9143,7 @@ pub mod builder {
     impl<'a> UpdateApiUser<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 identifier: Err("identifier was not initialized".to_string()),
                 body: Ok(types::builder::ApiUserUpdateParams::default()),
             }
@@ -5632,11 +9162,12 @@ pub mod builder {
         pub fn body<V>(mut self, value: V) -> Self
         where
             V: std::convert::TryInto<types::ApiUserUpdateParams>,
+            <V as std::convert::TryInto<types::ApiUserUpdateParams>>::Error: std::fmt::Display,
         {
             self.body = value
                 .try_into()
                 .map(From::from)
-                .map_err(|_| "conversion to `ApiUserUpdateParams` for body failed".to_string());
+                .map_err(|s| format!("conversion to `ApiUserUpdateParams` for body failed: {}", s));
             self
         }
 
@@ -5706,7 +9237,7 @@ pub mod builder {
     impl<'a> AddApiUserToGroup<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 identifier: Err("identifier was not initialized".to_string()),
                 body: Ok(types::builder::AddGroupBody::default()),
             }
@@ -5725,11 +9256,12 @@ pub mod builder {
         pub fn body<V>(mut self, value: V) -> Self
         where
             V: std::convert::TryInto<types::AddGroupBody>,
+            <V as std::convert::TryInto<types::AddGroupBody>>::Error: std::fmt::Display,
         {
             self.body = value
                 .try_into()
                 .map(From::from)
-                .map_err(|_| "conversion to `AddGroupBody` for body failed".to_string());
+                .map_err(|s| format!("conversion to `AddGroupBody` for body failed: {}", s));
             self
         }
 
@@ -5797,7 +9329,7 @@ pub mod builder {
     impl<'a> RemoveApiUserFromGroup<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 identifier: Err("identifier was not initialized".to_string()),
                 group_id: Err("group_id was not initialized".to_string()),
             }
@@ -5878,7 +9410,7 @@ pub mod builder {
     impl<'a> LinkProvider<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 identifier: Err("identifier was not initialized".to_string()),
                 body: Ok(types::builder::ApiUserProviderLinkPayload::default()),
             }
@@ -5897,9 +9429,14 @@ pub mod builder {
         pub fn body<V>(mut self, value: V) -> Self
         where
             V: std::convert::TryInto<types::ApiUserProviderLinkPayload>,
+            <V as std::convert::TryInto<types::ApiUserProviderLinkPayload>>::Error:
+                std::fmt::Display,
         {
-            self.body = value.try_into().map(From::from).map_err(|_| {
-                "conversion to `ApiUserProviderLinkPayload` for body failed".to_string()
+            self.body = value.try_into().map(From::from).map_err(|s| {
+                format!(
+                    "conversion to `ApiUserProviderLinkPayload` for body failed: {}",
+                    s
+                )
             });
             self
         }
@@ -5966,7 +9503,7 @@ pub mod builder {
     impl<'a> ListApiUserTokens<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 identifier: Err("identifier was not initialized".to_string()),
             }
         }
@@ -6028,7 +9565,7 @@ pub mod builder {
     impl<'a> CreateApiUserToken<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 identifier: Err("identifier was not initialized".to_string()),
                 body: Ok(types::builder::ApiKeyCreateParams::default()),
             }
@@ -6047,11 +9584,12 @@ pub mod builder {
         pub fn body<V>(mut self, value: V) -> Self
         where
             V: std::convert::TryInto<types::ApiKeyCreateParams>,
+            <V as std::convert::TryInto<types::ApiKeyCreateParams>>::Error: std::fmt::Display,
         {
             self.body = value
                 .try_into()
                 .map(From::from)
-                .map_err(|_| "conversion to `ApiKeyCreateParams` for body failed".to_string());
+                .map_err(|s| format!("conversion to `ApiKeyCreateParams` for body failed: {}", s));
             self
         }
 
@@ -6120,7 +9658,7 @@ pub mod builder {
     impl<'a> GetApiUserToken<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 identifier: Err("identifier was not initialized".to_string()),
                 token_identifier: Err("token_identifier was not initialized".to_string()),
             }
@@ -6200,7 +9738,7 @@ pub mod builder {
     impl<'a> DeleteApiUserToken<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 identifier: Err("identifier was not initialized".to_string()),
                 token_identifier: Err("token_identifier was not initialized".to_string()),
             }
@@ -6280,7 +9818,7 @@ pub mod builder {
     impl<'a> CreateLinkToken<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 identifier: Err("identifier was not initialized".to_string()),
                 body: Ok(types::builder::ApiUserLinkRequestPayload::default()),
             }
@@ -6299,9 +9837,14 @@ pub mod builder {
         pub fn body<V>(mut self, value: V) -> Self
         where
             V: std::convert::TryInto<types::ApiUserLinkRequestPayload>,
+            <V as std::convert::TryInto<types::ApiUserLinkRequestPayload>>::Error:
+                std::fmt::Display,
         {
-            self.body = value.try_into().map(From::from).map_err(|_| {
-                "conversion to `ApiUserLinkRequestPayload` for body failed".to_string()
+            self.body = value.try_into().map(From::from).map_err(|s| {
+                format!(
+                    "conversion to `ApiUserLinkRequestPayload` for body failed: {}",
+                    s
+                )
             });
             self
         }
@@ -6371,7 +9914,7 @@ pub mod builder {
     impl<'a> GithubWebhook<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 body: Ok(types::builder::GitHubCommitPayload::default()),
             }
         }
@@ -6379,11 +9922,12 @@ pub mod builder {
         pub fn body<V>(mut self, value: V) -> Self
         where
             V: std::convert::TryInto<types::GitHubCommitPayload>,
+            <V as std::convert::TryInto<types::GitHubCommitPayload>>::Error: std::fmt::Display,
         {
             self.body = value
                 .try_into()
                 .map(From::from)
-                .map_err(|_| "conversion to `GitHubCommitPayload` for body failed".to_string());
+                .map_err(|s| format!("conversion to `GitHubCommitPayload` for body failed: {}", s));
             self
         }
 
@@ -6438,7 +9982,7 @@ pub mod builder {
 
     impl<'a> GetGroups<'a> {
         pub fn new(client: &'a super::Client) -> Self {
-            Self { client }
+            Self { client: client }
         }
 
         /// Sends a `GET` request to `/group`
@@ -6485,7 +10029,7 @@ pub mod builder {
     impl<'a> CreateGroup<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 body: Ok(types::builder::AccessGroupUpdateParams::default()),
             }
         }
@@ -6493,11 +10037,14 @@ pub mod builder {
         pub fn body<V>(mut self, value: V) -> Self
         where
             V: std::convert::TryInto<types::AccessGroupUpdateParams>,
+            <V as std::convert::TryInto<types::AccessGroupUpdateParams>>::Error: std::fmt::Display,
         {
-            self.body = value
-                .try_into()
-                .map(From::from)
-                .map_err(|_| "conversion to `AccessGroupUpdateParams` for body failed".to_string());
+            self.body = value.try_into().map(From::from).map_err(|s| {
+                format!(
+                    "conversion to `AccessGroupUpdateParams` for body failed: {}",
+                    s
+                )
+            });
             self
         }
 
@@ -6558,7 +10105,7 @@ pub mod builder {
     impl<'a> UpdateGroup<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 group_id: Err("group_id was not initialized".to_string()),
                 body: Ok(types::builder::AccessGroupUpdateParams::default()),
             }
@@ -6577,11 +10124,14 @@ pub mod builder {
         pub fn body<V>(mut self, value: V) -> Self
         where
             V: std::convert::TryInto<types::AccessGroupUpdateParams>,
+            <V as std::convert::TryInto<types::AccessGroupUpdateParams>>::Error: std::fmt::Display,
         {
-            self.body = value
-                .try_into()
-                .map(From::from)
-                .map_err(|_| "conversion to `AccessGroupUpdateParams` for body failed".to_string());
+            self.body = value.try_into().map(From::from).map_err(|s| {
+                format!(
+                    "conversion to `AccessGroupUpdateParams` for body failed: {}",
+                    s
+                )
+            });
             self
         }
 
@@ -6650,7 +10200,7 @@ pub mod builder {
     impl<'a> DeleteGroup<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 group_id: Err("group_id was not initialized".to_string()),
             }
         }
@@ -6717,7 +10267,7 @@ pub mod builder {
     impl<'a> AuthzCodeRedirect<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 provider: Err("provider was not initialized".to_string()),
                 client_id: Err("client_id was not initialized".to_string()),
                 redirect_uri: Err("redirect_uri was not initialized".to_string()),
@@ -6843,7 +10393,7 @@ pub mod builder {
     impl<'a> AuthzCodeCallback<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 provider: Err("provider was not initialized".to_string()),
                 code: Ok(None),
                 error: Ok(None),
@@ -6951,7 +10501,7 @@ pub mod builder {
     impl<'a> AuthzCodeExchange<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 provider: Err("provider was not initialized".to_string()),
                 body: Ok(types::builder::OAuthAuthzCodeExchangeBody::default()),
             }
@@ -6970,9 +10520,14 @@ pub mod builder {
         pub fn body<V>(mut self, value: V) -> Self
         where
             V: std::convert::TryInto<types::OAuthAuthzCodeExchangeBody>,
+            <V as std::convert::TryInto<types::OAuthAuthzCodeExchangeBody>>::Error:
+                std::fmt::Display,
         {
-            self.body = value.try_into().map(From::from).map_err(|_| {
-                "conversion to `OAuthAuthzCodeExchangeBody` for body failed".to_string()
+            self.body = value.try_into().map(From::from).map_err(|s| {
+                format!(
+                    "conversion to `OAuthAuthzCodeExchangeBody` for body failed: {}",
+                    s
+                )
             });
             self
         }
@@ -7042,7 +10597,7 @@ pub mod builder {
     impl<'a> GetDeviceProvider<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 provider: Err("provider was not initialized".to_string()),
             }
         }
@@ -7104,7 +10659,7 @@ pub mod builder {
     impl<'a> ExchangeDeviceToken<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 provider: Err("provider was not initialized".to_string()),
                 body: Ok(types::builder::AccessTokenExchangeRequest::default()),
             }
@@ -7123,9 +10678,14 @@ pub mod builder {
         pub fn body<V>(mut self, value: V) -> Self
         where
             V: std::convert::TryInto<types::AccessTokenExchangeRequest>,
+            <V as std::convert::TryInto<types::AccessTokenExchangeRequest>>::Error:
+                std::fmt::Display,
         {
-            self.body = value.try_into().map(From::from).map_err(|_| {
-                "conversion to `AccessTokenExchangeRequest` for body failed".to_string()
+            self.body = value.try_into().map(From::from).map_err(|s| {
+                format!(
+                    "conversion to `AccessTokenExchangeRequest` for body failed: {}",
+                    s
+                )
             });
             self
         }
@@ -7178,7 +10738,7 @@ pub mod builder {
     impl<'a> GetMappers<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 include_depleted: Ok(None),
             }
         }
@@ -7242,7 +10802,7 @@ pub mod builder {
     impl<'a> CreateMapper<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 body: Ok(types::builder::CreateMapper::default()),
             }
         }
@@ -7250,11 +10810,12 @@ pub mod builder {
         pub fn body<V>(mut self, value: V) -> Self
         where
             V: std::convert::TryInto<types::CreateMapper>,
+            <V as std::convert::TryInto<types::CreateMapper>>::Error: std::fmt::Display,
         {
             self.body = value
                 .try_into()
                 .map(From::from)
-                .map_err(|_| "conversion to `CreateMapper` for body failed".to_string());
+                .map_err(|s| format!("conversion to `CreateMapper` for body failed: {}", s));
             self
         }
 
@@ -7309,7 +10870,7 @@ pub mod builder {
     impl<'a> DeleteMapper<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 identifier: Err("identifier was not initialized".to_string()),
             }
         }
@@ -7366,7 +10927,7 @@ pub mod builder {
 
     impl<'a> ListOauthClients<'a> {
         pub fn new(client: &'a super::Client) -> Self {
-            Self { client }
+            Self { client: client }
         }
 
         /// Sends a `GET` request to `/oauth/client`
@@ -7408,7 +10969,7 @@ pub mod builder {
 
     impl<'a> CreateOauthClient<'a> {
         pub fn new(client: &'a super::Client) -> Self {
-            Self { client }
+            Self { client: client }
         }
 
         /// Sends a `POST` request to `/oauth/client`
@@ -7450,7 +11011,7 @@ pub mod builder {
     impl<'a> GetOauthClient<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 client_id: Err("client_id was not initialized".to_string()),
             }
         }
@@ -7510,7 +11071,7 @@ pub mod builder {
     impl<'a> CreateOauthClientRedirectUri<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 client_id: Err("client_id was not initialized".to_string()),
                 body: Ok(types::builder::AddOAuthClientRedirectBody::default()),
             }
@@ -7529,9 +11090,14 @@ pub mod builder {
         pub fn body<V>(mut self, value: V) -> Self
         where
             V: std::convert::TryInto<types::AddOAuthClientRedirectBody>,
+            <V as std::convert::TryInto<types::AddOAuthClientRedirectBody>>::Error:
+                std::fmt::Display,
         {
-            self.body = value.try_into().map(From::from).map_err(|_| {
-                "conversion to `AddOAuthClientRedirectBody` for body failed".to_string()
+            self.body = value.try_into().map(From::from).map_err(|s| {
+                format!(
+                    "conversion to `AddOAuthClientRedirectBody` for body failed: {}",
+                    s
+                )
             });
             self
         }
@@ -7601,7 +11167,7 @@ pub mod builder {
     impl<'a> DeleteOauthClientRedirectUri<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 client_id: Err("client_id was not initialized".to_string()),
                 redirect_uri_id: Err("redirect_uri_id was not initialized".to_string()),
             }
@@ -7680,7 +11246,7 @@ pub mod builder {
     impl<'a> CreateOauthClientSecret<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 client_id: Err("client_id was not initialized".to_string()),
             }
         }
@@ -7743,7 +11309,7 @@ pub mod builder {
     impl<'a> DeleteOauthClientSecret<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 client_id: Err("client_id was not initialized".to_string()),
                 secret_id: Err("secret_id was not initialized".to_string()),
             }
@@ -7820,7 +11386,7 @@ pub mod builder {
 
     impl<'a> GetRfds<'a> {
         pub fn new(client: &'a super::Client) -> Self {
-            Self { client }
+            Self { client: client }
         }
 
         /// Sends a `GET` request to `/rfd`
@@ -7862,7 +11428,7 @@ pub mod builder {
     impl<'a> GetRfd<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 number: Err("number was not initialized".to_string()),
             }
         }
@@ -7926,7 +11492,7 @@ pub mod builder {
     impl<'a> SearchRfds<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
-                client,
+                client: client,
                 attributes_to_crop: Ok(None),
                 highlight_post_tag: Ok(None),
                 highlight_pre_tag: Ok(None),
@@ -8072,7 +11638,7 @@ pub mod builder {
 
     impl<'a> GetSelf<'a> {
         pub fn new(client: &'a super::Client) -> Self {
-            Self { client }
+            Self { client: client }
         }
 
         /// Sends a `GET` request to `/self`

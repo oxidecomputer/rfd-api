@@ -724,7 +724,7 @@ impl RfdTabPrinter {
                 writeln!(tw, "{:?}", err);
                 writeln!(tw, "Please report this as a bug against the rfd-api");
             }
-            progenitor_client::Error::InvalidResponsePayload(err) => {
+            progenitor_client::Error::InvalidResponsePayload(_, err) => {
                 writeln!(tw, "Internal CLI error");
                 writeln!(tw, "{:?}", err);
                 writeln!(tw, "Please report this as a bug against the rfd-api");
@@ -733,6 +733,16 @@ impl RfdTabPrinter {
                 writeln!(tw, "Internal CLI error");
                 writeln!(tw, "{:?}", err);
                 writeln!(tw, "Please report this as a bug against the rfd-api",);
+            }
+            progenitor_client::Error::ResponseBodyError(err) => {
+                writeln!(tw, "Internal CLI error");
+                writeln!(tw, "{:?}", err);
+                writeln!(tw, "Please report this as a bug against the rfd-api");
+            }
+            progenitor_client::Error::InvalidUpgrade(err) => {
+                writeln!(tw, "Internal CLI error");
+                writeln!(tw, "{:?}", err);
+                writeln!(tw, "Please report this as a bug against the rfd-api");
             }
         }
     }

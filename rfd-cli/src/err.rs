@@ -41,7 +41,7 @@ pub fn format_api_err(ctx: &Context, client_err: ProgenitorClientError<ApiError>
         ProgenitorClientError::InvalidRequest(message) => {
             err = err.context("Invalid request").context(message);
         }
-        ProgenitorClientError::InvalidResponsePayload(inner) => {
+        ProgenitorClientError::InvalidResponsePayload(_, inner) => {
             err = err.context("Invalid response").context(inner);
         }
         ProgenitorClientError::UnexpectedResponse(response) => {
@@ -52,6 +52,12 @@ pub fn format_api_err(ctx: &Context, client_err: ProgenitorClientError<ApiError>
             if ctx.verbosity >= VerbosityLevel::All {
                 err = err.context(format!("Headers {:?}", response.headers()));
             }
+        }
+        ProgenitorClientError::ResponseBodyError(inner) => {
+            err = err.context("Invalid response").context(inner);
+        }
+        ProgenitorClientError::InvalidUpgrade(inner) => {
+            err = err.context("Invalid upgrade").context(inner)
         }
     }
 
