@@ -241,6 +241,7 @@ impl ApiContext {
                     ApiPermission::CreateGroup,
                     ApiPermission::GetGroupsAll,
                     ApiPermission::ListMappers,
+                    ApiPermission::GetOAuthClientsAll,
                 ]
                 .into(),
             },

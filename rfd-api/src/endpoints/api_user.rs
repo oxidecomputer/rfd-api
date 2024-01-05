@@ -805,8 +805,8 @@ mod tests {
         )
         .await;
 
-        assert!(resp.is_err());
-        assert_eq!(get_status(&resp), StatusCode::FORBIDDEN);
+        assert!(resp.is_ok());
+        assert_eq!(resp.unwrap().0.len(), 0);
 
         let user2 = mock_user();
 
@@ -825,8 +825,8 @@ mod tests {
         )
         .await;
 
-        assert!(resp.is_err());
-        assert_eq!(get_status(&resp), StatusCode::FORBIDDEN);
+        assert!(resp.is_ok());
+        assert_eq!(resp.unwrap().0.len(), 0);
 
         let user3 = mock_user();
 
@@ -1101,7 +1101,7 @@ mod tests {
         let resp = get_api_user_token_op(&ctx, &no_permissions, &api_user_token_path).await;
 
         assert!(resp.is_err());
-        assert_eq!(get_status(&resp), StatusCode::NOT_FOUND);
+        assert_eq!(get_status(&resp), StatusCode::FORBIDDEN);
 
         let user2 = mock_user();
 
@@ -1114,7 +1114,7 @@ mod tests {
         let resp = get_api_user_token_op(&ctx, &incorrect_permissions, &api_user_token_path).await;
 
         assert!(resp.is_err());
-        assert_eq!(get_status(&resp), StatusCode::NOT_FOUND);
+        assert_eq!(get_status(&resp), StatusCode::FORBIDDEN);
 
         let user3 = mock_user();
 
@@ -1122,7 +1122,7 @@ mod tests {
         let incorrect_permissions = ApiCaller {
             id: user3.id,
             permissions: vec![ApiPermission::GetApiUserToken(
-                unknown_api_user_token_path._identifier,
+                unknown_api_user_token_path.token_identifier,
             )
             .into()]
             .into(),
@@ -1229,7 +1229,7 @@ mod tests {
         let resp = delete_api_user_token_op(&ctx, &no_permissions, &api_user_token_path).await;
 
         assert!(resp.is_err());
-        assert_eq!(get_status(&resp), StatusCode::NOT_FOUND);
+        assert_eq!(get_status(&resp), StatusCode::FORBIDDEN);
 
         let user2 = mock_user();
 
@@ -1243,7 +1243,7 @@ mod tests {
             delete_api_user_token_op(&ctx, &incorrect_permissions, &api_user_token_path).await;
 
         assert!(resp.is_err());
-        assert_eq!(get_status(&resp), StatusCode::NOT_FOUND);
+        assert_eq!(get_status(&resp), StatusCode::FORBIDDEN);
 
         let user3 = mock_user();
 
@@ -1251,7 +1251,7 @@ mod tests {
         let incorrect_permissions = ApiCaller {
             id: user3.id,
             permissions: vec![ApiPermission::DeleteApiUserToken(
-                unknown_api_user_token_path._identifier,
+                unknown_api_user_token_path.token_identifier,
             )
             .into()]
             .into(),

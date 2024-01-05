@@ -1201,6 +1201,7 @@ mod tests {
 
         ctx.set_storage(Arc::new(storage));
 
+        // 1. Verify exchange fails when passing an incorrect client id
         assert_eq!(
             Some("Unknown client id".to_string()),
             authorize_code_exchange(
@@ -1215,6 +1216,7 @@ mod tests {
             .error_description
         );
 
+        // 2. Verify exchange fails when passing an incorrect redirect uri
         assert_eq!(
             Some("Invalid redirect uri".to_string()),
             authorize_code_exchange(
@@ -1229,6 +1231,7 @@ mod tests {
             .error_description
         );
 
+        // 3. Verify a successful exchange
         assert_eq!(
             (),
             authorize_code_exchange(
