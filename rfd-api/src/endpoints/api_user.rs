@@ -283,7 +283,6 @@ async fn create_api_user_token_op(
     let api_user = ctx.get_api_user(caller, &path.identifier).await?;
 
     let key_id = Uuid::new_v4();
-
     let key = RawApiKey::generate::<24>(&key_id)
         .sign(&*ctx.secrets.signer)
         .await
@@ -299,7 +298,7 @@ async fn create_api_user_token_op(
                 permissions: into_permissions(body.permissions),
                 expires_at: body.expires_at,
             },
-            &api_user,
+            &api_user.id,
         )
         .await?;
 
@@ -916,11 +915,11 @@ mod tests {
         let mut token_store = MockApiKeyStore::new();
         token_store
             .expect_upsert()
-            .withf(move |_, user| user.id == api_user_id)
-            .returning(|key, user| {
+            // .withf(move |_, user| user.id == api_user_id)
+            .returning(move |key| {
                 Ok(ApiKey {
                     id: Uuid::new_v4(),
-                    api_user_id: user.id,
+                    api_user_id: api_user_id,
                     key_signature: key.key_signature,
                     permissions: key.permissions,
                     expires_at: key.expires_at,

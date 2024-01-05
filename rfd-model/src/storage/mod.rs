@@ -309,11 +309,7 @@ pub trait ApiKeyStore<T: Permission + Ord> {
         filter: ApiKeyFilter,
         pagination: &ListPagination,
     ) -> Result<Vec<ApiKey<T>>, StoreError>;
-    async fn upsert(
-        &self,
-        token: NewApiKey<T>,
-        api_user: &ApiUser<T>,
-    ) -> Result<ApiKey<T>, StoreError>;
+    async fn upsert(&self, token: NewApiKey<T>) -> Result<ApiKey<T>, StoreError>;
     async fn delete(&self, id: &Uuid) -> Result<Option<ApiKey<T>>, StoreError>;
 }
 

@@ -975,13 +975,13 @@ impl ApiContext {
         &self,
         caller: &ApiCaller,
         token: NewApiKey<ApiPermission>,
-        api_user: &ApiUser<ApiPermission>,
+        api_user_id: &Uuid,
     ) -> ResourceResult<UserToken, StoreError> {
         if caller.any(&[
-            &ApiPermission::CreateApiUserToken(api_user.id),
+            &ApiPermission::CreateApiUserToken(*api_user_id),
             &ApiPermission::CreateApiUserTokenAll,
         ]) {
-            ApiKeyStore::upsert(&*self.storage, token, api_user)
+            ApiKeyStore::upsert(&*self.storage, token)
                 .await
                 .to_resource_result()
         } else {
@@ -2097,12 +2097,11 @@ pub(crate) mod test_mocks {
         async fn upsert(
             &self,
             token: NewApiKey<ApiPermission>,
-            api_user: &rfd_model::ApiUser<ApiPermission>,
         ) -> Result<ApiKey<ApiPermission>, rfd_model::storage::StoreError> {
             self.api_user_token_store
                 .as_ref()
                 .unwrap()
-                .upsert(token, api_user)
+                .upsert(token)
                 .await
         }
 

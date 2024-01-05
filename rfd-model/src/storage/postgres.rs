@@ -28,7 +28,7 @@ use crate::{
         OAuthClientRedirectUriModel, OAuthClientSecretModel, RfdModel, RfdPdfModel,
         RfdRevisionModel,
     },
-    permissions::{Permission, Permissions},
+    permissions::Permission,
     schema::{
         access_groups, api_key, api_user, api_user_access_token, api_user_provider, job,
         link_request, login_attempt, mapper, oauth_client, oauth_client_redirect_uri,
@@ -726,35 +726,14 @@ where
             .collect())
     }
 
-    async fn upsert(
-        &self,
-        key: NewApiKey<T>,
-        api_user: &ApiUser<T>,
-    ) -> Result<ApiKey<T>, StoreError> {
-        // Validate the the token permissions are a subset of the users permissions
-        let permissions: Permissions<T> = key
-            .permissions
-            .iter()
-            .filter(|permission| {
-                let can = api_user.permissions.can(permission);
-
-                if !can {
-                    tracing::info!(user = ?api_user.id, ?permission, "Attempted to create API token with excess permissions");
-                }
-
-                can
-            })
-            .cloned()
-            .collect::<BTreeSet<T>>()
-            .into();
-
+    async fn upsert(&self, key: NewApiKey<T>) -> Result<ApiKey<T>, StoreError> {
         let key_m: ApiKeyModel<T> = insert_into(api_key::dsl::api_key)
             .values((
                 api_key::id.eq(key.id),
                 api_key::api_user_id.eq(key.api_user_id),
                 api_key::key_signature.eq(key.key_signature.clone()),
                 api_key::expires_at.eq(key.expires_at),
-                api_key::permissions.eq(permissions),
+                api_key::permissions.eq(key.permissions),
             ))
             .get_result_async(&*self.pool.get().await?)
             .await?;

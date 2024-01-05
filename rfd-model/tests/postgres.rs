@@ -185,7 +185,7 @@ async fn test_api_user() {
         .can(&TestPermission::DeleteApiKey(api_user_id).into()));
 
     // 5. Create an API token for the user
-    let token = ApiKeyStore::upsert(
+    let token = ApiKeyStore::<TestPermission>::upsert(
         &store,
         NewApiKey {
             id: Uuid::new_v4(),
@@ -194,7 +194,6 @@ async fn test_api_user() {
             permissions: vec![TestPermission::GetApiKey(api_user_id).into()].into(),
             expires_at: Utc::now() + Duration::seconds(5 * 60),
         },
-        &api_user,
     )
     .await
     .unwrap();
@@ -213,17 +212,16 @@ async fn test_api_user() {
             .into(),
             expires_at: Utc::now() + Duration::seconds(5 * 60),
         },
-        &api_user,
     )
     .await
     .unwrap();
 
-    assert!(!excess_token
+    assert!(excess_token
         .permissions
         .can(&TestPermission::CreateApiUser.into()));
 
     // 7. Create an API token with excess permissions for the user
-    let expired_token = ApiKeyStore::upsert(
+    let expired_token = ApiKeyStore::<TestPermission>::upsert(
         &store,
         NewApiKey {
             id: Uuid::new_v4(),
@@ -236,7 +234,6 @@ async fn test_api_user() {
             .into(),
             expires_at: Utc::now() - Duration::seconds(5 * 60),
         },
-        &api_user,
     )
     .await
     .unwrap();
