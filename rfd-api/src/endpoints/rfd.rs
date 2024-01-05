@@ -12,10 +12,9 @@ use tracing::instrument;
 use crate::{
     caller::CallerExt,
     context::{ApiContext, FullRfd, ListRfd},
-    error::ApiError,
     permissions::ApiPermission,
     search::{MeiliSearchResult, SearchRequest},
-    util::response::{client_error, internal_error, not_found, unauthorized},
+    util::response::{client_error, internal_error, unauthorized},
     ApiCaller,
 };
 
@@ -46,8 +45,7 @@ async fn get_rfds_op(
 ) -> Result<HttpResponseOk<Vec<ListRfd>>, HttpError> {
     let rfds = ctx
         .list_rfds(caller, None)
-        .await
-        .map_err(ApiError::Storage)?;
+        .await?;
     Ok(HttpResponseOk(rfds))
 }
 
@@ -79,22 +77,7 @@ async fn get_rfd_op(
     number: String,
 ) -> Result<HttpResponseOk<FullRfd>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
-        match ctx.get_rfd(caller, rfd_number, None).await {
-            Ok(result) => match result {
-                Some(rfd) => Ok(HttpResponseOk(rfd)),
-                // A None will be returned in both the event that the requested RFD does not exist
-                // as well as when the caller does not have access to the requested RFD
-                None => {
-                    tracing::error!(?rfd_number, "Failed to find RFD");
-                    Err(not_found("Failed to find RFD"))
-                }
-            },
-            // Errors are only returned for unexpected events
-            Err(err) => {
-                tracing::error!(?rfd_number, ?err, "Looking up RFD failed");
-                Err(internal_error("Failed to lookup RFD"))
-            }
-        }
+        Ok(HttpResponseOk(ctx.get_rfd(caller, rfd_number, None).await?))
     } else {
         Err(client_error(
             StatusCode::BAD_REQUEST,
@@ -169,6 +152,8 @@ async fn search_rfds_op(
     caller: &ApiCaller,
     query: RfdSearchQuery,
 ) -> Result<HttpResponseOk<SearchResults>, HttpError> {
+    // TODO: Move all of this into a ctx
+
     // Ensure that the user has the search permission before searching
     if caller.can(&ApiPermission::SearchRfds) {
         tracing::debug!("Fetching from remote search API");
@@ -472,9 +457,9 @@ mod tests {
         let result = get_rfd_op(&ctx, &caller, "0123".to_string()).await;
 
         match result {
-            Err(err) => assert_eq!(StatusCode::NOT_FOUND, err.status_code),
+            Err(err) => assert_eq!(StatusCode::FORBIDDEN, err.status_code),
             Ok(response) => panic!(
-                "Expected a 404 error, but instead found an RFD {:?}",
+                "Expected a 403 error, but instead found an RFD {:?}",
                 response.0
             ),
         }
@@ -503,9 +488,9 @@ mod tests {
 
         let result = get_rfd_op(&ctx, caller, "0123".to_string()).await;
         match result {
-            Err(err) => assert_eq!(StatusCode::NOT_FOUND, err.status_code),
+            Err(err) => assert_eq!(StatusCode::FORBIDDEN, err.status_code),
             Ok(response) => panic!(
-                "Expected a 404 error, but instead found an RFD {:?}",
+                "Expected a 403 error, but instead found an RFD {:?}",
                 response.0
             ),
         }

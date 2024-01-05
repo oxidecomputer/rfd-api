@@ -58,7 +58,7 @@ use crate::{
     search::SearchClient,
     util::response::{
         bad_request, client_error, internal_error, resource_error, resource_restricted,
-        ResourceError, ResourceResult, ToResourceResult, ToResourceResultOpt,
+        ResourceError, ResourceResult, ToResourceResult, ToResourceResultOpt, resource_not_found,
     },
     ApiCaller, ApiPermissions, User, UserToken,
 };
@@ -497,7 +497,7 @@ impl ApiContext {
         &self,
         caller: &ApiCaller,
         filter: Option<RfdFilter>,
-    ) -> Result<Vec<ListRfd>, StoreError> {
+    ) -> ResourceResult<Vec<ListRfd>, StoreError> {
         // List all of the RFDs first and then perform filter. This should be be improved once
         // filters can be combined to support OR expressions. Effectively we need to be able to
         // express "Has access to OR is public" with a filter
@@ -507,7 +507,8 @@ impl ApiContext {
             &ListPagination::default().limit(UNLIMITED),
         )
         .await
-        .tap_err(|err| tracing::error!(?err, "Failed to lookup RFDs"))?;
+        .tap_err(|err| tracing::error!(?err, "Failed to lookup RFDs"))
+        .to_resource_result()?;
 
         // Determine the list of RFDs the caller has direct access to
         let direct_access_rfds = caller
@@ -533,7 +534,8 @@ impl ApiContext {
             &ListPagination::default().limit(UNLIMITED),
         )
         .await
-        .tap_err(|err| tracing::error!(?err, "Failed to lookup RFD revisions"))?;
+        .tap_err(|err| tracing::error!(?err, "Failed to lookup RFD revisions"))
+        .to_resource_result()?;
 
         // Sort both the RFDs and revisions based on their RFD id to ensure they line up
         rfds.sort_by(|a, b| a.id.cmp(&b.id));
@@ -570,9 +572,9 @@ impl ApiContext {
         caller: &ApiCaller,
         rfd_number: i32,
         sha: Option<String>,
-    ) -> Result<Option<FullRfd>, StoreError> {
+    ) -> ResourceResult<FullRfd, StoreError> {
         // list_rfds performs authorization checks, if the caller does not have access to the
-        // requested RFD any empty Vec will be returned
+        // requested RFD an empty Vec will be returned
         let rfds = self
             .list_rfds(
                 caller,
@@ -591,7 +593,8 @@ impl ApiContext {
                     .sha(sha.map(|sha| vec![sha])),
                 &ListPagination::default().limit(1),
             )
-            .await?;
+            .await
+            .to_resource_result()?;
 
             if let Some(revision) = latest_revision.into_iter().nth(0) {
                 let pdfs = RfdPdfStore::list(
@@ -599,9 +602,10 @@ impl ApiContext {
                     RfdPdfFilter::default().rfd_revision(Some(vec![revision.id])),
                     &ListPagination::default(),
                 )
-                .await?;
+                .await
+                .to_resource_result()?;
 
-                Ok(Some(FullRfd {
+                Ok(FullRfd {
                     id: rfd.id,
                     rfd_number: rfd.rfd_number,
                     link: rfd.link,
@@ -621,16 +625,16 @@ impl ApiContext {
                         })
                         .collect(),
                     visibility: rfd.visibility,
-                }))
+                })
             } else {
                 // It should not be possible to reach this branch. If we have then the database
                 // has entered an inconsistent state
                 tracing::error!("Looking up revision for RFD returned no results");
-                Ok(None)
+                resource_not_found()
             }
         } else {
             // Either the RFD does not exist, or the caller is not allowed to access it
-            Ok(None)
+            resource_restricted()
         }
     }
 
