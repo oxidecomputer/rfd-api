@@ -702,7 +702,7 @@ dependencies = [
  "hyper",
  "indexmap 2.1.0",
  "multer",
- "openapiv3 2.0.0",
+ "openapiv3",
  "paste",
  "percent-encoding 2.3.1",
  "proc-macro2",
@@ -1871,17 +1871,6 @@ checksum = "3fdb12b2476b595f9358c5161aa467c2438859caa136dec86c26fdd2efe17b92"
 
 [[package]]
 name = "openapiv3"
-version = "1.0.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33b83630305ecc3355e998ddd2f926f98aae8e105eb42652174a58757851ba47"
-dependencies = [
- "indexmap 1.9.3",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "openapiv3"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cc02deea53ffe807708244e5914f6b099ad7015a207ee24317c22112e17d9c5c"
@@ -2195,8 +2184,8 @@ dependencies = [
 
 [[package]]
 name = "progenitor"
-version = "0.3.0"
-source = "git+https://github.com/oxidecomputer/progenitor?branch=print-example#424f7b34de7debfd4028b10cdcdf34b3192150e1"
+version = "0.5.0"
+source = "git+https://github.com/oxidecomputer/progenitor?branch=print-example#0a8dcec46f84cf86e60eebca6a0ea2c3b4c78260"
 dependencies = [
  "progenitor-client",
  "progenitor-impl",
@@ -2206,8 +2195,8 @@ dependencies = [
 
 [[package]]
 name = "progenitor-client"
-version = "0.3.0"
-source = "git+https://github.com/oxidecomputer/progenitor?branch=print-example#424f7b34de7debfd4028b10cdcdf34b3192150e1"
+version = "0.5.0"
+source = "git+https://github.com/oxidecomputer/progenitor?branch=print-example#0a8dcec46f84cf86e60eebca6a0ea2c3b4c78260"
 dependencies = [
  "bytes",
  "futures-core",
@@ -2220,14 +2209,14 @@ dependencies = [
 
 [[package]]
 name = "progenitor-impl"
-version = "0.3.0"
-source = "git+https://github.com/oxidecomputer/progenitor?branch=print-example#424f7b34de7debfd4028b10cdcdf34b3192150e1"
+version = "0.5.0"
+source = "git+https://github.com/oxidecomputer/progenitor?branch=print-example#0a8dcec46f84cf86e60eebca6a0ea2c3b4c78260"
 dependencies = [
  "getopts",
  "heck",
  "http 0.2.11",
  "indexmap 2.1.0",
- "openapiv3 1.0.4",
+ "openapiv3",
  "proc-macro2",
  "quote",
  "regex",
@@ -2242,10 +2231,10 @@ dependencies = [
 
 [[package]]
 name = "progenitor-macro"
-version = "0.3.0"
-source = "git+https://github.com/oxidecomputer/progenitor?branch=print-example#424f7b34de7debfd4028b10cdcdf34b3192150e1"
+version = "0.5.0"
+source = "git+https://github.com/oxidecomputer/progenitor?branch=print-example#0a8dcec46f84cf86e60eebca6a0ea2c3b4c78260"
 dependencies = [
- "openapiv3 1.0.4",
+ "openapiv3",
  "proc-macro2",
  "progenitor-impl",
  "quote",
