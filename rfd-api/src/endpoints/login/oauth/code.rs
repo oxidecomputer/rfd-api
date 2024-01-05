@@ -40,7 +40,7 @@ use crate::{
     secrets::OpenApiSecretString,
     util::{
         request::RequestCookies,
-        response::{internal_error, to_internal_error, unauthorized},
+        response::{internal_error, to_internal_error, unauthorized, ResourceError},
     },
 };
 
@@ -113,22 +113,27 @@ async fn get_oauth_client(
     redirect_uri: &str,
 ) -> Result<OAuthClient, OAuthError> {
     let client = ctx
-        .get_oauth_client(&client_id)
+        .get_oauth_client(ctx.builtin_registration_user(), &client_id)
         .await
         .map_err(|err| {
             tracing::error!(?err, "Failed to lookup OAuth client");
-            OAuthError {
-                error: OAuthErrorCode::ServerError,
-                error_description: None,
-                error_uri: None,
-                state: None,
+
+            match err {
+                ResourceError::DoesNotExist => OAuthError {
+                    error: OAuthErrorCode::InvalidClient,
+                    error_description: Some("Unknown client id".to_string()),
+                    error_uri: None,
+                    state: None,
+                },
+                // Given that the builtin caller should have access to all OAuth clients, any other
+                // error is considered an internal error
+                _ => OAuthError {
+                    error: OAuthErrorCode::ServerError,
+                    error_description: None,
+                    error_uri: None,
+                    state: None,
+                },
             }
-        })?
-        .ok_or_else(|| OAuthError {
-            error: OAuthErrorCode::InvalidRequest,
-            error_description: Some("Unknown client id".to_string()),
-            error_uri: None,
-            state: None,
         })?;
 
     if client.is_redirect_uri_valid(&redirect_uri) {

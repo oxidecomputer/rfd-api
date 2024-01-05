@@ -813,6 +813,8 @@ impl ApiContext {
                 self.update_api_user(caller, update).await
             }
             ResourceResult::Err(ResourceError::DoesNotExist) => {
+                // TODO: Seems weird this is not a create call, indicates an issue higher up in
+                // the call chain
                 self.update_api_user(
                     caller,
                     NewApiUser {
@@ -827,6 +829,7 @@ impl ApiContext {
         }
     }
 
+    // TODO: Need to pass in caller to be able to eventually pass it down to create_access_token
     pub async fn register_access_token(
         &self,
         api_user: &ApiUser<ApiPermission>,
@@ -880,10 +883,22 @@ impl ApiContext {
 
     pub async fn list_api_user(
         &self,
+        caller: &ApiCaller,
         filter: ApiUserFilter,
         pagination: &ListPagination,
-    ) -> Result<Vec<User>, StoreError> {
-        ApiUserStore::list(&*self.storage, filter, pagination).await
+    ) -> ResourceResult<Vec<User>, StoreError> {
+        let mut users = ApiUserStore::list(&*self.storage, filter, pagination)
+            .await
+            .to_resource_result()?;
+
+        users.retain(|user| {
+            caller.any(&[
+                &ApiPermission::GetApiUser(user.id),
+                &ApiPermission::GetApiUserAll,
+            ])
+        });
+
+        Ok(users)
     }
 
     #[instrument(skip(self))]
@@ -956,13 +971,16 @@ impl ApiContext {
         caller: &ApiCaller,
         token: NewApiKey<ApiPermission>,
         api_user: &ApiUser<ApiPermission>,
-    ) -> Result<Option<UserToken>, StoreError> {
-        if caller.can(&ApiPermission::CreateApiUserToken(api_user.id).into()) {
+    ) -> ResourceResult<UserToken, StoreError> {
+        if caller.any(&[
+            &ApiPermission::CreateApiUserToken(api_user.id),
+            &ApiPermission::CreateApiUserTokenAll,
+        ]) {
             ApiKeyStore::upsert(&*self.storage, token, api_user)
                 .await
-                .map(Option::Some)
+                .to_resource_result()
         } else {
-            Ok(None)
+            resource_restricted()
         }
     }
 
@@ -970,20 +988,26 @@ impl ApiContext {
         &self,
         caller: &ApiCaller,
         id: &Uuid,
-    ) -> Result<Option<UserToken>, StoreError> {
-        if caller.can(&ApiPermission::GetApiUserToken(*id).into()) {
-            ApiKeyStore::get(&*self.storage, id, false).await
+    ) -> ResourceResult<UserToken, StoreError> {
+        if caller.any(&[
+            &ApiPermission::GetApiUserToken(*id),
+            &ApiPermission::GetApiUserTokenAll,
+        ]) {
+            ApiKeyStore::get(&*self.storage, id, false)
+                .await
+                .opt_to_resource_result()
         } else {
-            Ok(None)
+            resource_restricted()
         }
     }
 
     pub async fn get_api_user_tokens(
         &self,
+        caller: &ApiCaller,
         api_user_id: &Uuid,
         pagination: &ListPagination,
-    ) -> Result<Vec<UserToken>, StoreError> {
-        ApiKeyStore::list(
+    ) -> ResourceResult<Vec<UserToken>, StoreError> {
+        let mut tokens = ApiKeyStore::list(
             &*self.storage,
             ApiKeyFilter {
                 api_user_id: Some(vec![*api_user_id]),
@@ -994,13 +1018,30 @@ impl ApiContext {
             pagination,
         )
         .await
+        .to_resource_result()?;
+
+        tokens.retain(|token| {
+            caller.any(&[
+                &ApiPermission::GetApiUserToken(token.id),
+                &ApiPermission::GetApiUserTokenAll,
+            ])
+        });
+
+        Ok(tokens)
     }
 
     pub async fn get_api_user_provider(
         &self,
+        caller: &ApiCaller,
         id: &Uuid,
-    ) -> Result<Option<ApiUserProvider>, StoreError> {
-        ApiUserProviderStore::get(&*self.storage, id, false).await
+    ) -> ResourceResult<ApiUserProvider, StoreError> {
+        if caller.can(&ApiPermission::GetApiUser(*id)) {
+            ApiUserProviderStore::get(&*self.storage, id, false)
+                .await
+                .opt_to_resource_result()
+        } else {
+            resource_restricted()
+        }
     }
 
     pub async fn list_api_user_provider(
@@ -1044,14 +1085,20 @@ impl ApiContext {
         &self,
         caller: &ApiCaller,
         id: &Uuid,
-    ) -> Result<Option<UserToken>, StoreError> {
-        if caller.can(&ApiPermission::DeleteApiUserToken(*id).into()) {
-            ApiKeyStore::delete(&*self.storage, id).await
+    ) -> ResourceResult<UserToken, StoreError> {
+        if caller.any(&[
+            &ApiPermission::DeleteApiUserToken(*id),
+            &ApiPermission::DeleteApiUserTokenAll,
+        ]) {
+            ApiKeyStore::delete(&*self.storage, id)
+                .await
+                .opt_to_resource_result()
         } else {
-            Ok(None)
+            resource_restricted()
         }
     }
 
+    // TODO: Create permissions for registration user to allow creating access tokens
     pub async fn create_access_token(
         &self,
         access_token: NewAccessToken,
@@ -1060,6 +1107,9 @@ impl ApiContext {
     }
 
     // Login Attempt Operations
+
+    // TODO: Create permissions around login attempts that are assigned to only the builtin
+    // registration user
 
     pub async fn create_login_attempt(
         &self,
@@ -1138,12 +1188,28 @@ impl ApiContext {
         }
     }
 
-    pub async fn get_oauth_client(&self, id: &Uuid) -> Result<Option<OAuthClient>, StoreError> {
-        OAuthClientStore::get(&*self.storage, id, false).await
+    pub async fn get_oauth_client(
+        &self,
+        caller: &ApiCaller,
+        id: &Uuid,
+    ) -> ResourceResult<OAuthClient, StoreError> {
+        if caller.any(&[
+            &ApiPermission::GetOAuthClient(*id),
+            &ApiPermission::GetOAuthClientsAll,
+        ]) {
+            OAuthClientStore::get(&*self.storage, id, false)
+                .await
+                .opt_to_resource_result()
+        } else {
+            resource_restricted()
+        }
     }
 
-    pub async fn list_oauth_clients(&self) -> Result<Vec<OAuthClient>, StoreError> {
-        OAuthClientStore::list(
+    pub async fn list_oauth_clients(
+        &self,
+        caller: &ApiCaller,
+    ) -> ResourceResult<Vec<OAuthClient>, StoreError> {
+        let mut clients = OAuthClientStore::list(
             &*self.storage,
             OAuthClientFilter {
                 id: None,
@@ -1152,53 +1218,103 @@ impl ApiContext {
             &ListPagination::default(),
         )
         .await
+        .to_resource_result()?;
+
+        clients.retain(|client| {
+            caller.any(&[
+                &ApiPermission::GetOAuthClient(client.id),
+                &ApiPermission::GetOAuthClientsAll,
+            ])
+        });
+
+        Ok(clients)
     }
 
     pub async fn add_oauth_secret(
         &self,
+        caller: &ApiCaller,
         id: &Uuid,
         client_id: &Uuid,
         secret: &str,
-    ) -> Result<OAuthClientSecret, StoreError> {
-        OAuthClientSecretStore::upsert(
-            &*self.storage,
-            NewOAuthClientSecret {
-                id: *id,
-                oauth_client_id: *client_id,
-                secret_signature: secret.to_string(),
-            },
-        )
-        .await
+    ) -> ResourceResult<OAuthClientSecret, StoreError> {
+        if caller.any(&[
+            &ApiPermission::UpdateOAuthClient(*client_id),
+            &ApiPermission::UpdateOAuthClientsAll,
+        ]) {
+            OAuthClientSecretStore::upsert(
+                &*self.storage,
+                NewOAuthClientSecret {
+                    id: *id,
+                    oauth_client_id: *client_id,
+                    secret_signature: secret.to_string(),
+                },
+            )
+            .await
+            .to_resource_result()
+        } else {
+            resource_restricted()
+        }
     }
 
     pub async fn delete_oauth_secret(
         &self,
+        caller: &ApiCaller,
         id: &Uuid,
-    ) -> Result<Option<OAuthClientSecret>, StoreError> {
-        OAuthClientSecretStore::delete(&*self.storage, id).await
+        client_id: &Uuid,
+    ) -> ResourceResult<OAuthClientSecret, StoreError> {
+        if caller.any(&[
+            &ApiPermission::UpdateOAuthClient(*client_id),
+            &ApiPermission::UpdateOAuthClientsAll,
+        ]) {
+            OAuthClientSecretStore::delete(&*self.storage, id)
+                .await
+                .opt_to_resource_result()
+        } else {
+            resource_restricted()
+        }
     }
 
     pub async fn add_oauth_redirect_uri(
         &self,
+        caller: &ApiCaller,
         client_id: &Uuid,
         uri: &str,
-    ) -> Result<OAuthClientRedirectUri, StoreError> {
-        OAuthClientRedirectUriStore::upsert(
-            &*self.storage,
-            NewOAuthClientRedirectUri {
-                id: Uuid::new_v4(),
-                oauth_client_id: *client_id,
-                redirect_uri: uri.to_string(),
-            },
-        )
-        .await
+    ) -> ResourceResult<OAuthClientRedirectUri, StoreError> {
+        if caller.any(&[
+            &ApiPermission::UpdateOAuthClient(*client_id),
+            &ApiPermission::UpdateOAuthClientsAll,
+        ]) {
+            OAuthClientRedirectUriStore::upsert(
+                &*self.storage,
+                NewOAuthClientRedirectUri {
+                    id: Uuid::new_v4(),
+                    oauth_client_id: *client_id,
+                    redirect_uri: uri.to_string(),
+                },
+            )
+            .await
+            .to_resource_result()
+        } else {
+            resource_restricted()
+        }
     }
 
     pub async fn delete_oauth_redirect_uri(
         &self,
+        caller: &ApiCaller,
         id: &Uuid,
-    ) -> Result<Option<OAuthClientRedirectUri>, StoreError> {
-        OAuthClientRedirectUriStore::delete(&*self.storage, id).await
+        client_id: &Uuid,
+    ) -> ResourceResult<OAuthClientRedirectUri, StoreError> {
+        if caller.any(&[
+            &ApiPermission::UpdateOAuthClient(*client_id),
+            &ApiPermission::UpdateOAuthClientsAll,
+        ]) {
+            OAuthClientRedirectUriStore::delete(&*self.storage, id)
+                .await
+                .opt_to_resource_result()
+        } else {
+            resource_restricted()
+        }
     }
 
     // Group Operations
@@ -1284,46 +1400,56 @@ impl ApiContext {
 
     pub async fn add_api_user_to_group(
         &self,
+        caller: &ApiCaller,
         api_user_id: &Uuid,
         group_id: &Uuid,
-    ) -> Result<Option<ApiUser<ApiPermission>>, StoreError> {
-        // TODO: This needs to be wrapped in a transaction. That requires reworking the way the
-        // store traits are handled. Ideally we could have an API that still abstracts away the
-        // underlying connection management while allowing for transactions. Possibly something
-        // that takes a closure and passes in a connection that implements all of the expected
-        // data store traits
-        let user = ApiUserStore::get(&*self.storage, api_user_id, false).await?;
+    ) -> ResourceResult<ApiUser<ApiPermission>, StoreError> {
+        if caller.can(&ApiPermission::AddToGroup(*group_id)) {
+            // TODO: This needs to be wrapped in a transaction. That requires reworking the way the
+            // store traits are handled. Ideally we could have an API that still abstracts away the
+            // underlying connection management while allowing for transactions. Possibly something
+            // that takes a closure and passes in a connection that implements all of the expected
+            // data store traits
+            let user = ApiUserStore::get(&*self.storage, api_user_id, false)
+                .await
+                .opt_to_resource_result()?;
 
-        Ok(if let Some(user) = user {
             let mut update: NewApiUser<ApiPermission> = user.into();
             update.groups.insert(*group_id);
 
-            Some(ApiUserStore::upsert(&*self.storage, update).await?)
+            ApiUserStore::upsert(&*self.storage, update)
+                .await
+                .to_resource_result()
         } else {
-            None
-        })
+            resource_restricted()
+        }
     }
 
     pub async fn remove_api_user_from_group(
         &self,
+        caller: &ApiCaller,
         api_user_id: &Uuid,
         group_id: &Uuid,
-    ) -> Result<Option<ApiUser<ApiPermission>>, StoreError> {
-        // TODO: This needs to be wrapped in a transaction. That requires reworking the way the
-        // store traits are handled. Ideally we could have an API that still abstracts away the
-        // underlying connection management while allowing for transactions. Possibly something
-        // that takes a closure and passes in a connection that implements all of the expected
-        // data store traits
-        let user = ApiUserStore::get(&*self.storage, api_user_id, false).await?;
+    ) -> ResourceResult<ApiUser<ApiPermission>, StoreError> {
+        if caller.can(&ApiPermission::RemoveFromGroup(*group_id)) {
+            // TODO: This needs to be wrapped in a transaction. That requires reworking the way the
+            // store traits are handled. Ideally we could have an API that still abstracts away the
+            // underlying connection management while allowing for transactions. Possibly something
+            // that takes a closure and passes in a connection that implements all of the expected
+            // data store traits
+            let user = ApiUserStore::get(&*self.storage, api_user_id, false)
+                .await
+                .opt_to_resource_result()?;
 
-        Ok(if let Some(user) = user {
             let mut update: NewApiUser<ApiPermission> = user.into();
             update.groups.retain(|id| id != group_id);
 
-            Some(ApiUserStore::upsert(&*self.storage, update).await?)
+            ApiUserStore::upsert(&*self.storage, update)
+                .await
+                .to_resource_result()
         } else {
-            None
-        })
+            resource_restricted()
+        }
     }
 
     // Mapper Operations
@@ -1394,6 +1520,7 @@ impl ApiContext {
         }
     }
 
+    // TODO: Create a permission for this that only the registration user has
     async fn consume_mapping_activation(&self, mapping: &Mapping) -> Result<(), StoreError> {
         // Activations are only incremented if the rule actually has a max activation value
         let activations = mapping
@@ -1419,44 +1546,56 @@ impl ApiContext {
         .map(|_| ())?)
     }
 
+    // TODO: Need a permission for this action
     pub async fn get_link_request(&self, id: &Uuid) -> Result<Option<LinkRequest>, StoreError> {
         Ok(LinkRequestStore::get(&*self.storage, id, false, false).await?)
     }
 
     pub async fn create_link_request_token(
         &self,
+        caller: &ApiCaller,
         source_provider: &Uuid,
         source_user: &Uuid,
         target: &Uuid,
-    ) -> Result<SignedApiKey, StoreError> {
-        let link_id = Uuid::new_v4();
-        let secret = RawApiKey::generate::<8>(&link_id);
-        let signed = secret.sign(&*self.secrets.signer).await.unwrap();
+    ) -> ResourceResult<SignedApiKey, StoreError> {
+        if caller.can(&ApiPermission::CreateUserApiProviderLinkToken) {
+            let link_id = Uuid::new_v4();
+            let secret = RawApiKey::generate::<8>(&link_id);
+            let signed = secret.sign(&*self.secrets.signer).await.unwrap();
 
-        Ok(LinkRequestStore::upsert(
-            &*self.storage,
-            &NewLinkRequest {
-                id: link_id,
-                source_provider_id: *source_provider,
-                source_api_user_id: *source_user,
-                target_api_user_id: *target,
-                secret_signature: signed.signature().to_string(),
-                expires_at: Utc::now().add(Duration::minutes(15)),
-                completed_at: None,
-            },
-        )
-        .await
-        .map(|_| signed)?)
+            LinkRequestStore::upsert(
+                &*self.storage,
+                &NewLinkRequest {
+                    id: link_id,
+                    source_provider_id: *source_provider,
+                    source_api_user_id: *source_user,
+                    target_api_user_id: *target,
+                    secret_signature: signed.signature().to_string(),
+                    expires_at: Utc::now().add(Duration::minutes(15)),
+                    completed_at: None,
+                },
+            )
+            .await
+            .map(|_| signed)
+            .to_resource_result()
+        } else {
+            resource_restricted()
+        }
     }
 
     pub async fn complete_link_request(
         &self,
+        caller: &ApiCaller,
         link_request: LinkRequest,
-    ) -> Result<Option<ApiUserProvider>, StoreError> {
-        if let Some(mut provider) = self
-            .get_api_user_provider(&link_request.source_provider_id)
-            .await?
-        {
+    ) -> ResourceResult<ApiUserProvider, StoreError> {
+        let mut provider = self
+            .get_api_user_provider(caller, &link_request.source_provider_id)
+            .await?;
+
+        // This check attempts to prevent a stolen link request from being activated
+        if caller.can(&ApiPermission::UpdateApiUser(
+            link_request.source_api_user_id,
+        )) {
             provider.api_user_id = link_request.target_api_user_id;
 
             tracing::info!(?provider, "Created provider update");
@@ -1464,15 +1603,15 @@ impl ApiContext {
             let source_api_user_id = link_request.source_api_user_id;
             let mut update_request: NewLinkRequest = link_request.into();
             update_request.completed_at = Some(Utc::now());
-            LinkRequestStore::upsert(&*self.storage, &update_request).await?;
+            LinkRequestStore::upsert(&*self.storage, &update_request)
+                .await
+                .to_resource_result()?;
 
-            Ok(Some(
-                ApiUserProviderStore::transfer(&*self.storage, provider.into(), source_api_user_id)
-                    .await?,
-            ))
+            ApiUserProviderStore::transfer(&*self.storage, provider.into(), source_api_user_id)
+                .await
+                .to_resource_result()
         } else {
-            tracing::warn!(?link_request, "Expected to find a provider that was assigned to a link request, but it looks to have gone missing");
-            Ok(None)
+            resource_restricted()
         }
     }
 }

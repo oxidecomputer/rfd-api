@@ -6,7 +6,6 @@ use chrono::{DateTime, Utc};
 use dropshot::{
     endpoint, HttpError, HttpResponseCreated, HttpResponseOk, Path, RequestContext, TypedBody,
 };
-use http::StatusCode;
 use rfd_model::{OAuthClient, OAuthClientRedirectUri, OAuthClientSecret};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -15,13 +14,8 @@ use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
-    authn::key::RawApiKey,
-    context::ApiContext,
-    error::ApiError,
-    permissions::ApiPermission,
-    secrets::OpenApiSecretString,
-    util::response::{client_error, to_internal_error},
-    ApiCaller,
+    authn::key::RawApiKey, context::ApiContext, permissions::ApiPermission,
+    secrets::OpenApiSecretString, util::response::to_internal_error, ApiCaller,
 };
 
 /// List OAuth clients
@@ -45,14 +39,7 @@ async fn list_oauth_clients_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
 ) -> Result<HttpResponseOk<Vec<OAuthClient>>, HttpError> {
-    Ok(HttpResponseOk(
-        ctx.list_oauth_clients()
-            .await
-            .map_err(ApiError::Storage)?
-            .into_iter()
-            .filter(|client| caller.can(&ApiPermission::GetOAuthClient(client.id)))
-            .collect(),
-    ))
+    Ok(HttpResponseOk(ctx.list_oauth_clients(caller).await?))
 }
 
 /// Create a new OAuth Client
@@ -110,7 +97,7 @@ pub struct GetOAuthClientPath {
 pub async fn get_oauth_client(
     rqctx: RequestContext<ApiContext>,
     path: Path<GetOAuthClientPath>,
-) -> Result<HttpResponseOk<Option<OAuthClient>>, HttpError> {
+) -> Result<HttpResponseOk<OAuthClient>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(auth.as_ref()).await?;
@@ -122,16 +109,10 @@ async fn get_oauth_client_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
     path: &GetOAuthClientPath,
-) -> Result<HttpResponseOk<Option<OAuthClient>>, HttpError> {
-    if caller.can(&ApiPermission::GetOAuthClient(path.client_id)) {
-        Ok(HttpResponseOk(
-            ctx.get_oauth_client(&path.client_id)
-                .await
-                .map_err(ApiError::Storage)?,
-        ))
-    } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
-    }
+) -> Result<HttpResponseOk<OAuthClient>, HttpError> {
+    Ok(HttpResponseOk(
+        ctx.get_oauth_client(caller, &path.client_id).await?,
+    ))
 }
 
 #[derive(Debug, Clone, Deserialize, JsonSchema)]
@@ -169,25 +150,20 @@ async fn create_oauth_client_secret_op(
     caller: &ApiCaller,
     client_id: Uuid,
 ) -> Result<HttpResponseOk<InitialOAuthClientSecretResponse>, HttpError> {
-    if caller.can(&ApiPermission::UpdateOAuthClient(client_id)) {
-        let id = Uuid::new_v4();
-        let secret = RawApiKey::generate::<24>(&id)
-            .sign(&*ctx.secrets.signer)
-            .await
-            .map_err(to_internal_error)?;
-        let client_secret = ctx
-            .add_oauth_secret(&id, &client_id, secret.signature())
-            .await
-            .map_err(ApiError::Storage)?;
+    let id = Uuid::new_v4();
+    let secret = RawApiKey::generate::<24>(&id)
+        .sign(&*ctx.secrets.signer)
+        .await
+        .map_err(to_internal_error)?;
+    let client_secret = ctx
+        .add_oauth_secret(caller, &id, &client_id, secret.signature())
+        .await?;
 
-        Ok(HttpResponseOk(InitialOAuthClientSecretResponse {
-            id: client_secret.id,
-            key: secret.key().into(),
-            created_at: client_secret.created_at,
-        }))
-    } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
-    }
+    Ok(HttpResponseOk(InitialOAuthClientSecretResponse {
+        id: client_secret.id,
+        key: secret.key().into(),
+        created_at: client_secret.created_at,
+    }))
 }
 
 #[derive(Debug, Clone, Deserialize, JsonSchema)]
@@ -206,7 +182,7 @@ pub struct DeleteOAuthClientSecretPath {
 pub async fn delete_oauth_client_secret(
     rqctx: RequestContext<ApiContext>,
     path: Path<DeleteOAuthClientSecretPath>,
-) -> Result<HttpResponseOk<Option<OAuthClientSecret>>, HttpError> {
+) -> Result<HttpResponseOk<OAuthClientSecret>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(auth.as_ref()).await?;
@@ -218,16 +194,11 @@ async fn delete_oauth_client_secret_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
     path: &DeleteOAuthClientSecretPath,
-) -> Result<HttpResponseOk<Option<OAuthClientSecret>>, HttpError> {
-    if caller.can(&ApiPermission::UpdateOAuthClient(path.secret_id)) {
-        Ok(HttpResponseOk(
-            ctx.delete_oauth_secret(&path.secret_id)
-                .await
-                .map_err(ApiError::Storage)?,
-        ))
-    } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
-    }
+) -> Result<HttpResponseOk<OAuthClientSecret>, HttpError> {
+    Ok(HttpResponseOk(
+        ctx.delete_oauth_secret(caller, &path.secret_id, &path.client_id)
+            .await?,
+    ))
 }
 
 #[derive(Debug, Clone, Deserialize, JsonSchema)]
@@ -265,15 +236,10 @@ async fn create_oauth_client_redirect_uri_op(
     path: &AddOAuthClientRedirectPath,
     body: AddOAuthClientRedirectBody,
 ) -> Result<HttpResponseOk<OAuthClientRedirectUri>, HttpError> {
-    if caller.can(&ApiPermission::UpdateOAuthClient(path.client_id)) {
-        Ok(HttpResponseOk(
-            ctx.add_oauth_redirect_uri(&path.client_id, &body.redirect_uri)
-                .await
-                .map_err(ApiError::Storage)?,
-        ))
-    } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
-    }
+    Ok(HttpResponseOk(
+        ctx.add_oauth_redirect_uri(caller, &path.client_id, &body.redirect_uri)
+            .await?,
+    ))
 }
 
 #[derive(Debug, Clone, Deserialize, JsonSchema)]
@@ -292,7 +258,7 @@ pub struct DeleteOAuthClientRedirectPath {
 pub async fn delete_oauth_client_redirect_uri(
     rqctx: RequestContext<ApiContext>,
     path: Path<DeleteOAuthClientRedirectPath>,
-) -> Result<HttpResponseOk<Option<OAuthClientRedirectUri>>, HttpError> {
+) -> Result<HttpResponseOk<OAuthClientRedirectUri>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let caller = ctx.get_caller(auth.as_ref()).await?;
@@ -304,16 +270,11 @@ async fn delete_oauth_client_redirect_uri_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
     path: &DeleteOAuthClientRedirectPath,
-) -> Result<HttpResponseOk<Option<OAuthClientRedirectUri>>, HttpError> {
-    if caller.can(&ApiPermission::UpdateOAuthClient(path.client_id)) {
-        Ok(HttpResponseOk(
-            ctx.delete_oauth_redirect_uri(&path.redirect_uri_id)
-                .await
-                .map_err(ApiError::Storage)?,
-        ))
-    } else {
-        Err(client_error(StatusCode::FORBIDDEN, "Unauthorized"))
-    }
+) -> Result<HttpResponseOk<OAuthClientRedirectUri>, HttpError> {
+    Ok(HttpResponseOk(
+        ctx.delete_oauth_redirect_uri(caller, &path.redirect_uri_id, &path.client_id)
+            .await?,
+    ))
 }
 
 #[cfg(test)]

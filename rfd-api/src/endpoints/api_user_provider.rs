@@ -9,10 +9,7 @@ use trace_request::trace_request;
 use tracing::instrument;
 use uuid::Uuid;
 
-use crate::{
-    context::ApiContext, error::ApiError, permissions::ApiPermission, secrets::OpenApiSecretString,
-    util::response::forbidden,
-};
+use crate::{context::ApiContext, secrets::OpenApiSecretString, util::response::forbidden};
 
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct ApiUserProviderPath {
@@ -47,29 +44,20 @@ pub async fn create_link_token(
     let path = path.into_inner();
     let body = body.into_inner();
 
-    let provider = ctx
-        .get_api_user_provider(&path.identifier)
-        .await
-        .map_err(ApiError::Storage)?;
+    let provider = ctx.get_api_user_provider(&caller, &path.identifier).await?;
 
-    if let Some(provider) = provider {
-        if provider.api_user_id == caller.id
-            && caller.can(&ApiPermission::CreateUserApiProviderLinkToken)
-        {
-            let token = ctx
-                .create_link_request_token(&path.identifier, &caller.id, &body.user_identifier)
-                .await
-                .map_err(ApiError::Storage)?;
+    // TODO: This permission check indicates that the permission modeling for this functionality
+    // is not correct. Need to rethink it
+    if provider.api_user_id == caller.id {
+        let token = ctx
+            .create_link_request_token(&caller, &path.identifier, &caller.id, &body.user_identifier)
+            .await?;
 
-            Ok(HttpResponseOk(ApiUserLinkRequestResponse {
-                token: token.key().into(),
-            }))
-        } else {
-            tracing::info!(caller = ?caller.id, provider = ?provider.id, provider_user = ?provider.api_user_id, "User does not have permission to modify this provider");
-            Err(forbidden())
-        }
+        Ok(HttpResponseOk(ApiUserLinkRequestResponse {
+            token: token.key().into(),
+        }))
     } else {
-        tracing::debug!(id = ?path.identifier, "Failed to find requested provider");
+        tracing::info!(caller = ?caller.id, provider = ?provider.id, provider_user = ?provider.api_user_id, "User does not have permission to modify this provider");
         Err(forbidden())
     }
 }

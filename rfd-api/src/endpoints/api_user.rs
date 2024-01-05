@@ -26,11 +26,9 @@ use crate::{
     authn::key::RawApiKey,
     context::ApiContext,
     error::ApiError,
-    permissions::{ApiPermission, ApiPermissionResponse},
+    permissions::ApiPermissionResponse,
     secrets::OpenApiSecretString,
-    util::response::{
-        bad_request, forbidden, internal_error, not_found, to_internal_error, unauthorized,
-    },
+    util::response::{bad_request, not_found, to_internal_error, unauthorized},
     ApiCaller, ApiPermissions, User,
 };
 
@@ -220,29 +218,24 @@ async fn list_api_user_tokens_op(
     caller: &ApiCaller,
     path: &ApiUserPath,
 ) -> Result<HttpResponseOk<Vec<ApiKeyResponse>>, HttpError> {
-    if caller.can(&ApiPermission::GetApiUserToken(path.identifier).into()) {
-        tracing::info!("Fetch token list");
+    tracing::info!("Fetch token list");
 
-        let tokens = ctx
-            .get_api_user_tokens(&path.identifier, &ListPagination::default())
-            .await
-            .map_err(ApiError::Storage)?;
+    let tokens = ctx
+        .get_api_user_tokens(caller, &path.identifier, &ListPagination::default())
+        .await?;
 
-        tracing::info!(count = ?tokens.len(), "Retrieved token list");
+    tracing::info!(count = ?tokens.len(), "Retrieved token list");
 
-        Ok(HttpResponseOk(
-            tokens
-                .into_iter()
-                .map(|token| ApiKeyResponse {
-                    id: token.id,
-                    permissions: into_permissions_response(token.permissions),
-                    created_at: token.created_at,
-                })
-                .collect(),
-        ))
-    } else {
-        Err(forbidden())
-    }
+    Ok(HttpResponseOk(
+        tokens
+            .into_iter()
+            .map(|token| ApiKeyResponse {
+                id: token.id,
+                permissions: into_permissions_response(token.permissions),
+                created_at: token.created_at,
+            })
+            .collect(),
+    ))
 }
 
 #[derive(Debug, Clone, Deserialize, JsonSchema)]
@@ -296,7 +289,7 @@ async fn create_api_user_token_op(
         .await
         .map_err(to_internal_error)?;
 
-    match ctx
+    let user_key = ctx
         .create_api_user_token(
             caller,
             NewApiKey {
@@ -308,21 +301,16 @@ async fn create_api_user_token_op(
             },
             &api_user,
         )
-        .await
-        .map_err(ApiError::Storage)?
-    {
-        Some(user_key) => {
-            // Creating an api token will return the hashed version, but we need to return the
-            // plaintext token as we do not store a copy
-            Ok(HttpResponseCreated(InitialApiKeyResponse {
-                id: user_key.id,
-                key: key.key().into(),
-                permissions: into_permissions_response(user_key.permissions),
-                created_at: user_key.created_at,
-            }))
-        }
-        None => Err(forbidden()),
-    }
+        .await?;
+
+    // Returning an api token will return the hashed version, but we need to return the
+    // plaintext token as we do not store a copy
+    Ok(HttpResponseCreated(InitialApiKeyResponse {
+        id: user_key.id,
+        key: key.key().into(),
+        permissions: into_permissions_response(user_key.permissions),
+        created_at: user_key.created_at,
+    }))
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -356,18 +344,13 @@ async fn get_api_user_token_op(
 ) -> Result<HttpResponseOk<ApiKeyResponse>, HttpError> {
     let token = ctx
         .get_api_user_token(caller, &path.token_identifier)
-        .await
-        .map_err(ApiError::Storage)?;
+        .await?;
 
-    if let Some(token) = token {
-        Ok(HttpResponseOk(ApiKeyResponse {
-            id: token.id,
-            permissions: into_permissions_response(token.permissions),
-            created_at: token.created_at,
-        }))
-    } else {
-        Err(not_found("Failed to find token"))
-    }
+    Ok(HttpResponseOk(ApiKeyResponse {
+        id: token.id,
+        permissions: into_permissions_response(token.permissions),
+        created_at: token.created_at,
+    }))
 }
 
 // Revoke a specific API token so it can no longer be used
@@ -395,18 +378,13 @@ async fn delete_api_user_token_op(
 ) -> Result<HttpResponseOk<ApiKeyResponse>, HttpError> {
     let token = ctx
         .delete_api_user_token(caller, &path.token_identifier)
-        .await
-        .map_err(ApiError::Storage)?;
+        .await?;
 
-    if let Some(token) = token {
-        Ok(HttpResponseOk(ApiKeyResponse {
-            id: token.id,
-            permissions: into_permissions_response(token.permissions),
-            created_at: token.created_at,
-        }))
-    } else {
-        Err(not_found("Failed to find token"))
-    }
+    Ok(HttpResponseOk(ApiKeyResponse {
+        id: token.id,
+        permissions: into_permissions_response(token.permissions),
+        created_at: token.created_at,
+    }))
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -431,16 +409,11 @@ pub async fn add_api_user_to_group(
     let path = path.into_inner();
     let body = body.into_inner();
 
-    if caller.can(&ApiPermission::AddToGroup(body.group_id)) {
-        ctx.add_api_user_to_group(&path.identifier, &body.group_id)
-            .await
-            .map(|o| o.map(into_user_response))
-            .map_err(ApiError::Storage)?
-            .map(HttpResponseOk)
-            .ok_or_else(|| not_found("User does not exist"))
-    } else {
-        Err(forbidden())
-    }
+    let user = ctx
+        .add_api_user_to_group(&caller, &path.identifier, &body.group_id)
+        .await?;
+
+    Ok(HttpResponseOk(into_user_response(user)))
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -464,16 +437,11 @@ pub async fn remove_api_user_from_group(
     let caller = ctx.get_caller(auth.as_ref()).await?;
     let path = path.into_inner();
 
-    if caller.can(&ApiPermission::RemoveFromGroup(path.group_id)) {
-        ctx.remove_api_user_from_group(&path.identifier, &path.group_id)
-            .await
-            .map(|o| o.map(into_user_response))
-            .map_err(ApiError::Storage)?
-            .map(HttpResponseOk)
-            .ok_or_else(|| not_found("User does not exist"))
-    } else {
-        Err(forbidden())
-    }
+    let user = ctx
+        .remove_api_user_from_group(&caller, &path.identifier, &path.group_id)
+        .await?;
+
+    Ok(HttpResponseOk(into_user_response(user)))
 }
 
 // TODO: Needs to be implemented
@@ -501,6 +469,9 @@ pub async fn link_provider(
     let path = path.into_inner();
     let body = body.into_inner();
 
+    // TODO: This permission check indicates that the permission modeling for this functionality
+    // is not correct. Need to rethink it
+    //
     // This endpoint can only be called by the user themselves, it can not be performed on behalf
     // of a user
     if path.identifier == caller.id {
@@ -512,11 +483,15 @@ pub async fn link_provider(
             tracing::debug!(?err, "Failed to parse link request id from token");
             bad_request("Invalid link request token")
         })?;
+
+        // TODO: We need an actual permission for reading a LinkRequest
         let link_request = ctx
             .get_link_request(&link_request_id)
             .await
             .map_err(ApiError::Storage)?
             .ok_or_else(|| not_found("Failed to find identifier"))?;
+
+        // TODO: How can this check be lowered to the context (including a proper permission check)
 
         // Verify that the found link request is assigned to the user calling the endpoint and that
         // the token provided matches the stored signature
@@ -528,19 +503,13 @@ pub async fn link_provider(
                 )
                 .is_ok()
         {
-            let result = ctx
-                .complete_link_request(link_request)
+            let provider = ctx
+                .complete_link_request(&caller, link_request)
                 .await
-                .tap_err(|err| tracing::error!(?err, "Failed to complete link request"))
-                .map_err(ApiError::Storage)?;
+                .tap_err(|err| tracing::error!(?err, "Failed to complete link request"))?;
 
-            match result {
-                Some(provider) => {
-                    tracing::info!(?provider, "Completed link request");
-                    Ok(HttpResponseUpdatedNoContent())
-                }
-                None => Err(internal_error("Failed to update provider")),
-            }
+            tracing::info!(?provider, "Completed link request");
+            Ok(HttpResponseUpdatedNoContent())
         } else {
             Err(unauthorized())
         }
