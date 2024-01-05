@@ -57,8 +57,8 @@ use crate::{
     permissions::{ApiPermission, ApiPermissionError, PermissionStorage},
     search::SearchClient,
     util::response::{
-        bad_request, client_error, internal_error, resource_error, resource_restricted,
-        ResourceError, ResourceResult, ToResourceResult, ToResourceResultOpt, resource_not_found,
+        bad_request, client_error, internal_error, resource_error, resource_not_found,
+        resource_restricted, ResourceError, ResourceResult, ToResourceResult, ToResourceResultOpt,
     },
     ApiCaller, ApiPermissions, User, UserToken,
 };

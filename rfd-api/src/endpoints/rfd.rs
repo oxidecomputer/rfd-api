@@ -43,9 +43,7 @@ async fn get_rfds_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
 ) -> Result<HttpResponseOk<Vec<ListRfd>>, HttpError> {
-    let rfds = ctx
-        .list_rfds(caller, None)
-        .await?;
+    let rfds = ctx.list_rfds(caller, None).await?;
     Ok(HttpResponseOk(rfds))
 }
 
