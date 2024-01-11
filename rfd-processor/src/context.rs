@@ -258,7 +258,6 @@ impl PdfStorageCtx {
                 .as_ref()
                 .map(|config| {
                     vec![PdfStorageLocation {
-                        drive_id: config.drive.clone(),
                         folder_id: config.folder.clone(),
                     }]
                 })
@@ -280,11 +279,8 @@ impl PdfStorage for PdfStorageCtx {
 
         if let Some(location) = self.locations.get(0) {
             let req = File {
-                copy_requires_writer_permission: Some(true),
-                drive_id: location.drive_id.clone(),
                 parents: Some(vec![location.folder_id.to_string()]),
                 name: Some(filename.to_string()),
-                mime_type: Some("application/pdf".to_string()),
                 ..Default::default()
             };
 
@@ -292,11 +288,12 @@ impl PdfStorage for PdfStorageCtx {
 
             let response = match external_id {
                 Some(file_id) => {
-                    tracing::info!(?file_id, "Updating existing PDF with new version");
+                    tracing::info!(?req, "Updating existing PDF with new version");
                     self.client
                         .files()
                         .update(req, file_id)
-                        .upload(
+                        .supports_all_drives(true)
+                        .upload_resumable(
                             stream,
                             "application/pdf".parse().expect("Failed to parse mimetype"),
                         )
@@ -304,11 +301,12 @@ impl PdfStorage for PdfStorageCtx {
                         .map_err(RfdPdfError::Remote)
                 }
                 None => {
-                    tracing::info!("Creating new PDF file");
+                    tracing::info!(?req, "Creating new PDF file");
                     self.client
                         .files()
                         .create(req)
-                        .upload(
+                        .supports_all_drives(true)
+                        .upload_resumable(
                             stream,
                             "application/pdf".parse().expect("Failed to parse mimetype"),
                         )
@@ -340,7 +338,6 @@ impl PdfStorage for PdfStorageCtx {
 
 #[derive(Debug)]
 pub struct PdfStorageLocation {
-    pub drive_id: Option<String>,
     pub folder_id: String,
 }
 
