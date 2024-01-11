@@ -84,7 +84,7 @@ tracing-bunyan-formatter = "0.3.9"
 tracing-core = "0.1.32"
 tracing-slog = { git = "https://github.com/oxidecomputer/tracing-slog" }
 tracing-subscriber = "0.3.17"
-uuid = "1.4.1"
+uuid = "1.6.1"
 valuable = "0.1.0"
 yup-oauth2 = "8.3.0"
 
