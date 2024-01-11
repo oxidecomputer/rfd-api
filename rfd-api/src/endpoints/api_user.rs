@@ -312,9 +312,11 @@ async fn create_api_user_token_op(
     }))
 }
 
+// The identifier field is currently unused
+#[allow(dead_code)]
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct ApiUserTokenPath {
-    _identifier: Uuid,
+    identifier: Uuid,
     token_identifier: Uuid,
 }
 
@@ -1056,17 +1058,17 @@ mod tests {
         };
 
         let api_user_token_path = ApiUserTokenPath {
-            _identifier: api_user_id,
+            identifier: api_user_id,
             token_identifier: token.id,
         };
 
         let failure_api_user_token_path = ApiUserTokenPath {
-            _identifier: api_user_id,
+            identifier: api_user_id,
             token_identifier: Uuid::new_v4(),
         };
 
         let unknown_api_user_token_path = ApiUserTokenPath {
-            _identifier: api_user_id,
+            identifier: api_user_id,
             token_identifier: Uuid::new_v4(),
         };
 
@@ -1184,17 +1186,17 @@ mod tests {
         };
 
         let api_user_token_path = ApiUserTokenPath {
-            _identifier: api_user_id,
+            identifier: api_user_id,
             token_identifier: token.id,
         };
 
         let failure_api_user_token_path = ApiUserTokenPath {
-            _identifier: api_user_id,
+            identifier: api_user_id,
             token_identifier: Uuid::new_v4(),
         };
 
         let unknown_api_user_token_path = ApiUserTokenPath {
-            _identifier: api_user_id,
+            identifier: api_user_id,
             token_identifier: Uuid::new_v4(),
         };
 

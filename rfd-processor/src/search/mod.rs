@@ -49,6 +49,7 @@ impl RfdSearchIndex {
         &self,
         rfd_number: &RfdNumber,
         content: &str,
+        public: bool,
     ) -> Result<(), SearchError> {
         let index = self.client.index(&self.index);
 
@@ -78,7 +79,10 @@ impl RfdSearchIndex {
             }
         }
 
-        let parsed = Self::parse_document(rfd_number, content)?;
+        let mut parsed = Self::parse_document(rfd_number, content)?;
+        for doc in parsed.iter_mut() {
+            doc.public = public;
+        }
 
         tracing::info!(count = parsed.len(), "Parsed RFD into sections to index");
 
@@ -142,6 +146,7 @@ pub struct IndexDocument {
     pub hierarchy: HashMap<String, String>,
     #[serde(flatten)]
     pub hierarchy_radio: HashMap<String, String>,
+    pub public: bool,
 }
 
 impl IndexDocument {
@@ -187,6 +192,7 @@ impl IndexDocument {
             rfd_number: rfd_number.into(),
             hierarchy,
             hierarchy_radio,
+            public: false,
         }
     }
 }

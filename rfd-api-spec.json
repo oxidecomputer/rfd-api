@@ -582,8 +582,8 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "successful operation",
+          "201": {
+            "description": "successful creation",
             "content": {
               "application/json": {
                 "schema": {
@@ -967,8 +967,8 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "successful operation",
+          "201": {
+            "description": "successful creation",
             "content": {
               "application/json": {
                 "schema": {
@@ -1051,8 +1051,8 @@
         "summary": "Create a new OAuth Client",
         "operationId": "create_oauth_client",
         "responses": {
-          "200": {
-            "description": "successful operation",
+          "201": {
+            "description": "successful creation",
             "content": {
               "application/json": {
                 "schema": {

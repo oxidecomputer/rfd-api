@@ -278,8 +278,7 @@ impl PdfStorage for PdfStorageCtx {
         tracing::info!("Attempt to store PFD");
 
         if let Some(location) = self.locations.get(0) {
-            let req = File {
-                parents: Some(vec![location.folder_id.to_string()]),
+            let mut req = File {
                 name: Some(filename.to_string()),
                 ..Default::default()
             };
@@ -301,6 +300,7 @@ impl PdfStorage for PdfStorageCtx {
                         .map_err(RfdPdfError::Remote)
                 }
                 None => {
+                    req.parents = Some(vec![location.folder_id.to_string()]);
                     tracing::info!(?req, "Creating new PDF file");
                     self.client
                         .files()

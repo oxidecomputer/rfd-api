@@ -116,6 +116,7 @@ pub struct MeiliSearchResult {
     rfd_number: u64,
     anchor: Option<String>,
     url: Option<String>,
+    public: Option<bool>,
 }
 
 impl From<SearchResult<MeiliSearchResult>> for SearchResultHit {

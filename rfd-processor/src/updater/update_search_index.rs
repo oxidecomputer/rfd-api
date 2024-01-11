@@ -3,6 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use async_trait::async_trait;
+use rfd_model::schema_ext::Visibility;
 use tracing::instrument;
 
 use crate::rfd::PersistedRfd;
@@ -30,8 +31,13 @@ impl RfdUpdateAction for UpdateSearch {
             tracing::info!("Updating search index");
 
             if mode == RfdUpdateMode::Write {
+                let public = match new.rfd.visibility {
+                    Visibility::Private => false,
+                    Visibility::Public => true,
+                };
+
                 if let Err(err) = index
-                    .index_rfd(&new.rfd.rfd_number.into(), &new.revision.content)
+                    .index_rfd(&new.rfd.rfd_number.into(), &new.revision.content, public)
                     .await
                 {
                     tracing::error!(?err, search_index = i, "Failed to add RFD to search index");

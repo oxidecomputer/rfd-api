@@ -202,6 +202,7 @@ pub async fn exchange_device_token(
                             &api_user_provider,
                             vec![
                                 "user:info:r".to_string(),
+                                "user:info:w".to_string(),
                                 "user:provider:w".to_string(),
                                 "user:token:r".to_string(),
                                 "user:token:w".to_string(),
