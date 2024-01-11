@@ -405,6 +405,8 @@ impl RfdPdfStore for PostgresStore {
                 rfd_pdf::rfd_revision_id.eq(new_pdf.rfd_revision_id.clone()),
                 rfd_pdf::source.eq(new_pdf.source.clone()),
                 rfd_pdf::link.eq(new_pdf.link.clone()),
+                rfd_pdf::rfd_id.eq(new_pdf.rfd_id.clone()),
+                rfd_pdf::external_id.eq(new_pdf.external_id.clone()),
             ))
             .on_conflict(on_constraint("revision_links_unique"))
             .do_nothing()
