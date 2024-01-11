@@ -240,6 +240,7 @@ impl ApiContext {
                     ApiPermission::UpdateApiUserAll,
                     ApiPermission::CreateGroup,
                     ApiPermission::GetGroupsAll,
+                    ApiPermission::CreateMapper,
                     ApiPermission::ListMappers,
                     ApiPermission::GetOAuthClientsAll,
                 ]
