@@ -260,8 +260,7 @@ pub mod types {
     /// {
     ///  "type": "object",
     ///  "required": [
-    ///    "expires_at",
-    ///    "permissions"
+    ///    "expires_at"
     ///  ],
     ///  "properties": {
     ///    "expires_at": {
@@ -269,8 +268,13 @@ pub mod types {
     ///      "format": "date-time"
     ///    },
     ///    "permissions": {
-    ///      "$ref":
+    ///      "allOf": [
+    ///        {
+    ///          "$ref":
     /// "#/components/schemas/Permissions_for_ApiPermissionResponse"
+    ///        }
+
+    ///      ]
     ///    }
 
     ///  }
@@ -282,7 +286,8 @@ pub mod types {
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct ApiKeyCreateParams {
         pub expires_at: chrono::DateTime<chrono::offset::Utc>,
-        pub permissions: PermissionsForApiPermissionResponse,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub permissions: Option<PermissionsForApiPermissionResponse>,
     }
 
     impl From<&ApiKeyCreateParams> for ApiKeyCreateParams {
@@ -306,8 +311,7 @@ pub mod types {
     ///  "type": "object",
     ///  "required": [
     ///    "created_at",
-    ///    "id",
-    ///    "permissions"
+    ///    "id"
     ///  ],
     ///  "properties": {
     ///    "created_at": {
@@ -319,8 +323,13 @@ pub mod types {
     ///      "format": "uuid"
     ///    },
     ///    "permissions": {
-    ///      "$ref":
+    ///      "allOf": [
+    ///        {
+    ///          "$ref":
     /// "#/components/schemas/Permissions_for_ApiPermissionResponse"
+    ///        }
+
+    ///      ]
     ///    }
 
     ///  }
@@ -333,7 +342,8 @@ pub mod types {
     pub struct ApiKeyResponse {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
         pub id: uuid::Uuid,
-        pub permissions: PermissionsForApiPermissionResponse,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub permissions: Option<PermissionsForApiPermissionResponse>,
     }
 
     impl From<&ApiKeyResponse> for ApiKeyResponse {
@@ -3322,8 +3332,7 @@ pub mod types {
     ///  "required": [
     ///    "created_at",
     ///    "id",
-    ///    "key",
-    ///    "permissions"
+    ///    "key"
     ///  ],
     ///  "properties": {
     ///    "created_at": {
@@ -3338,8 +3347,13 @@ pub mod types {
     ///      "$ref": "#/components/schemas/SecretString"
     ///    },
     ///    "permissions": {
-    ///      "$ref":
+    ///      "allOf": [
+    ///        {
+    ///          "$ref":
     /// "#/components/schemas/Permissions_for_ApiPermissionResponse"
+    ///        }
+
+    ///      ]
     ///    }
 
     ///  }
@@ -3353,7 +3367,8 @@ pub mod types {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
         pub id: uuid::Uuid,
         pub key: SecretString,
-        pub permissions: PermissionsForApiPermissionResponse,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub permissions: Option<PermissionsForApiPermissionResponse>,
     }
 
     impl From<&InitialApiKeyResponse> for InitialApiKeyResponse {
@@ -5149,14 +5164,14 @@ pub mod types {
         #[derive(Clone, Debug)]
         pub struct ApiKeyCreateParams {
             expires_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
-            permissions: Result<super::PermissionsForApiPermissionResponse, String>,
+            permissions: Result<Option<super::PermissionsForApiPermissionResponse>, String>,
         }
 
         impl Default for ApiKeyCreateParams {
             fn default() -> Self {
                 Self {
                     expires_at: Err("no value supplied for expires_at".to_string()),
-                    permissions: Err("no value supplied for permissions".to_string()),
+                    permissions: Ok(Default::default()),
                 }
             }
         }
@@ -5174,7 +5189,7 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::PermissionsForApiPermissionResponse>,
+                T: std::convert::TryInto<Option<super::PermissionsForApiPermissionResponse>>,
                 T::Error: std::fmt::Display,
             {
                 self.permissions = value
@@ -5207,7 +5222,7 @@ pub mod types {
         pub struct ApiKeyResponse {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             id: Result<uuid::Uuid, String>,
-            permissions: Result<super::PermissionsForApiPermissionResponse, String>,
+            permissions: Result<Option<super::PermissionsForApiPermissionResponse>, String>,
         }
 
         impl Default for ApiKeyResponse {
@@ -5215,7 +5230,7 @@ pub mod types {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
                     id: Err("no value supplied for id".to_string()),
-                    permissions: Err("no value supplied for permissions".to_string()),
+                    permissions: Ok(Default::default()),
                 }
             }
         }
@@ -5243,7 +5258,7 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::PermissionsForApiPermissionResponse>,
+                T: std::convert::TryInto<Option<super::PermissionsForApiPermissionResponse>>,
                 T::Error: std::fmt::Display,
             {
                 self.permissions = value
@@ -6811,7 +6826,7 @@ pub mod types {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             id: Result<uuid::Uuid, String>,
             key: Result<super::SecretString, String>,
-            permissions: Result<super::PermissionsForApiPermissionResponse, String>,
+            permissions: Result<Option<super::PermissionsForApiPermissionResponse>, String>,
         }
 
         impl Default for InitialApiKeyResponse {
@@ -6820,7 +6835,7 @@ pub mod types {
                     created_at: Err("no value supplied for created_at".to_string()),
                     id: Err("no value supplied for id".to_string()),
                     key: Err("no value supplied for key".to_string()),
-                    permissions: Err("no value supplied for permissions".to_string()),
+                    permissions: Ok(Default::default()),
                 }
             }
         }
@@ -6858,7 +6873,7 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::PermissionsForApiPermissionResponse>,
+                T: std::convert::TryInto<Option<super::PermissionsForApiPermissionResponse>>,
                 T::Error: std::fmt::Display,
             {
                 self.permissions = value

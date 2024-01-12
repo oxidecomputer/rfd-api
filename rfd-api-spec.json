@@ -1541,12 +1541,16 @@
             "format": "date-time"
           },
           "permissions": {
-            "$ref": "#/components/schemas/Permissions_for_ApiPermissionResponse"
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Permissions_for_ApiPermissionResponse"
+              }
+            ]
           }
         },
         "required": [
-          "expires_at",
-          "permissions"
+          "expires_at"
         ]
       },
       "ApiKeyResponse": {
@@ -1561,13 +1565,17 @@
             "format": "uuid"
           },
           "permissions": {
-            "$ref": "#/components/schemas/Permissions_for_ApiPermissionResponse"
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Permissions_for_ApiPermissionResponse"
+              }
+            ]
           }
         },
         "required": [
           "created_at",
-          "id",
-          "permissions"
+          "id"
         ]
       },
       "ApiPermission": {
@@ -3625,14 +3633,18 @@
             "$ref": "#/components/schemas/SecretString"
           },
           "permissions": {
-            "$ref": "#/components/schemas/Permissions_for_ApiPermissionResponse"
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Permissions_for_ApiPermissionResponse"
+              }
+            ]
           }
         },
         "required": [
           "created_at",
           "id",
-          "key",
-          "permissions"
+          "key"
         ]
       },
       "InitialOAuthClientSecretResponse": {

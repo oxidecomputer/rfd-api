@@ -5,10 +5,11 @@
 use itertools::{EitherOrBoth, Itertools};
 use owo_colors::{OwoColorize, Style};
 use rfd_sdk::types::{
-    self, AccessGroupForApiPermissionResponse, ApiKeyResponse, ApiUserForApiPermissionResponse,
-    Error, FullRfd, FullRfdPdfEntry, GetUserResponse, InitialApiKeyResponse,
-    InitialOAuthClientSecretResponse, ListRfd, Mapper, OAuthClient, OAuthClientRedirectUri,
-    OAuthClientSecret, SearchResultHit, SearchResults, Visibility,
+    self, AccessGroupForApiPermissionResponse, ApiKeyResponse, ApiPermission,
+    ApiUserForApiPermissionResponse, Error, FullRfd, FullRfdPdfEntry, GetUserResponse,
+    InitialApiKeyResponse, InitialOAuthClientSecretResponse, ListRfd, Mapper, OAuthClient,
+    OAuthClientRedirectUri, OAuthClientSecret, PermissionsForApiPermissionResponse,
+    SearchResultHit, SearchResults, Visibility,
 };
 use std::{collections::HashMap, fmt::Display, fs::File, io::Write, process::Command};
 use tabwriter::TabWriter;
@@ -329,10 +330,15 @@ impl TabDisplay for ApiKeyResponse {
             tw,
             level,
             "permissions",
-            &Vec::from(self.permissions.clone())
-                .iter()
-                .map(|p| p.to_string())
-                .collect_vec(),
+            &Vec::from(
+                self.permissions
+                    .as_ref()
+                    .cloned()
+                    .unwrap_or_else(|| PermissionsForApiPermissionResponse(vec![])),
+            )
+            .iter()
+            .map(|p| p.to_string())
+            .collect_vec(),
         );
         printer.print_field(tw, level, "created_at", &self.created_at);
     }
@@ -346,10 +352,15 @@ impl TabDisplay for InitialApiKeyResponse {
             tw,
             level,
             "permissions",
-            &Vec::from(self.permissions.clone())
-                .iter()
-                .map(|p| p.to_string())
-                .collect_vec(),
+            &Vec::from(
+                self.permissions
+                    .as_ref()
+                    .cloned()
+                    .unwrap_or_else(|| PermissionsForApiPermissionResponse(vec![])),
+            )
+            .iter()
+            .map(|p| p.to_string())
+            .collect_vec(),
         );
         printer.print_field(tw, level, "created_at", &self.created_at);
     }

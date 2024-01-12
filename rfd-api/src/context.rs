@@ -203,6 +203,12 @@ pub struct FullRfdPdfEntry {
     pub link: String,
 }
 
+#[derive(Debug)]
+enum BasePermissions {
+    Full,
+    Restricted(ApiPermissions),
+}
+
 impl ApiContext {
     pub async fn new(
         public_url: String,
@@ -307,7 +313,7 @@ impl ApiContext {
     pub async fn get_caller(&self, auth: Option<&AuthToken>) -> Result<ApiCaller, CallerError> {
         match auth {
             Some(token) => {
-                let (api_user_id, permissions) = self.get_base_permissions(&token).await?;
+                let (api_user_id, base_permissions) = self.get_base_permissions(&token).await?;
 
                 match self
                     .get_api_user(&self.builtin_registration_user(), &api_user_id)
@@ -316,12 +322,18 @@ impl ApiContext {
                     ResourceResult::Ok(user) => {
                         // The permissions for the caller is the intersection of the user's permissions and the tokens permissions
                         let user_permissions = self.get_user_permissions(&user).await?;
-                        let token_permissions =
-                            permissions.expand(&user.id, Some(&user_permissions));
 
-                        let combined_permissions = token_permissions.intersect(&user_permissions);
+                        let combined_permissions = match &base_permissions {
+                            BasePermissions::Full => user_permissions.clone(),
+                            BasePermissions::Restricted(permissions) => {
+                                let token_permissions =
+                                    permissions.expand(&user.id, Some(&user_permissions));
 
-                        tracing::trace!(token = ?token_permissions, user = ?user_permissions, combined = ?combined_permissions, "Computed caller permissions");
+                                token_permissions.intersect(&user_permissions)
+                            }
+                        };
+
+                        tracing::trace!(token = ?base_permissions, user = ?user_permissions, combined = ?combined_permissions, "Computed caller permissions");
 
                         let caller = Caller {
                             id: api_user_id,
@@ -362,7 +374,7 @@ impl ApiContext {
     async fn get_base_permissions(
         &self,
         auth: &AuthToken,
-    ) -> Result<(Uuid, Permissions<ApiPermission>), CallerError> {
+    ) -> Result<(Uuid, BasePermissions), CallerError> {
         Ok(match auth {
             AuthToken::ApiKey(api_key) => {
                 async {
@@ -396,7 +408,12 @@ impl ApiContext {
                             Err(CallerError::FailedToAuthenticate)
                         } else {
                             tracing::debug!("Verified caller key");
-                            Ok((key.api_user_id, key.permissions))
+                            Ok((
+                                key.api_user_id,
+                                key.permissions
+                                    .map(BasePermissions::Restricted)
+                                    .unwrap_or(BasePermissions::Full),
+                            ))
                         }
                     } else {
                         tracing::debug!("Failed to find matching key");
@@ -409,7 +426,7 @@ impl ApiContext {
             AuthToken::Jwt(jwt) => {
                 // AuthnToken::Jwt can only be generated from a verified JWT
                 let permissions = ApiPermission::from_scope(jwt.claims.scp.iter())?;
-                Ok((jwt.claims.sub, permissions))
+                Ok((jwt.claims.sub, BasePermissions::Restricted(permissions)))
             }
         }?)
     }

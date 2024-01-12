@@ -38,7 +38,7 @@ diesel::table! {
         id -> Uuid,
         api_user_id -> Uuid,
         key_signature -> Text,
-        permissions -> Jsonb,
+        permissions -> Nullable<Jsonb>,
         expires_at -> Timestamptz,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,

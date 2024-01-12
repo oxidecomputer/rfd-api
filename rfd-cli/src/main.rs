@@ -47,10 +47,10 @@ impl Context {
         })
     }
 
-    pub fn new_client(token: Result<&str>, host: &str) -> Result<Client> {
+    pub fn new_client(&self, token: Option<&str>) -> Result<Client> {
         let mut default_headers = HeaderMap::new();
 
-        if let Ok(token) = token {
+        if let Some(token) = token {
             let mut auth_header = HeaderValue::from_str(&format!("Bearer {}", token))?;
             auth_header.set_sensitive(true);
             default_headers.insert(AUTHORIZATION, auth_header);
@@ -62,12 +62,12 @@ impl Context {
             .timeout(Duration::from_secs(10))
             .build()?;
 
-        Ok(Client::new_with_client(host, http_client))
+        Ok(Client::new_with_client(self.config.host()?, http_client))
     }
 
     pub fn client(&mut self) -> Result<&Client> {
         if self.client.is_none() {
-            self.client = Some(Self::new_client(self.config.token(), self.config.host()?)?);
+            self.client = Some(Self::new_client(self, self.config.token().ok())?);
         }
 
         self.client

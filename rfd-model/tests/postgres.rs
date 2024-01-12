@@ -191,7 +191,7 @@ async fn test_api_user() {
             id: Uuid::new_v4(),
             api_user_id: api_user.id,
             key_signature: format!("key-{}", Uuid::new_v4()),
-            permissions: vec![TestPermission::GetApiKey(api_user_id).into()].into(),
+            permissions: Some(vec![TestPermission::GetApiKey(api_user_id).into()].into()),
             expires_at: Utc::now() + Duration::seconds(5 * 60),
         },
     )
@@ -205,11 +205,13 @@ async fn test_api_user() {
             id: Uuid::new_v4(),
             api_user_id: api_user.id,
             key_signature: format!("key-{}", Uuid::new_v4()),
-            permissions: vec![
-                TestPermission::CreateApiUser.into(),
-                TestPermission::GetApiKey(api_user_id).into(),
-            ]
-            .into(),
+            permissions: Some(
+                vec![
+                    TestPermission::CreateApiUser.into(),
+                    TestPermission::GetApiKey(api_user_id).into(),
+                ]
+                .into(),
+            ),
             expires_at: Utc::now() + Duration::seconds(5 * 60),
         },
     )
@@ -218,6 +220,8 @@ async fn test_api_user() {
 
     assert!(excess_token
         .permissions
+        .as_ref()
+        .unwrap()
         .can(&TestPermission::CreateApiUser.into()));
 
     // 7. Create an API token with excess permissions for the user
@@ -227,11 +231,13 @@ async fn test_api_user() {
             id: Uuid::new_v4(),
             api_user_id: api_user.id,
             key_signature: format!("key-{}", Uuid::new_v4()),
-            permissions: vec![
-                TestPermission::CreateApiUser.into(),
-                TestPermission::GetApiKey(api_user_id).into(),
-            ]
-            .into(),
+            permissions: Some(
+                vec![
+                    TestPermission::CreateApiUser.into(),
+                    TestPermission::GetApiKey(api_user_id).into(),
+                ]
+                .into(),
+            ),
             expires_at: Utc::now() - Duration::seconds(5 * 60),
         },
     )

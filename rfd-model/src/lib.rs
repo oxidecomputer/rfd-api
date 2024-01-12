@@ -206,7 +206,7 @@ pub struct ApiKey<T: Ord> {
     pub id: Uuid,
     pub api_user_id: Uuid,
     pub key_signature: String,
-    pub permissions: Permissions<T>,
+    pub permissions: Option<Permissions<T>>,
     pub expires_at: DateTime<Utc>,
     #[partial(NewApiKey(skip))]
     pub created_at: DateTime<Utc>,

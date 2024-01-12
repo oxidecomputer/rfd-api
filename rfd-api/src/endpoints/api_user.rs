@@ -240,7 +240,7 @@ async fn list_api_user_tokens_op(
 
 #[derive(Debug, Clone, Deserialize, JsonSchema)]
 pub struct ApiKeyCreateParams {
-    permissions: Permissions<ApiPermissionResponse>,
+    permissions: Option<Permissions<ApiPermissionResponse>>,
     expires_at: DateTime<Utc>,
 }
 
@@ -250,7 +250,7 @@ pub struct InitialApiKeyResponse {
     pub id: Uuid,
     #[partial(ApiKeyResponse(skip))]
     pub key: OpenApiSecretString,
-    pub permissions: Permissions<ApiPermissionResponse>,
+    pub permissions: Option<Permissions<ApiPermissionResponse>>,
     pub created_at: DateTime<Utc>,
 }
 
@@ -519,18 +519,26 @@ pub async fn link_provider(
     }
 }
 
-fn into_permissions(permissions: Permissions<ApiPermissionResponse>) -> ApiPermissions {
-    permissions
-        .into_iter()
-        .map(|p| p.into())
-        .collect::<ApiPermissions>()
+fn into_permissions(
+    permissions: Option<Permissions<ApiPermissionResponse>>,
+) -> Option<ApiPermissions> {
+    permissions.map(|permissions| {
+        permissions
+            .into_iter()
+            .map(|p| p.into())
+            .collect::<ApiPermissions>()
+    })
 }
 
-fn into_permissions_response(permissions: ApiPermissions) -> Permissions<ApiPermissionResponse> {
-    permissions
-        .into_iter()
-        .map(|p| p.into())
-        .collect::<Permissions<ApiPermissionResponse>>()
+fn into_permissions_response(
+    permissions: Option<ApiPermissions>,
+) -> Option<Permissions<ApiPermissionResponse>> {
+    permissions.map(|permissions| {
+        permissions
+            .into_iter()
+            .map(|p| p.into())
+            .collect::<Permissions<ApiPermissionResponse>>()
+    })
 }
 
 #[cfg(test)]
@@ -896,7 +904,7 @@ mod tests {
         };
 
         let new_token = ApiKeyCreateParams {
-            permissions: into_permissions_response(Vec::new().into()),
+            permissions: into_permissions_response(None),
             expires_at: Utc::now() + Duration::seconds(5 * 60),
         };
 
@@ -1050,7 +1058,7 @@ mod tests {
             id: Uuid::new_v4(),
             api_user_id: api_user_id,
             key_signature: "encrypted_key".to_string(),
-            permissions: Vec::new().into(),
+            permissions: None,
             expires_at: Utc::now() + Duration::seconds(5 * 60),
             created_at: Utc::now(),
             updated_at: Utc::now(),
@@ -1178,7 +1186,7 @@ mod tests {
             id: Uuid::new_v4(),
             api_user_id: api_user_id,
             key_signature: "encrypted_key".to_string(),
-            permissions: Vec::new().into(),
+            permissions: None,
             expires_at: Utc::now() + Duration::seconds(5 * 60),
             created_at: Utc::now(),
             updated_at: Utc::now(),
