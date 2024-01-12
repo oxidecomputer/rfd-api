@@ -15,7 +15,7 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-anyhow = "1.0.75"
+anyhow = "1.0.79"
 async-bb8-diesel = { git = "https://github.com/oxidecomputer/async-bb8-diesel" }
 async-trait = "0.1.74"
 base64 = "0.21.7"
