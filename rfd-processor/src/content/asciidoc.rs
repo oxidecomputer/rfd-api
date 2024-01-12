@@ -166,7 +166,7 @@ impl<'a> RfdAsciidoc<'a> {
 
 impl<'a> RfdAttributes for RfdAsciidoc<'a> {
     fn get_title(&self) -> Option<&str> {
-        let title_pattern = Regex::new(r"(?m)^[=# ]+(?:RFD ?)?(?:\d+ )?(.*)$").unwrap();
+        let title_pattern = Regex::new(r"(?m)^[=# ]+(?:RFD ?)?(?:\d+:? )?(.*)$").unwrap();
         let fallback_title_pattern = Regex::new(r"(?m)^= (.*)$").unwrap();
 
         if let Some(caps) = title_pattern.captures(&self.content) {
@@ -474,10 +474,24 @@ sdf
 
     #[test]
     fn test_get_asciidoc_title_without_rfd_prefix() {
-        // Add a test to show what happens for rfd 31 where there is no "RFD" in
+        // Add a test to show what happens when there is no "RFD" in
         // the title.
         let content = r#"sdfsdf
 = Identity and Access Management (IAM)
+:title: https://github.com/org/repo/pulls/1
+dsfsdf
+sdf
+:title: nope"#;
+        let rfd = RfdContent::new_asciidoc(content);
+        let expected = "Identity and Access Management (IAM)".to_string();
+        assert_eq!(expected, rfd.get_title().unwrap());
+    }
+
+    #[test]
+    fn test_get_asciidoc_title_colon() {
+        // Add a test to show what happens when there is a colon following the digits
+        let content = r#"sdfsdf
+= RFD 123: Identity and Access Management (IAM)
 :title: https://github.com/org/repo/pulls/1
 dsfsdf
 sdf
