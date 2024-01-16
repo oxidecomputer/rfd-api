@@ -20,7 +20,7 @@ pub struct CliConfig {
 
 impl CliConfig {
     pub fn new() -> Result<Self> {
-        let (path, _) = Self::file()?;
+        let (path, _) = Self::file(false)?;
         let config = Config::builder()
             .add_source(File::from(path))
             .add_source(Environment::default())
@@ -29,13 +29,17 @@ impl CliConfig {
         Ok(config.try_deserialize()?)
     }
 
-    fn file() -> Result<(PathBuf, StdFile)> {
+    fn file(clear: bool) -> Result<(PathBuf, StdFile)> {
         let mut path = dirs::config_dir().expect("Failed to determine configs path");
         path.push("rfd-cli");
         create_dir_all(&path).expect("Failed to create configs path");
 
         path.push("config.toml");
-        let file = OpenOptions::new().write(true).create(true).open(&path)?;
+        let file = OpenOptions::new()
+            .write(true)
+            .create(true)
+            .truncate(clear)
+            .open(&path)?;
 
         Ok((path, file))
     }
@@ -61,7 +65,7 @@ impl CliConfig {
     }
 
     pub fn save(&self) -> Result<()> {
-        let (_, mut file) = Self::file()?;
+        let (_, mut file) = Self::file(true)?;
         let _ = file.write_all(toml::to_string(&self)?.as_bytes())?;
 
         println!("Configuration updated");
