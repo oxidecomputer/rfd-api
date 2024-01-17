@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::sync::Arc;
+use std::{sync::Arc, fmt::Debug};
 
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD, Engine};
 use chrono::{DateTime, Utc};
@@ -167,9 +167,9 @@ impl JwtSigner {
     #[instrument(skip(self, claims))]
     pub async fn sign<C>(&self, claims: &C) -> Result<String, JwtSignerError>
     where
-        C: Serialize,
+        C: Serialize + Debug,
     {
-        tracing::debug!(?self.jwk.common.key_id, "Signing claims with");
+        tracing::debug!(?self.jwk.common.key_id, ?claims, "Signing claims");
 
         let encoded_claims = to_base64_json(claims)?;
 
