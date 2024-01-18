@@ -871,7 +871,7 @@ impl ApiContext {
                     id: claims.jti,
                     api_user_id: api_user.id,
                     revoked_at: None,
-                }
+                },
             )
             .await?;
 
@@ -1132,7 +1132,9 @@ impl ApiContext {
         access_token: NewAccessToken,
     ) -> ResourceResult<AccessToken, StoreError> {
         if caller.can(&ApiPermission::CreateAccessToken) {
-            AccessTokenStore::upsert(&*self.storage, access_token).await.to_resource_result()
+            AccessTokenStore::upsert(&*self.storage, access_token)
+                .await
+                .to_resource_result()
         } else {
             resource_restricted()
         }
