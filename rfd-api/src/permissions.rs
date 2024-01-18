@@ -102,6 +102,9 @@ pub enum ApiPermission {
     DeleteOAuthClientsAssigned,
     DeleteOAuthClientsAll,
 
+    // Internal permissions
+    CreateAccessToken,
+
     // Removed
     #[serde(other)]
     Removed,
@@ -182,6 +185,8 @@ impl ApiPermission {
             ApiPermission::DeleteOAuthClients(_) => "oauth:client:w",
             ApiPermission::DeleteOAuthClientsAssigned => "oauth:client:w",
             ApiPermission::DeleteOAuthClientsAll => "oauth:client:w",
+
+            ApiPermission::CreateAccessToken => "",
 
             ApiPermission::Removed => "",
         }

@@ -198,6 +198,7 @@ pub async fn exchange_device_token(
 
                     let token = ctx
                         .register_access_token(
+                            ctx.builtin_registration_user(),
                             &api_user,
                             &api_user_provider,
                             vec![

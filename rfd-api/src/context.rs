@@ -249,6 +249,7 @@ impl ApiContext {
                     ApiPermission::CreateMapper,
                     ApiPermission::ListMappers,
                     ApiPermission::GetOAuthClientsAll,
+                    ApiPermission::CreateAccessToken,
                 ]
                 .into(),
             },
@@ -855,6 +856,7 @@ impl ApiContext {
     // TODO: Need to pass in caller to be able to eventually pass it down to create_access_token
     pub async fn register_access_token(
         &self,
+        caller: &ApiCaller,
         api_user: &ApiUser<ApiPermission>,
         api_user_provider: &ApiUserProvider,
         scope: Vec<String>,
@@ -863,11 +865,14 @@ impl ApiContext {
 
         let claims = Claims::new(self, &api_user, &api_user_provider, scope, expires_at);
         let token = self
-            .create_access_token(NewAccessToken {
-                id: claims.jti,
-                api_user_id: api_user.id,
-                revoked_at: None,
-            })
+            .create_access_token(
+                caller,
+                NewAccessToken {
+                    id: claims.jti,
+                    api_user_id: api_user.id,
+                    revoked_at: None,
+                }
+            )
             .await?;
 
         let signed = self.sign_jwt(&claims).await?;
@@ -1121,12 +1126,16 @@ impl ApiContext {
         }
     }
 
-    // TODO: Create permissions for registration user to allow creating access tokens
     pub async fn create_access_token(
         &self,
+        caller: &ApiCaller,
         access_token: NewAccessToken,
-    ) -> Result<AccessToken, StoreError> {
-        AccessTokenStore::upsert(&*self.storage, access_token).await
+    ) -> ResourceResult<AccessToken, StoreError> {
+        if caller.can(&ApiPermission::CreateAccessToken) {
+            AccessTokenStore::upsert(&*self.storage, access_token).await.to_resource_result()
+        } else {
+            resource_restricted()
+        }
     }
 
     // Login Attempt Operations
