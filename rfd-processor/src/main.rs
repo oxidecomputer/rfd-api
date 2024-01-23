@@ -7,6 +7,7 @@ use processor::{processor, JobError};
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use tokio::select;
+use thiserror::Error;
 use tracing_appender::non_blocking::NonBlocking;
 use tracing_subscriber::EnvFilter;
 use updater::RfdUpdateMode;
@@ -46,6 +47,14 @@ pub struct AppConfig {
     pub pdf_storage: Option<PdfStorageConfig>,
     #[serde(default)]
     pub search_storage: Vec<SearchConfig>,
+}
+
+#[derive(Debug, Error)]
+pub enum AppError {
+    #[error("Job task failed")]
+    Job(#[source] JobError),
+    #[error("Scanner task failed")]
+    Scanner(#[source] ScannerError),
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -147,14 +156,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Tasks should run for the lifetime of the program. If any of them complete for any reason
     // then the entire application should exit
-    select! {
+    let error = select! {
         value = processor_handle => {
-            tracing::info!(?value, "Processor task exited")
+            tracing::info!(?value, "Processor task exited");
+            value?.map_err(AppError::Job)
         }
         value = scanner_handle => {
-            tracing::info!(?value, "Scanner task exited")
+            tracing::info!(?value, "Scanner task exited");
+            value?.map_err(AppError::Scanner)
         }
     };
 
-    Ok(())
+    Ok(error?)
 }
