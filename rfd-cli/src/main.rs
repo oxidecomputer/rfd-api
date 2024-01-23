@@ -5,12 +5,14 @@
 #![allow(unused)]
 
 use anyhow::{anyhow, Result};
-use clap::{Arg, ArgAction, Command, CommandFactory, FromArgMatches};
+use clap::{value_parser, Arg, ArgAction, Command, CommandFactory, FromArgMatches, ValueEnum};
 use generated::cli::*;
 use printer::{Printer, RfdJsonPrinter, RfdTabPrinter};
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
 use rfd_sdk::types::MappingRules;
 use rfd_sdk::Client;
+use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 use std::time::Duration;
 use std::{collections::HashMap, error::Error};
 use store::CliConfig;
@@ -25,6 +27,23 @@ mod store;
 pub enum VerbosityLevel {
     None,
     All,
+}
+
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Clone, Serialize, Deserialize)]
+pub enum FormatStyle {
+    #[value(name = "json")]
+    Json,
+    #[value(name = "tab")]
+    Tab,
+}
+
+impl Display for FormatStyle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Json => write!(f, "json"),
+            Self::Tab => write!(f, "tab"),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -213,8 +232,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .short('f')
                 .help("Specify the output format to display results in")
                 .global(true)
-                .value_parser(["json", "tab"])
-                .default_value("json")
+                .value_parser(value_parser!(FormatStyle))
                 .action(ArgAction::Set),
         );
 
@@ -230,11 +248,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
         ctx.verbosity = VerbosityLevel::All;
     }
 
-    let format = matches.try_get_one::<String>("format").unwrap().unwrap();
-    ctx.printer = Some(match format.as_str() {
-        "json" => Printer::Json(RfdJsonPrinter),
-        "tab" => Printer::Tab(RfdTabPrinter::default()),
-        other => panic!("Unknown format {}", other),
+    let format = matches
+        .try_get_one::<FormatStyle>("format")
+        .unwrap()
+        .cloned()
+        .unwrap_or_else(|| ctx.config.format_style());
+    ctx.printer = Some(match format {
+        FormatStyle::Json => Printer::Json(RfdJsonPrinter),
+        FormatStyle::Tab => Printer::Tab(RfdTabPrinter::default()),
     });
 
     let mut node = &root;

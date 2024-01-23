@@ -5,7 +5,7 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-use crate::Context;
+use crate::{Context, FormatStyle};
 
 #[derive(Debug, Parser)]
 #[clap(name = "config")]
@@ -26,6 +26,9 @@ pub enum SettingCmd {
 
 #[derive(Debug, Subcommand)]
 pub enum GetCmd {
+    /// Get the default formatter to use when printing results
+    #[clap(name = "format")]
+    Format,
     /// Get the configured API host in use
     #[clap(name = "host")]
     Host,
@@ -36,6 +39,9 @@ pub enum GetCmd {
 
 #[derive(Debug, Subcommand)]
 pub enum SetCmd {
+    /// Set the default formatter to use when printing results
+    #[clap(name = "format")]
+    Format { format: FormatStyle },
     /// Set the configured API host to use
     #[clap(name = "host")]
     Host { host: String },
@@ -55,6 +61,9 @@ impl ConfigCmd {
 impl GetCmd {
     pub async fn run(&self, ctx: &mut Context) -> Result<()> {
         match &self {
+            GetCmd::Format => {
+                println!("{}", ctx.config.format_style());
+            }
             GetCmd::Host => {
                 println!("{}", ctx.config.host().unwrap_or("None"));
             }
@@ -70,6 +79,10 @@ impl GetCmd {
 impl SetCmd {
     pub async fn run(&self, ctx: &mut Context) -> Result<()> {
         match &self {
+            SetCmd::Format { format } => {
+                ctx.config.set_format(format.clone());
+                ctx.config.save()?;
+            }
             SetCmd::Host { host } => {
                 ctx.config.set_host(host.to_string());
                 ctx.config.save()?;

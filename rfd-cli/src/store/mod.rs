@@ -12,10 +12,13 @@ use anyhow::{anyhow, Result};
 use config::{Config, Environment, File};
 use serde::{Deserialize, Serialize};
 
+use crate::FormatStyle;
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CliConfig {
     host: Option<String>,
     token: Option<String>,
+    default_format: Option<FormatStyle>,
 }
 
 impl CliConfig {
@@ -62,6 +65,17 @@ impl CliConfig {
 
     pub fn set_token(&mut self, token: String) {
         self.token = Some(token);
+    }
+
+    pub fn format_style(&self) -> FormatStyle {
+        self.default_format
+            .as_ref()
+            .cloned()
+            .unwrap_or(FormatStyle::Json)
+    }
+
+    pub fn set_format(&mut self, format: FormatStyle) {
+        self.default_format = Some(format);
     }
 
     pub fn save(&self) -> Result<()> {
