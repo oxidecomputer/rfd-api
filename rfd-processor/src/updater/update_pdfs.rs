@@ -5,7 +5,7 @@
 use async_trait::async_trait;
 use rfd_model::{
     schema_ext::PdfSource,
-    storage::{ConnectionError, DbError, PoolError, RfdPdfStore, StoreError},
+    storage::{DbError, RfdPdfStore, StoreError},
     NewRfdPdf,
 };
 use tracing::instrument;
@@ -142,9 +142,7 @@ impl RfdUpdateAction for UpdatePdfs {
 
                 // A not found error will be returned in the case of a conflict. This is expected
                 // and should not cause the function to return
-                Err(StoreError::Pool(PoolError::Connection(ConnectionError::Query(
-                    DbError::NotFound,
-                )))) => {
+                Err(StoreError::Db(DbError::NotFound)) => {
                     tracing::debug!("Dropping not found database response");
                 }
                 Err(err) => {
