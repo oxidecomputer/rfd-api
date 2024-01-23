@@ -4,10 +4,7 @@
 
 use context::ApiContext;
 use permissions::ApiPermission;
-use rfd_model::{
-    storage::postgres::PostgresStore,
-    AccessGroup, ApiKey, ApiUser,
-};
+use rfd_model::{storage::postgres::PostgresStore, AccessGroup, ApiKey, ApiUser};
 use server::{server, ServerConfig};
 use std::{
     error::Error,
@@ -17,7 +14,7 @@ use std::{
 use tap::TapFallible;
 use tracing_appender::non_blocking::NonBlocking;
 use tracing_subscriber::EnvFilter;
-use w_api_permissions::{Permissions, Caller};
+use w_api_permissions::{Caller, Permissions};
 
 use crate::{
     config::{AppConfig, ServerLogFormat},

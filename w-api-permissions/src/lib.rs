@@ -4,7 +4,14 @@
 
 use std::{collections::BTreeSet, fmt::Debug, hash::Hash};
 
-use diesel::{backend::Backend, deserialize::{self, FromSql}, pg::Pg, serialize::{self, Output, ToSql}, sql_types::Jsonb, AsExpression, FromSqlRow};
+use diesel::{
+    backend::Backend,
+    deserialize::{self, FromSql},
+    pg::Pg,
+    serialize::{self, Output, ToSql},
+    sql_types::Jsonb,
+    AsExpression, FromSqlRow,
+};
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use uuid::Uuid;
