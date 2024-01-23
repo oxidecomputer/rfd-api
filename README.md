@@ -6,7 +6,12 @@ Work in progress replacement for RFD processing and programmatic access.
 
 1. Download the latest release of `rfd-cli` or run `cargo run -p rfd-cli`
 2. Configure the API host with `rfd-cli config set host https://rfd-api.shared.oxide.computer`
-3. Authenticate against the API with `rfd-cli auth login google`
+
+Choose an authentication mode based on the kind of session you want, either a short-term session
+token (id) or a long-term api token (token).
+
+3a. Authenticate against the API with `rfd-cli auth login google` via a session
+3b. Authenticate against the API with `rfd-cli auth login google -m token` via a token
 
 ## RFD Model
 
