@@ -5,7 +5,6 @@
 use context::ApiContext;
 use permissions::ApiPermission;
 use rfd_model::{
-    permissions::{Caller, Permissions},
     storage::postgres::PostgresStore,
     AccessGroup, ApiKey, ApiUser,
 };
@@ -18,6 +17,7 @@ use std::{
 use tap::TapFallible;
 use tracing_appender::non_blocking::NonBlocking;
 use tracing_subscriber::EnvFilter;
+use w_api_permissions::{Permissions, Caller};
 
 use crate::{
     config::{AppConfig, ServerLogFormat},

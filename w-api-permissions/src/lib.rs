@@ -4,7 +4,7 @@
 
 use std::{collections::BTreeSet, fmt::Debug, hash::Hash};
 
-use diesel::{sql_types::Jsonb, AsExpression, FromSqlRow};
+use diesel::{backend::Backend, deserialize::{self, FromSql}, pg::Pg, serialize::{self, Output, ToSql}, sql_types::Jsonb, AsExpression, FromSqlRow};
 use schemars::JsonSchema;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use uuid::Uuid;
@@ -146,5 +146,25 @@ where
         let mut set = BTreeSet::new();
         set.extend::<Iter>(iter);
         Self(set)
+    }
+}
+
+impl<T> ToSql<Jsonb, Pg> for Permissions<T>
+where
+    T: Serialize + Debug + Ord,
+{
+    fn to_sql(&self, out: &mut Output<Pg>) -> serialize::Result {
+        let value = serde_json::to_value(self)?;
+        <serde_json::Value as ToSql<Jsonb, Pg>>::to_sql(&value, &mut out.reborrow())
+    }
+}
+
+impl<T> FromSql<Jsonb, Pg> for Permissions<T>
+where
+    T: DeserializeOwned + Debug + Ord,
+{
+    fn from_sql(bytes: <Pg as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
+        let value = <serde_json::Value as FromSql<Jsonb, Pg>>::from_sql(bytes)?;
+        Ok(serde_json::from_value(value)?)
     }
 }

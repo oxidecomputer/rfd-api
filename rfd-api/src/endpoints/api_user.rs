@@ -11,7 +11,6 @@ use dropshot::{
 };
 use partial_struct::partial;
 use rfd_model::{
-    permissions::Permissions,
     storage::{ApiUserProviderFilter, ListPagination},
     ApiUser, ApiUserProvider, NewApiKey, NewApiUser,
 };
@@ -21,6 +20,7 @@ use tap::TapFallible;
 use trace_request::trace_request;
 use tracing::instrument;
 use uuid::Uuid;
+use w_api_permissions::Permissions;
 
 use crate::{
     authn::key::RawApiKey,

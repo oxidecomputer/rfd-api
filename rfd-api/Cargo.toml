@@ -54,6 +54,7 @@ tracing-bunyan-formatter = { workspace = true }
 tracing-slog = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter", "fmt", "json"] }
 uuid = { workspace = true, features = ["v4", "serde"]  }
+w-api-permissions = { path = "../w-api-permissions" }
 yup-oauth2 = { workspace = true }
 
 [dev-dependencies]

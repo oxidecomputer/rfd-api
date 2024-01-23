@@ -5,12 +5,13 @@
 use dropshot::{
     endpoint, HttpError, HttpResponseCreated, HttpResponseOk, Path, RequestContext, TypedBody,
 };
-use rfd_model::{permissions::Permissions, AccessGroup, NewAccessGroup};
+use rfd_model::{AccessGroup, NewAccessGroup};
 use schemars::JsonSchema;
 use serde::Deserialize;
 use trace_request::trace_request;
 use tracing::instrument;
 use uuid::Uuid;
+use w_api_permissions::Permissions;
 
 use crate::{context::ApiContext, permissions::ApiPermissionResponse, ApiPermissions, Group};
 

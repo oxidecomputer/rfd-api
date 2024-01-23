@@ -12,9 +12,9 @@ pub use diesel::result::Error as DbError;
 use mockall::automock;
 use thiserror::Error;
 use uuid::Uuid;
+use w_api_permissions::Permission;
 
 use crate::{
-    permissions::Permission,
     schema_ext::{LoginAttemptState, PdfSource},
     AccessGroup, AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LinkRequest, LoginAttempt,
     Mapper, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,

@@ -3,12 +3,12 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use partial_struct::partial;
-use rfd_model::permissions::Permissions;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
 use thiserror::Error;
 use uuid::Uuid;
+use w_api_permissions::Permissions;
 
 use crate::ApiPermissions;
 

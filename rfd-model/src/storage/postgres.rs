@@ -20,6 +20,7 @@ use std::{
 };
 use tracing::instrument;
 use uuid::Uuid;
+use w_api_permissions::Permission;
 
 use crate::{
     db::{
@@ -28,7 +29,6 @@ use crate::{
         OAuthClientRedirectUriModel, OAuthClientSecretModel, RfdModel, RfdPdfModel,
         RfdRevisionModel,
     },
-    permissions::Permission,
     schema::{
         access_groups, api_key, api_user, api_user_access_token, api_user_provider, job,
         link_request, login_attempt, mapper, oauth_client, oauth_client_redirect_uri,

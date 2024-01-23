@@ -11,7 +11,6 @@ use jsonwebtoken::jwk::JwkSet;
 use oauth2::CsrfToken;
 use partial_struct::partial;
 use rfd_model::{
-    permissions::{Caller, Permissions},
     schema_ext::{LoginAttemptState, Visibility},
     storage::{
         AccessGroupFilter, AccessGroupStore, AccessTokenStore, ApiKeyFilter, ApiKeyStore,
@@ -38,6 +37,7 @@ use tap::TapFallible;
 use thiserror::Error;
 use tracing::{info_span, instrument, Instrument};
 use uuid::Uuid;
+use w_api_permissions::{Caller, Permissions};
 
 use crate::{
     authn::{
@@ -1784,7 +1784,6 @@ mod tests {
 pub(crate) mod test_mocks {
     use async_trait::async_trait;
     use rfd_model::{
-        permissions::Caller,
         storage::{
             AccessGroupStore, AccessTokenStore, ApiKeyStore, ApiUserProviderStore, ApiUserStore,
             JobStore, LinkRequestStore, ListPagination, LoginAttemptStore, MapperStore,
@@ -1798,8 +1797,8 @@ pub(crate) mod test_mocks {
         ApiKey, ApiUserProvider, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser,
         NewApiUserProvider, NewJob, NewLoginAttempt, NewMapper, NewRfd, NewRfdPdf, NewRfdRevision,
     };
-
     use std::sync::Arc;
+    use w_api_permissions::Caller;
 
     use crate::{
         config::{JwtConfig, SearchConfig},

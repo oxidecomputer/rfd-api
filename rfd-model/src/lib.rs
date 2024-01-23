@@ -13,16 +13,15 @@ use db::{
     OAuthClientRedirectUriModel, OAuthClientSecretModel, RfdModel, RfdPdfModel, RfdRevisionModel,
 };
 use partial_struct::partial;
-use permissions::Permissions;
 use schema_ext::{ContentFormat, LoginAttemptState, PdfSource, Visibility};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use thiserror::Error;
 use uuid::Uuid;
+use w_api_permissions::Permissions;
 
 pub mod db;
-pub mod permissions;
 pub mod schema;
 pub mod schema_ext;
 pub mod storage;

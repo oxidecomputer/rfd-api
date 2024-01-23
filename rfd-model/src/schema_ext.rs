@@ -8,20 +8,16 @@ use diesel::{
     pg::Pg,
     query_builder::QueryId,
     serialize::{self, IsNull, Output, ToSql},
-    sql_types::Jsonb,
     AsExpression, FromSqlRow,
 };
 use schemars::JsonSchema;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::{
     fmt::{Debug, Display},
     io::Write,
 };
 
-use crate::{
-    permissions::Permissions,
-    schema::sql_types::{AttemptState, RfdContentFormat, RfdPdfSource, RfdVisibility},
-};
+use crate::schema::sql_types::{AttemptState, RfdContentFormat, RfdPdfSource, RfdVisibility};
 
 macro_rules! sql_conversion {
     (
@@ -97,26 +93,6 @@ impl Display for PdfSource {
             PdfSource::GitHub => write!(f, "github"),
             PdfSource::Google => write!(f, "google"),
         }
-    }
-}
-
-impl<T> ToSql<Jsonb, Pg> for Permissions<T>
-where
-    T: Serialize + Debug + Ord,
-{
-    fn to_sql(&self, out: &mut Output<Pg>) -> serialize::Result {
-        let value = serde_json::to_value(self)?;
-        <serde_json::Value as ToSql<Jsonb, Pg>>::to_sql(&value, &mut out.reborrow())
-    }
-}
-
-impl<T> FromSql<Jsonb, Pg> for Permissions<T>
-where
-    T: DeserializeOwned + Debug + Ord,
-{
-    fn from_sql(bytes: <Pg as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
-        let value = <serde_json::Value as FromSql<Jsonb, Pg>>::from_sql(bytes)?;
-        Ok(serde_json::from_value(value)?)
     }
 }
 

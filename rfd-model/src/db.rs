@@ -7,9 +7,9 @@ use diesel::{Insertable, Queryable};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use uuid::Uuid;
+use w_api_permissions::Permissions;
 
 use crate::{
-    permissions::Permissions,
     schema::{
         access_groups, api_key, api_user, api_user_access_token, api_user_provider, job,
         link_request, login_attempt, mapper, oauth_client, oauth_client_redirect_uri,

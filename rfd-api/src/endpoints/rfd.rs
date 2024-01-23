@@ -225,11 +225,11 @@ mod tests {
     use dropshot::HttpResponseOk;
     use http::StatusCode;
     use rfd_model::{
-        permissions::Caller,
         storage::{MockRfdPdfStore, MockRfdRevisionStore, MockRfdStore},
         Rfd, RfdRevision,
     };
     use uuid::Uuid;
+    use w_api_permissions::Caller;
 
     use crate::{
         context::{
