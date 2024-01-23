@@ -87,7 +87,7 @@ impl OAuthProvider for GoogleOAuthProvider {
     }
 
     fn scopes(&self) -> Vec<&str> {
-        vec!["https://www.googleapis.com/auth/userinfo.email", "openid"]
+        vec!["openid", "email"]
     }
 
     fn client(&self) -> &reqwest::Client {
@@ -123,7 +123,7 @@ impl OAuthProvider for GoogleOAuthProvider {
     }
 
     fn auth_url_endpoint(&self) -> &str {
-        "https://accounts.google.com/o/oauth2/auth"
+        "https://accounts.google.com/o/oauth2/v2/auth"
     }
 
     fn token_exchange_content_type(&self) -> &str {
