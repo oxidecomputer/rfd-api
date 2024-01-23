@@ -8,6 +8,7 @@ use std::sync::Arc;
 use tap::TapFallible;
 use thiserror::Error;
 use tokio::time::interval;
+use tracing::Instrument;
 
 use crate::{
     context::Context,
@@ -40,6 +41,7 @@ pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
 
             for job in jobs {
                 let job_id = job.id;
+                let span = tracing::info_span!("Processing job", job_id);
 
                 let ctx = ctx.clone();
                 tokio::spawn(async move {
@@ -90,7 +92,9 @@ pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
                     }
 
                     Ok::<_, JobError>(())
-                }.or_else(move |err| {
+                }
+                .instrument(span)
+                .or_else(move |err| {
                     async move {
                         tracing::error!(id = ?job_id, ?err, "Spawned job failed");
                         Err(err)
