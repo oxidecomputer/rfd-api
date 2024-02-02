@@ -772,6 +772,7 @@ impl ApiContext {
         // instead handle mappers that become depleted before we can evaluate them at evaluation
         // time.
         for mapping in self.get_mappings(caller).await? {
+            tracing::trace!(?mapping.id, ?info, "Testing mapping against user_info");
             let (permissions, groups) = (
                 mapping
                     .rule
