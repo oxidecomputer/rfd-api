@@ -646,7 +646,13 @@ impl TabDisplay for SearchResultHit {
         }
 
         printer.print_field(tw, level, "location", &heading_path.iter().join(" > "));
-        printer.print_field(tw, level, "content", &&self.content[..255]);
+
+        fn get_slice_of_string(s: &str, n: usize) -> &str {
+            let char_boundary = s.char_indices().nth(n).map_or(s.len(), |(idx, _)| idx);
+            &s[..char_boundary]
+        }
+
+        printer.print_field(tw, level, "content", &format!("{}...", get_slice_of_string(&self.content, 255)));
     }
 }
 
