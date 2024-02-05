@@ -2511,7 +2511,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-api"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "async-trait",
  "base64 0.21.7",
@@ -2567,7 +2567,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-cli"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2619,7 +2619,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-processor"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "async-trait",
  "base64 0.21.7",
@@ -2658,7 +2658,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-redirect"
-version = "0.2.1"
+version = "0.3.0"
 dependencies = [
  "config",
  "dropshot",
