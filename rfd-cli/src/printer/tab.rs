@@ -652,7 +652,12 @@ impl TabDisplay for SearchResultHit {
             &s[..char_boundary]
         }
 
-        printer.print_field(tw, level, "content", &format!("{}...", get_slice_of_string(&self.content, 255)));
+        printer.print_field(
+            tw,
+            level,
+            "content",
+            &format!("{}...", get_slice_of_string(&self.content, 255)),
+        );
     }
 }
 

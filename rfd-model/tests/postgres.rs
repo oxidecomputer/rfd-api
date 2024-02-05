@@ -15,7 +15,7 @@ use diesel_migrations::{embed_migrations, EmbeddedMigrations};
 use rfd_model::{
     storage::{
         postgres::PostgresStore, ApiKeyFilter, ApiKeyStore, ApiUserFilter, ApiUserStore,
-        ListPagination,
+        ListPagination, RfdRevisionFilter, RfdRevisionStore,
     },
     NewApiKey, NewApiUser,
 };
@@ -355,3 +355,17 @@ async fn test_api_user() {
 // ...
 #[tokio::test]
 async fn test_device_token() {}
+
+#[tokio::test]
+async fn test_rfd_list() {
+    let db = TestDb::new("test_api_user");
+    let store = PostgresStore::new(&db.url()).await.unwrap();
+
+    RfdRevisionStore::list_unique_rfd(
+        &store,
+        RfdRevisionFilter::default(),
+        &ListPagination::default(),
+    )
+    .await
+    .unwrap();
+}
