@@ -206,7 +206,22 @@ impl<'a> RfdAttributes for RfdAsciidoc<'a> {
                 if first_line == "{authors}" {
                     self.attr("authors")
                 } else {
-                    Some(first_line)
+
+                    // Given that we are in a fallback case we need to be slightly picky on what
+                    // lines we allow. We require that the line at least include a *@*.* word to
+                    // try and filter out lines that are not actually author lines
+                    let author_fallback_pattern = Regex::new(r"^.*?([\S]+@[\S]+.[\S]+).*?$").unwrap();
+                    let fallback_matches = author_fallback_pattern.is_match(first_line);
+
+                    if fallback_matches {
+                        Some(first_line)
+                    } else {
+
+                        // If none of our attempts have found an author, we drop back to the
+                        // attribute lookup. Eventually all of this logic should be removed and only
+                        // the attribute version should be supported
+                        self.attr("authors")
+                    }
                 }
             })
         })
@@ -291,6 +306,26 @@ authors: nope"#;
 {authors}
 dsfsdf
 sdf"#;
+        let rfd = RfdContent::new_asciidoc(content);
+        let authors = rfd.get_authors().unwrap();
+        let expected = r#"firstname <email@company>"#.to_string();
+        assert_eq!(expected, authors);
+    }
+
+    #[test]
+    fn test_get_asciidoc_attribute_authors_without_marker() {
+        let content = r#":showtitle:
+:toc: left
+:numbered:
+:icons: font
+:state: published
+:revremark: State: {state} | {discussion}
+:authors: firstname <email@company>
+
+= RFD 123 Test Rfd
+
+dsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdf
+"#;
         let rfd = RfdContent::new_asciidoc(content);
         let authors = rfd.get_authors().unwrap();
         let expected = r#"firstname <email@company>"#.to_string();
