@@ -206,17 +206,16 @@ impl<'a> RfdAttributes for RfdAsciidoc<'a> {
                 if first_line == "{authors}" {
                     self.attr("authors")
                 } else {
-
                     // Given that we are in a fallback case we need to be slightly picky on what
                     // lines we allow. We require that the line at least include a *@*.* word to
                     // try and filter out lines that are not actually author lines
-                    let author_fallback_pattern = Regex::new(r"^.*?([\S]+@[\S]+.[\S]+).*?$").unwrap();
+                    let author_fallback_pattern =
+                        Regex::new(r"^.*?([\S]+@[\S]+.[\S]+).*?$").unwrap();
                     let fallback_matches = author_fallback_pattern.is_match(first_line);
 
                     if fallback_matches {
                         Some(first_line)
                     } else {
-
                         // If none of our attempts have found an author, we drop back to the
                         // attribute lookup. Eventually all of this logic should be removed and only
                         // the attribute version should be supported
