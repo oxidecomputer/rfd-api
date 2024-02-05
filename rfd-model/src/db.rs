@@ -3,7 +3,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use chrono::{DateTime, Utc};
-use diesel::{Insertable, Queryable};
+use diesel::{Insertable, Queryable, Selectable};
+use partial_struct::partial;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use uuid::Uuid;
@@ -30,7 +31,8 @@ pub struct RfdModel {
     pub visibility: Visibility,
 }
 
-#[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[partial(RfdRevisionMetaModel)]
+#[derive(Debug, Deserialize, Serialize, Selectable, Queryable, Insertable)]
 #[diesel(table_name = rfd_revision)]
 pub struct RfdRevisionModel {
     pub id: Uuid,
@@ -39,6 +41,7 @@ pub struct RfdRevisionModel {
     pub state: Option<String>,
     pub discussion: Option<String>,
     pub authors: Option<String>,
+    #[partial(RfdRevisionMetaModel(skip))]
     pub content: String,
     pub content_format: ContentFormat,
     pub sha: String,

@@ -24,7 +24,7 @@ use rfd_model::{
     LoginAttempt, Mapper, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser,
     NewApiUserProvider, NewJob, NewLinkRequest, NewLoginAttempt, NewMapper, NewOAuthClient,
     NewOAuthClientRedirectUri, NewOAuthClientSecret, OAuthClient, OAuthClientRedirectUri,
-    OAuthClientSecret,
+    OAuthClientSecret, RfdRevision, RfdRevisionMeta
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -67,7 +67,8 @@ static UNLIMITED: i64 = 9999999;
 
 pub trait Storage:
     RfdStore
-    + RfdRevisionStore
+    + RfdRevisionStore<RfdRevision>
+    + RfdRevisionStore<RfdRevisionMeta>
     + RfdPdfStore
     + JobStore
     + ApiUserStore<ApiPermission>
@@ -88,7 +89,8 @@ pub trait Storage:
 }
 impl<T> Storage for T where
     T: RfdStore
-        + RfdRevisionStore
+        + RfdRevisionStore<RfdRevision>
+        + RfdRevisionStore<RfdRevisionMeta>
         + RfdPdfStore
         + JobStore
         + ApiUserStore<ApiPermission>
@@ -547,7 +549,7 @@ impl ApiContext {
         });
 
         // Fetch the latest revision for each of the RFDs that is to be returned
-        let mut rfd_revisions = RfdRevisionStore::list_unique_rfd(
+        let mut rfd_revisions = RfdRevisionStore::<RfdRevisionMeta>::list_unique_rfd(
             &*self.storage,
             RfdRevisionFilter::default().rfd(Some(rfds.iter().map(|rfd| rfd.id).collect())),
             &ListPagination::default().limit(UNLIMITED),
@@ -605,7 +607,7 @@ impl ApiContext {
             // If list_rfds returned an RFD, then the caller is allowed to access that RFD and we
             // can return the full RFD revision. This is sub-optimal as we are required to execute
             // the revision lookup twice
-            let latest_revision = RfdRevisionStore::list(
+            let latest_revision = RfdRevisionStore::<RfdRevision>::list(
                 &*self.storage,
                 RfdRevisionFilter::default()
                     .rfd(Some(vec![rfd.id]))
@@ -1797,6 +1799,7 @@ pub(crate) mod test_mocks {
         },
         ApiKey, ApiUserProvider, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser,
         NewApiUserProvider, NewJob, NewLoginAttempt, NewMapper, NewRfd, NewRfdPdf, NewRfdRevision,
+        RfdRevision, RfdRevisionMeta
     };
     use std::sync::Arc;
     use w_api_permissions::Caller;
@@ -1844,7 +1847,8 @@ pub(crate) mod test_mocks {
     pub struct MockStorage {
         pub caller: Option<Caller<ApiPermission>>,
         pub rfd_store: Option<Arc<MockRfdStore>>,
-        pub rfd_revision_store: Option<Arc<MockRfdRevisionStore>>,
+        pub rfd_revision_store: Option<Arc<MockRfdRevisionStore<RfdRevision>>>,
+        pub rfd_revision_meta_store: Option<Arc<MockRfdRevisionStore<RfdRevisionMeta>>>,
         pub rfd_pdf_store: Option<Arc<MockRfdPdfStore>>,
         pub job_store: Option<Arc<MockJobStore>>,
         pub api_user_store: Option<Arc<MockApiUserStore<ApiPermission>>>,
@@ -1866,6 +1870,7 @@ pub(crate) mod test_mocks {
                 caller: None,
                 rfd_store: None,
                 rfd_revision_store: None,
+                rfd_revision_meta_store: None,
                 rfd_pdf_store: None,
                 job_store: None,
                 api_user_store: None,
@@ -1921,7 +1926,7 @@ pub(crate) mod test_mocks {
     }
 
     #[async_trait]
-    impl RfdRevisionStore for MockStorage {
+    impl RfdRevisionStore<RfdRevision> for MockStorage {
         async fn get(
             &self,
             id: &uuid::Uuid,
@@ -1974,6 +1979,63 @@ pub(crate) mod test_mocks {
             id: &uuid::Uuid,
         ) -> Result<Option<rfd_model::RfdRevision>, rfd_model::storage::StoreError> {
             self.rfd_revision_store.as_ref().unwrap().delete(id).await
+        }
+    }
+
+    #[async_trait]
+    impl RfdRevisionStore<RfdRevisionMeta> for MockStorage {
+        async fn get(
+            &self,
+            id: &uuid::Uuid,
+            deleted: bool,
+        ) -> Result<Option<rfd_model::RfdRevisionMeta>, rfd_model::storage::StoreError> {
+            self.rfd_revision_meta_store
+                .as_ref()
+                .unwrap()
+                .get(id, deleted)
+                .await
+        }
+
+        async fn list(
+            &self,
+            filter: rfd_model::storage::RfdRevisionFilter,
+            pagination: &ListPagination,
+        ) -> Result<Vec<rfd_model::RfdRevisionMeta>, rfd_model::storage::StoreError> {
+            self.rfd_revision_meta_store
+                .as_ref()
+                .unwrap()
+                .list(filter, pagination)
+                .await
+        }
+
+        async fn list_unique_rfd(
+            &self,
+            filter: rfd_model::storage::RfdRevisionFilter,
+            pagination: &ListPagination,
+        ) -> Result<Vec<rfd_model::RfdRevisionMeta>, rfd_model::storage::StoreError> {
+            self.rfd_revision_meta_store
+                .as_ref()
+                .unwrap()
+                .list(filter, pagination)
+                .await
+        }
+
+        async fn upsert(
+            &self,
+            new_revision: NewRfdRevision,
+        ) -> Result<rfd_model::RfdRevisionMeta, rfd_model::storage::StoreError> {
+            self.rfd_revision_meta_store
+                .as_ref()
+                .unwrap()
+                .upsert(new_revision)
+                .await
+        }
+
+        async fn delete(
+            &self,
+            id: &uuid::Uuid,
+        ) -> Result<Option<rfd_model::RfdRevisionMeta>, rfd_model::storage::StoreError> {
+            self.rfd_revision_meta_store.as_ref().unwrap().delete(id).await
         }
     }
 

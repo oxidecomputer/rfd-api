@@ -226,7 +226,7 @@ mod tests {
     use http::StatusCode;
     use rfd_model::{
         storage::{MockRfdPdfStore, MockRfdRevisionStore, MockRfdStore},
-        Rfd, RfdRevision,
+        Rfd, RfdRevision, RfdRevisionMeta,
     };
     use uuid::Uuid;
     use w_api_permissions::Caller;
@@ -353,6 +353,65 @@ mod tests {
                 Ok(results)
             });
 
+        let mut rfd_revision_meta_store = MockRfdRevisionStore::new();
+        rfd_revision_meta_store
+            .expect_list()
+            .returning(move |filter, _| {
+                let mut results = vec![
+                    RfdRevisionMeta {
+                        id: Uuid::new_v4(),
+                        rfd_id: private_rfd_id_1,
+                        title: "Private Test RFD 1".to_string(),
+                        state: None,
+                        discussion: None,
+                        authors: None,
+                        content_format: rfd_model::schema_ext::ContentFormat::Asciidoc,
+                        sha: String::new(),
+                        commit_sha: String::new(),
+                        committed_at: Utc::now(),
+                        created_at: Utc::now(),
+                        updated_at: Utc::now(),
+                        deleted_at: None,
+                    },
+                    RfdRevisionMeta {
+                        id: Uuid::new_v4(),
+                        rfd_id: public_rfd_id,
+                        title: "Public Test RFD".to_string(),
+                        state: None,
+                        discussion: None,
+                        authors: None,
+                        content_format: rfd_model::schema_ext::ContentFormat::Asciidoc,
+                        sha: String::new(),
+                        commit_sha: String::new(),
+                        committed_at: Utc::now(),
+                        created_at: Utc::now(),
+                        updated_at: Utc::now(),
+                        deleted_at: None,
+                    },
+                    RfdRevisionMeta {
+                        id: Uuid::new_v4(),
+                        rfd_id: private_rfd_id_2,
+                        title: "Private Test RFD 2".to_string(),
+                        state: None,
+                        discussion: None,
+                        authors: None,
+                        content_format: rfd_model::schema_ext::ContentFormat::Asciidoc,
+                        sha: String::new(),
+                        commit_sha: String::new(),
+                        committed_at: Utc::now(),
+                        created_at: Utc::now(),
+                        updated_at: Utc::now(),
+                        deleted_at: None,
+                    },
+                ];
+
+                results.retain(|revision| {
+                    filter.rfd.is_none() || filter.rfd.as_ref().unwrap().contains(&revision.rfd_id)
+                });
+
+                Ok(results)
+            });
+
         let mut rfd_pdf_store = MockRfdPdfStore::new();
         rfd_pdf_store
             .expect_list()
@@ -361,6 +420,7 @@ mod tests {
         let mut storage = MockStorage::new();
         storage.rfd_store = Some(Arc::new(rfd_store));
         storage.rfd_revision_store = Some(Arc::new(rfd_revision_store));
+        storage.rfd_revision_meta_store = Some(Arc::new(rfd_revision_meta_store));
         storage.rfd_pdf_store = Some(Arc::new(rfd_pdf_store));
 
         mock_context(storage).await

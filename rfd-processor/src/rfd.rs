@@ -54,7 +54,7 @@ impl PersistedRfd {
 
     pub async fn load<S>(number: RfdNumber, storage: &S) -> Result<Option<Self>, StoreError>
     where
-        S: RfdStore + RfdRevisionStore + RfdPdfStore,
+        S: RfdStore + RfdRevisionStore<RfdRevision> + RfdPdfStore,
     {
         let existing_rfd = RfdStore::list(
             storage,
@@ -99,7 +99,7 @@ impl PersistedRfd {
 
     pub async fn upsert<S>(&self, storage: &S) -> Result<(), RfdError>
     where
-        S: RfdStore + RfdRevisionStore,
+        S: RfdStore + RfdRevisionStore<RfdRevision>,
     {
         let should_update = *self.needs_update.lock().unwrap();
 
@@ -319,7 +319,7 @@ impl RemoteRfd {
 
     pub async fn upsert<S>(self, storage: &S) -> Result<PersistedRfd, RemoteRfdError>
     where
-        S: RfdStore + RfdRevisionStore + RfdPdfStore,
+        S: RfdStore + RfdRevisionStore<RfdRevision> + RfdPdfStore,
     {
         let number = self.number;
         let payload = self.into_payload()?;

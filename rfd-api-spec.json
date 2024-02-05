@@ -1623,6 +1623,7 @@
               "UpdateOAuthClientsAll",
               "DeleteOAuthClientsAssigned",
               "DeleteOAuthClientsAll",
+              "CreateAccessToken",
               "Removed"
             ]
           },
@@ -3111,6 +3112,20 @@
                 "type": "string",
                 "enum": [
                   "DeleteOAuthClientsAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "CreateAccessToken"
                 ]
               }
             },
