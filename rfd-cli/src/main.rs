@@ -128,48 +128,48 @@ impl<'a> Tree<'a> {
 
 fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
     match cmd {
-        // User commands
-        CliCommand::CreateApiUser => Some("user create"),
-        CliCommand::CreateApiUserToken => Some("user token create"),
-        CliCommand::DeleteApiUserToken => Some("user token delete"),
-        CliCommand::GetApiUser => Some("user get"),
-        CliCommand::GetApiUserToken => Some("user token get"),
-        CliCommand::ListApiUserTokens => Some("user token list"),
-        CliCommand::UpdateApiUser => Some("user update"),
-        CliCommand::GetSelf => Some("user self"),
-
         // RFD commands
         CliCommand::GetRfd => Some("view"),
         CliCommand::GetRfds => Some("list"),
         CliCommand::SearchRfds => Some("search"),
+        
+        // User commands
+        CliCommand::CreateApiUser => Some("sys user create"),
+        CliCommand::CreateApiUserToken => Some("sys user token create"),
+        CliCommand::DeleteApiUserToken => Some("sys user token delete"),
+        CliCommand::GetApiUser => Some("sys user get"),
+        CliCommand::GetApiUserToken => Some("sys user token get"),
+        CliCommand::ListApiUserTokens => Some("sys user token list"),
+        CliCommand::UpdateApiUser => Some("sys user update"),
+        CliCommand::GetSelf => Some("self"),
 
         // Link commands are handled separately
         CliCommand::CreateLinkToken => None,
         CliCommand::LinkProvider => None,
 
         // Group commands
-        CliCommand::GetGroups => Some("group list"),
-        CliCommand::CreateGroup => Some("group create"),
-        CliCommand::UpdateGroup => Some("group update"),
-        CliCommand::DeleteGroup => Some("group delete"),
+        CliCommand::GetGroups => Some("sys group list"),
+        CliCommand::CreateGroup => Some("sys group create"),
+        CliCommand::UpdateGroup => Some("sys group update"),
+        CliCommand::DeleteGroup => Some("sys group delete"),
 
         // User admin commands
-        CliCommand::AddApiUserToGroup => Some("group membership add"),
-        CliCommand::RemoveApiUserFromGroup => Some("group membership remove"),
+        CliCommand::AddApiUserToGroup => Some("sys group membership add"),
+        CliCommand::RemoveApiUserFromGroup => Some("sys group membership remove"),
 
         // Mapper commands
-        CliCommand::GetMappers => Some("mapper list"),
-        CliCommand::CreateMapper => Some("mapper create"),
-        CliCommand::DeleteMapper => Some("mapper delete"),
+        CliCommand::GetMappers => Some("sys mapper list"),
+        CliCommand::CreateMapper => Some("sys mapper create"),
+        CliCommand::DeleteMapper => Some("sys mapper delete"),
 
         // OAuth client commands
-        CliCommand::ListOauthClients => Some("oauth list"),
-        CliCommand::CreateOauthClient => Some("oauth create"),
-        CliCommand::GetOauthClient => Some("oauth get"),
-        CliCommand::CreateOauthClientRedirectUri => Some("oauth redirect create"),
-        CliCommand::DeleteOauthClientRedirectUri => Some("oauth redirect delete"),
-        CliCommand::CreateOauthClientSecret => Some("oauth secret create"),
-        CliCommand::DeleteOauthClientSecret => Some("oauth secret delete"),
+        CliCommand::ListOauthClients => Some("sys oauth list"),
+        CliCommand::CreateOauthClient => Some("sys oauth create"),
+        CliCommand::GetOauthClient => Some("sys oauth get"),
+        CliCommand::CreateOauthClientRedirectUri => Some("sys oauth redirect create"),
+        CliCommand::DeleteOauthClientRedirectUri => Some("sys oauth redirect delete"),
+        CliCommand::CreateOauthClientSecret => Some("sys oauth secret create"),
+        CliCommand::DeleteOauthClientSecret => Some("sys oauth secret delete"),
 
         // Authentication is handled separately
         CliCommand::ExchangeDeviceToken => None,
