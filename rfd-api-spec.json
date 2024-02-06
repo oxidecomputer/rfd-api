@@ -1335,6 +1335,50 @@
         }
       }
     },
+    "/rfd/{number}/visibility": {
+      "post": {
+        "summary": "Modify the visibility of an RFD",
+        "operationId": "update_rfd_visibility",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RfdVisibility"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfd"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
     "/rfd-search": {
       "get": {
         "summary": "Search the RFD index and get a list of results",
@@ -1613,6 +1657,8 @@
               "ManageMappersAll",
               "GetRfdsAssigned",
               "GetRfdsAll",
+              "ManageRfdsVisibilityAssigned",
+              "ManageRfdsVisibilityAll",
               "GetDiscussionsAssigned",
               "GetDiscussionsAll",
               "SearchRfds",
@@ -1623,6 +1669,7 @@
               "UpdateOAuthClientsAll",
               "DeleteOAuthClientsAssigned",
               "DeleteOAuthClientsAll",
+              "CreateAccessToken",
               "Removed"
             ]
           },
@@ -1886,6 +1933,36 @@
             },
             "required": [
               "GetRfds"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "ManageRfdVisibility": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "required": [
+              "ManageRfdVisibility"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "ManageRfdsVisibility": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "ManageRfdsVisibility"
             ],
             "additionalProperties": false
           },
@@ -2816,6 +2893,76 @@
               "kind": {
                 "type": "string",
                 "enum": [
+                  "ManageRfdVisibility"
+                ]
+              },
+              "value": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ManageRfdsVisibility"
+                ]
+              },
+              "value": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ManageRfdsVisibilityAssigned"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ManageRfdsVisibilityAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
                   "GetDiscussion"
                 ]
               },
@@ -3111,6 +3258,20 @@
                 "type": "string",
                 "enum": [
                   "DeleteOAuthClientsAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "CreateAccessToken"
                 ]
               }
             },
@@ -4153,6 +4314,57 @@
           "$ref": "#/components/schemas/ApiPermissionResponse"
         },
         "uniqueItems": true
+      },
+      "Rfd": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "link": {
+            "nullable": true,
+            "type": "string"
+          },
+          "rfd_number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
+          }
+        },
+        "required": [
+          "created_at",
+          "id",
+          "rfd_number",
+          "updated_at",
+          "visibility"
+        ]
+      },
+      "RfdVisibility": {
+        "type": "object",
+        "properties": {
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
+          }
+        },
+        "required": [
+          "visibility"
+        ]
       },
       "SearchResultHit": {
         "type": "object",

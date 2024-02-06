@@ -91,7 +91,8 @@ pub fn server(
     api.register(get_rfd).expect("Failed to register endpoint");
     api.register(search_rfds)
         .expect("Failed to register endpoint");
-    api.register(update_rfd_visibility).expect("Failed to register endpoint");
+    api.register(update_rfd_visibility)
+        .expect("Failed to register endpoint");
 
     // Webhooks
     api.register(github_webhook)

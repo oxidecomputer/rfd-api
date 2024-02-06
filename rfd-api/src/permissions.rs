@@ -81,10 +81,10 @@ pub enum ApiPermission {
     GetRfds(BTreeSet<i32>),
     GetRfdsAssigned,
     GetRfdsAll,
-    UpdateRfdVisibility(i32),
-    UpdateRfdsVisibility(BTreeSet<i32>),
-    UpdateRfdsVisibilityAssigned,
-    UpdateRfdsVisibilityAll,
+    ManageRfdVisibility(i32),
+    ManageRfdsVisibility(BTreeSet<i32>),
+    ManageRfdsVisibilityAssigned,
+    ManageRfdsVisibilityAll,
     GetDiscussion(i32),
     GetDiscussions(BTreeSet<i32>),
     GetDiscussionsAssigned,
@@ -171,10 +171,10 @@ impl ApiPermission {
             ApiPermission::GetRfdsAssigned => "rfd:content:r",
             ApiPermission::GetRfdsAll => "rfd:content:r",
 
-            ApiPermission::UpdateRfdVisibility(_) => "rfd:visibility:w",
-            ApiPermission::UpdateRfdsVisibility(_) => "rfd:visibility:w",
-            ApiPermission::UpdateRfdsVisibilityAssigned => "rfd:visibility:w",
-            ApiPermission::UpdateRfdsVisibilityAll => "rfd:visibility:w",
+            ApiPermission::ManageRfdVisibility(_) => "rfd:visibility:w",
+            ApiPermission::ManageRfdsVisibility(_) => "rfd:visibility:w",
+            ApiPermission::ManageRfdsVisibilityAssigned => "rfd:visibility:w",
+            ApiPermission::ManageRfdsVisibilityAll => "rfd:visibility:w",
 
             ApiPermission::GetDiscussion(_) => "rfd:discussion:r",
             ApiPermission::GetDiscussions(_) => "rfd:discussion:r",
@@ -267,8 +267,8 @@ impl ApiPermission {
                     permissions.insert(ApiPermission::GetRfdsAll);
                 }
                 "rfd:visibility:w" => {
-                    permissions.insert(ApiPermission::UpdateRfdsVisibilityAssigned);
-                    permissions.insert(ApiPermission::UpdateRfdsVisibilityAll);
+                    permissions.insert(ApiPermission::ManageRfdsVisibilityAssigned);
+                    permissions.insert(ApiPermission::ManageRfdsVisibilityAll);
                 }
                 "rfd:discussion:r" => {
                     permissions.insert(ApiPermission::GetDiscussionsAssigned);

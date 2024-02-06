@@ -666,7 +666,7 @@ impl ApiContext {
     ) -> ResourceResult<Rfd, StoreError> {
         if caller.all(&[
             &ApiPermission::GetRfd(rfd_number),
-            &ApiPermission::UpdateRfdVisibility(rfd_number),
+            &ApiPermission::ManageRfdVisibility(rfd_number),
         ]) {
             let mut rfds = RfdStore::list(
                 &*self.storage,
