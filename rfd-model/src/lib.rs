@@ -10,13 +10,15 @@ use std::{
 use chrono::{DateTime, Utc};
 use db::{
     AccessGroupModel, JobModel, LinkRequestModel, LoginAttemptModel, MapperModel,
-    OAuthClientRedirectUriModel, OAuthClientSecretModel, RfdModel, RfdPdfModel, RfdRevisionModel,
+    OAuthClientRedirectUriModel, OAuthClientSecretModel, RfdModel, RfdPdfModel,
+    RfdRevisionMetaModel, RfdRevisionModel,
 };
 use partial_struct::partial;
 use schema_ext::{ContentFormat, LoginAttemptState, PdfSource, Visibility};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use storage::FromModel;
 use thiserror::Error;
 use uuid::Uuid;
 use w_api_permissions::Permissions;
@@ -56,6 +58,7 @@ impl From<RfdModel> for Rfd {
 }
 
 #[partial(NewRfdRevision)]
+#[partial(RfdRevisionMeta)]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct RfdRevision {
     pub id: Uuid,
@@ -64,6 +67,7 @@ pub struct RfdRevision {
     pub state: Option<String>,
     pub discussion: Option<String>,
     pub authors: Option<String>,
+    #[partial(RfdRevisionMeta(skip))]
     pub content: String,
     pub content_format: ContentFormat,
     pub sha: String,
@@ -96,6 +100,34 @@ impl From<RfdRevisionModel> for RfdRevision {
             deleted_at: value.deleted_at,
         }
     }
+}
+
+impl FromModel for RfdRevision {
+    type Model = RfdRevisionModel;
+}
+
+impl From<RfdRevisionMetaModel> for RfdRevisionMeta {
+    fn from(value: RfdRevisionMetaModel) -> Self {
+        Self {
+            id: value.id,
+            rfd_id: value.rfd_id,
+            title: value.title,
+            state: value.state,
+            discussion: value.discussion,
+            authors: value.authors,
+            content_format: value.content_format,
+            sha: value.sha,
+            commit_sha: value.commit_sha,
+            committed_at: value.committed_at,
+            created_at: value.created_at,
+            updated_at: value.updated_at,
+            deleted_at: value.deleted_at,
+        }
+    }
+}
+
+impl FromModel for RfdRevisionMeta {
+    type Model = RfdRevisionMetaModel;
 }
 
 #[partial(NewRfdPdf)]

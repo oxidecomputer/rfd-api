@@ -20,7 +20,7 @@ use crate::{
     Mapper, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
     NewLinkRequest, NewLoginAttempt, NewMapper, NewOAuthClient, NewOAuthClientRedirectUri,
     NewOAuthClientSecret, NewRfd, NewRfdPdf, NewRfdRevision, OAuthClient, OAuthClientRedirectUri,
-    OAuthClientSecret, Rfd, RfdPdf, RfdRevision,
+    OAuthClientSecret, Rfd, RfdPdf,
 };
 
 pub mod postgres;
@@ -153,22 +153,26 @@ pub enum RfdRevisionGroupBy {
     None,
 }
 
+pub trait FromModel {
+    type Model;
+}
+
 #[cfg_attr(feature = "mock", automock)]
 #[async_trait]
-pub trait RfdRevisionStore {
-    async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<RfdRevision>, StoreError>;
+pub trait RfdRevisionStore<T: FromModel + Sync> {
+    async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<T>, StoreError>;
     async fn list(
         &self,
         filter: RfdRevisionFilter,
         pagination: &ListPagination,
-    ) -> Result<Vec<RfdRevision>, StoreError>;
+    ) -> Result<Vec<T>, StoreError>;
     async fn list_unique_rfd(
         &self,
         filter: RfdRevisionFilter,
         pagination: &ListPagination,
-    ) -> Result<Vec<RfdRevision>, StoreError>;
-    async fn upsert(&self, new_revision: NewRfdRevision) -> Result<RfdRevision, StoreError>;
-    async fn delete(&self, id: &Uuid) -> Result<Option<RfdRevision>, StoreError>;
+    ) -> Result<Vec<T>, StoreError>;
+    async fn upsert(&self, new_revision: NewRfdRevision) -> Result<T, StoreError>;
+    async fn delete(&self, id: &Uuid) -> Result<Option<T>, StoreError>;
 }
 
 #[derive(Debug, Default)]

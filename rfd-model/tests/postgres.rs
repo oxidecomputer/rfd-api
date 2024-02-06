@@ -17,7 +17,7 @@ use rfd_model::{
         postgres::PostgresStore, ApiKeyFilter, ApiKeyStore, ApiUserFilter, ApiUserStore,
         ListPagination, RfdRevisionFilter, RfdRevisionStore,
     },
-    NewApiKey, NewApiUser,
+    NewApiKey, NewApiUser, RfdRevision,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -361,7 +361,7 @@ async fn test_rfd_list() {
     let db = TestDb::new("test_api_user");
     let store = PostgresStore::new(&db.url()).await.unwrap();
 
-    RfdRevisionStore::list_unique_rfd(
+    RfdRevisionStore::<RfdRevision>::list_unique_rfd(
         &store,
         RfdRevisionFilter::default(),
         &ListPagination::default(),
