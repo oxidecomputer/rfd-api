@@ -198,7 +198,15 @@ impl GitHubRfdRepo {
                         let rfd_number = RfdNumber::from(number);
 
                         // Only interested in exactly the RFD file that matches the branch name
-                        let response = client.repos().get_content_file(&self.owner, &self.repo, &format!("rfd/{}/README.adoc", rfd_number.as_number_string()), &branch.commit.sha).await;
+                        let mut response = client.repos().get_content_file(&self.owner, &self.repo, &format!("rfd/{}/README.adoc", rfd_number.as_number_string()), &branch.commit.sha).await;
+
+                        // If we fail to find an Asciidoc readme, try to fall back to a Markdown version
+                        if match response {
+                            Err(ClientError::HttpError { status, .. }) if status == StatusCode::NOT_FOUND => true,
+                            _ => false
+                        } {
+                            response = client.repos().get_content_file(&self.owner, &self.repo, &format!("rfd/{}/README.md", rfd_number.as_number_string()), &branch.commit.sha).await;
+                        }
 
                         // 404s are returned as errors, but that should not stop processing. This only
                         // means that the branch should be skipped
