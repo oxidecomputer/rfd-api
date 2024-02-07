@@ -133,6 +133,8 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::GetRfds => Some("list"),
         CliCommand::SearchRfds => Some("search"),
 
+        CliCommand::UpdateRfdVisibility => Some("edit visibility"),
+
         // User commands
         CliCommand::CreateApiUser => Some("sys user create"),
         CliCommand::CreateApiUserToken => Some("sys user token create"),

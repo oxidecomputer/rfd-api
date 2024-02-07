@@ -398,6 +398,8 @@ pub mod types {
     ///        "ManageMappersAll",
     ///        "GetRfdsAssigned",
     ///        "GetRfdsAll",
+    ///        "ManageRfdsVisibilityAssigned",
+    ///        "ManageRfdsVisibilityAll",
     ///        "GetDiscussionsAssigned",
     ///        "GetDiscussionsAll",
     ///        "SearchRfds",
@@ -408,6 +410,7 @@ pub mod types {
     ///        "UpdateOAuthClientsAll",
     ///        "DeleteOAuthClientsAssigned",
     ///        "DeleteOAuthClientsAll",
+    ///        "CreateAccessToken",
     ///        "Removed"
     ///      ]
     ///    },
@@ -696,6 +699,38 @@ pub mod types {
     ///    {
     ///      "type": "object",
     ///      "required": [
+    ///        "ManageRfdVisibility"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageRfdVisibility": {
+    ///          "type": "integer",
+    ///          "format": "int32"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "ManageRfdsVisibility"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageRfdsVisibility": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "integer",
+    ///            "format": "int32"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
     ///        "GetDiscussion"
     ///      ],
     ///      "properties": {
@@ -859,6 +894,8 @@ pub mod types {
         ManageMappersAll,
         GetRfdsAssigned,
         GetRfdsAll,
+        ManageRfdsVisibilityAssigned,
+        ManageRfdsVisibilityAll,
         GetDiscussionsAssigned,
         GetDiscussionsAll,
         SearchRfds,
@@ -869,6 +906,7 @@ pub mod types {
         UpdateOAuthClientsAll,
         DeleteOAuthClientsAssigned,
         DeleteOAuthClientsAll,
+        CreateAccessToken,
         Removed,
         CreateApiUserToken(uuid::Uuid),
         GetApiUser(uuid::Uuid),
@@ -889,6 +927,8 @@ pub mod types {
         ManageMappers(Vec<uuid::Uuid>),
         GetRfd(i32),
         GetRfds(Vec<i32>),
+        ManageRfdVisibility(i32),
+        ManageRfdsVisibility(Vec<i32>),
         GetDiscussion(i32),
         GetDiscussions(Vec<i32>),
         GetOAuthClient(uuid::Uuid),
@@ -1817,6 +1857,84 @@ pub mod types {
     ///        "kind": {
     ///          "type": "string",
     ///          "enum": [
+    ///            "ManageRfdVisibility"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "integer",
+    ///          "format": "int32"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "ManageRfdsVisibility"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "integer",
+    ///            "format": "int32"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "ManageRfdsVisibilityAssigned"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "ManageRfdsVisibilityAll"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
     ///            "GetDiscussion"
     ///          ]
     ///        },
@@ -2160,6 +2278,22 @@ pub mod types {
     ///        "kind": {
     ///          "type": "string",
     ///          "enum": [
+    ///            "CreateAccessToken"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
     ///            "Removed"
     ///          ]
     ///        }
@@ -2225,6 +2359,10 @@ pub mod types {
         GetRfds(Vec<i32>),
         GetRfdsAssigned,
         GetRfdsAll,
+        ManageRfdVisibility(i32),
+        ManageRfdsVisibility(Vec<i32>),
+        ManageRfdsVisibilityAssigned,
+        ManageRfdsVisibilityAll,
         GetDiscussion(i32),
         GetDiscussions(Vec<i32>),
         GetDiscussionsAssigned,
@@ -2243,6 +2381,7 @@ pub mod types {
         DeleteOAuthClients(Vec<uuid::Uuid>),
         DeleteOAuthClientsAssigned,
         DeleteOAuthClientsAll,
+        CreateAccessToken,
         Removed,
     }
 
@@ -4515,6 +4654,123 @@ pub mod types {
     impl From<Vec<ApiPermissionResponse>> for PermissionsForApiPermissionResponse {
         fn from(value: Vec<ApiPermissionResponse>) -> Self {
             Self(value)
+        }
+    }
+
+    /// Rfd
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "rfd_number",
+    ///    "updated_at",
+    ///    "visibility"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "type": "string",
+    ///      "format": "uuid"
+    ///    },
+    ///    "link": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "rfd_number": {
+    ///      "type": "integer",
+    ///      "format": "int32"
+    ///    },
+    ///    "updated_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "visibility": {
+    ///      "$ref": "#/components/schemas/Visibility"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct Rfd {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub id: uuid::Uuid,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub link: Option<String>,
+        pub rfd_number: i32,
+        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
+        pub visibility: Visibility,
+    }
+
+    impl From<&Rfd> for Rfd {
+        fn from(value: &Rfd) -> Self {
+            value.clone()
+        }
+    }
+
+    impl Rfd {
+        pub fn builder() -> builder::Rfd {
+            Default::default()
+        }
+    }
+
+    /// RfdVisibility
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "visibility"
+    ///  ],
+    ///  "properties": {
+    ///    "visibility": {
+    ///      "$ref": "#/components/schemas/Visibility"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct RfdVisibility {
+        pub visibility: Visibility,
+    }
+
+    impl From<&RfdVisibility> for RfdVisibility {
+        fn from(value: &RfdVisibility) -> Self {
+            value.clone()
+        }
+    }
+
+    impl RfdVisibility {
+        pub fn builder() -> builder::RfdVisibility {
+            Default::default()
         }
     }
 
@@ -8094,6 +8350,176 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
+        pub struct Rfd {
+            created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+            deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
+            id: Result<uuid::Uuid, String>,
+            link: Result<Option<String>, String>,
+            rfd_number: Result<i32, String>,
+            updated_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+            visibility: Result<super::Visibility, String>,
+        }
+
+        impl Default for Rfd {
+            fn default() -> Self {
+                Self {
+                    created_at: Err("no value supplied for created_at".to_string()),
+                    deleted_at: Ok(Default::default()),
+                    id: Err("no value supplied for id".to_string()),
+                    link: Ok(Default::default()),
+                    rfd_number: Err("no value supplied for rfd_number".to_string()),
+                    updated_at: Err("no value supplied for updated_at".to_string()),
+                    visibility: Err("no value supplied for visibility".to_string()),
+                }
+            }
+        }
+
+        impl Rfd {
+            pub fn created_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.created_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                self
+            }
+            pub fn deleted_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<chrono::DateTime<chrono::offset::Utc>>>,
+                T::Error: std::fmt::Display,
+            {
+                self.deleted_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<uuid::Uuid>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn link<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.link = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for link: {}", e));
+                self
+            }
+            pub fn rfd_number<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<i32>,
+                T::Error: std::fmt::Display,
+            {
+                self.rfd_number = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for rfd_number: {}", e));
+                self
+            }
+            pub fn updated_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.updated_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for updated_at: {}", e));
+                self
+            }
+            pub fn visibility<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::Visibility>,
+                T::Error: std::fmt::Display,
+            {
+                self.visibility = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for visibility: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<Rfd> for super::Rfd {
+            type Error = String;
+            fn try_from(value: Rfd) -> Result<Self, String> {
+                Ok(Self {
+                    created_at: value.created_at?,
+                    deleted_at: value.deleted_at?,
+                    id: value.id?,
+                    link: value.link?,
+                    rfd_number: value.rfd_number?,
+                    updated_at: value.updated_at?,
+                    visibility: value.visibility?,
+                })
+            }
+        }
+
+        impl From<super::Rfd> for Rfd {
+            fn from(value: super::Rfd) -> Self {
+                Self {
+                    created_at: Ok(value.created_at),
+                    deleted_at: Ok(value.deleted_at),
+                    id: Ok(value.id),
+                    link: Ok(value.link),
+                    rfd_number: Ok(value.rfd_number),
+                    updated_at: Ok(value.updated_at),
+                    visibility: Ok(value.visibility),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct RfdVisibility {
+            visibility: Result<super::Visibility, String>,
+        }
+
+        impl Default for RfdVisibility {
+            fn default() -> Self {
+                Self {
+                    visibility: Err("no value supplied for visibility".to_string()),
+                }
+            }
+        }
+
+        impl RfdVisibility {
+            pub fn visibility<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::Visibility>,
+                T::Error: std::fmt::Display,
+            {
+                self.visibility = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for visibility: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<RfdVisibility> for super::RfdVisibility {
+            type Error = String;
+            fn try_from(value: RfdVisibility) -> Result<Self, String> {
+                Ok(Self {
+                    visibility: value.visibility?,
+                })
+            }
+        }
+
+        impl From<super::RfdVisibility> for RfdVisibility {
+            fn from(value: super::RfdVisibility) -> Self {
+                Self {
+                    visibility: Ok(value.visibility),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
         pub struct SearchResultHit {
             anchor: Result<Option<String>, String>,
             content: Result<String, String>,
@@ -8870,6 +9296,21 @@ impl Client {
     /// ```
     pub fn get_rfd(&self) -> builder::GetRfd {
         builder::GetRfd::new(self)
+    }
+
+    /// Modify the visibility of an RFD
+    ///
+    /// Sends a `POST` request to `/rfd/{number}/visibility`
+    ///
+    /// ```ignore
+    /// let response = client.update_rfd_visibility()
+    ///    .number(number)
+    ///    .body(body)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn update_rfd_visibility(&self) -> builder::UpdateRfdVisibility {
+        builder::UpdateRfdVisibility::new(self)
     }
 
     /// Search the RFD index and get a list of results
@@ -11474,6 +11915,95 @@ pub mod builder {
                     reqwest::header::ACCEPT,
                     reqwest::header::HeaderValue::from_static("application/json"),
                 )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::update_rfd_visibility`]
+    ///
+    /// [`Client::update_rfd_visibility`]: super::Client::update_rfd_visibility
+    #[derive(Debug, Clone)]
+    pub struct UpdateRfdVisibility<'a> {
+        client: &'a super::Client,
+        number: Result<String, String>,
+        body: Result<types::builder::RfdVisibility, String>,
+    }
+
+    impl<'a> UpdateRfdVisibility<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                number: Err("number was not initialized".to_string()),
+                body: Ok(types::builder::RfdVisibility::default()),
+            }
+        }
+
+        pub fn number<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<String>,
+        {
+            self.number = value
+                .try_into()
+                .map_err(|_| "conversion to `String` for number failed".to_string());
+            self
+        }
+
+        pub fn body<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::RfdVisibility>,
+            <V as std::convert::TryInto<types::RfdVisibility>>::Error: std::fmt::Display,
+        {
+            self.body = value
+                .try_into()
+                .map(From::from)
+                .map_err(|s| format!("conversion to `RfdVisibility` for body failed: {}", s));
+            self
+        }
+
+        pub fn body_map<F>(mut self, f: F) -> Self
+        where
+            F: std::ops::FnOnce(types::builder::RfdVisibility) -> types::builder::RfdVisibility,
+        {
+            self.body = self.body.map(f);
+            self
+        }
+
+        /// Sends a `POST` request to `/rfd/{number}/visibility`
+        pub async fn send(self) -> Result<ResponseValue<types::Rfd>, Error<types::Error>> {
+            let Self {
+                client,
+                number,
+                body,
+            } = self;
+            let number = number.map_err(Error::InvalidRequest)?;
+            let body = body
+                .and_then(std::convert::TryInto::<types::RfdVisibility>::try_into)
+                .map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/rfd/{}/visibility",
+                client.baseurl,
+                encode_path(&number.to_string()),
+            );
+            let request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .json(&body)
                 .build()?;
             let result = client.client.execute(request).await;
             let response = result?;

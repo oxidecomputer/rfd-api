@@ -24,7 +24,7 @@ use rfd_model::{
     LoginAttempt, Mapper, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser,
     NewApiUserProvider, NewJob, NewLinkRequest, NewLoginAttempt, NewMapper, NewOAuthClient,
     NewOAuthClientRedirectUri, NewOAuthClientSecret, OAuthClient, OAuthClientRedirectUri,
-    OAuthClientSecret,
+    OAuthClientSecret, Rfd,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -653,6 +653,38 @@ impl ApiContext {
             }
         } else {
             // Either the RFD does not exist, or the caller is not allowed to access it
+            resource_restricted()
+        }
+    }
+
+    #[instrument(skip(self, caller))]
+    pub async fn update_rfd_visibility(
+        &self,
+        caller: &ApiCaller,
+        rfd_number: i32,
+        visibility: Visibility,
+    ) -> ResourceResult<Rfd, StoreError> {
+        if caller.all(&[
+            &ApiPermission::GetRfd(rfd_number),
+            &ApiPermission::ManageRfdVisibility(rfd_number),
+        ]) {
+            let mut rfds = RfdStore::list(
+                &*self.storage,
+                RfdFilter::default().rfd_number(Some(vec![rfd_number])),
+                &ListPagination::default().limit(1),
+            )
+            .await
+            .to_resource_result()?;
+
+            if let Some(mut rfd) = rfds.pop() {
+                rfd.visibility = visibility;
+                RfdStore::upsert(&*self.storage, rfd.into())
+                    .await
+                    .to_resource_result()
+            } else {
+                Err(ResourceError::DoesNotExist)
+            }
+        } else {
             resource_restricted()
         }
     }

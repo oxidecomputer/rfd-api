@@ -2,8 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use dropshot::{endpoint, HttpError, HttpResponseOk, Path, Query, RequestContext};
+use dropshot::{endpoint, HttpError, HttpResponseOk, Path, Query, RequestContext, TypedBody};
 use http::StatusCode;
+use rfd_model::{schema_ext::Visibility, Rfd};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use trace_request::trace_request;
@@ -214,6 +215,54 @@ async fn search_rfds_op(
         }
     } else {
         Err(unauthorized())
+    }
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct RfdVisibility {
+    pub visibility: Visibility,
+}
+
+/// Modify the visibility of an RFD
+#[trace_request]
+#[endpoint {
+    method = POST,
+    path = "/rfd/{number}/visibility",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn update_rfd_visibility(
+    rqctx: RequestContext<ApiContext>,
+    path: Path<RfdPathParams>,
+    body: TypedBody<RfdVisibility>,
+) -> Result<HttpResponseOk<Rfd>, HttpError> {
+    let ctx = rqctx.context();
+    let auth = ctx.authn_token(&rqctx).await?;
+    update_rfd_visibility_op(
+        ctx,
+        &ctx.get_caller(auth.as_ref()).await?,
+        path.into_inner().number,
+        body.into_inner(),
+    )
+    .await
+}
+
+#[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
+async fn update_rfd_visibility_op(
+    ctx: &ApiContext,
+    caller: &ApiCaller,
+    number: String,
+    body: RfdVisibility,
+) -> Result<HttpResponseOk<Rfd>, HttpError> {
+    if let Ok(rfd_number) = number.parse::<i32>() {
+        Ok(HttpResponseOk(
+            ctx.update_rfd_visibility(caller, rfd_number, body.visibility)
+                .await?,
+        ))
+    } else {
+        Err(client_error(
+            StatusCode::BAD_REQUEST,
+            "Malformed RFD number",
+        ))
     }
 }
 

@@ -58,6 +58,7 @@ impl Cli {
             CliCommand::DeleteOauthClientSecret => Self::cli_delete_oauth_client_secret(),
             CliCommand::GetRfds => Self::cli_get_rfds(),
             CliCommand::GetRfd => Self::cli_get_rfd(),
+            CliCommand::UpdateRfdVisibility => Self::cli_update_rfd_visibility(),
             CliCommand::SearchRfds => Self::cli_search_rfds(),
             CliCommand::GetSelf => Self::cli_get_self(),
         }
@@ -769,6 +770,43 @@ impl Cli {
             .about("Get the latest representation of an RFD")
     }
 
+    pub fn cli_update_rfd_visibility() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(clap::value_parser!(String))
+                    .required(true),
+            )
+            .arg(
+                clap::Arg::new("visibility")
+                    .long("visibility")
+                    .value_parser(clap::builder::TypedValueParser::map(
+                        clap::builder::PossibleValuesParser::new([
+                            types::Visibility::Public.to_string(),
+                            types::Visibility::Private.to_string(),
+                        ]),
+                        |s| types::Visibility::try_from(s).unwrap(),
+                    ))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
+                clap::Arg::new("json-body")
+                    .long("json-body")
+                    .value_name("JSON-FILE")
+                    .required(false)
+                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .help("Path to a file that contains the full json body."),
+            )
+            .arg(
+                clap::Arg::new("json-body-template")
+                    .long("json-body-template")
+                    .action(clap::ArgAction::SetTrue)
+                    .help("XXX"),
+            )
+            .about("Modify the visibility of an RFD")
+    }
+
     pub fn cli_search_rfds() -> clap::Command {
         clap::Command::new("")
             .arg(
@@ -930,6 +968,9 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             }
             CliCommand::GetRfd => {
                 self.execute_get_rfd(matches).await;
+            }
+            CliCommand::UpdateRfdVisibility => {
+                self.execute_update_rfd_visibility(matches).await;
             }
             CliCommand::SearchRfds => {
                 self.execute_search_rfds(matches).await;
@@ -1687,6 +1728,32 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
         }
     }
 
+    pub async fn execute_update_rfd_visibility(&self, matches: &clap::ArgMatches) {
+        let mut request = self.client.update_rfd_visibility();
+        if let Some(value) = matches.get_one::<String>("number") {
+            request = request.number(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<types::Visibility>("visibility") {
+            request = request.body_map(|body| body.visibility(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value = serde_json::from_str::<types::RfdVisibility>(&body_txt).unwrap();
+            request = request.body(body_value);
+        }
+
+        self.over
+            .execute_update_rfd_visibility(matches, &mut request)
+            .unwrap();
+        let result = request.send().await;
+        match result {
+            Ok(r) => self.output.output_update_rfd_visibility(Ok(r.into_inner())),
+            Err(r) => self.output.output_update_rfd_visibility(Err(r)),
+        }
+    }
+
     pub async fn execute_search_rfds(&self, matches: &clap::ArgMatches) {
         let mut request = self.client.search_rfds();
         if let Some(value) = matches.get_one::<String>("attributes-to-crop") {
@@ -2015,6 +2082,14 @@ pub trait CliOverride {
         Ok(())
     }
 
+    fn execute_update_rfd_visibility(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::UpdateRfdVisibility,
+    ) -> Result<(), String> {
+        Ok(())
+    }
+
     fn execute_search_rfds(
         &self,
         matches: &clap::ArgMatches,
@@ -2259,6 +2334,12 @@ pub trait CliOutput {
     ) {
     }
 
+    fn output_update_rfd_visibility(
+        &self,
+        response: Result<types::Rfd, progenitor_client::Error<types::Error>>,
+    ) {
+    }
+
     fn output_search_rfds(
         &self,
         response: Result<types::SearchResults, progenitor_client::Error<types::Error>>,
@@ -2311,6 +2392,7 @@ pub enum CliCommand {
     DeleteOauthClientSecret,
     GetRfds,
     GetRfd,
+    UpdateRfdVisibility,
     SearchRfds,
     GetSelf,
 }
@@ -2353,6 +2435,7 @@ impl CliCommand {
             CliCommand::DeleteOauthClientSecret,
             CliCommand::GetRfds,
             CliCommand::GetRfd,
+            CliCommand::UpdateRfdVisibility,
             CliCommand::SearchRfds,
             CliCommand::GetSelf,
         ]

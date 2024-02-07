@@ -91,6 +91,18 @@ impl Display for ApiPermissionResponse {
             ),
             Self::GetRfdsAssigned => write!(f, "get-rfds-assigned"),
             Self::GetRfdsAll => write!(f, "get-rfds-all"),
+            Self::ManageRfdVisibility(number) => write!(f, "manage-rfd-vis:{}", number),
+            Self::ManageRfdsVisibility(numbers) => write!(
+                f,
+                "manage-rfds-vis:{}",
+                numbers
+                    .iter()
+                    .map(|i| i.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            Self::ManageRfdsVisibilityAssigned => write!(f, "manage-rfd-vis-assigned"),
+            Self::ManageRfdsVisibilityAll => write!(f, "manage-rfd-vis-all"),
             Self::GetDiscussion(number) => write!(f, "get-discussion:{}", number),
             Self::GetDiscussions(numbers) => write!(
                 f,
@@ -138,6 +150,7 @@ impl Display for ApiPermissionResponse {
             ),
             Self::DeleteOAuthClientsAssigned => write!(f, "delete-oauth-clients-assigned"),
             Self::DeleteOAuthClientsAll => write!(f, "delete-oauth-clients-self"),
+            Self::CreateAccessToken => Ok(()),
             Self::Removed => Ok(()),
         }
     }
