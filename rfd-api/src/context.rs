@@ -1442,7 +1442,10 @@ impl ApiContext {
         caller: &ApiCaller,
         group: NewAccessGroup<ApiPermission>,
     ) -> ResourceResult<AccessGroup<ApiPermission>, StoreError> {
-        if caller.can(&ApiPermission::UpdateGroup(group.id)) {
+        if caller.any(&[
+            &ApiPermission::UpdateGroup(group.id),
+            &ApiPermission::ManageGroupsAll,
+        ]) {
             AccessGroupStore::upsert(&*self.storage, &group)
                 .await
                 .to_resource_result()
@@ -1456,7 +1459,10 @@ impl ApiContext {
         caller: &ApiCaller,
         group_id: &Uuid,
     ) -> ResourceResult<AccessGroup<ApiPermission>, StoreError> {
-        if caller.can(&ApiPermission::DeleteGroup(*group_id)) {
+        if caller.any(&[
+            &ApiPermission::DeleteGroup(*group_id),
+            &ApiPermission::ManageGroupsAll,
+        ]) {
             AccessGroupStore::delete(&*self.storage, &group_id)
                 .await
                 .opt_to_resource_result()
@@ -1471,7 +1477,10 @@ impl ApiContext {
         api_user_id: &Uuid,
         group_id: &Uuid,
     ) -> ResourceResult<ApiUser<ApiPermission>, StoreError> {
-        if caller.can(&ApiPermission::AddToGroup(*group_id)) {
+        if caller.any(&[
+            &ApiPermission::AddToGroup(*group_id),
+            &ApiPermission::ManageGroupMembershipAll,
+        ]) {
             // TODO: This needs to be wrapped in a transaction. That requires reworking the way the
             // store traits are handled. Ideally we could have an API that still abstracts away the
             // underlying connection management while allowing for transactions. Possibly something
@@ -1498,7 +1507,10 @@ impl ApiContext {
         api_user_id: &Uuid,
         group_id: &Uuid,
     ) -> ResourceResult<ApiUser<ApiPermission>, StoreError> {
-        if caller.can(&ApiPermission::RemoveFromGroup(*group_id)) {
+        if caller.any(&[
+            &ApiPermission::RemoveFromGroup(*group_id),
+            &ApiPermission::ManageGroupMembershipAll,
+        ]) {
             // TODO: This needs to be wrapped in a transaction. That requires reworking the way the
             // store traits are handled. Ideally we could have an API that still abstracts away the
             // underlying connection management while allowing for transactions. Possibly something
@@ -1575,9 +1587,9 @@ impl ApiContext {
         id: &Uuid,
     ) -> ResourceResult<Mapper, StoreError> {
         if caller.any(&[
-            &ApiPermission::DeleteMapper(*id).into(),
-            &ApiPermission::ManageMapper(*id).into(),
-            &ApiPermission::ManageMappersAll.into(),
+            &ApiPermission::DeleteMapper(*id),
+            &ApiPermission::ManageMapper(*id),
+            &ApiPermission::ManageMappersAll,
         ]) {
             MapperStore::delete(&*self.storage, id)
                 .await
