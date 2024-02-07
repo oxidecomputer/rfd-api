@@ -664,12 +664,13 @@ impl ApiContext {
         rfd_number: i32,
         visibility: Visibility,
     ) -> ResourceResult<Rfd, StoreError> {
-        if caller.can(&ApiPermission::GetRfd(rfd_number))
-            && caller.any(&[
-                &ApiPermission::ManageRfdVisibility(rfd_number),
-                &ApiPermission::ManageRfdsVisibilityAll,
-            ])
-        {
+        if caller.any(&[
+            &ApiPermission::GetRfd(rfd_number),
+            &ApiPermission::GetRfdsAll,
+        ]) && caller.any(&[
+            &ApiPermission::ManageRfdVisibility(rfd_number),
+            &ApiPermission::ManageRfdsVisibilityAll,
+        ]) {
             let mut rfds = RfdStore::list(
                 &*self.storage,
                 RfdFilter::default().rfd_number(Some(vec![rfd_number])),
