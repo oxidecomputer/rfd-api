@@ -671,7 +671,7 @@ impl ApiContext {
             let mut rfds = RfdStore::list(
                 &*self.storage,
                 RfdFilter::default().rfd_number(Some(vec![rfd_number])),
-                &ListPagination::default(),
+                &ListPagination::default().limit(1),
             )
             .await
             .to_resource_result()?;
