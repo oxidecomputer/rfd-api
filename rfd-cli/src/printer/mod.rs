@@ -368,4 +368,14 @@ impl CliOutput for Printer {
             Printer::Tab(printer) => printer.output_get_self(response),
         }
     }
+
+    fn output_update_rfd_visibility(
+        &self,
+        response: Result<types::Rfd, progenitor_client::Error<types::Error>>,
+    ) {
+        match self {
+            Printer::Json(printer) => printer.output_update_rfd_visibility(response),
+            Printer::Tab(printer) => printer.output_update_rfd_visibility(response),
+        }
+    }
 }

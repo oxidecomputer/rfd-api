@@ -285,10 +285,31 @@ impl CliOutput for RfdTabPrinter {
     ) {
         self.output_get_api_user(response);
     }
+
+    fn output_update_rfd_visibility(
+        &self,
+        response: Result<types::Rfd, progenitor_client::Error<types::Error>>,
+    ) {
+        self.print_cli_output(&response, None);
+    }
 }
 
 trait TabDisplay {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter);
+}
+
+impl TabDisplay for types::Rfd {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &self.id);
+        printer.print_field(tw, level, "rfd_number", &self.rfd_number);
+        printer.print_field(tw, level, "visibility", &self.visibility.to_string());
+        printer.print_field(
+            tw,
+            level,
+            "link",
+            &self.link.as_ref().map(|s| s.as_str()).unwrap_or(""),
+        );
+    }
 }
 
 impl TabDisplay for ApiUserForApiPermissionResponse {
