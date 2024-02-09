@@ -28,8 +28,8 @@ cookie = { version = "0.18.0" }
 crc32c = "0.6.4"
 diesel = { version = "2.1.4", features = ["postgres"] }
 dirs = "5.0.1"
-dropshot = { git = "https://github.com/oxidecomputer/dropshot" }
-dropshot-verified-body = { git = "https://github.com/oxidecomputer/dropshot-verified-body", branch = "dropshot-dev" }
+dropshot = "0.10.0"
+dropshot-verified-body = { git = "https://github.com/oxidecomputer/dropshot-verified-body" }
 futures = "0.3.30"
 google-cloudkms1 = "5.0.3"
 google-drive3 = "5.0.3"
