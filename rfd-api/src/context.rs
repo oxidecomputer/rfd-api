@@ -573,6 +573,7 @@ impl ApiContext {
                 title: revision.title,
                 state: revision.state,
                 authors: revision.authors,
+                labels: revision.labels,
                 sha: revision.sha,
                 commit: revision.commit_sha,
                 committed_at: revision.committed_at,
