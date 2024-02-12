@@ -1,23 +1,23 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use diesel::{
     backend::Backend,
     deserialize::{self, FromSql},
     pg::Pg,
     query_builder::QueryId,
     serialize::{self, IsNull, Output, ToSql},
-    sql_types::Jsonb,
     AsExpression, FromSqlRow,
 };
 use schemars::JsonSchema;
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use std::{
     fmt::{Debug, Display},
     io::Write,
 };
 
-use crate::{
-    permissions::Permissions,
-    schema::sql_types::{RfdContentFormat, RfdPdfSource},
-};
+use crate::schema::sql_types::{AttemptState, RfdContentFormat, RfdPdfSource, RfdVisibility};
 
 macro_rules! sql_conversion {
     (
@@ -96,22 +96,60 @@ impl Display for PdfSource {
     }
 }
 
-impl<T> ToSql<Jsonb, Pg> for Permissions<T>
-where
-    T: Serialize + Debug,
-{
-    fn to_sql(&self, out: &mut Output<Pg>) -> serialize::Result {
-        let value = serde_json::to_value(self)?;
-        <serde_json::Value as ToSql<Jsonb, Pg>>::to_sql(&value, &mut out.reborrow())
+#[derive(Debug, PartialEq, Clone, FromSqlRow, AsExpression, Serialize, Deserialize, JsonSchema)]
+#[diesel(sql_type = AttemptState)]
+#[serde(rename_all = "lowercase")]
+pub enum LoginAttemptState {
+    Complete,
+    Failed,
+    New,
+    RemoteAuthenticated,
+}
+
+sql_conversion! {
+    AttemptState => LoginAttemptState,
+    Complete => b"complete",
+    Failed => b"failed",
+    New => b"new",
+    RemoteAuthenticated => b"remote_authenticated",
+}
+
+impl Display for LoginAttemptState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            LoginAttemptState::Complete => write!(f, "complete"),
+            LoginAttemptState::Failed => write!(f, "failed"),
+            LoginAttemptState::New => write!(f, "new"),
+            LoginAttemptState::RemoteAuthenticated => write!(f, "remote_authenticated"),
+        }
     }
 }
 
-impl<T> FromSql<Jsonb, Pg> for Permissions<T>
-where
-    T: DeserializeOwned + Debug,
-{
-    fn from_sql(bytes: <Pg as Backend>::RawValue<'_>) -> deserialize::Result<Self> {
-        let value = <serde_json::Value as FromSql<Jsonb, Pg>>::from_sql(bytes)?;
-        Ok(serde_json::from_value(value)?)
+impl Default for LoginAttemptState {
+    fn default() -> Self {
+        Self::New
+    }
+}
+
+#[derive(Debug, PartialEq, Clone, FromSqlRow, AsExpression, Serialize, Deserialize, JsonSchema)]
+#[diesel(sql_type = RfdVisibility)]
+#[serde(rename_all = "lowercase")]
+pub enum Visibility {
+    Public,
+    Private,
+}
+
+sql_conversion! {
+    RfdVisibility => Visibility,
+    Public => b"public",
+    Private => b"private",
+}
+
+impl Display for Visibility {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Visibility::Public => write!(f, "public"),
+            Visibility::Private => write!(f, "private"),
+        }
     }
 }

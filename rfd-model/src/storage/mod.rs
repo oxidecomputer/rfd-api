@@ -1,17 +1,26 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use std::fmt::Debug;
 
 pub use async_bb8_diesel::{ConnectionError, PoolError};
 use async_trait::async_trait;
+use bb8::RunError;
 pub use diesel::result::Error as DbError;
 #[cfg(feature = "mock")]
 use mockall::automock;
 use thiserror::Error;
 use uuid::Uuid;
+use w_api_permissions::Permission;
 
 use crate::{
-    permissions::Permission, schema_ext::PdfSource, AccessToken, ApiUser, ApiUserProvider,
-    ApiUserToken, Job, NewAccessToken, NewApiUser, NewApiUserProvider, NewApiUserToken, NewJob,
-    NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdPdf, RfdRevision,
+    schema_ext::{LoginAttemptState, PdfSource},
+    AccessGroup, AccessToken, ApiKey, ApiUser, ApiUserProvider, Job, LinkRequest, LoginAttempt,
+    Mapper, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser, NewApiUserProvider, NewJob,
+    NewLinkRequest, NewLoginAttempt, NewMapper, NewOAuthClient, NewOAuthClientRedirectUri,
+    NewOAuthClientSecret, NewRfd, NewRfdPdf, NewRfdRevision, OAuthClient, OAuthClientRedirectUri,
+    OAuthClientSecret, Rfd, RfdPdf, RfdRevision,
 };
 
 pub mod postgres;
@@ -19,7 +28,7 @@ pub mod postgres;
 #[derive(Debug, Error)]
 pub enum StoreError {
     #[error("Connection failure: {0}")]
-    Conn(#[from] ConnectionError),
+    Conn(#[from] RunError<ConnectionError>),
     #[error("Database failure: {0}")]
     Db(#[from] DbError),
     #[error("Connection pool failure: {0}")]
@@ -30,7 +39,7 @@ pub enum StoreError {
     Unknown,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ListPagination {
     pub offset: i64,
     pub limit: i64,
@@ -65,6 +74,7 @@ impl ListPagination {
 pub struct RfdFilter {
     pub id: Option<Vec<Uuid>>,
     pub rfd_number: Option<Vec<i32>>,
+    pub public: Option<bool>,
     pub deleted: bool,
 }
 
@@ -76,6 +86,11 @@ impl RfdFilter {
 
     pub fn rfd_number(mut self, rfd_number: Option<Vec<i32>>) -> Self {
         self.rfd_number = rfd_number;
+        self
+    }
+
+    pub fn public(mut self, public: Option<bool>) -> Self {
+        self.public = public;
         self
     }
 
@@ -97,6 +112,9 @@ pub trait RfdStore {
     async fn upsert(&self, new_rfd: NewRfd) -> Result<Rfd, StoreError>;
     async fn delete(&self, id: &Uuid) -> Result<Option<Rfd>, StoreError>;
 }
+
+// TODO: Make the revision store generic over a revision type. We want to be able to have a metadata
+// only version of the revision model so that we do not need to always load content from the db
 
 #[derive(Debug, Default)]
 pub struct RfdRevisionFilter {
@@ -128,11 +146,23 @@ impl RfdRevisionFilter {
     }
 }
 
+#[derive(Debug, Default)]
+pub enum RfdRevisionGroupBy {
+    Id,
+    #[default]
+    None,
+}
+
 #[cfg_attr(feature = "mock", automock)]
 #[async_trait]
 pub trait RfdRevisionStore {
     async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<RfdRevision>, StoreError>;
     async fn list(
+        &self,
+        filter: RfdRevisionFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdRevision>, StoreError>;
+    async fn list_unique_rfd(
         &self,
         filter: RfdRevisionFilter,
         pagination: &ListPagination,
@@ -147,6 +177,8 @@ pub struct RfdPdfFilter {
     pub rfd_revision: Option<Vec<Uuid>>,
     pub source: Option<Vec<PdfSource>>,
     pub deleted: bool,
+    pub rfd: Option<Vec<Uuid>>,
+    pub external_id: Option<Vec<String>>,
 }
 
 impl RfdPdfFilter {
@@ -169,6 +201,16 @@ impl RfdPdfFilter {
         self.deleted = deleted;
         self
     }
+
+    pub fn rfd(mut self, rfd: Option<Vec<Uuid>>) -> Self {
+        self.rfd = rfd;
+        self
+    }
+
+    pub fn external_id(mut self, external_id: Option<Vec<String>>) -> Self {
+        self.external_id = external_id;
+        self
+    }
 }
 
 #[cfg_attr(feature = "mock", automock)]
@@ -189,6 +231,7 @@ pub struct JobFilter {
     pub id: Option<Vec<i32>>,
     pub sha: Option<Vec<String>>,
     pub processed: Option<bool>,
+    pub started: Option<bool>,
 }
 
 impl JobFilter {
@@ -206,6 +249,11 @@ impl JobFilter {
         self.processed = processed;
         self
     }
+
+    pub fn started(mut self, started: Option<bool>) -> Self {
+        self.started = started;
+        self
+    }
 }
 
 #[cfg_attr(feature = "mock", automock)]
@@ -218,6 +266,7 @@ pub trait JobStore {
         pagination: &ListPagination,
     ) -> Result<Vec<Job>, StoreError>;
     async fn upsert(&self, new_job: NewJob) -> Result<Job, StoreError>;
+    async fn start(&self, id: i32) -> Result<Option<Job>, StoreError>;
     async fn complete(&self, id: i32) -> Result<Option<Job>, StoreError>;
 }
 
@@ -225,12 +274,13 @@ pub trait JobStore {
 pub struct ApiUserFilter {
     pub id: Option<Vec<Uuid>>,
     pub email: Option<Vec<String>>,
+    pub groups: Option<Vec<Uuid>>,
     pub deleted: bool,
 }
 
 #[cfg_attr(feature = "mock", automock)]
 #[async_trait]
-pub trait ApiUserStore<T: Permission> {
+pub trait ApiUserStore<T: Permission + Ord> {
     async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<ApiUser<T>>, StoreError>;
     async fn list(
         &self,
@@ -242,27 +292,25 @@ pub trait ApiUserStore<T: Permission> {
 }
 
 #[derive(Debug, Default)]
-pub struct ApiUserTokenFilter {
+pub struct ApiKeyFilter {
+    pub id: Option<Vec<Uuid>>,
     pub api_user_id: Option<Vec<Uuid>>,
+    pub key_signature: Option<Vec<String>>,
     pub expired: bool,
     pub deleted: bool,
 }
 
 #[cfg_attr(feature = "mock", automock)]
 #[async_trait]
-pub trait ApiUserTokenStore<T: Permission> {
-    async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<ApiUserToken<T>>, StoreError>;
+pub trait ApiKeyStore<T: Permission + Ord> {
+    async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<ApiKey<T>>, StoreError>;
     async fn list(
         &self,
-        filter: ApiUserTokenFilter,
+        filter: ApiKeyFilter,
         pagination: &ListPagination,
-    ) -> Result<Vec<ApiUserToken<T>>, StoreError>;
-    async fn upsert(
-        &self,
-        token: NewApiUserToken<T>,
-        api_user: &ApiUser<T>,
-    ) -> Result<ApiUserToken<T>, StoreError>;
-    async fn delete(&self, id: &Uuid) -> Result<Option<ApiUserToken<T>>, StoreError>;
+    ) -> Result<Vec<ApiKey<T>>, StoreError>;
+    async fn upsert(&self, token: NewApiKey<T>) -> Result<ApiKey<T>, StoreError>;
+    async fn delete(&self, id: &Uuid) -> Result<Option<ApiKey<T>>, StoreError>;
 }
 
 #[derive(Debug, Default)]
@@ -285,6 +333,11 @@ pub trait ApiUserProviderStore {
         pagination: &ListPagination,
     ) -> Result<Vec<ApiUserProvider>, StoreError>;
     async fn upsert(&self, api_user: NewApiUserProvider) -> Result<ApiUserProvider, StoreError>;
+    async fn transfer(
+        &self,
+        api_user: NewApiUserProvider,
+        current_api_user_id: Uuid,
+    ) -> Result<ApiUserProvider, StoreError>;
     async fn delete(&self, id: &Uuid) -> Result<Option<ApiUserProvider>, StoreError>;
 }
 
@@ -305,4 +358,154 @@ pub trait AccessTokenStore {
         pagination: &ListPagination,
     ) -> Result<Vec<AccessToken>, StoreError>;
     async fn upsert(&self, token: NewAccessToken) -> Result<AccessToken, StoreError>;
+}
+
+#[derive(Debug, Default)]
+pub struct LoginAttemptFilter {
+    pub id: Option<Vec<Uuid>>,
+    pub client_id: Option<Vec<Uuid>>,
+    pub attempt_state: Option<Vec<LoginAttemptState>>,
+    pub authz_code: Option<Vec<String>>,
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait LoginAttemptStore {
+    async fn get(&self, id: &Uuid) -> Result<Option<LoginAttempt>, StoreError>;
+    async fn list(
+        &self,
+        filter: LoginAttemptFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<LoginAttempt>, StoreError>;
+    async fn upsert(&self, attempt: NewLoginAttempt) -> Result<LoginAttempt, StoreError>;
+}
+
+#[derive(Debug, Default)]
+pub struct OAuthClientFilter {
+    pub id: Option<Vec<Uuid>>,
+    pub deleted: bool,
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait OAuthClientStore {
+    async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<OAuthClient>, StoreError>;
+    async fn list(
+        &self,
+        filter: OAuthClientFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<OAuthClient>, StoreError>;
+    async fn upsert(&self, client: NewOAuthClient) -> Result<OAuthClient, StoreError>;
+    async fn delete(&self, id: &Uuid) -> Result<Option<OAuthClient>, StoreError>;
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait OAuthClientSecretStore {
+    async fn upsert(&self, secret: NewOAuthClientSecret) -> Result<OAuthClientSecret, StoreError>;
+    async fn delete(&self, id: &Uuid) -> Result<Option<OAuthClientSecret>, StoreError>;
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait OAuthClientRedirectUriStore {
+    async fn upsert(
+        &self,
+        redirect_uri: NewOAuthClientRedirectUri,
+    ) -> Result<OAuthClientRedirectUri, StoreError>;
+    async fn delete(&self, id: &Uuid) -> Result<Option<OAuthClientRedirectUri>, StoreError>;
+}
+
+#[derive(Debug, Default, PartialEq)]
+pub struct AccessGroupFilter {
+    pub id: Option<Vec<Uuid>>,
+    pub name: Option<Vec<String>>,
+    pub deleted: bool,
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait AccessGroupStore<T: Permission + Ord> {
+    async fn get(&self, id: &Uuid, deleted: bool) -> Result<Option<AccessGroup<T>>, StoreError>;
+    async fn list(
+        &self,
+        filter: AccessGroupFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<AccessGroup<T>>, StoreError>;
+    async fn upsert(&self, group: &NewAccessGroup<T>) -> Result<AccessGroup<T>, StoreError>;
+    async fn delete(&self, id: &Uuid) -> Result<Option<AccessGroup<T>>, StoreError>;
+}
+
+#[derive(Debug, Default, PartialEq)]
+pub struct MapperFilter {
+    pub id: Option<Vec<Uuid>>,
+    pub name: Option<Vec<String>>,
+    pub depleted: bool,
+    pub deleted: bool,
+}
+
+impl MapperFilter {
+    pub fn id(mut self, id: Option<Vec<Uuid>>) -> Self {
+        self.id = id;
+        self
+    }
+
+    pub fn name(mut self, name: Option<Vec<String>>) -> Self {
+        self.name = name;
+        self
+    }
+
+    pub fn depleted(mut self, depleted: bool) -> Self {
+        self.depleted = depleted;
+        self
+    }
+
+    pub fn deleted(mut self, deleted: bool) -> Self {
+        self.deleted = deleted;
+        self
+    }
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait MapperStore {
+    async fn get(
+        &self,
+        id: &Uuid,
+        depleted: bool,
+        deleted: bool,
+    ) -> Result<Option<Mapper>, StoreError>;
+    async fn list(
+        &self,
+        filter: MapperFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<Mapper>, StoreError>;
+    async fn upsert(&self, new_mapper: &NewMapper) -> Result<Mapper, StoreError>;
+    async fn delete(&self, id: &Uuid) -> Result<Option<Mapper>, StoreError>;
+}
+
+#[derive(Debug, Default, PartialEq)]
+pub struct LinkRequestFilter {
+    pub id: Option<Vec<Uuid>>,
+    pub provider_id: Option<Vec<Uuid>>,
+    pub user_id: Option<Vec<Uuid>>,
+    pub expired: bool,
+    pub completed: bool,
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait LinkRequestStore {
+    async fn get(
+        &self,
+        id: &Uuid,
+        expired: bool,
+        completed: bool,
+    ) -> Result<Option<LinkRequest>, StoreError>;
+    async fn list(
+        &self,
+        filter: LinkRequestFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<LinkRequest>, StoreError>;
+    async fn upsert(&self, request: &NewLinkRequest) -> Result<LinkRequest, StoreError>;
 }

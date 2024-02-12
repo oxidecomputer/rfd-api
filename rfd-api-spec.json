@@ -10,6 +10,52 @@
     "version": ""
   },
   "paths": {
+    "/.well-known/jwks.json": {
+      "get": {
+        "operationId": "jwks_json",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Jwks"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/.well-known/openid-configuration": {
+      "get": {
+        "operationId": "openid_configuration",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OpenIdConfiguration"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
     "/api-user": {
       "post": {
         "summary": "Create a new user with a given set of permissions",
@@ -30,7 +76,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiUser_for_ApiPermission"
+                  "$ref": "#/components/schemas/ApiUser_for_ApiPermissionResponse"
                 }
               }
             }
@@ -65,7 +111,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiUser_for_ApiPermission"
+                  "$ref": "#/components/schemas/GetUserResponse"
                 }
               }
             }
@@ -108,10 +154,135 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiUser_for_ApiPermission"
+                  "$ref": "#/components/schemas/ApiUser_for_ApiPermissionResponse"
                 }
               }
             }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api-user/{identifier}/group": {
+      "post": {
+        "operationId": "add_api_user_to_group",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddGroupBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiUser_for_ApiPermissionResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api-user/{identifier}/group/{group_id}": {
+      "delete": {
+        "operationId": "remove_api_user_from_group",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiUser_for_ApiPermissionResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api-user/{identifier}/link": {
+      "post": {
+        "summary": "Link an existing login provider to this user",
+        "operationId": "link_provider",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiUserProviderLinkPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "resource updated"
           },
           "4XX": {
             "$ref": "#/components/responses/Error"
@@ -143,10 +314,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Array_of_ApiUserTokenResponse",
+                  "title": "Array_of_ApiKeyResponse",
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/ApiUserTokenResponse"
+                    "$ref": "#/components/schemas/ApiKeyResponse"
                   }
                 }
               }
@@ -177,7 +348,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ApiUserTokenCreateParams"
+                "$ref": "#/components/schemas/ApiKeyCreateParams"
               }
             }
           },
@@ -189,7 +360,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InitialApiUserTokenResponse"
+                  "$ref": "#/components/schemas/InitialApiKeyResponse"
                 }
               }
             }
@@ -232,7 +403,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiUserTokenResponse"
+                  "$ref": "#/components/schemas/ApiKeyResponse"
                 }
               }
             }
@@ -273,7 +444,52 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiUserTokenResponse"
+                  "$ref": "#/components/schemas/ApiKeyResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api-user-provider/{identifier}/link-token": {
+      "post": {
+        "summary": "Create a new link token for linking this provider to a different api user",
+        "operationId": "create_link_token",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiUserLinkRequestPayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiUserLinkRequestResponse"
                 }
               }
             }
@@ -289,6 +505,9 @@
     },
     "/github": {
       "post": {
+        "tags": [
+          "hidden"
+        ],
         "operationId": "github_webhook",
         "requestBody": {
           "content": {
@@ -324,24 +543,39 @@
         }
       }
     },
-    "/login/access-token/{provider}": {
-      "post": {
-        "operationId": "access_token_login",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "provider",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/AccessTokenProviderName"
+    "/group": {
+      "get": {
+        "operationId": "get_groups",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Array_of_AccessGroup_for_ApiPermissionResponse",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccessGroup_for_ApiPermissionResponse"
+                  }
+                }
+              }
             }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
           }
-        ],
+        }
+      },
+      "post": {
+        "operationId": "create_group",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AccessTokenProviderLogin"
+                "$ref": "#/components/schemas/AccessGroupUpdateParams"
               }
             }
           },
@@ -353,7 +587,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LoginTokenResponse"
+                  "$ref": "#/components/schemas/AccessGroup_for_ApiPermissionResponse"
                 }
               }
             }
@@ -367,16 +601,17 @@
         }
       }
     },
-    "/login/jwt/{provider}": {
-      "post": {
-        "operationId": "jwt_login",
+    "/group/{group_id}": {
+      "put": {
+        "operationId": "update_group",
         "parameters": [
           {
             "in": "path",
-            "name": "provider",
+            "name": "group_id",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/JwtProviderName"
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -384,19 +619,223 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/JwtProviderLogin"
+                "$ref": "#/components/schemas/AccessGroupUpdateParams"
               }
             }
           },
           "required": true
         },
         "responses": {
-          "201": {
-            "description": "successful creation",
+          "200": {
+            "description": "successful operation",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/LoginTokenResponse"
+                  "$ref": "#/components/schemas/AccessGroup_for_ApiPermissionResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "delete_group",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccessGroup_for_ApiPermissionResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/login/oauth/{provider}/code/authorize": {
+      "get": {
+        "summary": "Generate the remote provider login url and redirect the user",
+        "operationId": "authz_code_redirect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OAuthProviderName"
+            }
+          },
+          {
+            "in": "query",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "redirect_uri",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "response_type",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "*/*": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/login/oauth/{provider}/code/callback": {
+      "get": {
+        "summary": "Handle return calls from a remote OAuth provider",
+        "operationId": "authz_code_callback",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OAuthProviderName"
+            }
+          },
+          {
+            "in": "query",
+            "name": "code",
+            "schema": {
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "error",
+            "schema": {
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "schema": {
+              "nullable": true,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "307": {
+            "description": "redirect (temporary redirect)",
+            "headers": {
+              "location": {
+                "description": "HTTP \"Location\" header",
+                "style": "simple",
+                "required": true,
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/login/oauth/{provider}/code/token": {
+      "post": {
+        "summary": "Exchange an authorization code for an access token",
+        "operationId": "authz_code_exchange",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OAuthProviderName"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/OAuthAuthzCodeExchangeBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthAuthzCodeExchangeResponse"
                 }
               }
             }
@@ -478,8 +917,393 @@
         }
       }
     },
+    "/mapper": {
+      "get": {
+        "operationId": "get_mappers",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include_depleted",
+            "description": "Include depleted mappers in the returned results",
+            "schema": {
+              "nullable": true,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Array_of_Mapper",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Mapper"
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "operationId": "create_mapper",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMapper"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "successful creation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mapper"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/mapper/{identifier}": {
+      "delete": {
+        "operationId": "delete_mapper",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Mapper"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/oauth/client": {
+      "get": {
+        "summary": "List OAuth clients",
+        "operationId": "list_oauth_clients",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Array_of_OAuthClient",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/OAuthClient"
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a new OAuth Client",
+        "operationId": "create_oauth_client",
+        "responses": {
+          "201": {
+            "description": "successful creation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthClient"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/oauth/client/{client_id}": {
+      "get": {
+        "summary": "Get an new OAuth Client",
+        "operationId": "get_oauth_client",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthClient"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/oauth/client/{client_id}/redirect_uri": {
+      "post": {
+        "summary": "Add an OAuth client redirect uri",
+        "operationId": "create_oauth_client_redirect_uri",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddOAuthClientRedirectBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthClientRedirectUri"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/oauth/client/{client_id}/redirect_uri/{redirect_uri_id}": {
+      "delete": {
+        "summary": "Delete an OAuth client redirect uri",
+        "operationId": "delete_oauth_client_redirect_uri",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "redirect_uri_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthClientRedirectUri"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/oauth/client/{client_id}/secret": {
+      "post": {
+        "summary": "Add an OAuth client secret",
+        "operationId": "create_oauth_client_secret",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InitialOAuthClientSecretResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/oauth/client/{client_id}/secret/{secret_id}": {
+      "delete": {
+        "summary": "Delete an OAuth client secret",
+        "operationId": "delete_oauth_client_secret",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "in": "path",
+            "name": "secret_id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthClientSecret"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/rfd": {
+      "get": {
+        "summary": "List all available RFDs",
+        "operationId": "get_rfds",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Array_of_ListRfd",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ListRfd"
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
     "/rfd/{number}": {
       "get": {
+        "summary": "Get the latest representation of an RFD",
         "operationId": "get_rfd",
         "parameters": [
           {
@@ -511,6 +1335,128 @@
         }
       }
     },
+    "/rfd/{number}/visibility": {
+      "post": {
+        "summary": "Modify the visibility of an RFD",
+        "operationId": "update_rfd_visibility",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RfdVisibility"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Rfd"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/rfd-search": {
+      "get": {
+        "summary": "Search the RFD index and get a list of results",
+        "operationId": "search_rfds",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "attributes_to_crop",
+            "schema": {
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "highlight_post_tag",
+            "schema": {
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "highlight_pre_tag",
+            "schema": {
+              "nullable": true,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "nullable": true,
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "nullable": true,
+              "type": "integer",
+              "format": "uint32",
+              "minimum": 0
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResults"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
     "/self": {
       "get": {
         "summary": "Retrieve the user information of the calling user",
@@ -521,7 +1467,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiUser_for_ApiPermission"
+                  "$ref": "#/components/schemas/GetUserResponse"
                 }
               }
             }
@@ -537,19 +1483,57 @@
     }
   },
   "components": {
-    "responses": {
-      "Error": {
-        "description": "Error",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/Error"
-            }
-          }
-        }
-      }
-    },
     "schemas": {
+      "AccessGroupUpdateParams": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+          }
+        },
+        "required": [
+          "name",
+          "permissions"
+        ]
+      },
+      "AccessGroup_for_ApiPermissionResponse": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "permissions": {
+            "$ref": "#/components/schemas/Permissions_for_ApiPermissionResponse"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "created_at",
+          "id",
+          "name",
+          "permissions",
+          "updated_at"
+        ]
+      },
       "AccessTokenExchangeRequest": {
         "type": "object",
         "properties": {
@@ -570,24 +1554,72 @@
           "grant_type"
         ]
       },
-      "AccessTokenProviderLogin": {
+      "AddGroupBody": {
         "type": "object",
         "properties": {
-          "expiration": {
-            "nullable": true,
+          "group_id": {
             "type": "string",
-            "format": "date-time"
-          },
-          "permissions": {
-            "$ref": "#/components/schemas/LoginPermissions"
-          },
-          "token": {
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "group_id"
+        ]
+      },
+      "AddOAuthClientRedirectBody": {
+        "type": "object",
+        "properties": {
+          "redirect_uri": {
             "type": "string"
           }
         },
         "required": [
-          "permissions",
-          "token"
+          "redirect_uri"
+        ]
+      },
+      "ApiKeyCreateParams": {
+        "type": "object",
+        "properties": {
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "permissions": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Permissions_for_ApiPermissionResponse"
+              }
+            ]
+          }
+        },
+        "required": [
+          "expires_at"
+        ]
+      },
+      "ApiKeyResponse": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "permissions": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Permissions_for_ApiPermissionResponse"
+              }
+            ]
+          }
+        },
+        "required": [
+          "created_at",
+          "id"
         ]
       },
       "ApiPermission": {
@@ -596,17 +1628,49 @@
             "type": "string",
             "enum": [
               "CreateApiUserTokenSelf",
+              "CreateApiUserTokenAssigned",
               "CreateApiUserTokenAll",
               "GetApiUserSelf",
+              "GetApiUserAssigned",
               "GetApiUserAll",
               "GetApiUserTokenSelf",
+              "GetApiUserTokenAssigned",
+              "GetApiUserTokenAll",
               "DeleteApiUserTokenSelf",
+              "DeleteApiUserTokenAssigned",
               "DeleteApiUserTokenAll",
               "CreateApiUser",
               "UpdateApiUserSelf",
+              "UpdateApiUserAssigned",
               "UpdateApiUserAll",
-              "GetAllRfds",
-              "GetAssignedRfds"
+              "CreateUserApiProviderLinkToken",
+              "GetGroupsJoined",
+              "GetGroupsAll",
+              "CreateGroup",
+              "ManageGroupMembershipAssigned",
+              "ManageGroupMembershipAll",
+              "ManageGroupsAssigned",
+              "ManageGroupsAll",
+              "ListMappers",
+              "CreateMapper",
+              "ManageMappersAssigned",
+              "ManageMappersAll",
+              "GetRfdsAssigned",
+              "GetRfdsAll",
+              "ManageRfdsVisibilityAssigned",
+              "ManageRfdsVisibilityAll",
+              "GetDiscussionsAssigned",
+              "GetDiscussionsAll",
+              "SearchRfds",
+              "CreateOAuthClient",
+              "GetOAuthClientsAssigned",
+              "GetOAuthClientsAll",
+              "UpdateOAuthClientsAssigned",
+              "UpdateOAuthClientsAll",
+              "DeleteOAuthClientsAssigned",
+              "DeleteOAuthClientsAll",
+              "CreateAccessToken",
+              "Removed"
             ]
           },
           {
@@ -677,7 +1741,188 @@
           {
             "type": "object",
             "properties": {
+              "UpdateGroup": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "UpdateGroup"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "AddToGroup": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "AddToGroup"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "RemoveFromGroup": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "RemoveFromGroup"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "ManageGroupMembership": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "ManageGroupMembership"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "ManageGroupMemberships": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "ManageGroupMemberships"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "DeleteGroup": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "DeleteGroup"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "ManageGroup": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "ManageGroup"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "ManageGroups": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "ManageGroups"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "UpdateMapper": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "UpdateMapper"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "DeleteMapper": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "DeleteMapper"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "ManageMapper": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "ManageMapper"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "ManageMappers": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "ManageMappers"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
               "GetRfd": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "required": [
+              "GetRfd"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "GetRfds": {
                 "type": "array",
                 "items": {
                   "type": "integer",
@@ -687,61 +1932,1471 @@
               }
             },
             "required": [
-              "GetRfd"
+              "GetRfds"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "ManageRfdVisibility": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "required": [
+              "ManageRfdVisibility"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "ManageRfdsVisibility": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "ManageRfdsVisibility"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "GetDiscussion": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "required": [
+              "GetDiscussion"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "GetDiscussions": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "GetDiscussions"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "GetOAuthClient": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "GetOAuthClient"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "GetOAuthClients": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "GetOAuthClients"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "UpdateOAuthClient": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "UpdateOAuthClient"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "UpdateOAuthClients": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "UpdateOAuthClients"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "DeleteOAuthClient": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "DeleteOAuthClient"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "DeleteOAuthClients": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "DeleteOAuthClients"
             ],
             "additionalProperties": false
           }
         ]
       },
-      "ApiUserTokenCreateParams": {
+      "ApiPermissionResponse": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "CreateApiUserToken"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "CreateApiUserTokenSelf"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "CreateApiUserTokenAssigned"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "CreateApiUserTokenAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetApiUser"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetApiUserSelf"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetApiUserAssigned"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetApiUserAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetApiUserToken"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetApiUserTokenSelf"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetApiUserTokenAssigned"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetApiUserTokenAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "DeleteApiUserToken"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "DeleteApiUserTokenSelf"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "DeleteApiUserTokenAssigned"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "DeleteApiUserTokenAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "CreateApiUser"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "UpdateApiUser"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "UpdateApiUserSelf"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "UpdateApiUserAssigned"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "UpdateApiUserAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "CreateUserApiProviderLinkToken"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetGroupsJoined"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetGroupsAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "CreateGroup"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "UpdateGroup"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "AddToGroup"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "RemoveFromGroup"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ManageGroupMembership"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ManageGroupMemberships"
+                ]
+              },
+              "value": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ManageGroupMembershipAssigned"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ManageGroupMembershipAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "DeleteGroup"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ManageGroup"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ManageGroups"
+                ]
+              },
+              "value": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ManageGroupsAssigned"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ManageGroupsAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ListMappers"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "CreateMapper"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "UpdateMapper"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "DeleteMapper"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ManageMapper"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ManageMappers"
+                ]
+              },
+              "value": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ManageMappersAssigned"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ManageMappersAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetRfd"
+                ]
+              },
+              "value": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetRfds"
+                ]
+              },
+              "value": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetRfdsAssigned"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetRfdsAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ManageRfdVisibility"
+                ]
+              },
+              "value": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ManageRfdsVisibility"
+                ]
+              },
+              "value": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ManageRfdsVisibilityAssigned"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "ManageRfdsVisibilityAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetDiscussion"
+                ]
+              },
+              "value": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetDiscussions"
+                ]
+              },
+              "value": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetDiscussionsAssigned"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetDiscussionsAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "SearchRfds"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "CreateOAuthClient"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetOAuthClient"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetOAuthClients"
+                ]
+              },
+              "value": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetOAuthClientsAssigned"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "GetOAuthClientsAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "UpdateOAuthClient"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "UpdateOAuthClients"
+                ]
+              },
+              "value": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "UpdateOAuthClientsAssigned"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "UpdateOAuthClientsAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "DeleteOAuthClient"
+                ]
+              },
+              "value": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "DeleteOAuthClients"
+                ]
+              },
+              "value": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "DeleteOAuthClientsAssigned"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "DeleteOAuthClientsAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "CreateAccessToken"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "Removed"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          }
+        ]
+      },
+      "ApiUserLinkRequestPayload": {
         "type": "object",
         "properties": {
-          "expires_at": {
+          "user_identifier": {
             "type": "string",
-            "format": "date-time"
-          },
-          "permissions": {
-            "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+            "format": "uuid"
           }
         },
         "required": [
-          "expires_at",
-          "permissions"
+          "user_identifier"
         ]
       },
-      "ApiUserTokenResponse": {
+      "ApiUserLinkRequestResponse": {
         "type": "object",
         "properties": {
+          "token": {
+            "$ref": "#/components/schemas/SecretString"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "ApiUserProvider": {
+        "type": "object",
+        "properties": {
+          "api_user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
+          },
+          "deleted_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "emails": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "id": {
             "type": "string",
             "format": "uuid"
           },
-          "permissions": {
-            "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+          "provider": {
+            "type": "string"
+          },
+          "provider_id": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
+          "api_user_id",
           "created_at",
+          "emails",
           "id",
-          "permissions"
+          "provider",
+          "provider_id",
+          "updated_at"
+        ]
+      },
+      "ApiUserProviderLinkPayload": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
         ]
       },
       "ApiUserUpdateParams": {
         "type": "object",
         "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "uniqueItems": true
+          },
           "permissions": {
             "$ref": "#/components/schemas/Permissions_for_ApiPermission"
           }
         },
         "required": [
+          "groups",
           "permissions"
         ]
       },
-      "ApiUser_for_ApiPermission": {
+      "ApiUser_for_ApiPermissionResponse": {
         "type": "object",
         "properties": {
           "created_at": {
@@ -753,12 +3408,20 @@
             "type": "string",
             "format": "date-time"
           },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "uniqueItems": true
+          },
           "id": {
             "type": "string",
             "format": "uuid"
           },
           "permissions": {
-            "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+            "$ref": "#/components/schemas/Permissions_for_ApiPermissionResponse"
           },
           "updated_at": {
             "type": "string",
@@ -767,9 +3430,30 @@
         },
         "required": [
           "created_at",
+          "groups",
           "id",
           "permissions",
           "updated_at"
+        ]
+      },
+      "CreateMapper": {
+        "type": "object",
+        "properties": {
+          "max_activations": {
+            "nullable": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rule": {
+            "$ref": "#/components/schemas/MappingRules"
+          }
+        },
+        "required": [
+          "name",
+          "rule"
         ]
       },
       "Error": {
@@ -789,6 +3473,55 @@
         "required": [
           "message",
           "request_id"
+        ]
+      },
+      "FormattedSearchResultHit": {
+        "type": "object",
+        "properties": {
+          "anchor": {
+            "nullable": true,
+            "type": "string"
+          },
+          "content": {
+            "nullable": true,
+            "type": "string"
+          },
+          "hierarchy": {
+            "type": "array",
+            "items": {
+              "nullable": true,
+              "type": "string"
+            },
+            "minItems": 6,
+            "maxItems": 6
+          },
+          "hierarchy_radio": {
+            "type": "array",
+            "items": {
+              "nullable": true,
+              "type": "string"
+            },
+            "minItems": 6,
+            "maxItems": 6
+          },
+          "object_id": {
+            "type": "string"
+          },
+          "rfd_number": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0
+          },
+          "url": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "hierarchy",
+          "hierarchy_radio",
+          "object_id",
+          "rfd_number"
         ]
       },
       "FullRfd": {
@@ -843,6 +3576,9 @@
           },
           "title": {
             "type": "string"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
           }
         },
         "required": [
@@ -853,7 +3589,8 @@
           "pdfs",
           "rfd_number",
           "sha",
-          "title"
+          "title",
+          "visibility"
         ]
       },
       "FullRfdPdfEntry": {
@@ -869,6 +3606,24 @@
         "required": [
           "link",
           "source"
+        ]
+      },
+      "GetUserResponse": {
+        "type": "object",
+        "properties": {
+          "info": {
+            "$ref": "#/components/schemas/ApiUser_for_ApiPermissionResponse"
+          },
+          "providers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiUserProvider"
+            }
+          }
+        },
+        "required": [
+          "info",
+          "providers"
         ]
       },
       "GitHubCommit": {
@@ -918,12 +3673,17 @@
             }
           },
           "head_commit": {
-            "$ref": "#/components/schemas/GitHubCommit"
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GitHubCommit"
+              }
+            ]
           },
           "installation": {
             "$ref": "#/components/schemas/GitHubInstallation"
           },
-          "ref_": {
+          "ref": {
             "type": "string"
           },
           "repository": {
@@ -935,9 +3695,8 @@
         },
         "required": [
           "commits",
-          "head_commit",
           "installation",
-          "ref_",
+          "ref",
           "repository",
           "sender"
         ]
@@ -1024,7 +3783,7 @@
           "type"
         ]
       },
-      "InitialApiUserTokenResponse": {
+      "InitialApiKeyResponse": {
         "type": "object",
         "properties": {
           "created_at": {
@@ -1035,74 +3794,463 @@
             "type": "string",
             "format": "uuid"
           },
-          "permissions": {
-            "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+          "key": {
+            "$ref": "#/components/schemas/SecretString"
           },
-          "token": {
+          "permissions": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Permissions_for_ApiPermissionResponse"
+              }
+            ]
+          }
+        },
+        "required": [
+          "created_at",
+          "id",
+          "key"
+        ]
+      },
+      "InitialOAuthClientSecretResponse": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "key": {
+            "$ref": "#/components/schemas/SecretString"
+          }
+        },
+        "required": [
+          "created_at",
+          "id",
+          "key"
+        ]
+      },
+      "Jwk": {
+        "type": "object",
+        "properties": {
+          "e": {
+            "type": "string"
+          },
+          "kid": {
+            "type": "string"
+          },
+          "kty": {
+            "type": "string"
+          },
+          "n": {
+            "type": "string"
+          },
+          "use": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "e",
+          "kid",
+          "kty",
+          "n",
+          "use"
+        ]
+      },
+      "Jwks": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Jwk"
+            }
+          }
+        },
+        "required": [
+          "keys"
+        ]
+      },
+      "ListRfd": {
+        "type": "object",
+        "properties": {
+          "authors": {
+            "nullable": true,
+            "type": "string"
+          },
+          "commit": {
+            "type": "string"
+          },
+          "committed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "discussion": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "link": {
+            "nullable": true,
+            "type": "string"
+          },
+          "rfd_number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sha": {
+            "type": "string"
+          },
+          "state": {
+            "nullable": true,
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
+          }
+        },
+        "required": [
+          "commit",
+          "committed_at",
+          "id",
+          "rfd_number",
+          "sha",
+          "title",
+          "visibility"
+        ]
+      },
+      "Mapper": {
+        "type": "object",
+        "properties": {
+          "activations": {
+            "nullable": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "depleted_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "max_activations": {
+            "nullable": true,
+            "type": "integer",
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rule": {}
+        },
+        "required": [
+          "created_at",
+          "id",
+          "name",
+          "rule"
+        ]
+      },
+      "MappingRules": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "groups": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "permissions": {
+                "default": [],
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+                  }
+                ]
+              },
+              "rule": {
+                "type": "string",
+                "enum": [
+                  "default"
+                ]
+              }
+            },
+            "required": [
+              "rule"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string"
+              },
+              "groups": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "permissions": {
+                "default": [],
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+                  }
+                ]
+              },
+              "rule": {
+                "type": "string",
+                "enum": [
+                  "email_address"
+                ]
+              }
+            },
+            "required": [
+              "email",
+              "rule"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "domain": {
+                "type": "string"
+              },
+              "groups": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "permissions": {
+                "default": [],
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+                  }
+                ]
+              },
+              "rule": {
+                "type": "string",
+                "enum": [
+                  "email_domain"
+                ]
+              }
+            },
+            "required": [
+              "domain",
+              "rule"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "github_username": {
+                "type": "string"
+              },
+              "groups": {
+                "default": [],
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "permissions": {
+                "default": [],
+                "allOf": [
+                  {
+                    "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+                  }
+                ]
+              },
+              "rule": {
+                "type": "string",
+                "enum": [
+                  "github_username"
+                ]
+              }
+            },
+            "required": [
+              "github_username",
+              "rule"
+            ]
+          }
+        ]
+      },
+      "OAuthAuthzCodeExchangeBody": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "client_secret": {
+            "$ref": "#/components/schemas/SecretString"
+          },
+          "code": {
+            "type": "string"
+          },
+          "grant_type": {
+            "type": "string"
+          },
+          "pkce_verifier": {
+            "nullable": true,
+            "type": "string"
+          },
+          "redirect_uri": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id",
+          "client_secret",
+          "code",
+          "grant_type",
+          "redirect_uri"
+        ]
+      },
+      "OAuthAuthzCodeExchangeResponse": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string"
+          },
+          "expires_in": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "token_type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "access_token",
+          "expires_in",
+          "token_type"
+        ]
+      },
+      "OAuthClient": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "redirect_uris": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OAuthClientRedirectUri"
+            }
+          },
+          "secrets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OAuthClientSecret"
+            }
+          }
+        },
+        "required": [
+          "created_at",
+          "id",
+          "redirect_uris",
+          "secrets"
+        ]
+      },
+      "OAuthClientRedirectUri": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "oauth_client_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "redirect_uri": {
             "type": "string"
           }
         },
         "required": [
           "created_at",
           "id",
-          "permissions",
-          "token"
+          "oauth_client_id",
+          "redirect_uri"
         ]
       },
-      "JwtProviderLogin": {
+      "OAuthClientSecret": {
         "type": "object",
         "properties": {
-          "expiration": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
             "nullable": true,
             "type": "string",
             "format": "date-time"
           },
-          "permissions": {
-            "$ref": "#/components/schemas/LoginPermissions"
-          },
-          "token": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "permissions",
-          "token"
-        ]
-      },
-      "LoginPermissions": {
-        "oneOf": [
-          {
+          "id": {
             "type": "string",
-            "enum": [
-              "All"
-            ]
+            "format": "uuid"
           },
-          {
-            "type": "object",
-            "properties": {
-              "Specific": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/ApiPermission"
-                }
-              }
-            },
-            "required": [
-              "Specific"
-            ],
-            "additionalProperties": false
-          }
-        ]
-      },
-      "LoginTokenResponse": {
-        "type": "object",
-        "properties": {
-          "token": {
+          "oauth_client_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "secret_signature": {
             "type": "string"
           }
         },
         "required": [
-          "token"
+          "created_at",
+          "id",
+          "oauth_client_id",
+          "secret_signature"
         ]
       },
       "OAuthProviderInfo": {
@@ -1142,27 +4290,201 @@
       "OAuthProviderName": {
         "type": "string",
         "enum": [
+          "github",
           "google"
+        ]
+      },
+      "OpenIdConfiguration": {
+        "type": "object",
+        "properties": {
+          "jwks_uri": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "jwks_uri"
         ]
       },
       "Permissions_for_ApiPermission": {
         "type": "array",
         "items": {
           "$ref": "#/components/schemas/ApiPermission"
-        }
+        },
+        "uniqueItems": true
       },
-      "AccessTokenProviderName": {
-        "type": "string",
-        "enum": [
-          "github"
+      "Permissions_for_ApiPermissionResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ApiPermissionResponse"
+        },
+        "uniqueItems": true
+      },
+      "Rfd": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "link": {
+            "nullable": true,
+            "type": "string"
+          },
+          "rfd_number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
+          }
+        },
+        "required": [
+          "created_at",
+          "id",
+          "rfd_number",
+          "updated_at",
+          "visibility"
         ]
       },
-      "JwtProviderName": {
+      "RfdVisibility": {
+        "type": "object",
+        "properties": {
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
+          }
+        },
+        "required": [
+          "visibility"
+        ]
+      },
+      "SearchResultHit": {
+        "type": "object",
+        "properties": {
+          "anchor": {
+            "nullable": true,
+            "type": "string"
+          },
+          "content": {
+            "type": "string"
+          },
+          "formatted": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FormattedSearchResultHit"
+              }
+            ]
+          },
+          "hierarchy": {
+            "type": "array",
+            "items": {
+              "nullable": true,
+              "type": "string"
+            },
+            "minItems": 6,
+            "maxItems": 6
+          },
+          "hierarchy_radio": {
+            "type": "array",
+            "items": {
+              "nullable": true,
+              "type": "string"
+            },
+            "minItems": 6,
+            "maxItems": 6
+          },
+          "object_id": {
+            "type": "string"
+          },
+          "rfd_number": {
+            "type": "integer",
+            "format": "uint64",
+            "minimum": 0
+          },
+          "url": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "content",
+          "hierarchy",
+          "hierarchy_radio",
+          "object_id",
+          "rfd_number"
+        ]
+      },
+      "SearchResults": {
+        "type": "object",
+        "properties": {
+          "hits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SearchResultHit"
+            }
+          },
+          "limit": {
+            "nullable": true,
+            "type": "integer",
+            "format": "uint",
+            "minimum": 0
+          },
+          "offset": {
+            "nullable": true,
+            "type": "integer",
+            "format": "uint",
+            "minimum": 0
+          },
+          "query": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "hits",
+          "query"
+        ]
+      },
+      "SecretString": {
+        "type": "string"
+      },
+      "Visibility": {
         "type": "string",
         "enum": [
-          "google"
+          "public",
+          "private"
         ]
       }
+    },
+    "responses": {
+      "Error": {
+        "description": "Error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
     }
-  }
+  },
+  "tags": [
+    {
+      "name": "hidden",
+      "description": "Internal endpoints"
+    }
+  ]
 }

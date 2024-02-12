@@ -1,6 +1,6 @@
 [package]
 name = "rfd-cli"
-version = "0.1.0"
+version = "0.4.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -11,11 +11,20 @@ chrono = { workspace = true }
 clap = { workspace = true }
 config = { workspace = true }
 dirs = { workspace = true }
+itertools = { workspace = true }
+jsonwebtoken = { workspace = true }
 oauth2 = { workspace = true }
+owo-colors = { workspace = true }
+progenitor-client = { workspace = true }
 reqwest = { workspace = true }
 rfd-sdk = { path = "../rfd-sdk" }
 serde = { workspace = true }
 serde_json = { workspace = true }
+tabwriter = { workspace = true }
+textwrap = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 toml = { workspace = true }
-uuid = { workspace = true, features = ["serde"] }
+uuid = { workspace = true, features = ["serde", "v4"] }
+
+[package.metadata.dist]
+targets = ["x86_64-unknown-linux-gnu", "aarch64-apple-darwin", "x86_64-apple-darwin"]

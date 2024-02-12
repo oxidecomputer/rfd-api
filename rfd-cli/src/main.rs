@@ -1,18 +1,26 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #![allow(unused)]
 
 use anyhow::{anyhow, Result};
-use clap::{Arg, ArgAction, Command, CommandFactory, FromArgMatches};
+use clap::{value_parser, Arg, ArgAction, Command, CommandFactory, FromArgMatches, ValueEnum};
 use generated::cli::*;
+use printer::{Printer, RfdJsonPrinter, RfdTabPrinter};
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
+use rfd_sdk::types::MappingRules;
 use rfd_sdk::Client;
+use serde::{Deserialize, Serialize};
+use std::fmt::Display;
 use std::time::Duration;
 use std::{collections::HashMap, error::Error};
 use store::CliConfig;
 
-mod auth;
 mod cmd;
 mod err;
 mod generated;
+mod printer;
 mod store;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
@@ -21,10 +29,28 @@ pub enum VerbosityLevel {
     All,
 }
 
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Clone, Serialize, Deserialize)]
+pub enum FormatStyle {
+    #[value(name = "json")]
+    Json,
+    #[value(name = "tab")]
+    Tab,
+}
+
+impl Display for FormatStyle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Json => write!(f, "json"),
+            Self::Tab => write!(f, "tab"),
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct Context {
     config: CliConfig,
     client: Option<Client>,
+    printer: Option<Printer>,
     verbosity: VerbosityLevel,
 }
 
@@ -35,30 +61,43 @@ impl Context {
         Ok(Self {
             config,
             client: None,
+            printer: None,
             verbosity: VerbosityLevel::None,
         })
     }
 
+    pub fn new_client(&self, token: Option<&str>) -> Result<Client> {
+        let mut default_headers = HeaderMap::new();
+
+        if let Some(token) = token {
+            let mut auth_header = HeaderValue::from_str(&format!("Bearer {}", token))?;
+            auth_header.set_sensitive(true);
+            default_headers.insert(AUTHORIZATION, auth_header);
+        }
+
+        let http_client = reqwest::Client::builder()
+            .default_headers(default_headers)
+            .connect_timeout(Duration::from_secs(5))
+            .timeout(Duration::from_secs(10))
+            .build()?;
+
+        Ok(Client::new_with_client(self.config.host()?, http_client))
+    }
+
     pub fn client(&mut self) -> Result<&Client> {
         if self.client.is_none() {
-            let mut auth_header =
-                HeaderValue::from_str(&format!("Bearer {}", self.config.token()?))?;
-            auth_header.set_sensitive(true);
-
-            let mut default_headers = HeaderMap::new();
-            default_headers.insert(AUTHORIZATION, auth_header);
-
-            let http_client = reqwest::Client::builder()
-                .default_headers(default_headers)
-                .connect_timeout(Duration::from_secs(5))
-                .timeout(Duration::from_secs(10))
-                .build()?;
-            self.client = Some(Client::new_with_client(self.config.host()?, http_client));
+            self.client = Some(Self::new_client(self, self.config.token().ok())?);
         }
 
         self.client
             .as_ref()
             .ok_or_else(|| anyhow!("Failed to construct client"))
+    }
+
+    pub fn printer(&self) -> Result<&Printer> {
+        self.printer
+            .as_ref()
+            .ok_or_else(|| anyhow!("No printer configured"))
     }
 }
 
@@ -89,23 +128,62 @@ impl<'a> Tree<'a> {
 
 fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
     match cmd {
-        CliCommand::CreateApiUser => Some("user create"),
-        CliCommand::CreateApiUserToken => Some("user token create"),
-        CliCommand::DeleteApiUserToken => Some("user token delete"),
-        CliCommand::GetApiUser => Some("user get"),
-        CliCommand::GetApiUserToken => Some("user token get"),
-        CliCommand::GetRfd => Some("rfd"),
+        // RFD commands
+        CliCommand::GetRfd => Some("view"),
+        CliCommand::GetRfds => Some("list"),
+        CliCommand::SearchRfds => Some("search"),
+
+        CliCommand::UpdateRfdVisibility => Some("edit visibility"),
+
+        // User commands
+        CliCommand::CreateApiUser => Some("sys user create"),
+        CliCommand::CreateApiUserToken => Some("sys user token create"),
+        CliCommand::DeleteApiUserToken => Some("sys user token delete"),
+        CliCommand::GetApiUser => Some("sys user get"),
+        CliCommand::GetApiUserToken => Some("sys user token get"),
+        CliCommand::ListApiUserTokens => Some("sys user token list"),
+        CliCommand::UpdateApiUser => Some("sys user update"),
         CliCommand::GetSelf => Some("self"),
-        CliCommand::ListApiUserTokens => Some("user token list"),
-        CliCommand::UpdateApiUser => Some("user update"),
+
+        // Link commands are handled separately
+        CliCommand::CreateLinkToken => None,
+        CliCommand::LinkProvider => None,
+
+        // Group commands
+        CliCommand::GetGroups => Some("sys group list"),
+        CliCommand::CreateGroup => Some("sys group create"),
+        CliCommand::UpdateGroup => Some("sys group update"),
+        CliCommand::DeleteGroup => Some("sys group delete"),
+
+        // User admin commands
+        CliCommand::AddApiUserToGroup => Some("sys group membership add"),
+        CliCommand::RemoveApiUserFromGroup => Some("sys group membership remove"),
+
+        // Mapper commands
+        CliCommand::GetMappers => Some("sys mapper list"),
+        CliCommand::CreateMapper => Some("sys mapper create"),
+        CliCommand::DeleteMapper => Some("sys mapper delete"),
+
+        // OAuth client commands
+        CliCommand::ListOauthClients => Some("sys oauth list"),
+        CliCommand::CreateOauthClient => Some("sys oauth create"),
+        CliCommand::GetOauthClient => Some("sys oauth get"),
+        CliCommand::CreateOauthClientRedirectUri => Some("sys oauth redirect create"),
+        CliCommand::DeleteOauthClientRedirectUri => Some("sys oauth redirect delete"),
+        CliCommand::CreateOauthClientSecret => Some("sys oauth secret create"),
+        CliCommand::DeleteOauthClientSecret => Some("sys oauth secret delete"),
 
         // Authentication is handled separately
-        CliCommand::AccessTokenLogin => None,
-        CliCommand::JwtLogin => None,
         CliCommand::ExchangeDeviceToken => None,
         CliCommand::GetDeviceProvider => None,
 
-        CliCommand::GithubWebhook => todo!(),
+        // Unsupported commands
+        CliCommand::AuthzCodeRedirect => None,
+        CliCommand::AuthzCodeCallback => None,
+        CliCommand::AuthzCodeExchange => None,
+        CliCommand::GithubWebhook => None,
+        CliCommand::OpenidConfiguration => None,
+        CliCommand::JwksJson => None,
     }
 }
 
@@ -140,16 +218,29 @@ async fn main() -> Result<(), Box<dyn Error>> {
     }
 
     let mut cmd = root.cmd("rfd");
-    cmd = cmd.bin_name("rfd").arg(
-        Arg::new("debug")
-            .short('d')
-            .help("Enable more verbose errors")
-            .global(true)
-            .action(ArgAction::SetTrue),
-    );
+    cmd = cmd
+        .bin_name("rfd")
+        .arg(
+            Arg::new("debug")
+                .long("debug")
+                .short('d')
+                .help("Enable more verbose errors")
+                .global(true)
+                .action(ArgAction::SetTrue),
+        )
+        .arg(
+            Arg::new("format")
+                .long("format")
+                .short('f')
+                .help("Specify the output format to display results in")
+                .global(true)
+                .value_parser(value_parser!(FormatStyle))
+                .action(ArgAction::Set),
+        );
 
+    cmd = cmd.subcommand(cmd::auth::Auth::command());
     cmd = cmd.subcommand(cmd::config::ConfigCmd::command());
-    cmd = cmd.subcommand(auth::Login::command());
+    cmd = cmd.subcommand(cmd::shortcut::ShortcutCmd::command());
 
     let mut ctx = Context::new()?;
 
@@ -159,18 +250,34 @@ async fn main() -> Result<(), Box<dyn Error>> {
         ctx.verbosity = VerbosityLevel::All;
     }
 
+    let format = matches
+        .try_get_one::<FormatStyle>("format")
+        .unwrap()
+        .cloned()
+        .unwrap_or_else(|| ctx.config.format_style());
+    ctx.printer = Some(match format {
+        FormatStyle::Json => Printer::Json(RfdJsonPrinter),
+        FormatStyle::Tab => Printer::Tab(RfdTabPrinter::default()),
+    });
+
     let mut node = &root;
     let mut sm = &matches;
 
     match matches.subcommand() {
+        Some(("auth", sub_matches)) => {
+            cmd::auth::Auth::from_arg_matches(sub_matches)
+                .unwrap()
+                .run(&mut ctx)
+                .await?;
+        }
         Some(("config", sub_matches)) => {
             cmd::config::ConfigCmd::from_arg_matches(sub_matches)
                 .unwrap()
                 .run(&mut ctx)
                 .await?;
         }
-        Some(("login", sub_matches)) => {
-            let _ = auth::Login::from_arg_matches(sub_matches)
+        Some(("shortcut", sub_matches)) => {
+            cmd::shortcut::ShortcutCmd::from_arg_matches(sub_matches)
                 .unwrap()
                 .run(&mut ctx)
                 .await?;
@@ -181,7 +288,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 sm = sub_matches;
             }
 
-            let cli = Cli::new_with_override(ctx.client()?.clone(), ());
+            let cli = Cli::new_with_override(ctx.client()?.clone(), (), ctx.printer()?.clone());
             cli.execute(node.cmd.unwrap(), sm).await;
         }
     };

@@ -9,7 +9,11 @@ newline-converter = { workspace = true }
 progenitor = { workspace = true }
 regex = { workspace = true }
 rustfmt-wrapper = { workspace = true }
+semver = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sha2 = { workspace = true }
 similar = { workspace = true }
+
+[package.metadata.dist]
+dist = false

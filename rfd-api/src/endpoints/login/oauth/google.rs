@@ -1,14 +1,27 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use std::fmt;
 
-use serde::{Deserialize, Serialize};
+use hyper::body::Bytes;
+use reqwest::Client;
+use secrecy::SecretString;
+use serde::Deserialize;
 
 use crate::endpoints::login::{ExternalUserId, UserInfo, UserInfoError};
 
-use super::{ExtractUserInfo, OAuthProvider, OAuthProviderName};
+use super::{
+    ClientType, ExtractUserInfo, OAuthPrivateCredentials, OAuthProvider, OAuthProviderName,
+    OAuthPublicCredentials,
+};
 
 pub struct GoogleOAuthProvider {
-    public: GooglePublicProvider,
-    private: Option<GooglePrivateProvider>,
+    device_public: OAuthPublicCredentials,
+    device_private: Option<OAuthPrivateCredentials>,
+    web_public: OAuthPublicCredentials,
+    web_private: Option<OAuthPrivateCredentials>,
+    client: Client,
 }
 
 impl fmt::Debug for GoogleOAuthProvider {
@@ -17,20 +30,27 @@ impl fmt::Debug for GoogleOAuthProvider {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct GooglePublicProvider {
-    client_id: String,
-}
-
-pub struct GooglePrivateProvider {
-    client_secret: String,
-}
-
 impl GoogleOAuthProvider {
-    pub fn new(client_id: String, client_secret: String) -> Self {
+    pub fn new(
+        device_client_id: String,
+        device_client_secret: SecretString,
+        web_client_id: String,
+        web_client_secret: SecretString,
+    ) -> Self {
         Self {
-            public: GooglePublicProvider { client_id },
-            private: Some(GooglePrivateProvider { client_secret }),
+            device_public: OAuthPublicCredentials {
+                client_id: device_client_id,
+            },
+            device_private: Some(OAuthPrivateCredentials {
+                client_secret: device_client_secret,
+            }),
+            web_public: OAuthPublicCredentials {
+                client_id: web_client_id,
+            },
+            web_private: Some(OAuthPrivateCredentials {
+                client_secret: web_client_secret,
+            }),
+            client: Client::new(),
         }
     }
 }
@@ -43,8 +63,10 @@ struct GoogleUserInfo {
 }
 
 impl ExtractUserInfo for GoogleOAuthProvider {
-    fn extract_user_info(&self, data: &[u8]) -> Result<UserInfo, UserInfoError> {
-        let remote_info: GoogleUserInfo = serde_json::from_slice(data)?;
+    // There should always be as many entries in the data list as there are endpoints. This should
+    // be changed in the future to be a static check
+    fn extract_user_info(&self, data: &[Bytes]) -> Result<UserInfo, UserInfoError> {
+        let remote_info: GoogleUserInfo = serde_json::from_slice(&data[0])?;
         let verified_emails = if remote_info.email_verified {
             vec![remote_info.email]
         } else {
@@ -54,6 +76,7 @@ impl ExtractUserInfo for GoogleOAuthProvider {
         Ok(UserInfo {
             external_id: ExternalUserId::Google(remote_info.sub),
             verified_emails,
+            github_username: None,
         })
     }
 }
@@ -64,19 +87,35 @@ impl OAuthProvider for GoogleOAuthProvider {
     }
 
     fn scopes(&self) -> Vec<&str> {
-        vec!["email"]
+        vec!["openid", "email"]
     }
 
-    fn client_id(&self) -> &str {
-        &self.public.client_id
+    fn client(&self) -> &reqwest::Client {
+        &self.client
     }
 
-    fn client_secret(&mut self) -> Option<String> {
-        self.private.take().map(|private| private.client_secret)
+    fn client_id(&self, client_type: &ClientType) -> &str {
+        match client_type {
+            ClientType::Device => &self.device_public.client_id,
+            ClientType::Web { .. } => &self.web_public.client_id,
+        }
     }
 
-    fn user_info_endpoint(&self) -> &str {
-        "https://openidconnect.googleapis.com/v1/userinfo"
+    fn client_secret(&self, client_type: &ClientType) -> Option<&SecretString> {
+        match client_type {
+            ClientType::Device => self
+                .device_private
+                .as_ref()
+                .map(|private| &private.client_secret),
+            ClientType::Web { .. } => self
+                .web_private
+                .as_ref()
+                .map(|private| &private.client_secret),
+        }
+    }
+
+    fn user_info_endpoints(&self) -> Vec<&str> {
+        vec!["https://openidconnect.googleapis.com/v1/userinfo"]
     }
 
     fn device_code_endpoint(&self) -> &str {
@@ -84,7 +123,7 @@ impl OAuthProvider for GoogleOAuthProvider {
     }
 
     fn auth_url_endpoint(&self) -> &str {
-        "https://accounts.google.com/o/oauth2/auth"
+        "https://accounts.google.com/o/oauth2/v2/auth"
     }
 
     fn token_exchange_content_type(&self) -> &str {
@@ -93,5 +132,13 @@ impl OAuthProvider for GoogleOAuthProvider {
 
     fn token_exchange_endpoint(&self) -> &str {
         "https://oauth2.googleapis.com/token"
+    }
+
+    fn token_revocation_endpoint(&self) -> Option<&str> {
+        Some("https://oauth2.googleapis.com/revoke")
+    }
+
+    fn supports_pkce(&self) -> bool {
+        true
     }
 }

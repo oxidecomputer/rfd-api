@@ -1,0 +1,3 @@
+CREATE TYPE RFD_VISIBILITY as ENUM('public', 'private');
+
+ALTER TABLE rfd ADD COLUMN visibility RFD_VISIBILITY NOT NULL DEFAULT 'private';

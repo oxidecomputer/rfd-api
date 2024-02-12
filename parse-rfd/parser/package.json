@@ -4,7 +4,7 @@
   },
   "dependencies": {
     "@asciidoctor/core": "^2.2.6",
-    "@vercel/ncc": "^0.36.0",
+    "@vercel/ncc": "^0.38.0",
     "html-to-text": "^9.0.2"
   }
 }

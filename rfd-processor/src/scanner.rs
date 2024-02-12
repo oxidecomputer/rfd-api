@@ -1,8 +1,13 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+use diesel::result::{DatabaseErrorKind, Error as DieselError};
 use rfd_model::{
     storage::{JobStore, StoreError},
     NewJob,
 };
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 use thiserror::Error;
 use tokio::time::interval;
 
@@ -20,19 +25,40 @@ pub enum ScannerError {
 }
 
 pub async fn scanner(ctx: Arc<Context>) -> Result<(), ScannerError> {
-    let mut interval = interval(Duration::from_secs(1));
+    let mut interval = interval(ctx.scanner.interval);
     interval.tick().await;
 
     loop {
-        let updates = ctx
-            .github
-            .repository
-            .get_rfd_sync_updates(&ctx.github.client)
-            .await?;
+        if ctx.scanner.enabled {
+            let updates = ctx
+                .github
+                .repository
+                .get_rfd_sync_updates(&ctx.github.client)
+                .await?;
 
-        for update in updates {
-            JobStore::upsert(&ctx.db.storage, update.into()).await?;
+            for update in updates {
+                match JobStore::upsert(&ctx.db.storage, update.clone().into()).await {
+                    Ok(job) => tracing::trace!(?job.id, "Added job to the queue"),
+                    Err(err) => {
+                        match err {
+                            StoreError::Db(DieselError::DatabaseError(
+                                DatabaseErrorKind::UniqueViolation,
+                                _,
+                            )) => {
+                                // Nothing to do here, we expect uniqueness conflicts. It is expected
+                                // that the scanner picks ups redundant jobs for RFDs that have not
+                                // changed since the last scan
+                            }
+                            err => {
+                                tracing::warn!(?err, ?update, "Failed to add job")
+                            }
+                        }
+                    }
+                }
+            }
         }
+
+        interval.tick().await;
     }
 }
 

@@ -1,7 +1,11 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use dropshot::{ApiDescription, ConfigDropshot, EndpointTagPolicy, HttpServerStarter, TagConfig};
 use slog::Drain;
-use slog_tracing_bridge::BridgeDrain;
 use std::{error::Error, net::SocketAddr};
+use tracing_slog::TracingSlogDrain;
 
 use crate::{
     context::Context,
@@ -21,7 +25,7 @@ pub fn server(
 
     // Construct a shim to pipe dropshot logs into the global tracing logger
     let dropshot_logger = {
-        let level_drain = slog::LevelFilter(BridgeDrain, slog::Level::Debug).fuse();
+        let level_drain = slog::LevelFilter(TracingSlogDrain, slog::Level::Debug).fuse();
         let async_drain = slog_async::Async::new(level_drain).build().fuse();
         slog::Logger::root(async_drain, slog::o!())
     };

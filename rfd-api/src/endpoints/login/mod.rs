@@ -1,6 +1,9 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use async_trait::async_trait;
 use dropshot::HttpError;
-use hyper::{client::connect::Connect, Client};
 use schemars::JsonSchema;
 use serde::{
     de::{self, Visitor},
@@ -13,10 +16,6 @@ use crate::{
     util::response::{bad_request, internal_error},
 };
 
-use self::access_token::AccessTokenError;
-
-pub mod access_token;
-pub mod jwt;
 pub mod oauth;
 
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
@@ -27,8 +26,6 @@ pub enum LoginPermissions {
 
 #[derive(Debug, Error)]
 pub enum LoginError {
-    #[error(transparent)]
-    AccessTokenError(#[from] AccessTokenError),
     #[error("Requested token lifetime exceeds maximum configuration duration")]
     ExcessTokenExpiration,
     #[error("Failed to parse access token {0}")]
@@ -42,9 +39,6 @@ pub enum LoginError {
 impl From<LoginError> for HttpError {
     fn from(err: LoginError) -> Self {
         match err {
-            LoginError::AccessTokenError(_) => {
-                internal_error("Failed to construct internal client to authenticate")
-            }
             LoginError::ExcessTokenExpiration => {
                 let mut err =
                     bad_request("Requested expiration exceeds maximum allowed token duration");
@@ -147,25 +141,28 @@ impl<'de> Deserialize<'de> for ExternalUserId {
 pub struct UserInfo {
     pub external_id: ExternalUserId,
     pub verified_emails: Vec<String>,
+    pub github_username: Option<String>,
 }
 
 #[derive(Debug, Error)]
 pub enum UserInfoError {
-    #[error("Failed to create user info request {0}")]
-    Http(#[from] http::Error),
-    #[error("Failed to send user info request {0}")]
-    Hyper(#[from] hyper::Error),
     #[error("Failed to deserialize user info {0}")]
     Deserialize(#[from] serde_json::Error),
+    #[error("Failed to create user info request {0}")]
+    Http(#[from] http::Error),
+    #[error(transparent)]
+    Inner(#[from] reqwest::Error),
+    #[error("Failed to send user info request {0}")]
+    Hyper(#[from] hyper::Error),
+    #[error("User information is missing")]
+    MissingUserInfoData(String),
 }
 
 #[async_trait]
 pub trait UserInfoProvider {
-    async fn get_user_info<C>(
+    async fn get_user_info(
         &self,
-        client: &Client<C>,
+        client: &reqwest::Client,
         token: &str,
-    ) -> Result<UserInfo, UserInfoError>
-    where
-        C: Connect + Clone + Send + Sync + 'static;
+    ) -> Result<UserInfo, UserInfoError>;
 }

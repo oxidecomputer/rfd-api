@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use anyhow::{anyhow, Error};
 use rfd_sdk::{types::Error as ApiError, ProgenitorClientError};
 
@@ -37,7 +41,7 @@ pub fn format_api_err(ctx: &Context, client_err: ProgenitorClientError<ApiError>
         ProgenitorClientError::InvalidRequest(message) => {
             err = err.context("Invalid request").context(message);
         }
-        ProgenitorClientError::InvalidResponsePayload(inner) => {
+        ProgenitorClientError::InvalidResponsePayload(_, inner) => {
             err = err.context("Invalid response").context(inner);
         }
         ProgenitorClientError::UnexpectedResponse(response) => {
@@ -48,6 +52,12 @@ pub fn format_api_err(ctx: &Context, client_err: ProgenitorClientError<ApiError>
             if ctx.verbosity >= VerbosityLevel::All {
                 err = err.context(format!("Headers {:?}", response.headers()));
             }
+        }
+        ProgenitorClientError::ResponseBodyError(inner) => {
+            err = err.context("Invalid response").context(inner);
+        }
+        ProgenitorClientError::InvalidUpgrade(inner) => {
+            err = err.context("Invalid upgrade").context(inner)
         }
     }
 

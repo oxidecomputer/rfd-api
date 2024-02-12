@@ -1,10 +1,17 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use async_trait::async_trait;
 use google_storage1::api::Object;
 use tracing::instrument;
 
 use crate::{rfd::PersistedRfd, util::decode_base64};
 
-use super::{RfdUpdateAction, RfdUpdateActionContext, RfdUpdateActionErr, RfdUpdateActionResponse};
+use super::{
+    RfdUpdateAction, RfdUpdateActionContext, RfdUpdateActionErr, RfdUpdateActionResponse,
+    RfdUpdateMode,
+};
 
 #[derive(Debug)]
 pub struct CopyImagesToStorage;
@@ -16,6 +23,7 @@ impl RfdUpdateAction for CopyImagesToStorage {
         &self,
         ctx: &mut RfdUpdateActionContext,
         _new: &mut PersistedRfd,
+        mode: RfdUpdateMode,
     ) -> Result<RfdUpdateActionResponse, RfdUpdateActionErr> {
         let RfdUpdateActionContext { ctx, update, .. } = ctx;
 
@@ -46,17 +54,19 @@ impl RfdUpdateAction for CopyImagesToStorage {
             for location in &ctx.assets.locations {
                 tracing::info!(bucket = ?location.bucket, ?object_name, "Writing to location");
 
-                // TODO: Move implementation to a trait and abstract over different storage systems
-                if let Err(err) = ctx
-                    .assets
-                    .client
-                    .objects()
-                    .insert(Object::default(), &location.bucket)
-                    .name(&object_name)
-                    .upload(cursor.clone(), mime_type.clone())
-                    .await
-                {
-                    tracing::error!(?err, "Failed to upload static file to GCP");
+                if mode == RfdUpdateMode::Write {
+                    // TODO: Move implementation to a trait and abstract over different storage systems
+                    if let Err(err) = ctx
+                        .assets
+                        .client
+                        .objects()
+                        .insert(Object::default(), &location.bucket)
+                        .name(&object_name)
+                        .upload(cursor.clone(), mime_type.clone())
+                        .await
+                    {
+                        tracing::error!(?err, "Failed to upload static file to GCP");
+                    }
                 }
             }
         }

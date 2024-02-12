@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use std::borrow::Cow;
 
 use regex::Regex;
@@ -67,7 +71,7 @@ impl<'a> RfdMarkdown<'a> {
 
 impl<'a> RfdAttributes for RfdMarkdown<'a> {
     fn get_title(&self) -> Option<&str> {
-        let title_pattern = Regex::new(r"(?m)^[=# ]+(?:RFD ?)?(?:\d+ )?(.*)$").unwrap();
+        let title_pattern = Regex::new(r"(?m)^[=# ]+(?:RFD ?)?(?:\d+:? )?(.*)$").unwrap();
         let fallback_title_pattern = Regex::new(r"(?m)^# (.*)$").unwrap();
 
         if let Some(caps) = title_pattern.captures(&self.content) {
@@ -240,6 +244,20 @@ authors: nope"#;
     fn test_get_markdown_title() {
         let content = r#"things
 # RFD 43 Identity and Access Management (IAM)
+sdfsdf
+title: https://github.com/org/repo/pulls/1
+dsfsdf
+sdf
+authors: nope"#;
+        let rfd = RfdContent::new_markdown(content);
+        let expected = "Identity and Access Management (IAM)".to_string();
+        assert_eq!(expected, rfd.get_title().unwrap());
+    }
+
+    #[test]
+    fn test_get_markdown_title_colon() {
+        let content = r#"things
+# RFD 43: Identity and Access Management (IAM)
 sdfsdf
 title: https://github.com/org/repo/pulls/1
 dsfsdf

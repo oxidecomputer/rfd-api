@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use hmac::{Hmac, Mac};
 use md5::Md5;
 use meilisearch_sdk::{
@@ -34,7 +38,7 @@ impl RfdSearchIndex {
         index: impl Into<String>,
     ) -> Self {
         Self {
-            client: Client::new(host, api_key),
+            client: Client::new(host, Some(api_key)),
             index: index.into(),
         }
     }
@@ -45,6 +49,7 @@ impl RfdSearchIndex {
         &self,
         rfd_number: &RfdNumber,
         content: &str,
+        public: bool,
     ) -> Result<(), SearchError> {
         let index = self.client.index(&self.index);
 
@@ -74,7 +79,10 @@ impl RfdSearchIndex {
             }
         }
 
-        let parsed = Self::parse_document(rfd_number, content)?;
+        let mut parsed = Self::parse_document(rfd_number, content)?;
+        for doc in parsed.iter_mut() {
+            doc.public = public;
+        }
 
         tracing::info!(count = parsed.len(), "Parsed RFD into sections to index");
 
@@ -138,6 +146,7 @@ pub struct IndexDocument {
     pub hierarchy: HashMap<String, String>,
     #[serde(flatten)]
     pub hierarchy_radio: HashMap<String, String>,
+    pub public: bool,
 }
 
 impl IndexDocument {
@@ -183,6 +192,7 @@ impl IndexDocument {
             rfd_number: rfd_number.into(),
             hierarchy,
             hierarchy_radio,
+            public: false,
         }
     }
 }

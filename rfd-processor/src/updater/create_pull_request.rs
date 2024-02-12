@@ -1,9 +1,16 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use async_trait::async_trait;
 use tracing::instrument;
 
 use crate::rfd::PersistedRfd;
 
-use super::{RfdUpdateAction, RfdUpdateActionContext, RfdUpdateActionErr, RfdUpdateActionResponse};
+use super::{
+    RfdUpdateAction, RfdUpdateActionContext, RfdUpdateActionErr, RfdUpdateActionResponse,
+    RfdUpdateMode,
+};
 
 #[derive(Debug)]
 pub struct CreatePullRequest;
@@ -15,6 +22,7 @@ impl RfdUpdateAction for CreatePullRequest {
         &self,
         ctx: &mut RfdUpdateActionContext,
         new: &mut PersistedRfd,
+        mode: RfdUpdateMode,
     ) -> Result<RfdUpdateActionResponse, RfdUpdateActionErr> {
         let RfdUpdateActionContext {
             ctx,
@@ -34,38 +42,43 @@ impl RfdUpdateAction for CreatePullRequest {
         {
             tracing::info!("RFD is in the discussion state but there are no open pull requests, creating a new pull request");
 
-            let pull = ctx
-                .github
-                .client
-                .pulls()
-                .create(
-                    &update.location.owner,
-                    &update.location.repo,
-                    &octorust::types::PullsCreateRequest {
-                        title: new.name(),
-                        head: format!("{}:{}", ctx.github.repository.owner, update.location.branch),
-                        base: update.location.default_branch.to_string(),
-                        body: "Automatically opening the pull request since the document \
-                            is marked as being in discussion. If you wish to not have \
-                            a pull request open, change the state of your document and \
-                            close this pull request."
-                            .to_string(),
-                        draft: Some(false),
-                        maintainer_can_modify: Some(true),
-                        issue: 0,
-                    },
-                )
-                .await
-                .map_err(|err| RfdUpdateActionErr::Continue(Box::new(err)))?
-                .body;
+            if mode == RfdUpdateMode::Write {
+                let pull = ctx
+                    .github
+                    .client
+                    .pulls()
+                    .create(
+                        &update.location.owner,
+                        &update.location.repo,
+                        &octorust::types::PullsCreateRequest {
+                            title: new.name(),
+                            head: format!(
+                                "{}:{}",
+                                ctx.github.repository.owner, update.location.branch
+                            ),
+                            base: update.location.default_branch.to_string(),
+                            body: "Automatically opening the pull request since the document \
+                                is marked as being in discussion. If you wish to not have \
+                                a pull request open, change the state of your document and \
+                                close this pull request."
+                                .to_string(),
+                            draft: Some(false),
+                            maintainer_can_modify: Some(true),
+                            issue: 0,
+                        },
+                    )
+                    .await
+                    .map_err(|err| RfdUpdateActionErr::Continue(Box::new(err)))?
+                    .body;
 
-            tracing::info!(
-                old_state = ?previous.map(|rfd| &rfd.revision.state), new_state = new.revision.state, new_pr = pull.number,
-                "Opened new pull request for discussion"
-            );
+                tracing::info!(
+                    old_state = ?previous.map(|rfd| &rfd.revision.state), new_state = new.revision.state, new_pr = pull.number,
+                    "Opened new pull request for discussion"
+                );
 
-            // Add the newly created pull request into the context for future actions
-            pull_requests.push(pull.into());
+                // Add the newly created pull request into the context for future actions
+                pull_requests.push(pull.into());
+            }
         } else {
             tracing::debug!("RFD does not require a pull request or one already exists");
         }

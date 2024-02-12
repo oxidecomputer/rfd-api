@@ -1,7 +1,13 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use base64::{prelude::BASE64_STANDARD, DecodeError, Engine};
+use google_drive3::{hyper, hyper_rustls, DriveHub};
 use std::path::Path;
 use thiserror::Error;
 use tokio::{fs, io::AsyncWriteExt};
+use yup_oauth2::{hyper::client::HttpConnector, hyper_rustls::HttpsConnector};
 
 #[derive(Debug, Error)]
 pub enum FileIoError {
@@ -58,6 +64,59 @@ impl SliceExt for Vec<u8> {
             vec![]
         }
     }
+}
+
+#[derive(Debug, Error)]
+pub enum GDriveError {
+    #[error("Failed to construct GDrive error: {0}")]
+    RemoteKeyAuthMissing(#[source] std::io::Error),
+}
+
+pub async fn gdrive_client() -> Result<DriveHub<HttpsConnector<HttpConnector>>, GDriveError> {
+    let opts = yup_oauth2::ApplicationDefaultCredentialsFlowOpts::default();
+
+    tracing::trace!(?opts, "Request GCP credentials");
+
+    let gcp_credentials =
+        yup_oauth2::ApplicationDefaultCredentialsAuthenticator::builder(opts).await;
+
+    tracing::trace!("Retrieved GCP credentials");
+
+    let gcp_auth = match gcp_credentials {
+        yup_oauth2::authenticator::ApplicationDefaultCredentialsTypes::ServiceAccount(auth) => {
+            tracing::debug!("Create GCP service account based credentials");
+
+            auth.build().await.map_err(|err| {
+                tracing::error!(
+                    ?err,
+                    "Failed to construct Google Drive credentials from service account"
+                );
+                GDriveError::RemoteKeyAuthMissing(err)
+            })?
+        }
+        yup_oauth2::authenticator::ApplicationDefaultCredentialsTypes::InstanceMetadata(auth) => {
+            tracing::debug!("Create GCP instance based credentials");
+
+            auth.build().await.map_err(|err| {
+                tracing::error!(
+                    ?err,
+                    "Failed to construct Google Drive credentials from instance metadata"
+                );
+                GDriveError::RemoteKeyAuthMissing(err)
+            })?
+        }
+    };
+
+    Ok(DriveHub::new(
+        hyper::Client::builder().build(
+            hyper_rustls::HttpsConnectorBuilder::new()
+                .with_native_roots()
+                .https_only()
+                .enable_http2()
+                .build(),
+        ),
+        gcp_auth,
+    ))
 }
 
 #[cfg(test)]

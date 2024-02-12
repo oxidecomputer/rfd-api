@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 #![allow(dead_code, unused_imports)]
 
 extern crate proc_macro;
@@ -14,7 +18,7 @@ use syn::{
     parse::{Parse, ParseStream, Parser},
     parse_macro_input,
     punctuated::Punctuated,
-    AttributeArgs, Block, DeriveInput, Ident, ItemFn, LitStr, Result, Token, Type,
+    Block, DeriveInput, Ident, ItemFn, LitStr, Result, Token, Type,
 };
 
 #[proc_macro_attribute]
@@ -39,7 +43,7 @@ pub fn trace_request(_attr: TokenStream, input: TokenStream) -> TokenStream {
             let method = req.method();
 
             async {
-                tracing::info!("Handling request");
+                tracing::info!("Request handler start");
 
                 let start = std::time::Instant::now();
                 let result = async #body_block.await;
@@ -52,7 +56,7 @@ pub fn trace_request(_attr: TokenStream, input: TokenStream) -> TokenStream {
                     Ok(_) => tracing::info!(
                         ?status,
                         ?duration,
-                        "Request complete"
+                        "Request handler complete"
                     ),
                     Err(err) => {
                         tracing::info!(
@@ -60,7 +64,7 @@ pub fn trace_request(_attr: TokenStream, input: TokenStream) -> TokenStream {
                             ?duration,
                             external_message = ?err.external_message,
                             internal_message = ?err.internal_message,
-                            "Request complete"
+                            "Request handler complete"
                         )
                     }
                 };

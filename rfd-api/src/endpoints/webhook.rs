@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use dropshot::{
@@ -18,6 +22,7 @@ use crate::{context::ApiContext, error::ApiError};
 #[endpoint {
     method = POST,
     path = "/github",
+    tags = ["hidden"],
 }]
 #[instrument(
     skip(rqctx, body),
@@ -34,6 +39,8 @@ pub async fn github_webhook(
     EventType(event): EventType,
     body: HmacVerifiedBody<GitHubWebhookVerification, GitHubCommitPayload>,
 ) -> Result<HttpResponseAccepted<()>, HttpError> {
+    // The HmacVerifiedBody extractor ensures that we have verified the signature of the incoming
+    // request body
     let new_jobs = body.into_inner()?.create_jobs(delivery_id);
 
     for new_job in new_jobs {
@@ -50,9 +57,10 @@ pub async fn github_webhook(
 
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
 pub struct GitHubCommitPayload {
+    #[serde(rename = "ref")]
     pub ref_: String,
     pub commits: Vec<GitHubCommit>,
-    pub head_commit: GitHubCommit,
+    pub head_commit: Option<GitHubCommit>,
     pub repository: GitHubRepository,
     pub sender: GitHubSender,
     pub installation: GitHubInstallation,
@@ -62,14 +70,20 @@ impl GitHubCommitPayload {
     pub fn create_jobs(&self, delivery_id: Uuid) -> Vec<NewJob> {
         self.affected_rfds()
             .into_iter()
-            .map(|rfd| NewJob {
-                owner: self.repository.owner.login.clone(),
-                repository: self.repository.name.clone(),
-                branch: self.branch().to_string(),
-                sha: self.head_commit.id.clone(),
-                rfd,
-                webhook_delivery_id: Some(delivery_id),
-                committed_at: self.head_commit.timestamp.clone(),
+            .filter_map(|rfd| {
+                if let Some(head_commit) = &self.head_commit {
+                    Some(NewJob {
+                        owner: self.repository.owner.login.clone(),
+                        repository: self.repository.name.clone(),
+                        branch: self.branch().to_string(),
+                        sha: head_commit.id.clone(),
+                        rfd,
+                        webhook_delivery_id: Some(delivery_id),
+                        committed_at: head_commit.timestamp.clone(),
+                    })
+                } else {
+                    None
+                }
             })
             .collect()
     }

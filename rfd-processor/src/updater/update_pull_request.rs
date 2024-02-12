@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use async_trait::async_trait;
 use std::cmp::Ordering;
 use tap::TapFallible;
@@ -5,7 +9,10 @@ use tracing::instrument;
 
 use crate::rfd::PersistedRfd;
 
-use super::{RfdUpdateAction, RfdUpdateActionContext, RfdUpdateActionErr, RfdUpdateActionResponse};
+use super::{
+    RfdUpdateAction, RfdUpdateActionContext, RfdUpdateActionErr, RfdUpdateActionResponse,
+    RfdUpdateMode,
+};
 
 #[derive(Debug)]
 pub struct UpdatePullRequest;
@@ -17,6 +24,7 @@ impl RfdUpdateAction for UpdatePullRequest {
         &self,
         ctx: &mut RfdUpdateActionContext,
         new: &mut PersistedRfd,
+        mode: RfdUpdateMode,
     ) -> Result<RfdUpdateActionResponse, RfdUpdateActionErr> {
         let RfdUpdateActionContext {
             ctx,
@@ -56,32 +64,34 @@ impl RfdUpdateAction for UpdatePullRequest {
                             .await
                             .map_err(|err| RfdUpdateActionErr::Continue(Box::new(err)))?;
 
-                        ctx.github
-                            .client
-                            .pulls()
-                            .update(
-                                &update.location.owner,
-                                &update.location.repo,
-                                pull_request.number,
-                                &octorust::types::PullsUpdateRequest {
-                                    title: rfd_name.to_string(),
-                                    body: pull_content.body.body,
-                                    base: "".to_string(),
-                                    maintainer_can_modify: None,
-                                    state: None,
-                                },
-                            )
-                            .await
-                            .tap_err(|err| {
-                                tracing::error!(
-                                    ?err,
-                                    current_title = pull_request.title,
-                                    new_title = rfd_name,
-                                    pull_request = pull_request.number,
-                                    "Failed to update title of pull request"
+                        if mode == RfdUpdateMode::Write {
+                            ctx.github
+                                .client
+                                .pulls()
+                                .update(
+                                    &update.location.owner,
+                                    &update.location.repo,
+                                    pull_request.number,
+                                    &octorust::types::PullsUpdateRequest {
+                                        title: rfd_name.to_string(),
+                                        body: pull_content.body.body,
+                                        base: "".to_string(),
+                                        maintainer_can_modify: None,
+                                        state: None,
+                                    },
                                 )
-                            })
-                            .map_err(|err| RfdUpdateActionErr::Continue(Box::new(err)))?;
+                                .await
+                                .tap_err(|err| {
+                                    tracing::error!(
+                                        ?err,
+                                        current_title = pull_request.title,
+                                        new_title = rfd_name,
+                                        pull_request = pull_request.number,
+                                        "Failed to update title of pull request"
+                                    )
+                                })
+                                .map_err(|err| RfdUpdateActionErr::Continue(Box::new(err)))?;
+                        }
 
                         tracing::info!(new_title = ?rfd_name, "Updated title");
                     } else {
@@ -109,23 +119,27 @@ impl RfdUpdateAction for UpdatePullRequest {
                         tracing::info!("Ideation label is missing");
                     }
 
-                    // Only add a label if there is label missing.
-                    if !labels.is_empty() {
-                        ctx.github
-                            .client
-                            .issues()
-                            .add_labels(
-                                &update.location.owner,
-                                &update.location.repo,
-                                pull_request.number,
-                                &octorust::types::IssuesAddLabelsRequestOneOf::StringVector(labels),
-                            )
-                            .await
-                            .map_err(|err| RfdUpdateActionErr::Continue(Box::new(err)))?;
+                    if mode == RfdUpdateMode::Write {
+                        // Only add a label if there is label missing.
+                        if !labels.is_empty() {
+                            ctx.github
+                                .client
+                                .issues()
+                                .add_labels(
+                                    &update.location.owner,
+                                    &update.location.repo,
+                                    pull_request.number,
+                                    &octorust::types::IssuesAddLabelsRequestOneOf::StringVector(
+                                        labels,
+                                    ),
+                                )
+                                .await
+                                .map_err(|err| RfdUpdateActionErr::Continue(Box::new(err)))?;
 
-                        tracing::info!("Updated pull request labels");
-                    } else {
-                        tracing::debug!("Labels are valid. No changes needed");
+                            tracing::info!("Updated pull request labels");
+                        } else {
+                            tracing::debug!("Labels are valid. No changes needed");
+                        }
                     }
                 }
             }

@@ -1,10 +1,17 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use async_trait::async_trait;
 use std::cmp::Ordering;
 use tracing::instrument;
 
 use crate::rfd::PersistedRfd;
 
-use super::{RfdUpdateAction, RfdUpdateActionContext, RfdUpdateActionErr, RfdUpdateActionResponse};
+use super::{
+    RfdUpdateAction, RfdUpdateActionContext, RfdUpdateActionErr, RfdUpdateActionResponse,
+    RfdUpdateMode,
+};
 
 #[derive(Debug)]
 pub struct EnsureRfdWithPullRequestIsInValidState;
@@ -16,6 +23,7 @@ impl RfdUpdateAction for EnsureRfdWithPullRequestIsInValidState {
         &self,
         ctx: &mut RfdUpdateActionContext,
         new: &mut PersistedRfd,
+        _mode: RfdUpdateMode,
     ) -> Result<RfdUpdateActionResponse, RfdUpdateActionErr> {
         let RfdUpdateActionContext { pull_requests, .. } = ctx;
 

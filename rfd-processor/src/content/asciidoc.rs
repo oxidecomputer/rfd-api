@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use async_trait::async_trait;
 use octorust::Client;
 use regex::Regex;
@@ -162,7 +166,7 @@ impl<'a> RfdAsciidoc<'a> {
 
 impl<'a> RfdAttributes for RfdAsciidoc<'a> {
     fn get_title(&self) -> Option<&str> {
-        let title_pattern = Regex::new(r"(?m)^[=# ]+(?:RFD ?)?(?:\d+ )?(.*)$").unwrap();
+        let title_pattern = Regex::new(r"(?m)^[=# ]+(?:RFD ?)?(?:\d+:? )?(.*)$").unwrap();
         let fallback_title_pattern = Regex::new(r"(?m)^= (.*)$").unwrap();
 
         if let Some(caps) = title_pattern.captures(&self.content) {
@@ -202,7 +206,21 @@ impl<'a> RfdAttributes for RfdAsciidoc<'a> {
                 if first_line == "{authors}" {
                     self.attr("authors")
                 } else {
-                    Some(first_line)
+                    // Given that we are in a fallback case we need to be slightly picky on what
+                    // lines we allow. We require that the line at least include a *@*.* word to
+                    // try and filter out lines that are not actually author lines
+                    let author_fallback_pattern =
+                        Regex::new(r"^.*?([\S]+@[\S]+.[\S]+).*?$").unwrap();
+                    let fallback_matches = author_fallback_pattern.is_match(first_line);
+
+                    if fallback_matches {
+                        Some(first_line)
+                    } else {
+                        // If none of our attempts have found an author, we drop back to the
+                        // attribute lookup. Eventually all of this logic should be removed and only
+                        // the attribute version should be supported
+                        self.attr("authors")
+                    }
                 }
             })
         })
@@ -295,6 +313,26 @@ authors: nope"#;
 {authors}
 dsfsdf
 sdf"#;
+        let rfd = RfdContent::new_asciidoc(content);
+        let authors = rfd.get_authors().unwrap();
+        let expected = r#"firstname <email@company>"#.to_string();
+        assert_eq!(expected, authors);
+    }
+
+    #[test]
+    fn test_get_asciidoc_attribute_authors_without_marker() {
+        let content = r#":showtitle:
+:toc: left
+:numbered:
+:icons: font
+:state: published
+:revremark: State: {state} | {discussion}
+:authors: firstname <email@company>
+
+= RFD 123 Test Rfd
+
+dsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdf
+"#;
         let rfd = RfdContent::new_asciidoc(content);
         let authors = rfd.get_authors().unwrap();
         let expected = r#"firstname <email@company>"#.to_string();
@@ -478,10 +516,24 @@ sdf
 
     #[test]
     fn test_get_asciidoc_title_without_rfd_prefix() {
-        // Add a test to show what happens for rfd 31 where there is no "RFD" in
+        // Add a test to show what happens when there is no "RFD" in
         // the title.
         let content = r#"sdfsdf
 = Identity and Access Management (IAM)
+:title: https://github.com/org/repo/pulls/1
+dsfsdf
+sdf
+:title: nope"#;
+        let rfd = RfdContent::new_asciidoc(content);
+        let expected = "Identity and Access Management (IAM)".to_string();
+        assert_eq!(expected, rfd.get_title().unwrap());
+    }
+
+    #[test]
+    fn test_get_asciidoc_title_colon() {
+        // Add a test to show what happens when there is a colon following the digits
+        let content = r#"sdfsdf
+= RFD 123: Identity and Access Management (IAM)
 :title: https://github.com/org/repo/pulls/1
 dsfsdf
 sdf

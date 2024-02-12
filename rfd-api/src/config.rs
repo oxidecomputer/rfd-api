@@ -1,11 +1,18 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+use std::path::PathBuf;
+
 use config::{Config, ConfigError, Environment, File};
+use secrecy::SecretString;
 use serde::{
     de::{self, Visitor},
     Deserialize, Deserializer,
 };
 use thiserror::Error;
 
-use crate::{permissions::ApiPermission, server::SpecConfig};
+use crate::server::SpecConfig;
 
 #[derive(Debug, Error)]
 pub enum AppConfigError {
@@ -16,13 +23,16 @@ pub enum AppConfigError {
 #[derive(Debug, Deserialize)]
 pub struct AppConfig {
     pub log_format: ServerLogFormat,
+    pub log_directory: Option<PathBuf>,
+    pub initial_mappers: Option<String>,
     pub public_url: String,
     pub server_port: u16,
     pub database_url: String,
-    pub permissions: PermissionsConfig,
+    pub keys: Vec<AsymmetricKey>,
     pub jwt: JwtConfig,
     pub spec: Option<SpecConfig>,
     pub authn: AuthnProviders,
+    pub search: SearchConfig,
 }
 
 #[derive(Debug)]
@@ -62,24 +72,17 @@ impl<'de> Deserialize<'de> for ServerLogFormat {
 }
 
 #[derive(Debug, Default, Deserialize)]
-pub struct PermissionsConfig {
-    pub default: Vec<ApiPermission>,
-}
-
-#[derive(Debug, Default, Deserialize)]
 pub struct JwtConfig {
     pub default_expiration: i64,
-    pub max_expiration: i64,
-    pub keys: Vec<JwtKey>,
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(tag = "kind", rename_all = "lowercase")]
-pub enum JwtKey {
+pub enum AsymmetricKey {
     Local {
         kid: String,
-        #[serde(with = "serde_bytes")]
-        private: Vec<u8>,
+        // #[serde(with = "serde_bytes")]
+        private: String,
         public: String,
     },
     // Kms {
@@ -95,41 +98,65 @@ pub enum JwtKey {
     },
 }
 
+impl AsymmetricKey {
+    pub fn kid(&self) -> &str {
+        match self {
+            Self::Local { kid, .. } => kid,
+            Self::Ckms { kid, .. } => kid,
+        }
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct AuthnProviders {
-    pub jwt: JwtProviders,
     pub oauth: OAuthProviders,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct JwtProviders {
-    pub google: Option<GoogleJwtConfig>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct GoogleJwtConfig {
-    pub issuer: String,
-    pub well_known_uri: String,
-}
-
-#[derive(Debug, Deserialize)]
 pub struct OAuthProviders {
-    pub google: Option<GoogleOAuthConfig>,
+    pub github: Option<OAuthConfig>,
+    pub google: Option<OAuthConfig>,
 }
 
 #[derive(Debug, Deserialize)]
-pub struct GoogleOAuthConfig {
+pub struct OAuthConfig {
+    pub device: OAuthDeviceConfig,
+    pub web: OAuthWebConfig,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct OAuthDeviceConfig {
     pub client_id: String,
-    pub client_secret: String,
+    pub client_secret: SecretString,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct OAuthWebConfig {
+    pub client_id: String,
+    pub client_secret: SecretString,
+    pub redirect_uri: String,
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct SearchConfig {
+    pub host: String,
+    pub key: String,
+    pub index: String,
 }
 
 impl AppConfig {
-    pub fn new() -> Result<Self, ConfigError> {
-        let config = Config::builder()
-            .add_source(File::with_name("config.toml"))
-            .add_source(Environment::default())
-            .build()?;
+    pub fn new(config_sources: Option<Vec<String>>) -> Result<Self, ConfigError> {
+        let mut config = Config::builder()
+            .add_source(File::with_name("config.toml").required(false))
+            .add_source(File::with_name("rfd-api/config.toml").required(false));
 
-        config.try_deserialize()
+        for source in config_sources.unwrap_or_default() {
+            config = config.add_source(File::with_name(&source).required(false));
+        }
+
+        config
+            .add_source(Environment::default())
+            .build()?
+            .try_deserialize()
     }
 }

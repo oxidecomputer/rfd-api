@@ -1,3 +1,7 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use config::{Config, ConfigError, Environment, File};
 use serde::{
     de::{self, Visitor},
@@ -15,6 +19,8 @@ pub enum AppConfigError {
 pub struct AppConfig {
     pub log_format: ServerLogFormat,
     pub server_port: u16,
+    pub host_regex: String,
+    pub github_template: String,
 }
 
 #[derive(Debug)]

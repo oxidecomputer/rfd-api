@@ -1,6 +1,11 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 use async_trait::async_trait;
 use base64::{prelude::BASE64_STANDARD, DecodeError, Engine};
 use octorust::{repos::Repos, types::ContentFile, ClientError};
+use tracing::instrument;
 
 #[async_trait]
 pub trait ReposExt {
@@ -15,6 +20,7 @@ pub trait ReposExt {
 
 #[async_trait]
 impl ReposExt for Repos {
+    #[instrument(skip(self))]
     async fn get_content_blob(
         &self,
         owner: &str,
@@ -22,6 +28,7 @@ impl ReposExt for Repos {
         ref_: &str,
         file: &str,
     ) -> Result<ContentFile, ClientError> {
+        tracing::trace!("Fetching content from GitHub");
         let mut file = self.get_content_file(owner, repo, file, ref_).await?.body;
 
         // If the content is empty and the encoding is none then we likely hit a "too large" file case.

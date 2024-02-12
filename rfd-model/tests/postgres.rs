@@ -1,3 +1,9 @@
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+use std::collections::BTreeSet;
+
 use chrono::{Duration, Utc};
 use diesel::{
     migration::{Migration, MigrationSource},
@@ -8,10 +14,10 @@ use diesel::{
 use diesel_migrations::{embed_migrations, EmbeddedMigrations};
 use rfd_model::{
     storage::{
-        postgres::PostgresStore, ApiUserFilter, ApiUserStore, ApiUserTokenFilter,
-        ApiUserTokenStore, ListPagination,
+        postgres::PostgresStore, ApiKeyFilter, ApiKeyStore, ApiUserFilter, ApiUserStore,
+        ListPagination, RfdRevisionFilter, RfdRevisionStore,
     },
-    NewApiUser, NewApiUserToken,
+    NewApiKey, NewApiUser,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -24,12 +30,14 @@ fn leakable_dbs() -> Vec<String> {
     leaks.split(',').map(|s| s.to_string()).collect()
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize, JsonSchema, PartialOrd, Ord,
+)]
 enum TestPermission {
     CreateApiUser,
-    CreateApiUserToken(Uuid),
-    GetApiUserToken(Uuid),
-    DeleteApiUserToken(Uuid),
+    CreateApiKey(Uuid),
+    GetApiKey(Uuid),
+    DeleteApiKey(Uuid),
 }
 
 // A fresh test database that will be created and migrated for use in a test. At the end of the
@@ -123,7 +131,8 @@ async fn test_api_user() {
         &store,
         NewApiUser {
             id: api_user_id,
-            permissions: vec![TestPermission::CreateApiUserToken(api_user_id).into()].into(),
+            permissions: vec![TestPermission::CreateApiKey(api_user_id).into()].into(),
+            groups: BTreeSet::new(),
         },
     )
     .await
@@ -142,7 +151,8 @@ async fn test_api_user() {
         &store,
         NewApiUser {
             id: api_user_id,
-            permissions: vec![TestPermission::CreateApiUserToken(api_user_id).into()].into(),
+            permissions: vec![TestPermission::CreateApiKey(api_user_id).into()].into(),
+            groups: BTreeSet::new(),
         },
     )
     .await
@@ -156,11 +166,12 @@ async fn test_api_user() {
         NewApiUser {
             id: api_user_id,
             permissions: vec![
-                TestPermission::CreateApiUserToken(api_user_id).into(),
-                TestPermission::GetApiUserToken(api_user_id).into(),
-                TestPermission::DeleteApiUserToken(api_user_id).into(),
+                TestPermission::CreateApiKey(api_user_id).into(),
+                TestPermission::GetApiKey(api_user_id).into(),
+                TestPermission::DeleteApiKey(api_user_id).into(),
             ]
             .into(),
+            groups: BTreeSet::new(),
         },
     )
     .await
@@ -168,64 +179,67 @@ async fn test_api_user() {
 
     assert!(api_user
         .permissions
-        .can(&TestPermission::GetApiUserToken(api_user_id).into()));
+        .can(&TestPermission::GetApiKey(api_user_id).into()));
     assert!(api_user
         .permissions
-        .can(&TestPermission::DeleteApiUserToken(api_user_id).into()));
+        .can(&TestPermission::DeleteApiKey(api_user_id).into()));
 
     // 5. Create an API token for the user
-    let token = ApiUserTokenStore::upsert(
+    let token = ApiKeyStore::<TestPermission>::upsert(
         &store,
-        NewApiUserToken {
+        NewApiKey {
             id: Uuid::new_v4(),
             api_user_id: api_user.id,
-            token: format!("token-{}", Uuid::new_v4()),
-            permissions: vec![TestPermission::GetApiUserToken(api_user_id).into()].into(),
+            key_signature: format!("key-{}", Uuid::new_v4()),
+            permissions: Some(vec![TestPermission::GetApiKey(api_user_id).into()].into()),
             expires_at: Utc::now() + Duration::seconds(5 * 60),
         },
-        &api_user,
     )
     .await
     .unwrap();
 
     // 6. Create an API token with excess permissions for the user
-    let excess_token = ApiUserTokenStore::upsert(
+    let excess_token = ApiKeyStore::upsert(
         &store,
-        NewApiUserToken {
+        NewApiKey {
             id: Uuid::new_v4(),
             api_user_id: api_user.id,
-            token: format!("token-{}", Uuid::new_v4()),
-            permissions: vec![
-                TestPermission::CreateApiUser.into(),
-                TestPermission::GetApiUserToken(api_user_id).into(),
-            ]
-            .into(),
+            key_signature: format!("key-{}", Uuid::new_v4()),
+            permissions: Some(
+                vec![
+                    TestPermission::CreateApiUser.into(),
+                    TestPermission::GetApiKey(api_user_id).into(),
+                ]
+                .into(),
+            ),
             expires_at: Utc::now() + Duration::seconds(5 * 60),
         },
-        &api_user,
     )
     .await
     .unwrap();
 
-    assert!(!excess_token
+    assert!(excess_token
         .permissions
+        .as_ref()
+        .unwrap()
         .can(&TestPermission::CreateApiUser.into()));
 
     // 7. Create an API token with excess permissions for the user
-    let expired_token = ApiUserTokenStore::upsert(
+    let expired_token = ApiKeyStore::<TestPermission>::upsert(
         &store,
-        NewApiUserToken {
+        NewApiKey {
             id: Uuid::new_v4(),
             api_user_id: api_user.id,
-            token: format!("token-{}", Uuid::new_v4()),
-            permissions: vec![
-                TestPermission::CreateApiUser.into(),
-                TestPermission::GetApiUserToken(api_user_id).into(),
-            ]
-            .into(),
+            key_signature: format!("key-{}", Uuid::new_v4()),
+            permissions: Some(
+                vec![
+                    TestPermission::CreateApiUser.into(),
+                    TestPermission::GetApiKey(api_user_id).into(),
+                ]
+                .into(),
+            ),
             expires_at: Utc::now() - Duration::seconds(5 * 60),
         },
-        &api_user,
     )
     .await
     .unwrap();
@@ -233,10 +247,12 @@ async fn test_api_user() {
     assert!(expired_token.expires_at < Utc::now());
 
     // 8. List the active API tokens for the user
-    let tokens = ApiUserTokenStore::list(
+    let tokens = ApiKeyStore::list(
         &store,
-        ApiUserTokenFilter {
+        ApiKeyFilter {
+            id: None,
             api_user_id: Some(vec![api_user.id]),
+            key_signature: None,
             expired: false,
             deleted: false,
         },
@@ -250,10 +266,12 @@ async fn test_api_user() {
     assert!(tokens.contains(&excess_token));
 
     // 9. List all API tokens for the user
-    let all_tokens = ApiUserTokenStore::list(
+    let all_tokens = ApiKeyStore::list(
         &store,
-        ApiUserTokenFilter {
+        ApiKeyFilter {
+            id: None,
             api_user_id: Some(vec![api_user.id]),
+            key_signature: None,
             expired: true,
             deleted: false,
         },
@@ -266,7 +284,7 @@ async fn test_api_user() {
     assert!(all_tokens.contains(&expired_token));
 
     // 10. Lookup an API token for the user
-    let token_lookup = ApiUserTokenStore::<TestPermission>::get(&store, &token.id, false)
+    let token_lookup = ApiKeyStore::<TestPermission>::get(&store, &token.id, false)
         .await
         .unwrap()
         .unwrap();
@@ -275,16 +293,18 @@ async fn test_api_user() {
 
     // 11. Delete the API tokens for the user
     for token in all_tokens {
-        let _ = ApiUserTokenStore::<TestPermission>::delete(&store, &token.id)
+        let _ = ApiKeyStore::<TestPermission>::delete(&store, &token.id)
             .await
             .unwrap();
     }
 
     // 12. List the deleted API tokens for the user
-    let deleted_tokens = ApiUserTokenStore::<TestPermission>::list(
+    let deleted_tokens = ApiKeyStore::<TestPermission>::list(
         &store,
-        ApiUserTokenFilter {
+        ApiKeyFilter {
+            id: None,
             api_user_id: Some(vec![api_user.id]),
+            key_signature: None,
             expired: true,
             deleted: true,
         },
@@ -316,6 +336,7 @@ async fn test_api_user() {
         ApiUserFilter {
             id: None,
             email: None,
+            groups: None,
             deleted: true,
         },
         &ListPagination::default(),
@@ -334,3 +355,17 @@ async fn test_api_user() {
 // ...
 #[tokio::test]
 async fn test_device_token() {}
+
+#[tokio::test]
+async fn test_rfd_list() {
+    let db = TestDb::new("test_api_user");
+    let store = PostgresStore::new(&db.url()).await.unwrap();
+
+    RfdRevisionStore::list_unique_rfd(
+        &store,
+        RfdRevisionFilter::default(),
+        &ListPagination::default(),
+    )
+    .await
+    .unwrap();
+}
