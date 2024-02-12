@@ -6,13 +6,16 @@
 
 use anyhow::{anyhow, Result};
 use clap::{value_parser, Arg, ArgAction, Command, CommandFactory, FromArgMatches, ValueEnum};
-use generated::cli::*;
-use printer::{Printer, RfdJsonPrinter, RfdTabPrinter};
+use generated::cli::{CliConfig as ProgenitorCliConfig, *};
+use printer::{CliOutput, Printer, RfdJsonPrinter, RfdTabPrinter};
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
 use rfd_sdk::types::MappingRules;
 use rfd_sdk::Client;
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use std::any::Any;
 use std::fmt::Display;
+use std::ops::Deref;
 use std::time::Duration;
 use std::{collections::HashMap, error::Error};
 use store::CliConfig;
@@ -112,7 +115,7 @@ impl<'a> Tree<'a> {
         let mut cmd = if let Some(op) = self.cmd {
             // Command node
             // TODO
-            Cli::get_command(op).name(name.to_owned())
+            Cli::<Context>::get_command(op).name(name.to_owned())
         } else {
             // Internal node
             Command::new(name.to_owned()).subcommand_required(true)
@@ -288,10 +291,112 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 sm = sub_matches;
             }
 
-            let cli = Cli::new_with_override(ctx.client()?.clone(), (), ctx.printer()?.clone());
+            let cli = Cli::new(ctx.client()?.clone(), ctx);
             cli.execute(node.cmd.unwrap(), sm).await;
         }
     };
 
     Ok(())
+}
+
+pub fn reserialize<T, U>(value: &progenitor_client::ResponseValue<T>) -> U
+where
+    T: Serialize,
+    U: DeserializeOwned,
+{
+    serde_json::from_str::<U>(&serde_json::to_string::<T>(value.as_ref()).unwrap()).unwrap()
+}
+
+impl ProgenitorCliConfig for Context {
+    fn item_success<T>(&self, value: &progenitor_client::ResponseValue<T>)
+    where
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
+    {
+        match T::schema_name().as_str() {
+            "ApiUserForApiPermissionResponse" => {
+                self.printer().unwrap().output_api_user(reserialize(value))
+            }
+            "GetUserResponse" => self.printer().unwrap().output_api_user(reserialize(value)),
+            "Vec<ApiKeyResponse>" => self
+                .printer()
+                .unwrap()
+                .output_api_key_list(reserialize(value)),
+            "InitialApiKeyResponse" => self
+                .printer()
+                .unwrap()
+                .output_api_key_initial(reserialize(value)),
+            "ApiKeyResponse" => self.printer().unwrap().output_api_key(reserialize(value)),
+            "Array_of_AccessGroupForApiPermissionResponse" => self
+                .printer()
+                .unwrap()
+                .output_group_list(reserialize(value)),
+            "AccessGroupForApiPermissionResponse" => {
+                self.printer().unwrap().output_api_user(reserialize(value))
+            }
+            "Array_of_Mapper" => self
+                .printer()
+                .unwrap()
+                .output_mapper_list(reserialize(value)),
+            "Mapper" => self.printer().unwrap().output_mapper(reserialize(value)),
+            "Array_of_OAuthClient" => self
+                .printer()
+                .unwrap()
+                .output_oauth_client_list(reserialize(value)),
+            "OAuthClient" => self
+                .printer()
+                .unwrap()
+                .output_oauth_client(reserialize(value)),
+            "OAuthClientRedirectUri" => self
+                .printer()
+                .unwrap()
+                .output_oauth_redirect_uri(reserialize(value)),
+            "InitialOAuthClientSecretResponse" => self
+                .printer()
+                .unwrap()
+                .output_oauth_secret_initial(reserialize(value)),
+            "OAuthClientSecret" => self
+                .printer()
+                .unwrap()
+                .output_oauth_secret(reserialize(value)),
+            "Array_of_ListRfd" => self.printer().unwrap().output_rfd_list(reserialize(value)),
+            "FullRfd" => self.printer().unwrap().output_rfd_full(reserialize(value)),
+            "Rfd" => self.printer().unwrap().output_rfd(reserialize(value)),
+            "SearchResults" => self
+                .printer()
+                .unwrap()
+                .output_search_results(reserialize(value)),
+            _ => eprintln!("Unhandled response"),
+        }
+    }
+
+    fn item_error<T>(&self, value: &progenitor_client::Error<T>)
+    where
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
+    {
+        self.printer().unwrap().output_error(value)
+    }
+
+    fn list_start<T>(&self)
+    where
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
+    {
+    }
+
+    fn list_item<T>(&self, value: &T)
+    where
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
+    {
+    }
+
+    fn list_end_success<T>(&self)
+    where
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
+    {
+    }
+
+    fn list_end_error<T>(&self, value: &progenitor_client::Error<T>)
+    where
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
+    {
+    }
 }

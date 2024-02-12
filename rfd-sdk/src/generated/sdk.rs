@@ -5,10 +5,43 @@ use progenitor_client::{encode_path, RequestBuilderExt};
 pub use progenitor_client::{ByteStream, Error, ResponseValue};
 #[allow(unused_imports)]
 use reqwest::header::{HeaderMap, HeaderValue};
+/// Types used as operation parameters and responses.
+#[allow(clippy::all)]
 pub mod types {
     use serde::{Deserialize, Serialize};
     #[allow(unused_imports)]
     use std::convert::TryFrom;
+    /// Error types.
+    pub mod error {
+        /// Error from a TryFrom or FromStr implementation.
+        pub struct ConversionError(std::borrow::Cow<'static, str>);
+        impl std::error::Error for ConversionError {}
+
+        impl std::fmt::Display for ConversionError {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+                std::fmt::Display::fmt(&self.0, f)
+            }
+        }
+
+        impl std::fmt::Debug for ConversionError {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+                std::fmt::Debug::fmt(&self.0, f)
+            }
+        }
+
+        impl From<&'static str> for ConversionError {
+            fn from(value: &'static str) -> Self {
+                Self(value.into())
+            }
+        }
+
+        impl From<String> for ConversionError {
+            fn from(value: String) -> Self {
+                Self(value.into())
+            }
+        }
+    }
+
     /// AccessGroupForApiPermissionResponse
     ///
     /// <details><summary>JSON schema</summary>
@@ -4504,33 +4537,33 @@ pub mod types {
     }
 
     impl std::str::FromStr for OAuthProviderName {
-        type Err = &'static str;
-        fn from_str(value: &str) -> Result<Self, &'static str> {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> Result<Self, self::error::ConversionError> {
             match value {
                 "github" => Ok(Self::Github),
                 "google" => Ok(Self::Google),
-                _ => Err("invalid value"),
+                _ => Err("invalid value".into()),
             }
         }
     }
 
     impl std::convert::TryFrom<&str> for OAuthProviderName {
-        type Error = &'static str;
-        fn try_from(value: &str) -> Result<Self, &'static str> {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> Result<Self, self::error::ConversionError> {
             value.parse()
         }
     }
 
     impl std::convert::TryFrom<&String> for OAuthProviderName {
-        type Error = &'static str;
-        fn try_from(value: &String) -> Result<Self, &'static str> {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &String) -> Result<Self, self::error::ConversionError> {
             value.parse()
         }
     }
 
     impl std::convert::TryFrom<String> for OAuthProviderName {
-        type Error = &'static str;
-        fn try_from(value: String) -> Result<Self, &'static str> {
+        type Error = self::error::ConversionError;
+        fn try_from(value: String) -> Result<Self, self::error::ConversionError> {
             value.parse()
         }
     }
@@ -5056,37 +5089,38 @@ pub mod types {
     }
 
     impl std::str::FromStr for Visibility {
-        type Err = &'static str;
-        fn from_str(value: &str) -> Result<Self, &'static str> {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> Result<Self, self::error::ConversionError> {
             match value {
                 "public" => Ok(Self::Public),
                 "private" => Ok(Self::Private),
-                _ => Err("invalid value"),
+                _ => Err("invalid value".into()),
             }
         }
     }
 
     impl std::convert::TryFrom<&str> for Visibility {
-        type Error = &'static str;
-        fn try_from(value: &str) -> Result<Self, &'static str> {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> Result<Self, self::error::ConversionError> {
             value.parse()
         }
     }
 
     impl std::convert::TryFrom<&String> for Visibility {
-        type Error = &'static str;
-        fn try_from(value: &String) -> Result<Self, &'static str> {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &String) -> Result<Self, self::error::ConversionError> {
             value.parse()
         }
     }
 
     impl std::convert::TryFrom<String> for Visibility {
-        type Error = &'static str;
-        fn try_from(value: String) -> Result<Self, &'static str> {
+        type Error = self::error::ConversionError;
+        fn try_from(value: String) -> Result<Self, self::error::ConversionError> {
             value.parse()
         }
     }
 
+    /// Types for composing complex structures.
     pub mod builder {
         #[derive(Clone, Debug)]
         pub struct AccessGroupForApiPermissionResponse {
@@ -5177,8 +5211,10 @@ pub mod types {
         impl std::convert::TryFrom<AccessGroupForApiPermissionResponse>
             for super::AccessGroupForApiPermissionResponse
         {
-            type Error = String;
-            fn try_from(value: AccessGroupForApiPermissionResponse) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: AccessGroupForApiPermissionResponse,
+            ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     created_at: value.created_at?,
                     deleted_at: value.deleted_at?,
@@ -5242,8 +5278,10 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<AccessGroupUpdateParams> for super::AccessGroupUpdateParams {
-            type Error = String;
-            fn try_from(value: AccessGroupUpdateParams) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: AccessGroupUpdateParams,
+            ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     name: value.name?,
                     permissions: value.permissions?,
@@ -5311,8 +5349,10 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<AccessTokenExchangeRequest> for super::AccessTokenExchangeRequest {
-            type Error = String;
-            fn try_from(value: AccessTokenExchangeRequest) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: AccessTokenExchangeRequest,
+            ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     device_code: value.device_code?,
                     expires_at: value.expires_at?,
@@ -5358,8 +5398,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<AddGroupBody> for super::AddGroupBody {
-            type Error = String;
-            fn try_from(value: AddGroupBody) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: AddGroupBody) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     group_id: value.group_id?,
                 })
@@ -5401,8 +5441,10 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<AddOAuthClientRedirectBody> for super::AddOAuthClientRedirectBody {
-            type Error = String;
-            fn try_from(value: AddOAuthClientRedirectBody) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: AddOAuthClientRedirectBody,
+            ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     redirect_uri: value.redirect_uri?,
                 })
@@ -5456,8 +5498,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<ApiKeyCreateParams> for super::ApiKeyCreateParams {
-            type Error = String;
-            fn try_from(value: ApiKeyCreateParams) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: ApiKeyCreateParams) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     expires_at: value.expires_at?,
                     permissions: value.permissions?,
@@ -5525,8 +5567,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<ApiKeyResponse> for super::ApiKeyResponse {
-            type Error = String;
-            fn try_from(value: ApiKeyResponse) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: ApiKeyResponse) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     created_at: value.created_at?,
                     id: value.id?,
@@ -5634,8 +5676,10 @@ pub mod types {
         impl std::convert::TryFrom<ApiUserForApiPermissionResponse>
             for super::ApiUserForApiPermissionResponse
         {
-            type Error = String;
-            fn try_from(value: ApiUserForApiPermissionResponse) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: ApiUserForApiPermissionResponse,
+            ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     created_at: value.created_at?,
                     deleted_at: value.deleted_at?,
@@ -5687,8 +5731,10 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<ApiUserLinkRequestPayload> for super::ApiUserLinkRequestPayload {
-            type Error = String;
-            fn try_from(value: ApiUserLinkRequestPayload) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: ApiUserLinkRequestPayload,
+            ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     user_identifier: value.user_identifier?,
                 })
@@ -5730,8 +5776,10 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<ApiUserLinkRequestResponse> for super::ApiUserLinkRequestResponse {
-            type Error = String;
-            fn try_from(value: ApiUserLinkRequestResponse) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: ApiUserLinkRequestResponse,
+            ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     token: value.token?,
                 })
@@ -5857,8 +5905,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<ApiUserProvider> for super::ApiUserProvider {
-            type Error = String;
-            fn try_from(value: ApiUserProvider) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: ApiUserProvider) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     api_user_id: value.api_user_id?,
                     created_at: value.created_at?,
@@ -5914,8 +5962,10 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<ApiUserProviderLinkPayload> for super::ApiUserProviderLinkPayload {
-            type Error = String;
-            fn try_from(value: ApiUserProviderLinkPayload) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: ApiUserProviderLinkPayload,
+            ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     token: value.token?,
                 })
@@ -5969,8 +6019,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<ApiUserUpdateParams> for super::ApiUserUpdateParams {
-            type Error = String;
-            fn try_from(value: ApiUserUpdateParams) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: ApiUserUpdateParams) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     groups: value.groups?,
                     permissions: value.permissions?,
@@ -6038,8 +6088,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<CreateMapper> for super::CreateMapper {
-            type Error = String;
-            fn try_from(value: CreateMapper) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: CreateMapper) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     max_activations: value.max_activations?,
                     name: value.name?,
@@ -6109,8 +6159,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<Error> for super::Error {
-            type Error = String;
-            fn try_from(value: Error) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: Error) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     error_code: value.error_code?,
                     message: value.message?,
@@ -6228,8 +6278,10 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<FormattedSearchResultHit> for super::FormattedSearchResultHit {
-            type Error = String;
-            fn try_from(value: FormattedSearchResultHit) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: FormattedSearchResultHit,
+            ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     anchor: value.anchor?,
                     content: value.content?,
@@ -6427,8 +6479,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<FullRfd> for super::FullRfd {
-            type Error = String;
-            fn try_from(value: FullRfd) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: FullRfd) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     authors: value.authors?,
                     commit: value.commit?,
@@ -6506,8 +6558,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<FullRfdPdfEntry> for super::FullRfdPdfEntry {
-            type Error = String;
-            fn try_from(value: FullRfdPdfEntry) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: FullRfdPdfEntry) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     link: value.link?,
                     source: value.source?,
@@ -6563,8 +6615,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<GetUserResponse> for super::GetUserResponse {
-            type Error = String;
-            fn try_from(value: GetUserResponse) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: GetUserResponse) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     info: value.info?,
                     providers: value.providers?,
@@ -6656,8 +6708,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<GitHubCommit> for super::GitHubCommit {
-            type Error = String;
-            fn try_from(value: GitHubCommit) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: GitHubCommit) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     added: value.added?,
                     id: value.id?,
@@ -6767,8 +6819,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<GitHubCommitPayload> for super::GitHubCommitPayload {
-            type Error = String;
-            fn try_from(value: GitHubCommitPayload) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: GitHubCommitPayload) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     commits: value.commits?,
                     head_commit: value.head_commit?,
@@ -6832,8 +6884,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<GitHubInstallation> for super::GitHubInstallation {
-            type Error = String;
-            fn try_from(value: GitHubInstallation) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: GitHubInstallation) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     id: value.id?,
                     node_id: value.node_id?,
@@ -6925,8 +6977,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<GitHubRepository> for super::GitHubRepository {
-            type Error = String;
-            fn try_from(value: GitHubRepository) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: GitHubRepository) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     default_branch: value.default_branch?,
                     id: value.id?,
@@ -6976,8 +7028,10 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<GitHubRepositoryOwner> for super::GitHubRepositoryOwner {
-            type Error = String;
-            fn try_from(value: GitHubRepositoryOwner) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: GitHubRepositoryOwner,
+            ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     login: value.login?,
                 })
@@ -7055,8 +7109,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<GitHubSender> for super::GitHubSender {
-            type Error = String;
-            fn try_from(value: GitHubSender) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: GitHubSender) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     id: value.id?,
                     login: value.login?,
@@ -7140,8 +7194,10 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<InitialApiKeyResponse> for super::InitialApiKeyResponse {
-            type Error = String;
-            fn try_from(value: InitialApiKeyResponse) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: InitialApiKeyResponse,
+            ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     created_at: value.created_at?,
                     id: value.id?,
@@ -7215,8 +7271,10 @@ pub mod types {
         impl std::convert::TryFrom<InitialOAuthClientSecretResponse>
             for super::InitialOAuthClientSecretResponse
         {
-            type Error = String;
-            fn try_from(value: InitialOAuthClientSecretResponse) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: InitialOAuthClientSecretResponse,
+            ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     created_at: value.created_at?,
                     id: value.id?,
@@ -7310,8 +7368,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<Jwk> for super::Jwk {
-            type Error = String;
-            fn try_from(value: Jwk) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: Jwk) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     e: value.e?,
                     kid: value.kid?,
@@ -7361,8 +7419,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<Jwks> for super::Jwks {
-            type Error = String;
-            fn try_from(value: Jwks) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: Jwks) -> Result<Self, super::error::ConversionError> {
                 Ok(Self { keys: value.keys? })
             }
         }
@@ -7522,8 +7580,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<ListRfd> for super::ListRfd {
-            type Error = String;
-            fn try_from(value: ListRfd) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: ListRfd) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     authors: value.authors?,
                     commit: value.commit?,
@@ -7669,8 +7727,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<Mapper> for super::Mapper {
-            type Error = String;
-            fn try_from(value: Mapper) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: Mapper) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     activations: value.activations?,
                     created_at: value.created_at?,
@@ -7786,8 +7844,10 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<OAuthAuthzCodeExchangeBody> for super::OAuthAuthzCodeExchangeBody {
-            type Error = String;
-            fn try_from(value: OAuthAuthzCodeExchangeBody) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: OAuthAuthzCodeExchangeBody,
+            ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     client_id: value.client_id?,
                     client_secret: value.client_secret?,
@@ -7865,8 +7925,10 @@ pub mod types {
         impl std::convert::TryFrom<OAuthAuthzCodeExchangeResponse>
             for super::OAuthAuthzCodeExchangeResponse
         {
-            type Error = String;
-            fn try_from(value: OAuthAuthzCodeExchangeResponse) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: OAuthAuthzCodeExchangeResponse,
+            ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     access_token: value.access_token?,
                     expires_in: value.expires_in?,
@@ -7960,8 +8022,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<OAuthClient> for super::OAuthClient {
-            type Error = String;
-            fn try_from(value: OAuthClient) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: OAuthClient) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     created_at: value.created_at?,
                     deleted_at: value.deleted_at?,
@@ -8059,8 +8121,10 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<OAuthClientRedirectUri> for super::OAuthClientRedirectUri {
-            type Error = String;
-            fn try_from(value: OAuthClientRedirectUri) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: OAuthClientRedirectUri,
+            ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     created_at: value.created_at?,
                     deleted_at: value.deleted_at?,
@@ -8161,8 +8225,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<OAuthClientSecret> for super::OAuthClientSecret {
-            type Error = String;
-            fn try_from(value: OAuthClientSecret) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: OAuthClientSecret) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     created_at: value.created_at?,
                     deleted_at: value.deleted_at?,
@@ -8280,8 +8344,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<OAuthProviderInfo> for super::OAuthProviderInfo {
-            type Error = String;
-            fn try_from(value: OAuthProviderInfo) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: OAuthProviderInfo) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     auth_url_endpoint: value.auth_url_endpoint?,
                     client_id: value.client_id?,
@@ -8333,8 +8397,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<OpenIdConfiguration> for super::OpenIdConfiguration {
-            type Error = String;
-            fn try_from(value: OpenIdConfiguration) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: OpenIdConfiguration) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     jwks_uri: value.jwks_uri?,
                 })
@@ -8448,8 +8512,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<Rfd> for super::Rfd {
-            type Error = String;
-            fn try_from(value: Rfd) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: Rfd) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     created_at: value.created_at?,
                     deleted_at: value.deleted_at?,
@@ -8503,8 +8567,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<RfdVisibility> for super::RfdVisibility {
-            type Error = String;
-            fn try_from(value: RfdVisibility) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: RfdVisibility) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     visibility: value.visibility?,
                 })
@@ -8630,8 +8694,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<SearchResultHit> for super::SearchResultHit {
-            type Error = String;
-            fn try_from(value: SearchResultHit) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: SearchResultHit) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     anchor: value.anchor?,
                     content: value.content?,
@@ -8723,8 +8787,8 @@ pub mod types {
         }
 
         impl std::convert::TryFrom<SearchResults> for super::SearchResults {
-            type Error = String;
-            fn try_from(value: SearchResults) -> Result<Self, String> {
+            type Error = super::error::ConversionError;
+            fn try_from(value: SearchResults) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     hits: value.hits?,
                     limit: value.limit?,
@@ -8746,6 +8810,7 @@ pub mod types {
         }
     }
 
+    /// Generation of default values for serde.
     pub mod defaults {
         pub(super) fn mapping_rules_default_permissions() -> super::PermissionsForApiPermission {
             super::PermissionsForApiPermission(vec![])
@@ -9346,6 +9411,7 @@ impl Client {
     }
 }
 
+/// Internal endpoints
 pub trait ClientHiddenExt {
     /// Sends a `POST` request to `/github`
     ///
@@ -9364,6 +9430,8 @@ impl ClientHiddenExt for Client {
     }
 }
 
+/// Types for composing operation parameters.
+#[allow(clippy::all)]
 pub mod builder {
     use super::types;
     #[allow(unused_imports)]
@@ -9387,7 +9455,8 @@ pub mod builder {
         pub async fn send(self) -> Result<ResponseValue<types::Jwks>, Error<types::Error>> {
             let Self { client } = self;
             let url = format!("{}/.well-known/jwks.json", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -9429,7 +9498,8 @@ pub mod builder {
         ) -> Result<ResponseValue<types::OpenIdConfiguration>, Error<types::Error>> {
             let Self { client } = self;
             let url = format!("{}/.well-known/openid-configuration", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -9498,10 +9568,11 @@ pub mod builder {
         {
             let Self { client, body } = self;
             let body = body
-                .and_then(std::convert::TryInto::<types::ApiUserUpdateParams>::try_into)
+                .and_then(|v| types::ApiUserUpdateParams::try_from(v).map_err(|e| e.to_string()))
                 .map_err(Error::InvalidRequest)?;
             let url = format!("{}/api-user", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -9563,7 +9634,8 @@ pub mod builder {
                 client.baseurl,
                 encode_path(&identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -9649,14 +9721,15 @@ pub mod builder {
             } = self;
             let identifier = identifier.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::ApiUserUpdateParams>::try_into)
+                .and_then(|v| types::ApiUserUpdateParams::try_from(v).map_err(|e| e.to_string()))
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/api-user/{}",
                 client.baseurl,
                 encode_path(&identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -9741,14 +9814,15 @@ pub mod builder {
             } = self;
             let identifier = identifier.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::AddGroupBody>::try_into)
+                .and_then(|v| types::AddGroupBody::try_from(v).map_err(|e| e.to_string()))
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/api-user/{}/group",
                 client.baseurl,
                 encode_path(&identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -9830,7 +9904,8 @@ pub mod builder {
                 encode_path(&identifier.to_string()),
                 encode_path(&group_id.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .delete(url)
                 .header(
@@ -9916,14 +9991,17 @@ pub mod builder {
             } = self;
             let identifier = identifier.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::ApiUserProviderLinkPayload>::try_into)
+                .and_then(|v| {
+                    types::ApiUserProviderLinkPayload::try_from(v).map_err(|e| e.to_string())
+                })
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/api-user/{}/link",
                 client.baseurl,
                 encode_path(&identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -9985,7 +10063,8 @@ pub mod builder {
                 client.baseurl,
                 encode_path(&identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -10070,14 +10149,15 @@ pub mod builder {
             } = self;
             let identifier = identifier.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::ApiKeyCreateParams>::try_into)
+                .and_then(|v| types::ApiKeyCreateParams::try_from(v).map_err(|e| e.to_string()))
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/api-user/{}/token",
                 client.baseurl,
                 encode_path(&identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -10158,7 +10238,8 @@ pub mod builder {
                 encode_path(&identifier.to_string()),
                 encode_path(&token_identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -10238,7 +10319,8 @@ pub mod builder {
                 encode_path(&identifier.to_string()),
                 encode_path(&token_identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .delete(url)
                 .header(
@@ -10327,14 +10409,17 @@ pub mod builder {
             } = self;
             let identifier = identifier.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::ApiUserLinkRequestPayload>::try_into)
+                .and_then(|v| {
+                    types::ApiUserLinkRequestPayload::try_from(v).map_err(|e| e.to_string())
+                })
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/api-user-provider/{}/link-token",
                 client.baseurl,
                 encode_path(&identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -10401,10 +10486,11 @@ pub mod builder {
         pub async fn send(self) -> Result<ResponseValue<()>, Error<types::Error>> {
             let Self { client, body } = self;
             let body = body
-                .and_then(std::convert::TryInto::<types::GitHubCommitPayload>::try_into)
+                .and_then(|v| types::GitHubCommitPayload::try_from(v).map_err(|e| e.to_string()))
                 .map_err(Error::InvalidRequest)?;
             let url = format!("{}/github", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -10450,7 +10536,8 @@ pub mod builder {
         > {
             let Self { client } = self;
             let url = format!("{}/group", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -10521,10 +10608,13 @@ pub mod builder {
         {
             let Self { client, body } = self;
             let body = body
-                .and_then(std::convert::TryInto::<types::AccessGroupUpdateParams>::try_into)
+                .and_then(|v| {
+                    types::AccessGroupUpdateParams::try_from(v).map_err(|e| e.to_string())
+                })
                 .map_err(Error::InvalidRequest)?;
             let url = format!("{}/group", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -10613,14 +10703,17 @@ pub mod builder {
             } = self;
             let group_id = group_id.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::AccessGroupUpdateParams>::try_into)
+                .and_then(|v| {
+                    types::AccessGroupUpdateParams::try_from(v).map_err(|e| e.to_string())
+                })
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/group/{}",
                 client.baseurl,
                 encode_path(&group_id.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .put(url)
                 .header(
@@ -10683,7 +10776,8 @@ pub mod builder {
                 client.baseurl,
                 encode_path(&group_id.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .delete(url)
                 .header(
@@ -10824,7 +10918,8 @@ pub mod builder {
                 query.push(("scope", v.to_string()));
             }
             query.push(("state", state.to_string()));
-            let request = client.client.get(url).query(&query).build()?;
+            #[allow(unused_mut)]
+            let mut request = client.client.get(url).query(&query).build()?;
             let result = client.client.execute(request).await;
             let response = result?;
             match response.status().as_u16() {
@@ -10928,7 +11023,8 @@ pub mod builder {
             if let Some(v) = &state {
                 query.push(("state", v.to_string()));
             }
-            let request = client.client.get(url).query(&query).build()?;
+            #[allow(unused_mut)]
+            let mut request = client.client.get(url).query(&query).build()?;
             let result = client.client.execute(request).await;
             let response = result?;
             match response.status().as_u16() {
@@ -11010,14 +11106,17 @@ pub mod builder {
             } = self;
             let provider = provider.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::OAuthAuthzCodeExchangeBody>::try_into)
+                .and_then(|v| {
+                    types::OAuthAuthzCodeExchangeBody::try_from(v).map_err(|e| e.to_string())
+                })
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/login/oauth/{}/code/token",
                 client.baseurl,
                 encode_path(&provider.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -11079,7 +11178,8 @@ pub mod builder {
                 client.baseurl,
                 encode_path(&provider.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -11165,14 +11265,17 @@ pub mod builder {
             } = self;
             let provider = provider.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::AccessTokenExchangeRequest>::try_into)
+                .and_then(|v| {
+                    types::AccessTokenExchangeRequest::try_from(v).map_err(|e| e.to_string())
+                })
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/login/oauth/{}/device/exchange",
                 client.baseurl,
                 encode_path(&provider.to_string()),
             );
-            let request = client.client.post(url).form_urlencoded(&body)?.build()?;
+            #[allow(unused_mut)]
+            let mut request = client.client.post(url).form_urlencoded(&body)?.build()?;
             let result = client.client.execute(request).await;
             let response = result?;
             match response.status().as_u16() {
@@ -11222,7 +11325,8 @@ pub mod builder {
             if let Some(v) = &include_depleted {
                 query.push(("include_depleted", v.to_string()));
             }
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -11287,10 +11391,11 @@ pub mod builder {
         pub async fn send(self) -> Result<ResponseValue<types::Mapper>, Error<types::Error>> {
             let Self { client, body } = self;
             let body = body
-                .and_then(std::convert::TryInto::<types::CreateMapper>::try_into)
+                .and_then(|v| types::CreateMapper::try_from(v).map_err(|e| e.to_string()))
                 .map_err(Error::InvalidRequest)?;
             let url = format!("{}/mapper", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -11350,7 +11455,8 @@ pub mod builder {
                 client.baseurl,
                 encode_path(&identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .delete(url)
                 .header(
@@ -11392,7 +11498,8 @@ pub mod builder {
         ) -> Result<ResponseValue<Vec<types::OAuthClient>>, Error<types::Error>> {
             let Self { client } = self;
             let url = format!("{}/oauth/client", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -11432,7 +11539,8 @@ pub mod builder {
         pub async fn send(self) -> Result<ResponseValue<types::OAuthClient>, Error<types::Error>> {
             let Self { client } = self;
             let url = format!("{}/oauth/client", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -11491,7 +11599,8 @@ pub mod builder {
                 client.baseurl,
                 encode_path(&client_id.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -11579,14 +11688,17 @@ pub mod builder {
             } = self;
             let client_id = client_id.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::AddOAuthClientRedirectBody>::try_into)
+                .and_then(|v| {
+                    types::AddOAuthClientRedirectBody::try_from(v).map_err(|e| e.to_string())
+                })
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/oauth/client/{}/redirect_uri",
                 client.baseurl,
                 encode_path(&client_id.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -11667,7 +11779,8 @@ pub mod builder {
                 encode_path(&client_id.to_string()),
                 encode_path(&redirect_uri_id.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .delete(url)
                 .header(
@@ -11729,7 +11842,8 @@ pub mod builder {
                 client.baseurl,
                 encode_path(&client_id.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -11809,7 +11923,8 @@ pub mod builder {
                 encode_path(&client_id.to_string()),
                 encode_path(&secret_id.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .delete(url)
                 .header(
@@ -11849,7 +11964,8 @@ pub mod builder {
         pub async fn send(self) -> Result<ResponseValue<Vec<types::ListRfd>>, Error<types::Error>> {
             let Self { client } = self;
             let url = format!("{}/rfd", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -11908,7 +12024,8 @@ pub mod builder {
                 client.baseurl,
                 encode_path(&number.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -11989,14 +12106,15 @@ pub mod builder {
             } = self;
             let number = number.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::RfdVisibility>::try_into)
+                .and_then(|v| types::RfdVisibility::try_from(v).map_err(|e| e.to_string()))
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/rfd/{}/visibility",
                 client.baseurl,
                 encode_path(&number.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -12149,7 +12267,8 @@ pub mod builder {
                 query.push(("offset", v.to_string()));
             }
             query.push(("q", q.to_string()));
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -12192,7 +12311,8 @@ pub mod builder {
         ) -> Result<ResponseValue<types::GetUserResponse>, Error<types::Error>> {
             let Self { client } = self;
             let url = format!("{}/self", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -12216,6 +12336,8 @@ pub mod builder {
     }
 }
 
+/// Items consumers will typically use such as the Client and
+/// extension traits.
 pub mod prelude {
     pub use super::Client;
     pub use super::ClientHiddenExt;
