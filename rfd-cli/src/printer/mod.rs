@@ -9,373 +9,162 @@ pub use json::RfdJsonPrinter;
 use rfd_sdk::types;
 pub use tab::RfdTabPrinter;
 
-use crate::generated::cli::CliOutput;
-
 #[derive(Debug, Clone)]
 pub enum Printer {
     Json(RfdJsonPrinter),
     Tab(RfdTabPrinter),
 }
 
+pub trait CliOutput {
+    fn output_api_user(&self, value: types::ApiUserForApiPermissionResponse) {}
+    fn output_user(&self, value: types::GetUserResponse) {}
+    fn output_api_key_list(&self, value: Vec<types::ApiKeyResponse>) {}
+    fn output_api_key_initial(&self, value: types::InitialApiKeyResponse) {}
+    fn output_api_key(&self, value: types::ApiKeyResponse) {}
+    fn output_group_list(&self, value: Vec<types::AccessGroupForApiPermissionResponse>) {}
+    fn output_group(&self, value: types::AccessGroupForApiPermissionResponse) {}
+    fn output_mapper_list(&self, value: Vec<types::Mapper>) {}
+    fn output_mapper(&self, value: types::Mapper) {}
+    fn output_oauth_client_list(&self, value: Vec<types::OAuthClient>) {}
+    fn output_oauth_client(&self, value: types::OAuthClient) {}
+    fn output_oauth_redirect_uri(&self, value: types::OAuthClientRedirectUri) {}
+    fn output_oauth_secret_initial(&self, value: types::InitialOAuthClientSecretResponse) {}
+    fn output_oauth_secret(&self, value: types::OAuthClientSecret) {}
+    fn output_rfd_list(&self, value: Vec<types::ListRfd>) {}
+    fn output_rfd_full(&self, value: types::FullRfd) {}
+    fn output_rfd(&self, value: types::Rfd) {}
+    fn output_search_results(&self, value: types::SearchResults) {}
+    fn output_error<T>(&self, value: &progenitor_client::Error<T>)
+    where
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
+    {
+    }
+}
+
 impl CliOutput for Printer {
-    fn output_create_api_user(
-        &self,
-        response: Result<
-            types::ApiUserForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
+    fn output_api_user(&self, value: types::ApiUserForApiPermissionResponse) {
         match self {
-            Printer::Json(printer) => printer.output_create_api_user(response),
-            Printer::Tab(printer) => printer.output_create_api_user(response),
+            Self::Json(printer) => printer.output_api_user(value),
+            Self::Tab(printer) => printer.output_api_user(value),
         }
     }
 
-    fn output_get_api_user(
-        &self,
-        response: Result<types::GetUserResponse, progenitor_client::Error<types::Error>>,
-    ) {
+    fn output_user(&self, value: types::GetUserResponse) {
         match self {
-            Printer::Json(printer) => printer.output_get_api_user(response),
-            Printer::Tab(printer) => printer.output_get_api_user(response),
+            Self::Json(printer) => printer.output_user(value),
+            Self::Tab(printer) => printer.output_user(value),
         }
     }
 
-    fn output_update_api_user(
-        &self,
-        response: Result<
-            types::ApiUserForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
+    fn output_api_key_list(&self, value: Vec<types::ApiKeyResponse>) {
         match self {
-            Printer::Json(printer) => printer.output_update_api_user(response),
-            Printer::Tab(printer) => printer.output_update_api_user(response),
+            Self::Json(printer) => printer.output_api_key_list(value),
+            Self::Tab(printer) => printer.output_api_key_list(value),
         }
     }
 
-    fn output_add_api_user_to_group(
-        &self,
-        response: Result<
-            types::ApiUserForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
+    fn output_api_key_initial(&self, value: types::InitialApiKeyResponse) {
         match self {
-            Printer::Json(printer) => printer.output_add_api_user_to_group(response),
-            Printer::Tab(printer) => printer.output_add_api_user_to_group(response),
+            Self::Json(printer) => printer.output_api_key_initial(value),
+            Self::Tab(printer) => printer.output_api_key_initial(value),
         }
     }
 
-    fn output_remove_api_user_from_group(
-        &self,
-        response: Result<
-            types::ApiUserForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
+    fn output_api_key(&self, value: types::ApiKeyResponse) {
         match self {
-            Printer::Json(printer) => printer.output_remove_api_user_from_group(response),
-            Printer::Tab(printer) => printer.output_remove_api_user_from_group(response),
+            Self::Json(printer) => printer.output_api_key(value),
+            Self::Tab(printer) => printer.output_api_key(value),
         }
     }
 
-    fn output_list_api_user_tokens(
-        &self,
-        response: Result<Vec<types::ApiKeyResponse>, progenitor_client::Error<types::Error>>,
-    ) {
+    fn output_group_list(&self, value: Vec<types::AccessGroupForApiPermissionResponse>) {
         match self {
-            Printer::Json(printer) => printer.output_list_api_user_tokens(response),
-            Printer::Tab(printer) => printer.output_list_api_user_tokens(response),
+            Self::Json(printer) => printer.output_group_list(value),
+            Self::Tab(printer) => printer.output_group_list(value),
         }
     }
 
-    fn output_create_api_user_token(
-        &self,
-        response: Result<types::InitialApiKeyResponse, progenitor_client::Error<types::Error>>,
-    ) {
+    fn output_group(&self, value: types::AccessGroupForApiPermissionResponse) {
         match self {
-            Printer::Json(printer) => printer.output_create_api_user_token(response),
-            Printer::Tab(printer) => printer.output_create_api_user_token(response),
+            Self::Json(printer) => printer.output_group(value),
+            Self::Tab(printer) => printer.output_group(value),
         }
     }
 
-    fn output_get_api_user_token(
-        &self,
-        response: Result<types::ApiKeyResponse, progenitor_client::Error<types::Error>>,
-    ) {
+    fn output_mapper_list(&self, value: Vec<types::Mapper>) {
         match self {
-            Printer::Json(printer) => printer.output_get_api_user_token(response),
-            Printer::Tab(printer) => printer.output_get_api_user_token(response),
+            Self::Json(printer) => printer.output_mapper_list(value),
+            Self::Tab(printer) => printer.output_mapper_list(value),
         }
     }
 
-    fn output_delete_api_user_token(
-        &self,
-        response: Result<types::ApiKeyResponse, progenitor_client::Error<types::Error>>,
-    ) {
+    fn output_mapper(&self, value: types::Mapper) {
         match self {
-            Printer::Json(printer) => printer.output_delete_api_user_token(response),
-            Printer::Tab(printer) => printer.output_delete_api_user_token(response),
+            Self::Json(printer) => printer.output_mapper(value),
+            Self::Tab(printer) => printer.output_mapper(value),
         }
     }
 
-    fn output_github_webhook(&self, response: Result<(), progenitor_client::Error<types::Error>>) {
+    fn output_oauth_client_list(&self, value: Vec<types::OAuthClient>) {
         match self {
-            Printer::Json(printer) => printer.output_github_webhook(response),
-            Printer::Tab(printer) => printer.output_github_webhook(response),
+            Self::Json(printer) => printer.output_oauth_client_list(value),
+            Self::Tab(printer) => printer.output_oauth_client_list(value),
         }
     }
 
-    fn output_get_groups(
-        &self,
-        response: Result<
-            Vec<types::AccessGroupForApiPermissionResponse>,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
+    fn output_oauth_client(&self, value: types::OAuthClient) {
         match self {
-            Printer::Json(printer) => printer.output_get_groups(response),
-            Printer::Tab(printer) => printer.output_get_groups(response),
+            Self::Json(printer) => printer.output_oauth_client(value),
+            Self::Tab(printer) => printer.output_oauth_client(value),
         }
     }
 
-    fn output_create_group(
-        &self,
-        response: Result<
-            types::AccessGroupForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
+    fn output_oauth_redirect_uri(&self, value: types::OAuthClientRedirectUri) {
         match self {
-            Printer::Json(printer) => printer.output_create_group(response),
-            Printer::Tab(printer) => printer.output_create_group(response),
+            Self::Json(printer) => printer.output_oauth_redirect_uri(value),
+            Self::Tab(printer) => printer.output_oauth_redirect_uri(value),
         }
     }
 
-    fn output_update_group(
-        &self,
-        response: Result<
-            types::AccessGroupForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
+    fn output_oauth_secret_initial(&self, value: types::InitialOAuthClientSecretResponse) {
         match self {
-            Printer::Json(printer) => printer.output_update_group(response),
-            Printer::Tab(printer) => printer.output_update_group(response),
+            Self::Json(printer) => printer.output_oauth_secret_initial(value),
+            Self::Tab(printer) => printer.output_oauth_secret_initial(value),
         }
     }
 
-    fn output_delete_group(
-        &self,
-        response: Result<
-            types::AccessGroupForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
+    fn output_oauth_secret(&self, value: types::OAuthClientSecret) {
         match self {
-            Printer::Json(printer) => printer.output_delete_group(response),
-            Printer::Tab(printer) => printer.output_delete_group(response),
+            Self::Json(printer) => printer.output_oauth_secret(value),
+            Self::Tab(printer) => printer.output_oauth_secret(value),
         }
     }
 
-    fn output_get_mappers(
-        &self,
-        response: Result<Vec<types::Mapper>, progenitor_client::Error<types::Error>>,
-    ) {
+    fn output_rfd_list(&self, value: Vec<types::ListRfd>) {
         match self {
-            Printer::Json(printer) => printer.output_get_mappers(response),
-            Printer::Tab(printer) => printer.output_get_mappers(response),
+            Self::Json(printer) => printer.output_rfd_list(value),
+            Self::Tab(printer) => printer.output_rfd_list(value),
         }
     }
 
-    fn output_create_mapper(
-        &self,
-        response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
-    ) {
+    fn output_rfd_full(&self, value: types::FullRfd) {
         match self {
-            Printer::Json(printer) => printer.output_create_mapper(response),
-            Printer::Tab(printer) => printer.output_create_mapper(response),
+            Self::Json(printer) => printer.output_rfd_full(value),
+            Self::Tab(printer) => printer.output_rfd_full(value),
         }
     }
 
-    fn output_delete_mapper(
-        &self,
-        response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
-    ) {
+    fn output_rfd(&self, value: types::Rfd) {
         match self {
-            Printer::Json(printer) => printer.output_delete_mapper(response),
-            Printer::Tab(printer) => printer.output_delete_mapper(response),
+            Self::Json(printer) => printer.output_rfd(value),
+            Self::Tab(printer) => printer.output_rfd(value),
         }
     }
 
-    fn output_authz_code_redirect(&self, response: Result<(), progenitor_client::Error<()>>) {
+    fn output_search_results(&self, value: types::SearchResults) {
         match self {
-            Printer::Json(printer) => printer.output_authz_code_redirect(response),
-            Printer::Tab(printer) => printer.output_authz_code_redirect(response),
-        }
-    }
-
-    fn output_authz_code_callback(
-        &self,
-        response: Result<(), progenitor_client::Error<types::Error>>,
-    ) {
-        match self {
-            Printer::Json(printer) => printer.output_authz_code_callback(response),
-            Printer::Tab(printer) => printer.output_authz_code_callback(response),
-        }
-    }
-
-    fn output_authz_code_exchange(
-        &self,
-        response: Result<
-            types::OAuthAuthzCodeExchangeResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-        match self {
-            Printer::Json(printer) => printer.output_authz_code_exchange(response),
-            Printer::Tab(printer) => printer.output_authz_code_exchange(response),
-        }
-    }
-
-    fn output_get_device_provider(
-        &self,
-        response: Result<types::OAuthProviderInfo, progenitor_client::Error<types::Error>>,
-    ) {
-        match self {
-            Printer::Json(printer) => printer.output_get_device_provider(response),
-            Printer::Tab(printer) => printer.output_get_device_provider(response),
-        }
-    }
-
-    fn output_exchange_device_token(&self, response: Result<(), progenitor_client::Error<()>>) {
-        match self {
-            Printer::Json(printer) => printer.output_exchange_device_token(response),
-            Printer::Tab(printer) => printer.output_exchange_device_token(response),
-        }
-    }
-
-    fn output_list_oauth_clients(
-        &self,
-        response: Result<Vec<types::OAuthClient>, progenitor_client::Error<types::Error>>,
-    ) {
-        match self {
-            Printer::Json(printer) => printer.output_list_oauth_clients(response),
-            Printer::Tab(printer) => printer.output_list_oauth_clients(response),
-        }
-    }
-
-    fn output_create_oauth_client(
-        &self,
-        response: Result<types::OAuthClient, progenitor_client::Error<types::Error>>,
-    ) {
-        match self {
-            Printer::Json(printer) => printer.output_create_oauth_client(response),
-            Printer::Tab(printer) => printer.output_create_oauth_client(response),
-        }
-    }
-
-    fn output_get_oauth_client(
-        &self,
-        response: Result<types::OAuthClient, progenitor_client::Error<types::Error>>,
-    ) {
-        match self {
-            Printer::Json(printer) => printer.output_get_oauth_client(response),
-            Printer::Tab(printer) => printer.output_get_oauth_client(response),
-        }
-    }
-
-    fn output_create_oauth_client_redirect_uri(
-        &self,
-        response: Result<types::OAuthClientRedirectUri, progenitor_client::Error<types::Error>>,
-    ) {
-        match self {
-            Printer::Json(printer) => printer.output_create_oauth_client_redirect_uri(response),
-            Printer::Tab(printer) => printer.output_create_oauth_client_redirect_uri(response),
-        }
-    }
-
-    fn output_delete_oauth_client_redirect_uri(
-        &self,
-        response: Result<types::OAuthClientRedirectUri, progenitor_client::Error<types::Error>>,
-    ) {
-        match self {
-            Printer::Json(printer) => printer.output_delete_oauth_client_redirect_uri(response),
-            Printer::Tab(printer) => printer.output_delete_oauth_client_redirect_uri(response),
-        }
-    }
-
-    fn output_create_oauth_client_secret(
-        &self,
-        response: Result<
-            types::InitialOAuthClientSecretResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-        match self {
-            Printer::Json(printer) => printer.output_create_oauth_client_secret(response),
-            Printer::Tab(printer) => printer.output_create_oauth_client_secret(response),
-        }
-    }
-
-    fn output_delete_oauth_client_secret(
-        &self,
-        response: Result<types::OAuthClientSecret, progenitor_client::Error<types::Error>>,
-    ) {
-        match self {
-            Printer::Json(printer) => printer.output_delete_oauth_client_secret(response),
-            Printer::Tab(printer) => printer.output_delete_oauth_client_secret(response),
-        }
-    }
-
-    fn output_get_rfds(
-        &self,
-        response: Result<Vec<types::ListRfd>, progenitor_client::Error<types::Error>>,
-    ) {
-        match self {
-            Printer::Json(printer) => printer.output_get_rfds(response),
-            Printer::Tab(printer) => printer.output_get_rfds(response),
-        }
-    }
-
-    fn output_get_rfd(
-        &self,
-        response: Result<types::FullRfd, progenitor_client::Error<types::Error>>,
-    ) {
-        match self {
-            Printer::Json(printer) => printer.output_get_rfd(response),
-            Printer::Tab(printer) => printer.output_get_rfd(response),
-        }
-    }
-
-    fn output_search_rfds(
-        &self,
-        response: Result<types::SearchResults, progenitor_client::Error<types::Error>>,
-    ) {
-        match self {
-            Printer::Json(printer) => printer.output_search_rfds(response),
-            Printer::Tab(printer) => printer.output_search_rfds(response),
-        }
-    }
-
-    fn output_get_self(
-        &self,
-        response: Result<types::GetUserResponse, progenitor_client::Error<types::Error>>,
-    ) {
-        match self {
-            Printer::Json(printer) => printer.output_get_self(response),
-            Printer::Tab(printer) => printer.output_get_self(response),
-        }
-    }
-
-    fn output_update_rfd_visibility(
-        &self,
-        response: Result<types::Rfd, progenitor_client::Error<types::Error>>,
-    ) {
-        match self {
-            Printer::Json(printer) => printer.output_update_rfd_visibility(response),
-            Printer::Tab(printer) => printer.output_update_rfd_visibility(response),
+            Self::Json(printer) => printer.output_search_results(value),
+            Self::Tab(printer) => printer.output_search_results(value),
         }
     }
 }

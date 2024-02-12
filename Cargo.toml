@@ -50,8 +50,8 @@ oauth2 = "4.4.2"
 octorust = "0.7.0"
 owo-colors = "3.5.0"
 partial-struct = { git = "https://github.com/oxidecomputer/partial-struct" }
-progenitor = { git = "https://github.com/oxidecomputer/progenitor", branch = "print-example" }
-progenitor-client = { git = "https://github.com/oxidecomputer/progenitor", branch = "print-example" }
+progenitor = { git = "https://github.com/oxidecomputer/progenitor" }
+progenitor-client = { git = "https://github.com/oxidecomputer/progenitor" }
 rand = "0.8.5"
 rand_core = "0.6"
 regex = "1.10.2"
@@ -108,14 +108,5 @@ allow-dirty = ["ci"]
 inherits = "release"
 lto = "thin"
 
-# [patch."https://github.com/oxidecomputer/progenitor"]
-# progenitor = { path = "../progenitor/progenitor" }
-
-# [patch."https://github.com/oxidecomputer/typify"]
-# typify = { path = "../typify/typify" }
-
 [patch.crates-io]
 meilisearch-sdk = { git = "https://github.com/gibbz00/meilisearch-rust.git", branch = "request_clients" }
-# progenitor = { path = "../progenitor/progenitor"}
-# progenitor-client = { path = "../progenitor/progenitor-client"}
-# typify = { path = "../typify/typify" }

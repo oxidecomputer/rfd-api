@@ -5,6 +5,8 @@ use progenitor_client::{encode_path, RequestBuilderExt};
 pub use progenitor_client::{ByteStream, Error, ResponseValue};
 #[allow(unused_imports)]
 use reqwest::header::{HeaderMap, HeaderValue};
+/// Types used as operation parameters and responses.
+#[allow(clippy::all)]
 pub mod types {
     use serde::{Deserialize, Serialize};
     #[allow(unused_imports)]
@@ -9431,6 +9433,7 @@ impl Client {
     }
 }
 
+/// Internal endpoints
 pub trait ClientHiddenExt {
     /// Sends a `POST` request to `/github`
     ///
@@ -9449,6 +9452,8 @@ impl ClientHiddenExt for Client {
     }
 }
 
+/// Types for composing operation parameters.
+#[allow(clippy::all)]
 pub mod builder {
     use super::types;
     #[allow(unused_imports)]
@@ -9472,7 +9477,8 @@ pub mod builder {
         pub async fn send(self) -> Result<ResponseValue<types::Jwks>, Error<types::Error>> {
             let Self { client } = self;
             let url = format!("{}/.well-known/jwks.json", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -9514,7 +9520,8 @@ pub mod builder {
         ) -> Result<ResponseValue<types::OpenIdConfiguration>, Error<types::Error>> {
             let Self { client } = self;
             let url = format!("{}/.well-known/openid-configuration", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -9583,10 +9590,11 @@ pub mod builder {
         {
             let Self { client, body } = self;
             let body = body
-                .and_then(std::convert::TryInto::<types::ApiUserUpdateParams>::try_into)
+                .and_then(|v| types::ApiUserUpdateParams::try_from(v).map_err(|e| e.to_string()))
                 .map_err(Error::InvalidRequest)?;
             let url = format!("{}/api-user", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -9648,7 +9656,8 @@ pub mod builder {
                 client.baseurl,
                 encode_path(&identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -9734,14 +9743,15 @@ pub mod builder {
             } = self;
             let identifier = identifier.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::ApiUserUpdateParams>::try_into)
+                .and_then(|v| types::ApiUserUpdateParams::try_from(v).map_err(|e| e.to_string()))
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/api-user/{}",
                 client.baseurl,
                 encode_path(&identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -9826,14 +9836,15 @@ pub mod builder {
             } = self;
             let identifier = identifier.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::AddGroupBody>::try_into)
+                .and_then(|v| types::AddGroupBody::try_from(v).map_err(|e| e.to_string()))
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/api-user/{}/group",
                 client.baseurl,
                 encode_path(&identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -9915,7 +9926,8 @@ pub mod builder {
                 encode_path(&identifier.to_string()),
                 encode_path(&group_id.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .delete(url)
                 .header(
@@ -10001,14 +10013,17 @@ pub mod builder {
             } = self;
             let identifier = identifier.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::ApiUserProviderLinkPayload>::try_into)
+                .and_then(|v| {
+                    types::ApiUserProviderLinkPayload::try_from(v).map_err(|e| e.to_string())
+                })
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/api-user/{}/link",
                 client.baseurl,
                 encode_path(&identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -10070,7 +10085,8 @@ pub mod builder {
                 client.baseurl,
                 encode_path(&identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -10155,14 +10171,15 @@ pub mod builder {
             } = self;
             let identifier = identifier.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::ApiKeyCreateParams>::try_into)
+                .and_then(|v| types::ApiKeyCreateParams::try_from(v).map_err(|e| e.to_string()))
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/api-user/{}/token",
                 client.baseurl,
                 encode_path(&identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -10243,7 +10260,8 @@ pub mod builder {
                 encode_path(&identifier.to_string()),
                 encode_path(&token_identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -10323,7 +10341,8 @@ pub mod builder {
                 encode_path(&identifier.to_string()),
                 encode_path(&token_identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .delete(url)
                 .header(
@@ -10412,14 +10431,17 @@ pub mod builder {
             } = self;
             let identifier = identifier.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::ApiUserLinkRequestPayload>::try_into)
+                .and_then(|v| {
+                    types::ApiUserLinkRequestPayload::try_from(v).map_err(|e| e.to_string())
+                })
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/api-user-provider/{}/link-token",
                 client.baseurl,
                 encode_path(&identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -10486,10 +10508,11 @@ pub mod builder {
         pub async fn send(self) -> Result<ResponseValue<()>, Error<types::Error>> {
             let Self { client, body } = self;
             let body = body
-                .and_then(std::convert::TryInto::<types::GitHubCommitPayload>::try_into)
+                .and_then(|v| types::GitHubCommitPayload::try_from(v).map_err(|e| e.to_string()))
                 .map_err(Error::InvalidRequest)?;
             let url = format!("{}/github", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -10535,7 +10558,8 @@ pub mod builder {
         > {
             let Self { client } = self;
             let url = format!("{}/group", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -10606,10 +10630,13 @@ pub mod builder {
         {
             let Self { client, body } = self;
             let body = body
-                .and_then(std::convert::TryInto::<types::AccessGroupUpdateParams>::try_into)
+                .and_then(|v| {
+                    types::AccessGroupUpdateParams::try_from(v).map_err(|e| e.to_string())
+                })
                 .map_err(Error::InvalidRequest)?;
             let url = format!("{}/group", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -10698,14 +10725,17 @@ pub mod builder {
             } = self;
             let group_id = group_id.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::AccessGroupUpdateParams>::try_into)
+                .and_then(|v| {
+                    types::AccessGroupUpdateParams::try_from(v).map_err(|e| e.to_string())
+                })
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/group/{}",
                 client.baseurl,
                 encode_path(&group_id.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .put(url)
                 .header(
@@ -10768,7 +10798,8 @@ pub mod builder {
                 client.baseurl,
                 encode_path(&group_id.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .delete(url)
                 .header(
@@ -10909,7 +10940,8 @@ pub mod builder {
                 query.push(("scope", v.to_string()));
             }
             query.push(("state", state.to_string()));
-            let request = client.client.get(url).query(&query).build()?;
+            #[allow(unused_mut)]
+            let mut request = client.client.get(url).query(&query).build()?;
             let result = client.client.execute(request).await;
             let response = result?;
             match response.status().as_u16() {
@@ -11013,7 +11045,8 @@ pub mod builder {
             if let Some(v) = &state {
                 query.push(("state", v.to_string()));
             }
-            let request = client.client.get(url).query(&query).build()?;
+            #[allow(unused_mut)]
+            let mut request = client.client.get(url).query(&query).build()?;
             let result = client.client.execute(request).await;
             let response = result?;
             match response.status().as_u16() {
@@ -11095,14 +11128,17 @@ pub mod builder {
             } = self;
             let provider = provider.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::OAuthAuthzCodeExchangeBody>::try_into)
+                .and_then(|v| {
+                    types::OAuthAuthzCodeExchangeBody::try_from(v).map_err(|e| e.to_string())
+                })
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/login/oauth/{}/code/token",
                 client.baseurl,
                 encode_path(&provider.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -11164,7 +11200,8 @@ pub mod builder {
                 client.baseurl,
                 encode_path(&provider.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -11250,14 +11287,17 @@ pub mod builder {
             } = self;
             let provider = provider.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::AccessTokenExchangeRequest>::try_into)
+                .and_then(|v| {
+                    types::AccessTokenExchangeRequest::try_from(v).map_err(|e| e.to_string())
+                })
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/login/oauth/{}/device/exchange",
                 client.baseurl,
                 encode_path(&provider.to_string()),
             );
-            let request = client.client.post(url).form_urlencoded(&body)?.build()?;
+            #[allow(unused_mut)]
+            let mut request = client.client.post(url).form_urlencoded(&body)?.build()?;
             let result = client.client.execute(request).await;
             let response = result?;
             match response.status().as_u16() {
@@ -11307,7 +11347,8 @@ pub mod builder {
             if let Some(v) = &include_depleted {
                 query.push(("include_depleted", v.to_string()));
             }
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -11372,10 +11413,11 @@ pub mod builder {
         pub async fn send(self) -> Result<ResponseValue<types::Mapper>, Error<types::Error>> {
             let Self { client, body } = self;
             let body = body
-                .and_then(std::convert::TryInto::<types::CreateMapper>::try_into)
+                .and_then(|v| types::CreateMapper::try_from(v).map_err(|e| e.to_string()))
                 .map_err(Error::InvalidRequest)?;
             let url = format!("{}/mapper", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -11435,7 +11477,8 @@ pub mod builder {
                 client.baseurl,
                 encode_path(&identifier.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .delete(url)
                 .header(
@@ -11477,7 +11520,8 @@ pub mod builder {
         ) -> Result<ResponseValue<Vec<types::OAuthClient>>, Error<types::Error>> {
             let Self { client } = self;
             let url = format!("{}/oauth/client", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -11517,7 +11561,8 @@ pub mod builder {
         pub async fn send(self) -> Result<ResponseValue<types::OAuthClient>, Error<types::Error>> {
             let Self { client } = self;
             let url = format!("{}/oauth/client", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -11576,7 +11621,8 @@ pub mod builder {
                 client.baseurl,
                 encode_path(&client_id.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -11664,14 +11710,17 @@ pub mod builder {
             } = self;
             let client_id = client_id.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::AddOAuthClientRedirectBody>::try_into)
+                .and_then(|v| {
+                    types::AddOAuthClientRedirectBody::try_from(v).map_err(|e| e.to_string())
+                })
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/oauth/client/{}/redirect_uri",
                 client.baseurl,
                 encode_path(&client_id.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -11752,7 +11801,8 @@ pub mod builder {
                 encode_path(&client_id.to_string()),
                 encode_path(&redirect_uri_id.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .delete(url)
                 .header(
@@ -11814,7 +11864,8 @@ pub mod builder {
                 client.baseurl,
                 encode_path(&client_id.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -11894,7 +11945,8 @@ pub mod builder {
                 encode_path(&client_id.to_string()),
                 encode_path(&secret_id.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .delete(url)
                 .header(
@@ -11934,7 +11986,8 @@ pub mod builder {
         pub async fn send(self) -> Result<ResponseValue<Vec<types::ListRfd>>, Error<types::Error>> {
             let Self { client } = self;
             let url = format!("{}/rfd", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -11993,7 +12046,8 @@ pub mod builder {
                 client.baseurl,
                 encode_path(&number.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -12074,14 +12128,15 @@ pub mod builder {
             } = self;
             let number = number.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(std::convert::TryInto::<types::RfdVisibility>::try_into)
+                .and_then(|v| types::RfdVisibility::try_from(v).map_err(|e| e.to_string()))
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/rfd/{}/visibility",
                 client.baseurl,
                 encode_path(&number.to_string()),
             );
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .post(url)
                 .header(
@@ -12234,7 +12289,8 @@ pub mod builder {
                 query.push(("offset", v.to_string()));
             }
             query.push(("q", q.to_string()));
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -12277,7 +12333,8 @@ pub mod builder {
         ) -> Result<ResponseValue<types::GetUserResponse>, Error<types::Error>> {
             let Self { client } = self;
             let url = format!("{}/self", client.baseurl,);
-            let request = client
+            #[allow(unused_mut)]
+            let mut request = client
                 .client
                 .get(url)
                 .header(
@@ -12301,6 +12358,8 @@ pub mod builder {
     }
 }
 
+/// Items consumers will typically use such as the Client and
+/// extension traits.
 pub mod prelude {
     pub use super::Client;
     pub use super::ClientHiddenExt;

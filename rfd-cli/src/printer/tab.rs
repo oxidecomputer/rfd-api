@@ -4,6 +4,7 @@
 
 use itertools::{EitherOrBoth, Itertools};
 use owo_colors::{OwoColorize, Style};
+use progenitor_client::ResponseValue;
 use rfd_sdk::types::{
     self, AccessGroupForApiPermissionResponse, ApiKeyResponse, ApiPermission,
     ApiUserForApiPermissionResponse, Error, FullRfd, FullRfdPdfEntry, GetUserResponse,
@@ -14,7 +15,9 @@ use rfd_sdk::types::{
 use std::{collections::HashMap, fmt::Display, fs::File, io::Write, process::Command};
 use tabwriter::TabWriter;
 
-use crate::generated::cli::CliOutput;
+use crate::reserialize;
+
+use super::CliOutput;
 
 #[derive(Debug, Clone)]
 pub struct Styles {
@@ -37,260 +40,107 @@ pub struct RfdTabPrinter {
 }
 
 impl CliOutput for RfdTabPrinter {
-    fn output_create_api_user(
-        &self,
-        response: Result<
-            types::ApiUserForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-        self.print_cli_output(&response, None);
+    fn output_api_user(&self, value: types::ApiUserForApiPermissionResponse) {
+        self.print_cli_output(&value, None);
     }
 
-    fn output_get_api_user(
-        &self,
-        response: Result<types::GetUserResponse, progenitor_client::Error<types::Error>>,
-    ) {
+    fn output_user(&self, value: types::GetUserResponse) {
         let mut tw = TabWriter::new(vec![]).ansi(true);
 
-        match response {
-            Ok(response) => {
-                response.info.display(&mut tw, 0, self);
+        value.info.display(&mut tw, 0, self);
 
-                self.print_field(&mut tw, 0, "providers", &"");
-                for provider in response.providers {
-                    self.print_field(&mut tw, 1, "id", &provider.id);
-                    self.print_field(&mut tw, 1, "provider", &provider.provider);
-                    self.print_field(&mut tw, 1, "provider_id", &provider.provider_id);
-                    self.print_list(&mut tw, 1, "emails", &provider.emails);
-                    self.print_field(&mut tw, 1, "created_at", &provider.created_at);
-                    self.print_field(&mut tw, 1, "updated_at", &provider.updated_at);
-                    self.print_field(
-                        &mut tw,
-                        1,
-                        "deleted_at",
-                        &response
-                            .info
-                            .deleted_at
-                            .map(|d| d.to_string())
-                            .unwrap_or_else(|| "--".to_string()),
-                    );
-                }
-            }
-            Err(err) => {
-                self.print_error(&mut tw, &err);
-            }
+        self.print_field(&mut tw, 0, "providers", &"");
+        for provider in value.providers {
+            self.print_field(&mut tw, 1, "id", &provider.id);
+            self.print_field(&mut tw, 1, "provider", &provider.provider);
+            self.print_field(&mut tw, 1, "provider_id", &provider.provider_id);
+            self.print_list(&mut tw, 1, "emails", &provider.emails);
+            self.print_field(&mut tw, 1, "created_at", &provider.created_at);
+            self.print_field(&mut tw, 1, "updated_at", &provider.updated_at);
+            self.print_field(
+                &mut tw,
+                1,
+                "deleted_at",
+                &value
+                    .info
+                    .deleted_at
+                    .map(|d| d.to_string())
+                    .unwrap_or_else(|| "--".to_string()),
+            );
         }
 
         output_writer(tw);
     }
 
-    fn output_update_api_user(
-        &self,
-        response: Result<
-            types::ApiUserForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-        self.print_cli_output(&response, None);
+    fn output_api_key_list(&self, value: Vec<types::ApiKeyResponse>) {
+        self.print_cli_output(&value, Some("providers".to_string()));
     }
 
-    fn output_add_api_user_to_group(
-        &self,
-        response: Result<
-            types::ApiUserForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-        self.print_cli_output(&response, None);
+    fn output_api_key_initial(&self, value: types::InitialApiKeyResponse) {
+        self.print_cli_output(&value, None);
     }
 
-    fn output_remove_api_user_from_group(
-        &self,
-        response: Result<
-            types::ApiUserForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-        self.print_cli_output(&response, None);
+    fn output_api_key(&self, value: types::ApiKeyResponse) {
+        self.print_cli_output(&value, None);
     }
 
-    fn output_list_api_user_tokens(
-        &self,
-        response: Result<Vec<types::ApiKeyResponse>, progenitor_client::Error<types::Error>>,
-    ) {
-        self.print_cli_output(&response, Some("providers".to_string()));
+    fn output_group_list(&self, value: Vec<types::AccessGroupForApiPermissionResponse>) {
+        self.print_cli_output(&value, Some("groups".to_string()));
     }
 
-    fn output_create_api_user_token(
-        &self,
-        response: Result<types::InitialApiKeyResponse, progenitor_client::Error<types::Error>>,
-    ) {
-        self.print_cli_output(&response, None);
+    fn output_group(&self, value: types::AccessGroupForApiPermissionResponse) {
+        self.print_cli_output(&value, None);
     }
 
-    fn output_get_api_user_token(
-        &self,
-        response: Result<types::ApiKeyResponse, progenitor_client::Error<types::Error>>,
-    ) {
-        self.print_cli_output(&response, None);
+    fn output_mapper_list(&self, value: Vec<types::Mapper>) {
+        self.print_cli_output(&value, Some("mappers".to_string()));
     }
 
-    fn output_delete_api_user_token(
-        &self,
-        response: Result<types::ApiKeyResponse, progenitor_client::Error<types::Error>>,
-    ) {
-        self.print_cli_output(&response, None);
+    fn output_mapper(&self, value: types::Mapper) {
+        self.print_cli_output(&value, None);
     }
 
-    fn output_github_webhook(&self, response: Result<(), progenitor_client::Error<types::Error>>) {}
-
-    fn output_get_groups(
-        &self,
-        response: Result<
-            Vec<types::AccessGroupForApiPermissionResponse>,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-        self.print_cli_output(&response, Some("groups".to_string()));
+    fn output_oauth_client_list(&self, value: Vec<types::OAuthClient>) {
+        self.print_cli_output(&value, Some("clients".to_string()));
     }
 
-    fn output_create_group(
-        &self,
-        response: Result<
-            types::AccessGroupForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-        self.print_cli_output(&response, None);
+    fn output_oauth_client(&self, value: types::OAuthClient) {
+        self.print_cli_output(&value, None);
     }
 
-    fn output_update_group(
-        &self,
-        response: Result<
-            types::AccessGroupForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-        self.print_cli_output(&response, None);
+    fn output_oauth_redirect_uri(&self, value: types::OAuthClientRedirectUri) {
+        self.print_cli_output(&value, None);
     }
 
-    fn output_delete_group(
-        &self,
-        response: Result<
-            types::AccessGroupForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-        self.print_cli_output(&response, None);
+    fn output_oauth_secret_initial(&self, value: types::InitialOAuthClientSecretResponse) {
+        self.print_cli_output(&value, None);
     }
 
-    fn output_get_mappers(
-        &self,
-        response: Result<Vec<types::Mapper>, progenitor_client::Error<types::Error>>,
-    ) {
-        self.print_cli_output(&response, Some("mappers".to_string()));
+    fn output_oauth_secret(&self, value: types::OAuthClientSecret) {
+        self.print_cli_output(&value, None);
     }
 
-    fn output_create_mapper(
-        &self,
-        response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
-    ) {
-        self.print_cli_output(&response, None);
+    fn output_rfd_list(&self, value: Vec<types::ListRfd>) {
+        self.print_cli_output(&value, Some("rfds".to_string()));
     }
 
-    fn output_delete_mapper(
-        &self,
-        response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
-    ) {
-        self.print_cli_output(&response, None);
+    fn output_rfd_full(&self, value: types::FullRfd) {
+        self.print_cli_output(&value, None);
     }
 
-    fn output_list_oauth_clients(
-        &self,
-        response: Result<Vec<types::OAuthClient>, progenitor_client::Error<types::Error>>,
-    ) {
-        self.print_cli_output(&response, Some("clients".to_string()));
+    fn output_rfd(&self, value: types::Rfd) {
+        self.print_cli_output(&value, None);
     }
 
-    fn output_create_oauth_client(
-        &self,
-        response: Result<types::OAuthClient, progenitor_client::Error<types::Error>>,
-    ) {
-        self.print_cli_output(&response, None);
+    fn output_search_results(&self, value: types::SearchResults) {
+        self.print_cli_output(&value, Some("results".to_string()));
     }
 
-    fn output_get_oauth_client(
-        &self,
-        response: Result<types::OAuthClient, progenitor_client::Error<types::Error>>,
-    ) {
-        self.print_cli_output(&response, None);
-    }
-
-    fn output_create_oauth_client_redirect_uri(
-        &self,
-        response: Result<types::OAuthClientRedirectUri, progenitor_client::Error<types::Error>>,
-    ) {
-        self.print_cli_output(&response, None);
-    }
-
-    fn output_delete_oauth_client_redirect_uri(
-        &self,
-        response: Result<types::OAuthClientRedirectUri, progenitor_client::Error<types::Error>>,
-    ) {
-        self.print_cli_output(&response, None);
-    }
-
-    fn output_create_oauth_client_secret(
-        &self,
-        response: Result<
-            types::InitialOAuthClientSecretResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-        self.print_cli_output(&response, None);
-    }
-
-    fn output_delete_oauth_client_secret(
-        &self,
-        response: Result<types::OAuthClientSecret, progenitor_client::Error<types::Error>>,
-    ) {
-        self.print_cli_output(&response, None);
-    }
-
-    fn output_get_rfds(
-        &self,
-        response: Result<Vec<types::ListRfd>, progenitor_client::Error<types::Error>>,
-    ) {
-        self.print_cli_output(&response, Some("rfds".to_string()));
-    }
-
-    fn output_get_rfd(
-        &self,
-        response: Result<types::FullRfd, progenitor_client::Error<types::Error>>,
-    ) {
-        self.print_cli_output(&response, None);
-    }
-
-    fn output_search_rfds(
-        &self,
-        response: Result<types::SearchResults, progenitor_client::Error<types::Error>>,
-    ) {
-        self.print_cli_output(&response, Some("results".to_string()));
-    }
-
-    fn output_get_self(
-        &self,
-        response: Result<types::GetUserResponse, progenitor_client::Error<types::Error>>,
-    ) {
-        self.output_get_api_user(response);
-    }
-
-    fn output_update_rfd_visibility(
-        &self,
-        response: Result<types::Rfd, progenitor_client::Error<types::Error>>,
-    ) {
-        self.print_cli_output(&response, None);
+    fn output_error<T>(&self, value: &progenitor_client::Error<T>)
+    where
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
+    {
+        self.print_error(value)
     }
 }
 
@@ -695,25 +545,17 @@ where
 }
 
 impl RfdTabPrinter {
-    fn print_cli_output<T>(
-        &self,
-        response: &Result<T, progenitor_client::Error<types::Error>>,
-        heading: Option<String>,
-    ) where
+    fn print_cli_output<T>(&self, value: &T, heading: Option<String>)
+    where
         T: TabDisplay,
     {
         let mut tw = TabWriter::new(vec![]).ansi(true);
 
-        match response {
-            Ok(response) => {
-                if let Some(heading) = &heading {
-                    self.print_field(&mut tw, 0, heading, &"");
-                }
-
-                response.display(&mut tw, if heading.is_some() { 1 } else { 0 }, self);
-            }
-            Err(err) => self.print_error(&mut tw, err),
+        if let Some(heading) = &heading {
+            self.print_field(&mut tw, 0, heading, &"");
         }
+
+        value.display(&mut tw, if heading.is_some() { 1 } else { 0 }, self);
 
         output_writer(tw);
     }
@@ -748,13 +590,19 @@ impl RfdTabPrinter {
         }
     }
 
-    fn print_error(&self, tw: &mut TabWriter<Vec<u8>>, error: &progenitor_client::Error<Error>) {
+    fn print_error<T>(&self, error: &progenitor_client::Error<T>)
+    where
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
+    {
+        let mut tw = TabWriter::new(vec![]).ansi(true);
+
         match error {
             progenitor_client::Error::CommunicationError(err) => {
                 writeln!(tw, "Failed to reach the API server");
                 writeln!(tw, "{:#?}", err);
             }
             progenitor_client::Error::ErrorResponse(err) => {
+                let err: types::Error = reserialize(err);
                 writeln!(tw, "Received error from the remote API",);
                 writeln!(tw, "Message\t{}", err.message);
                 if let Some(code) = &err.error_code {
@@ -787,7 +635,14 @@ impl RfdTabPrinter {
                 writeln!(tw, "{:?}", err);
                 writeln!(tw, "Please report this as a bug against the rfd-api");
             }
+            progenitor_client::Error::PreHookError(err) => {
+                writeln!(tw, "Internal CLI error");
+                writeln!(tw, "{:?}", err);
+                writeln!(tw, "Please report this as a bug against the rfd-api");
+            }
         }
+
+        output_writer(tw);
     }
 }
 

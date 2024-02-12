@@ -2,19 +2,15 @@
 
 use rfd_sdk::*;
 
-pub struct Cli<T: CliOverride = (), U: CliOutput = ()> {
-    client: rfd_sdk::Client,
-    over: T,
-    output: U,
+use rfd_sdk::*;
+pub struct Cli<T: CliConfig> {
+    client: Client,
+    config: T,
 }
 
-impl Cli {
-    pub fn new(client: rfd_sdk::Client) -> Self {
-        Self {
-            client,
-            over: (),
-            output: (),
-        }
+impl<T: CliConfig> Cli<T> {
+    pub fn new(client: Client, config: T) -> Self {
+        Self { client, config }
     }
 
     pub fn get_command(cmd: CliCommand) -> clap::Command {
@@ -851,159 +847,97 @@ impl Cli {
     pub fn cli_get_self() -> clap::Command {
         clap::Command::new("").about("Retrieve the user information of the calling user")
     }
-}
 
-impl<T: CliOverride, U: CliOutput> Cli<T, U> {
-    pub fn new_with_override(client: rfd_sdk::Client, over: T, output: U) -> Self {
-        Self {
-            client,
-            over,
-            output,
-        }
-    }
-
-    pub async fn execute(&self, cmd: CliCommand, matches: &clap::ArgMatches) {
+    pub async fn execute(&self, cmd: CliCommand, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         match cmd {
-            CliCommand::JwksJson => {
-                self.execute_jwks_json(matches).await;
-            }
-            CliCommand::OpenidConfiguration => {
-                self.execute_openid_configuration(matches).await;
-            }
-            CliCommand::CreateApiUser => {
-                self.execute_create_api_user(matches).await;
-            }
-            CliCommand::GetApiUser => {
-                self.execute_get_api_user(matches).await;
-            }
-            CliCommand::UpdateApiUser => {
-                self.execute_update_api_user(matches).await;
-            }
-            CliCommand::AddApiUserToGroup => {
-                self.execute_add_api_user_to_group(matches).await;
-            }
+            CliCommand::JwksJson => self.execute_jwks_json(matches).await,
+            CliCommand::OpenidConfiguration => self.execute_openid_configuration(matches).await,
+            CliCommand::CreateApiUser => self.execute_create_api_user(matches).await,
+            CliCommand::GetApiUser => self.execute_get_api_user(matches).await,
+            CliCommand::UpdateApiUser => self.execute_update_api_user(matches).await,
+            CliCommand::AddApiUserToGroup => self.execute_add_api_user_to_group(matches).await,
             CliCommand::RemoveApiUserFromGroup => {
-                self.execute_remove_api_user_from_group(matches).await;
+                self.execute_remove_api_user_from_group(matches).await
             }
-            CliCommand::LinkProvider => {
-                self.execute_link_provider(matches).await;
-            }
-            CliCommand::ListApiUserTokens => {
-                self.execute_list_api_user_tokens(matches).await;
-            }
-            CliCommand::CreateApiUserToken => {
-                self.execute_create_api_user_token(matches).await;
-            }
-            CliCommand::GetApiUserToken => {
-                self.execute_get_api_user_token(matches).await;
-            }
-            CliCommand::DeleteApiUserToken => {
-                self.execute_delete_api_user_token(matches).await;
-            }
-            CliCommand::CreateLinkToken => {
-                self.execute_create_link_token(matches).await;
-            }
-            CliCommand::GithubWebhook => {
-                self.execute_github_webhook(matches).await;
-            }
-            CliCommand::GetGroups => {
-                self.execute_get_groups(matches).await;
-            }
-            CliCommand::CreateGroup => {
-                self.execute_create_group(matches).await;
-            }
-            CliCommand::UpdateGroup => {
-                self.execute_update_group(matches).await;
-            }
-            CliCommand::DeleteGroup => {
-                self.execute_delete_group(matches).await;
-            }
-            CliCommand::AuthzCodeRedirect => {
-                self.execute_authz_code_redirect(matches).await;
-            }
-            CliCommand::AuthzCodeCallback => {
-                self.execute_authz_code_callback(matches).await;
-            }
-            CliCommand::AuthzCodeExchange => {
-                self.execute_authz_code_exchange(matches).await;
-            }
-            CliCommand::GetDeviceProvider => {
-                self.execute_get_device_provider(matches).await;
-            }
-            CliCommand::ExchangeDeviceToken => {
-                self.execute_exchange_device_token(matches).await;
-            }
-            CliCommand::GetMappers => {
-                self.execute_get_mappers(matches).await;
-            }
-            CliCommand::CreateMapper => {
-                self.execute_create_mapper(matches).await;
-            }
-            CliCommand::DeleteMapper => {
-                self.execute_delete_mapper(matches).await;
-            }
-            CliCommand::ListOauthClients => {
-                self.execute_list_oauth_clients(matches).await;
-            }
-            CliCommand::CreateOauthClient => {
-                self.execute_create_oauth_client(matches).await;
-            }
-            CliCommand::GetOauthClient => {
-                self.execute_get_oauth_client(matches).await;
-            }
+            CliCommand::LinkProvider => self.execute_link_provider(matches).await,
+            CliCommand::ListApiUserTokens => self.execute_list_api_user_tokens(matches).await,
+            CliCommand::CreateApiUserToken => self.execute_create_api_user_token(matches).await,
+            CliCommand::GetApiUserToken => self.execute_get_api_user_token(matches).await,
+            CliCommand::DeleteApiUserToken => self.execute_delete_api_user_token(matches).await,
+            CliCommand::CreateLinkToken => self.execute_create_link_token(matches).await,
+            CliCommand::GithubWebhook => self.execute_github_webhook(matches).await,
+            CliCommand::GetGroups => self.execute_get_groups(matches).await,
+            CliCommand::CreateGroup => self.execute_create_group(matches).await,
+            CliCommand::UpdateGroup => self.execute_update_group(matches).await,
+            CliCommand::DeleteGroup => self.execute_delete_group(matches).await,
+            CliCommand::AuthzCodeRedirect => self.execute_authz_code_redirect(matches).await,
+            CliCommand::AuthzCodeCallback => self.execute_authz_code_callback(matches).await,
+            CliCommand::AuthzCodeExchange => self.execute_authz_code_exchange(matches).await,
+            CliCommand::GetDeviceProvider => self.execute_get_device_provider(matches).await,
+            CliCommand::ExchangeDeviceToken => self.execute_exchange_device_token(matches).await,
+            CliCommand::GetMappers => self.execute_get_mappers(matches).await,
+            CliCommand::CreateMapper => self.execute_create_mapper(matches).await,
+            CliCommand::DeleteMapper => self.execute_delete_mapper(matches).await,
+            CliCommand::ListOauthClients => self.execute_list_oauth_clients(matches).await,
+            CliCommand::CreateOauthClient => self.execute_create_oauth_client(matches).await,
+            CliCommand::GetOauthClient => self.execute_get_oauth_client(matches).await,
             CliCommand::CreateOauthClientRedirectUri => {
-                self.execute_create_oauth_client_redirect_uri(matches).await;
+                self.execute_create_oauth_client_redirect_uri(matches).await
             }
             CliCommand::DeleteOauthClientRedirectUri => {
-                self.execute_delete_oauth_client_redirect_uri(matches).await;
+                self.execute_delete_oauth_client_redirect_uri(matches).await
             }
             CliCommand::CreateOauthClientSecret => {
-                self.execute_create_oauth_client_secret(matches).await;
+                self.execute_create_oauth_client_secret(matches).await
             }
             CliCommand::DeleteOauthClientSecret => {
-                self.execute_delete_oauth_client_secret(matches).await;
+                self.execute_delete_oauth_client_secret(matches).await
             }
-            CliCommand::GetRfds => {
-                self.execute_get_rfds(matches).await;
-            }
-            CliCommand::GetRfd => {
-                self.execute_get_rfd(matches).await;
-            }
-            CliCommand::UpdateRfdVisibility => {
-                self.execute_update_rfd_visibility(matches).await;
-            }
-            CliCommand::SearchRfds => {
-                self.execute_search_rfds(matches).await;
-            }
-            CliCommand::GetSelf => {
-                self.execute_get_self(matches).await;
-            }
+            CliCommand::GetRfds => self.execute_get_rfds(matches).await,
+            CliCommand::GetRfd => self.execute_get_rfd(matches).await,
+            CliCommand::UpdateRfdVisibility => self.execute_update_rfd_visibility(matches).await,
+            CliCommand::SearchRfds => self.execute_search_rfds(matches).await,
+            CliCommand::GetSelf => self.execute_get_self(matches).await,
         }
     }
 
-    pub async fn execute_jwks_json(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_jwks_json(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.jwks_json();
-        self.over.execute_jwks_json(matches, &mut request).unwrap();
+        self.config.execute_jwks_json(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_jwks_json(Ok(r.into_inner())),
-            Err(r) => self.output.output_jwks_json(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_openid_configuration(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_openid_configuration(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.openid_configuration();
-        self.over
-            .execute_openid_configuration(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_openid_configuration(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_openid_configuration(Ok(r.into_inner())),
-            Err(r) => self.output.output_openid_configuration(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_create_api_user(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_create_api_user(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.create_api_user();
         if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
             let body_txt = std::fs::read_to_string(value).unwrap();
@@ -1011,33 +945,41 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.body(body_value);
         }
 
-        self.over
-            .execute_create_api_user(matches, &mut request)
-            .unwrap();
+        self.config.execute_create_api_user(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_create_api_user(Ok(r.into_inner())),
-            Err(r) => self.output.output_create_api_user(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_get_api_user(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_get_api_user(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.get_api_user();
         if let Some(value) = matches.get_one::<uuid::Uuid>("identifier") {
             request = request.identifier(value.clone());
         }
 
-        self.over
-            .execute_get_api_user(matches, &mut request)
-            .unwrap();
+        self.config.execute_get_api_user(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_get_api_user(Ok(r.into_inner())),
-            Err(r) => self.output.output_get_api_user(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_update_api_user(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_update_api_user(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.update_api_user();
         if let Some(value) = matches.get_one::<uuid::Uuid>("identifier") {
             request = request.identifier(value.clone());
@@ -1049,17 +991,24 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.body(body_value);
         }
 
-        self.over
-            .execute_update_api_user(matches, &mut request)
-            .unwrap();
+        self.config.execute_update_api_user(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_update_api_user(Ok(r.into_inner())),
-            Err(r) => self.output.output_update_api_user(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_add_api_user_to_group(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_add_api_user_to_group(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.add_api_user_to_group();
         if let Some(value) = matches.get_one::<uuid::Uuid>("group-id") {
             request = request.body_map(|body| body.group_id(value.clone()))
@@ -1075,17 +1024,25 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.body(body_value);
         }
 
-        self.over
-            .execute_add_api_user_to_group(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_add_api_user_to_group(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_add_api_user_to_group(Ok(r.into_inner())),
-            Err(r) => self.output.output_add_api_user_to_group(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_remove_api_user_from_group(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_remove_api_user_from_group(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.remove_api_user_from_group();
         if let Some(value) = matches.get_one::<uuid::Uuid>("group-id") {
             request = request.group_id(value.clone());
@@ -1095,19 +1052,22 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.identifier(value.clone());
         }
 
-        self.over
-            .execute_remove_api_user_from_group(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_remove_api_user_from_group(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self
-                .output
-                .output_remove_api_user_from_group(Ok(r.into_inner())),
-            Err(r) => self.output.output_remove_api_user_from_group(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_link_provider(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_link_provider(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.link_provider();
         if let Some(value) = matches.get_one::<uuid::Uuid>("identifier") {
             request = request.identifier(value.clone());
@@ -1124,33 +1084,48 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.body(body_value);
         }
 
-        self.over
-            .execute_link_provider(matches, &mut request)
-            .unwrap();
+        self.config.execute_link_provider(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_link_provider(Ok(r.into_inner())),
-            Err(r) => self.output.output_link_provider(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_list_api_user_tokens(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_list_api_user_tokens(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.list_api_user_tokens();
         if let Some(value) = matches.get_one::<uuid::Uuid>("identifier") {
             request = request.identifier(value.clone());
         }
 
-        self.over
-            .execute_list_api_user_tokens(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_list_api_user_tokens(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_list_api_user_tokens(Ok(r.into_inner())),
-            Err(r) => self.output.output_list_api_user_tokens(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_create_api_user_token(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_create_api_user_token(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.create_api_user_token();
         if let Some(value) = matches.get_one::<chrono::DateTime<chrono::offset::Utc>>("expires-at")
         {
@@ -1167,17 +1142,25 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.body(body_value);
         }
 
-        self.over
-            .execute_create_api_user_token(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_create_api_user_token(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_create_api_user_token(Ok(r.into_inner())),
-            Err(r) => self.output.output_create_api_user_token(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_get_api_user_token(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_get_api_user_token(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.get_api_user_token();
         if let Some(value) = matches.get_one::<uuid::Uuid>("identifier") {
             request = request.identifier(value.clone());
@@ -1187,17 +1170,25 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.token_identifier(value.clone());
         }
 
-        self.over
-            .execute_get_api_user_token(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_get_api_user_token(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_get_api_user_token(Ok(r.into_inner())),
-            Err(r) => self.output.output_get_api_user_token(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_delete_api_user_token(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_delete_api_user_token(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.delete_api_user_token();
         if let Some(value) = matches.get_one::<uuid::Uuid>("identifier") {
             request = request.identifier(value.clone());
@@ -1207,17 +1198,25 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.token_identifier(value.clone());
         }
 
-        self.over
-            .execute_delete_api_user_token(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_delete_api_user_token(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_delete_api_user_token(Ok(r.into_inner())),
-            Err(r) => self.output.output_delete_api_user_token(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_create_link_token(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_create_link_token(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.create_link_token();
         if let Some(value) = matches.get_one::<uuid::Uuid>("identifier") {
             request = request.identifier(value.clone());
@@ -1234,17 +1233,22 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.body(body_value);
         }
 
-        self.over
-            .execute_create_link_token(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_create_link_token(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_create_link_token(Ok(r.into_inner())),
-            Err(r) => self.output.output_create_link_token(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_github_webhook(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_github_webhook(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.github_webhook();
         if let Some(value) = matches.get_one::<String>("ref") {
             request = request.body_map(|body| body.ref_(value.clone()))
@@ -1256,27 +1260,37 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.body(body_value);
         }
 
-        self.over
-            .execute_github_webhook(matches, &mut request)
-            .unwrap();
+        self.config.execute_github_webhook(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_github_webhook(Ok(r.into_inner())),
-            Err(r) => self.output.output_github_webhook(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_get_groups(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_get_groups(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.get_groups();
-        self.over.execute_get_groups(matches, &mut request).unwrap();
+        self.config.execute_get_groups(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_get_groups(Ok(r.into_inner())),
-            Err(r) => self.output.output_get_groups(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_create_group(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_create_group(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.create_group();
         if let Some(value) = matches.get_one::<String>("name") {
             request = request.body_map(|body| body.name(value.clone()))
@@ -1289,17 +1303,21 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.body(body_value);
         }
 
-        self.over
-            .execute_create_group(matches, &mut request)
-            .unwrap();
+        self.config.execute_create_group(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_create_group(Ok(r.into_inner())),
-            Err(r) => self.output.output_create_group(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_update_group(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_update_group(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.update_group();
         if let Some(value) = matches.get_one::<uuid::Uuid>("group-id") {
             request = request.group_id(value.clone());
@@ -1316,33 +1334,44 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.body(body_value);
         }
 
-        self.over
-            .execute_update_group(matches, &mut request)
-            .unwrap();
+        self.config.execute_update_group(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_update_group(Ok(r.into_inner())),
-            Err(r) => self.output.output_update_group(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_delete_group(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_delete_group(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.delete_group();
         if let Some(value) = matches.get_one::<uuid::Uuid>("group-id") {
             request = request.group_id(value.clone());
         }
 
-        self.over
-            .execute_delete_group(matches, &mut request)
-            .unwrap();
+        self.config.execute_delete_group(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_delete_group(Ok(r.into_inner())),
-            Err(r) => self.output.output_delete_group(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_authz_code_redirect(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_authz_code_redirect(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.authz_code_redirect();
         if let Some(value) = matches.get_one::<uuid::Uuid>("client-id") {
             request = request.client_id(value.clone());
@@ -1368,9 +1397,8 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.state(value.clone());
         }
 
-        self.over
-            .execute_authz_code_redirect(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_authz_code_redirect(matches, &mut request)?;
         let result = request.send().await;
         match result {
             Ok(r) => {
@@ -1382,7 +1410,10 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
         }
     }
 
-    pub async fn execute_authz_code_callback(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_authz_code_callback(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.authz_code_callback();
         if let Some(value) = matches.get_one::<String>("code") {
             request = request.code(value.clone());
@@ -1400,19 +1431,24 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.state(value.clone());
         }
 
-        self.over
-            .execute_authz_code_callback(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_authz_code_callback(matches, &mut request)?;
         let result = request.send().await;
         match result {
             Ok(r) => {
                 todo!()
             }
-            Err(r) => self.output.output_authz_code_callback(Err(r)),
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_authz_code_exchange(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_authz_code_exchange(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.authz_code_exchange();
         if let Some(value) = matches.get_one::<uuid::Uuid>("client-id") {
             request = request.body_map(|body| body.client_id(value.clone()))
@@ -1449,33 +1485,49 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.body(body_value);
         }
 
-        self.over
-            .execute_authz_code_exchange(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_authz_code_exchange(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_authz_code_exchange(Ok(r.into_inner())),
-            Err(r) => self.output.output_authz_code_exchange(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_get_device_provider(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_get_device_provider(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.get_device_provider();
         if let Some(value) = matches.get_one::<types::OAuthProviderName>("provider") {
             request = request.provider(value.clone());
         }
 
-        self.over
-            .execute_get_device_provider(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_get_device_provider(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_get_device_provider(Ok(r.into_inner())),
-            Err(r) => self.output.output_get_device_provider(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_exchange_device_token(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_exchange_device_token(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.exchange_device_token();
         if let Some(value) = matches.get_one::<String>("device-code") {
             request = request.body_map(|body| body.device_code(value.clone()))
@@ -1501,9 +1553,8 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.body(body_value);
         }
 
-        self.over
-            .execute_exchange_device_token(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_exchange_device_token(matches, &mut request)?;
         let result = request.send().await;
         match result {
             Ok(r) => {
@@ -1515,23 +1566,27 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
         }
     }
 
-    pub async fn execute_get_mappers(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_get_mappers(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.get_mappers();
         if let Some(value) = matches.get_one::<bool>("include-depleted") {
             request = request.include_depleted(value.clone());
         }
 
-        self.over
-            .execute_get_mappers(matches, &mut request)
-            .unwrap();
+        self.config.execute_get_mappers(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_get_mappers(Ok(r.into_inner())),
-            Err(r) => self.output.output_get_mappers(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_create_mapper(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_create_mapper(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.create_mapper();
         if let Some(value) = matches.get_one::<i32>("max-activations") {
             request = request.body_map(|body| body.max_activations(value.clone()))
@@ -1547,73 +1602,105 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.body(body_value);
         }
 
-        self.over
-            .execute_create_mapper(matches, &mut request)
-            .unwrap();
+        self.config.execute_create_mapper(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_create_mapper(Ok(r.into_inner())),
-            Err(r) => self.output.output_create_mapper(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_delete_mapper(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_delete_mapper(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.delete_mapper();
         if let Some(value) = matches.get_one::<uuid::Uuid>("identifier") {
             request = request.identifier(value.clone());
         }
 
-        self.over
-            .execute_delete_mapper(matches, &mut request)
-            .unwrap();
+        self.config.execute_delete_mapper(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_delete_mapper(Ok(r.into_inner())),
-            Err(r) => self.output.output_delete_mapper(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_list_oauth_clients(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_list_oauth_clients(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.list_oauth_clients();
-        self.over
-            .execute_list_oauth_clients(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_list_oauth_clients(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_list_oauth_clients(Ok(r.into_inner())),
-            Err(r) => self.output.output_list_oauth_clients(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_create_oauth_client(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_create_oauth_client(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.create_oauth_client();
-        self.over
-            .execute_create_oauth_client(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_create_oauth_client(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_create_oauth_client(Ok(r.into_inner())),
-            Err(r) => self.output.output_create_oauth_client(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_get_oauth_client(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_get_oauth_client(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.get_oauth_client();
         if let Some(value) = matches.get_one::<uuid::Uuid>("client-id") {
             request = request.client_id(value.clone());
         }
 
-        self.over
-            .execute_get_oauth_client(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_get_oauth_client(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_get_oauth_client(Ok(r.into_inner())),
-            Err(r) => self.output.output_get_oauth_client(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_create_oauth_client_redirect_uri(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_create_oauth_client_redirect_uri(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.create_oauth_client_redirect_uri();
         if let Some(value) = matches.get_one::<uuid::Uuid>("client-id") {
             request = request.client_id(value.clone());
@@ -1630,19 +1717,25 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.body(body_value);
         }
 
-        self.over
-            .execute_create_oauth_client_redirect_uri(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_create_oauth_client_redirect_uri(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self
-                .output
-                .output_create_oauth_client_redirect_uri(Ok(r.into_inner())),
-            Err(r) => self.output.output_create_oauth_client_redirect_uri(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_delete_oauth_client_redirect_uri(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_delete_oauth_client_redirect_uri(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.delete_oauth_client_redirect_uri();
         if let Some(value) = matches.get_one::<uuid::Uuid>("client-id") {
             request = request.client_id(value.clone());
@@ -1652,37 +1745,49 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.redirect_uri_id(value.clone());
         }
 
-        self.over
-            .execute_delete_oauth_client_redirect_uri(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_delete_oauth_client_redirect_uri(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self
-                .output
-                .output_delete_oauth_client_redirect_uri(Ok(r.into_inner())),
-            Err(r) => self.output.output_delete_oauth_client_redirect_uri(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_create_oauth_client_secret(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_create_oauth_client_secret(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.create_oauth_client_secret();
         if let Some(value) = matches.get_one::<uuid::Uuid>("client-id") {
             request = request.client_id(value.clone());
         }
 
-        self.over
-            .execute_create_oauth_client_secret(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_create_oauth_client_secret(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self
-                .output
-                .output_create_oauth_client_secret(Ok(r.into_inner())),
-            Err(r) => self.output.output_create_oauth_client_secret(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_delete_oauth_client_secret(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_delete_oauth_client_secret(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.delete_oauth_client_secret();
         if let Some(value) = matches.get_one::<uuid::Uuid>("client-id") {
             request = request.client_id(value.clone());
@@ -1692,43 +1797,61 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.secret_id(value.clone());
         }
 
-        self.over
-            .execute_delete_oauth_client_secret(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_delete_oauth_client_secret(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self
-                .output
-                .output_delete_oauth_client_secret(Ok(r.into_inner())),
-            Err(r) => self.output.output_delete_oauth_client_secret(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_get_rfds(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_get_rfds(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.get_rfds();
-        self.over.execute_get_rfds(matches, &mut request).unwrap();
+        self.config.execute_get_rfds(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_get_rfds(Ok(r.into_inner())),
-            Err(r) => self.output.output_get_rfds(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_get_rfd(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_get_rfd(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.get_rfd();
         if let Some(value) = matches.get_one::<String>("number") {
             request = request.number(value.clone());
         }
 
-        self.over.execute_get_rfd(matches, &mut request).unwrap();
+        self.config.execute_get_rfd(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_get_rfd(Ok(r.into_inner())),
-            Err(r) => self.output.output_get_rfd(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_update_rfd_visibility(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_update_rfd_visibility(
+        &self,
+        matches: &clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.update_rfd_visibility();
         if let Some(value) = matches.get_one::<String>("number") {
             request = request.number(value.clone());
@@ -1744,17 +1867,22 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.body(body_value);
         }
 
-        self.over
-            .execute_update_rfd_visibility(matches, &mut request)
-            .unwrap();
+        self.config
+            .execute_update_rfd_visibility(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_update_rfd_visibility(Ok(r.into_inner())),
-            Err(r) => self.output.output_update_rfd_visibility(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_search_rfds(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_search_rfds(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.search_rfds();
         if let Some(value) = matches.get_one::<String>("attributes-to-crop") {
             request = request.attributes_to_crop(value.clone());
@@ -1780,33 +1908,61 @@ impl<T: CliOverride, U: CliOutput> Cli<T, U> {
             request = request.q(value.clone());
         }
 
-        self.over
-            .execute_search_rfds(matches, &mut request)
-            .unwrap();
+        self.config.execute_search_rfds(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_search_rfds(Ok(r.into_inner())),
-            Err(r) => self.output.output_search_rfds(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 
-    pub async fn execute_get_self(&self, matches: &clap::ArgMatches) {
+    pub async fn execute_get_self(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.get_self();
-        self.over.execute_get_self(matches, &mut request).unwrap();
+        self.config.execute_get_self(matches, &mut request)?;
         let result = request.send().await;
         match result {
-            Ok(r) => self.output.output_get_self(Ok(r.into_inner())),
-            Err(r) => self.output.output_get_self(Err(r)),
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
         }
     }
 }
 
-pub trait CliOverride {
+pub trait CliConfig {
+    fn item_success<T>(&self, value: &ResponseValue<T>)
+    where
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug;
+    fn item_error<T>(&self, value: &Error<T>)
+    where
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug;
+    fn list_start<T>(&self)
+    where
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug;
+    fn list_item<T>(&self, value: &T)
+    where
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug;
+    fn list_end_success<T>(&self)
+    where
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug;
+    fn list_end_error<T>(&self, value: &Error<T>)
+    where
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug;
     fn execute_jwks_json(
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::JwksJson,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1814,7 +1970,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::OpenidConfiguration,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1822,7 +1978,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::CreateApiUser,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1830,7 +1986,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::GetApiUser,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1838,7 +1994,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::UpdateApiUser,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1846,7 +2002,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::AddApiUserToGroup,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1854,7 +2010,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::RemoveApiUserFromGroup,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1862,7 +2018,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::LinkProvider,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1870,7 +2026,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::ListApiUserTokens,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1878,7 +2034,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::CreateApiUserToken,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1886,7 +2042,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::GetApiUserToken,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1894,7 +2050,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::DeleteApiUserToken,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1902,7 +2058,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::CreateLinkToken,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1910,7 +2066,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::GithubWebhook,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1918,7 +2074,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::GetGroups,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1926,7 +2082,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::CreateGroup,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1934,7 +2090,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::UpdateGroup,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1942,7 +2098,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::DeleteGroup,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1950,7 +2106,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::AuthzCodeRedirect,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1958,7 +2114,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::AuthzCodeCallback,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1966,7 +2122,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::AuthzCodeExchange,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1974,7 +2130,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::GetDeviceProvider,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1982,7 +2138,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::ExchangeDeviceToken,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1990,7 +2146,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::GetMappers,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -1998,7 +2154,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::CreateMapper,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -2006,7 +2162,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::DeleteMapper,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -2014,7 +2170,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::ListOauthClients,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -2022,7 +2178,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::CreateOauthClient,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -2030,7 +2186,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::GetOauthClient,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -2038,7 +2194,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::CreateOauthClientRedirectUri,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -2046,7 +2202,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::DeleteOauthClientRedirectUri,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -2054,7 +2210,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::CreateOauthClientSecret,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -2062,7 +2218,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::DeleteOauthClientSecret,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -2070,7 +2226,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::GetRfds,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -2078,7 +2234,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::GetRfd,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -2086,7 +2242,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::UpdateRfdVisibility,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -2094,7 +2250,7 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::SearchRfds,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 
@@ -2102,258 +2258,10 @@ pub trait CliOverride {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::GetSelf,
-    ) -> Result<(), String> {
+    ) -> anyhow::Result<()> {
         Ok(())
     }
 }
-
-impl CliOverride for () {}
-
-pub trait CliOutput {
-    fn output_jwks_json(
-        &self,
-        response: Result<types::Jwks, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_openid_configuration(
-        &self,
-        response: Result<types::OpenIdConfiguration, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_create_api_user(
-        &self,
-        response: Result<
-            types::ApiUserForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-    }
-
-    fn output_get_api_user(
-        &self,
-        response: Result<types::GetUserResponse, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_update_api_user(
-        &self,
-        response: Result<
-            types::ApiUserForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-    }
-
-    fn output_add_api_user_to_group(
-        &self,
-        response: Result<
-            types::ApiUserForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-    }
-
-    fn output_remove_api_user_from_group(
-        &self,
-        response: Result<
-            types::ApiUserForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-    }
-
-    fn output_link_provider(&self, response: Result<(), progenitor_client::Error<types::Error>>) {}
-
-    fn output_list_api_user_tokens(
-        &self,
-        response: Result<Vec<types::ApiKeyResponse>, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_create_api_user_token(
-        &self,
-        response: Result<types::InitialApiKeyResponse, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_get_api_user_token(
-        &self,
-        response: Result<types::ApiKeyResponse, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_delete_api_user_token(
-        &self,
-        response: Result<types::ApiKeyResponse, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_create_link_token(
-        &self,
-        response: Result<types::ApiUserLinkRequestResponse, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_github_webhook(&self, response: Result<(), progenitor_client::Error<types::Error>>) {}
-
-    fn output_get_groups(
-        &self,
-        response: Result<
-            Vec<types::AccessGroupForApiPermissionResponse>,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-    }
-
-    fn output_create_group(
-        &self,
-        response: Result<
-            types::AccessGroupForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-    }
-
-    fn output_update_group(
-        &self,
-        response: Result<
-            types::AccessGroupForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-    }
-
-    fn output_delete_group(
-        &self,
-        response: Result<
-            types::AccessGroupForApiPermissionResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-    }
-
-    fn output_authz_code_redirect(&self, response: Result<(), progenitor_client::Error<()>>) {}
-
-    fn output_authz_code_callback(
-        &self,
-        response: Result<(), progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_authz_code_exchange(
-        &self,
-        response: Result<
-            types::OAuthAuthzCodeExchangeResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-    }
-
-    fn output_get_device_provider(
-        &self,
-        response: Result<types::OAuthProviderInfo, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_exchange_device_token(&self, response: Result<(), progenitor_client::Error<()>>) {}
-
-    fn output_get_mappers(
-        &self,
-        response: Result<Vec<types::Mapper>, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_create_mapper(
-        &self,
-        response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_delete_mapper(
-        &self,
-        response: Result<types::Mapper, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_list_oauth_clients(
-        &self,
-        response: Result<Vec<types::OAuthClient>, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_create_oauth_client(
-        &self,
-        response: Result<types::OAuthClient, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_get_oauth_client(
-        &self,
-        response: Result<types::OAuthClient, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_create_oauth_client_redirect_uri(
-        &self,
-        response: Result<types::OAuthClientRedirectUri, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_delete_oauth_client_redirect_uri(
-        &self,
-        response: Result<types::OAuthClientRedirectUri, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_create_oauth_client_secret(
-        &self,
-        response: Result<
-            types::InitialOAuthClientSecretResponse,
-            progenitor_client::Error<types::Error>,
-        >,
-    ) {
-    }
-
-    fn output_delete_oauth_client_secret(
-        &self,
-        response: Result<types::OAuthClientSecret, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_get_rfds(
-        &self,
-        response: Result<Vec<types::ListRfd>, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_get_rfd(
-        &self,
-        response: Result<types::FullRfd, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_update_rfd_visibility(
-        &self,
-        response: Result<types::Rfd, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_search_rfds(
-        &self,
-        response: Result<types::SearchResults, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-
-    fn output_get_self(
-        &self,
-        response: Result<types::GetUserResponse, progenitor_client::Error<types::Error>>,
-    ) {
-    }
-}
-
-impl CliOutput for () {}
 
 #[derive(Copy, Clone, Debug)]
 pub enum CliCommand {
