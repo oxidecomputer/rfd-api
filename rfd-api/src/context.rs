@@ -746,6 +746,12 @@ impl ApiContext {
                             id: Uuid::new_v4(),
                             api_user_id: user.id,
                             emails: info.verified_emails,
+                            // TODO: Refactor in generic display name across providers. This cascades
+                            // into changes needed within mappers
+                            display_names: info
+                                .github_username
+                                .map(|name| vec![name])
+                                .unwrap_or_default(),
                             provider: info.external_id.provider().to_string(),
                             provider_id: info.external_id.id().to_string(),
                         },
@@ -1740,6 +1746,7 @@ mod tests {
             provider: "test".to_string(),
             provider_id: "test_id".to_string(),
             emails: vec![],
+            display_names: vec![],
             created_at: Utc::now(),
             updated_at: Utc::now(),
             deleted_at: None,

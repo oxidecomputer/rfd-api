@@ -839,6 +839,11 @@ impl ApiUserProviderStore for PostgresStore {
                 provider: provider.provider,
                 provider_id: provider.provider_id,
                 emails: provider.emails.into_iter().filter_map(|e| e).collect(),
+                display_names: provider
+                    .display_names
+                    .into_iter()
+                    .filter_map(|d| d)
+                    .collect(),
                 created_at: provider.created_at,
                 updated_at: provider.updated_at,
                 deleted_at: provider.deleted_at,
@@ -873,6 +878,11 @@ impl ApiUserProviderStore for PostgresStore {
             provider: provider_m.provider,
             provider_id: provider_m.provider_id,
             emails: provider_m.emails.into_iter().filter_map(|e| e).collect(),
+            display_names: provider_m
+                .display_names
+                .into_iter()
+                .filter_map(|d| d)
+                .collect(),
             created_at: provider_m.created_at,
             updated_at: provider_m.updated_at,
             deleted_at: provider_m.deleted_at,
@@ -902,6 +912,11 @@ impl ApiUserProviderStore for PostgresStore {
             provider: provider_m.provider,
             provider_id: provider_m.provider_id,
             emails: provider_m.emails.into_iter().filter_map(|e| e).collect(),
+            display_names: provider_m
+                .display_names
+                .into_iter()
+                .filter_map(|d| d)
+                .collect(),
             created_at: provider_m.created_at,
             updated_at: provider_m.updated_at,
             deleted_at: provider_m.deleted_at,
