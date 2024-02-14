@@ -862,11 +862,13 @@ impl ApiUserProviderStore for PostgresStore {
                     api_user_provider::provider.eq(provider.provider),
                     api_user_provider::provider_id.eq(provider.provider_id),
                     api_user_provider::emails.eq(provider.emails),
+                    api_user_provider::display_names.eq(provider.display_names),
                 ))
                 .on_conflict(api_user_provider::id)
                 .do_update()
                 .set((
                     api_user_provider::emails.eq(excluded(api_user_provider::emails)),
+                    api_user_provider::display_names.eq(excluded(api_user_provider::display_names)),
                     api_user_provider::updated_at.eq(Utc::now()),
                 ))
                 .get_result_async(&*self.pool.get().await?)

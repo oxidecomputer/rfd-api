@@ -766,7 +766,21 @@ impl ApiContext {
                 tracing::info!("Found an existing user. Ensuring mapped permissions and groups.");
 
                 // This branch ensures that there is a 0th indexed item
-                let provider = api_user_providers.into_iter().nth(0).unwrap();
+                let mut provider = api_user_providers.into_iter().nth(0).unwrap();
+
+                // Update the provider with the newest user info
+                provider.emails = info.verified_emails;
+                provider.display_names = info
+                    .github_username
+                    .map(|name| vec![name])
+                    .unwrap_or_default();
+
+                tracing::info!(?provider.id, "Updating provider for user");
+
+                self.update_api_user_provider(caller, provider.clone().into())
+                    .await
+                    .map_err(|err| err.into())
+                    .to_resource_result()?;
 
                 // Update the found user to ensure it has at least the mapped permissions and groups
                 let user = self
@@ -1137,13 +1151,13 @@ impl ApiContext {
     pub async fn update_api_user_provider(
         &self,
         caller: &ApiCaller,
-        api_user: NewApiUserProvider,
+        api_user_provider: NewApiUserProvider,
     ) -> ResourceResult<ApiUserProvider, StoreError> {
         if caller.any(&[
-            &ApiPermission::UpdateApiUser(api_user.id),
+            &ApiPermission::UpdateApiUser(api_user_provider.id),
             &ApiPermission::UpdateApiUserAll,
         ]) {
-            ApiUserProviderStore::upsert(&*self.storage, api_user)
+            ApiUserProviderStore::upsert(&*self.storage, api_user_provider)
                 .await
                 .to_resource_result()
         } else {
