@@ -1,0 +1,1 @@
+ALTER TABLE api_user_provider DROP COLUMN display_names;

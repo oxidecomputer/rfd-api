@@ -114,6 +114,7 @@ pub struct ApiUserProviderModel {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
+    pub display_names: Vec<Option<String>>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]

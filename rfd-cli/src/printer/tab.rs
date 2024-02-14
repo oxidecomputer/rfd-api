@@ -55,6 +55,7 @@ impl CliOutput for RfdTabPrinter {
             self.print_field(&mut tw, 1, "provider", &provider.provider);
             self.print_field(&mut tw, 1, "provider_id", &provider.provider_id);
             self.print_list(&mut tw, 1, "emails", &provider.emails);
+            self.print_list(&mut tw, 1, "display_names", &provider.display_names);
             self.print_field(&mut tw, 1, "created_at", &provider.created_at);
             self.print_field(&mut tw, 1, "updated_at", &provider.updated_at);
             self.print_field(

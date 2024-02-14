@@ -3334,6 +3334,12 @@
             "type": "string",
             "format": "date-time"
           },
+          "display_names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "emails": {
             "type": "array",
             "items": {
@@ -3358,6 +3364,7 @@
         "required": [
           "api_user_id",
           "created_at",
+          "display_names",
           "emails",
           "id",
           "provider",
