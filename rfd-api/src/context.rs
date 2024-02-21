@@ -426,8 +426,11 @@ impl ApiContext {
             }
             AuthToken::Jwt(jwt) => {
                 // AuthnToken::Jwt can only be generated from a verified JWT
-                let permissions = ApiPermission::from_scope(jwt.claims.scp.iter())?;
-                Ok((jwt.claims.sub, BasePermissions::Restricted(permissions)))
+                let permissions = match &jwt.claims.scp {
+                    Some(scp) => BasePermissions::Restricted(ApiPermission::from_scope(scp.iter())?),
+                    None => BasePermissions::Full,
+                };
+                Ok((jwt.claims.sub, permissions))
             }
         }?)
     }
@@ -915,7 +918,7 @@ impl ApiContext {
         caller: &ApiCaller,
         api_user: &ApiUser<ApiPermission>,
         api_user_provider: &ApiUserProvider,
-        scope: Vec<String>,
+        scope: Option<Vec<String>>,
     ) -> Result<RegisteredAccessToken, ApiError> {
         let expires_at = Utc::now() + Duration::seconds(self.default_jwt_expiration());
 
@@ -1744,7 +1747,7 @@ mod tests {
         ApiContext,
     };
 
-    async fn create_token(ctx: &ApiContext, user_id: Uuid, scope: Vec<String>) -> AuthToken {
+    async fn create_token(ctx: &ApiContext, user_id: Uuid, scope: Option<Vec<String>>) -> AuthToken {
         let user = User {
             id: user_id,
             permissions: vec![].into(),
@@ -1832,12 +1835,12 @@ mod tests {
         storage.api_user_store = Some(Arc::new(user_store));
         let ctx = mock_context(storage).await;
 
-        let token_with_no_scope = create_token(&ctx, user_id, vec![]).await;
+        let token_with_no_scope = create_token(&ctx, user_id, Some(vec![])).await;
         let permissions = ctx.get_caller(Some(&token_with_no_scope)).await.unwrap();
         assert_eq!(ApiPermissions::new(), permissions.permissions);
 
         let token_with_rfd_read_scope =
-            create_token(&ctx, user_id, vec!["rfd:content:r".to_string()]).await;
+            create_token(&ctx, user_id, Some(vec!["rfd:content:r".to_string()])).await;
         let permissions = ctx
             .get_caller(Some(&token_with_rfd_read_scope))
             .await

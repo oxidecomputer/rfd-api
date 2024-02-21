@@ -201,22 +201,7 @@ pub async fn exchange_device_token(
                             ctx.builtin_registration_user(),
                             &api_user,
                             &api_user_provider,
-                            vec![
-                                "user:info:r".to_string(),
-                                "user:info:w".to_string(),
-                                "user:provider:w".to_string(),
-                                "user:token:r".to_string(),
-                                "user:token:w".to_string(),
-                                "group:r".to_string(),
-                                "group:w".to_string(),
-                                "mapper:r".to_string(),
-                                "mapper:w".to_string(),
-                                "rfd:content:r".to_string(),
-                                "rfd:discussion:r".to_string(),
-                                "search".to_string(),
-                                "oauth:client:r".to_string(),
-                                "oauth:client:w".to_string(),
-                            ],
+                            None,
                         )
                         .await?;
 
