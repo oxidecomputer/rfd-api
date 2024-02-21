@@ -427,7 +427,9 @@ impl ApiContext {
             AuthToken::Jwt(jwt) => {
                 // AuthnToken::Jwt can only be generated from a verified JWT
                 let permissions = match &jwt.claims.scp {
-                    Some(scp) => BasePermissions::Restricted(ApiPermission::from_scope(scp.iter())?),
+                    Some(scp) => {
+                        BasePermissions::Restricted(ApiPermission::from_scope(scp.iter())?)
+                    }
                     None => BasePermissions::Full,
                 };
                 Ok((jwt.claims.sub, permissions))
@@ -1747,7 +1749,11 @@ mod tests {
         ApiContext,
     };
 
-    async fn create_token(ctx: &ApiContext, user_id: Uuid, scope: Option<Vec<String>>) -> AuthToken {
+    async fn create_token(
+        ctx: &ApiContext,
+        user_id: Uuid,
+        scope: Option<Vec<String>>,
+    ) -> AuthToken {
         let user = User {
             id: user_id,
             permissions: vec![].into(),
