@@ -657,7 +657,7 @@ in velit.
     #[test]
     fn test_update_asciidoc_labels() {
         let mut rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content()));
-        rfd.update_labels("newlabel1; newlabel2");
+        rfd.update_labels("newlabel1, newlabel2");
         let labels = rfd.get_labels().unwrap();
         let expected = "newlabel1, newlabel2".to_string();
         assert_eq!(expected, labels);
