@@ -645,6 +645,16 @@ in velit.
     }
 
     #[test]
+    fn test_get_asciidoc_empty_labels() {
+        let content = r#"sdfsdf
+        = RFD 43 Identity and Access Management (IAM)
+        No labels here
+        "#;
+        let rfd = RfdContent::new_asciidoc(content);
+        assert!(rfd.get_labels().is_none());
+    }
+
+    #[test]
     fn test_update_asciidoc_labels() {
         let mut rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content()));
         rfd.update_labels("newlabel1; newlabel2");
