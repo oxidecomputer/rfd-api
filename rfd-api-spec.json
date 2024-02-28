@@ -3538,10 +3538,6 @@
             "nullable": true,
             "type": "string"
           },
-          "labels": {
-            "nullable": true,
-            "type": "string"
-          },
           "commit": {
             "type": "string"
           },
@@ -3559,6 +3555,10 @@
           "id": {
             "type": "string",
             "format": "uuid"
+          },
+          "labels": {
+            "nullable": true,
+            "type": "string"
           },
           "link": {
             "nullable": true,
@@ -3902,6 +3902,10 @@
           "id": {
             "type": "string",
             "format": "uuid"
+          },
+          "labels": {
+            "nullable": true,
+            "type": "string"
           },
           "link": {
             "nullable": true,

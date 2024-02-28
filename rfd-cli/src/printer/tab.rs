@@ -408,6 +408,12 @@ impl TabDisplay for ListRfd {
         printer.print_field(
             tw,
             level,
+            "labels",
+            &self.labels.as_ref().map(|s| s.as_str()).unwrap_or(""),
+        );
+        printer.print_field(
+            tw,
+            level,
             "link",
             &self.link.as_ref().map(|s| s.as_str()).unwrap_or(""),
         );
@@ -448,6 +454,12 @@ impl TabDisplay for FullRfd {
             level,
             "authors",
             &self.authors.as_ref().map(|s| s.as_str()).unwrap_or(""),
+        );
+        printer.print_field(
+            tw,
+            level,
+            "labels",
+            &self.labels.as_ref().map(|s| s.as_str()).unwrap_or(""),
         );
         printer.print_field(
             tw,

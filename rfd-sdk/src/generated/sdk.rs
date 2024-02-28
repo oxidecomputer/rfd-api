@@ -3763,6 +3763,12 @@ pub mod types {
     ///      "type": "string",
     ///      "format": "uuid"
     ///    },
+    ///    "labels": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
     ///    "link": {
     ///      "type": [
     ///        "string",
@@ -3804,6 +3810,8 @@ pub mod types {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub discussion: Option<String>,
         pub id: uuid::Uuid,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub labels: Option<String>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub link: Option<String>,
         pub rfd_number: i32,
@@ -7485,6 +7493,7 @@ pub mod types {
             committed_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             discussion: Result<Option<String>, String>,
             id: Result<uuid::Uuid, String>,
+            labels: Result<Option<String>, String>,
             link: Result<Option<String>, String>,
             rfd_number: Result<i32, String>,
             sha: Result<String, String>,
@@ -7501,6 +7510,7 @@ pub mod types {
                     committed_at: Err("no value supplied for committed_at".to_string()),
                     discussion: Ok(Default::default()),
                     id: Err("no value supplied for id".to_string()),
+                    labels: Ok(Default::default()),
                     link: Ok(Default::default()),
                     rfd_number: Err("no value supplied for rfd_number".to_string()),
                     sha: Err("no value supplied for sha".to_string()),
@@ -7560,6 +7570,16 @@ pub mod types {
                 self.id = value
                     .try_into()
                     .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn labels<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.labels = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for labels: {}", e));
                 self
             }
             pub fn link<T>(mut self, value: T) -> Self
@@ -7633,6 +7653,7 @@ pub mod types {
                     committed_at: value.committed_at?,
                     discussion: value.discussion?,
                     id: value.id?,
+                    labels: value.labels?,
                     link: value.link?,
                     rfd_number: value.rfd_number?,
                     sha: value.sha?,
@@ -7651,6 +7672,7 @@ pub mod types {
                     committed_at: Ok(value.committed_at),
                     discussion: Ok(value.discussion),
                     id: Ok(value.id),
+                    labels: Ok(value.labels),
                     link: Ok(value.link),
                     rfd_number: Ok(value.rfd_number),
                     sha: Ok(value.sha),
