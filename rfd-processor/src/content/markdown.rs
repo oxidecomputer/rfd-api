@@ -102,6 +102,14 @@ impl<'a> RfdAttributes for RfdMarkdown<'a> {
     fn get_authors(&self) -> Option<&str> {
         self.attr("authors")
     }
+
+    fn get_labels(&self) -> Option<&str> {
+        self.attr("labels")
+    }
+
+    fn update_labels(&mut self, value: &str) {
+        self.set_attr("labels", value)
+    }
 }
 
 #[cfg(test)]

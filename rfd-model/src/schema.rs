@@ -227,6 +227,7 @@ diesel::table! {
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
         deleted_at -> Nullable<Timestamptz>,
+        labels -> Nullable<Varchar>,
     }
 }
 

@@ -3538,6 +3538,10 @@
             "nullable": true,
             "type": "string"
           },
+          "labels": {
+            "nullable": true,
+            "type": "string"
+          },
           "commit": {
             "type": "string"
           },

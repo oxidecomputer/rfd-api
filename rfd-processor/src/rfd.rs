@@ -205,6 +205,7 @@ pub struct RfdPayload {
     pub content: RfdContent<'static>,
     pub content_format: ContentFormat,
     pub authors: String,
+    pub labels: String,
     pub sha: String,
     pub commit_sha: String,
     pub commit_date: DateTime<Utc>,
@@ -285,6 +286,12 @@ impl RemoteRfd {
             .get_authors()
             .unwrap_or_default()
             .to_string();
+        let labels = self
+            .readme
+            .content
+            .get_labels()
+            .unwrap_or_default()
+            .to_string();
         let discussion = self.readme.content.get_discussion();
         let state = self
             .readme
@@ -311,6 +318,7 @@ impl RemoteRfd {
             content: self.readme.content,
             content_format,
             authors,
+            labels,
             sha: self.readme.sha,
             commit_sha: self.commit_sha,
             commit_date: self.commit_date,
@@ -375,6 +383,11 @@ impl RemoteRfd {
                     None
                 } else {
                     Some(payload.authors)
+                },
+                labels: if payload.labels.is_empty() {
+                    None
+                } else {
+                    Some(payload.labels)
                 },
                 content: payload.content.raw().to_string(),
                 content_format: payload.content_format,

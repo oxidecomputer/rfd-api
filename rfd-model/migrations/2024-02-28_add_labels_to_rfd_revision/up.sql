@@ -1,0 +1,1 @@
+ALTER TABLE rfd_revision ADD COLUMN labels VARCHAR;

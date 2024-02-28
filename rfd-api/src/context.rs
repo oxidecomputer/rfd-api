@@ -187,6 +187,7 @@ pub struct FullRfd {
     pub title: String,
     pub state: Option<String>,
     pub authors: Option<String>,
+    pub labels: Option<String>,
     #[partial(ListRfd(skip))]
     pub content: String,
     pub sha: String,
@@ -577,6 +578,7 @@ impl ApiContext {
                 title: revision.title,
                 state: revision.state,
                 authors: revision.authors,
+                labels: revision.labels,
                 sha: revision.sha,
                 commit: revision.commit_sha,
                 committed_at: revision.committed_at,
@@ -637,6 +639,7 @@ impl ApiContext {
                     title: revision.title,
                     state: revision.state,
                     authors: revision.authors,
+                    labels: revision.labels,
                     content: revision.content,
                     sha: revision.sha,
                     commit: revision.commit_sha,

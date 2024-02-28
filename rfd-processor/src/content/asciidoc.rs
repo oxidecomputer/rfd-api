@@ -225,6 +225,14 @@ impl<'a> RfdAttributes for RfdAsciidoc<'a> {
             })
         })
     }
+
+    fn get_labels(&self) -> Option<&str> {
+        self.attr("labels")
+    }
+
+    fn update_labels(&mut self, value: &str) {
+        self.set_attr("labels", value)
+    }
 }
 
 #[async_trait]
@@ -570,6 +578,7 @@ sdf
 :revremark: State: {state}
 :docdatetime: 2019-01-04 19:26:06 UTC
 :localdatetime: 2019-01-04 19:26:06 UTC
+:labels: label1, label2
 
 = RFD 123 Place
 FirstName LastName <fname@company.org>
@@ -625,5 +634,32 @@ in velit.
         let expected = std::fs::read(&ref_path).unwrap();
 
         assert_eq!(expected, pdf);
+    }
+
+    #[test]
+    fn test_get_asciidoc_labels() {
+        let rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content()));
+        let labels = rfd.get_labels().unwrap();
+        let expected = "label1, label2".to_string();
+        assert_eq!(expected, labels);
+    }
+
+    #[test]
+    fn test_get_asciidoc_empty_labels() {
+        let content = r#"sdfsdf
+        = RFD 43 Identity and Access Management (IAM)
+        No labels here
+        "#;
+        let rfd = RfdContent::new_asciidoc(content);
+        assert!(rfd.get_labels().is_none());
+    }
+
+    #[test]
+    fn test_update_asciidoc_labels() {
+        let mut rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content()));
+        rfd.update_labels("newlabel1, newlabel2");
+        let labels = rfd.get_labels().unwrap();
+        let expected = "newlabel1, newlabel2".to_string();
+        assert_eq!(expected, labels);
     }
 }
