@@ -39,7 +39,6 @@ pub struct RfdRevisionModel {
     pub state: Option<String>,
     pub discussion: Option<String>,
     pub authors: Option<String>,
-    pub labels: Option<String>,
     pub content: String,
     pub content_format: ContentFormat,
     pub sha: String,
@@ -48,6 +47,7 @@ pub struct RfdRevisionModel {
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
+    pub labels: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]

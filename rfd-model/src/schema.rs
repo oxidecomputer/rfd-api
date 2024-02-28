@@ -219,7 +219,6 @@ diesel::table! {
         state -> Nullable<Varchar>,
         discussion -> Nullable<Varchar>,
         authors -> Nullable<Varchar>,
-        labels -> Nullable<Varchar>,
         content -> Varchar,
         content_format -> RfdContentFormat,
         sha -> Varchar,
@@ -228,6 +227,7 @@ diesel::table! {
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
         deleted_at -> Nullable<Timestamptz>,
+        labels -> Nullable<Varchar>,
     }
 }
 
