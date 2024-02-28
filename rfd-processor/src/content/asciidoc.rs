@@ -578,7 +578,7 @@ sdf
 :revremark: State: {state}
 :docdatetime: 2019-01-04 19:26:06 UTC
 :localdatetime: 2019-01-04 19:26:06 UTC
-:labels: label1; label2
+:labels: label1, label2
 
 = RFD 123 Place
 FirstName LastName <fname@company.org>
@@ -640,7 +640,7 @@ in velit.
     fn test_get_asciidoc_labels() {
         let rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content()));
         let labels = rfd.get_labels().unwrap();
-        let expected = "label1; label2".to_string();
+        let expected = "label1, label2".to_string();
         assert_eq!(expected, labels);
     }
 
@@ -659,7 +659,7 @@ in velit.
         let mut rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content()));
         rfd.update_labels("newlabel1; newlabel2");
         let labels = rfd.get_labels().unwrap();
-        let expected = "newlabel1; newlabel2".to_string();
+        let expected = "newlabel1, newlabel2".to_string();
         assert_eq!(expected, labels);
     }
 }
