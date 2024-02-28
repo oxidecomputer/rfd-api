@@ -2587,6 +2587,7 @@ pub mod types {
     ///  "required": [
     ///    "api_user_id",
     ///    "created_at",
+    ///    "display_names",
     ///    "emails",
     ///    "id",
     ///    "provider",
@@ -2608,6 +2609,13 @@ pub mod types {
     ///        "null"
     ///      ],
     ///      "format": "date-time"
+    ///    },
+    ///    "display_names": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      }
+
     ///    },
     ///    "emails": {
     ///      "type": "array",
@@ -2643,6 +2651,7 @@ pub mod types {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub display_names: Vec<String>,
         pub emails: Vec<String>,
         pub id: uuid::Uuid,
         pub provider: String,
@@ -5807,6 +5816,7 @@ pub mod types {
             api_user_id: Result<uuid::Uuid, String>,
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
+            display_names: Result<Vec<String>, String>,
             emails: Result<Vec<String>, String>,
             id: Result<uuid::Uuid, String>,
             provider: Result<String, String>,
@@ -5820,6 +5830,7 @@ pub mod types {
                     api_user_id: Err("no value supplied for api_user_id".to_string()),
                     created_at: Err("no value supplied for created_at".to_string()),
                     deleted_at: Ok(Default::default()),
+                    display_names: Err("no value supplied for display_names".to_string()),
                     emails: Err("no value supplied for emails".to_string()),
                     id: Err("no value supplied for id".to_string()),
                     provider: Err("no value supplied for provider".to_string()),
@@ -5858,6 +5869,16 @@ pub mod types {
                 self.deleted_at = value
                     .try_into()
                     .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                self
+            }
+            pub fn display_names<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Vec<String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.display_names = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for display_names: {}", e)
+                });
                 self
             }
             pub fn emails<T>(mut self, value: T) -> Self
@@ -5919,6 +5940,7 @@ pub mod types {
                     api_user_id: value.api_user_id?,
                     created_at: value.created_at?,
                     deleted_at: value.deleted_at?,
+                    display_names: value.display_names?,
                     emails: value.emails?,
                     id: value.id?,
                     provider: value.provider?,
@@ -5934,6 +5956,7 @@ pub mod types {
                     api_user_id: Ok(value.api_user_id),
                     created_at: Ok(value.created_at),
                     deleted_at: Ok(value.deleted_at),
+                    display_names: Ok(value.display_names),
                     emails: Ok(value.emails),
                     id: Ok(value.id),
                     provider: Ok(value.provider),

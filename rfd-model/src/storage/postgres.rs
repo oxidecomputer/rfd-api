@@ -841,6 +841,11 @@ impl ApiUserProviderStore for PostgresStore {
                 provider: provider.provider,
                 provider_id: provider.provider_id,
                 emails: provider.emails.into_iter().filter_map(|e| e).collect(),
+                display_names: provider
+                    .display_names
+                    .into_iter()
+                    .filter_map(|d| d)
+                    .collect(),
                 created_at: provider.created_at,
                 updated_at: provider.updated_at,
                 deleted_at: provider.deleted_at,
@@ -859,11 +864,13 @@ impl ApiUserProviderStore for PostgresStore {
                     api_user_provider::provider.eq(provider.provider),
                     api_user_provider::provider_id.eq(provider.provider_id),
                     api_user_provider::emails.eq(provider.emails),
+                    api_user_provider::display_names.eq(provider.display_names),
                 ))
                 .on_conflict(api_user_provider::id)
                 .do_update()
                 .set((
                     api_user_provider::emails.eq(excluded(api_user_provider::emails)),
+                    api_user_provider::display_names.eq(excluded(api_user_provider::display_names)),
                     api_user_provider::updated_at.eq(Utc::now()),
                 ))
                 .get_result_async(&*self.pool.get().await?)
@@ -875,6 +882,11 @@ impl ApiUserProviderStore for PostgresStore {
             provider: provider_m.provider,
             provider_id: provider_m.provider_id,
             emails: provider_m.emails.into_iter().filter_map(|e| e).collect(),
+            display_names: provider_m
+                .display_names
+                .into_iter()
+                .filter_map(|d| d)
+                .collect(),
             created_at: provider_m.created_at,
             updated_at: provider_m.updated_at,
             deleted_at: provider_m.deleted_at,
@@ -904,6 +916,11 @@ impl ApiUserProviderStore for PostgresStore {
             provider: provider_m.provider,
             provider_id: provider_m.provider_id,
             emails: provider_m.emails.into_iter().filter_map(|e| e).collect(),
+            display_names: provider_m
+                .display_names
+                .into_iter()
+                .filter_map(|d| d)
+                .collect(),
             created_at: provider_m.created_at,
             updated_at: provider_m.updated_at,
             deleted_at: provider_m.deleted_at,

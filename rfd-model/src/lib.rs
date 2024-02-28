@@ -193,6 +193,7 @@ pub struct ApiUserProvider {
     pub provider: String,
     pub provider_id: String,
     pub emails: Vec<String>,
+    pub display_names: Vec<String>,
     #[partial(NewApiUserProvider(skip))]
     pub created_at: DateTime<Utc>,
     #[partial(NewApiUserProvider(skip))]

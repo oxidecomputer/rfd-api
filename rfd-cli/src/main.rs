@@ -316,7 +316,7 @@ impl ProgenitorCliConfig for Context {
             "ApiUserForApiPermissionResponse" => {
                 self.printer().unwrap().output_api_user(reserialize(value))
             }
-            "GetUserResponse" => self.printer().unwrap().output_api_user(reserialize(value)),
+            "GetUserResponse" => self.printer().unwrap().output_user(reserialize(value)),
             "Vec<ApiKeyResponse>" => self
                 .printer()
                 .unwrap()

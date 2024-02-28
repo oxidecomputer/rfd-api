@@ -427,8 +427,13 @@ impl ApiContext {
             }
             AuthToken::Jwt(jwt) => {
                 // AuthnToken::Jwt can only be generated from a verified JWT
-                let permissions = ApiPermission::from_scope(jwt.claims.scp.iter())?;
-                Ok((jwt.claims.sub, BasePermissions::Restricted(permissions)))
+                let permissions = match &jwt.claims.scp {
+                    Some(scp) => {
+                        BasePermissions::Restricted(ApiPermission::from_scope(scp.iter())?)
+                    }
+                    None => BasePermissions::Full,
+                };
+                Ok((jwt.claims.sub, permissions))
             }
         }?)
     }
@@ -749,6 +754,12 @@ impl ApiContext {
                             id: Uuid::new_v4(),
                             api_user_id: user.id,
                             emails: info.verified_emails,
+                            // TODO: Refactor in generic display name across providers. This cascades
+                            // into changes needed within mappers
+                            display_names: info
+                                .github_username
+                                .map(|name| vec![name])
+                                .unwrap_or_default(),
                             provider: info.external_id.provider().to_string(),
                             provider_id: info.external_id.id().to_string(),
                         },
@@ -763,7 +774,21 @@ impl ApiContext {
                 tracing::info!("Found an existing user. Ensuring mapped permissions and groups.");
 
                 // This branch ensures that there is a 0th indexed item
-                let provider = api_user_providers.into_iter().nth(0).unwrap();
+                let mut provider = api_user_providers.into_iter().nth(0).unwrap();
+
+                // Update the provider with the newest user info
+                provider.emails = info.verified_emails;
+                provider.display_names = info
+                    .github_username
+                    .map(|name| vec![name])
+                    .unwrap_or_default();
+
+                tracing::info!(?provider.id, "Updating provider for user");
+
+                self.update_api_user_provider(caller, provider.clone().into())
+                    .await
+                    .map_err(|err| err.into())
+                    .to_resource_result()?;
 
                 // Update the found user to ensure it has at least the mapped permissions and groups
                 let user = self
@@ -898,7 +923,7 @@ impl ApiContext {
         caller: &ApiCaller,
         api_user: &ApiUser<ApiPermission>,
         api_user_provider: &ApiUserProvider,
-        scope: Vec<String>,
+        scope: Option<Vec<String>>,
     ) -> Result<RegisteredAccessToken, ApiError> {
         let expires_at = Utc::now() + Duration::seconds(self.default_jwt_expiration());
 
@@ -1134,13 +1159,13 @@ impl ApiContext {
     pub async fn update_api_user_provider(
         &self,
         caller: &ApiCaller,
-        api_user: NewApiUserProvider,
+        api_user_provider: NewApiUserProvider,
     ) -> ResourceResult<ApiUserProvider, StoreError> {
         if caller.any(&[
-            &ApiPermission::UpdateApiUser(api_user.id),
+            &ApiPermission::UpdateApiUser(api_user_provider.id),
             &ApiPermission::UpdateApiUserAll,
         ]) {
-            ApiUserProviderStore::upsert(&*self.storage, api_user)
+            ApiUserProviderStore::upsert(&*self.storage, api_user_provider)
                 .await
                 .to_resource_result()
         } else {
@@ -1727,7 +1752,11 @@ mod tests {
         ApiContext,
     };
 
-    async fn create_token(ctx: &ApiContext, user_id: Uuid, scope: Vec<String>) -> AuthToken {
+    async fn create_token(
+        ctx: &ApiContext,
+        user_id: Uuid,
+        scope: Option<Vec<String>>,
+    ) -> AuthToken {
         let user = User {
             id: user_id,
             permissions: vec![].into(),
@@ -1743,6 +1772,7 @@ mod tests {
             provider: "test".to_string(),
             provider_id: "test_id".to_string(),
             emails: vec![],
+            display_names: vec![],
             created_at: Utc::now(),
             updated_at: Utc::now(),
             deleted_at: None,
@@ -1814,12 +1844,12 @@ mod tests {
         storage.api_user_store = Some(Arc::new(user_store));
         let ctx = mock_context(storage).await;
 
-        let token_with_no_scope = create_token(&ctx, user_id, vec![]).await;
+        let token_with_no_scope = create_token(&ctx, user_id, Some(vec![])).await;
         let permissions = ctx.get_caller(Some(&token_with_no_scope)).await.unwrap();
         assert_eq!(ApiPermissions::new(), permissions.permissions);
 
         let token_with_rfd_read_scope =
-            create_token(&ctx, user_id, vec!["rfd:content:r".to_string()]).await;
+            create_token(&ctx, user_id, Some(vec!["rfd:content:r".to_string()])).await;
         let permissions = ctx
             .get_caller(Some(&token_with_rfd_read_scope))
             .await
