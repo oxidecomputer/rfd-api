@@ -29,11 +29,11 @@ The RFD API backend is made up of two services:
 **Dependencies**
 * Postgres
 * Node
-* * @mermaid-js/mermaid-cli
+  * @mermaid-js/mermaid-cli
 * Ruby
-* * rouge
-* * asciidoctor-pdf
-* * asciidoctor-mermaid
+  * rouge
+  * asciidoctor-pdf
+  * asciidoctor-mermaid
 
 Running the API requires setting up a configuration file as outlined in `config.example.toml`.
 
