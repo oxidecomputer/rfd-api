@@ -1,8 +1,10 @@
 # rfd-api
 
-Work in progress replacement for RFD processing and programmatic access.
+Backend services and tools for processing and managing RFDs
 
-## Getting Started
+## RFD CLI
+
+### Getting Started
 
 1. Download the latest release of `rfd-cli` or run `cargo run -p rfd-cli`
 2. Configure the API host with `rfd-cli config set host https://rfd-api.shared.oxide.computer`
@@ -16,7 +18,27 @@ token (id) or a long-term api token (token).
 
 3. Authenticate against the API with `rfd-cli auth login google -m token` via a token
 
-## RFD Model
+## Backend
+
+The RFD API backend is made up of two services:
+* `rfd-api` - API for accessing RFDs and handling GitHub webhooks
+* `rfd-processor` - Scans for RFDs to update, handles RFD state transitions, manages RFD assets
+
+### Getting Started - API
+
+**Dependencies**
+* Postgres
+* Node
+* * @mermaid-js/mermaid-cli
+* Ruby
+* * rouge
+* * asciidoctor-pdf
+* * asciidoctor-mermaid
+
+Running the API requires setting up a configuration file as outlined in `config.example.toml`.
+
+
+### RFD Model
 
 ```
                                     ┌─────────────────┐ ┌─────────────────┐
@@ -31,7 +53,7 @@ token (id) or a long-term api token (token).
                 │                 │ │                 │
                 │ Revision aaaaaa │ │ Revision cccccc │
                 ├─────────────────┤ ├─────────────────┤
-              ┌─┤ sha             │ │ sha             │
+              ┌─┤ commit_sha      │ │ commit_sha      │
               │ └────────┬────────┘ └────────┬────────┘
               │          │                   │
               │          └───────────────────┤
@@ -44,7 +66,7 @@ token (id) or a long-term api token (token).
 │ branch* ├─┐ │ ├────────────┤  │   ├─────────────────┤
 └─────────┘ │ ├─┤ sha        ├──┘   │ id              │
             │ │ ├────────────┤      ├─────────────────┤
-┌─────────┐ ├─┼─┤ rfd_number ├──────┤ rfd_number      │
+┌─────────┐ ├─┼─┤ rfd        ├──────┤ rfd_number      │
 │         │ │ │ └────────────┘      └─────────────────┘
 │ Webhook │ │ │
 ├─────────┤ │ │

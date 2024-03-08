@@ -1,17 +1,19 @@
 # Allowed values: json, pretty
 log_format = ""
 
-# Optional directory to write log files to. If not specified, they are written to stdout
+# Optional directory to write log files to. If not specified, logs are written to stdout
 log_directory = ""
 
-# Config file to load initial mappers and groups from
+# Config file to load initial mappers and groups from. See mappers.example.toml for how to
+# construct this file
 initial_mappers = ""
 
 # Public url of the service. This should include the protocol, host, and port that a user would use
-# to connect to the server via
+# to connect to the server on
 public_url = ""
 
-# Port for the server to run on
+# Port for the server to run on. This does not have to match the public_url (i.e. in the case that
+# the server is running behind a proxy)
 server_port = 8080
 
 # Full url of the Postgres database to connect to

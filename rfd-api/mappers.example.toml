@@ -1,0 +1,16 @@
+# Initial data to be configured during startup
+
+[[groups]]
+name = "group-name"
+permissions = [
+  "GetRfdsAll",
+  "SearchRfds",
+]
+
+[[mappers]]
+name = "Initial admin"
+rule = "email_address"
+email = "user@hostname"
+groups = [
+  "group-name"
+]
