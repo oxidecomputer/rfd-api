@@ -11,5 +11,6 @@ header:
     - '**/*.rs'
   paths-ignore:
     - '**/generated/*.rs'
+    - 'parse-rfd/parser/dist/index.js'
 
   comment: on-failure
