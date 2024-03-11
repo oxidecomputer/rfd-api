@@ -33,6 +33,8 @@ Running the API requires setting up a configuration file as outlined in `config.
 ### Processor
 
 Dependencies
+
+* asciidoctor
 * Node
   * @mermaid-js/mermaid-cli
 * Ruby
