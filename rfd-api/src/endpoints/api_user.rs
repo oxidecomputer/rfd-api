@@ -459,7 +459,7 @@ pub struct ApiUserProviderLinkPayload {
     path = "/api-user/{identifier}/link",
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
-pub async fn link_provider(
+pub async fn _link_provider(
     rqctx: RequestContext<ApiContext>,
     path: Path<ApiUserPath>,
     body: TypedBody<ApiUserProviderLinkPayload>,

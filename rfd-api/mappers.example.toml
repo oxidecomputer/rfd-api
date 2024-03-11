@@ -1,0 +1,17 @@
+# Initial data to be configured during startup
+
+# Create a group to assign the initial admin user to
+[[groups]]
+name = "admin"
+permissions = [
+  # List the permissions that the admin should have
+]
+
+# Add the initial mapper that will assign a user with a specific email address to the admin group
+[[mappers]]
+name = "Initial admin"
+rule = "email_address"
+email = "user@hostname"
+groups = [
+  "admin"
+]

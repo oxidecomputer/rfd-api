@@ -1,8 +1,10 @@
 # rfd-api
 
-Work in progress replacement for RFD processing and programmatic access.
+Backend services and tools for processing and managing RFDs
 
-## Getting Started
+## RFD CLI
+
+### Getting Started
 
 1. Download the latest release of `rfd-cli` or run `cargo run -p rfd-cli`
 2. Configure the API host with `rfd-cli config set host https://rfd-api.shared.oxide.computer`
@@ -16,8 +18,31 @@ token (id) or a long-term api token (token).
 
 3. Authenticate against the API with `rfd-cli auth login google -m token` via a token
 
-## RFD Model
+## Backend
 
+The RFD API backend is made up of two services:
+* `rfd-api` - API for accessing RFDs and handling GitHub webhooks
+* `rfd-processor` - Scans for RFDs to update, handles RFD state transitions, manages RFD assets
+
+The RFD API backend services expect to run against a Postgres database.
+
+### API
+
+Running the API requires setting up a configuration file as outlined in `config.example.toml`.
+
+### Processor
+
+Dependencies
+* Node
+  * @mermaid-js/mermaid-cli
+* Ruby
+  * rouge
+  * asciidoctor-pdf
+  * asciidoctor-mermaid
+
+## Background
+
+Objects reference:
 ```
                                     ┌─────────────────┐ ┌─────────────────┐
                                     │                 │ │                 │
@@ -31,7 +56,7 @@ token (id) or a long-term api token (token).
                 │                 │ │                 │
                 │ Revision aaaaaa │ │ Revision cccccc │
                 ├─────────────────┤ ├─────────────────┤
-              ┌─┤ sha             │ │ sha             │
+              ┌─┤ commit_sha      │ │ commit_sha      │
               │ └────────┬────────┘ └────────┬────────┘
               │          │                   │
               │          └───────────────────┤
@@ -44,7 +69,7 @@ token (id) or a long-term api token (token).
 │ branch* ├─┐ │ ├────────────┤  │   ├─────────────────┤
 └─────────┘ │ ├─┤ sha        ├──┘   │ id              │
             │ │ ├────────────┤      ├─────────────────┤
-┌─────────┐ ├─┼─┤ rfd_number ├──────┤ rfd_number      │
+┌─────────┐ ├─┼─┤ rfd        ├──────┤ rfd_number      │
 │         │ │ │ └────────────┘      └─────────────────┘
 │ Webhook │ │ │
 ├─────────┤ │ │
@@ -154,6 +179,8 @@ repo itself, and GitHub rate limits. Currently we run the scanner on a 15 minute
 ```
 
 ### Account Provider Linking
+
+(Note: not yet implemented)
 
 The RFD API does not perform any kind of automatic account linking. Every new remote provider id that
 is seen results in a new account being generated. This is problematic though if you want to be able to

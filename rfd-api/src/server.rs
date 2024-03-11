@@ -15,10 +15,9 @@ use crate::{
     endpoints::{
         api_user::{
             add_api_user_to_group, create_api_user, create_api_user_token, delete_api_user_token,
-            get_api_user, get_api_user_token, get_self, link_provider, list_api_user_tokens,
+            get_api_user, get_api_user_token, get_self, list_api_user_tokens,
             remove_api_user_from_group, update_api_user,
         },
-        api_user_provider::create_link_token,
         group::{create_group, delete_group, get_groups, update_group},
         login::oauth::{
             client::{
@@ -117,10 +116,6 @@ pub fn server(
     api.register(add_api_user_to_group)
         .expect("Failed to register endpoint");
     api.register(remove_api_user_from_group)
-        .expect("Failed to register endpoint");
-    api.register(link_provider)
-        .expect("Failed to register endpoint");
-    api.register(create_link_token)
         .expect("Failed to register endpoint");
 
     // Group Management

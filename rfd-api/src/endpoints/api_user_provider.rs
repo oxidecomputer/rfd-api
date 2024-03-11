@@ -33,7 +33,7 @@ pub struct ApiUserLinkRequestResponse {
     path = "/api-user-provider/{identifier}/link-token",
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
-pub async fn create_link_token(
+pub async fn _create_link_token(
     rqctx: RequestContext<ApiContext>,
     path: Path<ApiUserProviderPath>,
     body: TypedBody<ApiUserLinkRequestPayload>,
