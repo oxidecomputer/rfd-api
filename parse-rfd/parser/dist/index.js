@@ -49765,7 +49765,7 @@ function getMergeFunction(key, options) {
 function getEnumerableOwnPropertySymbols(target) {
 	return Object.getOwnPropertySymbols
 		? Object.getOwnPropertySymbols(target).filter(function(symbol) {
-			return target.propertyIsEnumerable(symbol)
+			return Object.propertyIsEnumerable.call(target, symbol)
 		})
 		: []
 }
@@ -51004,7 +51004,7 @@ function getRssFeed(feedRoot) {
             addConditionally(entry, "title", "title", children);
             addConditionally(entry, "link", "link", children);
             addConditionally(entry, "description", "description", children);
-            var pubDate = fetch("pubDate", children);
+            var pubDate = fetch("pubDate", children) || fetch("dc:date", children);
             if (pubDate)
                 entry.pubDate = new Date(pubDate);
             return entry;
@@ -51121,11 +51121,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.uniqueSort = exports.compareDocumentPosition = exports.DocumentPosition = exports.removeSubsets = void 0;
 var domhandler_1 = __nccwpck_require__(4038);
 /**
- * Given an array of nodes, remove any member that is contained by another.
+ * Given an array of nodes, remove any member that is contained by another
+ * member.
  *
  * @category Helpers
  * @param nodes Nodes to filter.
- * @returns Remaining nodes that aren't subtrees of each other.
+ * @returns Remaining nodes that aren't contained by other nodes.
  */
 function removeSubsets(nodes) {
     var idx = nodes.length;
@@ -51167,8 +51168,8 @@ var DocumentPosition;
     DocumentPosition[DocumentPosition["CONTAINED_BY"] = 16] = "CONTAINED_BY";
 })(DocumentPosition = exports.DocumentPosition || (exports.DocumentPosition = {}));
 /**
- * Compare the position of one node against another node in any other document.
- * The return value is a bitmask with the values from {@link DocumentPosition}.
+ * Compare the position of one node against another node in any other document,
+ * returning a bitmask with the values from {@link DocumentPosition}.
  *
  * Document order:
  * > There is an ordering, document order, defined on all the nodes in the
@@ -51233,9 +51234,9 @@ function compareDocumentPosition(nodeA, nodeB) {
 }
 exports.compareDocumentPosition = compareDocumentPosition;
 /**
- * Sort an array of nodes based on their relative position in the document and
- * remove any duplicate nodes. If the array contains nodes that do not belong to
- * the same document, sort order is unspecified.
+ * Sort an array of nodes based on their relative position in the document,
+ * removing any duplicate nodes. If the array contains nodes that do not belong
+ * to the same document, sort order is unspecified.
  *
  * @category Helpers
  * @param nodes Array of DOM nodes.
@@ -51309,6 +51310,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getElementsByTagType = exports.getElementsByTagName = exports.getElementById = exports.getElements = exports.testElement = void 0;
 var domhandler_1 = __nccwpck_require__(4038);
 var querying_js_1 = __nccwpck_require__(9908);
+/**
+ * A map of functions to check nodes against.
+ */
 var Checks = {
     tag_name: function (name) {
         if (typeof name === "function") {
@@ -51333,6 +51337,9 @@ var Checks = {
     },
 };
 /**
+ * Returns a function to check whether a node has an attribute with a particular
+ * value.
+ *
  * @param attrib Attribute to check.
  * @param value Attribute value to look for.
  * @returns A function to check whether the a node has an attribute with a
@@ -51345,6 +51352,9 @@ function getAttribCheck(attrib, value) {
     return function (elem) { return (0, domhandler_1.isTag)(elem) && elem.attribs[attrib] === value; };
 }
 /**
+ * Returns a function that returns `true` if either of the input functions
+ * returns `true` for a node.
+ *
  * @param a First function to combine.
  * @param b Second function to combine.
  * @returns A function taking a node and returning `true` if either of the input
@@ -51354,9 +51364,12 @@ function combineFuncs(a, b) {
     return function (elem) { return a(elem) || b(elem); };
 }
 /**
+ * Returns a function that executes all checks in `options` and returns `true`
+ * if any of them match a node.
+ *
  * @param options An object describing nodes to look for.
- * @returns A function executing all checks in `options` and returning `true` if
- *   any of them match a node.
+ * @returns A function that executes all checks in `options` and returns `true`
+ *   if any of them match a node.
  */
 function compileTest(options) {
     var funcs = Object.keys(options).map(function (key) {
@@ -51368,6 +51381,8 @@ function compileTest(options) {
     return funcs.length === 0 ? null : funcs.reduce(combineFuncs);
 }
 /**
+ * Checks whether a node matches the description in `options`.
+ *
  * @category Legacy Query Functions
  * @param options An object describing nodes to look for.
  * @param node The element to test.
@@ -51379,6 +51394,8 @@ function testElement(options, node) {
 }
 exports.testElement = testElement;
 /**
+ * Returns all nodes that match `options`.
+ *
  * @category Legacy Query Functions
  * @param options An object describing nodes to look for.
  * @param nodes Nodes to search through.
@@ -51393,6 +51410,8 @@ function getElements(options, nodes, recurse, limit) {
 }
 exports.getElements = getElements;
 /**
+ * Returns the node with the supplied ID.
+ *
  * @category Legacy Query Functions
  * @param id The unique ID attribute value to look for.
  * @param nodes Nodes to search through.
@@ -51407,6 +51426,8 @@ function getElementById(id, nodes, recurse) {
 }
 exports.getElementById = getElementById;
 /**
+ * Returns all nodes with the supplied `tagName`.
+ *
  * @category Legacy Query Functions
  * @param tagName Tag name to search for.
  * @param nodes Nodes to search through.
@@ -51421,6 +51442,8 @@ function getElementsByTagName(tagName, nodes, recurse, limit) {
 }
 exports.getElementsByTagName = getElementsByTagName;
 /**
+ * Returns all nodes with the supplied `type`.
+ *
  * @category Legacy Query Functions
  * @param type Element type to look for.
  * @param nodes Nodes to search through.
@@ -51458,8 +51481,14 @@ function removeElement(elem) {
         elem.next.prev = elem.prev;
     if (elem.parent) {
         var childs = elem.parent.children;
-        childs.splice(childs.lastIndexOf(elem), 1);
+        var childsIndex = childs.lastIndexOf(elem);
+        if (childsIndex >= 0) {
+            childs.splice(childsIndex, 1);
+        }
     }
+    elem.next = null;
+    elem.prev = null;
+    elem.parent = null;
 }
 exports.removeElement = removeElement;
 /**
@@ -51490,15 +51519,15 @@ exports.replaceElement = replaceElement;
  * Append a child to an element.
  *
  * @category Manipulation
- * @param elem The element to append to.
+ * @param parent The element to append to.
  * @param child The element to be added as a child.
  */
-function appendChild(elem, child) {
+function appendChild(parent, child) {
     removeElement(child);
     child.next = null;
-    child.parent = elem;
-    if (elem.children.push(child) > 1) {
-        var sibling = elem.children[elem.children.length - 2];
+    child.parent = parent;
+    if (parent.children.push(child) > 1) {
+        var sibling = parent.children[parent.children.length - 2];
         sibling.next = child;
         child.prev = sibling;
     }
@@ -51538,15 +51567,15 @@ exports.append = append;
  * Prepend a child to an element.
  *
  * @category Manipulation
- * @param elem The element to prepend before.
+ * @param parent The element to prepend before.
  * @param child The element to be added as a child.
  */
-function prependChild(elem, child) {
+function prependChild(parent, child) {
     removeElement(child);
-    child.parent = elem;
+    child.parent = parent;
     child.prev = null;
-    if (elem.children.unshift(child) !== 1) {
-        var sibling = elem.children[1];
+    if (parent.children.unshift(child) !== 1) {
+        var sibling = parent.children[1];
         sibling.prev = child;
         child.next = sibling;
     }
@@ -51591,7 +51620,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.findAll = exports.existsOne = exports.findOne = exports.findOneChild = exports.find = exports.filter = void 0;
 var domhandler_1 = __nccwpck_require__(4038);
 /**
- * Search a node and its children for nodes passing a test function.
+ * Search a node and its children for nodes passing a test function. If `node` is not an array, it will be wrapped in one.
  *
  * @category Querying
  * @param test Function to test nodes on.
@@ -51603,13 +51632,11 @@ var domhandler_1 = __nccwpck_require__(4038);
 function filter(test, node, recurse, limit) {
     if (recurse === void 0) { recurse = true; }
     if (limit === void 0) { limit = Infinity; }
-    if (!Array.isArray(node))
-        node = [node];
-    return find(test, node, recurse, limit);
+    return find(test, Array.isArray(node) ? node : [node], recurse, limit);
 }
 exports.filter = filter;
 /**
- * Search an array of node and its children for nodes passing a test function.
+ * Search an array of nodes and their children for nodes passing a test function.
  *
  * @category Querying
  * @param test Function to test nodes on.
@@ -51620,26 +51647,42 @@ exports.filter = filter;
  */
 function find(test, nodes, recurse, limit) {
     var result = [];
-    for (var _i = 0, nodes_1 = nodes; _i < nodes_1.length; _i++) {
-        var elem = nodes_1[_i];
+    /** Stack of the arrays we are looking at. */
+    var nodeStack = [nodes];
+    /** Stack of the indices within the arrays. */
+    var indexStack = [0];
+    for (;;) {
+        // First, check if the current array has any more elements to look at.
+        if (indexStack[0] >= nodeStack[0].length) {
+            // If we have no more arrays to look at, we are done.
+            if (indexStack.length === 1) {
+                return result;
+            }
+            // Otherwise, remove the current array from the stack.
+            nodeStack.shift();
+            indexStack.shift();
+            // Loop back to the start to continue with the next array.
+            continue;
+        }
+        var elem = nodeStack[0][indexStack[0]++];
         if (test(elem)) {
             result.push(elem);
             if (--limit <= 0)
-                break;
+                return result;
         }
         if (recurse && (0, domhandler_1.hasChildren)(elem) && elem.children.length > 0) {
-            var children = find(test, elem.children, recurse, limit);
-            result.push.apply(result, children);
-            limit -= children.length;
-            if (limit <= 0)
-                break;
+            /*
+             * Add the children to the stack. We are depth-first, so this is
+             * the next array we look at.
+             */
+            indexStack.unshift(0);
+            nodeStack.unshift(elem.children);
         }
     }
-    return result;
 }
 exports.find = find;
 /**
- * Finds the first element inside of an array that matches a test function.
+ * Finds the first element inside of an array that matches a test function. This is an alias for `Array.prototype.find`.
  *
  * @category Querying
  * @param test Function to test nodes on.
@@ -51656,29 +51699,31 @@ exports.findOneChild = findOneChild;
  *
  * @category Querying
  * @param test Function to test nodes on.
- * @param nodes Array of nodes to search.
+ * @param nodes Node or array of nodes to search.
  * @param recurse Also consider child nodes.
- * @returns The first child node that passes `test`.
+ * @returns The first node that passes `test`.
  */
 function findOne(test, nodes, recurse) {
     if (recurse === void 0) { recurse = true; }
     var elem = null;
     for (var i = 0; i < nodes.length && !elem; i++) {
-        var checked = nodes[i];
-        if (!(0, domhandler_1.isTag)(checked)) {
+        var node = nodes[i];
+        if (!(0, domhandler_1.isTag)(node)) {
             continue;
         }
-        else if (test(checked)) {
-            elem = checked;
+        else if (test(node)) {
+            elem = node;
         }
-        else if (recurse && checked.children.length > 0) {
-            elem = findOne(test, checked.children, true);
+        else if (recurse && node.children.length > 0) {
+            elem = findOne(test, node.children, true);
         }
     }
     return elem;
 }
 exports.findOne = findOne;
 /**
+ * Checks if a tree of nodes contains at least one node passing a test.
+ *
  * @category Querying
  * @param test Function to test nodes on.
  * @param nodes Array of nodes to search.
@@ -51687,14 +51732,12 @@ exports.findOne = findOne;
 function existsOne(test, nodes) {
     return nodes.some(function (checked) {
         return (0, domhandler_1.isTag)(checked) &&
-            (test(checked) ||
-                (checked.children.length > 0 &&
-                    existsOne(test, checked.children)));
+            (test(checked) || existsOne(test, checked.children));
     });
 }
 exports.existsOne = existsOne;
 /**
- * Search and array of nodes and its children for elements passing a test function.
+ * Search an array of nodes and their children for elements passing a test function.
  *
  * Same as `find`, but limited to elements and with less options, leading to reduced complexity.
  *
@@ -51704,19 +51747,30 @@ exports.existsOne = existsOne;
  * @returns All nodes passing `test`.
  */
 function findAll(test, nodes) {
-    var _a;
     var result = [];
-    var stack = nodes.filter(domhandler_1.isTag);
-    var elem;
-    while ((elem = stack.shift())) {
-        var children = (_a = elem.children) === null || _a === void 0 ? void 0 : _a.filter(domhandler_1.isTag);
-        if (children && children.length > 0) {
-            stack.unshift.apply(stack, children);
+    var nodeStack = [nodes];
+    var indexStack = [0];
+    for (;;) {
+        if (indexStack[0] >= nodeStack[0].length) {
+            if (nodeStack.length === 1) {
+                return result;
+            }
+            // Otherwise, remove the current array from the stack.
+            nodeStack.shift();
+            indexStack.shift();
+            // Loop back to the start to continue with the next array.
+            continue;
         }
+        var elem = nodeStack[0][indexStack[0]++];
+        if (!(0, domhandler_1.isTag)(elem))
+            continue;
         if (test(elem))
             result.push(elem);
+        if (elem.children.length > 0) {
+            indexStack.unshift(0);
+            nodeStack.unshift(elem.children);
+        }
     }
-    return result;
 }
 exports.findAll = findAll;
 //# sourceMappingURL=querying.js.map
@@ -51761,7 +51815,7 @@ function getInnerHTML(node, options) {
 }
 exports.getInnerHTML = getInnerHTML;
 /**
- * Get a node's inner text. Same as `textContent`, but inserts newlines for `<br>` tags.
+ * Get a node's inner text. Same as `textContent`, but inserts newlines for `<br>` tags. Ignores comments.
  *
  * @category Stringify
  * @deprecated Use `textContent` instead.
@@ -51781,7 +51835,7 @@ function getText(node) {
 }
 exports.getText = getText;
 /**
- * Get a node's text content.
+ * Get a node's text content. Ignores comments.
  *
  * @category Stringify
  * @param node Node to get the text content of.
@@ -51800,7 +51854,7 @@ function textContent(node) {
 }
 exports.textContent = textContent;
 /**
- * Get a node's inner text.
+ * Get a node's inner text, ignoring `<script>` and `<style>` tags. Ignores comments.
  *
  * @category Stringify
  * @param node Node to get the inner text of.
@@ -51846,7 +51900,7 @@ exports.getChildren = getChildren;
  *
  * @category Traversal
  * @param elem Node to get the parent of.
- * @returns `elem`'s parent node.
+ * @returns `elem`'s parent node, or `null` if `elem` is a root node.
  */
 function getParent(elem) {
     return elem.parent || null;
@@ -51861,7 +51915,7 @@ exports.getParent = getParent;
  *
  * @category Traversal
  * @param elem Element to get the siblings of.
- * @returns `elem`'s siblings.
+ * @returns `elem`'s siblings, including `elem`.
  */
 function getSiblings(elem) {
     var _a, _b;
@@ -51924,7 +51978,8 @@ exports.getName = getName;
  *
  * @category Traversal
  * @param elem The element to get the next sibling of.
- * @returns `elem`'s next sibling that is a tag.
+ * @returns `elem`'s next sibling that is a tag, or `null` if there is no next
+ * sibling.
  */
 function nextElementSibling(elem) {
     var _a;
@@ -51939,7 +51994,8 @@ exports.nextElementSibling = nextElementSibling;
  *
  * @category Traversal
  * @param elem The element to get the previous sibling of.
- * @returns `elem`'s previous sibling that is a tag.
+ * @returns `elem`'s previous sibling that is a tag, or `null` if there is no
+ * previous sibling.
  */
 function prevElementSibling(elem) {
     var _a;
@@ -51958,16 +52014,39 @@ exports.prevElementSibling = prevElementSibling;
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.decodeXML = exports.decodeHTMLStrict = exports.decodeHTML = exports.determineBranch = exports.BinTrieFlags = exports.fromCodePoint = exports.replaceCodePoint = exports.decodeCodePoint = exports.xmlDecodeTree = exports.htmlDecodeTree = void 0;
+exports.decodeXML = exports.decodeHTMLStrict = exports.decodeHTMLAttribute = exports.decodeHTML = exports.determineBranch = exports.EntityDecoder = exports.DecodingMode = exports.BinTrieFlags = exports.fromCodePoint = exports.replaceCodePoint = exports.decodeCodePoint = exports.xmlDecodeTree = exports.htmlDecodeTree = void 0;
 var decode_data_html_js_1 = __importDefault(__nccwpck_require__(6970));
 exports.htmlDecodeTree = decode_data_html_js_1.default;
 var decode_data_xml_js_1 = __importDefault(__nccwpck_require__(7359));
 exports.xmlDecodeTree = decode_data_xml_js_1.default;
-var decode_codepoint_js_1 = __importDefault(__nccwpck_require__(1227));
+var decode_codepoint_js_1 = __importStar(__nccwpck_require__(1227));
 exports.decodeCodePoint = decode_codepoint_js_1.default;
 var decode_codepoint_js_2 = __nccwpck_require__(1227);
 Object.defineProperty(exports, "replaceCodePoint", ({ enumerable: true, get: function () { return decode_codepoint_js_2.replaceCodePoint; } }));
@@ -51976,99 +52055,421 @@ var CharCodes;
 (function (CharCodes) {
     CharCodes[CharCodes["NUM"] = 35] = "NUM";
     CharCodes[CharCodes["SEMI"] = 59] = "SEMI";
+    CharCodes[CharCodes["EQUALS"] = 61] = "EQUALS";
     CharCodes[CharCodes["ZERO"] = 48] = "ZERO";
     CharCodes[CharCodes["NINE"] = 57] = "NINE";
     CharCodes[CharCodes["LOWER_A"] = 97] = "LOWER_A";
     CharCodes[CharCodes["LOWER_F"] = 102] = "LOWER_F";
     CharCodes[CharCodes["LOWER_X"] = 120] = "LOWER_X";
-    /** Bit that needs to be set to convert an upper case ASCII character to lower case */
-    CharCodes[CharCodes["To_LOWER_BIT"] = 32] = "To_LOWER_BIT";
+    CharCodes[CharCodes["LOWER_Z"] = 122] = "LOWER_Z";
+    CharCodes[CharCodes["UPPER_A"] = 65] = "UPPER_A";
+    CharCodes[CharCodes["UPPER_F"] = 70] = "UPPER_F";
+    CharCodes[CharCodes["UPPER_Z"] = 90] = "UPPER_Z";
 })(CharCodes || (CharCodes = {}));
+/** Bit that needs to be set to convert an upper case ASCII character to lower case */
+var TO_LOWER_BIT = 32;
 var BinTrieFlags;
 (function (BinTrieFlags) {
     BinTrieFlags[BinTrieFlags["VALUE_LENGTH"] = 49152] = "VALUE_LENGTH";
     BinTrieFlags[BinTrieFlags["BRANCH_LENGTH"] = 16256] = "BRANCH_LENGTH";
     BinTrieFlags[BinTrieFlags["JUMP_TABLE"] = 127] = "JUMP_TABLE";
 })(BinTrieFlags = exports.BinTrieFlags || (exports.BinTrieFlags = {}));
-function getDecoder(decodeTree) {
-    return function decodeHTMLBinary(str, strict) {
-        var ret = "";
-        var lastIdx = 0;
-        var strIdx = 0;
-        while ((strIdx = str.indexOf("&", strIdx)) >= 0) {
-            ret += str.slice(lastIdx, strIdx);
-            lastIdx = strIdx;
-            // Skip the "&"
-            strIdx += 1;
-            // If we have a numeric entity, handle this separately.
-            if (str.charCodeAt(strIdx) === CharCodes.NUM) {
-                // Skip the leading "&#". For hex entities, also skip the leading "x".
-                var start = strIdx + 1;
-                var base = 10;
-                var cp = str.charCodeAt(start);
-                if ((cp | CharCodes.To_LOWER_BIT) === CharCodes.LOWER_X) {
-                    base = 16;
-                    strIdx += 1;
-                    start += 1;
+function isNumber(code) {
+    return code >= CharCodes.ZERO && code <= CharCodes.NINE;
+}
+function isHexadecimalCharacter(code) {
+    return ((code >= CharCodes.UPPER_A && code <= CharCodes.UPPER_F) ||
+        (code >= CharCodes.LOWER_A && code <= CharCodes.LOWER_F));
+}
+function isAsciiAlphaNumeric(code) {
+    return ((code >= CharCodes.UPPER_A && code <= CharCodes.UPPER_Z) ||
+        (code >= CharCodes.LOWER_A && code <= CharCodes.LOWER_Z) ||
+        isNumber(code));
+}
+/**
+ * Checks if the given character is a valid end character for an entity in an attribute.
+ *
+ * Attribute values that aren't terminated properly aren't parsed, and shouldn't lead to a parser error.
+ * See the example in https://html.spec.whatwg.org/multipage/parsing.html#named-character-reference-state
+ */
+function isEntityInAttributeInvalidEnd(code) {
+    return code === CharCodes.EQUALS || isAsciiAlphaNumeric(code);
+}
+var EntityDecoderState;
+(function (EntityDecoderState) {
+    EntityDecoderState[EntityDecoderState["EntityStart"] = 0] = "EntityStart";
+    EntityDecoderState[EntityDecoderState["NumericStart"] = 1] = "NumericStart";
+    EntityDecoderState[EntityDecoderState["NumericDecimal"] = 2] = "NumericDecimal";
+    EntityDecoderState[EntityDecoderState["NumericHex"] = 3] = "NumericHex";
+    EntityDecoderState[EntityDecoderState["NamedEntity"] = 4] = "NamedEntity";
+})(EntityDecoderState || (EntityDecoderState = {}));
+var DecodingMode;
+(function (DecodingMode) {
+    /** Entities in text nodes that can end with any character. */
+    DecodingMode[DecodingMode["Legacy"] = 0] = "Legacy";
+    /** Only allow entities terminated with a semicolon. */
+    DecodingMode[DecodingMode["Strict"] = 1] = "Strict";
+    /** Entities in attributes have limitations on ending characters. */
+    DecodingMode[DecodingMode["Attribute"] = 2] = "Attribute";
+})(DecodingMode = exports.DecodingMode || (exports.DecodingMode = {}));
+/**
+ * Token decoder with support of writing partial entities.
+ */
+var EntityDecoder = /** @class */ (function () {
+    function EntityDecoder(
+    /** The tree used to decode entities. */
+    decodeTree, 
+    /**
+     * The function that is called when a codepoint is decoded.
+     *
+     * For multi-byte named entities, this will be called multiple times,
+     * with the second codepoint, and the same `consumed` value.
+     *
+     * @param codepoint The decoded codepoint.
+     * @param consumed The number of bytes consumed by the decoder.
+     */
+    emitCodePoint, 
+    /** An object that is used to produce errors. */
+    errors) {
+        this.decodeTree = decodeTree;
+        this.emitCodePoint = emitCodePoint;
+        this.errors = errors;
+        /** The current state of the decoder. */
+        this.state = EntityDecoderState.EntityStart;
+        /** Characters that were consumed while parsing an entity. */
+        this.consumed = 1;
+        /**
+         * The result of the entity.
+         *
+         * Either the result index of a numeric entity, or the codepoint of a
+         * numeric entity.
+         */
+        this.result = 0;
+        /** The current index in the decode tree. */
+        this.treeIndex = 0;
+        /** The number of characters that were consumed in excess. */
+        this.excess = 1;
+        /** The mode in which the decoder is operating. */
+        this.decodeMode = DecodingMode.Strict;
+    }
+    /** Resets the instance to make it reusable. */
+    EntityDecoder.prototype.startEntity = function (decodeMode) {
+        this.decodeMode = decodeMode;
+        this.state = EntityDecoderState.EntityStart;
+        this.result = 0;
+        this.treeIndex = 0;
+        this.excess = 1;
+        this.consumed = 1;
+    };
+    /**
+     * Write an entity to the decoder. This can be called multiple times with partial entities.
+     * If the entity is incomplete, the decoder will return -1.
+     *
+     * Mirrors the implementation of `getDecoder`, but with the ability to stop decoding if the
+     * entity is incomplete, and resume when the next string is written.
+     *
+     * @param string The string containing the entity (or a continuation of the entity).
+     * @param offset The offset at which the entity begins. Should be 0 if this is not the first call.
+     * @returns The number of characters that were consumed, or -1 if the entity is incomplete.
+     */
+    EntityDecoder.prototype.write = function (str, offset) {
+        switch (this.state) {
+            case EntityDecoderState.EntityStart: {
+                if (str.charCodeAt(offset) === CharCodes.NUM) {
+                    this.state = EntityDecoderState.NumericStart;
+                    this.consumed += 1;
+                    return this.stateNumericStart(str, offset + 1);
                 }
-                do
-                    cp = str.charCodeAt(++strIdx);
-                while ((cp >= CharCodes.ZERO && cp <= CharCodes.NINE) ||
-                    (base === 16 &&
-                        (cp | CharCodes.To_LOWER_BIT) >= CharCodes.LOWER_A &&
-                        (cp | CharCodes.To_LOWER_BIT) <= CharCodes.LOWER_F));
-                if (start !== strIdx) {
-                    var entity = str.substring(start, strIdx);
-                    var parsed = parseInt(entity, base);
-                    if (str.charCodeAt(strIdx) === CharCodes.SEMI) {
-                        strIdx += 1;
-                    }
-                    else if (strict) {
-                        continue;
-                    }
-                    ret += (0, decode_codepoint_js_1.default)(parsed);
-                    lastIdx = strIdx;
-                }
-                continue;
+                this.state = EntityDecoderState.NamedEntity;
+                return this.stateNamedEntity(str, offset);
             }
-            var resultIdx = 0;
-            var excess = 1;
-            var treeIdx = 0;
-            var current = decodeTree[treeIdx];
-            for (; strIdx < str.length; strIdx++, excess++) {
-                treeIdx = determineBranch(decodeTree, current, treeIdx + 1, str.charCodeAt(strIdx));
-                if (treeIdx < 0)
-                    break;
-                current = decodeTree[treeIdx];
-                var masked = current & BinTrieFlags.VALUE_LENGTH;
-                // If the branch is a value, store it and continue
-                if (masked) {
-                    // If we have a legacy entity while parsing strictly, just skip the number of bytes
-                    if (!strict || str.charCodeAt(strIdx) === CharCodes.SEMI) {
-                        resultIdx = treeIdx;
-                        excess = 0;
-                    }
-                    // The mask is the number of bytes of the value, including the current byte.
-                    var valueLength = (masked >> 14) - 1;
-                    if (valueLength === 0)
-                        break;
-                    treeIdx += valueLength;
-                }
+            case EntityDecoderState.NumericStart: {
+                return this.stateNumericStart(str, offset);
             }
-            if (resultIdx !== 0) {
-                var valueLength = (decodeTree[resultIdx] & BinTrieFlags.VALUE_LENGTH) >> 14;
-                ret +=
-                    valueLength === 1
-                        ? String.fromCharCode(decodeTree[resultIdx] & ~BinTrieFlags.VALUE_LENGTH)
-                        : valueLength === 2
-                            ? String.fromCharCode(decodeTree[resultIdx + 1])
-                            : String.fromCharCode(decodeTree[resultIdx + 1], decodeTree[resultIdx + 2]);
-                lastIdx = strIdx - excess + 1;
+            case EntityDecoderState.NumericDecimal: {
+                return this.stateNumericDecimal(str, offset);
+            }
+            case EntityDecoderState.NumericHex: {
+                return this.stateNumericHex(str, offset);
+            }
+            case EntityDecoderState.NamedEntity: {
+                return this.stateNamedEntity(str, offset);
             }
         }
-        return ret + str.slice(lastIdx);
+    };
+    /**
+     * Switches between the numeric decimal and hexadecimal states.
+     *
+     * Equivalent to the `Numeric character reference state` in the HTML spec.
+     *
+     * @param str The string containing the entity (or a continuation of the entity).
+     * @param offset The current offset.
+     * @returns The number of characters that were consumed, or -1 if the entity is incomplete.
+     */
+    EntityDecoder.prototype.stateNumericStart = function (str, offset) {
+        if (offset >= str.length) {
+            return -1;
+        }
+        if ((str.charCodeAt(offset) | TO_LOWER_BIT) === CharCodes.LOWER_X) {
+            this.state = EntityDecoderState.NumericHex;
+            this.consumed += 1;
+            return this.stateNumericHex(str, offset + 1);
+        }
+        this.state = EntityDecoderState.NumericDecimal;
+        return this.stateNumericDecimal(str, offset);
+    };
+    EntityDecoder.prototype.addToNumericResult = function (str, start, end, base) {
+        if (start !== end) {
+            var digitCount = end - start;
+            this.result =
+                this.result * Math.pow(base, digitCount) +
+                    parseInt(str.substr(start, digitCount), base);
+            this.consumed += digitCount;
+        }
+    };
+    /**
+     * Parses a hexadecimal numeric entity.
+     *
+     * Equivalent to the `Hexademical character reference state` in the HTML spec.
+     *
+     * @param str The string containing the entity (or a continuation of the entity).
+     * @param offset The current offset.
+     * @returns The number of characters that were consumed, or -1 if the entity is incomplete.
+     */
+    EntityDecoder.prototype.stateNumericHex = function (str, offset) {
+        var startIdx = offset;
+        while (offset < str.length) {
+            var char = str.charCodeAt(offset);
+            if (isNumber(char) || isHexadecimalCharacter(char)) {
+                offset += 1;
+            }
+            else {
+                this.addToNumericResult(str, startIdx, offset, 16);
+                return this.emitNumericEntity(char, 3);
+            }
+        }
+        this.addToNumericResult(str, startIdx, offset, 16);
+        return -1;
+    };
+    /**
+     * Parses a decimal numeric entity.
+     *
+     * Equivalent to the `Decimal character reference state` in the HTML spec.
+     *
+     * @param str The string containing the entity (or a continuation of the entity).
+     * @param offset The current offset.
+     * @returns The number of characters that were consumed, or -1 if the entity is incomplete.
+     */
+    EntityDecoder.prototype.stateNumericDecimal = function (str, offset) {
+        var startIdx = offset;
+        while (offset < str.length) {
+            var char = str.charCodeAt(offset);
+            if (isNumber(char)) {
+                offset += 1;
+            }
+            else {
+                this.addToNumericResult(str, startIdx, offset, 10);
+                return this.emitNumericEntity(char, 2);
+            }
+        }
+        this.addToNumericResult(str, startIdx, offset, 10);
+        return -1;
+    };
+    /**
+     * Validate and emit a numeric entity.
+     *
+     * Implements the logic from the `Hexademical character reference start
+     * state` and `Numeric character reference end state` in the HTML spec.
+     *
+     * @param lastCp The last code point of the entity. Used to see if the
+     *               entity was terminated with a semicolon.
+     * @param expectedLength The minimum number of characters that should be
+     *                       consumed. Used to validate that at least one digit
+     *                       was consumed.
+     * @returns The number of characters that were consumed.
+     */
+    EntityDecoder.prototype.emitNumericEntity = function (lastCp, expectedLength) {
+        var _a;
+        // Ensure we consumed at least one digit.
+        if (this.consumed <= expectedLength) {
+            (_a = this.errors) === null || _a === void 0 ? void 0 : _a.absenceOfDigitsInNumericCharacterReference(this.consumed);
+            return 0;
+        }
+        // Figure out if this is a legit end of the entity
+        if (lastCp === CharCodes.SEMI) {
+            this.consumed += 1;
+        }
+        else if (this.decodeMode === DecodingMode.Strict) {
+            return 0;
+        }
+        this.emitCodePoint((0, decode_codepoint_js_1.replaceCodePoint)(this.result), this.consumed);
+        if (this.errors) {
+            if (lastCp !== CharCodes.SEMI) {
+                this.errors.missingSemicolonAfterCharacterReference();
+            }
+            this.errors.validateNumericCharacterReference(this.result);
+        }
+        return this.consumed;
+    };
+    /**
+     * Parses a named entity.
+     *
+     * Equivalent to the `Named character reference state` in the HTML spec.
+     *
+     * @param str The string containing the entity (or a continuation of the entity).
+     * @param offset The current offset.
+     * @returns The number of characters that were consumed, or -1 if the entity is incomplete.
+     */
+    EntityDecoder.prototype.stateNamedEntity = function (str, offset) {
+        var decodeTree = this.decodeTree;
+        var current = decodeTree[this.treeIndex];
+        // The mask is the number of bytes of the value, including the current byte.
+        var valueLength = (current & BinTrieFlags.VALUE_LENGTH) >> 14;
+        for (; offset < str.length; offset++, this.excess++) {
+            var char = str.charCodeAt(offset);
+            this.treeIndex = determineBranch(decodeTree, current, this.treeIndex + Math.max(1, valueLength), char);
+            if (this.treeIndex < 0) {
+                return this.result === 0 ||
+                    // If we are parsing an attribute
+                    (this.decodeMode === DecodingMode.Attribute &&
+                        // We shouldn't have consumed any characters after the entity,
+                        (valueLength === 0 ||
+                            // And there should be no invalid characters.
+                            isEntityInAttributeInvalidEnd(char)))
+                    ? 0
+                    : this.emitNotTerminatedNamedEntity();
+            }
+            current = decodeTree[this.treeIndex];
+            valueLength = (current & BinTrieFlags.VALUE_LENGTH) >> 14;
+            // If the branch is a value, store it and continue
+            if (valueLength !== 0) {
+                // If the entity is terminated by a semicolon, we are done.
+                if (char === CharCodes.SEMI) {
+                    return this.emitNamedEntityData(this.treeIndex, valueLength, this.consumed + this.excess);
+                }
+                // If we encounter a non-terminated (legacy) entity while parsing strictly, then ignore it.
+                if (this.decodeMode !== DecodingMode.Strict) {
+                    this.result = this.treeIndex;
+                    this.consumed += this.excess;
+                    this.excess = 0;
+                }
+            }
+        }
+        return -1;
+    };
+    /**
+     * Emit a named entity that was not terminated with a semicolon.
+     *
+     * @returns The number of characters consumed.
+     */
+    EntityDecoder.prototype.emitNotTerminatedNamedEntity = function () {
+        var _a;
+        var _b = this, result = _b.result, decodeTree = _b.decodeTree;
+        var valueLength = (decodeTree[result] & BinTrieFlags.VALUE_LENGTH) >> 14;
+        this.emitNamedEntityData(result, valueLength, this.consumed);
+        (_a = this.errors) === null || _a === void 0 ? void 0 : _a.missingSemicolonAfterCharacterReference();
+        return this.consumed;
+    };
+    /**
+     * Emit a named entity.
+     *
+     * @param result The index of the entity in the decode tree.
+     * @param valueLength The number of bytes in the entity.
+     * @param consumed The number of characters consumed.
+     *
+     * @returns The number of characters consumed.
+     */
+    EntityDecoder.prototype.emitNamedEntityData = function (result, valueLength, consumed) {
+        var decodeTree = this.decodeTree;
+        this.emitCodePoint(valueLength === 1
+            ? decodeTree[result] & ~BinTrieFlags.VALUE_LENGTH
+            : decodeTree[result + 1], consumed);
+        if (valueLength === 3) {
+            // For multi-byte values, we need to emit the second byte.
+            this.emitCodePoint(decodeTree[result + 2], consumed);
+        }
+        return consumed;
+    };
+    /**
+     * Signal to the parser that the end of the input was reached.
+     *
+     * Remaining data will be emitted and relevant errors will be produced.
+     *
+     * @returns The number of characters consumed.
+     */
+    EntityDecoder.prototype.end = function () {
+        var _a;
+        switch (this.state) {
+            case EntityDecoderState.NamedEntity: {
+                // Emit a named entity if we have one.
+                return this.result !== 0 &&
+                    (this.decodeMode !== DecodingMode.Attribute ||
+                        this.result === this.treeIndex)
+                    ? this.emitNotTerminatedNamedEntity()
+                    : 0;
+            }
+            // Otherwise, emit a numeric entity if we have one.
+            case EntityDecoderState.NumericDecimal: {
+                return this.emitNumericEntity(0, 2);
+            }
+            case EntityDecoderState.NumericHex: {
+                return this.emitNumericEntity(0, 3);
+            }
+            case EntityDecoderState.NumericStart: {
+                (_a = this.errors) === null || _a === void 0 ? void 0 : _a.absenceOfDigitsInNumericCharacterReference(this.consumed);
+                return 0;
+            }
+            case EntityDecoderState.EntityStart: {
+                // Return 0 if we have no entity.
+                return 0;
+            }
+        }
+    };
+    return EntityDecoder;
+}());
+exports.EntityDecoder = EntityDecoder;
+/**
+ * Creates a function that decodes entities in a string.
+ *
+ * @param decodeTree The decode tree.
+ * @returns A function that decodes entities in a string.
+ */
+function getDecoder(decodeTree) {
+    var ret = "";
+    var decoder = new EntityDecoder(decodeTree, function (str) { return (ret += (0, decode_codepoint_js_1.fromCodePoint)(str)); });
+    return function decodeWithTrie(str, decodeMode) {
+        var lastIndex = 0;
+        var offset = 0;
+        while ((offset = str.indexOf("&", offset)) >= 0) {
+            ret += str.slice(lastIndex, offset);
+            decoder.startEntity(decodeMode);
+            var len = decoder.write(str, 
+            // Skip the "&"
+            offset + 1);
+            if (len < 0) {
+                lastIndex = offset + decoder.end();
+                break;
+            }
+            lastIndex = offset + len;
+            // If `len` is 0, skip the current `&` and continue.
+            offset = len === 0 ? lastIndex + 1 : lastIndex;
+        }
+        var result = ret + str.slice(lastIndex);
+        // Make sure we don't keep a reference to the final string.
+        ret = "";
+        return result;
     };
 }
+/**
+ * Determines the branch of the current node that is taken given the current
+ * character. This function is used to traverse the trie.
+ *
+ * @param decodeTree The trie.
+ * @param current The current node.
+ * @param nodeIdx The index right after the current node and its value.
+ * @param char The current character.
+ * @returns The index of the next node, or -1 if no branch is taken.
+ */
 function determineBranch(decodeTree, current, nodeIdx, char) {
     var branchCount = (current & BinTrieFlags.BRANCH_LENGTH) >> 7;
     var jumpOffset = current & BinTrieFlags.JUMP_TABLE;
@@ -52106,33 +52507,45 @@ exports.determineBranch = determineBranch;
 var htmlDecoder = getDecoder(decode_data_html_js_1.default);
 var xmlDecoder = getDecoder(decode_data_xml_js_1.default);
 /**
- * Decodes an HTML string, allowing for entities not terminated by a semi-colon.
+ * Decodes an HTML string.
+ *
+ * @param str The string to decode.
+ * @param mode The decoding mode.
+ * @returns The decoded string.
+ */
+function decodeHTML(str, mode) {
+    if (mode === void 0) { mode = DecodingMode.Legacy; }
+    return htmlDecoder(str, mode);
+}
+exports.decodeHTML = decodeHTML;
+/**
+ * Decodes an HTML string in an attribute.
  *
  * @param str The string to decode.
  * @returns The decoded string.
  */
-function decodeHTML(str) {
-    return htmlDecoder(str, false);
+function decodeHTMLAttribute(str) {
+    return htmlDecoder(str, DecodingMode.Attribute);
 }
-exports.decodeHTML = decodeHTML;
+exports.decodeHTMLAttribute = decodeHTMLAttribute;
 /**
- * Decodes an HTML string, requiring all entities to be terminated by a semi-colon.
+ * Decodes an HTML string, requiring all entities to be terminated by a semicolon.
  *
  * @param str The string to decode.
  * @returns The decoded string.
  */
 function decodeHTMLStrict(str) {
-    return htmlDecoder(str, true);
+    return htmlDecoder(str, DecodingMode.Strict);
 }
 exports.decodeHTMLStrict = decodeHTMLStrict;
 /**
- * Decodes an XML string, requiring all entities to be terminated by a semi-colon.
+ * Decodes an XML string, requiring all entities to be terminated by a semicolon.
  *
  * @param str The string to decode.
  * @returns The decoded string.
  */
 function decodeXML(str) {
-    return xmlDecoder(str, true);
+    return xmlDecoder(str, DecodingMode.Strict);
 }
 exports.decodeXML = decodeXML;
 //# sourceMappingURL=decode.js.map
@@ -52150,6 +52563,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.replaceCodePoint = exports.fromCodePoint = void 0;
 var decodeMap = new Map([
     [0, 65533],
+    // C1 Unicode control character reference replacements
     [128, 8364],
     [130, 8218],
     [131, 402],
@@ -52178,6 +52592,9 @@ var decodeMap = new Map([
     [158, 382],
     [159, 376],
 ]);
+/**
+ * Polyfill for `String.fromCodePoint`. It is used to create a string from a Unicode code point.
+ */
 exports.fromCodePoint = 
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, node/no-unsupported-features/es-builtins
 (_a = String.fromCodePoint) !== null && _a !== void 0 ? _a : function (codePoint) {
@@ -52190,6 +52607,11 @@ exports.fromCodePoint =
     output += String.fromCharCode(codePoint);
     return output;
 };
+/**
+ * Replace the given code point with a replacement character if it is a
+ * surrogate or is outside the valid range. Otherwise return the code
+ * point unchanged.
+ */
 function replaceCodePoint(codePoint) {
     var _a;
     if ((codePoint >= 0xd800 && codePoint <= 0xdfff) || codePoint > 0x10ffff) {
@@ -52198,6 +52620,13 @@ function replaceCodePoint(codePoint) {
     return (_a = decodeMap.get(codePoint)) !== null && _a !== void 0 ? _a : codePoint;
 }
 exports.replaceCodePoint = replaceCodePoint;
+/**
+ * Replace the code point if relevant, then convert it to a string.
+ *
+ * @deprecated Use `fromCodePoint(replaceCodePoint(codePoint))` instead.
+ * @param codePoint The code point to decode.
+ * @returns The decoded code point.
+ */
 function decodeCodePoint(codePoint) {
     return (0, exports.fromCodePoint)(replaceCodePoint(codePoint));
 }
@@ -52272,7 +52701,7 @@ function encodeHTMLTrieRe(regExp, str) {
             }
             next = next.v;
         }
-        // We might have a tree node without a value; skip and use a numeric entitiy.
+        // We might have a tree node without a value; skip and use a numeric entity.
         if (next !== undefined) {
             ret += next;
             lastIdx = i + 1;
@@ -52357,6 +52786,16 @@ exports.encodeXML = encodeXML;
  * @param data String to escape.
  */
 exports.escape = encodeXML;
+/**
+ * Creates a function that escapes all characters matched by the given regular
+ * expression using the given map of characters to escape to their entities.
+ *
+ * @param regex Regular expression to match characters to escape.
+ * @param map Map of characters to escape to their entities.
+ *
+ * @returns Function that escapes all characters matched by the given regular
+ * expression using the given map of characters to escape to their entities.
+ */
 function getEscaper(regex, map) {
     return function escape(data) {
         var match;
@@ -52366,7 +52805,7 @@ function getEscaper(regex, map) {
             if (lastIdx !== match.index) {
                 result += data.substring(lastIdx, match.index);
             }
-            // We know that this chararcter will be in the map.
+            // We know that this character will be in the map.
             result += map.get(match[0].charCodeAt(0));
             // Every match will be of length 1
             lastIdx = match.index + 1;
@@ -52466,7 +52905,7 @@ exports["default"] = new Map(/* #__PURE__ */ restoreDiff([[9, "&Tab;"], [0, "&Ne
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.decodeXMLStrict = exports.decodeHTML5Strict = exports.decodeHTML4Strict = exports.decodeHTML5 = exports.decodeHTML4 = exports.decodeHTMLStrict = exports.decodeHTML = exports.decodeXML = exports.encodeHTML5 = exports.encodeHTML4 = exports.encodeNonAsciiHTML = exports.encodeHTML = exports.escapeText = exports.escapeAttribute = exports.escapeUTF8 = exports.escape = exports.encodeXML = exports.encode = exports.decodeStrict = exports.decode = exports.EncodingMode = exports.DecodingMode = exports.EntityLevel = void 0;
+exports.decodeXMLStrict = exports.decodeHTML5Strict = exports.decodeHTML4Strict = exports.decodeHTML5 = exports.decodeHTML4 = exports.decodeHTMLAttribute = exports.decodeHTMLStrict = exports.decodeHTML = exports.decodeXML = exports.DecodingMode = exports.EntityDecoder = exports.encodeHTML5 = exports.encodeHTML4 = exports.encodeNonAsciiHTML = exports.encodeHTML = exports.escapeText = exports.escapeAttribute = exports.escapeUTF8 = exports.escape = exports.encodeXML = exports.encode = exports.decodeStrict = exports.decode = exports.EncodingMode = exports.EntityLevel = void 0;
 var decode_js_1 = __nccwpck_require__(5107);
 var encode_js_1 = __nccwpck_require__(2006);
 var escape_js_1 = __nccwpck_require__(7654);
@@ -52478,14 +52917,6 @@ var EntityLevel;
     /** Support HTML entities, which are a superset of XML entities. */
     EntityLevel[EntityLevel["HTML"] = 1] = "HTML";
 })(EntityLevel = exports.EntityLevel || (exports.EntityLevel = {}));
-/** Determines whether some entities are allowed to be written without a trailing `;`. */
-var DecodingMode;
-(function (DecodingMode) {
-    /** Support legacy HTML entities. */
-    DecodingMode[DecodingMode["Legacy"] = 0] = "Legacy";
-    /** Do not support legacy HTML entities. */
-    DecodingMode[DecodingMode["Strict"] = 1] = "Strict";
-})(DecodingMode = exports.DecodingMode || (exports.DecodingMode = {}));
 var EncodingMode;
 (function (EncodingMode) {
     /**
@@ -52523,12 +52954,10 @@ var EncodingMode;
  */
 function decode(data, options) {
     if (options === void 0) { options = EntityLevel.XML; }
-    var opts = typeof options === "number" ? { level: options } : options;
-    if (opts.level === EntityLevel.HTML) {
-        if (opts.mode === DecodingMode.Strict) {
-            return (0, decode_js_1.decodeHTMLStrict)(data);
-        }
-        return (0, decode_js_1.decodeHTML)(data);
+    var level = typeof options === "number" ? options : options.level;
+    if (level === EntityLevel.HTML) {
+        var mode = typeof options === "object" ? options.mode : undefined;
+        return (0, decode_js_1.decodeHTML)(data, mode);
     }
     return (0, decode_js_1.decodeXML)(data);
 }
@@ -52541,15 +52970,11 @@ exports.decode = decode;
  * @deprecated Use `decode` with the `mode` set to `Strict`.
  */
 function decodeStrict(data, options) {
+    var _a;
     if (options === void 0) { options = EntityLevel.XML; }
     var opts = typeof options === "number" ? { level: options } : options;
-    if (opts.level === EntityLevel.HTML) {
-        if (opts.mode === DecodingMode.Legacy) {
-            return (0, decode_js_1.decodeHTML)(data);
-        }
-        return (0, decode_js_1.decodeHTMLStrict)(data);
-    }
-    return (0, decode_js_1.decodeXML)(data);
+    (_a = opts.mode) !== null && _a !== void 0 ? _a : (opts.mode = decode_js_1.DecodingMode.Strict);
+    return decode(data, opts);
 }
 exports.decodeStrict = decodeStrict;
 /**
@@ -52591,9 +53016,12 @@ Object.defineProperty(exports, "encodeNonAsciiHTML", ({ enumerable: true, get: f
 Object.defineProperty(exports, "encodeHTML4", ({ enumerable: true, get: function () { return encode_js_2.encodeHTML; } }));
 Object.defineProperty(exports, "encodeHTML5", ({ enumerable: true, get: function () { return encode_js_2.encodeHTML; } }));
 var decode_js_2 = __nccwpck_require__(5107);
+Object.defineProperty(exports, "EntityDecoder", ({ enumerable: true, get: function () { return decode_js_2.EntityDecoder; } }));
+Object.defineProperty(exports, "DecodingMode", ({ enumerable: true, get: function () { return decode_js_2.DecodingMode; } }));
 Object.defineProperty(exports, "decodeXML", ({ enumerable: true, get: function () { return decode_js_2.decodeXML; } }));
 Object.defineProperty(exports, "decodeHTML", ({ enumerable: true, get: function () { return decode_js_2.decodeHTML; } }));
 Object.defineProperty(exports, "decodeHTMLStrict", ({ enumerable: true, get: function () { return decode_js_2.decodeHTMLStrict; } }));
+Object.defineProperty(exports, "decodeHTMLAttribute", ({ enumerable: true, get: function () { return decode_js_2.decodeHTMLAttribute; } }));
 // Legacy aliases (deprecated)
 Object.defineProperty(exports, "decodeHTML4", ({ enumerable: true, get: function () { return decode_js_2.decodeHTML; } }));
 Object.defineProperty(exports, "decodeHTML5", ({ enumerable: true, get: function () { return decode_js_2.decodeHTML; } }));
@@ -54701,10 +55129,10 @@ var Parser = /** @class */ (function () {
          * Entities can be emitted on the character, or directly after.
          * We use the section start here to get accurate indices.
          */
-        var idx = this.tokenizer.getSectionStart();
-        this.endIndex = idx - 1;
+        var index = this.tokenizer.getSectionStart();
+        this.endIndex = index - 1;
         (_b = (_a = this.cbs).ontext) === null || _b === void 0 ? void 0 : _b.call(_a, (0, decode_js_1.fromCodePoint)(cp));
-        this.startIndex = idx;
+        this.startIndex = index;
     };
     Parser.prototype.isVoidElement = function (name) {
         return !this.options.xmlMode && voidElements.has(name);
@@ -54726,8 +55154,8 @@ var Parser = /** @class */ (function () {
         if (impliesClose) {
             while (this.stack.length > 0 &&
                 impliesClose.has(this.stack[this.stack.length - 1])) {
-                var el = this.stack.pop();
-                (_b = (_a = this.cbs).onclosetag) === null || _b === void 0 ? void 0 : _b.call(_a, el, true);
+                var element = this.stack.pop();
+                (_b = (_a = this.cbs).onclosetag) === null || _b === void 0 ? void 0 : _b.call(_a, element, true);
             }
         }
         if (!this.isVoidElement(name)) {
@@ -54862,8 +55290,8 @@ var Parser = /** @class */ (function () {
         this.attribvalue = "";
     };
     Parser.prototype.getInstructionName = function (value) {
-        var idx = value.search(reNameEnd);
-        var name = idx < 0 ? value : value.substr(0, idx);
+        var index = value.search(reNameEnd);
+        var name = index < 0 ? value : value.substr(0, index);
         if (this.lowerCaseTagNames) {
             name = name.toLowerCase();
         }
@@ -54923,7 +55351,7 @@ var Parser = /** @class */ (function () {
         if (this.cbs.onclosetag) {
             // Set the end index for all remaining tags
             this.endIndex = this.startIndex;
-            for (var i = this.stack.length; i > 0; this.cbs.onclosetag(this.stack[--i], true))
+            for (var index = this.stack.length; index > 0; this.cbs.onclosetag(this.stack[--index], true))
                 ;
         }
         (_b = (_a = this.cbs).onend) === null || _b === void 0 ? void 0 : _b.call(_a);
@@ -54961,12 +55389,12 @@ var Parser = /** @class */ (function () {
         while (start - this.bufferOffset >= this.buffers[0].length) {
             this.shiftBuffer();
         }
-        var str = this.buffers[0].slice(start - this.bufferOffset, end - this.bufferOffset);
+        var slice = this.buffers[0].slice(start - this.bufferOffset, end - this.bufferOffset);
         while (end - this.bufferOffset > this.buffers[0].length) {
             this.shiftBuffer();
-            str += this.buffers[0].slice(0, end - this.bufferOffset);
+            slice += this.buffers[0].slice(0, end - this.bufferOffset);
         }
-        return str;
+        return slice;
     };
     Parser.prototype.shiftBuffer = function () {
         this.bufferOffset += this.buffers[0].length;
@@ -54998,7 +55426,7 @@ var Parser = /** @class */ (function () {
     Parser.prototype.end = function (chunk) {
         var _a, _b;
         if (this.ended) {
-            (_b = (_a = this.cbs).onerror) === null || _b === void 0 ? void 0 : _b.call(_a, Error(".end() after done!"));
+            (_b = (_a = this.cbs).onerror) === null || _b === void 0 ? void 0 : _b.call(_a, new Error(".end() after done!"));
             return;
         }
         if (chunk)
@@ -55065,7 +55493,7 @@ var CharCodes;
     CharCodes[CharCodes["CarriageReturn"] = 13] = "CarriageReturn";
     CharCodes[CharCodes["Space"] = 32] = "Space";
     CharCodes[CharCodes["ExclamationMark"] = 33] = "ExclamationMark";
-    CharCodes[CharCodes["Num"] = 35] = "Num";
+    CharCodes[CharCodes["Number"] = 35] = "Number";
     CharCodes[CharCodes["Amp"] = 38] = "Amp";
     CharCodes[CharCodes["SingleQuote"] = 39] = "SingleQuote";
     CharCodes[CharCodes["DoubleQuote"] = 34] = "DoubleQuote";
@@ -55187,6 +55615,7 @@ var Tokenizer = /** @class */ (function () {
         this.running = true;
         /** The offset of the current buffer. */
         this.offset = 0;
+        this.currentSequence = undefined;
         this.sequenceIndex = 0;
         this.trieIndex = 0;
         this.trieCurrent = 0;
@@ -55455,6 +55884,7 @@ var Tokenizer = /** @class */ (function () {
         // Skip everything until ">"
         if (c === CharCodes.Gt || this.fastForwardTo(CharCodes.Gt)) {
             this.state = State.Text;
+            this.baseState = State.Text;
             this.sectionStart = this.index + 1;
         }
     };
@@ -55626,7 +56056,7 @@ var Tokenizer = /** @class */ (function () {
         // Start excess with 1 to include the '&'
         this.entityExcess = 1;
         this.entityResult = 0;
-        if (c === CharCodes.Num) {
+        if (c === CharCodes.Number) {
             this.state = State.BeforeNumericEntity;
         }
         else if (c === CharCodes.Amp) {
@@ -55682,13 +56112,15 @@ var Tokenizer = /** @class */ (function () {
         var valueLength = (this.entityTrie[this.entityResult] & decode_js_1.BinTrieFlags.VALUE_LENGTH) >>
             14;
         switch (valueLength) {
-            case 1:
+            case 1: {
                 this.emitCodePoint(this.entityTrie[this.entityResult] &
                     ~decode_js_1.BinTrieFlags.VALUE_LENGTH);
                 break;
-            case 2:
+            }
+            case 2: {
                 this.emitCodePoint(this.entityTrie[this.entityResult + 1]);
                 break;
+            }
             case 3: {
                 this.emitCodePoint(this.entityTrie[this.entityResult + 1]);
                 this.emitCodePoint(this.entityTrie[this.entityResult + 2]);
@@ -55794,93 +56226,123 @@ var Tokenizer = /** @class */ (function () {
     Tokenizer.prototype.parse = function () {
         while (this.shouldContinue()) {
             var c = this.buffer.charCodeAt(this.index - this.offset);
-            if (this.state === State.Text) {
-                this.stateText(c);
-            }
-            else if (this.state === State.SpecialStartSequence) {
-                this.stateSpecialStartSequence(c);
-            }
-            else if (this.state === State.InSpecialTag) {
-                this.stateInSpecialTag(c);
-            }
-            else if (this.state === State.CDATASequence) {
-                this.stateCDATASequence(c);
-            }
-            else if (this.state === State.InAttributeValueDq) {
-                this.stateInAttributeValueDoubleQuotes(c);
-            }
-            else if (this.state === State.InAttributeName) {
-                this.stateInAttributeName(c);
-            }
-            else if (this.state === State.InCommentLike) {
-                this.stateInCommentLike(c);
-            }
-            else if (this.state === State.InSpecialComment) {
-                this.stateInSpecialComment(c);
-            }
-            else if (this.state === State.BeforeAttributeName) {
-                this.stateBeforeAttributeName(c);
-            }
-            else if (this.state === State.InTagName) {
-                this.stateInTagName(c);
-            }
-            else if (this.state === State.InClosingTagName) {
-                this.stateInClosingTagName(c);
-            }
-            else if (this.state === State.BeforeTagName) {
-                this.stateBeforeTagName(c);
-            }
-            else if (this.state === State.AfterAttributeName) {
-                this.stateAfterAttributeName(c);
-            }
-            else if (this.state === State.InAttributeValueSq) {
-                this.stateInAttributeValueSingleQuotes(c);
-            }
-            else if (this.state === State.BeforeAttributeValue) {
-                this.stateBeforeAttributeValue(c);
-            }
-            else if (this.state === State.BeforeClosingTagName) {
-                this.stateBeforeClosingTagName(c);
-            }
-            else if (this.state === State.AfterClosingTagName) {
-                this.stateAfterClosingTagName(c);
-            }
-            else if (this.state === State.BeforeSpecialS) {
-                this.stateBeforeSpecialS(c);
-            }
-            else if (this.state === State.InAttributeValueNq) {
-                this.stateInAttributeValueNoQuotes(c);
-            }
-            else if (this.state === State.InSelfClosingTag) {
-                this.stateInSelfClosingTag(c);
-            }
-            else if (this.state === State.InDeclaration) {
-                this.stateInDeclaration(c);
-            }
-            else if (this.state === State.BeforeDeclaration) {
-                this.stateBeforeDeclaration(c);
-            }
-            else if (this.state === State.BeforeComment) {
-                this.stateBeforeComment(c);
-            }
-            else if (this.state === State.InProcessingInstruction) {
-                this.stateInProcessingInstruction(c);
-            }
-            else if (this.state === State.InNamedEntity) {
-                this.stateInNamedEntity(c);
-            }
-            else if (this.state === State.BeforeEntity) {
-                this.stateBeforeEntity(c);
-            }
-            else if (this.state === State.InHexEntity) {
-                this.stateInHexEntity(c);
-            }
-            else if (this.state === State.InNumericEntity) {
-                this.stateInNumericEntity(c);
-            }
-            else {
-                // `this._state === State.BeforeNumericEntity`
-                this.stateBeforeNumericEntity(c);
+            switch (this.state) {
+                case State.Text: {
+                    this.stateText(c);
+                    break;
+                }
+                case State.SpecialStartSequence: {
+                    this.stateSpecialStartSequence(c);
+                    break;
+                }
+                case State.InSpecialTag: {
+                    this.stateInSpecialTag(c);
+                    break;
+                }
+                case State.CDATASequence: {
+                    this.stateCDATASequence(c);
+                    break;
+                }
+                case State.InAttributeValueDq: {
+                    this.stateInAttributeValueDoubleQuotes(c);
+                    break;
+                }
+                case State.InAttributeName: {
+                    this.stateInAttributeName(c);
+                    break;
+                }
+                case State.InCommentLike: {
+                    this.stateInCommentLike(c);
+                    break;
+                }
+                case State.InSpecialComment: {
+                    this.stateInSpecialComment(c);
+                    break;
+                }
+                case State.BeforeAttributeName: {
+                    this.stateBeforeAttributeName(c);
+                    break;
+                }
+                case State.InTagName: {
+                    this.stateInTagName(c);
+                    break;
+                }
+                case State.InClosingTagName: {
+                    this.stateInClosingTagName(c);
+                    break;
+                }
+                case State.BeforeTagName: {
+                    this.stateBeforeTagName(c);
+                    break;
+                }
+                case State.AfterAttributeName: {
+                    this.stateAfterAttributeName(c);
+                    break;
+                }
+                case State.InAttributeValueSq: {
+                    this.stateInAttributeValueSingleQuotes(c);
+                    break;
+                }
+                case State.BeforeAttributeValue: {
+                    this.stateBeforeAttributeValue(c);
+                    break;
+                }
+                case State.BeforeClosingTagName: {
+                    this.stateBeforeClosingTagName(c);
+                    break;
+                }
+                case State.AfterClosingTagName: {
+                    this.stateAfterClosingTagName(c);
+                    break;
+                }
+                case State.BeforeSpecialS: {
+                    this.stateBeforeSpecialS(c);
+                    break;
+                }
+                case State.InAttributeValueNq: {
+                    this.stateInAttributeValueNoQuotes(c);
+                    break;
+                }
+                case State.InSelfClosingTag: {
+                    this.stateInSelfClosingTag(c);
+                    break;
+                }
+                case State.InDeclaration: {
+                    this.stateInDeclaration(c);
+                    break;
+                }
+                case State.BeforeDeclaration: {
+                    this.stateBeforeDeclaration(c);
+                    break;
+                }
+                case State.BeforeComment: {
+                    this.stateBeforeComment(c);
+                    break;
+                }
+                case State.InProcessingInstruction: {
+                    this.stateInProcessingInstruction(c);
+                    break;
+                }
+                case State.InNamedEntity: {
+                    this.stateInNamedEntity(c);
+                    break;
+                }
+                case State.BeforeEntity: {
+                    this.stateBeforeEntity(c);
+                    break;
+                }
+                case State.InHexEntity: {
+                    this.stateInHexEntity(c);
+                    break;
+                }
+                case State.InNumericEntity: {
+                    this.stateInNumericEntity(c);
+                    break;
+                }
+                default: {
+                    // `this._state === State.BeforeNumericEntity`
+                    this.stateBeforeNumericEntity(c);
+                }
             }
             this.index++;
         }
@@ -55992,12 +56454,15 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.DefaultHandler = exports.DomUtils = exports.parseFeed = exports.getFeed = exports.ElementType = exports.Tokenizer = exports.createDomStream = exports.parseDOM = exports.parseDocument = exports.DomHandler = exports.Parser = void 0;
+exports.DomUtils = exports.parseFeed = exports.getFeed = exports.ElementType = exports.Tokenizer = exports.createDomStream = exports.parseDOM = exports.parseDocument = exports.DefaultHandler = exports.DomHandler = exports.Parser = void 0;
 var Parser_js_1 = __nccwpck_require__(8460);
-Object.defineProperty(exports, "Parser", ({ enumerable: true, get: function () { return Parser_js_1.Parser; } }));
+var Parser_js_2 = __nccwpck_require__(8460);
+Object.defineProperty(exports, "Parser", ({ enumerable: true, get: function () { return Parser_js_2.Parser; } }));
 var domhandler_1 = __nccwpck_require__(4038);
-Object.defineProperty(exports, "DomHandler", ({ enumerable: true, get: function () { return domhandler_1.DomHandler; } }));
-Object.defineProperty(exports, "DefaultHandler", ({ enumerable: true, get: function () { return domhandler_1.DomHandler; } }));
+var domhandler_2 = __nccwpck_require__(4038);
+Object.defineProperty(exports, "DomHandler", ({ enumerable: true, get: function () { return domhandler_2.DomHandler; } }));
+// Old name for DomHandler
+Object.defineProperty(exports, "DefaultHandler", ({ enumerable: true, get: function () { return domhandler_2.DomHandler; } }));
 // Helper methods
 /**
  * Parses the data, returns the resulting document.
@@ -56028,12 +56493,12 @@ exports.parseDOM = parseDOM;
 /**
  * Creates a parser instance, with an attached DOM handler.
  *
- * @param cb A callback that will be called once parsing has been completed.
+ * @param callback A callback that will be called once parsing has been completed.
  * @param options Optional options for the parser and DOM builder.
- * @param elementCb An optional callback that will be called every time a tag has been completed inside of the DOM.
+ * @param elementCallback An optional callback that will be called every time a tag has been completed inside of the DOM.
  */
-function createDomStream(cb, options, elementCb) {
-    var handler = new domhandler_1.DomHandler(cb, options, elementCb);
+function createDomStream(callback, options, elementCallback) {
+    var handler = new domhandler_1.DomHandler(callback, options, elementCallback);
     return new Parser_js_1.Parser(handler, options);
 }
 exports.createDomStream = createDomStream;
@@ -56043,10 +56508,11 @@ Object.defineProperty(exports, "Tokenizer", ({ enumerable: true, get: function (
  * All of the following exports exist for backwards-compatibility.
  * They should probably be removed eventually.
  */
-var ElementType = __importStar(__nccwpck_require__(3944));
-exports.ElementType = ElementType;
+exports.ElementType = __importStar(__nccwpck_require__(3944));
 var domutils_1 = __nccwpck_require__(1754);
-Object.defineProperty(exports, "getFeed", ({ enumerable: true, get: function () { return domutils_1.getFeed; } }));
+var domutils_2 = __nccwpck_require__(1754);
+Object.defineProperty(exports, "getFeed", ({ enumerable: true, get: function () { return domutils_2.getFeed; } }));
+var parseFeedDefaultOptions = { xmlMode: true };
 /**
  * Parse a feed.
  *
@@ -56054,7 +56520,7 @@ Object.defineProperty(exports, "getFeed", ({ enumerable: true, get: function () 
  * @param options Optionally, options for parsing. When using this, you should set `xmlMode` to `true`.
  */
 function parseFeed(feed, options) {
-    if (options === void 0) { options = { xmlMode: true }; }
+    if (options === void 0) { options = parseFeedDefaultOptions; }
     return (0, domutils_1.getFeed)(parseDOM(feed, options));
 }
 exports.parseFeed = parseFeed;
@@ -59477,9 +59943,11 @@ function transposeInPlace (matrix, maxSize) {
     const rowI = getRow(matrix, i);
     for (let j = 0; j < i; j++) {
       const rowJ = getRow(matrix, j);
-      const temp = rowI[j];
-      rowI[j] = rowJ[i];
-      rowJ[i] = temp;
+      if (rowI[j] || rowJ[i]) {
+        const temp = rowI[j];
+        rowI[j] = rowJ[i];
+        rowJ[i] = temp;
+      }
     }
   }
 }
@@ -59493,10 +59961,17 @@ function putCellIntoLayout (cell, layout, baseRow, baseCol) {
   }
 }
 
+function getOrInitOffset (offsets, index) {
+  if (offsets[index] === undefined) {
+    offsets[index] = (index === 0) ? 0 : 1 + getOrInitOffset(offsets, index - 1);
+  }
+  return offsets[index];
+}
+
 function updateOffset (offsets, base, span, value) {
   offsets[base + span] = Math.max(
-    offsets[base + span] || 0,
-    offsets[base] + value
+    getOrInitOffset(offsets, base + span),
+    getOrInitOffset(offsets, base) + value
   );
 }
 
@@ -59541,19 +60016,27 @@ function tableToString (tableRows, rowSpacing, colSpacing) {
   for (let x = 0; x < colNumber; x++) {
     let y = 0;
     let cell;
-    while (y < rowNumber && (cell = layout[x][y])) {
-      if (!cell.rendered) {
-        let cellWidth = 0;
-        for (let j = 0; j < cell.lines.length; j++) {
-          const line = cell.lines[j];
-          const lineOffset = rowOffsets[y] + j;
-          outputLines[lineOffset] = (outputLines[lineOffset] || '').padEnd(colOffsets[x]) + line;
-          cellWidth = (line.length > cellWidth) ? line.length : cellWidth;
+    const rowsInThisColumn = Math.min(rowNumber, layout[x].length);
+    while (y < rowsInThisColumn) {
+      cell = layout[x][y];
+      if (cell) {
+        if (!cell.rendered) {
+          let cellWidth = 0;
+          for (let j = 0; j < cell.lines.length; j++) {
+            const line = cell.lines[j];
+            const lineOffset = rowOffsets[y] + j;
+            outputLines[lineOffset] = (outputLines[lineOffset] || '').padEnd(colOffsets[x]) + line;
+            cellWidth = (line.length > cellWidth) ? line.length : cellWidth;
+          }
+          updateOffset(colOffsets, x, cell.colspan, cellWidth + colSpacing);
+          cell.rendered = true;
         }
-        updateOffset(colOffsets, x, cell.colspan, cellWidth + colSpacing);
-        cell.rendered = true;
+        y += cell.rowspan;
+      } else {
+        const lineOffset = rowOffsets[y];
+        outputLines[lineOffset] = (outputLines[lineOffset] || '');
+        y++;
       }
-      y += cell.rowspan;
     }
   }
 
@@ -59693,6 +60176,29 @@ function formatImage (elem, walk, builder, formatOptions) {
 
   builder.addInline(text, { noWordTransform: true });
 }
+
+// a img baseUrl
+// a img pathRewrite
+// a img linkBrackets
+
+// a     ignoreHref: false
+//            ignoreText ?
+// a     noAnchorUrl: true
+//            can be replaced with selector
+// a     hideLinkHrefIfSameAsText: false
+//            how to compare, what to show (text, href, normalized) ?
+// a     mailto protocol removed without options
+
+// a     protocols: mailto, tel, ...
+//            can be matched with selector?
+
+// anchors, protocols - only if no pathRewrite fn is provided
+
+// normalize-url ?
+
+// a
+// a[href^="#"] - format:skip by default
+// a[href^="mailto:"] - ?
 
 /**
  * Process an anchor.
@@ -60202,12 +60708,23 @@ var ast = /*#__PURE__*/Object.freeze({
     __proto__: null
 });
 
-const lex = leac.createLexer([
-    { name: 'ws', regex: /[ \t\r\n\f]+/ },
-    { name: 'idn', regex: /[a-zA-Z_-][a-zA-Z0-9_-]*/ },
-    { name: '#id', regex: /#[a-zA-Z0-9_-]+/ },
-    { name: 'str1', regex: /'(?:\\['\\]|[^\n'\\])*'/ },
-    { name: 'str2', regex: /"(?:\\["\\]|[^\n"\\])*"/ },
+const ws = `(?:[ \\t\\r\\n\\f]*)`;
+const nl = `(?:\\n|\\r\\n|\\r|\\f)`;
+const nonascii = `[^\\x00-\\x7F]`;
+const unicode = `(?:\\\\[0-9a-f]{1,6}(?:\\r\\n|[ \\n\\r\\t\\f])?)`;
+const escape = `(?:\\\\[^\\n\\r\\f0-9a-f])`;
+const nmstart = `(?:[_a-z]|${nonascii}|${unicode}|${escape})`;
+const nmchar = `(?:[_a-z0-9-]|${nonascii}|${unicode}|${escape})`;
+const name = `(?:${nmchar}+)`;
+const ident = `(?:[-]?${nmstart}${nmchar}*)`;
+const string1 = `'([^\\n\\r\\f\\\\']|\\\\${nl}|${nonascii}|${unicode}|${escape})*'`;
+const string2 = `"([^\\n\\r\\f\\\\"]|\\\\${nl}|${nonascii}|${unicode}|${escape})*"`;
+const lexSelector = leac.createLexer([
+    { name: 'ws', regex: new RegExp(ws) },
+    { name: 'hash', regex: new RegExp(`#${name}`, 'i') },
+    { name: 'ident', regex: new RegExp(ident, 'i') },
+    { name: 'str1', regex: new RegExp(string1, 'i') },
+    { name: 'str2', regex: new RegExp(string2, 'i') },
     { name: '*' },
     { name: '.' },
     { name: ',' },
@@ -60221,11 +60738,25 @@ const lex = leac.createLexer([
     { name: '^' },
     { name: '$' },
 ]);
+const lexEscapedString = leac.createLexer([
+    { name: 'unicode', regex: new RegExp(unicode, 'i') },
+    { name: 'escape', regex: new RegExp(escape, 'i') },
+    { name: 'any', regex: new RegExp('[\\s\\S]', 'i') }
+]);
 function sumSpec([a0, a1, a2], [b0, b1, b2]) {
     return [a0 + b0, a1 + b1, a2 + b2];
 }
 function sumAllSpec(ss) {
     return ss.reduce(sumSpec, [0, 0, 0]);
+}
+const unicodeEscapedSequence_ = p__namespace.token((t) => t.name === 'unicode' ? String.fromCodePoint(parseInt(t.text.slice(1), 16)) : undefined);
+const escapedSequence_ = p__namespace.token((t) => t.name === 'escape' ? t.text.slice(1) : undefined);
+const anyChar_ = p__namespace.token((t) => t.name === 'any' ? t.text : undefined);
+const escapedString_ = p__namespace.map(p__namespace.many(p__namespace.or(unicodeEscapedSequence_, escapedSequence_, anyChar_)), (cs) => cs.join(''));
+function unescape(escapedString) {
+    const lexerResult = lexEscapedString(escapedString);
+    const result = escapedString_({ tokens: lexerResult.tokens, options: undefined }, 0);
+    return result.value;
 }
 function literal(name) {
     return p__namespace.token((t) => t.name === name ? true : undefined);
@@ -60235,9 +60766,9 @@ const optionalWhitespace_ = p__namespace.option(whitespace_, null);
 function optionallySpaced(parser) {
     return p__namespace.middle(optionalWhitespace_, parser, optionalWhitespace_);
 }
-const identifier_ = p__namespace.token((t) => t.name === 'idn' ? t.text : undefined);
-const hashId_ = p__namespace.token((t) => t.name === '#id' ? t.text.slice(1) : undefined);
-const string_ = p__namespace.token((t) => t.name.startsWith('str') ? t.text.slice(1, -1) : undefined);
+const identifier_ = p__namespace.token((t) => t.name === 'ident' ? unescape(t.text) : undefined);
+const hashId_ = p__namespace.token((t) => t.name === 'hash' ? unescape(t.text.slice(1)) : undefined);
+const string_ = p__namespace.token((t) => t.name.startsWith('str') ? unescape(t.text.slice(1, -1)) : undefined);
 const namespace_ = p__namespace.left(p__namespace.option(identifier_, ''), literal('|'));
 const qualifiedName_ = p__namespace.eitherOr(p__namespace.ab(namespace_, identifier_, (ns, name) => ({ name: name, namespace: ns })), p__namespace.map(identifier_, (name) => ({ name: name, namespace: null })));
 const uniSelector_ = p__namespace.eitherOr(p__namespace.ab(namespace_, literal('*'), (ns) => ({ type: 'universal', namespace: ns, specificity: [0, 0, 0] })), p__namespace.map(literal('*'), () => ({ type: 'universal', namespace: null, specificity: [0, 0, 0] })));
@@ -60258,7 +60789,7 @@ const idSelector_ = p__namespace.map(hashId_, (name) => ({
     specificity: [1, 0, 0]
 }));
 const attrModifier_ = p__namespace.token((t) => {
-    if (t.name === 'idn') {
+    if (t.name === 'ident') {
         if (t.text === 'i' || t.text === 'I') {
             return 'i';
         }
@@ -60304,7 +60835,10 @@ const complexSelector_ = p__namespace.leftAssoc2(compoundSelector_, p__namespace
 })), compoundSelector_);
 const listSelector_ = p__namespace.leftAssoc2(p__namespace.map(complexSelector_, (s) => ({ type: 'list', list: [s] })), p__namespace.map(optionallySpaced(literal(',')), () => (acc, next) => ({ type: 'list', list: [...acc.list, next] })), complexSelector_);
 function parse_(parser, str) {
-    const lexerResult = lex(str);
+    if (!(typeof str === 'string' || str instanceof String)) {
+        throw new Error('Expected a selector string. Actual input is not a string!');
+    }
+    const lexerResult = lexSelector(str);
     if (!lexerResult.complete) {
         throw new Error(`The input "${str}" was only partially tokenized, stopped at offset ${lexerResult.offset}!\n` +
             prettyPrintPosition(str, lexerResult.offset));
@@ -60338,15 +60872,15 @@ function serialize(selector) {
         case 'universal':
             return _serNs(selector.namespace) + '*';
         case 'tag':
-            return _serNs(selector.namespace) + selector.name;
+            return _serNs(selector.namespace) + _serIdent(selector.name);
         case 'class':
-            return '.' + selector.name;
+            return '.' + _serIdent(selector.name);
         case 'id':
-            return '#' + selector.name;
+            return '#' + _serIdent(selector.name);
         case 'attrPresence':
-            return `[${_serNs(selector.namespace)}${selector.name}]`;
+            return `[${_serNs(selector.namespace)}${_serIdent(selector.name)}]`;
         case 'attrValue':
-            return `[${_serNs(selector.namespace)}${selector.name}${selector.matcher}${_serStr(selector.value)}${(selector.modifier ? selector.modifier : '')}]`;
+            return `[${_serNs(selector.namespace)}${_serIdent(selector.name)}${selector.matcher}"${_serStr(selector.value)}"${(selector.modifier ? selector.modifier : '')}]`;
         case 'combinator':
             return serialize(selector.left) + selector.combinator;
         case 'compound':
@@ -60364,19 +60898,28 @@ function serialize(selector) {
 }
 function _serNs(ns) {
     return (ns || ns === '')
-        ? ns + '|'
+        ? _serIdent(ns) + '|'
         : '';
 }
+function _codePoint(char) {
+    return `\\${char.codePointAt(0).toString(16)} `;
+}
+function _serIdent(str) {
+    return str.replace(
+    /(^[0-9])|(^-[0-9])|(^-$)|([-0-9a-zA-Z_]|[^\x00-\x7F])|(\x00)|([\x01-\x1f]|\x7f)|([\s\S])/g, (m, d1, d2, hy, safe, nl, ctrl, other) => d1 ? _codePoint(d1) :
+        d2 ? '-' + _codePoint(d2.slice(1)) :
+            hy ? '\\-' :
+                safe ? safe :
+                    nl ? '\ufffd' :
+                        ctrl ? _codePoint(ctrl) :
+                            '\\' + other);
+}
 function _serStr(str) {
-    if (str.indexOf('"') === -1) {
-        return `"${str}"`;
-    }
-    else if (str.indexOf("'") === -1) {
-        return `'${str}'`;
-    }
-    else {
-        return `"${str.replace('"', '\\"')}"`;
-    }
+    return str.replace(
+    /(")|(\\)|(\x00)|([\x01-\x1f]|\x7f)/g, (m, dq, bs, nl, ctrl) => dq ? '\\"' :
+        bs ? '\\\\' :
+            nl ? '\ufffd' :
+                _codePoint(ctrl));
 }
 function normalize(selector) {
     if (!selector.type) {
@@ -60654,8 +61197,7 @@ function many(p) {
 function many1(p) {
     return ab(p, many(p), (head, tail) => [head, ...tail]);
 }
-function ab(pa, pb,
-join) {
+function ab(pa, pb, join) {
     return (data, i) => mapOuter(pa(data, i), (ma) => mapInner(pb(data, ma.position), (vb, j) => join(ma.value, vb, data, i, j)));
 }
 function left(pa, pb) {
@@ -60664,8 +61206,7 @@ function left(pa, pb) {
 function right(pa, pb) {
     return ab(pa, pb, (va, vb) => vb);
 }
-function abc(pa, pb, pc,
-join) {
+function abc(pa, pb, pc, join) {
     return (data, i) => mapOuter(pa(data, i), (ma) => mapOuter(pb(data, ma.position), (mb) => mapInner(pc(data, mb.position), (vc, j) => join(ma.value, mb.value, vc, data, i, j))));
 }
 function middle(pa, pb, pc) {
@@ -60750,8 +61291,7 @@ function leftAssoc2(pLeft, pOper, pRight) {
 function rightAssoc2(pLeft, pOper, pRight) {
     return ab(reduceRight(ab(pLeft, pOper, (x, f) => [x, f]), (y) => y, ([x, f], acc) => (y) => f(x, acc(y))), pRight, (f, v) => f(v));
 }
-function condition(
-cond, pTrue, pFalse) {
+function condition(cond, pTrue, pFalse) {
     return (data, i) => (cond(data, i))
         ? pTrue(data, i)
         : pFalse(data, i);
@@ -61437,6 +61977,10 @@ exports.Types = Types;
 var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
 (() => {
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
 let Asciidoctor = __nccwpck_require__(853);
 let convert = (__nccwpck_require__(3012)/* .convert */ .OQ);
 
@@ -61475,7 +62019,9 @@ const formatSection = (section, content) => {
   let currSection = section.getParent();
 
   while (level-- && currSection) {
-    parentSections.push(currSection.getName());
+    if (typeof currSection.getName === 'function') {
+      parentSections.push(currSection.getName());
+    }
     currSection = currSection.getParent();
   }
 
