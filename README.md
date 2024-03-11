@@ -24,10 +24,15 @@ The RFD API backend is made up of two services:
 * `rfd-api` - API for accessing RFDs and handling GitHub webhooks
 * `rfd-processor` - Scans for RFDs to update, handles RFD state transitions, manages RFD assets
 
-### Getting Started - API
+The RFD API backend services expect to run against a Postgres database.
 
-**Dependencies**
-* Postgres
+### API
+
+Running the API requires setting up a configuration file as outlined in `config.example.toml`.
+
+### Processor
+
+Dependencies
 * Node
   * @mermaid-js/mermaid-cli
 * Ruby
@@ -35,11 +40,9 @@ The RFD API backend is made up of two services:
   * asciidoctor-pdf
   * asciidoctor-mermaid
 
-Running the API requires setting up a configuration file as outlined in `config.example.toml`.
+## Background
 
-
-### RFD Model
-
+Objects reference:
 ```
                                     ┌─────────────────┐ ┌─────────────────┐
                                     │                 │ │                 │
@@ -176,6 +179,8 @@ repo itself, and GitHub rate limits. Currently we run the scanner on a 15 minute
 ```
 
 ### Account Provider Linking
+
+(Note: not yet implemented)
 
 The RFD API does not perform any kind of automatic account linking. Every new remote provider id that
 is seen results in a new account being generated. This is problematic though if you want to be able to
