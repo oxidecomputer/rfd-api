@@ -431,3 +431,17 @@ cargo run -p rfd-cli mapper create --json-body /dev/stdin <<EOM
 }
 EOM
 ```
+
+## Contributing
+
+This repo is public because others are interested in the RFD process and the tooling we've
+built around it. In its present state, it's the code we're using as the backend to
+[our RFD frontend](https://rfd.shared.oxide.computer/). We're open to PRs that
+improve these services, especially if they make the repo easier for others to use and contribute
+to. However, we are a small company, and the primary goal of this repo is as an internal
+tool for Oxide, so we can't guarantee that PRs will be integrated.
+
+## License
+
+Unless otherwise noted, all components are licensed under the
+[Mozilla Public License Version 2.0](LICENSE).
