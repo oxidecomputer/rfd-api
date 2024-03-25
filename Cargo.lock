@@ -2506,7 +2506,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-api"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "async-trait",
  "base64 0.21.7",
@@ -2562,7 +2562,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-cli"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2615,7 +2615,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-processor"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "async-trait",
  "base64 0.21.7",
@@ -2654,7 +2654,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-redirect"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "config",
  "dropshot",
@@ -3004,9 +3004,9 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.21"
+version = "1.0.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b97ed7a9823b74f99c7742f5336af7be5ecd3eeafcb1507d1fa93347b1d589b0"
+checksum = "92d43fe69e652f3df9bdc2b85b2854a0825b86e4fb76bc44d945137d053639ca"
 
 [[package]]
 name = "serde"
