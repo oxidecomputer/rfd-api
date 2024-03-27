@@ -319,9 +319,9 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "chrono"
-version = "0.4.34"
+version = "0.4.37"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5bc015644b92d5890fab7489e49d21f879d5c990186827d42ec511919404f38b"
+checksum = "8a0d04d43504c61aa6c7531f1871dd0d418d91130162063b789da00fd7057a5e"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
@@ -2506,7 +2506,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-api"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "async-trait",
  "base64 0.21.7",
@@ -2562,7 +2562,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-cli"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -2615,7 +2615,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-processor"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "async-trait",
  "base64 0.21.7",
@@ -2654,7 +2654,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-redirect"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "config",
  "dropshot",
