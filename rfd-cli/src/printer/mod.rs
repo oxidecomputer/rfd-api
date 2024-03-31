@@ -36,9 +36,7 @@ pub trait CliOutput {
     fn output_search_results(&self, value: types::SearchResults) {}
     fn output_error<T>(&self, value: &progenitor_client::Error<T>)
     where
-        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
-    {
-    }
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug;
 }
 
 impl CliOutput for Printer {
@@ -165,6 +163,16 @@ impl CliOutput for Printer {
         match self {
             Self::Json(printer) => printer.output_search_results(value),
             Self::Tab(printer) => printer.output_search_results(value),
+        }
+    }
+
+    fn output_error<T>(&self, value: &progenitor_client::Error<T>)
+    where
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
+    {
+        match self {
+            Self::Json(printer) => printer.output_error(value),
+            Self::Tab(printer) => printer.output_error(value),
         }
     }
 }
