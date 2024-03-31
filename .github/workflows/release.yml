@@ -149,7 +149,7 @@ jobs:
           name: artifacts
           path: artifacts
       - name: Create Release
-        uses: ncipollo/release-action@6c75be85e571768fa31b40abf38de58ba0397db5 # v1
+        uses: ncipollo/release-action@2c591bcc8ecdcd2db72b97d6147f871fcd833ba5 # v1
         with:
           tag: ${{ needs.plan.outputs.tag }}
           name: ${{ fromJson(needs.plan.outputs.val).announcement_title }}
