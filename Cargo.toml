@@ -25,7 +25,7 @@ chrono = "0.4.37"
 clap = { version = "4.5.4", features = ["derive", "string", "env"] }
 config = { version = "0.13.4", features = ["toml"] }
 cookie = { version = "0.18.1" }
-crc32c = "0.6.4"
+crc32c = "0.6.5"
 diesel = { version = "2.1.5", features = ["postgres"] }
 dirs = "5.0.1"
 dropshot = "0.10.0"
