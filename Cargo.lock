@@ -1001,9 +1001,9 @@ dependencies = [
 
 [[package]]
 name = "google-cloudkms1"
-version = "5.0.3+20230106"
+version = "5.0.4+20240219"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9452e6b25b5aff4268dfd2806b0caa5ea4abc84534895eb74220a9e59c1ddf1a"
+checksum = "05980332a85d458b9cfd8c071dee92811dad827c5bca75037bab052d75e8e66a"
 dependencies = [
  "anyhow",
  "google-apis-common",
@@ -1021,9 +1021,9 @@ dependencies = [
 
 [[package]]
 name = "google-drive3"
-version = "5.0.3+20230115"
+version = "5.0.4+20240227"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ceed0f4299b62993133e1cebb3747500e7565811ad24c9fe69f70077c5dbbd20"
+checksum = "479d55d400d8714e341586b7972d2577043995fa1ca2f782668b915aced56d16"
 dependencies = [
  "anyhow",
  "google-apis-common",
@@ -1041,9 +1041,9 @@ dependencies = [
 
 [[package]]
 name = "google-storage1"
-version = "5.0.3+20230119"
+version = "5.0.4+20240229"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a818191c0e1c35545aa210165324b2e7a00389f2eb42f94ef62c8b68ca862b95"
+checksum = "9d26f756b1d332e03c119b8f986c7a1acd3bff52958d2751a035efdd1b2324f6"
 dependencies = [
  "anyhow",
  "google-apis-common",
