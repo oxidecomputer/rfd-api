@@ -3,20 +3,29 @@
 Backend services and tools for processing and managing RFDs
 
 ## RFD CLI
-
 ### Getting Started
-
 1. Download the latest release of `rfd-cli` or run `cargo run -p rfd-cli`
 2. Configure the API host with `rfd-cli config set host https://rfd-api.shared.oxide.computer`
+3. Choose an authentication mode based on the kind of session you want, either a short-term session token (id) or a long-term api token (token).
 
-Choose an authentication mode based on the kind of session you want, either a short-term session
-token (id) or a long-term api token (token).
+#### Authenticate with short lived session
+To log in with a short lived session run:
+```sh
+rfd-cli auth login google
+```
 
-3. Authenticate against the API with `rfd-cli auth login google` via a session
+#### Authenticate with long lived token
+To generate and log in with a long lived token run:
+```sh
+rfd-cli auth login google -m token
+```
 
-**OR**
+### Formatting
+Results can be output either as machine (JSON) or human (tab) readable formats. A format can be specified per call via the `--format` argument. To persist this setting and apply it to call calls, it can be set in your config file via:
 
-3. Authenticate against the API with `rfd-cli auth login google -m token` via a token
+```sh
+rfd-cli config set format <FORMAT>
+```
 
 ## Backend
 
