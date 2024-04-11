@@ -29,7 +29,7 @@ use crate::{
             device_token::{exchange_device_token, get_device_provider},
         },
         mappers::{create_mapper, delete_mapper, get_mappers},
-        rfd::{get_rfd, get_rfds, search_rfds, update_rfd_visibility},
+        rfd::{get_rfd, get_rfd_attr, get_rfds, search_rfds, update_rfd_visibility},
         webhook::github_webhook,
         well_known::{jwks_json, openid_configuration},
     },
@@ -88,6 +88,7 @@ pub fn server(
     // RFDs
     api.register(get_rfds).expect("Failed to register endpoint");
     api.register(get_rfd).expect("Failed to register endpoint");
+    api.register(get_rfd_attr).expect("Failed to register endpoint");
     api.register(search_rfds)
         .expect("Failed to register endpoint");
     api.register(update_rfd_visibility)

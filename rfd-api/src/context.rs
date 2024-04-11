@@ -11,7 +11,7 @@ use jsonwebtoken::jwk::JwkSet;
 use oauth2::CsrfToken;
 use partial_struct::partial;
 use rfd_model::{
-    schema_ext::{LoginAttemptState, Visibility},
+    schema_ext::{ContentFormat, LoginAttemptState, Visibility},
     storage::{
         AccessGroupFilter, AccessGroupStore, AccessTokenStore, ApiKeyFilter, ApiKeyStore,
         ApiUserFilter, ApiUserProviderFilter, ApiUserProviderStore, ApiUserStore, JobStore,
@@ -190,6 +190,7 @@ pub struct FullRfd {
     pub labels: Option<String>,
     #[partial(ListRfd(skip))]
     pub content: String,
+    pub format: ContentFormat,
     pub sha: String,
     pub commit: String,
     pub committed_at: DateTime<Utc>,
@@ -579,6 +580,7 @@ impl ApiContext {
                 state: revision.state,
                 authors: revision.authors,
                 labels: revision.labels,
+                format: revision.content_format,
                 sha: revision.sha,
                 commit: revision.commit_sha,
                 committed_at: revision.committed_at,
@@ -641,6 +643,7 @@ impl ApiContext {
                     authors: revision.authors,
                     labels: revision.labels,
                     content: revision.content,
+                    format: revision.content_format,
                     sha: revision.sha,
                     commit: revision.commit_sha,
                     committed_at: revision.committed_at,

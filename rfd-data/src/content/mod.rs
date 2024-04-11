@@ -8,7 +8,7 @@ mod markdown;
 pub use asciidoc::RfdAsciidoc;
 pub use markdown::RfdMarkdown;
 
-pub trait RfdAttributes {
+pub trait RfdDocument {
     /// Extract the title from the internal content
     fn get_title<'a>(&'a self) -> Option<&'a str>;
 
@@ -33,4 +33,98 @@ pub trait RfdAttributes {
 
     // Update the labels stored within the document or add them if they do not exist
     fn update_labels(&mut self, value: &str);
+
+    // Get a reference to the contents of the RFD header
+    fn header(&self) -> Option<&str>;
+
+    /// Get a reference to the contents of the RFD body
+    fn body(&self) -> Option<&str>;
+
+    /// Get a reference to the internal unparsed contents
+    fn raw(&self) -> &str;
+}
+
+#[derive(Debug, Clone)]
+pub enum RfdContent<'a> {
+    Asciidoc(RfdAsciidoc<'a>),
+    Markdown(RfdMarkdown<'a>),
+}
+
+impl<'a> RfdDocument for RfdContent<'a> {
+    fn get_title(&self) -> Option<&str> {
+        match self {
+            Self::Asciidoc(inner) => inner.get_title(),
+            Self::Markdown(inner) => inner.get_title(),
+        }
+    }
+
+    fn get_state(&self) -> Option<&str> {
+        match self {
+            Self::Asciidoc(inner) => inner.get_state(),
+            Self::Markdown(inner) => inner.get_state(),
+        }
+    }
+
+    fn update_state(&mut self, value: &str) {
+        match self {
+            Self::Asciidoc(inner) => inner.update_state(value),
+            Self::Markdown(inner) => inner.update_state(value),
+        }
+    }
+
+    fn get_discussion(&self) -> Option<&str> {
+        match self {
+            Self::Asciidoc(inner) => inner.get_discussion(),
+            Self::Markdown(inner) => inner.get_discussion(),
+        }
+    }
+
+    fn update_discussion(&mut self, value: &str) {
+        match self {
+            Self::Asciidoc(inner) => inner.update_discussion(value),
+            Self::Markdown(inner) => inner.update_discussion(value),
+        }
+    }
+
+    fn get_authors(&self) -> Option<&str> {
+        match self {
+            Self::Asciidoc(inner) => inner.get_authors(),
+            Self::Markdown(inner) => inner.get_authors(),
+        }
+    }
+
+    fn get_labels(&self) -> Option<&str> {
+        match self {
+            Self::Asciidoc(inner) => inner.get_labels(),
+            Self::Markdown(inner) => inner.get_labels(),
+        }
+    }
+
+    fn update_labels(&mut self, value: &str) {
+        match self {
+            Self::Asciidoc(inner) => inner.update_labels(value),
+            Self::Markdown(inner) => inner.update_labels(value),
+        }
+    }
+
+    fn header(&self) -> Option<&str> {
+        match self {
+            Self::Asciidoc(inner) => inner.header(),
+            Self::Markdown(inner) => inner.header(),
+        }
+    }
+
+    fn body(&self) -> Option<&str> {
+        match self {
+            Self::Asciidoc(inner) => inner.body(),
+            Self::Markdown(inner) => inner.body(),
+        }
+    }
+
+    fn raw(&self) -> &str {
+        match self {
+            Self::Asciidoc(inner) => inner.raw(),
+            Self::Markdown(inner) => inner.raw(),
+        }
+    }
 }

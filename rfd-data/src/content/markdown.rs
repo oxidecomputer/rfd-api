@@ -5,7 +5,7 @@
 use regex::Regex;
 use std::borrow::Cow;
 
-use super::RfdAttributes;
+use super::RfdDocument;
 
 #[derive(Debug, Clone)]
 pub struct RfdMarkdown<'a> {
@@ -20,19 +20,6 @@ impl<'a> RfdMarkdown<'a> {
         Self {
             content: content.into(),
         }
-    }
-
-    pub fn header(&self) -> Option<&str> {
-        self.title_pattern().splitn(&self.content, 2).nth(0)
-    }
-
-    pub fn body(&self) -> Option<&str> {
-        self.title_pattern().splitn(&self.content, 2).nth(1)
-    }
-
-    /// Get a reference to the internal unparsed contents
-    pub fn raw(&self) -> &str {
-        &self.content
     }
 
     fn attr(&self, attr: &str) -> Option<&str> {
@@ -78,7 +65,7 @@ impl<'a> RfdMarkdown<'a> {
     }
 }
 
-impl<'a> RfdAttributes for RfdMarkdown<'a> {
+impl<'a> RfdDocument for RfdMarkdown<'a> {
     fn get_title(&self) -> Option<&str> {
         let title_pattern = Regex::new(r"(?m)^[=# ]+(?:RFD ?)?(?:\d+:? )?(.*)$").unwrap();
         let fallback_title_pattern = Regex::new(r"(?m)^# (.*)$").unwrap();
@@ -119,11 +106,24 @@ impl<'a> RfdAttributes for RfdMarkdown<'a> {
     fn update_labels(&mut self, value: &str) {
         self.set_attr("labels", value)
     }
+
+    fn header(&self) -> Option<&str> {
+        self.title_pattern().splitn(&self.content, 2).nth(0)
+    }
+
+    fn body(&self) -> Option<&str> {
+        self.title_pattern().splitn(&self.content, 2).nth(1)
+    }
+
+    /// Get a reference to the internal unparsed contents
+    fn raw(&self) -> &str {
+        &self.content
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::content::{markdown::RfdMarkdown, RfdAttributes};
+    use crate::content::{markdown::RfdMarkdown, RfdDocument};
 
     // Read authors tests
 

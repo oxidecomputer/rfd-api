@@ -134,6 +134,7 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         // RFD commands
         CliCommand::GetRfd => Some("view"),
         CliCommand::GetRfds => Some("list"),
+        CliCommand::GetRfdAttr => Some("attr"),
         CliCommand::SearchRfds => Some("search"),
 
         CliCommand::UpdateRfdVisibility => Some("edit visibility"),
@@ -149,8 +150,8 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::GetSelf => Some("self"),
 
         // Link commands are handled separately
-        CliCommand::CreateLinkToken => None,
-        CliCommand::LinkProvider => None,
+        // CliCommand::CreateLinkToken => None,
+        // CliCommand::LinkProvider => None,
 
         // Group commands
         CliCommand::GetGroups => Some("sys group list"),
@@ -365,6 +366,7 @@ impl ProgenitorCliConfig for Context {
                 .printer()
                 .unwrap()
                 .output_search_results(reserialize(value)),
+            "RfdAttr" => self.printer().unwrap().output_rfd_attr(reserialize(value)),
             _ => eprintln!("Unhandled response"),
         }
     }

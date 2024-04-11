@@ -8,7 +8,7 @@ use async_trait::async_trait;
 use base64::DecodeError;
 use octorust::Client;
 use rfd_data::{
-    content::{RfdAsciidoc, RfdAttributes, RfdMarkdown},
+    content::{RfdAsciidoc, RfdContent, RfdDocument, RfdMarkdown},
     RfdNumber,
 };
 use rfd_model::schema_ext::ContentFormat;
@@ -50,12 +50,6 @@ pub struct RenderableRfd<'a> {
     render_id: Uuid,
 }
 
-#[derive(Debug, Clone)]
-enum RfdContent<'a> {
-    Asciidoc(RfdAsciidoc<'a>),
-    Markdown(RfdMarkdown<'a>),
-}
-
 impl<'a> RenderableRfd<'a> {
     /// Construct a new RfdContent wrapper that contains Asciidoc content
     pub fn new_asciidoc<T>(content: T) -> Self
@@ -76,30 +70,6 @@ impl<'a> RenderableRfd<'a> {
         Self {
             content: RfdContent::Markdown(RfdMarkdown::new(content.into())),
             render_id: Uuid::new_v4(),
-        }
-    }
-
-    /// Get a reference to the internal unparsed contents
-    pub fn raw(&self) -> &str {
-        match &self.content {
-            RfdContent::Asciidoc(adoc) => adoc.raw(),
-            RfdContent::Markdown(md) => md.raw(),
-        }
-    }
-
-    /// Fetch the content that is above the title line
-    pub fn header(&self) -> Option<&str> {
-        match &self.content {
-            RfdContent::Asciidoc(adoc) => adoc.header(),
-            RfdContent::Markdown(md) => md.header(),
-        }
-    }
-
-    /// Fetch the content that is below the title line
-    pub fn body(&self) -> Option<&str> {
-        match &self.content {
-            RfdContent::Asciidoc(adoc) => adoc.body(),
-            RfdContent::Markdown(md) => md.body(),
         }
     }
 
@@ -203,61 +173,50 @@ impl<'a> RenderableRfd<'a> {
     }
 }
 
-impl<'a> RfdAttributes for RenderableRfd<'a> {
+impl<'a> RfdDocument for RenderableRfd<'a> {
     fn get_title(&self) -> Option<&str> {
-        match &self.content {
-            RfdContent::Asciidoc(adoc) => adoc.get_title(),
-            RfdContent::Markdown(md) => md.get_title(),
-        }
+        RfdDocument::get_title(&self.content)
     }
 
     fn get_state(&self) -> Option<&str> {
-        match &self.content {
-            RfdContent::Asciidoc(adoc) => adoc.get_state(),
-            RfdContent::Markdown(md) => md.get_state(),
-        }
+        RfdDocument::get_state(&self.content)
     }
 
     fn update_state(&mut self, value: &str) {
-        match &mut self.content {
-            RfdContent::Asciidoc(adoc) => adoc.update_state(value),
-            RfdContent::Markdown(md) => md.update_state(value),
-        }
+        RfdDocument::update_state(&mut self.content, value)
     }
 
     fn get_discussion(&self) -> Option<&str> {
-        match &self.content {
-            RfdContent::Asciidoc(adoc) => adoc.get_discussion(),
-            RfdContent::Markdown(md) => md.get_discussion(),
-        }
+        RfdDocument::get_discussion(&self.content)
     }
 
     fn update_discussion(&mut self, value: &str) {
-        match &mut self.content {
-            RfdContent::Asciidoc(adoc) => adoc.update_discussion(value),
-            RfdContent::Markdown(md) => md.update_discussion(value),
-        }
+        RfdDocument::update_discussion(&mut self.content, value)
     }
 
     fn get_authors(&self) -> Option<&str> {
-        match &self.content {
-            RfdContent::Asciidoc(adoc) => adoc.get_authors(),
-            RfdContent::Markdown(md) => md.get_authors(),
-        }
+        RfdDocument::get_authors(&self.content)
     }
 
     fn get_labels(&self) -> Option<&str> {
-        match &self.content {
-            RfdContent::Asciidoc(adoc) => adoc.get_labels(),
-            RfdContent::Markdown(md) => md.get_labels(),
-        }
+        RfdDocument::get_labels(&self.content)
     }
 
     fn update_labels(&mut self, value: &str) {
-        match &mut self.content {
-            RfdContent::Asciidoc(adoc) => adoc.update_labels(value),
-            RfdContent::Markdown(md) => md.update_labels(value),
-        }
+        RfdDocument::update_labels(&mut self.content, value)
+    }
+
+    fn header(&self) -> Option<&str> {
+        RfdDocument::header(&self.content)
+    }
+
+    fn body(&self) -> Option<&str> {
+        RfdDocument::body(&self.content)
+    }
+
+    /// Get a reference to the internal unparsed contents
+    fn raw(&self) -> &str {
+        RfdDocument::raw(&self.content)
     }
 }
 

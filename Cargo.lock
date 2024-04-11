@@ -2526,6 +2526,7 @@ dependencies = [
  "rand_core",
  "regex",
  "reqwest",
+ "rfd-data",
  "rfd-model",
  "ring 0.17.7",
  "rsa",

@@ -2500,83 +2500,6 @@ pub mod types {
         }
     }
 
-    /// ApiUserLinkRequestPayload
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "user_identifier"
-    ///  ],
-    ///  "properties": {
-    ///    "user_identifier": {
-    ///      "type": "string",
-    ///      "format": "uuid"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct ApiUserLinkRequestPayload {
-        pub user_identifier: uuid::Uuid,
-    }
-
-    impl From<&ApiUserLinkRequestPayload> for ApiUserLinkRequestPayload {
-        fn from(value: &ApiUserLinkRequestPayload) -> Self {
-            value.clone()
-        }
-    }
-
-    impl ApiUserLinkRequestPayload {
-        pub fn builder() -> builder::ApiUserLinkRequestPayload {
-            Default::default()
-        }
-    }
-
-    /// ApiUserLinkRequestResponse
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "token"
-    ///  ],
-    ///  "properties": {
-    ///    "token": {
-    ///      "$ref": "#/components/schemas/SecretString"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct ApiUserLinkRequestResponse {
-        pub token: SecretString,
-    }
-
-    impl From<&ApiUserLinkRequestResponse> for ApiUserLinkRequestResponse {
-        fn from(value: &ApiUserLinkRequestResponse) -> Self {
-            value.clone()
-        }
-    }
-
-    impl ApiUserLinkRequestResponse {
-        pub fn builder() -> builder::ApiUserLinkRequestResponse {
-            Default::default()
-        }
-    }
-
     /// ApiUserProvider
     ///
     /// <details><summary>JSON schema</summary>
@@ -2671,44 +2594,6 @@ pub mod types {
         }
     }
 
-    /// ApiUserProviderLinkPayload
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "token"
-    ///  ],
-    ///  "properties": {
-    ///    "token": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct ApiUserProviderLinkPayload {
-        pub token: String,
-    }
-
-    impl From<&ApiUserProviderLinkPayload> for ApiUserProviderLinkPayload {
-        fn from(value: &ApiUserProviderLinkPayload) -> Self {
-            value.clone()
-        }
-    }
-
-    impl ApiUserProviderLinkPayload {
-        pub fn builder() -> builder::ApiUserProviderLinkPayload {
-            Default::default()
-        }
-    }
-
     /// ApiUserUpdateParams
     ///
     /// <details><summary>JSON schema</summary>
@@ -2754,6 +2639,88 @@ pub mod types {
     impl ApiUserUpdateParams {
         pub fn builder() -> builder::ApiUserUpdateParams {
             Default::default()
+        }
+    }
+
+    /// ContentFormat
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "asciidoc",
+    ///    "markdown"
+    ///  ]
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        Deserialize,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        Serialize,
+        schemars :: JsonSchema,
+    )]
+    pub enum ContentFormat {
+        #[serde(rename = "asciidoc")]
+        Asciidoc,
+        #[serde(rename = "markdown")]
+        Markdown,
+    }
+
+    impl From<&ContentFormat> for ContentFormat {
+        fn from(value: &ContentFormat) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ToString for ContentFormat {
+        fn to_string(&self) -> String {
+            match *self {
+                Self::Asciidoc => "asciidoc".to_string(),
+                Self::Markdown => "markdown".to_string(),
+            }
+        }
+    }
+
+    impl std::str::FromStr for ContentFormat {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> Result<Self, self::error::ConversionError> {
+            match value {
+                "asciidoc" => Ok(Self::Asciidoc),
+                "markdown" => Ok(Self::Markdown),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for ContentFormat {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for ContentFormat {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &String) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for ContentFormat {
+        type Error = self::error::ConversionError;
+        fn try_from(value: String) -> Result<Self, self::error::ConversionError> {
+            value.parse()
         }
     }
 
@@ -2964,6 +2931,7 @@ pub mod types {
     ///    "commit",
     ///    "committed_at",
     ///    "content",
+    ///    "format",
     ///    "id",
     ///    "pdfs",
     ///    "rfd_number",
@@ -2993,6 +2961,9 @@ pub mod types {
     ///        "string",
     ///        "null"
     ///      ]
+    ///    },
+    ///    "format": {
+    ///      "$ref": "#/components/schemas/ContentFormat"
     ///    },
     ///    "id": {
     ///      "type": "string",
@@ -3052,6 +3023,7 @@ pub mod types {
         pub content: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub discussion: Option<String>,
+        pub format: ContentFormat,
         pub id: uuid::Uuid,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub labels: Option<String>,
@@ -3733,6 +3705,7 @@ pub mod types {
     ///  "required": [
     ///    "commit",
     ///    "committed_at",
+    ///    "format",
     ///    "id",
     ///    "rfd_number",
     ///    "sha",
@@ -3758,6 +3731,9 @@ pub mod types {
     ///        "string",
     ///        "null"
     ///      ]
+    ///    },
+    ///    "format": {
+    ///      "$ref": "#/components/schemas/ContentFormat"
     ///    },
     ///    "id": {
     ///      "type": "string",
@@ -3809,6 +3785,7 @@ pub mod types {
         pub committed_at: chrono::DateTime<chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub discussion: Option<String>,
+        pub format: ContentFormat,
         pub id: uuid::Uuid,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub labels: Option<String>,
@@ -4794,6 +4771,49 @@ pub mod types {
         }
     }
 
+    /// RfdAttr
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "name",
+    ///    "value"
+    ///  ],
+    ///  "properties": {
+    ///    "name": {
+    ///      "$ref": "#/components/schemas/ViewRfdAttr"
+    ///    },
+    ///    "value": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub struct RfdAttr {
+        pub name: ViewRfdAttr,
+        pub value: String,
+    }
+
+    impl From<&RfdAttr> for RfdAttr {
+        fn from(value: &RfdAttr) -> Self {
+            value.clone()
+        }
+    }
+
+    impl RfdAttr {
+        pub fn builder() -> builder::RfdAttr {
+            Default::default()
+        }
+    }
+
     /// RfdVisibility
     ///
     /// <details><summary>JSON schema</summary>
@@ -5060,6 +5080,93 @@ pub mod types {
     impl ToString for SecretString {
         fn to_string(&self) -> String {
             self.0.to_string()
+        }
+    }
+
+    /// ViewRfdAttr
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "discussion",
+    ///    "labels",
+    ///    "state"
+    ///  ]
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        Deserialize,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        Serialize,
+        schemars :: JsonSchema,
+    )]
+    pub enum ViewRfdAttr {
+        #[serde(rename = "discussion")]
+        Discussion,
+        #[serde(rename = "labels")]
+        Labels,
+        #[serde(rename = "state")]
+        State,
+    }
+
+    impl From<&ViewRfdAttr> for ViewRfdAttr {
+        fn from(value: &ViewRfdAttr) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ToString for ViewRfdAttr {
+        fn to_string(&self) -> String {
+            match *self {
+                Self::Discussion => "discussion".to_string(),
+                Self::Labels => "labels".to_string(),
+                Self::State => "state".to_string(),
+            }
+        }
+    }
+
+    impl std::str::FromStr for ViewRfdAttr {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> Result<Self, self::error::ConversionError> {
+            match value {
+                "discussion" => Ok(Self::Discussion),
+                "labels" => Ok(Self::Labels),
+                "state" => Ok(Self::State),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for ViewRfdAttr {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for ViewRfdAttr {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &String) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for ViewRfdAttr {
+        type Error = self::error::ConversionError;
+        fn try_from(value: String) -> Result<Self, self::error::ConversionError> {
+            value.parse()
         }
     }
 
@@ -5730,96 +5837,6 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
-        pub struct ApiUserLinkRequestPayload {
-            user_identifier: Result<uuid::Uuid, String>,
-        }
-
-        impl Default for ApiUserLinkRequestPayload {
-            fn default() -> Self {
-                Self {
-                    user_identifier: Err("no value supplied for user_identifier".to_string()),
-                }
-            }
-        }
-
-        impl ApiUserLinkRequestPayload {
-            pub fn user_identifier<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<uuid::Uuid>,
-                T::Error: std::fmt::Display,
-            {
-                self.user_identifier = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for user_identifier: {}", e)
-                });
-                self
-            }
-        }
-
-        impl std::convert::TryFrom<ApiUserLinkRequestPayload> for super::ApiUserLinkRequestPayload {
-            type Error = super::error::ConversionError;
-            fn try_from(
-                value: ApiUserLinkRequestPayload,
-            ) -> Result<Self, super::error::ConversionError> {
-                Ok(Self {
-                    user_identifier: value.user_identifier?,
-                })
-            }
-        }
-
-        impl From<super::ApiUserLinkRequestPayload> for ApiUserLinkRequestPayload {
-            fn from(value: super::ApiUserLinkRequestPayload) -> Self {
-                Self {
-                    user_identifier: Ok(value.user_identifier),
-                }
-            }
-        }
-
-        #[derive(Clone, Debug)]
-        pub struct ApiUserLinkRequestResponse {
-            token: Result<super::SecretString, String>,
-        }
-
-        impl Default for ApiUserLinkRequestResponse {
-            fn default() -> Self {
-                Self {
-                    token: Err("no value supplied for token".to_string()),
-                }
-            }
-        }
-
-        impl ApiUserLinkRequestResponse {
-            pub fn token<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<super::SecretString>,
-                T::Error: std::fmt::Display,
-            {
-                self.token = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for token: {}", e));
-                self
-            }
-        }
-
-        impl std::convert::TryFrom<ApiUserLinkRequestResponse> for super::ApiUserLinkRequestResponse {
-            type Error = super::error::ConversionError;
-            fn try_from(
-                value: ApiUserLinkRequestResponse,
-            ) -> Result<Self, super::error::ConversionError> {
-                Ok(Self {
-                    token: value.token?,
-                })
-            }
-        }
-
-        impl From<super::ApiUserLinkRequestResponse> for ApiUserLinkRequestResponse {
-            fn from(value: super::ApiUserLinkRequestResponse) -> Self {
-                Self {
-                    token: Ok(value.token),
-                }
-            }
-        }
-
-        #[derive(Clone, Debug)]
         pub struct ApiUserProvider {
             api_user_id: Result<uuid::Uuid, String>,
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
@@ -5970,51 +5987,6 @@ pub mod types {
                     provider: Ok(value.provider),
                     provider_id: Ok(value.provider_id),
                     updated_at: Ok(value.updated_at),
-                }
-            }
-        }
-
-        #[derive(Clone, Debug)]
-        pub struct ApiUserProviderLinkPayload {
-            token: Result<String, String>,
-        }
-
-        impl Default for ApiUserProviderLinkPayload {
-            fn default() -> Self {
-                Self {
-                    token: Err("no value supplied for token".to_string()),
-                }
-            }
-        }
-
-        impl ApiUserProviderLinkPayload {
-            pub fn token<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<String>,
-                T::Error: std::fmt::Display,
-            {
-                self.token = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for token: {}", e));
-                self
-            }
-        }
-
-        impl std::convert::TryFrom<ApiUserProviderLinkPayload> for super::ApiUserProviderLinkPayload {
-            type Error = super::error::ConversionError;
-            fn try_from(
-                value: ApiUserProviderLinkPayload,
-            ) -> Result<Self, super::error::ConversionError> {
-                Ok(Self {
-                    token: value.token?,
-                })
-            }
-        }
-
-        impl From<super::ApiUserProviderLinkPayload> for ApiUserProviderLinkPayload {
-            fn from(value: super::ApiUserProviderLinkPayload) -> Self {
-                Self {
-                    token: Ok(value.token),
                 }
             }
         }
@@ -6354,6 +6326,7 @@ pub mod types {
             committed_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             content: Result<String, String>,
             discussion: Result<Option<String>, String>,
+            format: Result<super::ContentFormat, String>,
             id: Result<uuid::Uuid, String>,
             labels: Result<Option<String>, String>,
             link: Result<Option<String>, String>,
@@ -6373,6 +6346,7 @@ pub mod types {
                     committed_at: Err("no value supplied for committed_at".to_string()),
                     content: Err("no value supplied for content".to_string()),
                     discussion: Ok(Default::default()),
+                    format: Err("no value supplied for format".to_string()),
                     id: Err("no value supplied for id".to_string()),
                     labels: Ok(Default::default()),
                     link: Ok(Default::default()),
@@ -6435,6 +6409,16 @@ pub mod types {
                 self.discussion = value
                     .try_into()
                     .map_err(|e| format!("error converting supplied value for discussion: {}", e));
+                self
+            }
+            pub fn format<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::ContentFormat>,
+                T::Error: std::fmt::Display,
+            {
+                self.format = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for format: {}", e));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -6538,6 +6522,7 @@ pub mod types {
                     committed_at: value.committed_at?,
                     content: value.content?,
                     discussion: value.discussion?,
+                    format: value.format?,
                     id: value.id?,
                     labels: value.labels?,
                     link: value.link?,
@@ -6559,6 +6544,7 @@ pub mod types {
                     committed_at: Ok(value.committed_at),
                     content: Ok(value.content),
                     discussion: Ok(value.discussion),
+                    format: Ok(value.format),
                     id: Ok(value.id),
                     labels: Ok(value.labels),
                     link: Ok(value.link),
@@ -7492,6 +7478,7 @@ pub mod types {
             commit: Result<String, String>,
             committed_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             discussion: Result<Option<String>, String>,
+            format: Result<super::ContentFormat, String>,
             id: Result<uuid::Uuid, String>,
             labels: Result<Option<String>, String>,
             link: Result<Option<String>, String>,
@@ -7509,6 +7496,7 @@ pub mod types {
                     commit: Err("no value supplied for commit".to_string()),
                     committed_at: Err("no value supplied for committed_at".to_string()),
                     discussion: Ok(Default::default()),
+                    format: Err("no value supplied for format".to_string()),
                     id: Err("no value supplied for id".to_string()),
                     labels: Ok(Default::default()),
                     link: Ok(Default::default()),
@@ -7560,6 +7548,16 @@ pub mod types {
                 self.discussion = value
                     .try_into()
                     .map_err(|e| format!("error converting supplied value for discussion: {}", e));
+                self
+            }
+            pub fn format<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::ContentFormat>,
+                T::Error: std::fmt::Display,
+            {
+                self.format = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for format: {}", e));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -7652,6 +7650,7 @@ pub mod types {
                     commit: value.commit?,
                     committed_at: value.committed_at?,
                     discussion: value.discussion?,
+                    format: value.format?,
                     id: value.id?,
                     labels: value.labels?,
                     link: value.link?,
@@ -7671,6 +7670,7 @@ pub mod types {
                     commit: Ok(value.commit),
                     committed_at: Ok(value.committed_at),
                     discussion: Ok(value.discussion),
+                    format: Ok(value.format),
                     id: Ok(value.id),
                     labels: Ok(value.labels),
                     link: Ok(value.link),
@@ -8608,6 +8608,63 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
+        pub struct RfdAttr {
+            name: Result<super::ViewRfdAttr, String>,
+            value: Result<String, String>,
+        }
+
+        impl Default for RfdAttr {
+            fn default() -> Self {
+                Self {
+                    name: Err("no value supplied for name".to_string()),
+                    value: Err("no value supplied for value".to_string()),
+                }
+            }
+        }
+
+        impl RfdAttr {
+            pub fn name<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::ViewRfdAttr>,
+                T::Error: std::fmt::Display,
+            {
+                self.name = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for name: {}", e));
+                self
+            }
+            pub fn value<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.value = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for value: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<RfdAttr> for super::RfdAttr {
+            type Error = super::error::ConversionError;
+            fn try_from(value: RfdAttr) -> Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    name: value.name?,
+                    value: value.value?,
+                })
+            }
+        }
+
+        impl From<super::RfdAttr> for RfdAttr {
+            fn from(value: super::RfdAttr) -> Self {
+                Self {
+                    name: Ok(value.name),
+                    value: Ok(value.value),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
         pub struct RfdVisibility {
             visibility: Result<super::Visibility, String>,
         }
@@ -9054,21 +9111,6 @@ impl Client {
         builder::RemoveApiUserFromGroup::new(self)
     }
 
-    /// Link an existing login provider to this user
-    ///
-    /// Sends a `POST` request to `/api-user/{identifier}/link`
-    ///
-    /// ```ignore
-    /// let response = client.link_provider()
-    ///    .identifier(identifier)
-    ///    .body(body)
-    ///    .send()
-    ///    .await;
-    /// ```
-    pub fn link_provider(&self) -> builder::LinkProvider {
-        builder::LinkProvider::new(self)
-    }
-
     /// List the active and expired API tokens for a given user
     ///
     /// Sends a `GET` request to `/api-user/{identifier}/token`
@@ -9122,22 +9164,6 @@ impl Client {
     /// ```
     pub fn delete_api_user_token(&self) -> builder::DeleteApiUserToken {
         builder::DeleteApiUserToken::new(self)
-    }
-
-    /// Create a new link token for linking this provider to a different api
-    /// user
-    ///
-    /// Sends a `POST` request to `/api-user-provider/{identifier}/link-token`
-    ///
-    /// ```ignore
-    /// let response = client.create_link_token()
-    ///    .identifier(identifier)
-    ///    .body(body)
-    ///    .send()
-    ///    .await;
-    /// ```
-    pub fn create_link_token(&self) -> builder::CreateLinkToken {
-        builder::CreateLinkToken::new(self)
     }
 
     /// Sends a `GET` request to `/group`
@@ -9428,6 +9454,21 @@ impl Client {
     /// ```
     pub fn get_rfd(&self) -> builder::GetRfd {
         builder::GetRfd::new(self)
+    }
+
+    /// Get an attribute of a given RFD
+    ///
+    /// Sends a `GET` request to `/rfd/{number}/attr/{attr}`
+    ///
+    /// ```ignore
+    /// let response = client.get_rfd_attr()
+    ///    .number(number)
+    ///    .attr(attr)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn get_rfd_attr(&self) -> builder::GetRfdAttr {
+        builder::GetRfdAttr::new(self)
     }
 
     /// Modify the visibility of an RFD
@@ -9995,103 +10036,6 @@ pub mod builder {
         }
     }
 
-    /// Builder for [`Client::link_provider`]
-    ///
-    /// [`Client::link_provider`]: super::Client::link_provider
-    #[derive(Debug, Clone)]
-    pub struct LinkProvider<'a> {
-        client: &'a super::Client,
-        identifier: Result<uuid::Uuid, String>,
-        body: Result<types::builder::ApiUserProviderLinkPayload, String>,
-    }
-
-    impl<'a> LinkProvider<'a> {
-        pub fn new(client: &'a super::Client) -> Self {
-            Self {
-                client: client,
-                identifier: Err("identifier was not initialized".to_string()),
-                body: Ok(types::builder::ApiUserProviderLinkPayload::default()),
-            }
-        }
-
-        pub fn identifier<V>(mut self, value: V) -> Self
-        where
-            V: std::convert::TryInto<uuid::Uuid>,
-        {
-            self.identifier = value
-                .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for identifier failed".to_string());
-            self
-        }
-
-        pub fn body<V>(mut self, value: V) -> Self
-        where
-            V: std::convert::TryInto<types::ApiUserProviderLinkPayload>,
-            <V as std::convert::TryInto<types::ApiUserProviderLinkPayload>>::Error:
-                std::fmt::Display,
-        {
-            self.body = value.try_into().map(From::from).map_err(|s| {
-                format!(
-                    "conversion to `ApiUserProviderLinkPayload` for body failed: {}",
-                    s
-                )
-            });
-            self
-        }
-
-        pub fn body_map<F>(mut self, f: F) -> Self
-        where
-            F: std::ops::FnOnce(
-                types::builder::ApiUserProviderLinkPayload,
-            ) -> types::builder::ApiUserProviderLinkPayload,
-        {
-            self.body = self.body.map(f);
-            self
-        }
-
-        /// Sends a `POST` request to `/api-user/{identifier}/link`
-        pub async fn send(self) -> Result<ResponseValue<()>, Error<types::Error>> {
-            let Self {
-                client,
-                identifier,
-                body,
-            } = self;
-            let identifier = identifier.map_err(Error::InvalidRequest)?;
-            let body = body
-                .and_then(|v| {
-                    types::ApiUserProviderLinkPayload::try_from(v).map_err(|e| e.to_string())
-                })
-                .map_err(Error::InvalidRequest)?;
-            let url = format!(
-                "{}/api-user/{}/link",
-                client.baseurl,
-                encode_path(&identifier.to_string()),
-            );
-            #[allow(unused_mut)]
-            let mut request = client
-                .client
-                .post(url)
-                .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
-                )
-                .json(&body)
-                .build()?;
-            let result = client.client.execute(request).await;
-            let response = result?;
-            match response.status().as_u16() {
-                204u16 => Ok(ResponseValue::empty(response)),
-                400u16..=499u16 => Err(Error::ErrorResponse(
-                    ResponseValue::from_response(response).await?,
-                )),
-                500u16..=599u16 => Err(Error::ErrorResponse(
-                    ResponseValue::from_response(response).await?,
-                )),
-                _ => Err(Error::UnexpectedResponse(response)),
-            }
-        }
-    }
-
     /// Builder for [`Client::list_api_user_tokens`]
     ///
     /// [`Client::list_api_user_tokens`]: super::Client::list_api_user_tokens
@@ -10394,106 +10338,6 @@ pub mod builder {
                     reqwest::header::ACCEPT,
                     reqwest::header::HeaderValue::from_static("application/json"),
                 )
-                .build()?;
-            let result = client.client.execute(request).await;
-            let response = result?;
-            match response.status().as_u16() {
-                200u16 => ResponseValue::from_response(response).await,
-                400u16..=499u16 => Err(Error::ErrorResponse(
-                    ResponseValue::from_response(response).await?,
-                )),
-                500u16..=599u16 => Err(Error::ErrorResponse(
-                    ResponseValue::from_response(response).await?,
-                )),
-                _ => Err(Error::UnexpectedResponse(response)),
-            }
-        }
-    }
-
-    /// Builder for [`Client::create_link_token`]
-    ///
-    /// [`Client::create_link_token`]: super::Client::create_link_token
-    #[derive(Debug, Clone)]
-    pub struct CreateLinkToken<'a> {
-        client: &'a super::Client,
-        identifier: Result<uuid::Uuid, String>,
-        body: Result<types::builder::ApiUserLinkRequestPayload, String>,
-    }
-
-    impl<'a> CreateLinkToken<'a> {
-        pub fn new(client: &'a super::Client) -> Self {
-            Self {
-                client: client,
-                identifier: Err("identifier was not initialized".to_string()),
-                body: Ok(types::builder::ApiUserLinkRequestPayload::default()),
-            }
-        }
-
-        pub fn identifier<V>(mut self, value: V) -> Self
-        where
-            V: std::convert::TryInto<uuid::Uuid>,
-        {
-            self.identifier = value
-                .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for identifier failed".to_string());
-            self
-        }
-
-        pub fn body<V>(mut self, value: V) -> Self
-        where
-            V: std::convert::TryInto<types::ApiUserLinkRequestPayload>,
-            <V as std::convert::TryInto<types::ApiUserLinkRequestPayload>>::Error:
-                std::fmt::Display,
-        {
-            self.body = value.try_into().map(From::from).map_err(|s| {
-                format!(
-                    "conversion to `ApiUserLinkRequestPayload` for body failed: {}",
-                    s
-                )
-            });
-            self
-        }
-
-        pub fn body_map<F>(mut self, f: F) -> Self
-        where
-            F: std::ops::FnOnce(
-                types::builder::ApiUserLinkRequestPayload,
-            ) -> types::builder::ApiUserLinkRequestPayload,
-        {
-            self.body = self.body.map(f);
-            self
-        }
-
-        /// Sends a `POST` request to
-        /// `/api-user-provider/{identifier}/link-token`
-        pub async fn send(
-            self,
-        ) -> Result<ResponseValue<types::ApiUserLinkRequestResponse>, Error<types::Error>> {
-            let Self {
-                client,
-                identifier,
-                body,
-            } = self;
-            let identifier = identifier.map_err(Error::InvalidRequest)?;
-            let body = body
-                .and_then(|v| {
-                    types::ApiUserLinkRequestPayload::try_from(v).map_err(|e| e.to_string())
-                })
-                .map_err(Error::InvalidRequest)?;
-            let url = format!(
-                "{}/api-user-provider/{}/link-token",
-                client.baseurl,
-                encode_path(&identifier.to_string()),
-            );
-            #[allow(unused_mut)]
-            let mut request = client
-                .client
-                .post(url)
-                .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
-                )
-                .json(&body)
                 .build()?;
             let result = client.client.execute(request).await;
             let response = result?;
@@ -12090,6 +11934,84 @@ pub mod builder {
                 "{}/rfd/{}",
                 client.baseurl,
                 encode_path(&number.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::get_rfd_attr`]
+    ///
+    /// [`Client::get_rfd_attr`]: super::Client::get_rfd_attr
+    #[derive(Debug, Clone)]
+    pub struct GetRfdAttr<'a> {
+        client: &'a super::Client,
+        number: Result<String, String>,
+        attr: Result<types::ViewRfdAttr, String>,
+    }
+
+    impl<'a> GetRfdAttr<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                number: Err("number was not initialized".to_string()),
+                attr: Err("attr was not initialized".to_string()),
+            }
+        }
+
+        pub fn number<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<String>,
+        {
+            self.number = value
+                .try_into()
+                .map_err(|_| "conversion to `String` for number failed".to_string());
+            self
+        }
+
+        pub fn attr<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::ViewRfdAttr>,
+        {
+            self.attr = value
+                .try_into()
+                .map_err(|_| "conversion to `ViewRfdAttr` for attr failed".to_string());
+            self
+        }
+
+        /// Sends a `GET` request to `/rfd/{number}/attr/{attr}`
+        pub async fn send(self) -> Result<ResponseValue<types::RfdAttr>, Error<types::Error>> {
+            let Self {
+                client,
+                number,
+                attr,
+            } = self;
+            let number = number.map_err(Error::InvalidRequest)?;
+            let attr = attr.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/rfd/{}/attr/{}",
+                client.baseurl,
+                encode_path(&number.to_string()),
+                encode_path(&attr.to_string()),
             );
             #[allow(unused_mut)]
             let mut request = client

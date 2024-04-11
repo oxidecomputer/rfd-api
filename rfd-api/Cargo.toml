@@ -31,6 +31,7 @@ rand_core = { workspace = true, features = ["std"] }
 regex = { workspace = true }
 reqwest = { workspace = true }
 ring = { workspace = true }
+rfd-data = { path = "../rfd-data" }
 rfd-model = { path = "../rfd-model" }
 rsa = { workspace = true, features = ["sha2"] }
 schemars = { workspace = true, features = ["chrono"] }

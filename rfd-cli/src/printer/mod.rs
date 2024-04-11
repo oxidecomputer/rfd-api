@@ -33,6 +33,7 @@ pub trait CliOutput {
     fn output_rfd_list(&self, value: Vec<types::ListRfd>) {}
     fn output_rfd_full(&self, value: types::FullRfd) {}
     fn output_rfd(&self, value: types::Rfd) {}
+    fn output_rfd_attr(&self, value: types::RfdAttr) {}
     fn output_search_results(&self, value: types::SearchResults) {}
     fn output_error<T>(&self, value: &progenitor_client::Error<T>)
     where
@@ -156,6 +157,13 @@ impl CliOutput for Printer {
         match self {
             Self::Json(printer) => printer.output_rfd(value),
             Self::Tab(printer) => printer.output_rfd(value),
+        }
+    }
+
+    fn output_rfd_attr(&self, value: types::RfdAttr) {
+        match self {
+            Self::Json(printer) => printer.output_rfd_attr(value),
+            Self::Tab(printer) => printer.output_rfd_attr(value),
         }
     }
 

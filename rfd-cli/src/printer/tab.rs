@@ -6,11 +6,7 @@ use itertools::{EitherOrBoth, Itertools};
 use owo_colors::{OwoColorize, Style};
 use progenitor_client::ResponseValue;
 use rfd_sdk::types::{
-    self, AccessGroupForApiPermissionResponse, ApiKeyResponse, ApiPermission,
-    ApiUserForApiPermissionResponse, Error, FullRfd, FullRfdPdfEntry, GetUserResponse,
-    InitialApiKeyResponse, InitialOAuthClientSecretResponse, ListRfd, Mapper, OAuthClient,
-    OAuthClientRedirectUri, OAuthClientSecret, PermissionsForApiPermissionResponse,
-    SearchResultHit, SearchResults, Visibility,
+    self, AccessGroupForApiPermissionResponse, ApiKeyResponse, ApiPermission, ApiUserForApiPermissionResponse, Error, FullRfd, FullRfdPdfEntry, GetUserResponse, InitialApiKeyResponse, InitialOAuthClientSecretResponse, ListRfd, Mapper, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, PermissionsForApiPermissionResponse, RfdAttr, SearchResultHit, SearchResults, Visibility
 };
 use std::{collections::HashMap, fmt::Display, fs::File, io::Write, process::Command};
 use tabwriter::TabWriter;
@@ -130,6 +126,10 @@ impl CliOutput for RfdTabPrinter {
     }
 
     fn output_rfd(&self, value: types::Rfd) {
+        self.print_cli_output(&value, None);
+    }
+
+    fn output_rfd_attr(&self, value: types::RfdAttr) {
         self.print_cli_output(&value, None);
     }
 
@@ -487,6 +487,13 @@ impl TabDisplay for FullRfdPdfEntry {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "link", &self.link);
         printer.print_field(tw, level, "source", &self.source);
+    }
+}
+
+impl TabDisplay for RfdAttr {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "name", &self.name.to_string());
+        printer.print_field(tw, level, "value", &self.value);
     }
 }
 

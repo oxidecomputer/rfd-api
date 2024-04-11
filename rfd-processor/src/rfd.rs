@@ -6,7 +6,7 @@ use std::sync::Mutex;
 
 use chrono::{DateTime, Utc};
 use octorust::{Client, ClientError};
-use rfd_data::{content::RfdAttributes, RfdNumber};
+use rfd_data::{content::RfdDocument, RfdNumber};
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
     storage::{

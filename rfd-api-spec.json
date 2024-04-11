@@ -255,44 +255,6 @@
         }
       }
     },
-    "/api-user/{identifier}/link": {
-      "post": {
-        "summary": "Link an existing login provider to this user",
-        "operationId": "link_provider",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "identifier",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ApiUserProviderLinkPayload"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "204": {
-            "description": "resource updated"
-          },
-          "4XX": {
-            "$ref": "#/components/responses/Error"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/Error"
-          }
-        }
-      }
-    },
     "/api-user/{identifier}/token": {
       "get": {
         "summary": "List the active and expired API tokens for a given user",
@@ -445,51 +407,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiKeyResponse"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/Error"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/Error"
-          }
-        }
-      }
-    },
-    "/api-user-provider/{identifier}/link-token": {
-      "post": {
-        "summary": "Create a new link token for linking this provider to a different api user",
-        "operationId": "create_link_token",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "identifier",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ApiUserLinkRequestPayload"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "successful operation",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ApiUserLinkRequestResponse"
                 }
               }
             }
@@ -1322,6 +1239,48 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FullRfd"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/rfd/{number}/attr/{attr}": {
+      "get": {
+        "summary": "Get an attribute of a given RFD",
+        "operationId": "get_rfd_attr",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attr",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/ViewRfdAttr"
+            }
+          },
+          {
+            "in": "path",
+            "name": "number",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RfdAttr"
                 }
               }
             }
@@ -3295,29 +3254,6 @@
           }
         ]
       },
-      "ApiUserLinkRequestPayload": {
-        "type": "object",
-        "properties": {
-          "user_identifier": {
-            "type": "string",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "user_identifier"
-        ]
-      },
-      "ApiUserLinkRequestResponse": {
-        "type": "object",
-        "properties": {
-          "token": {
-            "$ref": "#/components/schemas/SecretString"
-          }
-        },
-        "required": [
-          "token"
-        ]
-      },
       "ApiUserProvider": {
         "type": "object",
         "properties": {
@@ -3370,17 +3306,6 @@
           "provider",
           "provider_id",
           "updated_at"
-        ]
-      },
-      "ApiUserProviderLinkPayload": {
-        "type": "object",
-        "properties": {
-          "token": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "token"
         ]
       },
       "ApiUserUpdateParams": {
@@ -3441,6 +3366,13 @@
           "id",
           "permissions",
           "updated_at"
+        ]
+      },
+      "ContentFormat": {
+        "type": "string",
+        "enum": [
+          "asciidoc",
+          "markdown"
         ]
       },
       "CreateMapper": {
@@ -3552,6 +3484,9 @@
             "nullable": true,
             "type": "string"
           },
+          "format": {
+            "$ref": "#/components/schemas/ContentFormat"
+          },
           "id": {
             "type": "string",
             "format": "uuid"
@@ -3592,6 +3527,7 @@
           "commit",
           "committed_at",
           "content",
+          "format",
           "id",
           "pdfs",
           "rfd_number",
@@ -3899,6 +3835,9 @@
             "nullable": true,
             "type": "string"
           },
+          "format": {
+            "$ref": "#/components/schemas/ContentFormat"
+          },
           "id": {
             "type": "string",
             "format": "uuid"
@@ -3932,6 +3871,7 @@
         "required": [
           "commit",
           "committed_at",
+          "format",
           "id",
           "rfd_number",
           "sha",
@@ -4370,6 +4310,21 @@
           "visibility"
         ]
       },
+      "RfdAttr": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/ViewRfdAttr"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "value"
+        ]
+      },
       "RfdVisibility": {
         "type": "object",
         "properties": {
@@ -4470,6 +4425,14 @@
       },
       "SecretString": {
         "type": "string"
+      },
+      "ViewRfdAttr": {
+        "type": "string",
+        "enum": [
+          "discussion",
+          "labels",
+          "state"
+        ]
       },
       "Visibility": {
         "type": "string",

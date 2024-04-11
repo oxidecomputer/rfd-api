@@ -6,6 +6,7 @@ use std::fmt::Debug;
 
 use async_trait::async_trait;
 use octorust::types::{LabelsData, PullRequestData, PullRequestSimple};
+use rfd_data::content::RfdDocument;
 use rfd_model::storage::StoreError;
 use serde::Deserialize;
 use thiserror::Error;

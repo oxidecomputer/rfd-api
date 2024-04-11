@@ -5,7 +5,7 @@
 use regex::Regex;
 use std::borrow::Cow;
 
-use super::RfdAttributes;
+use super::RfdDocument;
 
 /// The text data of an Asciidoc RFD
 #[derive(Debug, Clone)]
@@ -21,19 +21,6 @@ impl<'a> RfdAsciidoc<'a> {
         Self {
             content: content.into(),
         }
-    }
-
-    pub fn header(&self) -> Option<&str> {
-        self.title_pattern().splitn(&self.content, 2).nth(0)
-    }
-
-    pub fn body(&self) -> Option<&str> {
-        self.title_pattern().splitn(&self.content, 2).nth(1)
-    }
-
-    /// Get a reference to the internal unparsed contents
-    pub fn raw(&self) -> &str {
-        &self.content
     }
 
     fn attr(&self, attr: &str) -> Option<&str> {
@@ -81,7 +68,7 @@ impl<'a> RfdAsciidoc<'a> {
     }
 }
 
-impl<'a> RfdAttributes for RfdAsciidoc<'a> {
+impl<'a> RfdDocument for RfdAsciidoc<'a> {
     fn get_title(&self) -> Option<&str> {
         let title_pattern = Regex::new(r"(?m)^[=# ]+(?:RFD ?)?(?:\d+:? )?(.*)$").unwrap();
         let fallback_title_pattern = Regex::new(r"(?m)^= (.*)$").unwrap();
@@ -149,6 +136,19 @@ impl<'a> RfdAttributes for RfdAsciidoc<'a> {
 
     fn update_labels(&mut self, value: &str) {
         self.set_attr("labels", value)
+    }
+
+    fn header(&self) -> Option<&str> {
+        self.title_pattern().splitn(&self.content, 2).nth(0)
+    }
+
+    fn body(&self) -> Option<&str> {
+        self.title_pattern().splitn(&self.content, 2).nth(1)
+    }
+
+    /// Get a reference to the internal unparsed contents
+    fn raw(&self) -> &str {
+        &self.content
     }
 }
 

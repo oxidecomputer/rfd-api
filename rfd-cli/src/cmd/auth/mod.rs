@@ -11,7 +11,7 @@ use std::ops::Add;
 
 use crate::{err::format_api_err, Context};
 
-mod link;
+// mod link;
 mod login;
 mod oauth;
 
@@ -25,8 +25,8 @@ pub struct Auth {
 
 #[derive(Subcommand, Debug, Clone)]
 enum AuthCommands {
-    /// Link an authentication provider to an account
-    Link(link::Link),
+    // /// Link an authentication provider to an account
+    // Link(link::Link),
     /// Login via an authentication provider
     Login(login::Login),
 }
@@ -34,7 +34,7 @@ enum AuthCommands {
 impl Auth {
     pub async fn run(&self, ctx: &mut Context) -> Result<()> {
         match &self.auth {
-            AuthCommands::Link(link) => link.run(ctx).await,
+            // AuthCommands::Link(link) => link.run(ctx).await,
             AuthCommands::Login(login) => login.run(ctx).await,
         }
     }
