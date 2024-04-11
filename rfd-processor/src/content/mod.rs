@@ -2,28 +2,29 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::{borrow::Cow, io, path::PathBuf, str::Utf8Error, string::FromUtf8Error};
+use std::{borrow::Cow, env, io, path::PathBuf, str::Utf8Error, string::FromUtf8Error};
 
 use async_trait::async_trait;
 use base64::DecodeError;
 use octorust::Client;
-use rfd_data::RfdNumber;
+use rfd_data::{
+    content::{RfdAsciidoc, RfdAttributes, RfdMarkdown},
+    RfdNumber,
+};
 use rfd_model::schema_ext::ContentFormat;
+use tap::TapFallible;
 use thiserror::Error;
 use tokio::task::JoinError;
+use tracing::instrument;
+use uuid::Uuid;
 
 use crate::{
     github::{GitHubError, GitHubRfdLocation},
     pdf::RfdPdf,
-    util::FileIoError,
+    util::{decode_base64, write_file, FileIoError},
 };
 
 mod asciidoc;
-mod markdown;
-
-use asciidoc::RfdAsciidoc;
-
-use self::markdown::RfdMarkdown;
 
 #[derive(Debug, Error)]
 pub enum RfdContentError {
@@ -43,46 +44,28 @@ pub enum RfdContentError {
     TaskFailure(#[from] JoinError),
 }
 
-pub trait RfdAttributes {
-    /// Extract the title from the internal content
-    fn get_title<'a>(&'a self) -> Option<&'a str>;
-
-    /// Get the state value stored within the document
-    fn get_state(&self) -> Option<&str>;
-
-    // Update the state value stored within the document or add it if it does not exist
-    fn update_state(&mut self, value: &str);
-
-    /// Get the discussion link stored within the document
-    fn get_discussion(&self) -> Option<&str>;
-
-    // Update the discussion link stored within the document or add it if it does not exist
-    fn update_discussion(&mut self, value: &str);
-
-    /// Get the authors line stored within the document. The returned string may contain multiple
-    /// names
-    fn get_authors(&self) -> Option<&str>;
-
-    /// Get the labels stored within the document
-    fn get_labels(&self) -> Option<&str>;
-
-    // Update the labels stored within the document or add them if they do not exist
-    fn update_labels(&mut self, value: &str);
+#[derive(Debug, Clone)]
+pub struct RenderableRfd<'a> {
+    content: RfdContent<'a>,
+    render_id: Uuid,
 }
 
 #[derive(Debug, Clone)]
-pub enum RfdContent<'a> {
+enum RfdContent<'a> {
     Asciidoc(RfdAsciidoc<'a>),
     Markdown(RfdMarkdown<'a>),
 }
 
-impl<'a> RfdContent<'a> {
+impl<'a> RenderableRfd<'a> {
     /// Construct a new RfdContent wrapper that contains Asciidoc content
     pub fn new_asciidoc<T>(content: T) -> Self
     where
         T: Into<Cow<'a, str>>,
     {
-        Self::Asciidoc(RfdAsciidoc::new(content.into()))
+        Self {
+            content: RfdContent::Asciidoc(RfdAsciidoc::new(content.into())),
+            render_id: Uuid::new_v4(),
+        }
     }
 
     /// Construct a new RfdContent wrapper that contains Markdown content
@@ -90,46 +73,49 @@ impl<'a> RfdContent<'a> {
     where
         T: Into<Cow<'a, str>>,
     {
-        Self::Markdown(RfdMarkdown::new(content.into()))
+        Self {
+            content: RfdContent::Markdown(RfdMarkdown::new(content.into())),
+            render_id: Uuid::new_v4(),
+        }
     }
 
     /// Get a reference to the internal unparsed contents
     pub fn raw(&self) -> &str {
-        match self {
-            Self::Asciidoc(adoc) => &adoc.content,
-            Self::Markdown(md) => &md.content,
+        match &self.content {
+            RfdContent::Asciidoc(adoc) => adoc.raw(),
+            RfdContent::Markdown(md) => md.raw(),
         }
     }
 
     /// Fetch the content that is above the title line
     pub fn header(&self) -> Option<&str> {
-        match self {
-            Self::Asciidoc(adoc) => adoc.header(),
-            Self::Markdown(md) => md.header(),
+        match &self.content {
+            RfdContent::Asciidoc(adoc) => adoc.header(),
+            RfdContent::Markdown(md) => md.header(),
         }
     }
 
     /// Fetch the content that is below the title line
     pub fn body(&self) -> Option<&str> {
-        match self {
-            Self::Asciidoc(adoc) => adoc.body(),
-            Self::Markdown(md) => md.body(),
+        match &self.content {
+            RfdContent::Asciidoc(adoc) => adoc.body(),
+            RfdContent::Markdown(md) => md.body(),
         }
     }
 
     /// Get an indicator of the inner content format
     pub fn format(&self) -> ContentFormat {
-        match self {
-            Self::Asciidoc(_) => ContentFormat::Asciidoc,
-            Self::Markdown(_) => ContentFormat::Markdown,
+        match self.content {
+            RfdContent::Asciidoc(_) => ContentFormat::Asciidoc,
+            RfdContent::Markdown(_) => ContentFormat::Markdown,
         }
     }
 
     /// Consume this wrapper and return the internal unparsed contents
     pub fn into_inner_content(self) -> String {
-        match self {
-            Self::Asciidoc(adoc) => adoc.content.into_owned(),
-            Self::Markdown(md) => md.content.into_owned(),
+        match self.content {
+            RfdContent::Asciidoc(adoc) => adoc.content.into_owned(),
+            RfdContent::Markdown(md) => md.content.into_owned(),
         }
     }
 
@@ -141,67 +127,136 @@ impl<'a> RfdContent<'a> {
         number: &RfdNumber,
         branch: &GitHubRfdLocation,
     ) -> Result<RfdPdf, RfdOutputError> {
-        match self {
-            Self::Asciidoc(adoc) => Ok(adoc.to_pdf(client, number, branch).await?),
+        match &self.content {
+            RfdContent::Asciidoc(adoc) => {
+                self.download_images(client, number, branch).await?;
+
+                let pdf = RenderedPdf::render(adoc, self.tmp_path()?).await?;
+
+                self.cleanup_tmp_path()?;
+
+                Ok(RfdPdf {
+                    contents: pdf.into_inner(),
+                    number: *number,
+                })
+                // Ok(adoc.to_pdf(client, number, branch).await?)
+            }
             _ => Err(RfdOutputError::FormatNotSupported),
         }
     }
+
+    /// Downloads images that are stored on the provided GitHub branch for the given RFD number.
+    /// These are stored locally so in a tmp directory for use by asciidoctor
+    #[instrument(skip(self, client), fields(storage_path = ?self.tmp_path()))]
+    async fn download_images(
+        &self,
+        client: &Client,
+        number: &RfdNumber,
+        location: &GitHubRfdLocation,
+    ) -> Result<(), RfdContentError> {
+        let dir = number.repo_path();
+        let storage_path = self.tmp_path()?;
+
+        let images = location.get_images(client, number).await?;
+
+        for image in images {
+            let image_path = storage_path.join(
+                image
+                    .path
+                    .replace(dir.trim_start_matches('/'), "")
+                    .trim_start_matches('/'),
+            );
+
+            let path = PathBuf::from(image_path);
+            write_file(&path, &decode_base64(&image.content)?).await?;
+
+            tracing::info!(?path, "Wrote embedded image",);
+        }
+
+        Ok(())
+    }
+
+    /// Create a tmp directory for rendering this RFD
+    fn tmp_path(&self) -> Result<PathBuf, RfdContentError> {
+        let mut path = env::temp_dir();
+        path.push("rfd-render/");
+        path.push(&self.render_id.to_string());
+
+        // Ensure the path exists
+        std::fs::create_dir_all(path.clone())?;
+
+        Ok(path)
+    }
+
+    // Cleanup remaining images and local state that was used by asciidoctor
+    #[instrument(skip(self), fields(storage_path = ?self.tmp_path()), err)]
+    fn cleanup_tmp_path(&self) -> Result<(), RfdContentError> {
+        let storage_path = self.tmp_path()?;
+
+        if storage_path.exists() && storage_path.is_dir() {
+            tracing::info!("Removing temporary content directory {:?}", storage_path);
+            std::fs::remove_dir_all(storage_path)
+                .tap_err(|err| tracing::warn!(?err, "Failed to clean up temporary files"))?
+        }
+
+        Ok(())
+    }
 }
 
-impl<'a> RfdAttributes for RfdContent<'a> {
+impl<'a> RfdAttributes for RenderableRfd<'a> {
     fn get_title(&self) -> Option<&str> {
-        match self {
-            Self::Asciidoc(adoc) => adoc.get_title(),
-            Self::Markdown(md) => md.get_title(),
+        match &self.content {
+            RfdContent::Asciidoc(adoc) => adoc.get_title(),
+            RfdContent::Markdown(md) => md.get_title(),
         }
     }
 
     fn get_state(&self) -> Option<&str> {
-        match self {
-            Self::Asciidoc(adoc) => adoc.get_state(),
-            Self::Markdown(md) => md.get_state(),
+        match &self.content {
+            RfdContent::Asciidoc(adoc) => adoc.get_state(),
+            RfdContent::Markdown(md) => md.get_state(),
         }
     }
 
     fn update_state(&mut self, value: &str) {
-        match self {
-            Self::Asciidoc(adoc) => adoc.update_state(value),
-            Self::Markdown(md) => md.update_state(value),
+        match &mut self.content {
+            RfdContent::Asciidoc(adoc) => adoc.update_state(value),
+            RfdContent::Markdown(md) => md.update_state(value),
         }
     }
 
     fn get_discussion(&self) -> Option<&str> {
-        match self {
-            Self::Asciidoc(adoc) => adoc.get_discussion(),
-            Self::Markdown(md) => md.get_discussion(),
+        match &self.content {
+            RfdContent::Asciidoc(adoc) => adoc.get_discussion(),
+            RfdContent::Markdown(md) => md.get_discussion(),
         }
     }
 
     fn update_discussion(&mut self, value: &str) {
-        match self {
-            Self::Asciidoc(adoc) => adoc.update_discussion(value),
-            Self::Markdown(md) => md.update_discussion(value),
+        match &mut self.content {
+            RfdContent::Asciidoc(adoc) => adoc.update_discussion(value),
+            RfdContent::Markdown(md) => md.update_discussion(value),
         }
     }
 
     fn get_authors(&self) -> Option<&str> {
-        match self {
-            Self::Asciidoc(adoc) => adoc.get_authors(),
-            Self::Markdown(md) => md.get_authors(),
+        match &self.content {
+            RfdContent::Asciidoc(adoc) => adoc.get_authors(),
+            RfdContent::Markdown(md) => md.get_authors(),
         }
     }
 
     fn get_labels(&self) -> Option<&str> {
-        match self {
-            Self::Asciidoc(adoc) => adoc.get_labels(),
-            Self::Markdown(md) => md.get_labels(),
+        match &self.content {
+            RfdContent::Asciidoc(adoc) => adoc.get_labels(),
+            RfdContent::Markdown(md) => md.get_labels(),
         }
     }
 
     fn update_labels(&mut self, value: &str) {
-        match self {
-            Self::Asciidoc(adoc) => adoc.update_labels(value),
-            Self::Markdown(md) => md.update_labels(value),
+        match &mut self.content {
+            RfdContent::Asciidoc(adoc) => adoc.update_labels(value),
+            RfdContent::Markdown(md) => md.update_labels(value),
         }
     }
 }

@@ -4,6 +4,8 @@
 
 use std::fmt::Display;
 
+pub mod content;
+
 #[derive(Debug, Copy, Clone)]
 pub struct RfdNumber(i32);
 

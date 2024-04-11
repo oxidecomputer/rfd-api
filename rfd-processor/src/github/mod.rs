@@ -21,7 +21,7 @@ use rfd_data::RfdNumber;
 use thiserror::Error;
 use tracing::{instrument, Instrument};
 
-use crate::{content::RfdContent, github::ext::ReposExt, util::decode_base64};
+use crate::{content::RenderableRfd, github::ext::ReposExt, util::decode_base64};
 
 pub mod ext;
 
@@ -309,9 +309,9 @@ impl GitHubRfdLocation {
             .await?;
 
         let content = if is_markdown {
-            RfdContent::new_markdown(Cow::Owned(parsed))
+            RenderableRfd::new_markdown(Cow::Owned(parsed))
         } else {
-            RfdContent::new_asciidoc(Cow::Owned(parsed))
+            RenderableRfd::new_asciidoc(Cow::Owned(parsed))
         };
 
         // The html_url for the README.* file will look something like:
@@ -544,7 +544,7 @@ struct FetchedRfdContent {
 
 #[derive(Debug)]
 pub struct GitHubRfdReadme<'a> {
-    pub content: RfdContent<'a>,
+    pub content: RenderableRfd<'a>,
     pub sha: String,
     pub location: GitHubRfdReadmeLocation,
 }

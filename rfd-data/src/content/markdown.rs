@@ -2,9 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::borrow::Cow;
-
 use regex::Regex;
+use std::borrow::Cow;
 
 use super::RfdAttributes;
 
@@ -14,8 +13,13 @@ pub struct RfdMarkdown<'a> {
 }
 
 impl<'a> RfdMarkdown<'a> {
-    pub fn new(content: Cow<'a, str>) -> Self {
-        Self { content }
+    pub fn new<T>(content: T) -> Self
+    where
+        T: Into<Cow<'a, str>>,
+    {
+        Self {
+            content: content.into(),
+        }
     }
 
     pub fn header(&self) -> Option<&str> {
@@ -24,6 +28,11 @@ impl<'a> RfdMarkdown<'a> {
 
     pub fn body(&self) -> Option<&str> {
         self.title_pattern().splitn(&self.content, 2).nth(1)
+    }
+
+    /// Get a reference to the internal unparsed contents
+    pub fn raw(&self) -> &str {
+        &self.content
     }
 
     fn attr(&self, attr: &str) -> Option<&str> {
@@ -114,7 +123,7 @@ impl<'a> RfdAttributes for RfdMarkdown<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::content::{markdown::RfdMarkdown, RfdAttributes, RfdContent};
+    use crate::content::{markdown::RfdMarkdown, RfdAttributes};
 
     // Read authors tests
 
@@ -126,7 +135,7 @@ authors: things, joe
 dsfsdf
 sdf
 authors: nope"#;
-        let rfd = RfdContent::new_markdown(content);
+        let rfd = RfdMarkdown::new(content);
         let authors = rfd.get_authors().unwrap();
         let expected = "things, joe".to_string();
         assert_eq!(expected, authors);
@@ -140,7 +149,7 @@ things, joe
 dsfsdf
 sdf
 :authors: nope"#;
-        let rfd = RfdContent::new_markdown(content);
+        let rfd = RfdMarkdown::new(content);
         let authors = rfd.get_authors();
         assert!(authors.is_none());
     }
@@ -153,7 +162,7 @@ discussion: https://github.com/org/repo/pulls/1
 dsfsdf
 sdf
 discussion: nope"#;
-        let mut rfd = RfdMarkdown::new(content.into());
+        let mut rfd = RfdMarkdown::new(content);
         rfd.set_attr("xrefstyle", "short");
         assert_eq!(Some("short"), rfd.attr("xrefstyle"))
     }
@@ -168,7 +177,7 @@ state: discussion
 dsfsdf
 sdf
 authors: nope"#;
-        let rfd = RfdContent::new_markdown(content);
+        let rfd = RfdMarkdown::new(content);
         let state = rfd.get_state().unwrap();
         let expected = "discussion".to_string();
         assert_eq!(expected, state);
@@ -184,7 +193,7 @@ discussion: https://github.com/org/repo/pulls/1
 dsfsdf
 sdf
 authors: nope"#;
-        let rfd = RfdContent::new_markdown(content);
+        let rfd = RfdMarkdown::new(content);
         let discussion = rfd.get_discussion().unwrap();
         let expected = "https://github.com/org/repo/pulls/1".to_string();
         assert_eq!(expected, discussion);
@@ -202,7 +211,7 @@ discussion:   https://github.com/org/repo/pulls/1
 dsfsdf
 sdf
 authors: nope"#;
-        let mut rfd = RfdContent::new_markdown(content);
+        let mut rfd = RfdMarkdown::new(content);
         rfd.update_discussion(link);
 
         let expected = r#"sdfsdf
@@ -226,7 +235,7 @@ state:   sdfsdfsdf
 dsfsdf
 sdf
 authors: nope"#;
-        let mut rfd = RfdContent::new_markdown(content);
+        let mut rfd = RfdMarkdown::new(content);
         rfd.update_state(state);
 
         let expected = r#"sdfsdf
@@ -249,7 +258,7 @@ title: https://github.com/org/repo/pulls/1
 dsfsdf
 sdf
 authors: nope"#;
-        let rfd = RfdContent::new_markdown(content);
+        let rfd = RfdMarkdown::new(content);
         let expected = "Identity and Access Management (IAM)".to_string();
         assert_eq!(expected, rfd.get_title().unwrap());
     }
@@ -263,7 +272,7 @@ title: https://github.com/org/repo/pulls/1
 dsfsdf
 sdf
 authors: nope"#;
-        let rfd = RfdContent::new_markdown(content);
+        let rfd = RfdMarkdown::new(content);
         let expected = "Identity and Access Management (IAM)".to_string();
         assert_eq!(expected, rfd.get_title().unwrap());
     }

@@ -25,7 +25,6 @@ hyper-rustls = { workspace = true }
 jsonwebtoken = { workspace = true }
 meilisearch-sdk = { workspace = true }
 oauth2 = { workspace = true }
-octorust = { workspace = true }
 partial-struct = { workspace = true }
 rand = { workspace = true, features = ["std"] }
 rand_core = { workspace = true, features = ["std"] }
@@ -37,7 +36,6 @@ rsa = { workspace = true, features = ["sha2"] }
 schemars = { workspace = true, features = ["chrono"] }
 secrecy = { workspace = true, features = ["serde"] }
 serde = { workspace = true, features = ["derive"] }
-serde_bytes = { workspace = true }
 serde_json = { workspace = true }
 serde_urlencoded = { workspace = true }
 sha2 = { workspace = true }
@@ -50,7 +48,6 @@ toml = { workspace = true }
 trace-request = { path = "../trace-request" }
 tracing = { workspace = true }
 tracing-appender = { workspace = true }
-tracing-bunyan-formatter = { workspace = true }
 tracing-slog = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter", "fmt", "json"] }
 uuid = { workspace = true, features = ["v4", "serde"]  }
