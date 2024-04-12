@@ -256,10 +256,7 @@ impl<'a> RfdUpdater<'a> {
             // Update the file in GitHub.
             update
                 .location
-                .upsert(
-                    &new.number,
-                    new.content().raw().as_bytes(),
-                )
+                .upsert(&new.number, new.content().raw().as_bytes())
                 .await
                 .map_err(RfdUpdaterError::GitHubStorage)?;
         }

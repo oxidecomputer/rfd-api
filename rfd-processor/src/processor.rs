@@ -11,10 +11,7 @@ use thiserror::Error;
 use tokio::time::interval;
 use tracing::Instrument;
 
-use crate::{
-    context::Context,
-    updater::RfdUpdater,
-};
+use crate::{context::Context, updater::RfdUpdater};
 
 #[derive(Debug, Error)]
 pub enum JobError {

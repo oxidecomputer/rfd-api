@@ -3,7 +3,12 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::{
-    borrow::Cow, collections::HashMap, fmt::Debug, future::Future, pin::Pin, str::{from_utf8, Utf8Error}
+    borrow::Cow,
+    collections::HashMap,
+    fmt::Debug,
+    future::Future,
+    pin::Pin,
+    str::{from_utf8, Utf8Error},
 };
 
 use base64::{prelude::BASE64_STANDARD, DecodeError, Engine};
@@ -70,7 +75,7 @@ impl GitHubRfdRepo {
         owner: String,
         repo: String,
         path: String,
-        default_branch: String
+        default_branch: String,
     ) -> Result<Self, GitHubError> {
         Ok(Self {
             client: client.clone(),
