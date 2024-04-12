@@ -51,6 +51,13 @@ pub struct RenderableRfd<'a> {
 }
 
 impl<'a> RenderableRfd<'a> {
+    pub fn new(content: RfdContent<'a>) -> Self {
+        Self {
+            content,
+            render_id: Uuid::new_v4(),
+        }
+    }
+
     /// Construct a new RfdContent wrapper that contains Asciidoc content
     pub fn new_asciidoc<T>(content: T) -> Self
     where

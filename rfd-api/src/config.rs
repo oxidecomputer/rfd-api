@@ -33,6 +33,7 @@ pub struct AppConfig {
     pub spec: Option<SpecConfig>,
     pub authn: AuthnProviders,
     pub search: SearchConfig,
+    pub services: ServicesConfig,
 }
 
 #[derive(Debug)]
@@ -142,6 +143,24 @@ pub struct SearchConfig {
     pub host: String,
     pub key: String,
     pub index: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ServicesConfig {
+    pub github: GitHubAuthConfig,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(untagged)]
+pub enum GitHubAuthConfig {
+    Installation {
+        app_id: i64,
+        installation_id: i64,
+        private_key: String,
+    },
+    User {
+        token: String,
+    },
 }
 
 impl AppConfig {

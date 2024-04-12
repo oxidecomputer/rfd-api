@@ -81,6 +81,10 @@ pub enum ApiPermission {
     GetRfds(BTreeSet<i32>),
     GetRfdsAssigned,
     GetRfdsAll,
+    UpdateRfd(i32),
+    UpdateRfds(BTreeSet<i32>),
+    UpdateRfdsAssigned,
+    UpdateRfdsAll,
     ManageRfdVisibility(i32),
     ManageRfdsVisibility(BTreeSet<i32>),
     ManageRfdsVisibilityAssigned,
@@ -170,6 +174,11 @@ impl ApiPermission {
             ApiPermission::GetRfds(_) => "rfd:content:r",
             ApiPermission::GetRfdsAssigned => "rfd:content:r",
             ApiPermission::GetRfdsAll => "rfd:content:r",
+
+            ApiPermission::UpdateRfd(_) => "rfd:content:w",
+            ApiPermission::UpdateRfds(_) => "rfd:content:w",
+            ApiPermission::UpdateRfdsAssigned => "rfd:content:w",
+            ApiPermission::UpdateRfdsAll => "rfd:content:w",
 
             ApiPermission::ManageRfdVisibility(_) => "rfd:visibility:w",
             ApiPermission::ManageRfdsVisibility(_) => "rfd:visibility:w",
@@ -266,6 +275,10 @@ impl ApiPermission {
                     permissions.insert(ApiPermission::GetRfdsAssigned);
                     permissions.insert(ApiPermission::GetRfdsAll);
                 }
+                "rfd:content:w" => {
+                    permissions.insert(ApiPermission::UpdateRfdsAssigned);
+                    permissions.insert(ApiPermission::UpdateRfdsAll);
+                }
                 "rfd:visibility:w" => {
                     permissions.insert(ApiPermission::ManageRfdsVisibilityAssigned);
                     permissions.insert(ApiPermission::ManageRfdsVisibilityAll);
@@ -307,7 +320,8 @@ impl PermissionStorage for Permissions<ApiPermission> {
 
         let mut manage_group_memberships = BTreeSet::<Uuid>::new();
         let mut manage_groups = BTreeSet::<Uuid>::new();
-        let mut rfds = BTreeSet::<i32>::new();
+        let mut read_rfds = BTreeSet::<i32>::new();
+        let mut update_rfds = BTreeSet::<i32>::new();
         let mut discussions = BTreeSet::<i32>::new();
         let mut read_oauth_clients = BTreeSet::<Uuid>::new();
         let mut update_oauth_clients = BTreeSet::<Uuid>::new();
@@ -349,7 +363,10 @@ impl PermissionStorage for Permissions<ApiPermission> {
                 }
 
                 ApiPermission::GetRfd(number) => {
-                    rfds.insert(*number);
+                    read_rfds.insert(*number);
+                }
+                ApiPermission::UpdateRfd(number) => {
+                    update_rfds.insert(*number);
                 }
                 ApiPermission::GetDiscussion(number) => {
                     discussions.insert(*number);
@@ -372,7 +389,8 @@ impl PermissionStorage for Permissions<ApiPermission> {
             manage_group_memberships,
         ));
         contracted.push(ApiPermission::ManageGroups(manage_groups));
-        contracted.push(ApiPermission::GetRfds(rfds));
+        contracted.push(ApiPermission::GetRfds(read_rfds));
+        contracted.push(ApiPermission::UpdateRfds(update_rfds));
         contracted.push(ApiPermission::GetDiscussions(discussions));
         contracted.push(ApiPermission::GetOAuthClients(read_oauth_clients));
         contracted.push(ApiPermission::UpdateOAuthClients(update_oauth_clients));

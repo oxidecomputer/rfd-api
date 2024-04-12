@@ -315,7 +315,7 @@ impl RemoteRfd {
             state,
             name,
             title,
-            content: self.readme.content,
+            content: RenderableRfd::new(self.readme.content),
             content_format,
             authors,
             labels,

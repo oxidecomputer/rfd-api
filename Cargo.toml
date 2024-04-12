@@ -4,7 +4,7 @@ members = [
   "parse-rfd",
   "rfd-api",
   "rfd-cli",
-  "rfd-data",
+  "rfd-data", "rfd-github",
   "rfd-model",
   "rfd-processor",
   "rfd-redirect",

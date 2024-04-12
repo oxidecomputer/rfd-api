@@ -3,6 +3,8 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use dropshot::HttpError;
+use octorust::ClientError as GitHubError;
+use reqwest::Error as ReqwestError;
 use rfd_model::storage::StoreError;
 use thiserror::Error;
 
@@ -14,6 +16,12 @@ use crate::{
 
 #[derive(Debug, Error)]
 pub enum AppError {
+    #[error(transparent)]
+    ClientConstruction(ReqwestError),
+    #[error(transparent)]
+    GitHub(#[from] GitHubError),
+    #[error(transparent)]
+    InvalidGitHubPrivateKey(#[from] rsa::pkcs1::Error),
     #[error("At least one JWT signing key must be configured")]
     NoConfiguredJwtKeys,
     #[error(transparent)]

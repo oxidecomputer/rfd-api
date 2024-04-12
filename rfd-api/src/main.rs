@@ -84,6 +84,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         config.jwt,
         config.keys,
         config.search,
+        config.services,
     )
     .await?;
 

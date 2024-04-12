@@ -1,0 +1,16 @@
+[package]
+name = "rfd-github"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+async-trait = { workspace = true }
+base64 = { workspace = true }
+chrono = { workspace = true }
+http = { workspace = true }
+octorust = { workspace = true }
+rfd-data = { path = "../rfd-data" }
+thiserror = { workspace = true }
+tracing = { workspace = true }

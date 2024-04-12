@@ -6,7 +6,11 @@ use itertools::{EitherOrBoth, Itertools};
 use owo_colors::{OwoColorize, Style};
 use progenitor_client::ResponseValue;
 use rfd_sdk::types::{
-    self, AccessGroupForApiPermissionResponse, ApiKeyResponse, ApiPermission, ApiUserForApiPermissionResponse, Error, FullRfd, FullRfdPdfEntry, GetUserResponse, InitialApiKeyResponse, InitialOAuthClientSecretResponse, ListRfd, Mapper, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, PermissionsForApiPermissionResponse, RfdAttr, SearchResultHit, SearchResults, Visibility
+    self, AccessGroupForApiPermissionResponse, ApiKeyResponse, ApiPermission,
+    ApiUserForApiPermissionResponse, Error, FullRfd, FullRfdPdfEntry, GetUserResponse,
+    InitialApiKeyResponse, InitialOAuthClientSecretResponse, ListRfd, Mapper, OAuthClient,
+    OAuthClientRedirectUri, OAuthClientSecret, PermissionsForApiPermissionResponse, RfdAttr,
+    SearchResultHit, SearchResults, Visibility,
 };
 use std::{collections::HashMap, fmt::Display, fs::File, io::Write, process::Command};
 use tabwriter::TabWriter;

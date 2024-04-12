@@ -7,6 +7,7 @@ mod markdown;
 
 pub use asciidoc::RfdAsciidoc;
 pub use markdown::RfdMarkdown;
+use rfd_model::schema_ext::ContentFormat;
 
 pub trait RfdDocument {
     /// Extract the title from the internal content
@@ -48,6 +49,15 @@ pub trait RfdDocument {
 pub enum RfdContent<'a> {
     Asciidoc(RfdAsciidoc<'a>),
     Markdown(RfdMarkdown<'a>),
+}
+
+impl<'a> RfdContent<'a> {
+    pub fn format(&self) -> ContentFormat {
+        match self {
+            Self::Asciidoc(_) => ContentFormat::Asciidoc,
+            Self::Markdown(_) => ContentFormat::Markdown,
+        }
+    }
 }
 
 impl<'a> RfdDocument for RfdContent<'a> {

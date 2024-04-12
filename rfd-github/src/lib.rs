@@ -24,9 +24,11 @@ use rfd_data::{
 use thiserror::Error;
 use tracing::{instrument, Instrument};
 
-use crate::{github::ext::ReposExt, util::decode_base64};
-
 pub mod ext;
+mod util;
+
+use ext::ReposExt;
+use util::decode_base64;
 
 #[derive(Debug, Error)]
 pub enum GitHubError {

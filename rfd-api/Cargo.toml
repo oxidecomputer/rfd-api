@@ -25,11 +25,15 @@ hyper-rustls = { workspace = true }
 jsonwebtoken = { workspace = true }
 meilisearch-sdk = { workspace = true }
 oauth2 = { workspace = true }
+octorust = { workspace = true }
 partial-struct = { workspace = true }
 rand = { workspace = true, features = ["std"] }
 rand_core = { workspace = true, features = ["std"] }
 regex = { workspace = true }
 reqwest = { workspace = true }
+reqwest-middleware = { workspace = true }
+reqwest-retry = { workspace = true }
+reqwest-tracing = { workspace = true }
 ring = { workspace = true }
 rfd-data = { path = "../rfd-data" }
 rfd-model = { path = "../rfd-model" }
