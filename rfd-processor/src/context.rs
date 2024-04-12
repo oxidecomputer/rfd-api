@@ -16,6 +16,7 @@ use octorust::{
     Client as GitHubClient, ClientError,
 };
 use reqwest::Error as ReqwestError;
+use rfd_github::{GitHubError, GitHubRfdRepo};
 use rfd_model::{schema_ext::PdfSource, storage::postgres::PostgresStore};
 use rsa::{
     pkcs1::{DecodeRsaPrivateKey, EncodeRsaPrivateKey},
@@ -26,7 +27,6 @@ use thiserror::Error;
 use tracing::instrument;
 
 use crate::{
-    github::{GitHubError, GitHubRfdRepo},
     pdf::{PdfFileLocation, PdfStorage, RfdPdf, RfdPdfError},
     search::RfdSearchIndex,
     updater::{BoxedAction, RfdUpdateMode, RfdUpdaterError},
@@ -130,6 +130,7 @@ impl Context {
             config.source.owner.clone(),
             config.source.repo.clone(),
             config.source.path.clone(),
+            config.source.default_branch.clone(),
         )
         .await?;
 

@@ -3,6 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use async_trait::async_trait;
+use rfd_github::GitHubRfdUpdate;
 use rfd_model::{
     schema_ext::PdfSource,
     storage::{DbError, RfdPdfStore, StoreError},
@@ -14,7 +15,6 @@ use uuid::Uuid;
 use crate::{
     content::RfdOutputError,
     context::Context,
-    github::GitHubRfdUpdate,
     pdf::{PdfFileLocation, PdfStorage},
     rfd::PersistedRfd,
 };

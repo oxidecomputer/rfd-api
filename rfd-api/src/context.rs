@@ -336,6 +336,7 @@ impl ApiContext {
                 services.github.owner,
                 services.github.repo,
                 services.github.path,
+                services.github.default_branch,
             )
             .await?,
         })
@@ -2083,6 +2084,7 @@ pub(crate) mod test_mocks {
                     owner: String::new(),
                     repo: String::new(),
                     path: String::new(),
+                    default_branch: String::new(),
                     auth: GitHubAuthConfig::User {
                         token: String::default(),
                     },

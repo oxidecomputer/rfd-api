@@ -7,6 +7,7 @@ use std::fmt::Debug;
 use async_trait::async_trait;
 use octorust::types::{LabelsData, PullRequestData, PullRequestSimple};
 use rfd_data::content::RfdDocument;
+use rfd_github::{GitHubError, GitHubRfdUpdate};
 use rfd_model::storage::StoreError;
 use serde::Deserialize;
 use thiserror::Error;
@@ -15,7 +16,6 @@ use uuid::Uuid;
 
 use crate::{
     context::Context,
-    github::{GitHubError, GitHubRfdUpdate},
     rfd::{FetchRemoteRfdError, PersistedRfd, RemoteRfd, RemoteRfdError, RfdError},
 };
 
@@ -257,7 +257,6 @@ impl<'a> RfdUpdater<'a> {
             update
                 .location
                 .upsert(
-                    &ctx.ctx.github.client,
                     &new.number,
                     new.content().raw().as_bytes(),
                 )

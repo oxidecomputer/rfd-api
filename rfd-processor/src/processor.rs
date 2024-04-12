@@ -3,6 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use futures::TryFutureExt;
+use rfd_github::{GitHubRfdLocation, GitHubRfdUpdate};
 use rfd_model::storage::{JobFilter, JobStore, ListPagination, StoreError};
 use std::sync::Arc;
 use tap::TapFallible;
@@ -12,7 +13,6 @@ use tracing::Instrument;
 
 use crate::{
     context::Context,
-    github::{GitHubRfdLocation, GitHubRfdUpdate},
     updater::RfdUpdater,
 };
 
@@ -49,6 +49,7 @@ pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
                     match JobStore::start(&ctx.db.storage, job.id).await {
                         Ok(Some(job)) => {
                             let location = GitHubRfdLocation {
+                                client: ctx.github.client.clone(),
                                 owner: job.owner.clone(),
                                 repo: job.repository.clone(),
                                 branch: job.branch.clone(),

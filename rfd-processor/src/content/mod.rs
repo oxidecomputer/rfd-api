@@ -7,6 +7,7 @@ use std::{borrow::Cow, env, io, path::PathBuf, str::Utf8Error, string::FromUtf8E
 use async_trait::async_trait;
 use base64::DecodeError;
 use octorust::Client;
+use rfd_github::{GitHubError, GitHubRfdLocation};
 use rfd_data::{
     content::{RfdAsciidoc, RfdContent, RfdDocument, RfdMarkdown},
     RfdNumber,
@@ -19,7 +20,6 @@ use tracing::instrument;
 use uuid::Uuid;
 
 use crate::{
-    github::{GitHubError, GitHubRfdLocation},
     pdf::RfdPdf,
     util::{decode_base64, write_file, FileIoError},
 };

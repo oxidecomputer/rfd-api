@@ -19,7 +19,7 @@ use crate::{
 
 mod content;
 mod context;
-mod github;
+// mod github;
 mod pdf;
 mod processor;
 mod rfd;
@@ -80,6 +80,7 @@ pub struct GitHubSourceRepo {
     pub owner: String,
     pub repo: String,
     pub path: String,
+    pub default_branch: String,
 }
 
 #[derive(Debug, Deserialize, Serialize)]

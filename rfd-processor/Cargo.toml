@@ -28,6 +28,7 @@ reqwest-middleware = { workspace = true }
 reqwest-retry = { workspace = true }
 reqwest-tracing = { workspace = true }
 rfd-data = { path = "../rfd-data" }
+rfd-github = { path = "../rfd-github" }
 rfd-model = { path = "../rfd-model" }
 rsa = { workspace = true }
 serde = { workspace = true }

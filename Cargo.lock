@@ -2655,6 +2655,7 @@ dependencies = [
  "reqwest-retry 0.3.0",
  "reqwest-tracing",
  "rfd-data",
+ "rfd-github",
  "rfd-model",
  "rsa",
  "serde",

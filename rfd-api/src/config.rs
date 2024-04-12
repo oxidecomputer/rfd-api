@@ -156,6 +156,7 @@ pub struct GitHubConfig {
     pub owner: String,
     pub path: String,
     pub repo: String,
+    pub default_branch: String,
 }
 
 #[derive(Debug, Deserialize)]

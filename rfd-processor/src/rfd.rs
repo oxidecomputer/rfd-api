@@ -7,6 +7,7 @@ use std::sync::Mutex;
 use chrono::{DateTime, Utc};
 use octorust::{Client, ClientError};
 use rfd_data::{content::RfdDocument, RfdNumber};
+use rfd_github::{GitHubError, GitHubRfdReadme, GitHubRfdUpdate};
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
     storage::{
@@ -18,10 +19,7 @@ use rfd_model::{
 use thiserror::Error;
 use uuid::Uuid;
 
-use crate::{
-    content::RenderableRfd,
-    github::{GitHubError, GitHubRfdReadme, GitHubRfdUpdate},
-};
+use crate::content::RenderableRfd;
 
 #[derive(Debug)]
 pub struct PersistedRfd {
