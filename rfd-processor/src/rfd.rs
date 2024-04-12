@@ -358,7 +358,7 @@ impl RemoteRfd {
             storage,
             RfdRevisionFilter::default()
                 .rfd(Some(vec![rfd.id]))
-                .sha(Some(vec![payload.sha.clone()])),
+                .sha(Some(vec![payload.commit_sha.clone()])),
             &ListPagination::latest(),
         )
         .await?
