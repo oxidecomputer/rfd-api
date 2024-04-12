@@ -779,7 +779,7 @@ impl ApiContext {
         }
     }
 
-    #[instrument(skip(self, caller))]
+    #[instrument(skip(self, caller, content))]
     pub async fn update_rfd_content(
         &self,
         caller: &ApiCaller,
@@ -816,13 +816,20 @@ impl ApiContext {
                 let sha = latest_revision.commit_sha;
                 let mut github_locations = self
                     .github
-                    .locations_for_commit(sha)
+                    .locations_for_commit(sha.clone())
                     .await
                     .map_err(UpdateRfdContentError::GitHub)
                     .to_resource_result()?;
 
                 match github_locations.len() {
-                    0 => Err(ResourceError::DoesNotExist),
+                    0 => {
+                        tracing::warn!(
+                            sha,
+                            rfd_number,
+                            "Failed to find a GitHub location for most recent revision"
+                        );
+                        Err(ResourceError::DoesNotExist)
+                    }
                     1 => {
                         // Unwrap is checked by the location length
                         let location = github_locations.pop().unwrap();

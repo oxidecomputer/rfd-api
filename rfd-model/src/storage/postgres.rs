@@ -274,7 +274,10 @@ impl RfdRevisionStore for PostgresStore {
         let query = query
             .offset(pagination.offset)
             .limit(pagination.limit)
-            .order((rfd_revision::rfd_id.asc(), rfd_revision::created_at.desc()));
+            .order((
+                rfd_revision::rfd_id.asc(),
+                rfd_revision::committed_at.desc(),
+            ));
 
         let results = query
             .get_results_async::<RfdRevisionModel>(&*self.pool.get().await?)

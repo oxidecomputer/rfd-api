@@ -362,8 +362,14 @@ impl RemoteRfd {
         .await?
         .into_iter()
         .next()
-        .map(|revision| revision.id)
-        .unwrap_or_else(|| Uuid::new_v4());
+        .map(|revision| {
+            tracing::info!("Found existing RFD revision for this commit. Updating the revision.");
+            revision.id
+        })
+        .unwrap_or_else(|| {
+            tracing::info!("No existing revisions exist for this commit. Creating a new revision.");
+            Uuid::new_v4()
+        });
 
         let revision = RfdRevisionStore::upsert(
             storage,
