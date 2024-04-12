@@ -134,7 +134,8 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         // RFD commands
         CliCommand::GetRfd => Some("view"),
         CliCommand::GetRfds => Some("list"),
-        CliCommand::GetRfdAttr => Some("attr"),
+        CliCommand::GetRfdAttr => Some("attr get"),
+        CliCommand::SetRfdAttr => Some("attr set"),
         CliCommand::SearchRfds => Some("search"),
 
         CliCommand::UpdateRfdVisibility => Some("edit visibility"),

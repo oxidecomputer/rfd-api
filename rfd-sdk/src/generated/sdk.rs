@@ -431,6 +431,8 @@ pub mod types {
     ///        "ManageMappersAll",
     ///        "GetRfdsAssigned",
     ///        "GetRfdsAll",
+    ///        "UpdateRfdsAssigned",
+    ///        "UpdateRfdsAll",
     ///        "ManageRfdsVisibilityAssigned",
     ///        "ManageRfdsVisibilityAll",
     ///        "GetDiscussionsAssigned",
@@ -732,6 +734,38 @@ pub mod types {
     ///    {
     ///      "type": "object",
     ///      "required": [
+    ///        "UpdateRfd"
+    ///      ],
+    ///      "properties": {
+    ///        "UpdateRfd": {
+    ///          "type": "integer",
+    ///          "format": "int32"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "UpdateRfds"
+    ///      ],
+    ///      "properties": {
+    ///        "UpdateRfds": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "integer",
+    ///            "format": "int32"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
     ///        "ManageRfdVisibility"
     ///      ],
     ///      "properties": {
@@ -927,6 +961,8 @@ pub mod types {
         ManageMappersAll,
         GetRfdsAssigned,
         GetRfdsAll,
+        UpdateRfdsAssigned,
+        UpdateRfdsAll,
         ManageRfdsVisibilityAssigned,
         ManageRfdsVisibilityAll,
         GetDiscussionsAssigned,
@@ -960,6 +996,8 @@ pub mod types {
         ManageMappers(Vec<uuid::Uuid>),
         GetRfd(i32),
         GetRfds(Vec<i32>),
+        UpdateRfd(i32),
+        UpdateRfds(Vec<i32>),
         ManageRfdVisibility(i32),
         ManageRfdsVisibility(Vec<i32>),
         GetDiscussion(i32),
@@ -1890,6 +1928,84 @@ pub mod types {
     ///        "kind": {
     ///          "type": "string",
     ///          "enum": [
+    ///            "UpdateRfd"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "integer",
+    ///          "format": "int32"
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "UpdateRfds"
+    ///          ]
+    ///        },
+    ///        "value": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "type": "integer",
+    ///            "format": "int32"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "UpdateRfdsAssigned"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
+    ///            "UpdateRfdsAll"
+    ///          ]
+    ///        }
+
+    ///      }
+
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "kind",
+    ///        "value"
+    ///      ],
+    ///      "properties": {
+    ///        "kind": {
+    ///          "type": "string",
+    ///          "enum": [
     ///            "ManageRfdVisibility"
     ///          ]
     ///        },
@@ -2392,6 +2508,10 @@ pub mod types {
         GetRfds(Vec<i32>),
         GetRfdsAssigned,
         GetRfdsAll,
+        UpdateRfd(i32),
+        UpdateRfds(Vec<i32>),
+        UpdateRfdsAssigned,
+        UpdateRfdsAll,
         ManageRfdVisibility(i32),
         ManageRfdsVisibility(Vec<i32>),
         ManageRfdsVisibilityAssigned,
@@ -4777,15 +4897,172 @@ pub mod types {
     ///
     /// ```json
     /// {
+    ///  "oneOf": [
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "discussion"
+    ///      ],
+    ///      "properties": {
+    ///        "discussion": {
+    ///          "type": "string"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "labels"
+    ///      ],
+    ///      "properties": {
+    ///        "labels": {
+    ///          "type": "string"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "state"
+    ///      ],
+    ///      "properties": {
+    ///        "state": {
+    ///          "$ref": "#/components/schemas/RfdState"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    }
+
+    ///  ]
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    pub enum RfdAttr {
+        #[serde(rename = "discussion")]
+        Discussion(String),
+        #[serde(rename = "labels")]
+        Labels(String),
+        #[serde(rename = "state")]
+        State(RfdState),
+    }
+
+    impl From<&RfdAttr> for RfdAttr {
+        fn from(value: &RfdAttr) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<RfdState> for RfdAttr {
+        fn from(value: RfdState) -> Self {
+            Self::State(value)
+        }
+    }
+
+    /// RfdAttrName
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "discussion",
+    ///    "labels",
+    ///    "state"
+    ///  ]
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        Deserialize,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        Serialize,
+        schemars :: JsonSchema,
+    )]
+    pub enum RfdAttrName {
+        #[serde(rename = "discussion")]
+        Discussion,
+        #[serde(rename = "labels")]
+        Labels,
+        #[serde(rename = "state")]
+        State,
+    }
+
+    impl From<&RfdAttrName> for RfdAttrName {
+        fn from(value: &RfdAttrName) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ToString for RfdAttrName {
+        fn to_string(&self) -> String {
+            match *self {
+                Self::Discussion => "discussion".to_string(),
+                Self::Labels => "labels".to_string(),
+                Self::State => "state".to_string(),
+            }
+        }
+    }
+
+    impl std::str::FromStr for RfdAttrName {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> Result<Self, self::error::ConversionError> {
+            match value {
+                "discussion" => Ok(Self::Discussion),
+                "labels" => Ok(Self::Labels),
+                "state" => Ok(Self::State),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for RfdAttrName {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for RfdAttrName {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &String) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for RfdAttrName {
+        type Error = self::error::ConversionError;
+        fn try_from(value: String) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    /// RfdAttrValue
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
     ///  "type": "object",
     ///  "required": [
-    ///    "name",
     ///    "value"
     ///  ],
     ///  "properties": {
-    ///    "name": {
-    ///      "$ref": "#/components/schemas/ViewRfdAttr"
-    ///    },
     ///    "value": {
     ///      "type": "string"
     ///    }
@@ -4797,20 +5074,121 @@ pub mod types {
     /// ```
     /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct RfdAttr {
-        pub name: ViewRfdAttr,
+    pub struct RfdAttrValue {
         pub value: String,
     }
 
-    impl From<&RfdAttr> for RfdAttr {
-        fn from(value: &RfdAttr) -> Self {
+    impl From<&RfdAttrValue> for RfdAttrValue {
+        fn from(value: &RfdAttrValue) -> Self {
             value.clone()
         }
     }
 
-    impl RfdAttr {
-        pub fn builder() -> builder::RfdAttr {
+    impl RfdAttrValue {
+        pub fn builder() -> builder::RfdAttrValue {
             Default::default()
+        }
+    }
+
+    /// RfdState
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "abandoned",
+    ///    "committed",
+    ///    "discussion",
+    ///    "ideation",
+    ///    "prediscussion",
+    ///    "published"
+    ///  ]
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        Clone,
+        Copy,
+        Debug,
+        Deserialize,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        Serialize,
+        schemars :: JsonSchema,
+    )]
+    pub enum RfdState {
+        #[serde(rename = "abandoned")]
+        Abandoned,
+        #[serde(rename = "committed")]
+        Committed,
+        #[serde(rename = "discussion")]
+        Discussion,
+        #[serde(rename = "ideation")]
+        Ideation,
+        #[serde(rename = "prediscussion")]
+        Prediscussion,
+        #[serde(rename = "published")]
+        Published,
+    }
+
+    impl From<&RfdState> for RfdState {
+        fn from(value: &RfdState) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ToString for RfdState {
+        fn to_string(&self) -> String {
+            match *self {
+                Self::Abandoned => "abandoned".to_string(),
+                Self::Committed => "committed".to_string(),
+                Self::Discussion => "discussion".to_string(),
+                Self::Ideation => "ideation".to_string(),
+                Self::Prediscussion => "prediscussion".to_string(),
+                Self::Published => "published".to_string(),
+            }
+        }
+    }
+
+    impl std::str::FromStr for RfdState {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> Result<Self, self::error::ConversionError> {
+            match value {
+                "abandoned" => Ok(Self::Abandoned),
+                "committed" => Ok(Self::Committed),
+                "discussion" => Ok(Self::Discussion),
+                "ideation" => Ok(Self::Ideation),
+                "prediscussion" => Ok(Self::Prediscussion),
+                "published" => Ok(Self::Published),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for RfdState {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for RfdState {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &String) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for RfdState {
+        type Error = self::error::ConversionError;
+        fn try_from(value: String) -> Result<Self, self::error::ConversionError> {
+            value.parse()
         }
     }
 
@@ -5080,93 +5458,6 @@ pub mod types {
     impl ToString for SecretString {
         fn to_string(&self) -> String {
             self.0.to_string()
-        }
-    }
-
-    /// ViewRfdAttr
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "enum": [
-    ///    "discussion",
-    ///    "labels",
-    ///    "state"
-    ///  ]
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        Deserialize,
-        Eq,
-        Hash,
-        Ord,
-        PartialEq,
-        PartialOrd,
-        Serialize,
-        schemars :: JsonSchema,
-    )]
-    pub enum ViewRfdAttr {
-        #[serde(rename = "discussion")]
-        Discussion,
-        #[serde(rename = "labels")]
-        Labels,
-        #[serde(rename = "state")]
-        State,
-    }
-
-    impl From<&ViewRfdAttr> for ViewRfdAttr {
-        fn from(value: &ViewRfdAttr) -> Self {
-            value.clone()
-        }
-    }
-
-    impl ToString for ViewRfdAttr {
-        fn to_string(&self) -> String {
-            match *self {
-                Self::Discussion => "discussion".to_string(),
-                Self::Labels => "labels".to_string(),
-                Self::State => "state".to_string(),
-            }
-        }
-    }
-
-    impl std::str::FromStr for ViewRfdAttr {
-        type Err = self::error::ConversionError;
-        fn from_str(value: &str) -> Result<Self, self::error::ConversionError> {
-            match value {
-                "discussion" => Ok(Self::Discussion),
-                "labels" => Ok(Self::Labels),
-                "state" => Ok(Self::State),
-                _ => Err("invalid value".into()),
-            }
-        }
-    }
-
-    impl std::convert::TryFrom<&str> for ViewRfdAttr {
-        type Error = self::error::ConversionError;
-        fn try_from(value: &str) -> Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-
-    impl std::convert::TryFrom<&String> for ViewRfdAttr {
-        type Error = self::error::ConversionError;
-        fn try_from(value: &String) -> Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-
-    impl std::convert::TryFrom<String> for ViewRfdAttr {
-        type Error = self::error::ConversionError;
-        fn try_from(value: String) -> Result<Self, self::error::ConversionError> {
-            value.parse()
         }
     }
 
@@ -8608,31 +8899,19 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
-        pub struct RfdAttr {
-            name: Result<super::ViewRfdAttr, String>,
+        pub struct RfdAttrValue {
             value: Result<String, String>,
         }
 
-        impl Default for RfdAttr {
+        impl Default for RfdAttrValue {
             fn default() -> Self {
                 Self {
-                    name: Err("no value supplied for name".to_string()),
                     value: Err("no value supplied for value".to_string()),
                 }
             }
         }
 
-        impl RfdAttr {
-            pub fn name<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<super::ViewRfdAttr>,
-                T::Error: std::fmt::Display,
-            {
-                self.name = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for name: {}", e));
-                self
-            }
+        impl RfdAttrValue {
             pub fn value<T>(mut self, value: T) -> Self
             where
                 T: std::convert::TryInto<String>,
@@ -8645,20 +8924,18 @@ pub mod types {
             }
         }
 
-        impl std::convert::TryFrom<RfdAttr> for super::RfdAttr {
+        impl std::convert::TryFrom<RfdAttrValue> for super::RfdAttrValue {
             type Error = super::error::ConversionError;
-            fn try_from(value: RfdAttr) -> Result<Self, super::error::ConversionError> {
+            fn try_from(value: RfdAttrValue) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
-                    name: value.name?,
                     value: value.value?,
                 })
             }
         }
 
-        impl From<super::RfdAttr> for RfdAttr {
-            fn from(value: super::RfdAttr) -> Self {
+        impl From<super::RfdAttrValue> for RfdAttrValue {
+            fn from(value: super::RfdAttrValue) -> Self {
                 Self {
-                    name: Ok(value.name),
                     value: Ok(value.value),
                 }
             }
@@ -9469,6 +9746,22 @@ impl Client {
     /// ```
     pub fn get_rfd_attr(&self) -> builder::GetRfdAttr {
         builder::GetRfdAttr::new(self)
+    }
+
+    /// Set an attribute of a given RFD
+    ///
+    /// Sends a `PUT` request to `/rfd/{number}/attr/{attr}`
+    ///
+    /// ```ignore
+    /// let response = client.set_rfd_attr()
+    ///    .number(number)
+    ///    .attr(attr)
+    ///    .body(body)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn set_rfd_attr(&self) -> builder::SetRfdAttr {
+        builder::SetRfdAttr::new(self)
     }
 
     /// Modify the visibility of an RFD
@@ -11966,7 +12259,7 @@ pub mod builder {
     pub struct GetRfdAttr<'a> {
         client: &'a super::Client,
         number: Result<String, String>,
-        attr: Result<types::ViewRfdAttr, String>,
+        attr: Result<types::RfdAttrName, String>,
     }
 
     impl<'a> GetRfdAttr<'a> {
@@ -11990,11 +12283,11 @@ pub mod builder {
 
         pub fn attr<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<types::ViewRfdAttr>,
+            V: std::convert::TryInto<types::RfdAttrName>,
         {
             self.attr = value
                 .try_into()
-                .map_err(|_| "conversion to `ViewRfdAttr` for attr failed".to_string());
+                .map_err(|_| "conversion to `RfdAttrName` for attr failed".to_string());
             self
         }
 
@@ -12021,6 +12314,111 @@ pub mod builder {
                     reqwest::header::ACCEPT,
                     reqwest::header::HeaderValue::from_static("application/json"),
                 )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::set_rfd_attr`]
+    ///
+    /// [`Client::set_rfd_attr`]: super::Client::set_rfd_attr
+    #[derive(Debug, Clone)]
+    pub struct SetRfdAttr<'a> {
+        client: &'a super::Client,
+        number: Result<String, String>,
+        attr: Result<types::RfdAttrName, String>,
+        body: Result<types::builder::RfdAttrValue, String>,
+    }
+
+    impl<'a> SetRfdAttr<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                number: Err("number was not initialized".to_string()),
+                attr: Err("attr was not initialized".to_string()),
+                body: Ok(types::builder::RfdAttrValue::default()),
+            }
+        }
+
+        pub fn number<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<String>,
+        {
+            self.number = value
+                .try_into()
+                .map_err(|_| "conversion to `String` for number failed".to_string());
+            self
+        }
+
+        pub fn attr<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::RfdAttrName>,
+        {
+            self.attr = value
+                .try_into()
+                .map_err(|_| "conversion to `RfdAttrName` for attr failed".to_string());
+            self
+        }
+
+        pub fn body<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::RfdAttrValue>,
+            <V as std::convert::TryInto<types::RfdAttrValue>>::Error: std::fmt::Display,
+        {
+            self.body = value
+                .try_into()
+                .map(From::from)
+                .map_err(|s| format!("conversion to `RfdAttrValue` for body failed: {}", s));
+            self
+        }
+
+        pub fn body_map<F>(mut self, f: F) -> Self
+        where
+            F: std::ops::FnOnce(types::builder::RfdAttrValue) -> types::builder::RfdAttrValue,
+        {
+            self.body = self.body.map(f);
+            self
+        }
+
+        /// Sends a `PUT` request to `/rfd/{number}/attr/{attr}`
+        pub async fn send(self) -> Result<ResponseValue<types::RfdAttr>, Error<types::Error>> {
+            let Self {
+                client,
+                number,
+                attr,
+                body,
+            } = self;
+            let number = number.map_err(Error::InvalidRequest)?;
+            let attr = attr.map_err(Error::InvalidRequest)?;
+            let body = body
+                .and_then(|v| types::RfdAttrValue::try_from(v).map_err(|e| e.to_string()))
+                .map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/rfd/{}/attr/{}",
+                client.baseurl,
+                encode_path(&number.to_string()),
+                encode_path(&attr.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .put(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .json(&body)
                 .build()?;
             let result = client.client.execute(request).await;
             let response = result?;

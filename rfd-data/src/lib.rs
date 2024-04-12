@@ -4,6 +4,9 @@
 
 use std::fmt::Display;
 
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
+
 pub mod content;
 
 #[derive(Debug, Copy, Clone)]
@@ -53,5 +56,47 @@ impl From<RfdNumber> for i32 {
 impl From<&RfdNumber> for i32 {
     fn from(num: &RfdNumber) -> Self {
         num.0
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub enum RfdState {
+    Abandoned,
+    Committed,
+    Discussion,
+    Ideation,
+    Prediscussion,
+    Published,
+}
+
+impl Display for RfdState {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RfdState::Abandoned => write!(f, "abandoned"),
+            RfdState::Committed => write!(f, "committed"),
+            RfdState::Discussion => write!(f, "discussion"),
+            RfdState::Ideation => write!(f, "ideation"),
+            RfdState::Prediscussion => write!(f, "prediscussion"),
+            RfdState::Published => write!(f, "published"),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct InvalidRfdState<'a>(pub &'a str);
+
+impl<'a> TryFrom<&'a str> for RfdState {
+    type Error = InvalidRfdState<'a>;
+    fn try_from(value: &'a str) -> Result<Self, Self::Error> {
+        match value {
+            "abandoned" => Ok(RfdState::Abandoned),
+            "committed" => Ok(RfdState::Committed),
+            "discussion" => Ok(RfdState::Discussion),
+            "ideation" => Ok(RfdState::Ideation),
+            "prediscussion" => Ok(RfdState::Prediscussion),
+            "published" => Ok(RfdState::Published),
+            _ => Err(InvalidRfdState(value)),
+        }
     }
 }

@@ -2502,6 +2502,7 @@ dependencies = [
 name = "rfd-api"
 version = "0.5.0"
 dependencies = [
+ "anyhow",
  "async-trait",
  "base64 0.21.7",
  "chrono",
@@ -2531,6 +2532,7 @@ dependencies = [
  "reqwest-retry 0.3.0",
  "reqwest-tracing",
  "rfd-data",
+ "rfd-github",
  "rfd-model",
  "ring 0.17.7",
  "rsa",
@@ -2587,6 +2589,8 @@ version = "0.1.0"
 dependencies = [
  "regex",
  "rfd-model",
+ "schemars",
+ "serde",
 ]
 
 [[package]]

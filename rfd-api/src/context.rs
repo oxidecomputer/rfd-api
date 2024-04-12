@@ -15,6 +15,7 @@ use octorust::{
     Client as GitHubClient,
 };
 use partial_struct::partial;
+use rfd_github::{GitHubError, GitHubRfdRepo};
 use rfd_model::{
     schema_ext::{ContentFormat, LoginAttemptState, Visibility},
     storage::{
@@ -28,8 +29,8 @@ use rfd_model::{
     AccessGroup, AccessToken, ApiUser, ApiUserProvider, InvalidValueError, Job, LinkRequest,
     LoginAttempt, Mapper, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser,
     NewApiUserProvider, NewJob, NewLinkRequest, NewLoginAttempt, NewMapper, NewOAuthClient,
-    NewOAuthClientRedirectUri, NewOAuthClientSecret, NewRfdRevision, OAuthClient,
-    OAuthClientRedirectUri, OAuthClientSecret, Rfd, RfdRevision,
+    NewOAuthClientRedirectUri, NewOAuthClientSecret, OAuthClient, OAuthClientRedirectUri,
+    OAuthClientSecret, Rfd, RfdRevision,
 };
 use rsa::{
     pkcs1::{DecodeRsaPrivateKey, EncodeRsaPrivateKey},
@@ -127,7 +128,7 @@ pub struct ApiContext {
     pub secrets: SecretContext,
     pub oauth_providers: HashMap<OAuthProviderName, Box<dyn OAuthProviderFn>>,
     pub search: SearchContext,
-    pub github: GitHubClient,
+    pub github: GitHubRfdRepo,
 }
 
 pub struct JwtContext {
@@ -156,9 +157,9 @@ pub enum CallerError {
     FailedToAuthenticate,
     #[error("Supplied API key is invalid")]
     InvalidKey,
-    #[error("Invalid scope: {0}")]
+    #[error("Invalid scope")]
     Scope(#[from] ApiPermissionError),
-    #[error("Inner storage failure: {0}")]
+    #[error("Inner storage failure")]
     Storage(#[from] StoreError),
 }
 
@@ -183,6 +184,16 @@ impl From<CallerError> for HttpError {
 pub enum LoginAttemptError {
     #[error(transparent)]
     FailedToCreate(#[from] InvalidValueError),
+    #[error(transparent)]
+    Storage(#[from] StoreError),
+}
+
+#[derive(Debug, Error)]
+pub enum UpdateRfdContentError {
+    #[error(transparent)]
+    GitHub(#[from] GitHubError),
+    #[error("Internal GitHub state does not currently allow for update. This commit appears as the head commit on multiple branches.")]
+    InternalState,
     #[error(transparent)]
     Storage(#[from] StoreError),
 }
@@ -294,33 +305,39 @@ impl ApiContext {
             search: SearchContext {
                 client: SearchClient::new(search.host, search.index, search.key),
             },
-            github: match services.github {
-                GitHubAuthConfig::Installation {
-                    app_id,
-                    installation_id,
-                    private_key,
-                } => GitHubClient::custom(
-                    "rfd-api",
-                    Credentials::InstallationToken(InstallationTokenGenerator::new(
+            github: GitHubRfdRepo::new(
+                &match services.github.auth {
+                    GitHubAuthConfig::Installation {
+                        app_id,
                         installation_id,
-                        JWTCredentials::new(
-                            app_id,
-                            RsaPrivateKey::from_pkcs1_pem(&private_key)?
-                                .to_pkcs1_der()?
-                                .to_bytes()
-                                .to_vec(),
-                        )?,
-                    )),
-                    client,
-                    Box::new(NoCache),
-                ),
-                GitHubAuthConfig::User { token } => GitHubClient::custom(
-                    "rfd-api",
-                    Credentials::Token(token.to_string()),
-                    client,
-                    Box::new(NoCache),
-                ),
-            },
+                        private_key,
+                    } => GitHubClient::custom(
+                        "rfd-api",
+                        Credentials::InstallationToken(InstallationTokenGenerator::new(
+                            installation_id,
+                            JWTCredentials::new(
+                                app_id,
+                                RsaPrivateKey::from_pkcs1_pem(&private_key)?
+                                    .to_pkcs1_der()?
+                                    .to_bytes()
+                                    .to_vec(),
+                            )?,
+                        )),
+                        client,
+                        Box::new(NoCache),
+                    ),
+                    GitHubAuthConfig::User { token } => GitHubClient::custom(
+                        "rfd-api",
+                        Credentials::Token(token.to_string()),
+                        client,
+                        Box::new(NoCache),
+                    ),
+                },
+                services.github.owner,
+                services.github.repo,
+                services.github.path,
+            )
+            .await?,
         })
     }
 
@@ -762,20 +779,64 @@ impl ApiContext {
     }
 
     #[instrument(skip(self, caller))]
-    pub async fn update_rfd_content<'a>(
+    pub async fn update_rfd_content(
         &self,
         caller: &ApiCaller,
         rfd_number: i32,
-        revision: NewRfdRevision,
-    ) -> ResourceResult<RfdRevision, StoreError> {
+        content: &str,
+    ) -> ResourceResult<(), UpdateRfdContentError> {
         if caller.any(&[
             &ApiPermission::UpdateRfd(rfd_number),
             &ApiPermission::UpdateRfdsAll,
         ]) {
-            let revision = RfdRevisionStore::upsert(&*self.storage, revision)
+            let rfds = RfdStore::list(
+                &*self.storage,
+                RfdFilter::default().rfd_number(Some(vec![rfd_number])),
+                &ListPagination::default().limit(1),
+            )
+            .await
+            .map_err(UpdateRfdContentError::Storage)
+            .to_resource_result()?;
+            if let Some(rfd) = rfds.into_iter().nth(0) {
+                let revisions = RfdRevisionStore::list(
+                    &*self.storage,
+                    RfdRevisionFilter::default().rfd(Some(vec![rfd.id])),
+                    &ListPagination::default().limit(1),
+                )
                 .await
+                .map_err(UpdateRfdContentError::Storage)
                 .to_resource_result()?;
-            Ok(revision)
+
+                let latest_revision = match revisions.into_iter().nth(0) {
+                    Some(revision) => Ok(revision),
+                    None => Err(ResourceError::DoesNotExist),
+                }?;
+
+                let sha = latest_revision.commit_sha;
+                let mut github_locations = self
+                    .github
+                    .locations_for_commit(sha)
+                    .await
+                    .map_err(UpdateRfdContentError::GitHub)
+                    .to_resource_result()?;
+
+                match github_locations.len() {
+                    0 => Err(ResourceError::DoesNotExist),
+                    1 => {
+                        // Unwrap is checked by the location length
+                        let location = github_locations.pop().unwrap();
+                        location
+                            .upsert(&rfd_number.into(), content.as_bytes())
+                            .await
+                            .map_err(UpdateRfdContentError::GitHub)
+                            .to_resource_result()?;
+                        Ok(())
+                    }
+                    _ => Err(UpdateRfdContentError::InternalState).to_resource_result(),
+                }
+            } else {
+                Err(ResourceError::DoesNotExist)
+            }
         } else {
             resource_restricted()
         }
@@ -1998,7 +2059,7 @@ pub(crate) mod test_mocks {
     use w_api_permissions::Caller;
 
     use crate::{
-        config::{GitHubAuthConfig, JwtConfig, SearchConfig, ServicesConfig},
+        config::{GitHubAuthConfig, GitHubConfig, JwtConfig, SearchConfig, ServicesConfig},
         endpoints::login::oauth::{google::GoogleOAuthProvider, OAuthProviderName},
         permissions::ApiPermission,
         util::tests::mock_key,
@@ -2018,8 +2079,13 @@ pub(crate) mod test_mocks {
             ],
             SearchConfig::default(),
             ServicesConfig {
-                github: GitHubAuthConfig::User {
-                    token: String::default(),
+                github: GitHubConfig {
+                    owner: String::new(),
+                    repo: String::new(),
+                    path: String::new(),
+                    auth: GitHubAuthConfig::User {
+                        token: String::default(),
+                    },
                 },
             },
         )

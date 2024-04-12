@@ -4,8 +4,10 @@
 
 use dropshot::{endpoint, HttpError, HttpResponseOk, Path, Query, RequestContext, TypedBody};
 use http::StatusCode;
-use partial_struct::partial;
-use rfd_data::content::{RfdAsciidoc, RfdContent, RfdDocument, RfdMarkdown};
+use rfd_data::{
+    content::{RfdAsciidoc, RfdContent, RfdDocument, RfdMarkdown},
+    RfdState,
+};
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
     Rfd,
@@ -91,25 +93,25 @@ async fn get_rfd_op(
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
-pub struct ViewRfdAttrPathParams {
+pub struct RfdAttrPathParams {
     number: String,
-    attr: ViewRfdAttr,
+    attr: RfdAttrName,
 }
 
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
-pub enum ViewRfdAttr {
+pub enum RfdAttrName {
     Discussion,
     Labels,
     State,
 }
 
-#[partial(SetRfdAttrResponse)]
-#[derive(Debug, Serialize, JsonSchema)]
-pub struct RfdAttrResponse {
-    #[partial(SetRfdAttrResponse(retype = SetRfdAttr))]
-    name: ViewRfdAttr,
-    value: String,
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub enum RfdAttr {
+    Discussion(String),
+    Labels(String),
+    State(RfdState),
 }
 
 /// Get an attribute of a given RFD
@@ -121,8 +123,8 @@ pub struct RfdAttrResponse {
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn get_rfd_attr(
     rqctx: RequestContext<ApiContext>,
-    path: Path<ViewRfdAttrPathParams>,
-) -> Result<HttpResponseOk<RfdAttrResponse>, HttpError> {
+    path: Path<RfdAttrPathParams>,
+) -> Result<HttpResponseOk<RfdAttr>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let path = path.into_inner();
@@ -140,8 +142,8 @@ async fn get_rfd_attr_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
     number: String,
-    attr: ViewRfdAttr,
-) -> Result<HttpResponseOk<RfdAttrResponse>, HttpError> {
+    attr: RfdAttrName,
+) -> Result<HttpResponseOk<RfdAttr>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
         let rfd = ctx.get_rfd(caller, rfd_number, None).await?;
         let content = match rfd.format {
@@ -149,21 +151,42 @@ async fn get_rfd_attr_op(
             ContentFormat::Markdown => RfdContent::Markdown(RfdMarkdown::new(rfd.content)),
         };
 
-        let attr_value = match attr {
-            ViewRfdAttr::Discussion => content.get_discussion(),
-            ViewRfdAttr::Labels => content.get_labels(),
-            ViewRfdAttr::State => content.get_state(),
-        };
-
-        match attr_value {
-            Some(value) => Ok(HttpResponseOk(RfdAttrResponse {
-                name: attr,
-                value: value.to_string(),
-            })),
-            None => Err(HttpError::for_not_found(
-                None,
-                "RFD does not have the requested attribute".to_string(),
-            )),
+        match attr {
+            RfdAttrName::Discussion => content
+                .get_discussion()
+                .ok_or_else(|| {
+                    HttpError::for_not_found(
+                        None,
+                        "RFD does not have the requested attribute".to_string(),
+                    )
+                })
+                .map(|value| HttpResponseOk(RfdAttr::Discussion(value.to_string()))),
+            RfdAttrName::Labels => content
+                .get_labels()
+                .ok_or_else(|| {
+                    HttpError::for_not_found(
+                        None,
+                        "RFD does not have the requested attribute".to_string(),
+                    )
+                })
+                .map(|value| HttpResponseOk(RfdAttr::Labels(value.to_string()))),
+            RfdAttrName::State => content
+                .get_state()
+                .ok_or_else(|| {
+                    HttpError::for_not_found(
+                        None,
+                        "RFD does not have the requested attribute".to_string(),
+                    )
+                })
+                .and_then(|value| match value.try_into() {
+                    Ok(rfd_state) => Ok(HttpResponseOk(RfdAttr::State(rfd_state))),
+                    Err(err) => {
+                        tracing::error!(?err, "RFD has an invalid state stored in its contents");
+                        Err(HttpError::for_internal_error(
+                            "Set attribute placed an invalid state".to_string(),
+                        ))
+                    }
+                }),
         }
     } else {
         Err(client_error(
@@ -173,21 +196,8 @@ async fn get_rfd_attr_op(
     }
 }
 
-#[derive(Debug, Deserialize, JsonSchema)]
-pub struct SetRfdAttrPathParams {
-    number: String,
-    attr: SetRfdAttr,
-}
-
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
-pub enum SetRfdAttr {
-    Labels,
-    State,
-}
-
-#[derive(Debug, Deserialize, JsonSchema)]
-pub struct SetRfdAttrBody {
+pub struct RfdAttrValue {
     value: String,
 }
 
@@ -200,9 +210,9 @@ pub struct SetRfdAttrBody {
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn set_rfd_attr(
     rqctx: RequestContext<ApiContext>,
-    path: Path<SetRfdAttrPathParams>,
-    body: TypedBody<SetRfdAttrBody>,
-) -> Result<HttpResponseOk<SetRfdAttrResponse>, HttpError> {
+    path: Path<RfdAttrPathParams>,
+    body: TypedBody<RfdAttrValue>,
+) -> Result<HttpResponseOk<RfdAttr>, HttpError> {
     let ctx = rqctx.context();
     let auth = ctx.authn_token(&rqctx).await?;
     let path = path.into_inner();
@@ -221,58 +231,74 @@ async fn set_rfd_attr_op(
     ctx: &ApiContext,
     caller: &ApiCaller,
     number: String,
-    attr: SetRfdAttr,
+    attr: RfdAttrName,
     value: String,
-) -> Result<HttpResponseOk<SetRfdAttrResponse>, HttpError> {
+) -> Result<HttpResponseOk<RfdAttr>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
         // Get the latest revision
-        let mut revision = ctx.get_rfd_revision(caller, rfd_number, None).await?;
+        let revision = ctx.get_rfd_revision(caller, rfd_number, None).await?;
 
         // TODO: Get rid of these clones
         let mut content = match revision.content_format {
-            ContentFormat::Asciidoc => {
-                RfdContent::Asciidoc(RfdAsciidoc::new(revision.content.clone()))
-            }
-            ContentFormat::Markdown => {
-                RfdContent::Markdown(RfdMarkdown::new(revision.content.clone()))
-            }
+            ContentFormat::Asciidoc => RfdContent::Asciidoc(RfdAsciidoc::new(revision.content)),
+            ContentFormat::Markdown => RfdContent::Markdown(RfdMarkdown::new(revision.content)),
         };
 
         // Update the requested attribute
-        match attr {
-            SetRfdAttr::Labels => content.update_labels(&value),
-            SetRfdAttr::State => content.update_state(&value),
+        match &attr {
+            RfdAttrName::Discussion => content.update_discussion(&value),
+            RfdAttrName::Labels => content.update_labels(&value),
+            RfdAttrName::State => {
+                let state: RfdState = value.as_str().try_into().map_err(|err| {
+                    tracing::info!(?err, "Invalid state was supplied");
+                    HttpError::for_bad_request(None, "Invalid RFD state".to_string())
+                })?;
+                content.update_state(&state.to_string());
+            }
         };
-
-        // Replace the RFD content with an updated version
-        revision.content = content.raw().to_string();
 
         // Persist the data back to GitHub. Note that we do not store this back to the database.
         // We rely on GitHub as the source of truth and revisions are required to tbe linked to
         // commits
-        let revision = ctx
-            .update_rfd_content(caller, rfd_number, revision.into())
+        ctx.update_rfd_content(caller, rfd_number, content.raw())
             .await?;
 
-        // Extract the attribute back out of the updated content
-        let content = match revision.content_format {
-            ContentFormat::Asciidoc => RfdContent::Asciidoc(RfdAsciidoc::new(revision.content)),
-            ContentFormat::Markdown => RfdContent::Markdown(RfdMarkdown::new(revision.content)),
-        };
-        let attr_value = match attr {
-            SetRfdAttr::Labels => content.get_labels(),
-            SetRfdAttr::State => content.get_state(),
-        };
-
-        match attr_value {
-            Some(value) => Ok(HttpResponseOk(SetRfdAttrResponse {
-                name: attr,
-                value: value.to_string(),
-            })),
-            None => Err(HttpError::for_not_found(
-                None,
-                "RFD does not have the requested attribute".to_string(),
-            )),
+        match attr {
+            RfdAttrName::Discussion => content
+                .get_discussion()
+                .ok_or_else(|| {
+                    HttpError::for_not_found(
+                        None,
+                        "RFD does not have the requested attribute".to_string(),
+                    )
+                })
+                .map(|value| HttpResponseOk(RfdAttr::Discussion(value.to_string()))),
+            RfdAttrName::Labels => content
+                .get_labels()
+                .ok_or_else(|| {
+                    HttpError::for_not_found(
+                        None,
+                        "RFD does not have the requested attribute".to_string(),
+                    )
+                })
+                .map(|value| HttpResponseOk(RfdAttr::Labels(value.to_string()))),
+            RfdAttrName::State => content
+                .get_state()
+                .ok_or_else(|| {
+                    HttpError::for_not_found(
+                        None,
+                        "RFD does not have the requested attribute".to_string(),
+                    )
+                })
+                .and_then(|value| match value.try_into() {
+                    Ok(rfd_state) => Ok(HttpResponseOk(RfdAttr::State(rfd_state))),
+                    Err(err) => {
+                        tracing::error!(?err, "RFD has an invalid state stored in its contents");
+                        Err(HttpError::for_internal_error(
+                            "Set attribute placed an invalid state".to_string(),
+                        ))
+                    }
+                }),
         }
     } else {
         Err(client_error(

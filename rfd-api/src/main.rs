@@ -7,7 +7,6 @@ use permissions::ApiPermission;
 use rfd_model::{storage::postgres::PostgresStore, AccessGroup, ApiKey, ApiUser};
 use server::{server, ServerConfig};
 use std::{
-    error::Error,
     net::{SocketAddr, SocketAddrV4},
     sync::Arc,
 };
@@ -45,7 +44,7 @@ pub type User = ApiUser<ApiPermission>;
 pub type UserToken = ApiKey<ApiPermission>;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
+async fn main() -> anyhow::Result<()> {
     let mut args = std::env::args();
     let _ = args.next();
     let config_path = args.next();
@@ -77,8 +76,8 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
         Arc::new(
             PostgresStore::new(&config.database_url)
                 .await
-                .map_err(|err| {
-                    format!("Failed to establish initial database connection: {:?}", err)
+                .tap_err(|err| {
+                    tracing::error!(?err, "Failed to establish initial database connection");
                 })?,
         ),
         config.jwt,
@@ -147,12 +146,16 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     let server = server(config)
         .tap_err(|err| {
             tracing::error!(?err, "Failed to construct server");
-        })?
+        })
+        .expect("Failed to construct server")
         .start();
 
-    server.await.tap_err(|err| {
-        tracing::error!(?err, "Server exited with an error");
-    })?;
+    server
+        .await
+        .tap_err(|err| {
+            tracing::error!(?err, "Server exited with an error");
+        })
+        .expect("Failed to start server");
 
     tracing::error!("Server completed without an error");
 

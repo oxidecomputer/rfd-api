@@ -91,6 +91,18 @@ impl Display for ApiPermissionResponse {
             ),
             Self::GetRfdsAssigned => write!(f, "get-rfds-assigned"),
             Self::GetRfdsAll => write!(f, "get-rfds-all"),
+            Self::UpdateRfd(number) => write!(f, "update-rfd:{}", number),
+            Self::UpdateRfds(numbers) => write!(
+                f,
+                "update-rfds:{}",
+                numbers
+                    .iter()
+                    .map(|i| i.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            ),
+            Self::UpdateRfdsAssigned => write!(f, "update-rfds-assigned"),
+            Self::UpdateRfdsAll => write!(f, "update-rfds-all"),
             Self::ManageRfdVisibility(number) => write!(f, "manage-rfd-vis:{}", number),
             Self::ManageRfdsVisibility(numbers) => write!(
                 f,

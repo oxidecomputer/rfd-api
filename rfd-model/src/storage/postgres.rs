@@ -18,6 +18,7 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     time::Duration,
 };
+use thiserror::Error;
 use tracing::instrument;
 use uuid::Uuid;
 use w_api_permissions::Permission;
@@ -58,8 +59,9 @@ pub struct PostgresStore {
     pool: DbPool,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum PostgresError {
+    #[error("Failed to connect to database")]
     Connection(ConnectionError),
 }
 
@@ -224,7 +226,7 @@ impl RfdRevisionStore for PostgresStore {
         let results = query
             .offset(pagination.offset)
             .limit(pagination.limit)
-            .order(rfd_revision::created_at.desc())
+            .order(rfd_revision::committed_at.desc())
             .get_results_async::<RfdRevisionModel>(&*self.pool.get().await?)
             .await?;
 

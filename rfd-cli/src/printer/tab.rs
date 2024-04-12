@@ -496,8 +496,12 @@ impl TabDisplay for FullRfdPdfEntry {
 
 impl TabDisplay for RfdAttr {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
-        printer.print_field(tw, level, "name", &self.name.to_string());
-        printer.print_field(tw, level, "value", &self.value);
+        let (key, value) = match self {
+            Self::Discussion(value) => ("discussion", value.to_string()),
+            Self::Labels(value) => ("labels", value.to_string()),
+            Self::State(value) => ("state", value.to_string()),
+        };
+        printer.print_field(tw, level, key, &value);
     }
 }
 

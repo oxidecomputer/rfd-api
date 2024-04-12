@@ -7,6 +7,7 @@ repository = "https://github.com/oxidecomputer/rfd-api"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = { workspace = true }
 async-trait = { workspace = true }
 base64 = { workspace = true }
 chrono = { workspace = true, features = ["serde"] }
@@ -25,7 +26,7 @@ hyper-rustls = { workspace = true }
 jsonwebtoken = { workspace = true }
 meilisearch-sdk = { workspace = true }
 oauth2 = { workspace = true }
-octorust = { workspace = true }
+octorust = { workspace = true, features = ["httpcache"] }
 partial-struct = { workspace = true }
 rand = { workspace = true, features = ["std"] }
 rand_core = { workspace = true, features = ["std"] }
@@ -36,6 +37,7 @@ reqwest-retry = { workspace = true }
 reqwest-tracing = { workspace = true }
 ring = { workspace = true }
 rfd-data = { path = "../rfd-data" }
+rfd-github = { path = "../rfd-github" }
 rfd-model = { path = "../rfd-model" }
 rsa = { workspace = true, features = ["sha2"] }
 schemars = { workspace = true, features = ["chrono"] }

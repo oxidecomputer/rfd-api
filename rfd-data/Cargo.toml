@@ -8,3 +8,5 @@ edition = "2021"
 [dependencies]
 regex = { workspace = true }
 rfd-model = { path = "../rfd-model" }
+schemars = { workspace = true }
+serde = { workspace = true }

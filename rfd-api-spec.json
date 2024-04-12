@@ -1262,7 +1262,7 @@
             "name": "attr",
             "required": true,
             "schema": {
-              "$ref": "#/components/schemas/ViewRfdAttr"
+              "$ref": "#/components/schemas/RfdAttrName"
             }
           },
           {
@@ -1274,6 +1274,56 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RfdAttr"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "put": {
+        "summary": "Set an attribute of a given RFD",
+        "operationId": "set_rfd_attr",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attr",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/RfdAttrName"
+            }
+          },
+          {
+            "in": "path",
+            "name": "number",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RfdAttrValue"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "successful operation",
@@ -1616,6 +1666,8 @@
               "ManageMappersAll",
               "GetRfdsAssigned",
               "GetRfdsAll",
+              "UpdateRfdsAssigned",
+              "UpdateRfdsAll",
               "ManageRfdsVisibilityAssigned",
               "ManageRfdsVisibilityAll",
               "GetDiscussionsAssigned",
@@ -1892,6 +1944,36 @@
             },
             "required": [
               "GetRfds"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "UpdateRfd": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "required": [
+              "UpdateRfd"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "UpdateRfds": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "UpdateRfds"
             ],
             "additionalProperties": false
           },
@@ -2839,6 +2921,76 @@
                 "type": "string",
                 "enum": [
                   "GetRfdsAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "UpdateRfd"
+                ]
+              },
+              "value": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "UpdateRfds"
+                ]
+              },
+              "value": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "UpdateRfdsAssigned"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "UpdateRfdsAll"
                 ]
               }
             },
@@ -4311,18 +4463,65 @@
         ]
       },
       "RfdAttr": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "discussion": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "discussion"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "labels": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "labels"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "state": {
+                "$ref": "#/components/schemas/RfdState"
+              }
+            },
+            "required": [
+              "state"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "RfdAttrValue": {
         "type": "object",
         "properties": {
-          "name": {
-            "$ref": "#/components/schemas/ViewRfdAttr"
-          },
           "value": {
             "type": "string"
           }
         },
         "required": [
-          "name",
           "value"
+        ]
+      },
+      "RfdState": {
+        "type": "string",
+        "enum": [
+          "abandoned",
+          "committed",
+          "discussion",
+          "ideation",
+          "prediscussion",
+          "published"
         ]
       },
       "RfdVisibility": {
@@ -4426,19 +4625,19 @@
       "SecretString": {
         "type": "string"
       },
-      "ViewRfdAttr": {
-        "type": "string",
-        "enum": [
-          "discussion",
-          "labels",
-          "state"
-        ]
-      },
       "Visibility": {
         "type": "string",
         "enum": [
           "public",
           "private"
+        ]
+      },
+      "RfdAttrName": {
+        "type": "string",
+        "enum": [
+          "discussion",
+          "labels",
+          "state"
         ]
       }
     },

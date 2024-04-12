@@ -5,6 +5,7 @@
 use std::{
     borrow::Cow,
     collections::HashMap,
+    fmt::Debug,
     future::Future,
     pin::Pin,
     str::{from_utf8, Utf8Error},
@@ -32,15 +33,15 @@ use util::decode_base64;
 
 #[derive(Debug, Error)]
 pub enum GitHubError {
-    #[error("Internal client error {0}")]
+    #[error("Internal client error")]
     ClientError(#[from] ClientError),
-    #[error("Failed to decode blob {0}")]
+    #[error("Failed to decode blob")]
     FailedToDecodeData(#[from] DecodeError),
     #[error("Could not find a committer for a commit")]
     FailedToFindCommitter,
     #[error("Failed to parse decoded contents")]
     InvalidData(#[from] Utf8Error),
-    #[error("Failed to parse date {0}")]
+    #[error("Failed to parse date")]
     InvalidDate(#[from] ParseError),
     #[error("Expected to find at least one commit")]
     NoCommitsFound,
@@ -48,12 +49,24 @@ pub enum GitHubError {
     NoCommitterFound,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct GitHubRfdRepo {
+    pub client: Client,
     pub owner: String,
     pub repo: String,
     pub path: String,
     pub default_branch: String,
+}
+
+impl Debug for GitHubRfdRepo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("GitHubRfdRepo")
+            .field("owner", &self.owner)
+            .field("repo", &self.repo)
+            .field("path", &self.path)
+            .field("default_branch", &self.default_branch)
+            .finish()
+    }
 }
 
 impl GitHubRfdRepo {
@@ -64,6 +77,7 @@ impl GitHubRfdRepo {
         path: String,
     ) -> Result<Self, GitHubError> {
         Ok(Self {
+            client: client.clone(),
             default_branch: client.repos().get(&owner, &repo).await?.body.default_branch,
             owner,
             repo,
@@ -73,12 +87,29 @@ impl GitHubRfdRepo {
 
     pub fn location(&self, branch: String, commit: String) -> GitHubRfdLocation {
         GitHubRfdLocation {
+            client: self.client.clone(),
             owner: self.owner.clone(),
             repo: self.repo.clone(),
             default_branch: self.default_branch.clone(),
             branch,
             commit,
         }
+    }
+
+    pub async fn locations_for_commit(
+        &self,
+        commit_sha: String,
+    ) -> Result<Vec<GitHubRfdLocation>, GitHubError> {
+        let branches = self
+            .client
+            .repos()
+            .list_branches_for_head_commit(&self.owner, &self.repo, &commit_sha)
+            .await?;
+        Ok(branches
+            .body
+            .into_iter()
+            .map(|branch| self.location(branch.name, commit_sha.clone()))
+            .collect::<Vec<_>>())
     }
 
     pub async fn get_rfd_sync_updates(
@@ -258,13 +289,26 @@ impl GitHubRfdRepo {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct GitHubRfdLocation {
+    pub client: Client,
     pub owner: String,
     pub repo: String,
     pub default_branch: String,
     pub branch: String,
     pub commit: String,
+}
+
+impl Debug for GitHubRfdLocation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("GitHubRfdRepo")
+            .field("owner", &self.owner)
+            .field("repo", &self.repo)
+            .field("default_branch", &self.default_branch)
+            .field("branch", &self.branch)
+            .field("commit", &self.commit)
+            .finish()
+    }
 }
 
 impl GitHubRfdLocation {
@@ -495,16 +539,11 @@ impl GitHubRfdLocation {
             .parse()?)
     }
 
-    #[instrument(skip(self, client, content))]
-    pub async fn upsert(
-        &self,
-        client: &Client,
-        rfd_number: &RfdNumber,
-        content: &[u8],
-    ) -> Result<(), GitHubError> {
-        let readme_path = self.readme_path(client, rfd_number).await;
+    #[instrument(skip(self, content))]
+    pub async fn upsert(&self, rfd_number: &RfdNumber, content: &[u8]) -> Result<(), GitHubError> {
+        let readme_path = self.readme_path(&self.client, rfd_number).await;
         let FetchedRfdContent { decoded, sha, .. } = self
-            .fetch_content(&client, &readme_path, &self.commit)
+            .fetch_content(&self.client, &readme_path, &self.commit)
             .await?;
 
         // We can short circuit if the new and old content are the same
@@ -519,7 +558,7 @@ impl GitHubRfdLocation {
             "Writing file to GitHub"
         );
 
-        client
+        self.client
             .repos()
             .create_or_update_file_contents(
                 &self.owner,

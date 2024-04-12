@@ -147,7 +147,15 @@ pub struct SearchConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct ServicesConfig {
-    pub github: GitHubAuthConfig,
+    pub github: GitHubConfig,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GitHubConfig {
+    pub auth: GitHubAuthConfig,
+    pub owner: String,
+    pub path: String,
+    pub repo: String,
 }
 
 #[derive(Debug, Deserialize)]

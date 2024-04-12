@@ -53,6 +53,7 @@ impl<T: CliConfig> Cli<T> {
             CliCommand::GetRfds => Self::cli_get_rfds(),
             CliCommand::GetRfd => Self::cli_get_rfd(),
             CliCommand::GetRfdAttr => Self::cli_get_rfd_attr(),
+            CliCommand::SetRfdAttr => Self::cli_set_rfd_attr(),
             CliCommand::UpdateRfdVisibility => Self::cli_update_rfd_visibility(),
             CliCommand::SearchRfds => Self::cli_search_rfds(),
             CliCommand::GetSelf => Self::cli_get_self(),
@@ -710,11 +711,11 @@ impl<T: CliConfig> Cli<T> {
                     .long("attr")
                     .value_parser(clap::builder::TypedValueParser::map(
                         clap::builder::PossibleValuesParser::new([
-                            types::ViewRfdAttr::Discussion.to_string(),
-                            types::ViewRfdAttr::Labels.to_string(),
-                            types::ViewRfdAttr::State.to_string(),
+                            types::RfdAttrName::Discussion.to_string(),
+                            types::RfdAttrName::Labels.to_string(),
+                            types::RfdAttrName::State.to_string(),
                         ]),
-                        |s| types::ViewRfdAttr::try_from(s).unwrap(),
+                        |s| types::RfdAttrName::try_from(s).unwrap(),
                     ))
                     .required(true),
             )
@@ -725,6 +726,50 @@ impl<T: CliConfig> Cli<T> {
                     .required(true),
             )
             .about("Get an attribute of a given RFD")
+    }
+
+    pub fn cli_set_rfd_attr() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("attr")
+                    .long("attr")
+                    .value_parser(clap::builder::TypedValueParser::map(
+                        clap::builder::PossibleValuesParser::new([
+                            types::RfdAttrName::Discussion.to_string(),
+                            types::RfdAttrName::Labels.to_string(),
+                            types::RfdAttrName::State.to_string(),
+                        ]),
+                        |s| types::RfdAttrName::try_from(s).unwrap(),
+                    ))
+                    .required(true),
+            )
+            .arg(
+                clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(clap::value_parser!(String))
+                    .required(true),
+            )
+            .arg(
+                clap::Arg::new("value")
+                    .long("value")
+                    .value_parser(clap::value_parser!(String))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
+                clap::Arg::new("json-body")
+                    .long("json-body")
+                    .value_name("JSON-FILE")
+                    .required(false)
+                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .help("Path to a file that contains the full json body."),
+            )
+            .arg(
+                clap::Arg::new("json-body-template")
+                    .long("json-body-template")
+                    .action(clap::ArgAction::SetTrue)
+                    .help("XXX"),
+            )
+            .about("Set an attribute of a given RFD")
     }
 
     pub fn cli_update_rfd_visibility() -> clap::Command {
@@ -855,6 +900,7 @@ impl<T: CliConfig> Cli<T> {
             CliCommand::GetRfds => self.execute_get_rfds(matches).await,
             CliCommand::GetRfd => self.execute_get_rfd(matches).await,
             CliCommand::GetRfdAttr => self.execute_get_rfd_attr(matches).await,
+            CliCommand::SetRfdAttr => self.execute_set_rfd_attr(matches).await,
             CliCommand::UpdateRfdVisibility => self.execute_update_rfd_visibility(matches).await,
             CliCommand::SearchRfds => self.execute_search_rfds(matches).await,
             CliCommand::GetSelf => self.execute_get_self(matches).await,
@@ -1744,7 +1790,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_get_rfd_attr(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.get_rfd_attr();
-        if let Some(value) = matches.get_one::<types::ViewRfdAttr>("attr") {
+        if let Some(value) = matches.get_one::<types::RfdAttrName>("attr") {
             request = request.attr(value.clone());
         }
 
@@ -1753,6 +1799,40 @@ impl<T: CliConfig> Cli<T> {
         }
 
         self.config.execute_get_rfd_attr(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
+    pub async fn execute_set_rfd_attr(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+        let mut request = self.client.set_rfd_attr();
+        if let Some(value) = matches.get_one::<types::RfdAttrName>("attr") {
+            request = request.attr(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<String>("number") {
+            request = request.number(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<String>("value") {
+            request = request.body_map(|body| body.value(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value = serde_json::from_str::<types::RfdAttrValue>(&body_txt).unwrap();
+            request = request.body(body_value);
+        }
+
+        self.config.execute_set_rfd_attr(matches, &mut request)?;
         let result = request.send().await;
         match result {
             Ok(r) => {
@@ -2148,6 +2228,14 @@ pub trait CliConfig {
         Ok(())
     }
 
+    fn execute_set_rfd_attr(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::SetRfdAttr,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     fn execute_update_rfd_visibility(
         &self,
         matches: &clap::ArgMatches,
@@ -2209,6 +2297,7 @@ pub enum CliCommand {
     GetRfds,
     GetRfd,
     GetRfdAttr,
+    SetRfdAttr,
     UpdateRfdVisibility,
     SearchRfds,
     GetSelf,
@@ -2251,6 +2340,7 @@ impl CliCommand {
             CliCommand::GetRfds,
             CliCommand::GetRfd,
             CliCommand::GetRfdAttr,
+            CliCommand::SetRfdAttr,
             CliCommand::UpdateRfdVisibility,
             CliCommand::SearchRfds,
             CliCommand::GetSelf,
