@@ -49,6 +49,7 @@ impl<'a> RfdAsciidoc<'a> {
                 let body = self.body();
 
                 self.content = (header.unwrap_or_default().to_string()
+                    + "\n"
                     + &new_attr
                     + title.as_str()
                     + body.unwrap_or_default())
@@ -139,7 +140,10 @@ impl<'a> RfdDocument for RfdAsciidoc<'a> {
     }
 
     fn header(&self) -> Option<&str> {
-        self.title_pattern().splitn(&self.content, 2).nth(0)
+        self.title_pattern()
+            .splitn(&self.content, 2)
+            .nth(0)
+            .map(|s| s.trim_end())
     }
 
     fn body(&self) -> Option<&str> {
@@ -264,7 +268,9 @@ dsfsdf
 sdf
 :discussion: nope"#;
         let mut rfd = RfdAsciidoc::new(content);
+        println!("Before\n{}", rfd.raw());
         rfd.set_attr("xrefstyle", "short");
+        println!("After\n{}", rfd.raw());
         assert_eq!(Some("short"), rfd.attr("xrefstyle"))
     }
 
