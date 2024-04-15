@@ -151,43 +151,7 @@ async fn get_rfd_attr_op(
             ContentFormat::Markdown => RfdContent::Markdown(RfdMarkdown::new(rfd.content)),
         };
 
-        match attr {
-            RfdAttrName::Discussion => content
-                .get_discussion()
-                .ok_or_else(|| {
-                    HttpError::for_not_found(
-                        None,
-                        "RFD does not have the requested attribute".to_string(),
-                    )
-                })
-                .map(|value| HttpResponseOk(RfdAttr::Discussion(value.to_string()))),
-            RfdAttrName::Labels => content
-                .get_labels()
-                .ok_or_else(|| {
-                    HttpError::for_not_found(
-                        None,
-                        "RFD does not have the requested attribute".to_string(),
-                    )
-                })
-                .map(|value| HttpResponseOk(RfdAttr::Labels(value.to_string()))),
-            RfdAttrName::State => content
-                .get_state()
-                .ok_or_else(|| {
-                    HttpError::for_not_found(
-                        None,
-                        "RFD does not have the requested attribute".to_string(),
-                    )
-                })
-                .and_then(|value| match value.try_into() {
-                    Ok(rfd_state) => Ok(HttpResponseOk(RfdAttr::State(rfd_state))),
-                    Err(err) => {
-                        tracing::error!(?err, "RFD has an invalid state stored in its contents");
-                        Err(HttpError::for_internal_error(
-                            "Set attribute placed an invalid state".to_string(),
-                        ))
-                    }
-                }),
-        }
+        extract_attr(&attr, &content)
     } else {
         Err(client_error(
             StatusCode::BAD_REQUEST,
@@ -263,48 +227,55 @@ async fn set_rfd_attr_op(
         ctx.update_rfd_content(caller, rfd_number, content.raw())
             .await?;
 
-        match attr {
-            RfdAttrName::Discussion => content
-                .get_discussion()
-                .ok_or_else(|| {
-                    HttpError::for_not_found(
-                        None,
-                        "RFD does not have the requested attribute".to_string(),
-                    )
-                })
-                .map(|value| HttpResponseOk(RfdAttr::Discussion(value.to_string()))),
-            RfdAttrName::Labels => content
-                .get_labels()
-                .ok_or_else(|| {
-                    HttpError::for_not_found(
-                        None,
-                        "RFD does not have the requested attribute".to_string(),
-                    )
-                })
-                .map(|value| HttpResponseOk(RfdAttr::Labels(value.to_string()))),
-            RfdAttrName::State => content
-                .get_state()
-                .ok_or_else(|| {
-                    HttpError::for_not_found(
-                        None,
-                        "RFD does not have the requested attribute".to_string(),
-                    )
-                })
-                .and_then(|value| match value.try_into() {
-                    Ok(rfd_state) => Ok(HttpResponseOk(RfdAttr::State(rfd_state))),
-                    Err(err) => {
-                        tracing::error!(?err, "RFD has an invalid state stored in its contents");
-                        Err(HttpError::for_internal_error(
-                            "Set attribute placed an invalid state".to_string(),
-                        ))
-                    }
-                }),
-        }
+        extract_attr(&attr, &content)
     } else {
         Err(client_error(
             StatusCode::BAD_REQUEST,
             "Malformed RFD number",
         ))
+    }
+}
+
+fn extract_attr(
+    attr: &RfdAttrName,
+    content: &RfdContent,
+) -> Result<HttpResponseOk<RfdAttr>, HttpError> {
+    match attr {
+        RfdAttrName::Discussion => content
+            .get_discussion()
+            .ok_or_else(|| {
+                HttpError::for_not_found(
+                    None,
+                    "RFD does not have the requested attribute".to_string(),
+                )
+            })
+            .map(|value| HttpResponseOk(RfdAttr::Discussion(value.to_string()))),
+        RfdAttrName::Labels => content
+            .get_labels()
+            .ok_or_else(|| {
+                HttpError::for_not_found(
+                    None,
+                    "RFD does not have the requested attribute".to_string(),
+                )
+            })
+            .map(|value| HttpResponseOk(RfdAttr::Labels(value.to_string()))),
+        RfdAttrName::State => content
+            .get_state()
+            .ok_or_else(|| {
+                HttpError::for_not_found(
+                    None,
+                    "RFD does not have the requested attribute".to_string(),
+                )
+            })
+            .and_then(|value| match value.try_into() {
+                Ok(rfd_state) => Ok(HttpResponseOk(RfdAttr::State(rfd_state))),
+                Err(err) => {
+                    tracing::error!(?err, "RFD has an invalid state stored in its contents");
+                    Err(HttpError::for_internal_error(
+                        "Set attribute placed an invalid state".to_string(),
+                    ))
+                }
+            }),
     }
 }
 
