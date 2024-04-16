@@ -541,7 +541,12 @@ impl GitHubRfdLocation {
     }
 
     #[instrument(skip(self, content))]
-    pub async fn upsert(&self, rfd_number: &RfdNumber, content: &[u8]) -> Result<(), GitHubError> {
+    pub async fn upsert(
+        &self,
+        rfd_number: &RfdNumber,
+        content: &[u8],
+        message: &str,
+    ) -> Result<(), GitHubError> {
         let readme_path = self.readme_path(&self.client, rfd_number).await;
         let FetchedRfdContent { decoded, sha, .. } = self
             .fetch_content(&self.client, &readme_path, &self.commit)
@@ -566,7 +571,7 @@ impl GitHubRfdLocation {
                 &self.repo,
                 &readme_path.trim_start_matches('/'),
                 &ReposCreateUpdateFileContentsRequest {
-                    message: "Automated update from rfd-api".to_string(),
+                    message: format!("{}\nCommitted via rfd-api", message),
                     sha,
                     branch: self.branch.clone(),
                     content: BASE64_STANDARD.encode(content),

@@ -52,6 +52,7 @@ impl<T: CliConfig> Cli<T> {
             CliCommand::DeleteOauthClientSecret => Self::cli_delete_oauth_client_secret(),
             CliCommand::GetRfds => Self::cli_get_rfds(),
             CliCommand::GetRfd => Self::cli_get_rfd(),
+            CliCommand::SetRfdContent => Self::cli_set_rfd_content(),
             CliCommand::GetRfdAttr => Self::cli_get_rfd_attr(),
             CliCommand::SetRfdAttr => Self::cli_set_rfd_attr(),
             CliCommand::UpdateRfdVisibility => Self::cli_update_rfd_visibility(),
@@ -699,9 +700,49 @@ impl<T: CliConfig> Cli<T> {
                 clap::Arg::new("number")
                     .long("number")
                     .value_parser(clap::value_parser!(String))
-                    .required(true),
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
             )
             .about("Get the latest representation of an RFD")
+    }
+
+    pub fn cli_set_rfd_content() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("content")
+                    .long("content")
+                    .value_parser(clap::value_parser!(String))
+                    .required_unless_present("json-body")
+                    .help("Full Asciidoc content to store for this RFD"),
+            )
+            .arg(
+                clap::Arg::new("message")
+                    .long("message")
+                    .value_parser(clap::value_parser!(String))
+                    .required(false)
+                    .help("Optional Git commit message to send with this update (recommended)"),
+            )
+            .arg(
+                clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(clap::value_parser!(String))
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
+            )
+            .arg(
+                clap::Arg::new("json-body")
+                    .long("json-body")
+                    .value_name("JSON-FILE")
+                    .required(false)
+                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .help("Path to a file that contains the full json body."),
+            )
+            .arg(
+                clap::Arg::new("json-body-template")
+                    .long("json-body-template")
+                    .action(clap::ArgAction::SetTrue)
+                    .help("XXX"),
+            )
     }
 
     pub fn cli_get_rfd_attr() -> clap::Command {
@@ -744,6 +785,13 @@ impl<T: CliConfig> Cli<T> {
                     .required(true),
             )
             .arg(
+                clap::Arg::new("message")
+                    .long("message")
+                    .value_parser(clap::value_parser!(String))
+                    .required(false)
+                    .help("Optional Git commit message to send with this update (recommended)"),
+            )
+            .arg(
                 clap::Arg::new("number")
                     .long("number")
                     .value_parser(clap::value_parser!(String))
@@ -753,7 +801,8 @@ impl<T: CliConfig> Cli<T> {
                 clap::Arg::new("value")
                     .long("value")
                     .value_parser(clap::value_parser!(String))
-                    .required_unless_present("json-body"),
+                    .required_unless_present("json-body")
+                    .help("Full value to set this attribute to in the existing RFD contents"),
             )
             .arg(
                 clap::Arg::new("json-body")
@@ -778,7 +827,8 @@ impl<T: CliConfig> Cli<T> {
                 clap::Arg::new("number")
                     .long("number")
                     .value_parser(clap::value_parser!(String))
-                    .required(true),
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
             )
             .arg(
                 clap::Arg::new("visibility")
@@ -899,6 +949,7 @@ impl<T: CliConfig> Cli<T> {
             }
             CliCommand::GetRfds => self.execute_get_rfds(matches).await,
             CliCommand::GetRfd => self.execute_get_rfd(matches).await,
+            CliCommand::SetRfdContent => self.execute_set_rfd_content(matches).await,
             CliCommand::GetRfdAttr => self.execute_get_rfd_attr(matches).await,
             CliCommand::SetRfdAttr => self.execute_set_rfd_attr(matches).await,
             CliCommand::UpdateRfdVisibility => self.execute_update_rfd_visibility(matches).await,
@@ -1788,6 +1839,40 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
+    pub async fn execute_set_rfd_content(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+        let mut request = self.client.set_rfd_content();
+        if let Some(value) = matches.get_one::<String>("content") {
+            request = request.body_map(|body| body.content(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<String>("message") {
+            request = request.body_map(|body| body.message(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<String>("number") {
+            request = request.number(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value = serde_json::from_str::<types::RfdUpdateBody>(&body_txt).unwrap();
+            request = request.body(body_value);
+        }
+
+        self.config.execute_set_rfd_content(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
     pub async fn execute_get_rfd_attr(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.get_rfd_attr();
         if let Some(value) = matches.get_one::<types::RfdAttrName>("attr") {
@@ -1816,6 +1901,10 @@ impl<T: CliConfig> Cli<T> {
         let mut request = self.client.set_rfd_attr();
         if let Some(value) = matches.get_one::<types::RfdAttrName>("attr") {
             request = request.attr(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<String>("message") {
+            request = request.body_map(|body| body.message(value.clone()))
         }
 
         if let Some(value) = matches.get_one::<String>("number") {
@@ -2220,6 +2309,14 @@ pub trait CliConfig {
         Ok(())
     }
 
+    fn execute_set_rfd_content(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::SetRfdContent,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     fn execute_get_rfd_attr(
         &self,
         matches: &clap::ArgMatches,
@@ -2296,6 +2393,7 @@ pub enum CliCommand {
     DeleteOauthClientSecret,
     GetRfds,
     GetRfd,
+    SetRfdContent,
     GetRfdAttr,
     SetRfdAttr,
     UpdateRfdVisibility,
@@ -2339,6 +2437,7 @@ impl CliCommand {
             CliCommand::DeleteOauthClientSecret,
             CliCommand::GetRfds,
             CliCommand::GetRfd,
+            CliCommand::SetRfdContent,
             CliCommand::GetRfdAttr,
             CliCommand::SetRfdAttr,
             CliCommand::UpdateRfdVisibility,

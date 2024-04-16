@@ -785,6 +785,7 @@ impl ApiContext {
         caller: &ApiCaller,
         rfd_number: i32,
         content: &str,
+        message: Option<&str>,
     ) -> ResourceResult<(), UpdateRfdContentError> {
         if caller.any(&[
             &ApiPermission::UpdateRfd(rfd_number),
@@ -831,10 +832,16 @@ impl ApiContext {
                         Err(ResourceError::DoesNotExist)
                     }
                     1 => {
+                        let message = format!(
+                            "{}\n\nSubmitted by {}",
+                            message.unwrap_or("RFD API update"),
+                            caller.id
+                        );
+
                         // Unwrap is checked by the location length
                         let location = github_locations.pop().unwrap();
                         location
-                            .upsert(&rfd_number.into(), content.as_bytes())
+                            .upsert(&rfd_number.into(), content.as_bytes(), &message)
                             .await
                             .map_err(UpdateRfdContentError::GitHub)
                             .to_resource_result()?;

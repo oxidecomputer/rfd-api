@@ -1226,6 +1226,7 @@
           {
             "in": "path",
             "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
             "required": true,
             "schema": {
               "type": "string"
@@ -1239,6 +1240,52 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FullRfd"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "operationId": "set_rfd_content",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RfdUpdateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "successfully enqueued operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Null",
+                  "type": "string",
+                  "enum": [
+                    null
+                  ]
                 }
               }
             }
@@ -1352,6 +1399,7 @@
           {
             "in": "path",
             "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
             "required": true,
             "schema": {
               "type": "string"
@@ -4505,7 +4553,13 @@
       "RfdAttrValue": {
         "type": "object",
         "properties": {
+          "message": {
+            "nullable": true,
+            "description": "Optional Git commit message to send with this update (recommended)",
+            "type": "string"
+          },
           "value": {
+            "description": "Full value to set this attribute to in the existing RFD contents",
             "type": "string"
           }
         },
@@ -4522,6 +4576,23 @@
           "ideation",
           "prediscussion",
           "published"
+        ]
+      },
+      "RfdUpdateBody": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "description": "Full Asciidoc content to store for this RFD",
+            "type": "string"
+          },
+          "message": {
+            "nullable": true,
+            "description": "Optional Git commit message to send with this update (recommended)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "content"
         ]
       },
       "RfdVisibility": {

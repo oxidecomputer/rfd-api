@@ -2,7 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use dropshot::{endpoint, HttpError, HttpResponseOk, Path, Query, RequestContext, TypedBody};
+use dropshot::{
+    endpoint, HttpError, HttpResponseAccepted, HttpResponseOk, Path, Query, RequestContext,
+    TypedBody,
+};
 use http::StatusCode;
 use rfd_data::{
     content::{RfdAsciidoc, RfdContent, RfdDocument, RfdMarkdown},
@@ -28,6 +31,7 @@ use crate::{
 
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct RfdPathParams {
+    /// The RFD number (examples: 1 or 123)
     number: String,
 }
 
@@ -84,6 +88,58 @@ async fn get_rfd_op(
 ) -> Result<HttpResponseOk<FullRfd>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
         Ok(HttpResponseOk(ctx.get_rfd(caller, rfd_number, None).await?))
+    } else {
+        Err(client_error(
+            StatusCode::BAD_REQUEST,
+            "Malformed RFD number",
+        ))
+    }
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct RfdUpdateBody {
+    /// Full Asciidoc content to store for this RFD
+    content: String,
+    /// Optional Git commit message to send with this update (recommended)
+    message: Option<String>,
+}
+
+#[trace_request]
+#[endpoint {
+    method = POST,
+    path = "/rfd/{number}",
+}]
+pub async fn set_rfd_content(
+    rqctx: RequestContext<ApiContext>,
+    path: Path<RfdPathParams>,
+    body: TypedBody<RfdUpdateBody>,
+) -> Result<HttpResponseAccepted<()>, HttpError> {
+    let ctx = rqctx.context();
+    let auth = ctx.authn_token(&rqctx).await?;
+    set_rfd_content_op(
+        ctx,
+        &ctx.get_caller(auth.as_ref()).await?,
+        path.into_inner().number,
+        body.into_inner(),
+    )
+    .await
+}
+
+async fn set_rfd_content_op(
+    ctx: &ApiContext,
+    caller: &ApiCaller,
+    number: String,
+    body: RfdUpdateBody,
+) -> Result<HttpResponseAccepted<()>, HttpError> {
+    if let Ok(rfd_number) = number.parse::<i32>() {
+        ctx.update_rfd_content(
+            caller,
+            rfd_number.into(),
+            &body.content,
+            body.message.as_deref(),
+        )
+        .await?;
+        Ok(HttpResponseAccepted(()))
     } else {
         Err(client_error(
             StatusCode::BAD_REQUEST,
@@ -162,7 +218,10 @@ async fn get_rfd_attr_op(
 
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 pub struct RfdAttrValue {
+    /// Full value to set this attribute to in the existing RFD contents
     value: String,
+    /// Optional Git commit message to send with this update (recommended)
+    message: Option<String>,
 }
 
 /// Set an attribute of a given RFD
@@ -185,7 +244,7 @@ pub async fn set_rfd_attr(
         &ctx.get_caller(auth.as_ref()).await?,
         path.number,
         path.attr,
-        body.into_inner().value,
+        &body.into_inner(),
     )
     .await
 }
@@ -196,7 +255,7 @@ async fn set_rfd_attr_op(
     caller: &ApiCaller,
     number: String,
     attr: RfdAttrName,
-    value: String,
+    body: &RfdAttrValue,
 ) -> Result<HttpResponseOk<RfdAttr>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
         // Get the latest revision
@@ -210,10 +269,10 @@ async fn set_rfd_attr_op(
 
         // Update the requested attribute
         match &attr {
-            RfdAttrName::Discussion => content.update_discussion(&value),
-            RfdAttrName::Labels => content.update_labels(&value),
+            RfdAttrName::Discussion => content.update_discussion(&body.value),
+            RfdAttrName::Labels => content.update_labels(&body.value),
             RfdAttrName::State => {
-                let state: RfdState = value.as_str().try_into().map_err(|err| {
+                let state: RfdState = body.value.as_str().try_into().map_err(|err| {
                     tracing::info!(?err, "Invalid state was supplied");
                     HttpError::for_bad_request(None, "Invalid RFD state".to_string())
                 })?;
@@ -224,7 +283,7 @@ async fn set_rfd_attr_op(
         // Persist the data back to GitHub. Note that we do not store this back to the database.
         // We rely on GitHub as the source of truth and revisions are required to tbe linked to
         // commits
-        ctx.update_rfd_content(caller, rfd_number, content.raw())
+        ctx.update_rfd_content(caller, rfd_number, content.raw(), body.message.as_deref())
             .await?;
 
         extract_attr(&attr, &content)
@@ -414,6 +473,7 @@ async fn search_rfds_op(
 
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct RfdVisibility {
+    ///
     pub visibility: Visibility,
 }
 

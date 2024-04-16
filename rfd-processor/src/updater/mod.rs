@@ -256,7 +256,11 @@ impl<'a> RfdUpdater<'a> {
             // Update the file in GitHub.
             update
                 .location
-                .upsert(&new.number, new.content().raw().as_bytes())
+                .upsert(
+                    &new.number,
+                    new.content().raw().as_bytes(),
+                    "RFD processor update",
+                )
                 .await
                 .map_err(RfdUpdaterError::GitHubStorage)?;
         }
