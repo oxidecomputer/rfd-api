@@ -81,6 +81,7 @@ pub enum ApiPermission {
     GetRfds(BTreeSet<i32>),
     GetRfdsAssigned,
     GetRfdsAll,
+    CreateRfd,
     UpdateRfd(i32),
     UpdateRfds(BTreeSet<i32>),
     UpdateRfdsAssigned,
@@ -174,6 +175,8 @@ impl ApiPermission {
             ApiPermission::GetRfds(_) => "rfd:content:r",
             ApiPermission::GetRfdsAssigned => "rfd:content:r",
             ApiPermission::GetRfdsAll => "rfd:content:r",
+
+            ApiPermission::CreateRfd => "rfd:content:w",
 
             ApiPermission::UpdateRfd(_) => "rfd:content:w",
             ApiPermission::UpdateRfds(_) => "rfd:content:w",
@@ -276,6 +279,7 @@ impl ApiPermission {
                     permissions.insert(ApiPermission::GetRfdsAll);
                 }
                 "rfd:content:w" => {
+                    permissions.insert(ApiPermission::CreateRfd);
                     permissions.insert(ApiPermission::UpdateRfdsAssigned);
                     permissions.insert(ApiPermission::UpdateRfdsAll);
                 }

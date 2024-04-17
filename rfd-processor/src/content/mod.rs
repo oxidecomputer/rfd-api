@@ -221,6 +221,10 @@ impl<'a> RfdDocument for RenderableRfd<'a> {
         RfdDocument::body(&self.content)
     }
 
+    fn update_body(&mut self, value: &str) {
+        RfdDocument::update_body(&mut self.content, value)
+    }
+
     /// Get a reference to the internal unparsed contents
     fn raw(&self) -> &str {
         RfdDocument::raw(&self.content)

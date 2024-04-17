@@ -30,8 +30,8 @@ use crate::{
         },
         mappers::{create_mapper, delete_mapper, get_mappers},
         rfd::{
-            get_rfd, get_rfd_attr, get_rfds, search_rfds, set_rfd_attr, set_rfd_content,
-            update_rfd_visibility,
+            get_rfd, get_rfd_attr, get_rfds, reserve_rfd, search_rfds, set_rfd_attr,
+            set_rfd_content, set_rfd_document, update_rfd_visibility,
         },
         webhook::github_webhook,
         well_known::{jwks_json, openid_configuration},
@@ -91,15 +91,19 @@ pub fn server(
     // RFDs
     api.register(get_rfds).expect("Failed to register endpoint");
     api.register(get_rfd).expect("Failed to register endpoint");
+    api.register(reserve_rfd)
+        .expect("Failed to register endpoint");
+    api.register(set_rfd_document)
+        .expect("Failed to register endpoint");
     api.register(set_rfd_content)
         .expect("Failed to register endpoint");
     api.register(get_rfd_attr)
         .expect("Failed to register endpoint");
     api.register(set_rfd_attr)
         .expect("Failed to register endpoint");
-    api.register(search_rfds)
-        .expect("Failed to register endpoint");
     api.register(update_rfd_visibility)
+        .expect("Failed to register endpoint");
+    api.register(search_rfds)
         .expect("Failed to register endpoint");
 
     // Webhooks

@@ -2591,6 +2591,7 @@ dependencies = [
  "rfd-model",
  "schemars",
  "serde",
+ "thiserror",
 ]
 
 [[package]]
@@ -2602,6 +2603,7 @@ dependencies = [
  "chrono",
  "http 0.2.11",
  "octorust",
+ "regex",
  "rfd-data",
  "thiserror",
  "tracing",

@@ -15,7 +15,11 @@ use octorust::{
     Client as GitHubClient,
 };
 use partial_struct::partial;
-use rfd_github::{GitHubError, GitHubRfdRepo};
+use rfd_data::{
+    content::{RfdContent, RfdDocument, RfdTemplate, TemplateError},
+    RfdNumber,
+};
+use rfd_github::{GitHubError, GitHubNewRfdNumber, GitHubRfdRepo};
 use rfd_model::{
     schema_ext::{ContentFormat, LoginAttemptState, Visibility},
     storage::{
@@ -55,7 +59,9 @@ use crate::{
         key::{RawApiKey, SignedApiKey},
         AuthError, AuthToken, Signer,
     },
-    config::{AsymmetricKey, GitHubAuthConfig, JwtConfig, SearchConfig, ServicesConfig},
+    config::{
+        AsymmetricKey, ContentConfig, GitHubAuthConfig, JwtConfig, SearchConfig, ServicesConfig,
+    },
     endpoints::login::{
         oauth::{
             ClientType, OAuthProvider, OAuthProviderError, OAuthProviderFn, OAuthProviderName,
@@ -128,6 +134,7 @@ pub struct ApiContext {
     pub secrets: SecretContext,
     pub oauth_providers: HashMap<OAuthProviderName, Box<dyn OAuthProviderFn>>,
     pub search: SearchContext,
+    pub content: ContentContext,
     pub github: GitHubRfdRepo,
 }
 
@@ -143,6 +150,10 @@ pub struct SecretContext {
 
 pub struct SearchContext {
     pub client: SearchClient,
+}
+
+pub struct ContentContext {
+    pub new_rfd_template: RfdTemplate,
 }
 
 pub struct RegisteredAccessToken {
@@ -194,6 +205,10 @@ pub enum UpdateRfdContentError {
     GitHub(#[from] GitHubError),
     #[error("Internal GitHub state does not currently allow for update. This commit appears as the head commit on multiple branches.")]
     InternalState,
+    #[error("Failed to construct new RFD template")]
+    InvalidTemplate(#[from] TemplateError),
+    #[error("Unable to perform action. Unable to find the default branch on GitHub.")]
+    NoDefaultBranch,
     #[error(transparent)]
     Storage(#[from] StoreError),
 }
@@ -239,6 +254,7 @@ impl ApiContext {
         jwt: JwtConfig,
         keys: Vec<AsymmetricKey>,
         search: SearchConfig,
+        content: ContentConfig,
         services: ServicesConfig,
     ) -> Result<Self, AppError> {
         let mut jwt_signers = vec![];
@@ -304,6 +320,13 @@ impl ApiContext {
             oauth_providers: HashMap::new(),
             search: SearchContext {
                 client: SearchClient::new(search.host, search.index, search.key),
+            },
+            content: ContentContext {
+                new_rfd_template: content
+                    .templates
+                    .get("new")
+                    .cloned()
+                    .ok_or(AppError::MissingNewRfdTemplate)?,
             },
             github: GitHubRfdRepo::new(
                 &match services.github.auth {
@@ -664,6 +687,73 @@ impl ApiContext {
         Ok(rfd_list)
     }
 
+    #[instrument(skip(self, caller), err(Debug))]
+    pub async fn create_rfd(
+        &self,
+        caller: &ApiCaller,
+        title: String,
+    ) -> ResourceResult<RfdNumber, UpdateRfdContentError> {
+        if caller.can(&ApiPermission::CreateRfd) {
+            tracing::info!("Reserving new RFD");
+
+            // We acknowledge that there are race conditions here, as there would be if an end user
+            // were to attempt to reserve an RFD number manually
+            let GitHubNewRfdNumber {
+                number: next_rfd_number,
+                commit,
+            } = self
+                .github
+                .next_rfd_number()
+                .await
+                .map_err(UpdateRfdContentError::GitHub)
+                .to_resource_result()?;
+
+            tracing::info!(?next_rfd_number, commit, "Creating new RFD branch");
+
+            // Branch off of the default branch with a new branch with the padded form of the RFD number
+            self.github
+                .create_branch(&next_rfd_number, &commit)
+                .await
+                .map_err(UpdateRfdContentError::GitHub)
+                .to_resource_result()?;
+
+            tracing::info!(
+                ?next_rfd_number,
+                ?commit,
+                "Created new branch for reserving RFD off of default branch"
+            );
+
+            let content = self
+                .content
+                .new_rfd_template
+                .clone()
+                .field("number".to_string(), next_rfd_number.to_string())
+                .field("title".to_string(), title)
+                .build()
+                .map_err(UpdateRfdContentError::InvalidTemplate)
+                .to_resource_result()?;
+
+            self.commit_rfd_document(
+                caller,
+                next_rfd_number.into(),
+                &content.render(),
+                Some("Reserving RFD number"),
+                &commit,
+                Some(&next_rfd_number.as_number_string()),
+            )
+            .await?;
+
+            tracing::info!(
+                ?next_rfd_number,
+                "Pushed placeholder RFD to reserved branch"
+            );
+
+            Ok(next_rfd_number)
+        } else {
+            Err(ResourceError::Restricted)
+        }
+    }
+
     #[instrument(skip(self, caller))]
     pub async fn get_rfd(
         &self,
@@ -779,17 +869,14 @@ impl ApiContext {
         }
     }
 
-    #[instrument(skip(self, caller, content))]
-    pub async fn update_rfd_content(
+    async fn get_latest_rfd_revision(
         &self,
         caller: &ApiCaller,
         rfd_number: i32,
-        content: &str,
-        message: Option<&str>,
-    ) -> ResourceResult<(), UpdateRfdContentError> {
+    ) -> ResourceResult<RfdRevision, StoreError> {
         if caller.any(&[
-            &ApiPermission::UpdateRfd(rfd_number),
-            &ApiPermission::UpdateRfdsAll,
+            &ApiPermission::GetRfd(rfd_number),
+            &ApiPermission::GetRfdsAll,
         ]) {
             let rfds = RfdStore::list(
                 &*self.storage,
@@ -797,8 +884,8 @@ impl ApiContext {
                 &ListPagination::default().limit(1),
             )
             .await
-            .map_err(UpdateRfdContentError::Storage)
             .to_resource_result()?;
+
             if let Some(rfd) = rfds.into_iter().nth(0) {
                 let revisions = RfdRevisionStore::list(
                     &*self.storage,
@@ -806,54 +893,135 @@ impl ApiContext {
                     &ListPagination::default().limit(1),
                 )
                 .await
-                .map_err(UpdateRfdContentError::Storage)
                 .to_resource_result()?;
 
-                let latest_revision = match revisions.into_iter().nth(0) {
+                match revisions.into_iter().nth(0) {
                     Some(revision) => Ok(revision),
                     None => Err(ResourceError::DoesNotExist),
-                }?;
-
-                let sha = latest_revision.commit_sha;
-                let mut github_locations = self
-                    .github
-                    .locations_for_commit(sha.clone())
-                    .await
-                    .map_err(UpdateRfdContentError::GitHub)
-                    .to_resource_result()?;
-
-                match github_locations.len() {
-                    0 => {
-                        tracing::warn!(
-                            sha,
-                            rfd_number,
-                            "Failed to find a GitHub location for most recent revision"
-                        );
-                        Err(ResourceError::DoesNotExist)
-                    }
-                    1 => {
-                        let message = format!(
-                            "{}\n\nSubmitted by {}",
-                            message.unwrap_or("RFD API update"),
-                            caller.id
-                        );
-
-                        // Unwrap is checked by the location length
-                        let location = github_locations.pop().unwrap();
-                        location
-                            .upsert(&rfd_number.into(), content.as_bytes(), &message)
-                            .await
-                            .map_err(UpdateRfdContentError::GitHub)
-                            .to_resource_result()?;
-                        Ok(())
-                    }
-                    _ => Err(UpdateRfdContentError::InternalState).to_resource_result(),
                 }
             } else {
                 Err(ResourceError::DoesNotExist)
             }
         } else {
             resource_restricted()
+        }
+    }
+
+    #[instrument(skip(self, caller, content))]
+    pub async fn update_rfd_content(
+        &self,
+        caller: &ApiCaller,
+        rfd_number: i32,
+        content: &str,
+        message: Option<&str>,
+        branch_name: Option<&str>,
+    ) -> ResourceResult<(), UpdateRfdContentError> {
+        if caller.any(&[
+            &ApiPermission::UpdateRfd(rfd_number),
+            &ApiPermission::UpdateRfdsAll,
+        ]) {
+            let latest_revision = self
+                .get_latest_rfd_revision(caller, rfd_number)
+                .await
+                .map_err(|err| err.inner_into())?;
+
+            let sha = latest_revision.commit_sha.clone();
+            let mut updated_content: RfdContent = latest_revision.into();
+            updated_content.update_body(content);
+
+            self.commit_rfd_document(
+                caller,
+                rfd_number,
+                updated_content.raw(),
+                message,
+                &sha,
+                branch_name,
+            )
+            .await
+        } else {
+            resource_restricted()
+        }
+    }
+
+    #[instrument(skip(self, caller, document))]
+    pub async fn update_rfd_document(
+        &self,
+        caller: &ApiCaller,
+        rfd_number: i32,
+        document: &str,
+        message: Option<&str>,
+        branch_name: Option<&str>,
+    ) -> ResourceResult<(), UpdateRfdContentError> {
+        if caller.any(&[
+            &ApiPermission::UpdateRfd(rfd_number),
+            &ApiPermission::UpdateRfdsAll,
+        ]) {
+            let latest_revision = self
+                .get_latest_rfd_revision(caller, rfd_number)
+                .await
+                .map_err(|err| err.inner_into())?;
+
+            let sha = latest_revision.commit_sha;
+            self.commit_rfd_document(caller, rfd_number, document, message, &sha, branch_name)
+                .await
+        } else {
+            resource_restricted()
+        }
+    }
+
+    #[instrument(skip(self, caller, document))]
+    async fn commit_rfd_document(
+        &self,
+        caller: &ApiCaller,
+        rfd_number: i32,
+        document: &str,
+        message: Option<&str>,
+        head: &str,
+        branch_name: Option<&str>,
+    ) -> ResourceResult<(), UpdateRfdContentError> {
+        let mut github_locations = self
+            .github
+            .locations_for_commit(head.to_string())
+            .await
+            .map_err(UpdateRfdContentError::GitHub)
+            .to_resource_result()?
+            .into_iter()
+            .filter(|location| {
+                branch_name
+                    .as_ref()
+                    .map(|branch_name| branch_name == &location.branch)
+                    .unwrap_or(true)
+            })
+            .collect::<Vec<_>>();
+
+        match github_locations.len() {
+            0 => {
+                tracing::warn!(
+                    head,
+                    rfd_number,
+                    "Failed to find a GitHub location for most recent revision"
+                );
+                Err(ResourceError::DoesNotExist)
+            }
+            1 => {
+                tracing::info!("Pushing RFD commit to GitHub");
+
+                let message = format!(
+                    "{}\n\nSubmitted by {}",
+                    message.unwrap_or("RFD API update"),
+                    caller.id
+                );
+
+                // Unwrap is checked by the location length
+                let location = github_locations.pop().unwrap();
+                location
+                    .upsert(&rfd_number.into(), document.as_bytes(), &message)
+                    .await
+                    .map_err(UpdateRfdContentError::GitHub)
+                    .to_resource_result()?;
+                Ok(())
+            }
+            _ => Err(UpdateRfdContentError::InternalState).to_resource_result(),
         }
     }
 
@@ -2074,7 +2242,9 @@ pub(crate) mod test_mocks {
     use w_api_permissions::Caller;
 
     use crate::{
-        config::{GitHubAuthConfig, GitHubConfig, JwtConfig, SearchConfig, ServicesConfig},
+        config::{
+            ContentConfig, GitHubAuthConfig, GitHubConfig, JwtConfig, SearchConfig, ServicesConfig,
+        },
         endpoints::login::oauth::{google::GoogleOAuthProvider, OAuthProviderName},
         permissions::ApiPermission,
         util::tests::mock_key,
@@ -2093,6 +2263,7 @@ pub(crate) mod test_mocks {
                 mock_key(),
             ],
             SearchConfig::default(),
+            ContentConfig::default(),
             ServicesConfig {
                 github: GitHubConfig {
                     owner: String::new(),

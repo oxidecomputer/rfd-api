@@ -136,9 +136,11 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::GetRfds => Some("list"),
         CliCommand::GetRfdAttr => Some("attr"),
         CliCommand::SearchRfds => Some("search"),
+        CliCommand::ReserveRfd => Some("reserve"),
 
         CliCommand::SetRfdAttr => Some("edit attr"),
         CliCommand::SetRfdContent => Some("edit content"),
+        CliCommand::SetRfdDocument => Some("edit document"),
         CliCommand::UpdateRfdVisibility => Some("edit visibility"),
 
         // User commands
@@ -369,7 +371,10 @@ impl ProgenitorCliConfig for Context {
                 .unwrap()
                 .output_search_results(reserialize(value)),
             "RfdAttr" => self.printer().unwrap().output_rfd_attr(reserialize(value)),
-            _ => eprintln!("Unhandled response"),
+            other => eprintln!(
+                "Unhandled response type: {}. Please report this as a bug.",
+                other
+            ),
         }
     }
 

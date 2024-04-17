@@ -119,6 +119,17 @@ impl<'a> RfdDocument for RfdMarkdown<'a> {
         self.title_pattern().splitn(&self.content, 2).nth(1)
     }
 
+    fn update_body(&mut self, value: &str) {
+        self.content = Cow::Owned(
+            self.title_pattern()
+                .splitn(&self.content, 2)
+                .nth(0)
+                .unwrap_or_default()
+                .to_string()
+                + value,
+        )
+    }
+
     /// Get a reference to the internal unparsed contents
     fn raw(&self) -> &str {
         &self.content

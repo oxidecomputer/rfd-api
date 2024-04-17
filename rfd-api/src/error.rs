@@ -23,6 +23,8 @@ pub enum AppError {
     GitHub(#[from] GitHubError),
     #[error("Invalid GitHub private key")]
     InvalidGitHubPrivateKey(#[from] rsa::pkcs1::Error),
+    #[error("A template for new RFDs must be defined")]
+    MissingNewRfdTemplate,
     #[error("At least one JWT signing key must be configured")]
     NoConfiguredJwtKeys,
     #[error("Failed to construct GitHub client")]

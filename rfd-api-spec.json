@@ -1216,6 +1216,38 @@
             "$ref": "#/components/responses/Error"
           }
         }
+      },
+      "post": {
+        "summary": "Create a new RFD",
+        "operationId": "reserve_rfd",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReserveRfdBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "successfully enqueued operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReserveRfdResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
       }
     },
     "/rfd/{number}": {
@@ -1253,7 +1285,7 @@
         }
       },
       "post": {
-        "operationId": "set_rfd_content",
+        "operationId": "set_rfd_document",
         "parameters": [
           {
             "in": "path",
@@ -1372,12 +1404,60 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "successful operation",
+          "202": {
+            "description": "successfully enqueued operation",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RfdAttr"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/rfd/{number}/content": {
+      "post": {
+        "operationId": "set_rfd_content",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RfdUpdateContentBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "successfully enqueued operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Null",
+                  "type": "string",
+                  "enum": [
+                    null
+                  ]
                 }
               }
             }
@@ -1714,6 +1794,7 @@
               "ManageMappersAll",
               "GetRfdsAssigned",
               "GetRfdsAll",
+              "CreateRfd",
               "UpdateRfdsAssigned",
               "UpdateRfdsAll",
               "ManageRfdsVisibilityAssigned",
@@ -2969,6 +3050,20 @@
                 "type": "string",
                 "enum": [
                   "GetRfdsAll"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "CreateRfd"
                 ]
               }
             },
@@ -4470,6 +4565,29 @@
         },
         "uniqueItems": true
       },
+      "ReserveRfdBody": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "ReserveRfdResponse": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "number"
+        ]
+      },
       "Rfd": {
         "type": "object",
         "properties": {
@@ -4581,8 +4699,25 @@
       "RfdUpdateBody": {
         "type": "object",
         "properties": {
+          "document": {
+            "description": "Full Asciidoc document to store for this RFD",
+            "type": "string"
+          },
+          "message": {
+            "nullable": true,
+            "description": "Optional Git commit message to send with this update (recommended)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "document"
+        ]
+      },
+      "RfdUpdateContentBody": {
+        "type": "object",
+        "properties": {
           "content": {
-            "description": "Full Asciidoc content to store for this RFD",
+            "description": "Asciidoc content to store for this RFD",
             "type": "string"
           },
           "message": {

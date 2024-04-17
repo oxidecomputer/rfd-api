@@ -108,6 +108,19 @@ pub mod response {
         InternalError(#[source] E),
     }
 
+    impl<E> ResourceError<E> {
+        pub fn inner_into<F>(self) -> ResourceError<F>
+        where
+            F: From<E>,
+        {
+            match self {
+                ResourceError::DoesNotExist => ResourceError::DoesNotExist,
+                ResourceError::Restricted => ResourceError::Restricted,
+                ResourceError::InternalError(inner) => ResourceError::InternalError(inner.into()),
+            }
+        }
+    }
+
     pub trait ToResourceResultOpt<T, E> {
         fn opt_to_resource_result(self) -> ResourceResult<T, E>;
     }

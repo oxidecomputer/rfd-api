@@ -15,9 +15,10 @@ use base64::{prelude::BASE64_STANDARD, DecodeError, Engine};
 use chrono::{DateTime, ParseError, Utc};
 use http::StatusCode;
 use octorust::{
-    types::{PullRequestSimple, ReposCreateUpdateFileContentsRequest},
+    types::{GitCreateRefRequest, PullRequestSimple, ReposCreateUpdateFileContentsRequest},
     Client, ClientError, Response,
 };
+use regex::Regex;
 use rfd_data::{
     content::{RfdAsciidoc, RfdContent, RfdMarkdown},
     RfdNumber,
@@ -84,6 +85,120 @@ impl GitHubRfdRepo {
             repo,
             path,
         })
+    }
+
+    #[instrument(skip(self))]
+    pub async fn next_rfd_number(&self) -> Result<GitHubNewRfdNumber, GitHubError> {
+        // We need to use two separate calls to try to determine the next available RFD number:
+        //  `1. The list of published RFD files that exist on the default branch
+        //   2. The list of open branches in the RFD repo that are not yet published
+
+        // Get the latest commit of the default branch
+        let default = self
+            .client
+            .repos()
+            .get_branch(&self.owner, &self.repo, &self.default_branch)
+            .await?
+            .body;
+
+        tracing::debug!(?default.commit.sha, "Fetched default branch");
+
+        // List all of the files that are in the RFD path of the repo
+        let rfd_files = match self
+            .client
+            .repos()
+            .get_content_vec_entries(&self.owner, &self.repo, &self.path, &default.commit.sha)
+            .await
+        {
+            Ok(entries) => entries.body,
+            Err(ClientError::HttpError { status, .. }) if status == StatusCode::NOT_FOUND => {
+                vec![]
+            }
+            Err(err) => return Err(err)?,
+        };
+
+        tracing::info!(count = ?rfd_files.len(), "Fetched repo files");
+
+        let mut rfd_numbers_on_default = vec![];
+
+        // Each RFD should exist at a path that looks like rfd/{number}/README.adoc
+        for entry in rfd_files {
+            let path_parts = entry.path.split('/').collect::<Vec<&str>>();
+
+            // There should always be exactly 2 parts "rfd" "{number}"
+            if path_parts.len() == 2 {
+                if let Ok(number) = path_parts[1].parse::<i32>() {
+                    rfd_numbers_on_default.push(number);
+                } else {
+                    tracing::warn!(?path_parts, "Failed to parse RFD number from file path");
+                }
+            } else {
+                tracing::warn!(?path_parts, path = ?entry.path, "Found RFD file with an invalid path");
+            }
+        }
+
+        let max_rfd_number_on_default = rfd_numbers_on_default.into_iter().max().unwrap_or(0);
+
+        let branches = self.branches().await?;
+        let max_rfd_number_on_branch = branches
+            .iter()
+            .filter_map(|location| location.branch.parse::<i32>().ok())
+            .max()
+            .unwrap_or(0);
+
+        let next_rfd_number: RfdNumber =
+            (max_rfd_number_on_default.max(max_rfd_number_on_branch) + 1).into();
+
+        Ok(GitHubNewRfdNumber {
+            number: next_rfd_number,
+            commit: default.commit.sha,
+        })
+    }
+
+    pub async fn branches(&self) -> Result<Vec<GitHubRfdLocation>, GitHubError> {
+        let branch_pattern = Regex::new(r#"^\d{4}$"#).unwrap();
+        let responses = self
+            .client
+            .repos()
+            .list_all_branches(&self.owner, &self.repo, false)
+            .await?;
+        Ok(responses
+            .body
+            .into_iter()
+            .filter_map(|branch| {
+                if branch_pattern.is_match(&branch.name) || branch.name == self.default_branch {
+                    Some(self.location(branch.name, branch.commit.sha))
+                } else {
+                    None
+                }
+            })
+            .collect())
+    }
+
+    #[instrument(skip(self), fields(owner = self.owner, repo = self.repo))]
+    pub async fn create_branch(
+        &self,
+        number: &RfdNumber,
+        commit: &str,
+    ) -> Result<GitHubRfdLocation, GitHubError> {
+        let ref_ = format!("refs/heads/{}", number.as_number_string());
+
+        tracing::debug!(ref_, "Creating GitHub ref");
+
+        self.client
+            .git()
+            .create_ref(
+                &self.owner,
+                &self.repo,
+                &GitCreateRefRequest {
+                    key: String::new(),
+                    ref_,
+                    sha: commit.to_string(),
+                },
+            )
+            .await?;
+
+        Ok(self.location(number.as_number_string(), commit.to_string()))
     }
 
     pub fn location(&self, branch: String, commit: String) -> GitHubRfdLocation {
@@ -313,23 +428,38 @@ impl Debug for GitHubRfdLocation {
 }
 
 impl GitHubRfdLocation {
+    pub fn is_default(&self) -> bool {
+        self.branch == self.default_branch
+    }
+
     pub async fn readme_path(&self, client: &Client, rfd_number: &RfdNumber) -> String {
         // Use the supplied RFD number to determine the location in the RFD repo to read from
         let dir = rfd_number.repo_path();
 
         // Get the contents of the file
         let mut path = format!("{}/README.adoc", dir);
-        let response = self.fetch_content(&client, &path, &self.commit).await;
+        match self.fetch_content(&client, &path, &self.commit).await {
+            Ok(_) => path,
+            Err(err) => {
+                tracing::trace!(
+                    ?err,
+                    "Failed to find asciidoc README, falling back to markdown"
+                );
 
-        if let Err(err) = response {
-            tracing::trace!(
-                ?err,
-                "Failed to find asciidoc README, falling back to markdown"
-            );
-            path = format!("{}/README.md", dir);
+                path = format!("{}/README.md", dir);
+                match self.fetch_content(&client, &path, &self.commit).await {
+                    Ok(_) => path,
+                    Err(err) => {
+                        tracing::trace!(
+                            ?err,
+                            "Failed to find markdown README. With no README detected, defaulting to asciidoc"
+                        );
+
+                        format!("{}/README.adoc", dir)
+                    }
+                }
+            }
         }
-
-        path
     }
 
     /// Checks if this branch actually exists in the remote system (GitHub)
@@ -548,9 +678,24 @@ impl GitHubRfdLocation {
         message: &str,
     ) -> Result<(), GitHubError> {
         let readme_path = self.readme_path(&self.client, rfd_number).await;
-        let FetchedRfdContent { decoded, sha, .. } = self
+        // let FetchedRfdContent { decoded, .. } = self
+        //     .fetch_content(&self.client, &readme_path, &self.commit)
+        //     .await?;
+
+        let decoded = match self
             .fetch_content(&self.client, &readme_path, &self.commit)
-            .await?;
+            .await
+        {
+            Ok(FetchedRfdContent { decoded, .. }) => decoded,
+            Err(err) => match err {
+                GitHubError::ClientError(ClientError::HttpError { status, .. })
+                    if status == StatusCode::NOT_FOUND =>
+                {
+                    vec![]
+                }
+                other => return Err(other),
+            },
+        };
 
         // We can short circuit if the new and old content are the same
         if content == &decoded {
@@ -572,7 +717,7 @@ impl GitHubRfdLocation {
                 &readme_path.trim_start_matches('/'),
                 &ReposCreateUpdateFileContentsRequest {
                     message: format!("{}\nCommitted via rfd-api", message),
-                    sha,
+                    sha: self.commit.clone(),
                     branch: self.branch.clone(),
                     content: BASE64_STANDARD.encode(content),
                     committer: Default::default(),
@@ -612,6 +757,12 @@ pub struct GitHubRfdUpdate {
     pub number: RfdNumber,
     pub location: GitHubRfdLocation,
     pub committed_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone)]
+pub struct GitHubNewRfdNumber {
+    pub number: RfdNumber,
+    pub commit: String,
 }
 
 // TODO: Expand this
