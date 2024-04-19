@@ -10203,6 +10203,8 @@ impl Client {
         builder::GetRfd::new(self)
     }
 
+    /// Replace the full document of for a RFD
+    ///
     /// Sends a `POST` request to `/rfd/{number}`
     ///
     /// Arguments:
@@ -10250,6 +10252,8 @@ impl Client {
         builder::SetRfdAttr::new(self)
     }
 
+    /// Replace the contents of an RFD
+    ///
     /// Sends a `POST` request to `/rfd/{number}/content`
     ///
     /// Arguments:

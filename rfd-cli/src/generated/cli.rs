@@ -778,6 +778,7 @@ impl<T: CliConfig> Cli<T> {
                     .action(clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
+            .about("Replace the full document of for a RFD")
     }
 
     pub fn cli_get_rfd_attr() -> clap::Command {
@@ -893,6 +894,7 @@ impl<T: CliConfig> Cli<T> {
                     .action(clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
+            .about("Replace the contents of an RFD")
     }
 
     pub fn cli_update_rfd_visibility() -> clap::Command {

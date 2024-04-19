@@ -150,6 +150,7 @@ pub struct RfdUpdateBody {
     message: Option<String>,
 }
 
+/// Replace the full document of for a RFD
 #[trace_request]
 #[endpoint {
     method = POST,
@@ -203,6 +204,7 @@ pub struct RfdUpdateContentBody {
     message: Option<String>,
 }
 
+/// Replace the contents of an RFD
 #[trace_request]
 #[endpoint {
     method = POST,
