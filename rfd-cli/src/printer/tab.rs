@@ -9,8 +9,8 @@ use rfd_sdk::types::{
     self, AccessGroupForApiPermissionResponse, ApiKeyResponse, ApiPermission,
     ApiUserForApiPermissionResponse, Error, FullRfd, FullRfdPdfEntry, GetUserResponse,
     InitialApiKeyResponse, InitialOAuthClientSecretResponse, ListRfd, Mapper, OAuthClient,
-    OAuthClientRedirectUri, OAuthClientSecret, PermissionsForApiPermissionResponse, RfdAttr,
-    SearchResultHit, SearchResults, Visibility,
+    OAuthClientRedirectUri, OAuthClientSecret, PermissionsForApiPermissionResponse,
+    ReserveRfdResponse, RfdAttr, SearchResultHit, SearchResults, Visibility,
 };
 use std::{collections::HashMap, fmt::Display, fs::File, io::Write, process::Command};
 use tabwriter::TabWriter;
@@ -139,6 +139,10 @@ impl CliOutput for RfdTabPrinter {
 
     fn output_search_results(&self, value: types::SearchResults) {
         self.print_cli_output(&value, Some("results".to_string()));
+    }
+
+    fn output_reserved_rfd(&self, value: types::ReserveRfdResponse) {
+        self.print_cli_output(&value, None);
     }
 
     fn output_error<T>(&self, value: &progenitor_client::Error<T>)
@@ -557,6 +561,12 @@ impl TabDisplay for SearchResultHit {
             "content",
             &format!("{}...", get_slice_of_string(&self.content, 255)),
         );
+    }
+}
+
+impl TabDisplay for ReserveRfdResponse {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "number", &self.number);
     }
 }
 

@@ -4842,7 +4842,15 @@ pub mod types {
     ///    "title"
     ///  ],
     ///  "properties": {
+    ///    "content": {
+    ///      "description": "Optional contents of the RFD",
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
     ///    "title": {
+    ///      "description": "Title of the RFD",
     ///      "type": "string"
     ///    }
 
@@ -4854,6 +4862,10 @@ pub mod types {
     /// </details>
     #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
     pub struct ReserveRfdBody {
+        /// Optional contents of the RFD
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub content: Option<String>,
+        /// Title of the RFD
         pub title: String,
     }
 
@@ -8985,18 +8997,30 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct ReserveRfdBody {
+            content: Result<Option<String>, String>,
             title: Result<String, String>,
         }
 
         impl Default for ReserveRfdBody {
             fn default() -> Self {
                 Self {
+                    content: Ok(Default::default()),
                     title: Err("no value supplied for title".to_string()),
                 }
             }
         }
 
         impl ReserveRfdBody {
+            pub fn content<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.content = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for content: {}", e));
+                self
+            }
             pub fn title<T>(mut self, value: T) -> Self
             where
                 T: std::convert::TryInto<String>,
@@ -9013,6 +9037,7 @@ pub mod types {
             type Error = super::error::ConversionError;
             fn try_from(value: ReserveRfdBody) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
+                    content: value.content?,
                     title: value.title?,
                 })
             }
@@ -9021,6 +9046,7 @@ pub mod types {
         impl From<super::ReserveRfdBody> for ReserveRfdBody {
             fn from(value: super::ReserveRfdBody) -> Self {
                 Self {
+                    content: Ok(value.content),
                     title: Ok(value.title),
                 }
             }

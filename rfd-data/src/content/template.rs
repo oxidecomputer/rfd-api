@@ -11,7 +11,7 @@ pub enum TemplateError {
     },
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize, Default)]
 pub struct RfdTemplate {
     template: String,
     #[serde(default)]

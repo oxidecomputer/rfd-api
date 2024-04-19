@@ -153,7 +153,8 @@ pub struct SearchContext {
 }
 
 pub struct ContentContext {
-    pub new_rfd_template: RfdTemplate,
+    pub placeholder_template: RfdTemplate,
+    pub new_template: RfdTemplate,
 }
 
 pub struct RegisteredAccessToken {
@@ -322,7 +323,12 @@ impl ApiContext {
                 client: SearchClient::new(search.host, search.index, search.key),
             },
             content: ContentContext {
-                new_rfd_template: content
+                placeholder_template: content
+                    .templates
+                    .get("placeholder")
+                    .cloned()
+                    .ok_or(AppError::MissingNewRfdTemplate)?,
+                new_template: content
                     .templates
                     .get("new")
                     .cloned()
@@ -692,6 +698,7 @@ impl ApiContext {
         &self,
         caller: &ApiCaller,
         title: String,
+        content: Option<String>,
     ) -> ResourceResult<RfdNumber, UpdateRfdContentError> {
         if caller.can(&ApiPermission::CreateRfd) {
             tracing::info!("Reserving new RFD");
@@ -708,6 +715,25 @@ impl ApiContext {
                 .map_err(UpdateRfdContentError::GitHub)
                 .to_resource_result()?;
 
+            let content = match content {
+                Some(content) => self
+                    .content
+                    .new_template
+                    .clone()
+                    .field("number".to_string(), next_rfd_number.to_string())
+                    .field("title".to_string(), title)
+                    .field("body".to_string(), content),
+                None => self
+                    .content
+                    .placeholder_template
+                    .clone()
+                    .field("number".to_string(), next_rfd_number.to_string())
+                    .field("title".to_string(), title),
+            }
+            .build()
+            .map_err(UpdateRfdContentError::InvalidTemplate)
+            .to_resource_result()?;
+
             tracing::info!(?next_rfd_number, commit, "Creating new RFD branch");
 
             // Branch off of the default branch with a new branch with the padded form of the RFD number
@@ -722,16 +748,6 @@ impl ApiContext {
                 ?commit,
                 "Created new branch for reserving RFD off of default branch"
             );
-
-            let content = self
-                .content
-                .new_rfd_template
-                .clone()
-                .field("number".to_string(), next_rfd_number.to_string())
-                .field("title".to_string(), title)
-                .build()
-                .map_err(UpdateRfdContentError::InvalidTemplate)
-                .to_resource_result()?;
 
             self.commit_rfd_document(
                 caller,
@@ -2224,6 +2240,7 @@ mod tests {
 #[cfg(test)]
 pub(crate) mod test_mocks {
     use async_trait::async_trait;
+    use rfd_data::content::RfdTemplate;
     use rfd_model::{
         storage::{
             AccessGroupStore, AccessTokenStore, ApiKeyStore, ApiUserProviderStore, ApiUserStore,
@@ -2254,6 +2271,11 @@ pub(crate) mod test_mocks {
 
     // Construct a mock context that can be used in tests
     pub async fn mock_context(storage: MockStorage) -> ApiContext {
+        let mut content = ContentConfig::default();
+        content
+            .templates
+            .insert("new".to_string(), RfdTemplate::default());
+
         let mut ctx = ApiContext::new(
             "".to_string(),
             Arc::new(storage),
@@ -2263,7 +2285,7 @@ pub(crate) mod test_mocks {
                 mock_key(),
             ],
             SearchConfig::default(),
-            ContentConfig::default(),
+            content,
             ServicesConfig {
                 github: GitHubConfig {
                     owner: String::new(),

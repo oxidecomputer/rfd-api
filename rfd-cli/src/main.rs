@@ -371,6 +371,10 @@ impl ProgenitorCliConfig for Context {
                 .unwrap()
                 .output_search_results(reserialize(value)),
             "RfdAttr" => self.printer().unwrap().output_rfd_attr(reserialize(value)),
+            "ReserveRfdResponse" => self
+                .printer()
+                .unwrap()
+                .output_reserved_rfd(reserialize(value)),
             other => eprintln!(
                 "Unhandled response type: {}. Please report this as a bug.",
                 other

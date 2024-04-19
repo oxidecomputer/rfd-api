@@ -699,10 +699,18 @@ impl<T: CliConfig> Cli<T> {
     pub fn cli_reserve_rfd() -> clap::Command {
         clap::Command::new("")
             .arg(
+                clap::Arg::new("content")
+                    .long("content")
+                    .value_parser(clap::value_parser!(String))
+                    .required(false)
+                    .help("Optional contents of the RFD"),
+            )
+            .arg(
                 clap::Arg::new("title")
                     .long("title")
                     .value_parser(clap::value_parser!(String))
-                    .required_unless_present("json-body"),
+                    .required_unless_present("json-body")
+                    .help("Title of the RFD"),
             )
             .arg(
                 clap::Arg::new("json-body")
@@ -1889,6 +1897,10 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_reserve_rfd(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.reserve_rfd();
+        if let Some(value) = matches.get_one::<String>("content") {
+            request = request.body_map(|body| body.content(value.clone()))
+        }
+
         if let Some(value) = matches.get_one::<String>("title") {
             request = request.body_map(|body| body.title(value.clone()))
         }

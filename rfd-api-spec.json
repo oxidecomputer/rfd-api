@@ -4568,7 +4568,13 @@
       "ReserveRfdBody": {
         "type": "object",
         "properties": {
+          "content": {
+            "nullable": true,
+            "description": "Optional contents of the RFD",
+            "type": "string"
+          },
           "title": {
+            "description": "Title of the RFD",
             "type": "string"
           }
         },

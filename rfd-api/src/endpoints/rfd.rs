@@ -55,7 +55,10 @@ async fn get_rfds_op(
 
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct ReserveRfdBody {
+    /// Title of the RFD
     pub title: String,
+    /// Optional contents of the RFD
+    pub content: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
@@ -90,7 +93,7 @@ async fn reserve_rfd_op(
     caller: &ApiCaller,
     body: ReserveRfdBody,
 ) -> Result<HttpResponseAccepted<ReserveRfdResponse>, HttpError> {
-    let number = ctx.create_rfd(caller, body.title).await?;
+    let number = ctx.create_rfd(caller, body.title, body.content).await?;
     Ok(HttpResponseAccepted(ReserveRfdResponse {
         number: number.into(),
     }))
