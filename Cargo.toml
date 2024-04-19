@@ -41,7 +41,7 @@ http = "0.2.11"
 hyper = "0.14.28"
 hyper-rustls = "0.24.2"
 itertools = "0.12.1"
-jsonwebtoken = "9.2.0"
+jsonwebtoken = "9.3.0"
 meilisearch-sdk = { version = "0.24.3", default-features = false, features = ["reqwest-rustls"] }
 md-5 = "0.10.6"
 mime_guess = "2.0.4"
