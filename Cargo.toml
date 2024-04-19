@@ -49,7 +49,7 @@ mockall = "0.12.1"
 newline-converter = "0.3.0"
 oauth2 = "4.4.2"
 octorust = { git = "https://github.com/oxidecomputer/third-party-api-clients", branch = "handle-cache-miss" }
-owo-colors = "3.5.0"
+owo-colors = "4.0.0"
 partial-struct = { git = "https://github.com/oxidecomputer/partial-struct" }
 progenitor = { git = "https://github.com/oxidecomputer/progenitor" }
 progenitor-client = { git = "https://github.com/oxidecomputer/progenitor" }
