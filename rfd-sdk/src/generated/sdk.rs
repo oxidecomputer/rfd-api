@@ -10203,7 +10203,7 @@ impl Client {
         builder::GetRfd::new(self)
     }
 
-    /// Replace the full document of for a RFD
+    /// Replace the full document of a RFD
     ///
     /// Sends a `POST` request to `/rfd/{number}`
     ///

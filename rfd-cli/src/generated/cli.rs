@@ -780,7 +780,7 @@ impl<T: CliConfig> Cli<T> {
                     .action(clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
-            .about("Replace the full document of for a RFD")
+            .about("Replace the full document of a RFD")
     }
 
     pub fn cli_get_rfd_attr() -> clap::Command {

@@ -1285,7 +1285,7 @@
         }
       },
       "post": {
-        "summary": "Replace the full document of for a RFD",
+        "summary": "Replace the full document of a RFD",
         "operationId": "set_rfd_document",
         "parameters": [
           {
