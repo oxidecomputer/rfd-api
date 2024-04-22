@@ -10187,7 +10187,7 @@ impl Client {
         builder::ReserveRfd::new(self)
     }
 
-    /// Get the latest representation of an RFD
+    /// Get the latest representation of a RFD
     ///
     /// Sends a `GET` request to `/rfd/{number}`
     ///
@@ -10221,7 +10221,7 @@ impl Client {
         builder::SetRfdDocument::new(self)
     }
 
-    /// Get an attribute of a given RFD
+    /// Get an attribute of a RFD
     ///
     /// Sends a `GET` request to `/rfd/{number}/attr/{attr}`
     ///
@@ -10236,9 +10236,9 @@ impl Client {
         builder::GetRfdAttr::new(self)
     }
 
-    /// Set an attribute of a given RFD
+    /// Set an attribute of a RFD
     ///
-    /// Sends a `PUT` request to `/rfd/{number}/attr/{attr}`
+    /// Sends a `POST` request to `/rfd/{number}/attr/{attr}`
     ///
     /// ```ignore
     /// let response = client.set_rfd_attr()
@@ -10252,7 +10252,7 @@ impl Client {
         builder::SetRfdAttr::new(self)
     }
 
-    /// Replace the contents of an RFD
+    /// Replace the contents of a RFD
     ///
     /// Sends a `POST` request to `/rfd/{number}/content`
     ///
@@ -10270,7 +10270,39 @@ impl Client {
         builder::SetRfdContent::new(self)
     }
 
-    /// Modify the visibility of an RFD
+    /// Open a RFD for discussion
+    ///
+    /// Sends a `POST` request to `/rfd/{number}/discuss`
+    ///
+    /// Arguments:
+    /// - `number`: The RFD number (examples: 1 or 123)
+    /// ```ignore
+    /// let response = client.discuss_rfd()
+    ///    .number(number)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn discuss_rfd(&self) -> builder::DiscussRfd {
+        builder::DiscussRfd::new(self)
+    }
+
+    /// Publish a RFD
+    ///
+    /// Sends a `POST` request to `/rfd/{number}/publish`
+    ///
+    /// Arguments:
+    /// - `number`: The RFD number (examples: 1 or 123)
+    /// ```ignore
+    /// let response = client.publish_rfd()
+    ///    .number(number)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn publish_rfd(&self) -> builder::PublishRfd {
+        builder::PublishRfd::new(self)
+    }
+
+    /// Modify the visibility of a RFD
     ///
     /// Sends a `POST` request to `/rfd/{number}/visibility`
     ///
@@ -13061,7 +13093,7 @@ pub mod builder {
             self
         }
 
-        /// Sends a `PUT` request to `/rfd/{number}/attr/{attr}`
+        /// Sends a `POST` request to `/rfd/{number}/attr/{attr}`
         pub async fn send(self) -> Result<ResponseValue<types::RfdAttr>, Error<types::Error>> {
             let Self {
                 client,
@@ -13083,7 +13115,7 @@ pub mod builder {
             #[allow(unused_mut)]
             let mut request = client
                 .client
-                .put(url)
+                .post(url)
                 .header(
                     reqwest::header::ACCEPT,
                     reqwest::header::HeaderValue::from_static("application/json"),
@@ -13183,6 +13215,126 @@ pub mod builder {
                     reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                202u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::discuss_rfd`]
+    ///
+    /// [`Client::discuss_rfd`]: super::Client::discuss_rfd
+    #[derive(Debug, Clone)]
+    pub struct DiscussRfd<'a> {
+        client: &'a super::Client,
+        number: Result<String, String>,
+    }
+
+    impl<'a> DiscussRfd<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                number: Err("number was not initialized".to_string()),
+            }
+        }
+
+        pub fn number<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<String>,
+        {
+            self.number = value
+                .try_into()
+                .map_err(|_| "conversion to `String` for number failed".to_string());
+            self
+        }
+
+        /// Sends a `POST` request to `/rfd/{number}/discuss`
+        pub async fn send(self) -> Result<ResponseValue<types::RfdAttr>, Error<types::Error>> {
+            let Self { client, number } = self;
+            let number = number.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/rfd/{}/discuss",
+                client.baseurl,
+                encode_path(&number.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                202u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::publish_rfd`]
+    ///
+    /// [`Client::publish_rfd`]: super::Client::publish_rfd
+    #[derive(Debug, Clone)]
+    pub struct PublishRfd<'a> {
+        client: &'a super::Client,
+        number: Result<String, String>,
+    }
+
+    impl<'a> PublishRfd<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                number: Err("number was not initialized".to_string()),
+            }
+        }
+
+        pub fn number<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<String>,
+        {
+            self.number = value
+                .try_into()
+                .map_err(|_| "conversion to `String` for number failed".to_string());
+            self
+        }
+
+        /// Sends a `POST` request to `/rfd/{number}/publish`
+        pub async fn send(self) -> Result<ResponseValue<types::RfdAttr>, Error<types::Error>> {
+            let Self { client, number } = self;
+            let number = number.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/rfd/{}/publish",
+                client.baseurl,
+                encode_path(&number.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
                 .build()?;
             let result = client.client.execute(request).await;
             let response = result?;

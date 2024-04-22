@@ -64,10 +64,10 @@ trait Validate {
 
 impl Validate for GitHubRfdUpdate {
     fn is_valid(&self) -> bool {
-        // An RFD update is only valid in one of two cases:
+        // a RFD update is only valid in one of two cases:
         //  `1. The update is occurring on the default branch. In this case it does not matter what
         //      RFD is being updated, the update is always considered valid
-        //   2. The update is occurring on an RFD branch with a name of the pattern \d\d\d\d . In
+        //   2. The update is occurring on a RFD branch with a name of the pattern \d\d\d\d . In
         //      this case, the update is only valid if the number of the RFD being updated matches
         //      the branch the update is occurring on.
         self.location.branch == self.location.default_branch

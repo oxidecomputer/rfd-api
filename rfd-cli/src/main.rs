@@ -142,6 +142,8 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::SetRfdContent => Some("edit content"),
         CliCommand::SetRfdDocument => Some("edit document"),
         CliCommand::UpdateRfdVisibility => Some("edit visibility"),
+        CliCommand::PublishRfd => Some("edit publish"),
+        CliCommand::DiscussRfd => Some("edit discuss"),
 
         // User commands
         CliCommand::CreateApiUser => Some("sys user create"),

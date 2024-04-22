@@ -704,7 +704,7 @@ impl ApiContext {
             tracing::info!("Reserving new RFD");
 
             // We acknowledge that there are race conditions here, as there would be if an end user
-            // were to attempt to reserve an RFD number manually
+            // were to attempt to reserve a RFD number manually
             let GitHubNewRfdNumber {
                 number: next_rfd_number,
                 commit,
@@ -787,7 +787,7 @@ impl ApiContext {
             .await?;
 
         if let Some(rfd) = rfds.into_iter().nth(0) {
-            // If list_rfds returned an RFD, then the caller is allowed to access that RFD and we
+            // If list_rfds returned a RFD, then the caller is allowed to access that RFD and we
             // can return the full RFD revision. This is sub-optimal as we are required to execute
             // the revision lookup twice
             let latest_revision = RfdRevisionStore::list(

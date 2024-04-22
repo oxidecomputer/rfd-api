@@ -1252,7 +1252,7 @@
     },
     "/rfd/{number}": {
       "get": {
-        "summary": "Get the latest representation of an RFD",
+        "summary": "Get the latest representation of a RFD",
         "operationId": "get_rfd",
         "parameters": [
           {
@@ -1334,7 +1334,7 @@
     },
     "/rfd/{number}/attr/{attr}": {
       "get": {
-        "summary": "Get an attribute of a given RFD",
+        "summary": "Get an attribute of a RFD",
         "operationId": "get_rfd_attr",
         "parameters": [
           {
@@ -1373,8 +1373,8 @@
           }
         }
       },
-      "put": {
-        "summary": "Set an attribute of a given RFD",
+      "post": {
+        "summary": "Set an attribute of a RFD",
         "operationId": "set_rfd_attr",
         "parameters": [
           {
@@ -1426,7 +1426,7 @@
     },
     "/rfd/{number}/content": {
       "post": {
-        "summary": "Replace the contents of an RFD",
+        "summary": "Replace the contents of a RFD",
         "operationId": "set_rfd_content",
         "parameters": [
           {
@@ -1473,9 +1473,79 @@
         }
       }
     },
+    "/rfd/{number}/discuss": {
+      "post": {
+        "summary": "Open a RFD for discussion",
+        "operationId": "discuss_rfd",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "successfully enqueued operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RfdAttr"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/rfd/{number}/publish": {
+      "post": {
+        "summary": "Publish a RFD",
+        "operationId": "publish_rfd",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "successfully enqueued operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RfdAttr"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
     "/rfd/{number}/visibility": {
       "post": {
-        "summary": "Modify the visibility of an RFD",
+        "summary": "Modify the visibility of a RFD",
         "operationId": "update_rfd_visibility",
         "parameters": [
           {

@@ -57,6 +57,8 @@ impl<T: CliConfig> Cli<T> {
             CliCommand::GetRfdAttr => Self::cli_get_rfd_attr(),
             CliCommand::SetRfdAttr => Self::cli_set_rfd_attr(),
             CliCommand::SetRfdContent => Self::cli_set_rfd_content(),
+            CliCommand::DiscussRfd => Self::cli_discuss_rfd(),
+            CliCommand::PublishRfd => Self::cli_publish_rfd(),
             CliCommand::UpdateRfdVisibility => Self::cli_update_rfd_visibility(),
             CliCommand::SearchRfds => Self::cli_search_rfds(),
             CliCommand::GetSelf => Self::cli_get_self(),
@@ -738,7 +740,7 @@ impl<T: CliConfig> Cli<T> {
                     .required(true)
                     .help("The RFD number (examples: 1 or 123)"),
             )
-            .about("Get the latest representation of an RFD")
+            .about("Get the latest representation of a RFD")
     }
 
     pub fn cli_set_rfd_document() -> clap::Command {
@@ -802,7 +804,7 @@ impl<T: CliConfig> Cli<T> {
                     .value_parser(clap::value_parser!(String))
                     .required(true),
             )
-            .about("Get an attribute of a given RFD")
+            .about("Get an attribute of a RFD")
     }
 
     pub fn cli_set_rfd_attr() -> clap::Command {
@@ -854,7 +856,7 @@ impl<T: CliConfig> Cli<T> {
                     .action(clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
-            .about("Set an attribute of a given RFD")
+            .about("Set an attribute of a RFD")
     }
 
     pub fn cli_set_rfd_content() -> clap::Command {
@@ -894,7 +896,31 @@ impl<T: CliConfig> Cli<T> {
                     .action(clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
-            .about("Replace the contents of an RFD")
+            .about("Replace the contents of a RFD")
+    }
+
+    pub fn cli_discuss_rfd() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(clap::value_parser!(String))
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
+            )
+            .about("Open a RFD for discussion")
+    }
+
+    pub fn cli_publish_rfd() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(clap::value_parser!(String))
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
+            )
+            .about("Publish a RFD")
     }
 
     pub fn cli_update_rfd_visibility() -> clap::Command {
@@ -932,7 +958,7 @@ impl<T: CliConfig> Cli<T> {
                     .action(clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
-            .about("Modify the visibility of an RFD")
+            .about("Modify the visibility of a RFD")
     }
 
     pub fn cli_search_rfds() -> clap::Command {
@@ -1030,6 +1056,8 @@ impl<T: CliConfig> Cli<T> {
             CliCommand::GetRfdAttr => self.execute_get_rfd_attr(matches).await,
             CliCommand::SetRfdAttr => self.execute_set_rfd_attr(matches).await,
             CliCommand::SetRfdContent => self.execute_set_rfd_content(matches).await,
+            CliCommand::DiscussRfd => self.execute_discuss_rfd(matches).await,
+            CliCommand::PublishRfd => self.execute_publish_rfd(matches).await,
             CliCommand::UpdateRfdVisibility => self.execute_update_rfd_visibility(matches).await,
             CliCommand::SearchRfds => self.execute_search_rfds(matches).await,
             CliCommand::GetSelf => self.execute_get_self(matches).await,
@@ -2079,6 +2107,46 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
+    pub async fn execute_discuss_rfd(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+        let mut request = self.client.discuss_rfd();
+        if let Some(value) = matches.get_one::<String>("number") {
+            request = request.number(value.clone());
+        }
+
+        self.config.execute_discuss_rfd(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
+    pub async fn execute_publish_rfd(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+        let mut request = self.client.publish_rfd();
+        if let Some(value) = matches.get_one::<String>("number") {
+            request = request.number(value.clone());
+        }
+
+        self.config.execute_publish_rfd(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
     pub async fn execute_update_rfd_visibility(
         &self,
         matches: &clap::ArgMatches,
@@ -2493,6 +2561,22 @@ pub trait CliConfig {
         Ok(())
     }
 
+    fn execute_discuss_rfd(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::DiscussRfd,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn execute_publish_rfd(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::PublishRfd,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     fn execute_update_rfd_visibility(
         &self,
         matches: &clap::ArgMatches,
@@ -2558,6 +2642,8 @@ pub enum CliCommand {
     GetRfdAttr,
     SetRfdAttr,
     SetRfdContent,
+    DiscussRfd,
+    PublishRfd,
     UpdateRfdVisibility,
     SearchRfds,
     GetSelf,
@@ -2604,6 +2690,8 @@ impl CliCommand {
             CliCommand::GetRfdAttr,
             CliCommand::SetRfdAttr,
             CliCommand::SetRfdContent,
+            CliCommand::DiscussRfd,
+            CliCommand::PublishRfd,
             CliCommand::UpdateRfdVisibility,
             CliCommand::SearchRfds,
             CliCommand::GetSelf,

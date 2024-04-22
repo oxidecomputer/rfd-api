@@ -49,7 +49,7 @@ impl UpdatePdfs {
                     RfdOutputError::FormatNotSupported => {
                         tracing::info!("RFD is not in a format that supports PDF output");
 
-                        // If an RFD does not support PDF output than we do not want to report an
+                        // If a RFD does not support PDF output than we do not want to report an
                         // error. We return early instead
                         return Ok(vec![]);
                     }

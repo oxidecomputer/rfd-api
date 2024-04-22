@@ -26,7 +26,7 @@ impl RfdUpdateAction for EnsureRfdOnDefaultIsInValidState {
     ) -> Result<RfdUpdateActionResponse, RfdUpdateActionErr> {
         let RfdUpdateActionContext { update, .. } = ctx;
 
-        // If an RFD exists on the default branch then it should be in either the published or
+        // If a RFD exists on the default branch then it should be in either the published or
         // abandoned state
         if update.location.branch == update.location.default_branch {
             if !new.is_state("published")

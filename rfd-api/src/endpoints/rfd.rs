@@ -105,7 +105,7 @@ pub struct RfdPathParams {
     number: String,
 }
 
-/// Get the latest representation of an RFD
+/// Get the latest representation of a RFD
 #[trace_request]
 #[endpoint {
     method = GET,
@@ -204,7 +204,7 @@ pub struct RfdUpdateContentBody {
     message: Option<String>,
 }
 
-/// Replace the contents of an RFD
+/// Replace the contents of a RFD
 #[trace_request]
 #[endpoint {
     method = POST,
@@ -272,7 +272,7 @@ pub enum RfdAttr {
     State(RfdState),
 }
 
-/// Get an attribute of a given RFD
+/// Get an attribute of a RFD
 #[trace_request]
 #[endpoint {
     method = GET,
@@ -326,10 +326,10 @@ pub struct RfdAttrValue {
     message: Option<String>,
 }
 
-/// Set an attribute of a given RFD
+/// Set an attribute of a RFD
 #[trace_request]
 #[endpoint {
-    method = PUT,
+    method = POST,
     path = "/rfd/{number}/attr/{attr}",
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
@@ -401,6 +401,54 @@ async fn set_rfd_attr_op(
             "Malformed RFD number",
         ))
     }
+}
+
+/// Open a RFD for discussion
+#[trace_request]
+#[endpoint {
+    method = POST,
+    path = "/rfd/{number}/discuss",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn discuss_rfd(
+    rqctx: RequestContext<ApiContext>,
+    path: Path<RfdPathParams>,
+) -> Result<HttpResponseAccepted<RfdAttr>, HttpError> {
+    let ctx = rqctx.context();
+    let auth = ctx.authn_token(&rqctx).await?;
+    let path = path.into_inner();
+    set_rfd_attr_op(
+        ctx,
+        &ctx.get_caller(auth.as_ref()).await?,
+        path.number,
+        RfdAttrName::State,
+        &RfdAttrValue { value: RfdState::Discussion.to_string(), message: Some("Move to discussion".to_string()) },
+    )
+    .await
+}
+
+/// Publish a RFD
+#[trace_request]
+#[endpoint {
+    method = POST,
+    path = "/rfd/{number}/publish",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn publish_rfd(
+    rqctx: RequestContext<ApiContext>,
+    path: Path<RfdPathParams>,
+) -> Result<HttpResponseAccepted<RfdAttr>, HttpError> {
+    let ctx = rqctx.context();
+    let auth = ctx.authn_token(&rqctx).await?;
+    let path = path.into_inner();
+    set_rfd_attr_op(
+        ctx,
+        &ctx.get_caller(auth.as_ref()).await?,
+        path.number,
+        RfdAttrName::State,
+        &RfdAttrValue { value: RfdState::Published.to_string(), message: Some("Publish".to_string()) },
+    )
+    .await
 }
 
 fn extract_attr(attr: &RfdAttrName, content: &RfdContent) -> Result<RfdAttr, HttpError> {
@@ -582,7 +630,7 @@ pub struct RfdVisibility {
     pub visibility: Visibility,
 }
 
-/// Modify the visibility of an RFD
+/// Modify the visibility of a RFD
 #[trace_request]
 #[endpoint {
     method = POST,
@@ -809,7 +857,7 @@ mod tests {
         assert_eq!(456, rfd.rfd_number);
     }
 
-    // Test RFD access via the direct permission to an RFD
+    // Test RFD access via the direct permission to a RFD
 
     #[tokio::test]
     async fn list_rfds_with_direct_permission() {
@@ -868,7 +916,7 @@ mod tests {
         match result {
             Err(err) => assert_eq!(StatusCode::FORBIDDEN, err.status_code),
             Ok(response) => panic!(
-                "Expected a 403 error, but instead found an RFD {:?}",
+                "Expected a 403 error, but instead found a RFD {:?}",
                 response.0
             ),
         }
@@ -899,7 +947,7 @@ mod tests {
         match result {
             Err(err) => assert_eq!(StatusCode::FORBIDDEN, err.status_code),
             Ok(response) => panic!(
-                "Expected a 403 error, but instead found an RFD {:?}",
+                "Expected a 403 error, but instead found a RFD {:?}",
                 response.0
             ),
         }
