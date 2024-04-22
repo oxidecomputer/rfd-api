@@ -422,7 +422,10 @@ pub async fn discuss_rfd(
         &ctx.get_caller(auth.as_ref()).await?,
         path.number,
         RfdAttrName::State,
-        &RfdAttrValue { value: RfdState::Discussion.to_string(), message: Some("Move to discussion".to_string()) },
+        &RfdAttrValue {
+            value: RfdState::Discussion.to_string(),
+            message: Some("Move to discussion".to_string()),
+        },
     )
     .await
 }
@@ -446,7 +449,10 @@ pub async fn publish_rfd(
         &ctx.get_caller(auth.as_ref()).await?,
         path.number,
         RfdAttrName::State,
-        &RfdAttrValue { value: RfdState::Published.to_string(), message: Some("Publish".to_string()) },
+        &RfdAttrValue {
+            value: RfdState::Published.to_string(),
+            message: Some("Publish".to_string()),
+        },
     )
     .await
 }

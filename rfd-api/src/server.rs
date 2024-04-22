@@ -30,7 +30,8 @@ use crate::{
         },
         mappers::{create_mapper, delete_mapper, get_mappers},
         rfd::{
-            discuss_rfd, get_rfd, get_rfd_attr, get_rfds, publish_rfd, reserve_rfd, search_rfds, set_rfd_attr, set_rfd_content, set_rfd_document, update_rfd_visibility
+            discuss_rfd, get_rfd, get_rfd_attr, get_rfds, publish_rfd, reserve_rfd, search_rfds,
+            set_rfd_attr, set_rfd_content, set_rfd_document, update_rfd_visibility,
         },
         webhook::github_webhook,
         well_known::{jwks_json, openid_configuration},
