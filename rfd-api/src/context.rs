@@ -2275,6 +2275,9 @@ pub(crate) mod test_mocks {
         content
             .templates
             .insert("new".to_string(), RfdTemplate::default());
+        content
+            .templates
+            .insert("placeholder".to_string(), RfdTemplate::default());
 
         let mut ctx = ApiContext::new(
             "".to_string(),
