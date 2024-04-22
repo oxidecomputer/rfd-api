@@ -22,7 +22,7 @@ async-bb8-diesel = { git = "https://github.com/oxidecomputer/async-bb8-diesel" }
 async-trait = "0.1.79"
 base64 = "0.21.7"
 bb8 = "0.8.3"
-chrono = "0.4.37"
+chrono = "0.4.38"
 clap = { version = "4.5.4", features = ["derive", "string", "env"] }
 config = { version = "0.14.0", features = ["toml"] }
 cookie = { version = "0.18.1" }
