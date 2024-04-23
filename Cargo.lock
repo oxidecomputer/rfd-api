@@ -1020,7 +1020,7 @@ dependencies = [
  "google-apis-common",
  "http 0.2.11",
  "hyper",
- "hyper-rustls",
+ "hyper-rustls 0.24.2",
  "itertools 0.10.5",
  "mime",
  "serde",
@@ -1040,7 +1040,7 @@ dependencies = [
  "google-apis-common",
  "http 0.2.11",
  "hyper",
- "hyper-rustls",
+ "hyper-rustls 0.24.2",
  "itertools 0.10.5",
  "mime",
  "serde",
@@ -1060,7 +1060,7 @@ dependencies = [
  "google-apis-common",
  "http 0.2.11",
  "hyper",
- "hyper-rustls",
+ "hyper-rustls 0.24.2",
  "itertools 0.10.5",
  "mime",
  "serde",
@@ -1253,9 +1253,26 @@ dependencies = [
  "hyper",
  "log",
  "rustls 0.21.11",
- "rustls-native-certs",
+ "rustls-native-certs 0.6.3",
  "tokio",
  "tokio-rustls 0.24.1",
+]
+
+[[package]]
+name = "hyper-rustls"
+version = "0.25.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "399c78f9338483cb7e630c8474b07268983c6bd5acee012e4211f9f7bb21b070"
+dependencies = [
+ "futures-util",
+ "http 0.2.11",
+ "hyper",
+ "log",
+ "rustls 0.22.2",
+ "rustls-native-certs 0.7.0",
+ "rustls-pki-types",
+ "tokio",
+ "tokio-rustls 0.25.0",
 ]
 
 [[package]]
@@ -2383,7 +2400,7 @@ dependencies = [
  "http 0.2.11",
  "http-body",
  "hyper",
- "hyper-rustls",
+ "hyper-rustls 0.24.2",
  "ipnet",
  "js-sys",
  "log",
@@ -2542,7 +2559,7 @@ dependencies = [
  "hex",
  "http 0.2.11",
  "hyper",
- "hyper-rustls",
+ "hyper-rustls 0.24.2",
  "jsonwebtoken 9.3.0",
  "meilisearch-sdk",
  "mockall",
@@ -2874,6 +2891,19 @@ checksum = "a9aace74cb666635c918e9c12bc0d348266037aa8eb599b5cba565709a8dff00"
 dependencies = [
  "openssl-probe",
  "rustls-pemfile 1.0.4",
+ "schannel",
+ "security-framework",
+]
+
+[[package]]
+name = "rustls-native-certs"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8f1fb85efa936c42c6d5fc28d2629bb51e4b2f4b8a5211e297d599cc5a093792"
+dependencies = [
+ "openssl-probe",
+ "rustls-pemfile 2.0.0",
+ "rustls-pki-types",
  "schannel",
  "security-framework",
 ]
@@ -4402,9 +4432,9 @@ dependencies = [
 
 [[package]]
 name = "yup-oauth2"
-version = "8.3.2"
+version = "8.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b61da40aeb0907a65f7fb5c1de83c5a224d6a9ebb83bf918588a2bb744d636b8"
+checksum = "45b7ff561fdc7809a2adad8bce73e157d01129074098e6405d0d7dfa2d087782"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4412,7 +4442,7 @@ dependencies = [
  "futures",
  "http 0.2.11",
  "hyper",
- "hyper-rustls",
+ "hyper-rustls 0.25.0",
  "itertools 0.12.1",
  "log",
  "percent-encoding 2.3.1",
