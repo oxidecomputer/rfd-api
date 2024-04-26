@@ -1,0 +1,79 @@
+# How many jobs should be processed at once
+processor_batch_size = 10
+
+# How often to select a batch of jobs to process
+processor_interval = 30
+
+# A control mode for all processor actions, designating if the action should persist data to remote
+# services or only generate what would be persisted.
+processor_update_mode = "read"
+
+# How often the processor scanner should check the remote GitHub repo for RFDs
+scanner_interval = 900
+
+# The internal database url to store RFD information
+database_url = "postgres://<user>:<pass>@<host>/<database>"
+
+# The list of actions that should be run for each processing job
+actions = [
+  # "CopyImagesToStorage",
+  # "UpdateSearch",
+  # "UpdatePdfs",
+  # "CreatePullRequest",
+  # "UpdatePullRequest",
+  # "UpdateDiscussionUrl",
+  # "EnsureRfdWithPullRequestIsInValidState",
+  # "EnsureRfdOnDefaultIsInValidState",
+]
+
+# The method for authenticating to GitHub. This requires one of two authentication styles:
+#   1. A GitHub App installation that is defined by an app_id, installation_id, and private_key
+#   2. A GitHub access token
+# Exactly one authentication must be specified
+
+# App Installation
+[auth.github]
+# Numeric GitHub App id
+app_id = 1111111
+# Numeric GitHub App installation id corresponding to the organization that the configured repo
+# belongs to
+installation_id = 2222222
+# PEM encoded private key for the GitHub App
+private_key = """"""
+
+# Access Token
+[auth.github]
+# This may be any GitHub access token that has permission to the configured repo
+token = ""
+
+# The GitHub repository to use to read and write RFDs
+[source]
+# GitHub user or organization
+owner = ""
+# GitHub repository name
+repo = ""
+# Path within the repository where RFDs are stored
+path = ""
+# Branch to use as the default branch of ther repository
+default_branch = ""
+
+# Bucket to push static assets pulled from RFDs to (currently only GCP Storage buckets are supported)
+[[static_storage]]
+# Name of the bucket
+bucket = ""
+
+# Location to store generated PDFs (currently on Google Drive Shared Drives are supported)
+[pdf_storage]
+# Shared Drive id
+drive = ""
+# Folder id within the Shared Drive
+folder = ""
+
+# Search backend for indexing RFD contents (currently on Meilisearch is supported)
+[[search_storage]]
+# Https endpoint of the search instance
+host = ""
+# API Key for reading and writing documents
+key = ""
+# Search index to store documents in
+index = ""

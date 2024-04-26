@@ -17,7 +17,7 @@ public_url = ""
 server_port = 8080
 
 # Full url of the Postgres database to connect to
-database_url = ""
+database_url = "postgres://<user>:<pass>@<host>/<database>"
 
 # Settings for JWT management
 [jwt]
@@ -26,7 +26,7 @@ database_url = ""
 default_expiration = 3600
 
 # Keys for signing JWTs and generating secrets. Currently GCP Cloud KMS keys and local static keys
-# are supported
+# are supported. At least one key must be configured.
 
 # Cloud KMS
 [[keys]]
@@ -46,7 +46,8 @@ private = """""" # PEM encoded private key
 public = """""" # PEM encoded public key
 
 # OAuth Providers
-# Google and GitHub are supported. An OAuth provider needs to have both a web and device config
+# Google and GitHub are supported. An OAuth provider needs to have both a web and device config.
+# At least one OAuth provider must be configured
 
 [authn.oauth.google.device]
 client_id = ""
@@ -55,7 +56,16 @@ client_secret = ""
 [authn.oauth.google.web]
 client_id = ""
 client_secret = ""
-redirect_uri = ""
+redirect_uri = "https://<rfd-api-hostname>/login/oauth/google/code/callback"
+
+[authn.oauth.github.device]
+client_id = ""
+client_secret = ""
+
+[authn.oauth.github.web]
+client_id = ""
+client_secret = ""
+redirect_uri = "https://<rfd-api-hostname>/login/oauth/github/code/callback"
 
 # Search configuration
 [search]
@@ -64,7 +74,7 @@ host = ""
 # Read-only search key
 key = ""
 # Index to perform searches against
-index = "rfd"
+index = ""
 
 # Fields for use in generating the OpenAPI spec file
 [spec]
@@ -73,3 +83,47 @@ description = ""
 contact_url = ""
 contact_email = ""
 output_path = ""
+
+# Templated for creating new RFDs. The 'placeholder' and 'new' templates are the only two templates
+# available and are both required
+
+# Template used when creating a new RFD without specifying a body
+[content.templates.placeholder]
+template = """"""
+required_fields = []
+
+# Template used when creating a new RFD while specifying a body
+[content.templates.new]
+template = """"""
+required_fields = []
+
+# The GitHub repository to use to write RFDs
+[source]
+# GitHub user or organization
+owner = ""
+# GitHub repository name
+repo = ""
+# Path within the repository where RFDs are stored
+path = ""
+# Branch to use as the default branch of ther repository
+default_branch = ""
+
+# The method for authenticating to GitHub. This requires one of two authentication styles:
+#   1. A GitHub App installation that is defined by an app_id, installation_id, and private_key
+#   2. A GitHub access token
+# Exactly one authentication must be specified
+
+# App Installation
+[services.github.auth]
+# Numeric GitHub App id
+app_id = 1111111
+# Numeric GitHub App installation id corresponding to the organization that the configured repo
+# belongs to
+installation_id = 2222222
+# PEM encoded private key for the GitHub App
+private_key = """"""
+
+# Access Token
+[services.github.auth]
+# This may be any GitHub access token that has permission to the configured repo
+token = ""
