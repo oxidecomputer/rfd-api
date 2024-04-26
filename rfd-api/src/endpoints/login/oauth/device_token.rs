@@ -19,7 +19,10 @@ use super::{
     ClientType, OAuthProvider, OAuthProviderInfo, OAuthProviderNameParam, UserInfoProvider,
 };
 use crate::{
-    context::ApiContext, endpoints::login::{DeviceTokenResponse, LoginError}, error::ApiError, util::response::bad_request,
+    context::ApiContext,
+    endpoints::login::{DeviceTokenResponse, LoginError},
+    error::ApiError,
+    util::response::bad_request,
 };
 
 // Get the metadata about an OAuth provider necessary to begin a device code exchange
