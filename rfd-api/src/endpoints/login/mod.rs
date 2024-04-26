@@ -16,6 +16,7 @@ use crate::{
     util::response::{bad_request, internal_error},
 };
 
+pub mod local;
 pub mod oauth;
 
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
@@ -57,6 +58,7 @@ impl From<LoginError> for HttpError {
 pub enum ExternalUserId {
     GitHub(String),
     Google(String),
+    Local(String),
 }
 
 impl ExternalUserId {
@@ -64,6 +66,7 @@ impl ExternalUserId {
         match self {
             Self::GitHub(id) => id,
             Self::Google(id) => id,
+            Self::Local(id) => id,
         }
     }
 
@@ -71,6 +74,7 @@ impl ExternalUserId {
         match self {
             Self::GitHub(_) => "github",
             Self::Google(_) => "google",
+            Self::Local(_) => "local",
         }
     }
 }
@@ -91,6 +95,7 @@ impl Serialize for ExternalUserId {
         match self {
             ExternalUserId::GitHub(id) => serializer.serialize_str(&format!("github-{}", id)),
             ExternalUserId::Google(id) => serializer.serialize_str(&format!("google-{}", id)),
+            ExternalUserId::Local(id) => serializer.serialize_str(&format!("local-{}", id)),
         }
     }
 }
@@ -165,4 +170,13 @@ pub trait UserInfoProvider {
         client: &reqwest::Client,
         token: &str,
     ) -> Result<UserInfo, UserInfoError>;
+}
+
+#[derive(Debug, Deserialize, JsonSchema, Serialize)]
+pub struct DeviceTokenResponse {
+    pub access_token: String,
+    pub token_type: String,
+    pub expires_in: Option<u32>,
+    pub refresh_token: Option<String>,
+    pub scopes: Option<Vec<String>>,
 }

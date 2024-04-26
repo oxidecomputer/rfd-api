@@ -188,6 +188,7 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::GetDeviceProvider => None,
 
         // Unsupported commands
+        CliCommand::LocalLogin => None,
         CliCommand::AuthzCodeRedirect => None,
         CliCommand::AuthzCodeCallback => None,
         CliCommand::AuthzCodeExchange => None,

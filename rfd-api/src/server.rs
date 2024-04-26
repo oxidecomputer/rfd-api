@@ -19,14 +19,17 @@ use crate::{
             remove_api_user_from_group, update_api_user,
         },
         group::{create_group, delete_group, get_groups, update_group},
-        login::oauth::{
-            client::{
-                create_oauth_client, create_oauth_client_redirect_uri, create_oauth_client_secret,
-                delete_oauth_client_redirect_uri, delete_oauth_client_secret, get_oauth_client,
-                list_oauth_clients,
+        login::{
+            local::local_login,
+            oauth::{
+                client::{
+                    create_oauth_client, create_oauth_client_redirect_uri,
+                    create_oauth_client_secret, delete_oauth_client_redirect_uri,
+                    delete_oauth_client_secret, get_oauth_client, list_oauth_clients,
+                },
+                code::{authz_code_callback, authz_code_exchange, authz_code_redirect},
+                device_token::{exchange_device_token, get_device_provider},
             },
-            code::{authz_code_callback, authz_code_exchange, authz_code_redirect},
-            device_token::{exchange_device_token, get_device_provider},
         },
         mappers::{create_mapper, delete_mapper, get_mappers},
         rfd::{
@@ -181,6 +184,10 @@ pub fn server(
     api.register(get_device_provider)
         .expect("Failed to register endpoint");
     api.register(exchange_device_token)
+        .expect("Failed to register endpoint");
+
+    // Development
+    api.register(local_login)
         .expect("Failed to register endpoint");
 
     if let Some(spec) = config.spec_output {

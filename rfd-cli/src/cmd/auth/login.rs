@@ -7,7 +7,8 @@ use std::ops::Add;
 use anyhow::Result;
 use chrono::{Duration, NaiveDate, Utc};
 use clap::{Parser, Subcommand, ValueEnum};
-use oauth2::TokenResponse;
+use futures::stream::StreamExt;
+use oauth2::{basic::BasicTokenType, EmptyExtraTokenFields, StandardTokenResponse, TokenResponse};
 use rfd_sdk::types::{ApiPermission, OAuthProviderName};
 
 use crate::{cmd::auth::oauth, Context};
@@ -16,8 +17,8 @@ use crate::{cmd::auth::oauth, Context};
 #[derive(Parser, Debug, Clone)]
 #[clap(name = "login")]
 pub struct Login {
-    #[arg(value_enum)]
-    provider: LoginProvider,
+    #[command(subcommand)]
+    provider: LoginProviderCommand,
     #[arg(short = 'm', default_value = "id")]
     mode: AuthenticationMode,
 }
@@ -33,14 +34,21 @@ impl Login {
     }
 }
 
-#[derive(ValueEnum, Debug, Clone)]
-pub enum LoginProvider {
+#[derive(Debug, Clone, Subcommand)]
+pub enum LoginProviderCommand {
+    #[clap(name = "github")]
     /// Login via GitHub
-    #[value(name = "github")]
     GitHub,
-    #[value(name = "google")]
     /// Login via Google
     Google,
+    /// Login with arbitrary details for local development
+    #[cfg(feature = "local-dev")]
+    Local {
+        /// The email to authenticate as
+        email: String,
+        /// An arbitrary external id to uniquely identify this user
+        external_id: String,
+    },
 }
 
 #[derive(ValueEnum, Debug, Clone, PartialEq)]
@@ -55,19 +63,22 @@ pub enum AuthenticationMode {
     Token,
 }
 
-impl LoginProvider {
-    fn as_name(&self) -> OAuthProviderName {
-        match self {
-            Self::GitHub => OAuthProviderName::Github,
-            Self::Google => OAuthProviderName::Google,
-        }
-    }
+pub struct OAuthProviderRunner(OAuthProviderName);
+pub struct LocalProviderRunner {
+    email: String,
+    external_id: String,
+}
 
-    pub async fn run(&self, ctx: &mut Context, mode: &AuthenticationMode) -> Result<String> {
+pub trait ProviderRunner {
+    async fn run(&self, ctx: &mut Context, mode: &AuthenticationMode) -> Result<String>;
+}
+
+impl ProviderRunner for OAuthProviderRunner {
+    async fn run(&self, ctx: &mut Context, mode: &AuthenticationMode) -> Result<String> {
         let provider = ctx
             .client()?
             .get_device_provider()
-            .provider(self.as_name())
+            .provider(self.0.to_string())
             .send()
             .await?;
 
@@ -100,6 +111,77 @@ impl LoginProvider {
                 .to_string())
         } else {
             Ok(identity_token.secret().to_string())
+        }
+    }
+}
+
+impl ProviderRunner for LocalProviderRunner {
+    async fn run(&self, ctx: &mut Context, mode: &AuthenticationMode) -> Result<String> {
+        let identity_token = ctx
+            .client()?
+            .local_login()
+            .body_map(|body| {
+                body.email(self.email.clone())
+                    .external_id(self.external_id.clone())
+            })
+            .send()
+            .await?
+            .into_inner();
+
+        let mut bytes = identity_token.into_inner();
+
+        let mut data = vec![];
+        while let Some(chunk) = bytes.next().await {
+            data.append(&mut chunk?.to_vec());
+        }
+
+        let identity_token = match serde_json::from_slice::<
+            StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>,
+        >(&data)
+        {
+            Ok(token) => Ok(token.access_token().to_owned()),
+            Err(err) => Err(anyhow::anyhow!("Authentication failed: {}", err)),
+        }?;
+
+        if mode == &AuthenticationMode::Token {
+            let client = ctx.new_client(Some(identity_token.secret()))?;
+            let user = client.get_self().send().await?;
+            Ok(client
+                .create_api_user_token()
+                .identifier(user.info.id)
+                .body_map(|body| body.expires_at(Utc::now().add(Duration::days(365))))
+                .send()
+                .await?
+                .key
+                .to_string())
+        } else {
+            Ok(identity_token.secret().to_string())
+        }
+    }
+}
+
+impl ProviderRunner for LoginProviderCommand {
+    async fn run(&self, ctx: &mut Context, mode: &AuthenticationMode) -> Result<String> {
+        match self {
+            LoginProviderCommand::GitHub => {
+                OAuthProviderRunner(OAuthProviderName::Github)
+                    .run(ctx, mode)
+                    .await
+            }
+            LoginProviderCommand::Google => {
+                OAuthProviderRunner(OAuthProviderName::Google)
+                    .run(ctx, mode)
+                    .await
+            }
+            #[cfg(feature = "local-dev")]
+            LoginProviderCommand::Local { email, external_id } => {
+                LocalProviderRunner {
+                    email: email.to_string(),
+                    external_id: external_id.to_string(),
+                }
+                .run(ctx, mode)
+                .await
+            }
         }
     }
 }

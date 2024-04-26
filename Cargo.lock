@@ -2567,6 +2567,7 @@ dependencies = [
  "clap",
  "config",
  "dirs 5.0.1",
+ "futures",
  "itertools 0.12.1",
  "jsonwebtoken 9.2.0",
  "oauth2",
