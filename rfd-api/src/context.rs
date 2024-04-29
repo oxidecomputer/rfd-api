@@ -931,7 +931,7 @@ impl ApiContext {
         content: &str,
         message: Option<&str>,
         branch_name: Option<&str>,
-    ) -> ResourceResult<(), UpdateRfdContentError> {
+    ) -> ResourceResult<Option<String>, UpdateRfdContentError> {
         if caller.any(&[
             &ApiPermission::UpdateRfd(rfd_number),
             &ApiPermission::UpdateRfdsAll,
@@ -947,7 +947,7 @@ impl ApiContext {
 
             self.commit_rfd_document(
                 caller,
-                rfd_number,
+                rfd_number.into(),
                 updated_content.raw(),
                 message,
                 &sha,
@@ -967,7 +967,7 @@ impl ApiContext {
         document: &str,
         message: Option<&str>,
         branch_name: Option<&str>,
-    ) -> ResourceResult<(), UpdateRfdContentError> {
+    ) -> ResourceResult<Option<String>, UpdateRfdContentError> {
         if caller.any(&[
             &ApiPermission::UpdateRfd(rfd_number),
             &ApiPermission::UpdateRfdsAll,
@@ -978,8 +978,15 @@ impl ApiContext {
                 .map_err(|err| err.inner_into())?;
 
             let sha = latest_revision.commit_sha;
-            self.commit_rfd_document(caller, rfd_number, document, message, &sha, branch_name)
-                .await
+            self.commit_rfd_document(
+                caller,
+                rfd_number.into(),
+                document,
+                message,
+                &sha,
+                branch_name,
+            )
+            .await
         } else {
             resource_restricted()
         }
@@ -989,12 +996,12 @@ impl ApiContext {
     async fn commit_rfd_document(
         &self,
         caller: &ApiCaller,
-        rfd_number: i32,
+        rfd_number: RfdNumber,
         document: &str,
         message: Option<&str>,
         head: &str,
         branch_name: Option<&str>,
-    ) -> ResourceResult<(), UpdateRfdContentError> {
+    ) -> ResourceResult<Option<String>, UpdateRfdContentError> {
         let mut github_locations = self
             .github
             .locations_for_commit(head.to_string())
@@ -1014,7 +1021,7 @@ impl ApiContext {
             0 => {
                 tracing::warn!(
                     head,
-                    rfd_number,
+                    ?rfd_number,
                     "Failed to find a GitHub location for most recent revision"
                 );
                 Err(ResourceError::DoesNotExist)
@@ -1030,12 +1037,34 @@ impl ApiContext {
 
                 // Unwrap is checked by the location length
                 let location = github_locations.pop().unwrap();
-                location
-                    .upsert(&rfd_number.into(), document.as_bytes(), &message)
+                let commit = location
+                    .upsert(&rfd_number, document.as_bytes(), &message)
                     .await
                     .map_err(UpdateRfdContentError::GitHub)
                     .to_resource_result()?;
-                Ok(())
+
+                // If we committed a change, immediately register a job as well. This may conflict with
+                // a job already added by a webhook, this is fine and we can ignore the error
+                if let Some(commit) = &commit {
+                    let new_job = NewJob {
+                        owner: self.github.owner.clone(),
+                        repository: self.github.repo.clone(),
+                        branch: rfd_number.as_number_string(),
+                        sha: commit.to_string(),
+                        rfd: rfd_number.into(),
+                        // This job is not being triggered by a webhook
+                        webhook_delivery_id: None,
+                        committed_at: Utc::now(), // Use the current time or extract from commit if available
+                    };
+
+                    if let Err(err) = self.register_job(new_job).await {
+                        tracing::info!(?err, "Failed to register job for RFD update");
+                    } else {
+                        tracing::debug!(?rfd_number, ?commit, "Registered job for RFD update");
+                    }
+                }
+
+                Ok(commit)
             }
             _ => Err(UpdateRfdContentError::InternalState).to_resource_result(),
         }

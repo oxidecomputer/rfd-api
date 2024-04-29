@@ -676,7 +676,7 @@ impl GitHubRfdLocation {
         rfd_number: &RfdNumber,
         content: &[u8],
         message: &str,
-    ) -> Result<(), GitHubError> {
+    ) -> Result<Option<String>, GitHubError> {
         let readme_path = self.readme_path(&self.client, rfd_number).await;
         // let FetchedRfdContent { decoded, .. } = self
         //     .fetch_content(&self.client, &readme_path, &self.commit)
@@ -700,7 +700,7 @@ impl GitHubRfdLocation {
         // We can short circuit if the new and old content are the same
         if content == &decoded {
             tracing::info!("File contents are the same. Skipping commit");
-            return Ok(());
+            return Ok(None);
         }
 
         tracing::info!(
@@ -709,7 +709,8 @@ impl GitHubRfdLocation {
             "Writing file to GitHub"
         );
 
-        self.client
+        let response = self
+            .client
             .repos()
             .create_or_update_file_contents(
                 &self.owner,
@@ -726,7 +727,7 @@ impl GitHubRfdLocation {
             )
             .await?;
 
-        Ok(())
+        Ok(Some(response.body.commit.sha))
     }
 }
 
