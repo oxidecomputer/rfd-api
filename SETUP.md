@@ -77,9 +77,10 @@ Instead of using a remote authentication provider, the API can be run via:
 cargo run -p rfd-api --features local-dev
 ```
 
-This will run the API with a [`POST /login/local`]() endpoint exposed. This endpoint allows for
-logging in with an arbitrary email and user supplied unique identifier. To use this with the CLI,
-the `local-dev` feature will need to be passed to the CLI build.
+This will run the API with a [`POST /login/local`](rfd-api/src/endpoints/login/local/mod.rs) endpoint
+exposed. This endpoint allows for logging in with an arbitrary email and user supplied unique
+identifier. To use this with the CLI, the `local-dev` feature will need to be passed to the CLI
+build.
 
 ```sh
 cargo run -p rfd-cli --features local-dev
