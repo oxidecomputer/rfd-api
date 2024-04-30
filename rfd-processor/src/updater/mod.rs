@@ -322,6 +322,7 @@ pub trait RfdUpdateAction: Debug {
 pub type BoxedAction = Box<dyn RfdUpdateAction + Send + Sync>;
 
 #[derive(Copy, Clone, Debug, Deserialize, PartialEq)]
+#[serde(rename_all = "lowercase")]
 pub enum RfdUpdateMode {
     Read,
     Write,

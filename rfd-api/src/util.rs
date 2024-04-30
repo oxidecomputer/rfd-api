@@ -57,7 +57,7 @@ pub mod response {
     }
 
     pub fn forbidden() -> HttpError {
-        client_error(StatusCode::FORBIDDEN, "Unauthorized")
+        client_error(StatusCode::FORBIDDEN, "Forbidden")
     }
 
     pub fn client_error<S>(status_code: StatusCode, message: S) -> HttpError

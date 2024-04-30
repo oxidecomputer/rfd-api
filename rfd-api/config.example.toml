@@ -98,7 +98,7 @@ template = """"""
 required_fields = []
 
 # The GitHub repository to use to write RFDs
-[source]
+[services.github]
 # GitHub user or organization
 owner = ""
 # GitHub repository name

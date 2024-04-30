@@ -191,6 +191,9 @@ pub fn server(
         .expect("Failed to register endpoint");
 
     if let Some(spec) = config.spec_output {
+        // TODO: How do we validate that spec_output can be read or written? Currently File::create
+        // panics if the file path is not a valid path
+
         // Create the API schema.
         let mut api_definition = &mut api.openapi(spec.title, &"");
         api_definition = api_definition
