@@ -22,6 +22,7 @@ use rfd_data::{
     content::{RfdAsciidoc, RfdContent, RfdMarkdown},
     RfdNumber,
 };
+use rfd_model::{CommitSha, FileSha};
 use thiserror::Error;
 use tracing::{instrument, Instrument};
 
@@ -86,7 +87,7 @@ impl GitHubRfdRepo {
         })
     }
 
-    pub fn location(&self, branch: String, commit: String) -> GitHubRfdLocation {
+    pub fn location(&self, branch: String, commit: CommitSha) -> GitHubRfdLocation {
         GitHubRfdLocation {
             client: self.client.clone(),
             owner: self.owner.clone(),
@@ -99,17 +100,17 @@ impl GitHubRfdRepo {
 
     pub async fn locations_for_commit(
         &self,
-        commit_sha: String,
+        commit: CommitSha,
     ) -> Result<Vec<GitHubRfdLocation>, GitHubError> {
         let branches = self
             .client
             .repos()
-            .list_branches_for_head_commit(&self.owner, &self.repo, &commit_sha)
+            .list_branches_for_head_commit(&self.owner, &self.repo, commit.0.as_str())
             .await?;
         Ok(branches
             .body
             .into_iter()
-            .map(|branch| self.location(branch.name, commit_sha.clone()))
+            .map(|branch| self.location(branch.name, commit.clone()))
             .collect::<Vec<_>>())
     }
 
@@ -172,8 +173,10 @@ impl GitHubRfdRepo {
 
                     let update = GitHubRfdUpdate {
                         number: number.into(),
-                        location: self
-                            .location(self.default_branch.clone(), default.commit.sha.clone()),
+                        location: self.location(
+                            self.default_branch.clone(),
+                            default.commit.sha.clone().into(),
+                        ),
                         committed_at: default_committed_at,
                     };
 
@@ -261,7 +264,7 @@ impl GitHubRfdRepo {
                                     if let Ok(number) = path_parts[1].parse::<i32>() {
                                         let update = GitHubRfdUpdate {
                                             number: rfd_number,
-                                            location: self.location(branch.name, branch.commit.sha),
+                                            location: self.location(branch.name, branch.commit.sha.into()),
                                             committed_at,
                                         };
 
@@ -297,7 +300,7 @@ pub struct GitHubRfdLocation {
     pub repo: String,
     pub default_branch: String,
     pub branch: String,
-    pub commit: String,
+    pub commit: CommitSha,
 }
 
 impl Debug for GitHubRfdLocation {
@@ -374,7 +377,7 @@ impl GitHubRfdLocation {
 
         Ok(GitHubRfdReadme {
             content,
-            sha,
+            sha: sha.into(),
             location: GitHubRfdReadmeLocation {
                 file: readme_path,
                 blob_link: url,
@@ -388,11 +391,11 @@ impl GitHubRfdLocation {
         &self,
         client: &Client,
         path: &str,
-        ref_: &str,
+        ref_: &CommitSha,
     ) -> Result<FetchedRfdContent, GitHubError> {
         let file = client
             .repos()
-            .get_content_blob(&self.owner, &self.repo, ref_, path)
+            .get_content_blob(&self.owner, &self.repo, ref_.0.as_str(), path)
             .await?;
 
         let decoded = decode_base64(&file.content)?;
@@ -401,7 +404,7 @@ impl GitHubRfdLocation {
         Ok(FetchedRfdContent {
             decoded,
             parsed,
-            sha: file.sha,
+            sha: file.sha.into(),
             url: file.html_url,
         })
     }
@@ -421,7 +424,7 @@ impl GitHubRfdLocation {
         client: &'a Client,
         owner: &'a String,
         repo: &'a String,
-        ref_: &'a String,
+        ref_: &'a CommitSha,
         dir: String,
     ) -> Pin<
         Box<
@@ -433,7 +436,7 @@ impl GitHubRfdLocation {
 
             let resp = client
                 .repos()
-                .get_content_vec_entries(owner, repo, &dir, ref_)
+                .get_content_vec_entries(owner, repo, &dir, ref_.0.as_str())
                 .await?;
 
             for file in resp.body {
@@ -449,7 +452,7 @@ impl GitHubRfdLocation {
                 } else if is_image(&file.name) {
                     let file = client
                         .repos()
-                        .get_content_blob(owner, repo, ref_, &file.path)
+                        .get_content_blob(owner, repo, ref_.0.as_str(), &file.path)
                         .await?;
                     files.push(file);
                 }
@@ -516,7 +519,7 @@ impl GitHubRfdLocation {
             .list_commits(
                 &self.owner,
                 &self.repo,
-                &self.commit,
+                &self.commit.0.as_str(),
                 &rfd_number.repo_path(),
                 "",
                 None,
@@ -572,7 +575,7 @@ impl GitHubRfdLocation {
                 &readme_path.trim_start_matches('/'),
                 &ReposCreateUpdateFileContentsRequest {
                     message: format!("{}\nCommitted via rfd-api", message),
-                    sha,
+                    sha: sha.into(),
                     branch: self.branch.clone(),
                     content: BASE64_STANDARD.encode(content),
                     committer: Default::default(),
@@ -588,14 +591,14 @@ impl GitHubRfdLocation {
 struct FetchedRfdContent {
     decoded: Vec<u8>,
     parsed: String,
-    sha: String,
+    sha: FileSha,
     url: String,
 }
 
 #[derive(Debug)]
 pub struct GitHubRfdReadme<'a> {
     pub content: RfdContent<'a>,
-    pub sha: String,
+    pub sha: FileSha,
     pub location: GitHubRfdReadmeLocation,
 }
 

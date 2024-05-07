@@ -26,8 +26,8 @@ use rfd_model::{
         OAuthClientStore, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter,
         RfdRevisionStore, RfdStore, StoreError,
     },
-    AccessGroup, AccessToken, ApiUser, ApiUserProvider, InvalidValueError, Job, LinkRequest,
-    LoginAttempt, Mapper, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser,
+    AccessGroup, AccessToken, ApiUser, ApiUserProvider, CommitSha, FileSha, InvalidValueError, Job,
+    LinkRequest, LoginAttempt, Mapper, NewAccessGroup, NewAccessToken, NewApiKey, NewApiUser,
     NewApiUserProvider, NewJob, NewLinkRequest, NewLoginAttempt, NewMapper, NewOAuthClient,
     NewOAuthClientRedirectUri, NewOAuthClientSecret, OAuthClient, OAuthClientRedirectUri,
     OAuthClientSecret, Rfd, RfdRevision,
@@ -212,8 +212,8 @@ pub struct FullRfd {
     #[partial(ListRfd(skip))]
     pub content: String,
     pub format: ContentFormat,
-    pub sha: String,
-    pub commit: String,
+    pub sha: FileSha,
+    pub commit: CommitSha,
     pub committed_at: DateTime<Utc>,
     #[partial(ListRfd(skip))]
     pub pdfs: Vec<FullRfdPdfEntry>,
@@ -652,7 +652,7 @@ impl ApiContext {
                 labels: revision.labels,
                 format: revision.content_format,
                 sha: revision.sha,
-                commit: revision.commit_sha,
+                commit: revision.commit.into(),
                 committed_at: revision.committed_at,
                 visibility: rfd.visibility,
             })
@@ -715,7 +715,7 @@ impl ApiContext {
                     content: revision.content,
                     format: revision.content_format,
                     sha: revision.sha,
-                    commit: revision.commit_sha,
+                    commit: revision.commit.into(),
                     committed_at: revision.committed_at,
                     pdfs: pdfs
                         .into_iter()
@@ -814,7 +814,7 @@ impl ApiContext {
                     None => Err(ResourceError::DoesNotExist),
                 }?;
 
-                let sha = latest_revision.commit_sha;
+                let sha = latest_revision.commit;
                 let mut github_locations = self
                     .github
                     .locations_for_commit(sha.clone())
@@ -825,7 +825,7 @@ impl ApiContext {
                 match github_locations.len() {
                     0 => {
                         tracing::warn!(
-                            sha,
+                            ?sha,
                             rfd_number,
                             "Failed to find a GitHub location for most recent revision"
                         );

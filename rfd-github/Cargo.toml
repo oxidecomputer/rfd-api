@@ -12,5 +12,6 @@ chrono = { workspace = true }
 http = { workspace = true }
 octorust = { workspace = true }
 rfd-data = { path = "../rfd-data" }
+rfd-model = { path = "../rfd-model" }
 thiserror = { workspace = true }
 tracing = { workspace = true }

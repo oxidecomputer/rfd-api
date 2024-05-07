@@ -2628,6 +2628,7 @@ dependencies = [
  "http 0.2.11",
  "octorust",
  "rfd-data",
+ "rfd-model",
  "thiserror",
  "tracing",
 ]
