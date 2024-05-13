@@ -76,7 +76,7 @@ impl GitHubCommitPayload {
                         owner: self.repository.owner.login.clone(),
                         repository: self.repository.name.clone(),
                         branch: self.branch().to_string(),
-                        sha: head_commit.id.clone(),
+                        sha: head_commit.id.clone().into(),
                         rfd,
                         webhook_delivery_id: Some(delivery_id),
                         committed_at: head_commit.timestamp.clone(),

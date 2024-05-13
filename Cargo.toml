@@ -17,17 +17,17 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-anyhow = "1.0.81"
+anyhow = "1.0.82"
 async-bb8-diesel = { git = "https://github.com/oxidecomputer/async-bb8-diesel" }
-async-trait = "0.1.79"
+async-trait = "0.1.80"
 base64 = "0.21.7"
 bb8 = "0.8.3"
-chrono = "0.4.37"
+chrono = "0.4.38"
 clap = { version = "4.5.4", features = ["derive", "string", "env"] }
-config = { version = "0.13.4", features = ["toml"] }
+config = { version = "0.14.0", features = ["toml"] }
 cookie = { version = "0.18.1" }
 crc32c = "0.6.5"
-diesel = { version = "2.1.5", features = ["postgres"] }
+diesel = { version = "2.1.6", features = ["postgres"] }
 dirs = "5.0.1"
 dropshot = "0.10.0"
 dropshot-verified-body = { git = "https://github.com/oxidecomputer/dropshot-verified-body" }
@@ -40,8 +40,8 @@ hmac = "0.12.1"
 http = "0.2.11"
 hyper = "0.14.28"
 hyper-rustls = "0.24.2"
-itertools = "0.12.0"
-jsonwebtoken = "9.2.0"
+itertools = "0.12.1"
+jsonwebtoken = "9.3.0"
 meilisearch-sdk = { version = "0.24.3", default-features = false, features = ["reqwest-rustls"] }
 md-5 = "0.10.6"
 mime_guess = "2.0.4"
@@ -49,18 +49,18 @@ mockall = "0.12.1"
 newline-converter = "0.3.0"
 oauth2 = "4.4.2"
 octorust = { git = "https://github.com/oxidecomputer/third-party-api-clients", branch = "handle-cache-miss" }
-owo-colors = "3.5.0"
+owo-colors = "4.0.0"
 partial-struct = { git = "https://github.com/oxidecomputer/partial-struct" }
 progenitor = { git = "https://github.com/oxidecomputer/progenitor" }
 progenitor-client = { git = "https://github.com/oxidecomputer/progenitor" }
 rand = "0.8.5"
 rand_core = "0.6"
-regex = "1.10.2"
+regex = "1.10.4"
 reqwest = { version = "0.11", default-features = false, features = ["json", "stream"] }
 reqwest-middleware = "0.2"
 reqwest-retry = "0.3.0"
 reqwest-tracing = "0.4.6"
-ring = "0.17.7"
+ring = "0.17.8"
 rsa = "0.9.6"
 rustfmt-wrapper = "0.2.1"
 schemars = "0.8.16"
@@ -71,22 +71,22 @@ serde_bytes = "0.11.14"
 serde_json = "1"
 serde_urlencoded = "0.7.1"
 sha2 = "0.10.8"
-similar = "2.4.0"
+similar = "2.5.0"
 slog = "2.7.0"
 slog-async = "2.8.0"
 tabwriter = "1.4.0"
 tap = "1.0.1"
-textwrap = "0.16.0"
-thiserror = "1.0.56"
-tokio = "1.35.1"
-toml = "0.8.8"
+textwrap = "0.16.1"
+thiserror = "1.0.58"
+tokio = "1.37.0"
+toml = "0.8.12"
 tracing = "0.1.40"
 tracing-appender = "0.2.3"
 tracing-bunyan-formatter = "0.3.9"
 tracing-core = "0.1.32"
 tracing-slog = { git = "https://github.com/oxidecomputer/tracing-slog" }
 tracing-subscriber = "0.3.18"
-uuid = "1.6.1"
+uuid = "1.8.0"
 valuable = "0.1.0"
 yup-oauth2 = "8.3.2"
 

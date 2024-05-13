@@ -26,6 +26,42 @@ pub mod schema;
 pub mod schema_ext;
 pub mod storage;
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct CommitSha(pub String);
+
+impl Display for CommitSha {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
+impl From<String> for CommitSha {
+    fn from(value: String) -> Self {
+        Self(value)
+    }
+}
+
+impl From<CommitSha> for String {
+    fn from(value: CommitSha) -> Self {
+        value.0
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct FileSha(pub String);
+
+impl From<String> for FileSha {
+    fn from(value: String) -> Self {
+        Self(value)
+    }
+}
+
+impl From<FileSha> for String {
+    fn from(value: FileSha) -> Self {
+        value.0
+    }
+}
+
 #[partial(NewRfd)]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct Rfd {
@@ -67,8 +103,8 @@ pub struct RfdRevision {
     pub labels: Option<String>,
     pub content: String,
     pub content_format: ContentFormat,
-    pub sha: String,
-    pub commit_sha: String,
+    pub sha: FileSha,
+    pub commit: CommitSha,
     pub committed_at: DateTime<Utc>,
     #[partial(NewRfdRevision(skip))]
     pub created_at: DateTime<Utc>,
@@ -90,8 +126,8 @@ impl From<RfdRevisionModel> for RfdRevision {
             labels: value.labels,
             content: value.content,
             content_format: value.content_format,
-            sha: value.sha,
-            commit_sha: value.commit_sha,
+            sha: value.sha.into(),
+            commit: value.commit_sha.into(),
             committed_at: value.committed_at,
             created_at: value.created_at,
             updated_at: value.updated_at,
@@ -141,7 +177,7 @@ pub struct Job {
     pub owner: String,
     pub repository: String,
     pub branch: String,
-    pub sha: String,
+    pub sha: CommitSha,
     pub rfd: i32,
     pub webhook_delivery_id: Option<Uuid>,
     pub committed_at: DateTime<Utc>,
@@ -160,7 +196,7 @@ impl From<JobModel> for Job {
             owner: value.owner,
             repository: value.repository,
             branch: value.branch,
-            sha: value.sha,
+            sha: value.sha.into(),
             rfd: value.rfd,
             webhook_delivery_id: value.webhook_delivery_id,
             committed_at: value.committed_at,

@@ -70,7 +70,7 @@ impl IntoJob for GitHubRfdUpdate {
             owner: self.location.owner,
             repository: self.location.repo,
             branch: self.location.branch,
-            sha: self.location.commit,
+            sha: self.location.commit.into(),
             rfd: self.number.into(),
             webhook_delivery_id: None,
             committed_at: self.committed_at,

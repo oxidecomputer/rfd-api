@@ -303,8 +303,8 @@ impl RfdRevisionStore for PostgresStore {
                 rfd_revision::labels.eq(new_revision.labels.clone()),
                 rfd_revision::content.eq(new_revision.content.clone()),
                 rfd_revision::content_format.eq(new_revision.content_format.clone()),
-                rfd_revision::sha.eq(new_revision.sha.clone()),
-                rfd_revision::commit_sha.eq(new_revision.commit_sha.clone()),
+                rfd_revision::sha.eq(String::from(new_revision.sha)),
+                rfd_revision::commit_sha.eq(String::from(new_revision.commit)),
                 rfd_revision::committed_at.eq(new_revision.committed_at.clone()),
             ))
             .on_conflict(rfd_revision::id)
@@ -500,7 +500,7 @@ impl JobStore for PostgresStore {
                 job::owner.eq(new_job.owner.clone()),
                 job::repository.eq(new_job.repository.clone()),
                 job::branch.eq(new_job.branch.clone()),
-                job::sha.eq(new_job.sha.clone()),
+                job::sha.eq(String::from(new_job.sha)),
                 job::rfd.eq(new_job.rfd.clone()),
                 job::webhook_delivery_id.eq(new_job.webhook_delivery_id.clone()),
                 job::processed.eq(false),

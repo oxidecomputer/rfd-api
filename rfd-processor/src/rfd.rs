@@ -14,7 +14,7 @@ use rfd_model::{
         ListPagination, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionStore,
         RfdStore, StoreError,
     },
-    NewRfd, NewRfdRevision, Rfd, RfdRevision,
+    CommitSha, FileSha, NewRfd, NewRfdRevision, Rfd, RfdRevision,
 };
 use thiserror::Error;
 use uuid::Uuid;
@@ -204,8 +204,8 @@ pub struct RfdPayload {
     pub content_format: ContentFormat,
     pub authors: String,
     pub labels: String,
-    pub sha: String,
-    pub commit_sha: String,
+    pub sha: FileSha,
+    pub commit_sha: CommitSha,
     pub commit_date: DateTime<Utc>,
 }
 
@@ -241,7 +241,7 @@ pub enum FetchRemoteRfdError {
 pub struct RemoteRfd {
     pub number: RfdNumber,
     pub readme: GitHubRfdReadme<'static>,
-    pub commit_sha: String,
+    pub commit: CommitSha,
     pub commit_date: DateTime<Utc>,
 }
 
@@ -265,7 +265,7 @@ impl RemoteRfd {
         Ok(RemoteRfd {
             number: update.number,
             readme,
-            commit_sha: update.location.commit.clone(),
+            commit: update.location.commit.clone(),
             commit_date: commit_date,
         })
     }
@@ -317,8 +317,8 @@ impl RemoteRfd {
             content_format,
             authors,
             labels,
-            sha: self.readme.sha,
-            commit_sha: self.commit_sha,
+            sha: self.readme.sha.into(),
+            commit_sha: self.commit,
             commit_date: self.commit_date,
         })
     }
@@ -356,7 +356,7 @@ impl RemoteRfd {
             storage,
             RfdRevisionFilter::default()
                 .rfd(Some(vec![rfd.id]))
-                .sha(Some(vec![payload.commit_sha.clone()])),
+                .sha(Some(vec![payload.commit_sha.clone().into()])),
             &ListPagination::latest(),
         )
         .await?
@@ -396,7 +396,7 @@ impl RemoteRfd {
                 content: payload.content.raw().to_string(),
                 content_format: payload.content_format,
                 sha: payload.sha,
-                commit_sha: payload.commit_sha,
+                commit: payload.commit_sha.into(),
                 committed_at: payload.commit_date,
             },
         )
