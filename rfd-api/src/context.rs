@@ -979,6 +979,7 @@ impl ApiContext {
                 .map_err(|err| err.inner_into())?;
             let sha = latest_revision.commit_sha;
 
+            tracing::info!(?sha, "Found commit to update from");
 
             self.commit_rfd_document(
                 caller,
@@ -994,7 +995,7 @@ impl ApiContext {
         }
     }
 
-    #[instrument(skip(self, caller, document))]
+    #[instrument(skip(self, caller, document), err(Debug))]
     async fn commit_rfd_document(
         &self,
         caller: &ApiCaller,
@@ -1004,6 +1005,8 @@ impl ApiContext {
         head: &str,
         branch_name: Option<&str>,
     ) -> ResourceResult<Option<String>, UpdateRfdContentError> {
+        tracing::info!("Pushing update to GitHub");
+
         let mut github_locations = self
             .github
             .locations_for_commit(head.to_string())

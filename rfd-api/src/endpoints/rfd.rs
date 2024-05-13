@@ -382,6 +382,8 @@ async fn set_rfd_attr_op(
             }
         };
 
+        tracing::info!("Updated attribute in RFD document");
+
         // Persist the data back to GitHub. Note that we do not store this back to the database.
         // We rely on GitHub as the source of truth and revisions are required to tbe linked to
         // commits

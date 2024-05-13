@@ -141,7 +141,10 @@ impl OAuthProvider for GoogleOAuthProvider {
     }
 
     fn user_info_endpoints(&self) -> Vec<&str> {
-        vec!["https://openidconnect.googleapis.com/v1/userinfo"]
+        vec![
+            "https://openidconnect.googleapis.com/v1/userinfo",
+            "https://people.googleapis.com/v1/people/me?personFields=names",
+        ]
     }
 
     fn device_code_endpoint(&self) -> &str {
