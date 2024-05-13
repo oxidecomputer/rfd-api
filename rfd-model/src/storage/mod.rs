@@ -323,6 +323,38 @@ pub struct ApiUserProviderFilter {
     pub deleted: bool,
 }
 
+impl ApiUserProviderFilter {
+    pub fn id(mut self, id: Option<Vec<Uuid>>) -> Self {
+        self.id = id;
+        self
+    }
+
+    pub fn api_user_id(mut self, api_user_id: Option<Vec<Uuid>>) -> Self {
+        self.api_user_id = api_user_id;
+        self
+    }
+
+    pub fn provider(mut self, provider: Option<Vec<String>>) -> Self {
+        self.provider = provider;
+        self
+    }
+
+    pub fn provider_id(mut self, provider_id: Option<Vec<String>>) -> Self {
+        self.provider_id = provider_id;
+        self
+    }
+
+    pub fn email(mut self, email: Option<Vec<String>>) -> Self {
+        self.email = email;
+        self
+    }
+
+    pub fn deleted(mut self, deleted: bool) -> Self {
+        self.deleted = deleted;
+        self
+    }
+}
+
 #[cfg_attr(feature = "mock", automock)]
 #[async_trait]
 pub trait ApiUserProviderStore {

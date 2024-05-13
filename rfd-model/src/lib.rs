@@ -190,6 +190,7 @@ pub struct ApiUser<T: Ord> {
 pub struct ApiUserProvider {
     pub id: Uuid,
     pub api_user_id: Uuid,
+    // TODO: This really needs to be an enum,
     pub provider: String,
     pub provider_id: String,
     pub emails: Vec<String>,

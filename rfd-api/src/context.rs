@@ -43,6 +43,7 @@ use rsa::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::{
+    cmp::Ordering,
     collections::{BTreeSet, HashMap},
     ops::Add,
     sync::Arc,
@@ -976,8 +977,9 @@ impl ApiContext {
                 .get_latest_rfd_revision(caller, rfd_number)
                 .await
                 .map_err(|err| err.inner_into())?;
-
             let sha = latest_revision.commit_sha;
+
+
             self.commit_rfd_document(
                 caller,
                 rfd_number.into(),
@@ -1017,6 +1019,31 @@ impl ApiContext {
             })
             .collect::<Vec<_>>();
 
+        let mut providers = self
+            .list_api_user_provider(
+                caller,
+                ApiUserProviderFilter::default().api_user_id(Some(vec![caller.id])),
+                &ListPagination::default(),
+            )
+            .await
+            .map_err(|err| err.inner_into())?;
+
+        // Prefer a GitHub identity provider, but we will use Google if we can not find one
+        providers.sort_by(|a, b| {
+            if a.provider == b.provider {
+                Ordering::Equal
+            } else if a.provider == "github" {
+                Ordering::Less
+            } else {
+                Ordering::Greater
+            }
+        });
+
+        let display_name = providers
+            .get(0)
+            .and_then(|p| p.display_names.get(0).map(|s| s.clone()))
+            .unwrap_or_else(|| caller.id.to_string());
+
         match github_locations.len() {
             0 => {
                 tracing::warn!(
@@ -1032,7 +1059,7 @@ impl ApiContext {
                 let message = format!(
                     "{}\n\nSubmitted by {}",
                     message.unwrap_or("RFD API update"),
-                    caller.id
+                    display_name,
                 );
 
                 // Unwrap is checked by the location length
