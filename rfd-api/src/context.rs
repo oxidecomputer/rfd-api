@@ -735,7 +735,7 @@ impl ApiContext {
             .map_err(UpdateRfdContentError::InvalidTemplate)
             .to_resource_result()?;
 
-            tracing::info!(?next_rfd_number, commit, "Creating new RFD branch");
+            tracing::info!(?next_rfd_number, ?commit, "Creating new RFD branch");
 
             // Branch off of the default branch with a new branch with the padded form of the RFD number
             self.github
@@ -755,7 +755,7 @@ impl ApiContext {
                 next_rfd_number.into(),
                 &content.render(),
                 Some("Reserving RFD number"),
-                &commit,
+                commit,
                 Some(&next_rfd_number.as_number_string()),
             )
             .await?;
@@ -932,7 +932,7 @@ impl ApiContext {
         content: &str,
         message: Option<&str>,
         branch_name: Option<&str>,
-    ) -> ResourceResult<Option<String>, UpdateRfdContentError> {
+    ) -> ResourceResult<Option<CommitSha>, UpdateRfdContentError> {
         if caller.any(&[
             &ApiPermission::UpdateRfd(rfd_number),
             &ApiPermission::UpdateRfdsAll,
@@ -942,7 +942,7 @@ impl ApiContext {
                 .await
                 .map_err(|err| err.inner_into())?;
 
-            let sha = latest_revision.commit_sha.clone();
+            let sha = latest_revision.commit.clone();
             let mut updated_content: RfdContent = latest_revision.into();
             updated_content.update_body(content);
 
@@ -951,7 +951,7 @@ impl ApiContext {
                 rfd_number.into(),
                 updated_content.raw(),
                 message,
-                &sha,
+                sha,
                 branch_name,
             )
             .await
@@ -968,7 +968,7 @@ impl ApiContext {
         document: &str,
         message: Option<&str>,
         branch_name: Option<&str>,
-    ) -> ResourceResult<Option<String>, UpdateRfdContentError> {
+    ) -> ResourceResult<Option<CommitSha>, UpdateRfdContentError> {
         if caller.any(&[
             &ApiPermission::UpdateRfd(rfd_number),
             &ApiPermission::UpdateRfdsAll,
@@ -977,7 +977,7 @@ impl ApiContext {
                 .get_latest_rfd_revision(caller, rfd_number)
                 .await
                 .map_err(|err| err.inner_into())?;
-            let sha = latest_revision.commit_sha;
+            let sha = latest_revision.commit;
 
             tracing::info!(?sha, "Found commit to update from");
 
@@ -986,7 +986,7 @@ impl ApiContext {
                 rfd_number.into(),
                 document,
                 message,
-                &sha,
+                sha,
                 branch_name,
             )
             .await
@@ -1002,14 +1002,14 @@ impl ApiContext {
         rfd_number: RfdNumber,
         document: &str,
         message: Option<&str>,
-        head: &str,
+        head: CommitSha,
         branch_name: Option<&str>,
-    ) -> ResourceResult<Option<String>, UpdateRfdContentError> {
+    ) -> ResourceResult<Option<CommitSha>, UpdateRfdContentError> {
         tracing::info!("Pushing update to GitHub");
 
         let mut github_locations = self
             .github
-            .locations_for_commit(head.to_string())
+            .locations_for_commit(head.clone())
             .await
             .map_err(UpdateRfdContentError::GitHub)
             .to_resource_result()?
@@ -1050,7 +1050,7 @@ impl ApiContext {
         match github_locations.len() {
             0 => {
                 tracing::warn!(
-                    head,
+                    ?head,
                     ?rfd_number,
                     "Failed to find a GitHub location for most recent revision"
                 );
@@ -1075,12 +1075,12 @@ impl ApiContext {
 
                 // If we committed a change, immediately register a job as well. This may conflict with
                 // a job already added by a webhook, this is fine and we can ignore the error
-                if let Some(commit) = &commit {
+                if let Some(commit) = commit.clone() {
                     let new_job = NewJob {
                         owner: self.github.owner.clone(),
                         repository: self.github.repo.clone(),
                         branch: rfd_number.as_number_string(),
-                        sha: commit.to_string(),
+                        sha: commit.clone(),
                         rfd: rfd_number.into(),
                         // This job is not being triggered by a webhook
                         webhook_delivery_id: None,

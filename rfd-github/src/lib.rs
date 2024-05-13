@@ -152,7 +152,7 @@ impl GitHubRfdRepo {
 
         Ok(GitHubNewRfdNumber {
             number: next_rfd_number,
-            commit: default.commit.sha,
+            commit: default.commit.sha.into(),
         })
     }
 
@@ -679,7 +679,7 @@ impl GitHubRfdLocation {
         rfd_number: &RfdNumber,
         content: &[u8],
         message: &str,
-    ) -> Result<Option<String>, GitHubError> {
+    ) -> Result<Option<CommitSha>, GitHubError> {
         let readme_path = self.readme_path(&self.client, rfd_number).await;
         let (decoded, sha) = match self
             .fetch_content(&self.client, &readme_path, &self.commit)
@@ -726,7 +726,7 @@ impl GitHubRfdLocation {
             )
             .await?;
 
-        Ok(Some(response.body.commit.sha))
+        Ok(Some(response.body.commit.sha.into()))
     }
 }
 
@@ -762,7 +762,7 @@ pub struct GitHubRfdUpdate {
 #[derive(Debug, Clone)]
 pub struct GitHubNewRfdNumber {
     pub number: RfdNumber,
-    pub commit: String,
+    pub commit: CommitSha,
 }
 
 // TODO: Expand this

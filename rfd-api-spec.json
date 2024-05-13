@@ -3760,6 +3760,9 @@
           "updated_at"
         ]
       },
+      "CommitSha": {
+        "type": "string"
+      },
       "ContentFormat": {
         "type": "string",
         "enum": [
@@ -3805,6 +3808,9 @@
           "message",
           "request_id"
         ]
+      },
+      "FileSha": {
+        "type": "string"
       },
       "FormattedSearchResultHit": {
         "type": "object",
@@ -3863,7 +3869,7 @@
             "type": "string"
           },
           "commit": {
-            "type": "string"
+            "$ref": "#/components/schemas/CommitSha"
           },
           "committed_at": {
             "type": "string",
@@ -3902,7 +3908,7 @@
             "format": "int32"
           },
           "sha": {
-            "type": "string"
+            "$ref": "#/components/schemas/FileSha"
           },
           "state": {
             "nullable": true,
@@ -4217,7 +4223,7 @@
             "type": "string"
           },
           "commit": {
-            "type": "string"
+            "$ref": "#/components/schemas/CommitSha"
           },
           "committed_at": {
             "type": "string",
@@ -4247,7 +4253,7 @@
             "format": "int32"
           },
           "sha": {
-            "type": "string"
+            "$ref": "#/components/schemas/FileSha"
           },
           "state": {
             "nullable": true,

@@ -431,8 +431,8 @@ impl TabDisplay for ListRfd {
             "discussion",
             &self.discussion.as_ref().map(|s| s.as_str()).unwrap_or(""),
         );
-        printer.print_field(tw, level, "sha", &self.sha);
-        printer.print_field(tw, level, "commit", &self.commit);
+        printer.print_field(tw, level, "sha", &self.sha.as_str());
+        printer.print_field(tw, level, "commit", &self.commit.as_str());
         printer.print_field(tw, level, "committed_at", &self.committed_at);
     }
 }
@@ -483,8 +483,8 @@ impl TabDisplay for FullRfd {
         );
         printer.print_field(tw, level, "pdfs", &"");
         self.pdfs.display(tw, level + 1, printer);
-        printer.print_field(tw, level, "sha", &self.sha);
-        printer.print_field(tw, level, "commit", &self.commit);
+        printer.print_field(tw, level, "sha", &self.sha.as_str());
+        printer.print_field(tw, level, "commit", &self.commit.as_str());
         printer.print_field(tw, level, "committed_at", &self.committed_at);
         writeln!(tw, "");
         writeln!(tw, "{}", self.content);

@@ -2781,6 +2781,68 @@ pub mod types {
         }
     }
 
+    /// CommitSha
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        Clone,
+        Debug,
+        Deserialize,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        Serialize,
+        schemars :: JsonSchema,
+    )]
+    pub struct CommitSha(pub String);
+    impl std::ops::Deref for CommitSha {
+        type Target = String;
+        fn deref(&self) -> &String {
+            &self.0
+        }
+    }
+
+    impl From<CommitSha> for String {
+        fn from(value: CommitSha) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&CommitSha> for CommitSha {
+        fn from(value: &CommitSha) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<String> for CommitSha {
+        fn from(value: String) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for CommitSha {
+        type Err = std::convert::Infallible;
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ToString for CommitSha {
+        fn to_string(&self) -> String {
+            self.0.to_string()
+        }
+    }
+
     /// ContentFormat
     ///
     /// <details><summary>JSON schema</summary>
@@ -2964,6 +3026,68 @@ pub mod types {
         }
     }
 
+    /// FileSha
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        Clone,
+        Debug,
+        Deserialize,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        Serialize,
+        schemars :: JsonSchema,
+    )]
+    pub struct FileSha(pub String);
+    impl std::ops::Deref for FileSha {
+        type Target = String;
+        fn deref(&self) -> &String {
+            &self.0
+        }
+    }
+
+    impl From<FileSha> for String {
+        fn from(value: FileSha) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&FileSha> for FileSha {
+        fn from(value: &FileSha) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<String> for FileSha {
+        fn from(value: String) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for FileSha {
+        type Err = std::convert::Infallible;
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ToString for FileSha {
+        fn to_string(&self) -> String {
+            self.0.to_string()
+        }
+    }
+
     /// FormattedSearchResultHit
     ///
     /// <details><summary>JSON schema</summary>
@@ -3086,7 +3210,7 @@ pub mod types {
     ///      ]
     ///    },
     ///    "commit": {
-    ///      "type": "string"
+    ///      "$ref": "#/components/schemas/CommitSha"
     ///    },
     ///    "committed_at": {
     ///      "type": "string",
@@ -3132,7 +3256,7 @@ pub mod types {
     ///      "format": "int32"
     ///    },
     ///    "sha": {
-    ///      "type": "string"
+    ///      "$ref": "#/components/schemas/FileSha"
     ///    },
     ///    "state": {
     ///      "type": [
@@ -3157,7 +3281,7 @@ pub mod types {
     pub struct FullRfd {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub authors: Option<String>,
-        pub commit: String,
+        pub commit: CommitSha,
         pub committed_at: chrono::DateTime<chrono::offset::Utc>,
         pub content: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -3170,7 +3294,7 @@ pub mod types {
         pub link: Option<String>,
         pub pdfs: Vec<FullRfdPdfEntry>,
         pub rfd_number: i32,
-        pub sha: String,
+        pub sha: FileSha,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub state: Option<String>,
         pub title: String,
@@ -3859,7 +3983,7 @@ pub mod types {
     ///      ]
     ///    },
     ///    "commit": {
-    ///      "type": "string"
+    ///      "$ref": "#/components/schemas/CommitSha"
     ///    },
     ///    "committed_at": {
     ///      "type": "string",
@@ -3895,7 +4019,7 @@ pub mod types {
     ///      "format": "int32"
     ///    },
     ///    "sha": {
-    ///      "type": "string"
+    ///      "$ref": "#/components/schemas/FileSha"
     ///    },
     ///    "state": {
     ///      "type": [
@@ -3920,7 +4044,7 @@ pub mod types {
     pub struct ListRfd {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub authors: Option<String>,
-        pub commit: String,
+        pub commit: CommitSha,
         pub committed_at: chrono::DateTime<chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub discussion: Option<String>,
@@ -3931,7 +4055,7 @@ pub mod types {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub link: Option<String>,
         pub rfd_number: i32,
-        pub sha: String,
+        pub sha: FileSha,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub state: Option<String>,
         pub title: String,
@@ -6880,7 +7004,7 @@ pub mod types {
         #[derive(Clone, Debug)]
         pub struct FullRfd {
             authors: Result<Option<String>, String>,
-            commit: Result<String, String>,
+            commit: Result<super::CommitSha, String>,
             committed_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             content: Result<String, String>,
             discussion: Result<Option<String>, String>,
@@ -6890,7 +7014,7 @@ pub mod types {
             link: Result<Option<String>, String>,
             pdfs: Result<Vec<super::FullRfdPdfEntry>, String>,
             rfd_number: Result<i32, String>,
-            sha: Result<String, String>,
+            sha: Result<super::FileSha, String>,
             state: Result<Option<String>, String>,
             title: Result<String, String>,
             visibility: Result<super::Visibility, String>,
@@ -6931,7 +7055,7 @@ pub mod types {
             }
             pub fn commit<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<String>,
+                T: std::convert::TryInto<super::CommitSha>,
                 T::Error: std::fmt::Display,
             {
                 self.commit = value
@@ -7031,7 +7155,7 @@ pub mod types {
             }
             pub fn sha<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<String>,
+                T: std::convert::TryInto<super::FileSha>,
                 T::Error: std::fmt::Display,
             {
                 self.sha = value
@@ -8033,7 +8157,7 @@ pub mod types {
         #[derive(Clone, Debug)]
         pub struct ListRfd {
             authors: Result<Option<String>, String>,
-            commit: Result<String, String>,
+            commit: Result<super::CommitSha, String>,
             committed_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             discussion: Result<Option<String>, String>,
             format: Result<super::ContentFormat, String>,
@@ -8041,7 +8165,7 @@ pub mod types {
             labels: Result<Option<String>, String>,
             link: Result<Option<String>, String>,
             rfd_number: Result<i32, String>,
-            sha: Result<String, String>,
+            sha: Result<super::FileSha, String>,
             state: Result<Option<String>, String>,
             title: Result<String, String>,
             visibility: Result<super::Visibility, String>,
@@ -8080,7 +8204,7 @@ pub mod types {
             }
             pub fn commit<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<String>,
+                T: std::convert::TryInto<super::CommitSha>,
                 T::Error: std::fmt::Display,
             {
                 self.commit = value
@@ -8160,7 +8284,7 @@ pub mod types {
             }
             pub fn sha<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<String>,
+                T: std::convert::TryInto<super::FileSha>,
                 T::Error: std::fmt::Display,
             {
                 self.sha = value
