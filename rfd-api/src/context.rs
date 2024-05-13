@@ -1043,7 +1043,9 @@ impl ApiContext {
         });
 
         let display_name = providers
-            .get(0)
+            .into_iter()
+            .filter(|provider| !provider.display_names.is_empty())
+            .nth(0)
             .and_then(|p| p.display_names.get(0).map(|s| s.clone()))
             .unwrap_or_else(|| caller.id.to_string());
 
