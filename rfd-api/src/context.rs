@@ -1159,12 +1159,7 @@ impl ApiContext {
                             id: Uuid::new_v4(),
                             api_user_id: user.id,
                             emails: info.verified_emails,
-                            // TODO: Refactor in generic display name across providers. This cascades
-                            // into changes needed within mappers
-                            display_names: info
-                                .github_username
-                                .map(|name| vec![name])
-                                .unwrap_or_default(),
+                            display_names: info.display_name.into_iter().collect::<Vec<_>>(),
                             provider: info.external_id.provider().to_string(),
                             provider_id: info.external_id.id().to_string(),
                         },
@@ -1183,10 +1178,7 @@ impl ApiContext {
 
                 // Update the provider with the newest user info
                 provider.emails = info.verified_emails;
-                provider.display_names = info
-                    .github_username
-                    .map(|name| vec![name])
-                    .unwrap_or_default();
+                provider.display_names = info.display_name.into_iter().collect::<Vec<_>>();
 
                 tracing::info!(?provider.id, "Updating provider for user");
 

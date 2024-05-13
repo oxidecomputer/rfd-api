@@ -146,7 +146,7 @@ impl<'de> Deserialize<'de> for ExternalUserId {
 pub struct UserInfo {
     pub external_id: ExternalUserId,
     pub verified_emails: Vec<String>,
-    pub github_username: Option<String>,
+    pub display_name: Option<String>,
 }
 
 #[derive(Debug, Error)]
