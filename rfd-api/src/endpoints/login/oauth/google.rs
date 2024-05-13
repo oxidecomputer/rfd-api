@@ -77,6 +77,7 @@ struct GoogleProfileName {
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct GoogleProfileNameMeta {
+    #[serde(default)]
     primary: bool,
 }
 
