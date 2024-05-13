@@ -77,7 +77,7 @@ impl PostgresStore {
 
         Ok(Self {
             pool: Pool::builder()
-                .connection_timeout(Duration::from_secs(15))
+                .connection_timeout(Duration::from_secs(30))
                 .build(manager)
                 .await?,
         })
