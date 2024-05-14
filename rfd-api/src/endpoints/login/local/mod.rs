@@ -39,7 +39,7 @@ pub async fn local_login(
         let info = UserInfo {
             external_id: super::ExternalUserId::Local(body.external_id),
             verified_emails: vec![body.email],
-            github_username: None,
+            display_name: Some("Local Dev".to_string()),
         };
 
         let (api_user, api_user_provider) = ctx
