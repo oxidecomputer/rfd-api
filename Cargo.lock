@@ -2697,25 +2697,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rfd-redirect"
-version = "0.8.0"
-dependencies = [
- "config",
- "dropshot",
- "regex",
- "rfd-data",
- "schemars",
- "serde",
- "slog",
- "slog-async",
- "thiserror",
- "tokio",
- "tracing",
- "tracing-slog",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "rfd-sdk"
 version = "0.1.0"
 dependencies = [
