@@ -42,7 +42,7 @@ pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
 
                 let ctx = ctx.clone();
                 tokio::spawn(async move {
-                    // Make the job as started
+                    // Mark the job as started
                     match JobStore::start(&ctx.db.storage, job.id).await {
                         Ok(Some(job)) => {
                             let location = GitHubRfdLocation {

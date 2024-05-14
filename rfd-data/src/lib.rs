@@ -18,7 +18,7 @@ impl RfdNumber {
         format!("/rfd/{}", self.as_number_string())
     }
 
-    /// Get an RFD number in its expanded form with leading 0s
+    /// Get a RFD number in its expanded form with leading 0s
     pub fn as_number_string(&self) -> String {
         let mut number_string = self.0.to_string();
         while number_string.len() < 4 {

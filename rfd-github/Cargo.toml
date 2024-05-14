@@ -11,6 +11,7 @@ base64 = { workspace = true }
 chrono = { workspace = true }
 http = { workspace = true }
 octorust = { workspace = true }
+regex = { workspace = true }
 rfd-data = { path = "../rfd-data" }
 rfd-model = { path = "../rfd-model" }
 thiserror = { workspace = true }

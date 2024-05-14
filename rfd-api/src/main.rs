@@ -83,6 +83,7 @@ async fn main() -> anyhow::Result<()> {
         config.jwt,
         config.keys,
         config.search,
+        config.content,
         config.services,
     )
     .await?;

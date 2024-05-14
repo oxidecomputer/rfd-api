@@ -594,6 +594,31 @@
         }
       }
     },
+    "/login/local": {
+      "post": {
+        "operationId": "local_login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocalLogin"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "*/*": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/login/oauth/{provider}/code/authorize": {
       "get": {
         "summary": "Generate the remote provider login url and redirect the user",
@@ -1216,11 +1241,43 @@
             "$ref": "#/components/responses/Error"
           }
         }
+      },
+      "post": {
+        "summary": "Create a new RFD",
+        "operationId": "reserve_rfd",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReserveRfdBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "successfully enqueued operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReserveRfdResponse"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
       }
     },
     "/rfd/{number}": {
       "get": {
-        "summary": "Get the latest representation of an RFD",
+        "summary": "Get the latest representation of a RFD",
         "operationId": "get_rfd",
         "parameters": [
           {
@@ -1253,7 +1310,8 @@
         }
       },
       "post": {
-        "operationId": "set_rfd_content",
+        "summary": "Replace the full document of a RFD",
+        "operationId": "set_rfd_document",
         "parameters": [
           {
             "in": "path",
@@ -1301,7 +1359,7 @@
     },
     "/rfd/{number}/attr/{attr}": {
       "get": {
-        "summary": "Get an attribute of a given RFD",
+        "summary": "Get an attribute of a RFD",
         "operationId": "get_rfd_attr",
         "parameters": [
           {
@@ -1340,8 +1398,8 @@
           }
         }
       },
-      "put": {
-        "summary": "Set an attribute of a given RFD",
+      "post": {
+        "summary": "Set an attribute of a RFD",
         "operationId": "set_rfd_attr",
         "parameters": [
           {
@@ -1372,8 +1430,127 @@
           "required": true
         },
         "responses": {
-          "200": {
-            "description": "successful operation",
+          "202": {
+            "description": "successfully enqueued operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RfdAttr"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/rfd/{number}/content": {
+      "post": {
+        "summary": "Replace the contents of a RFD",
+        "operationId": "set_rfd_content",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RfdUpdateContentBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "successfully enqueued operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Null",
+                  "type": "string",
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/rfd/{number}/discuss": {
+      "post": {
+        "summary": "Open a RFD for discussion",
+        "operationId": "discuss_rfd",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "successfully enqueued operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RfdAttr"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/rfd/{number}/publish": {
+      "post": {
+        "summary": "Publish a RFD",
+        "operationId": "publish_rfd",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "successfully enqueued operation",
             "content": {
               "application/json": {
                 "schema": {
@@ -1393,7 +1570,7 @@
     },
     "/rfd/{number}/visibility": {
       "post": {
-        "summary": "Modify the visibility of an RFD",
+        "summary": "Modify the visibility of a RFD",
         "operationId": "update_rfd_visibility",
         "parameters": [
           {
@@ -1714,6 +1891,7 @@
               "ManageMappersAll",
               "GetRfdsAssigned",
               "GetRfdsAll",
+              "CreateRfd",
               "UpdateRfdsAssigned",
               "UpdateRfdsAll",
               "ManageRfdsVisibilityAssigned",
@@ -2982,6 +3160,20 @@
               "kind": {
                 "type": "string",
                 "enum": [
+                  "CreateRfd"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
                   "UpdateRfd"
                 ]
               },
@@ -3568,6 +3760,9 @@
           "updated_at"
         ]
       },
+      "CommitSha": {
+        "type": "string"
+      },
       "ContentFormat": {
         "type": "string",
         "enum": [
@@ -3613,6 +3808,9 @@
           "message",
           "request_id"
         ]
+      },
+      "FileSha": {
+        "type": "string"
       },
       "FormattedSearchResultHit": {
         "type": "object",
@@ -3671,7 +3869,7 @@
             "type": "string"
           },
           "commit": {
-            "type": "string"
+            "$ref": "#/components/schemas/CommitSha"
           },
           "committed_at": {
             "type": "string",
@@ -3710,7 +3908,7 @@
             "format": "int32"
           },
           "sha": {
-            "type": "string"
+            "$ref": "#/components/schemas/FileSha"
           },
           "state": {
             "nullable": true,
@@ -4025,7 +4223,7 @@
             "type": "string"
           },
           "commit": {
-            "type": "string"
+            "$ref": "#/components/schemas/CommitSha"
           },
           "committed_at": {
             "type": "string",
@@ -4055,7 +4253,7 @@
             "format": "int32"
           },
           "sha": {
-            "type": "string"
+            "$ref": "#/components/schemas/FileSha"
           },
           "state": {
             "nullable": true,
@@ -4077,6 +4275,21 @@
           "sha",
           "title",
           "visibility"
+        ]
+      },
+      "LocalLogin": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "external_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email",
+          "external_id"
         ]
       },
       "Mapper": {
@@ -4470,6 +4683,35 @@
         },
         "uniqueItems": true
       },
+      "ReserveRfdBody": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "nullable": true,
+            "description": "Optional contents of the RFD",
+            "type": "string"
+          },
+          "title": {
+            "description": "Title of the RFD",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "ReserveRfdResponse": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "required": [
+          "number"
+        ]
+      },
       "Rfd": {
         "type": "object",
         "properties": {
@@ -4581,8 +4823,25 @@
       "RfdUpdateBody": {
         "type": "object",
         "properties": {
+          "document": {
+            "description": "Full Asciidoc document to store for this RFD",
+            "type": "string"
+          },
+          "message": {
+            "nullable": true,
+            "description": "Optional Git commit message to send with this update (recommended)",
+            "type": "string"
+          }
+        },
+        "required": [
+          "document"
+        ]
+      },
+      "RfdUpdateContentBody": {
+        "type": "object",
+        "properties": {
           "content": {
-            "description": "Full Asciidoc content to store for this RFD",
+            "description": "Asciidoc content to store for this RFD",
             "type": "string"
           },
           "message": {

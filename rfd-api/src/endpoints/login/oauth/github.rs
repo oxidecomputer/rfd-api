@@ -92,7 +92,7 @@ impl ExtractUserInfo for GitHubOAuthProvider {
         Ok(UserInfo {
             external_id: ExternalUserId::GitHub(user.id.to_string()),
             verified_emails,
-            github_username: Some(user.login),
+            display_name: Some(user.login),
         })
     }
 }

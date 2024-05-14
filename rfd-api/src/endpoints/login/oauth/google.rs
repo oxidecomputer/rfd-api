@@ -62,21 +62,47 @@ struct GoogleUserInfo {
     email_verified: bool,
 }
 
+#[derive(Debug, Deserialize)]
+struct GoogleProfile {
+    names: Vec<GoogleProfileName>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct GoogleProfileName {
+    display_name: String,
+    metadata: GoogleProfileNameMeta,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct GoogleProfileNameMeta {
+    #[serde(default)]
+    primary: bool,
+}
+
 impl ExtractUserInfo for GoogleOAuthProvider {
     // There should always be as many entries in the data list as there are endpoints. This should
     // be changed in the future to be a static check
     fn extract_user_info(&self, data: &[Bytes]) -> Result<UserInfo, UserInfoError> {
-        let remote_info: GoogleUserInfo = serde_json::from_slice(&data[0])?;
-        let verified_emails = if remote_info.email_verified {
-            vec![remote_info.email]
+        let user_info: GoogleUserInfo = serde_json::from_slice(&data[0])?;
+        let verified_emails = if user_info.email_verified {
+            vec![user_info.email]
         } else {
             vec![]
         };
 
+        let profile_info: GoogleProfile = serde_json::from_slice(&data[1])?;
+        let display_name = profile_info
+            .names
+            .into_iter()
+            .filter_map(|name| name.metadata.primary.then(|| name.display_name))
+            .nth(0);
+
         Ok(UserInfo {
-            external_id: ExternalUserId::Google(remote_info.sub),
+            external_id: ExternalUserId::Google(user_info.sub),
             verified_emails,
-            github_username: None,
+            display_name,
         })
     }
 }
@@ -87,7 +113,7 @@ impl OAuthProvider for GoogleOAuthProvider {
     }
 
     fn scopes(&self) -> Vec<&str> {
-        vec!["openid", "email"]
+        vec!["openid", "email", "profile"]
     }
 
     fn client(&self) -> &reqwest::Client {
@@ -115,7 +141,10 @@ impl OAuthProvider for GoogleOAuthProvider {
     }
 
     fn user_info_endpoints(&self) -> Vec<&str> {
-        vec!["https://openidconnect.googleapis.com/v1/userinfo"]
+        vec![
+            "https://openidconnect.googleapis.com/v1/userinfo",
+            "https://people.googleapis.com/v1/people/me?personFields=names",
+        ]
     }
 
     fn device_code_endpoint(&self) -> &str {

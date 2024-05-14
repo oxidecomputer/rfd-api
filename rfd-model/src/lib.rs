@@ -29,6 +29,12 @@ pub mod storage;
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct CommitSha(pub String);
 
+impl Display for CommitSha {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self)
+    }
+}
+
 impl From<String> for CommitSha {
     fn from(value: String) -> Self {
         Self(value)
@@ -220,6 +226,7 @@ pub struct ApiUser<T: Ord> {
 pub struct ApiUserProvider {
     pub id: Uuid,
     pub api_user_id: Uuid,
+    // TODO: This really needs to be an enum,
     pub provider: String,
     pub provider_id: String,
     pub emails: Vec<String>,

@@ -2590,6 +2590,7 @@ dependencies = [
  "clap",
  "config",
  "dirs 5.0.1",
+ "futures",
  "itertools 0.12.1",
  "jsonwebtoken 9.3.0",
  "oauth2",
@@ -2614,6 +2615,7 @@ dependencies = [
  "rfd-model",
  "schemars",
  "serde",
+ "thiserror",
 ]
 
 [[package]]
@@ -2625,6 +2627,7 @@ dependencies = [
  "chrono",
  "http 0.2.12",
  "octorust",
+ "regex",
  "rfd-data",
  "rfd-model",
  "thiserror",

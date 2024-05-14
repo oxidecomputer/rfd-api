@@ -15,7 +15,11 @@ use octorust::{
     Client as GitHubClient,
 };
 use partial_struct::partial;
-use rfd_github::{GitHubError, GitHubRfdRepo};
+use rfd_data::{
+    content::{RfdContent, RfdDocument, RfdTemplate, TemplateError},
+    RfdNumber,
+};
+use rfd_github::{GitHubError, GitHubNewRfdNumber, GitHubRfdRepo};
 use rfd_model::{
     schema_ext::{ContentFormat, LoginAttemptState, Visibility},
     storage::{
@@ -39,6 +43,7 @@ use rsa::{
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::{
+    cmp::Ordering,
     collections::{BTreeSet, HashMap},
     ops::Add,
     sync::Arc,
@@ -55,7 +60,9 @@ use crate::{
         key::{RawApiKey, SignedApiKey},
         AuthError, AuthToken, Signer,
     },
-    config::{AsymmetricKey, GitHubAuthConfig, JwtConfig, SearchConfig, ServicesConfig},
+    config::{
+        AsymmetricKey, ContentConfig, GitHubAuthConfig, JwtConfig, SearchConfig, ServicesConfig,
+    },
     endpoints::login::{
         oauth::{
             ClientType, OAuthProvider, OAuthProviderError, OAuthProviderFn, OAuthProviderName,
@@ -128,6 +135,7 @@ pub struct ApiContext {
     pub secrets: SecretContext,
     pub oauth_providers: HashMap<OAuthProviderName, Box<dyn OAuthProviderFn>>,
     pub search: SearchContext,
+    pub content: ContentContext,
     pub github: GitHubRfdRepo,
 }
 
@@ -143,6 +151,11 @@ pub struct SecretContext {
 
 pub struct SearchContext {
     pub client: SearchClient,
+}
+
+pub struct ContentContext {
+    pub placeholder_template: RfdTemplate,
+    pub new_template: RfdTemplate,
 }
 
 pub struct RegisteredAccessToken {
@@ -194,6 +207,10 @@ pub enum UpdateRfdContentError {
     GitHub(#[from] GitHubError),
     #[error("Internal GitHub state does not currently allow for update. This commit appears as the head commit on multiple branches.")]
     InternalState,
+    #[error("Failed to construct new RFD template")]
+    InvalidTemplate(#[from] TemplateError),
+    #[error("Unable to perform action. Unable to find the default branch on GitHub.")]
+    NoDefaultBranch,
     #[error(transparent)]
     Storage(#[from] StoreError),
 }
@@ -239,6 +256,7 @@ impl ApiContext {
         jwt: JwtConfig,
         keys: Vec<AsymmetricKey>,
         search: SearchConfig,
+        content: ContentConfig,
         services: ServicesConfig,
     ) -> Result<Self, AppError> {
         let mut jwt_signers = vec![];
@@ -304,6 +322,18 @@ impl ApiContext {
             oauth_providers: HashMap::new(),
             search: SearchContext {
                 client: SearchClient::new(search.host, search.index, search.key),
+            },
+            content: ContentContext {
+                placeholder_template: content
+                    .templates
+                    .get("placeholder")
+                    .cloned()
+                    .ok_or(AppError::MissingNewRfdTemplate)?,
+                new_template: content
+                    .templates
+                    .get("new")
+                    .cloned()
+                    .ok_or(AppError::MissingNewRfdTemplate)?,
             },
             github: GitHubRfdRepo::new(
                 &match services.github.auth {
@@ -664,6 +694,83 @@ impl ApiContext {
         Ok(rfd_list)
     }
 
+    #[instrument(skip(self, caller), err(Debug))]
+    pub async fn create_rfd(
+        &self,
+        caller: &ApiCaller,
+        title: String,
+        content: Option<String>,
+    ) -> ResourceResult<RfdNumber, UpdateRfdContentError> {
+        if caller.can(&ApiPermission::CreateRfd) {
+            tracing::info!("Reserving new RFD");
+
+            // We acknowledge that there are race conditions here, as there would be if an end user
+            // were to attempt to reserve a RFD number manually
+            let GitHubNewRfdNumber {
+                number: next_rfd_number,
+                commit,
+            } = self
+                .github
+                .next_rfd_number()
+                .await
+                .map_err(UpdateRfdContentError::GitHub)
+                .to_resource_result()?;
+
+            let content = match content {
+                Some(content) => self
+                    .content
+                    .new_template
+                    .clone()
+                    .field("number".to_string(), next_rfd_number.to_string())
+                    .field("title".to_string(), title)
+                    .field("body".to_string(), content),
+                None => self
+                    .content
+                    .placeholder_template
+                    .clone()
+                    .field("number".to_string(), next_rfd_number.to_string())
+                    .field("title".to_string(), title),
+            }
+            .build()
+            .map_err(UpdateRfdContentError::InvalidTemplate)
+            .to_resource_result()?;
+
+            tracing::info!(?next_rfd_number, ?commit, "Creating new RFD branch");
+
+            // Branch off of the default branch with a new branch with the padded form of the RFD number
+            self.github
+                .create_branch(&next_rfd_number, &commit)
+                .await
+                .map_err(UpdateRfdContentError::GitHub)
+                .to_resource_result()?;
+
+            tracing::info!(
+                ?next_rfd_number,
+                ?commit,
+                "Created new branch for reserving RFD off of default branch"
+            );
+
+            self.commit_rfd_document(
+                caller,
+                next_rfd_number.into(),
+                &content.render(),
+                Some("Reserving RFD number"),
+                commit,
+                Some(&next_rfd_number.as_number_string()),
+            )
+            .await?;
+
+            tracing::info!(
+                ?next_rfd_number,
+                "Pushed placeholder RFD to reserved branch"
+            );
+
+            Ok(next_rfd_number)
+        } else {
+            Err(ResourceError::Restricted)
+        }
+    }
+
     #[instrument(skip(self, caller))]
     pub async fn get_rfd(
         &self,
@@ -681,7 +788,7 @@ impl ApiContext {
             .await?;
 
         if let Some(rfd) = rfds.into_iter().nth(0) {
-            // If list_rfds returned an RFD, then the caller is allowed to access that RFD and we
+            // If list_rfds returned a RFD, then the caller is allowed to access that RFD and we
             // can return the full RFD revision. This is sub-optimal as we are required to execute
             // the revision lookup twice
             let latest_revision = RfdRevisionStore::list(
@@ -779,17 +886,14 @@ impl ApiContext {
         }
     }
 
-    #[instrument(skip(self, caller, content))]
-    pub async fn update_rfd_content(
+    async fn get_latest_rfd_revision(
         &self,
         caller: &ApiCaller,
         rfd_number: i32,
-        content: &str,
-        message: Option<&str>,
-    ) -> ResourceResult<(), UpdateRfdContentError> {
+    ) -> ResourceResult<RfdRevision, StoreError> {
         if caller.any(&[
-            &ApiPermission::UpdateRfd(rfd_number),
-            &ApiPermission::UpdateRfdsAll,
+            &ApiPermission::GetRfd(rfd_number),
+            &ApiPermission::GetRfdsAll,
         ]) {
             let rfds = RfdStore::list(
                 &*self.storage,
@@ -797,8 +901,8 @@ impl ApiContext {
                 &ListPagination::default().limit(1),
             )
             .await
-            .map_err(UpdateRfdContentError::Storage)
             .to_resource_result()?;
+
             if let Some(rfd) = rfds.into_iter().nth(0) {
                 let revisions = RfdRevisionStore::list(
                     &*self.storage,
@@ -806,54 +910,195 @@ impl ApiContext {
                     &ListPagination::default().limit(1),
                 )
                 .await
-                .map_err(UpdateRfdContentError::Storage)
                 .to_resource_result()?;
 
-                let latest_revision = match revisions.into_iter().nth(0) {
+                match revisions.into_iter().nth(0) {
                     Some(revision) => Ok(revision),
                     None => Err(ResourceError::DoesNotExist),
-                }?;
-
-                let sha = latest_revision.commit;
-                let mut github_locations = self
-                    .github
-                    .locations_for_commit(sha.clone())
-                    .await
-                    .map_err(UpdateRfdContentError::GitHub)
-                    .to_resource_result()?;
-
-                match github_locations.len() {
-                    0 => {
-                        tracing::warn!(
-                            ?sha,
-                            rfd_number,
-                            "Failed to find a GitHub location for most recent revision"
-                        );
-                        Err(ResourceError::DoesNotExist)
-                    }
-                    1 => {
-                        let message = format!(
-                            "{}\n\nSubmitted by {}",
-                            message.unwrap_or("RFD API update"),
-                            caller.id
-                        );
-
-                        // Unwrap is checked by the location length
-                        let location = github_locations.pop().unwrap();
-                        location
-                            .upsert(&rfd_number.into(), content.as_bytes(), &message)
-                            .await
-                            .map_err(UpdateRfdContentError::GitHub)
-                            .to_resource_result()?;
-                        Ok(())
-                    }
-                    _ => Err(UpdateRfdContentError::InternalState).to_resource_result(),
                 }
             } else {
                 Err(ResourceError::DoesNotExist)
             }
         } else {
             resource_restricted()
+        }
+    }
+
+    #[instrument(skip(self, caller, content))]
+    pub async fn update_rfd_content(
+        &self,
+        caller: &ApiCaller,
+        rfd_number: i32,
+        content: &str,
+        message: Option<&str>,
+        branch_name: Option<&str>,
+    ) -> ResourceResult<Option<CommitSha>, UpdateRfdContentError> {
+        if caller.any(&[
+            &ApiPermission::UpdateRfd(rfd_number),
+            &ApiPermission::UpdateRfdsAll,
+        ]) {
+            let latest_revision = self
+                .get_latest_rfd_revision(caller, rfd_number)
+                .await
+                .map_err(|err| err.inner_into())?;
+
+            let sha = latest_revision.commit.clone();
+            let mut updated_content: RfdContent = latest_revision.into();
+            updated_content.update_body(content);
+
+            self.commit_rfd_document(
+                caller,
+                rfd_number.into(),
+                updated_content.raw(),
+                message,
+                sha,
+                branch_name,
+            )
+            .await
+        } else {
+            resource_restricted()
+        }
+    }
+
+    #[instrument(skip(self, caller, document))]
+    pub async fn update_rfd_document(
+        &self,
+        caller: &ApiCaller,
+        rfd_number: i32,
+        document: &str,
+        message: Option<&str>,
+        branch_name: Option<&str>,
+    ) -> ResourceResult<Option<CommitSha>, UpdateRfdContentError> {
+        if caller.any(&[
+            &ApiPermission::UpdateRfd(rfd_number),
+            &ApiPermission::UpdateRfdsAll,
+        ]) {
+            let latest_revision = self
+                .get_latest_rfd_revision(caller, rfd_number)
+                .await
+                .map_err(|err| err.inner_into())?;
+            let sha = latest_revision.commit;
+
+            tracing::info!(?sha, "Found commit to update from");
+
+            self.commit_rfd_document(
+                caller,
+                rfd_number.into(),
+                document,
+                message,
+                sha,
+                branch_name,
+            )
+            .await
+        } else {
+            resource_restricted()
+        }
+    }
+
+    #[instrument(skip(self, caller, document), err(Debug))]
+    async fn commit_rfd_document(
+        &self,
+        caller: &ApiCaller,
+        rfd_number: RfdNumber,
+        document: &str,
+        message: Option<&str>,
+        head: CommitSha,
+        branch_name: Option<&str>,
+    ) -> ResourceResult<Option<CommitSha>, UpdateRfdContentError> {
+        tracing::info!("Pushing update to GitHub");
+
+        let mut github_locations = self
+            .github
+            .locations_for_commit(head.clone())
+            .await
+            .map_err(UpdateRfdContentError::GitHub)
+            .to_resource_result()?
+            .into_iter()
+            .filter(|location| {
+                branch_name
+                    .as_ref()
+                    .map(|branch_name| branch_name == &location.branch)
+                    .unwrap_or(true)
+            })
+            .collect::<Vec<_>>();
+
+        let mut providers = self
+            .list_api_user_provider(
+                caller,
+                ApiUserProviderFilter::default().api_user_id(Some(vec![caller.id])),
+                &ListPagination::default(),
+            )
+            .await
+            .map_err(|err| err.inner_into())?;
+
+        // Prefer a GitHub identity provider, but we will use Google if we can not find one
+        providers.sort_by(|a, b| {
+            if a.provider == b.provider {
+                Ordering::Equal
+            } else if a.provider == "github" {
+                Ordering::Less
+            } else {
+                Ordering::Greater
+            }
+        });
+
+        let display_name = providers
+            .into_iter()
+            .filter(|provider| !provider.display_names.is_empty())
+            .nth(0)
+            .and_then(|p| p.display_names.get(0).map(|s| s.clone()))
+            .unwrap_or_else(|| caller.id.to_string());
+
+        match github_locations.len() {
+            0 => {
+                tracing::warn!(
+                    ?head,
+                    ?rfd_number,
+                    "Failed to find a GitHub location for most recent revision"
+                );
+                Err(ResourceError::DoesNotExist)
+            }
+            1 => {
+                tracing::info!("Pushing RFD commit to GitHub");
+
+                let message = format!(
+                    "{}\n\nSubmitted by {}",
+                    message.unwrap_or("RFD API update"),
+                    display_name,
+                );
+
+                // Unwrap is checked by the location length
+                let location = github_locations.pop().unwrap();
+                let commit = location
+                    .upsert(&rfd_number, document.as_bytes(), &message)
+                    .await
+                    .map_err(UpdateRfdContentError::GitHub)
+                    .to_resource_result()?;
+
+                // If we committed a change, immediately register a job as well. This may conflict with
+                // a job already added by a webhook, this is fine and we can ignore the error
+                if let Some(commit) = commit.clone() {
+                    let new_job = NewJob {
+                        owner: self.github.owner.clone(),
+                        repository: self.github.repo.clone(),
+                        branch: rfd_number.as_number_string(),
+                        sha: commit.clone(),
+                        rfd: rfd_number.into(),
+                        // This job is not being triggered by a webhook
+                        webhook_delivery_id: None,
+                        committed_at: Utc::now(), // Use the current time or extract from commit if available
+                    };
+
+                    if let Err(err) = self.register_job(new_job).await {
+                        tracing::info!(?err, "Failed to register job for RFD update");
+                    } else {
+                        tracing::debug!(?rfd_number, ?commit, "Registered job for RFD update");
+                    }
+                }
+
+                Ok(commit)
+            }
+            _ => Err(UpdateRfdContentError::InternalState).to_resource_result(),
         }
     }
 
@@ -946,12 +1191,7 @@ impl ApiContext {
                             id: Uuid::new_v4(),
                             api_user_id: user.id,
                             emails: info.verified_emails,
-                            // TODO: Refactor in generic display name across providers. This cascades
-                            // into changes needed within mappers
-                            display_names: info
-                                .github_username
-                                .map(|name| vec![name])
-                                .unwrap_or_default(),
+                            display_names: info.display_name.into_iter().collect::<Vec<_>>(),
                             provider: info.external_id.provider().to_string(),
                             provider_id: info.external_id.id().to_string(),
                         },
@@ -970,10 +1210,7 @@ impl ApiContext {
 
                 // Update the provider with the newest user info
                 provider.emails = info.verified_emails;
-                provider.display_names = info
-                    .github_username
-                    .map(|name| vec![name])
-                    .unwrap_or_default();
+                provider.display_names = info.display_name.into_iter().collect::<Vec<_>>();
 
                 tracing::info!(?provider.id, "Updating provider for user");
 
@@ -2056,6 +2293,7 @@ mod tests {
 #[cfg(test)]
 pub(crate) mod test_mocks {
     use async_trait::async_trait;
+    use rfd_data::content::RfdTemplate;
     use rfd_model::{
         storage::{
             AccessGroupStore, AccessTokenStore, ApiKeyStore, ApiUserProviderStore, ApiUserStore,
@@ -2074,7 +2312,9 @@ pub(crate) mod test_mocks {
     use w_api_permissions::Caller;
 
     use crate::{
-        config::{GitHubAuthConfig, GitHubConfig, JwtConfig, SearchConfig, ServicesConfig},
+        config::{
+            ContentConfig, GitHubAuthConfig, GitHubConfig, JwtConfig, SearchConfig, ServicesConfig,
+        },
         endpoints::login::oauth::{google::GoogleOAuthProvider, OAuthProviderName},
         permissions::ApiPermission,
         util::tests::mock_key,
@@ -2084,6 +2324,14 @@ pub(crate) mod test_mocks {
 
     // Construct a mock context that can be used in tests
     pub async fn mock_context(storage: MockStorage) -> ApiContext {
+        let mut content = ContentConfig::default();
+        content
+            .templates
+            .insert("new".to_string(), RfdTemplate::default());
+        content
+            .templates
+            .insert("placeholder".to_string(), RfdTemplate::default());
+
         let mut ctx = ApiContext::new(
             "".to_string(),
             Arc::new(storage),
@@ -2093,6 +2341,7 @@ pub(crate) mod test_mocks {
                 mock_key(),
             ],
             SearchConfig::default(),
+            content,
             ServicesConfig {
                 github: GitHubConfig {
                     owner: String::new(),

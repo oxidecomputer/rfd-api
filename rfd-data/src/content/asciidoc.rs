@@ -41,7 +41,7 @@ impl<'a> RfdAsciidoc<'a> {
                 .replacen(found.as_str(), &format!(":{}: {}\n", attr, value), 1)
                 .into()
         } else {
-            let title = self.title_pattern().find(&self.content);
+            let title = self.title_line();
 
             if let Some(title) = title {
                 let new_attr = format!(":{}: {}\n", attr, value);
@@ -51,7 +51,8 @@ impl<'a> RfdAsciidoc<'a> {
                 self.content = (header.unwrap_or_default().to_string()
                     + "\n"
                     + &new_attr
-                    + title.as_str()
+                    + "\n\n"
+                    + title
                     + body.unwrap_or_default())
                 .into()
             }
@@ -60,6 +61,11 @@ impl<'a> RfdAsciidoc<'a> {
 
     fn attr_pattern(&self, attr: &str) -> Regex {
         Regex::new(&format!(r"(?m)^:{}:(.*)$\n", attr)).unwrap()
+    }
+
+    fn title_line(&self) -> Option<&str> {
+        let title = self.title_pattern().find(&self.content);
+        title.map(|m| m.as_str())
     }
 
     fn title_pattern(&self) -> Regex {
@@ -148,6 +154,15 @@ impl<'a> RfdDocument for RfdAsciidoc<'a> {
 
     fn body(&self) -> Option<&str> {
         self.title_pattern().splitn(&self.content, 2).nth(1)
+    }
+
+    fn update_body(&mut self, value: &str) {
+        self.content = Cow::Owned(format!(
+            "{}\n\n{}{}",
+            self.header().unwrap_or_default(),
+            self.title_line().unwrap_or_default(),
+            value
+        ));
     }
 
     /// Get a reference to the internal unparsed contents
@@ -440,8 +455,7 @@ sdf
     }
 
     fn test_rfd_content() -> &'static str {
-        r#"
-:reproducible:
+        r#":reproducible:
 :showtitle:
 :toc: left
 :numbered:
@@ -506,5 +520,26 @@ in velit.
         let labels = rfd.get_labels().unwrap();
         let expected = "newlabel1, newlabel2".to_string();
         assert_eq!(expected, labels);
+    }
+
+    #[test]
+    fn test_update_body() {
+        let new_content = r#"This is the new body"#;
+        let expected = r#":reproducible:
+:showtitle:
+:toc: left
+:numbered:
+:icons: font
+:state: prediscussion
+:revremark: State: {state}
+:docdatetime: 2019-01-04 19:26:06 UTC
+:localdatetime: 2019-01-04 19:26:06 UTC
+:labels: label1, label2
+
+= RFD 123 Place
+This is the new body"#;
+        let mut rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content()));
+        rfd.update_body(&new_content);
+        assert_eq!(expected, rfd.raw());
     }
 }

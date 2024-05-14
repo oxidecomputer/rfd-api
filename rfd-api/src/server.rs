@@ -19,19 +19,22 @@ use crate::{
             remove_api_user_from_group, update_api_user,
         },
         group::{create_group, delete_group, get_groups, update_group},
-        login::oauth::{
-            client::{
-                create_oauth_client, create_oauth_client_redirect_uri, create_oauth_client_secret,
-                delete_oauth_client_redirect_uri, delete_oauth_client_secret, get_oauth_client,
-                list_oauth_clients,
+        login::{
+            local::local_login,
+            oauth::{
+                client::{
+                    create_oauth_client, create_oauth_client_redirect_uri,
+                    create_oauth_client_secret, delete_oauth_client_redirect_uri,
+                    delete_oauth_client_secret, get_oauth_client, list_oauth_clients,
+                },
+                code::{authz_code_callback, authz_code_exchange, authz_code_redirect},
+                device_token::{exchange_device_token, get_device_provider},
             },
-            code::{authz_code_callback, authz_code_exchange, authz_code_redirect},
-            device_token::{exchange_device_token, get_device_provider},
         },
         mappers::{create_mapper, delete_mapper, get_mappers},
         rfd::{
-            get_rfd, get_rfd_attr, get_rfds, search_rfds, set_rfd_attr, set_rfd_content,
-            update_rfd_visibility,
+            discuss_rfd, get_rfd, get_rfd_attr, get_rfds, publish_rfd, reserve_rfd, search_rfds,
+            set_rfd_attr, set_rfd_content, set_rfd_document, update_rfd_visibility,
         },
         webhook::github_webhook,
         well_known::{jwks_json, openid_configuration},
@@ -91,15 +94,23 @@ pub fn server(
     // RFDs
     api.register(get_rfds).expect("Failed to register endpoint");
     api.register(get_rfd).expect("Failed to register endpoint");
+    api.register(reserve_rfd)
+        .expect("Failed to register endpoint");
+    api.register(set_rfd_document)
+        .expect("Failed to register endpoint");
     api.register(set_rfd_content)
         .expect("Failed to register endpoint");
     api.register(get_rfd_attr)
         .expect("Failed to register endpoint");
     api.register(set_rfd_attr)
         .expect("Failed to register endpoint");
-    api.register(search_rfds)
+    api.register(discuss_rfd)
+        .expect("Failed to register endpoint");
+    api.register(publish_rfd)
         .expect("Failed to register endpoint");
     api.register(update_rfd_visibility)
+        .expect("Failed to register endpoint");
+    api.register(search_rfds)
         .expect("Failed to register endpoint");
 
     // Webhooks
@@ -175,7 +186,14 @@ pub fn server(
     api.register(exchange_device_token)
         .expect("Failed to register endpoint");
 
+    // Development
+    api.register(local_login)
+        .expect("Failed to register endpoint");
+
     if let Some(spec) = config.spec_output {
+        // TODO: How do we validate that spec_output can be read or written? Currently File::create
+        // panics if the file path is not a valid path
+
         // Create the API schema.
         let mut api_definition = &mut api.openapi(spec.title, &"");
         api_definition = api_definition

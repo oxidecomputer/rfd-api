@@ -19,7 +19,10 @@ use super::{
     ClientType, OAuthProvider, OAuthProviderInfo, OAuthProviderNameParam, UserInfoProvider,
 };
 use crate::{
-    context::ApiContext, endpoints::login::LoginError, error::ApiError, util::response::bad_request,
+    context::ApiContext,
+    endpoints::login::{DeviceTokenResponse, LoginError},
+    error::ApiError,
+    util::response::bad_request,
 };
 
 // Get the metadata about an OAuth provider necessary to begin a device code exchange
@@ -87,15 +90,6 @@ impl AccessTokenExchange {
                 expires_at: req.expires_at,
             })
     }
-}
-
-#[derive(Debug, Deserialize, JsonSchema, Serialize)]
-pub struct ProxyTokenResponse {
-    access_token: String,
-    token_type: String,
-    expires_in: Option<u32>,
-    refresh_token: Option<String>,
-    scopes: Option<Vec<String>>,
 }
 
 #[derive(Debug, Deserialize, JsonSchema, Serialize)]
@@ -211,7 +205,7 @@ pub async fn exchange_device_token(
                         .status(StatusCode::OK)
                         .header(header::CONTENT_TYPE, "application/json")
                         .body(
-                            serde_json::to_string(&ProxyTokenResponse {
+                            serde_json::to_string(&DeviceTokenResponse {
                                 access_token: token.signed_token,
                                 token_type: "Bearer".to_string(),
                                 expires_in: Some(

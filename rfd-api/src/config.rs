@@ -2,9 +2,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::path::PathBuf;
+use std::{collections::HashMap, path::PathBuf};
 
 use config::{Config, ConfigError, Environment, File};
+use rfd_data::content::RfdTemplate;
 use secrecy::SecretString;
 use serde::{
     de::{self, Visitor},
@@ -33,6 +34,7 @@ pub struct AppConfig {
     pub spec: Option<SpecConfig>,
     pub authn: AuthnProviders,
     pub search: SearchConfig,
+    pub content: ContentConfig,
     pub services: ServicesConfig,
 }
 
@@ -143,6 +145,11 @@ pub struct SearchConfig {
     pub host: String,
     pub key: String,
     pub index: String,
+}
+
+#[derive(Debug, Default, Deserialize)]
+pub struct ContentConfig {
+    pub templates: HashMap<String, RfdTemplate>,
 }
 
 #[derive(Debug, Deserialize)]

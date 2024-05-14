@@ -1,0 +1,1 @@
+CREATE INDEX jobs_started ON job (id, started_at, processed ASC, committed_at ASC, created_at ASC);

@@ -57,7 +57,7 @@ pub mod response {
     }
 
     pub fn forbidden() -> HttpError {
-        client_error(StatusCode::FORBIDDEN, "Unauthorized")
+        client_error(StatusCode::FORBIDDEN, "Forbidden")
     }
 
     pub fn client_error<S>(status_code: StatusCode, message: S) -> HttpError
@@ -106,6 +106,19 @@ pub mod response {
         Restricted,
         #[error("Internal server error")]
         InternalError(#[source] E),
+    }
+
+    impl<E> ResourceError<E> {
+        pub fn inner_into<F>(self) -> ResourceError<F>
+        where
+            F: From<E>,
+        {
+            match self {
+                ResourceError::DoesNotExist => ResourceError::DoesNotExist,
+                ResourceError::Restricted => ResourceError::Restricted,
+                ResourceError::InternalError(inner) => ResourceError::InternalError(inner.into()),
+            }
+        }
     }
 
     pub trait ToResourceResultOpt<T, E> {

@@ -4,10 +4,13 @@
 
 mod asciidoc;
 mod markdown;
+mod template;
 
 pub use asciidoc::RfdAsciidoc;
 pub use markdown::RfdMarkdown;
-use rfd_model::schema_ext::ContentFormat;
+pub use template::{RenderableRfdTemplate, RfdTemplate, TemplateError};
+
+use rfd_model::{schema_ext::ContentFormat, RfdRevision};
 
 pub trait RfdDocument {
     /// Extract the title from the internal content
@@ -40,6 +43,9 @@ pub trait RfdDocument {
 
     /// Get a reference to the contents of the RFD body
     fn body(&self) -> Option<&str>;
+
+    /// Get a reference to the contents of the RFD body
+    fn update_body(&mut self, value: &str);
 
     /// Get a reference to the internal unparsed contents
     fn raw(&self) -> &str;
@@ -131,10 +137,26 @@ impl<'a> RfdDocument for RfdContent<'a> {
         }
     }
 
+    fn update_body(&mut self, value: &str) {
+        match self {
+            Self::Asciidoc(inner) => inner.update_body(value),
+            Self::Markdown(inner) => inner.update_body(value),
+        }
+    }
+
     fn raw(&self) -> &str {
         match self {
             Self::Asciidoc(inner) => inner.raw(),
             Self::Markdown(inner) => inner.raw(),
+        }
+    }
+}
+
+impl<'a> From<RfdRevision> for RfdContent<'a> {
+    fn from(value: RfdRevision) -> Self {
+        match value.content_format {
+            ContentFormat::Asciidoc => RfdContent::Asciidoc(RfdAsciidoc::new(value.content)),
+            ContentFormat::Markdown => RfdContent::Markdown(RfdMarkdown::new(value.content)),
         }
     }
 }

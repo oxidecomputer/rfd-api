@@ -11,7 +11,10 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
-    context::ApiContext, endpoints::login::UserInfo, util::response::ResourceResult, ApiPermissions,
+    context::ApiContext,
+    endpoints::login::{ExternalUserId, UserInfo},
+    util::response::ResourceResult,
+    ApiPermissions,
 };
 
 use super::MapperRule;
@@ -25,6 +28,14 @@ pub struct GitHubUsernameMapper {
     groups: Vec<String>,
 }
 
+fn github_username(user: &UserInfo) -> Option<&str> {
+    match user.external_id {
+        // Endure that this is GitHub provided user data
+        ExternalUserId::GitHub(_) => user.display_name.as_deref(),
+        _ => None,
+    }
+}
+
 #[async_trait]
 impl MapperRule for GitHubUsernameMapper {
     async fn permissions_for(
@@ -32,9 +43,7 @@ impl MapperRule for GitHubUsernameMapper {
         _ctx: &ApiContext,
         user: &UserInfo,
     ) -> Result<ApiPermissions, StoreError> {
-        if user
-            .github_username
-            .as_ref()
+        if github_username(user)
             .map(|u| u == &self.github_username)
             .unwrap_or(false)
         {
@@ -49,9 +58,7 @@ impl MapperRule for GitHubUsernameMapper {
         ctx: &ApiContext,
         user: &UserInfo,
     ) -> ResourceResult<BTreeSet<Uuid>, StoreError> {
-        if user
-            .github_username
-            .as_ref()
+        if github_username(user)
             .map(|u| u == &self.github_username)
             .unwrap_or(false)
         {

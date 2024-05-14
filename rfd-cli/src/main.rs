@@ -136,10 +136,14 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::GetRfds => Some("list"),
         CliCommand::GetRfdAttr => Some("attr"),
         CliCommand::SearchRfds => Some("search"),
+        CliCommand::ReserveRfd => Some("reserve"),
 
         CliCommand::SetRfdAttr => Some("edit attr"),
         CliCommand::SetRfdContent => Some("edit content"),
+        CliCommand::SetRfdDocument => Some("edit document"),
         CliCommand::UpdateRfdVisibility => Some("edit visibility"),
+        CliCommand::PublishRfd => Some("edit publish"),
+        CliCommand::DiscussRfd => Some("edit discuss"),
 
         // User commands
         CliCommand::CreateApiUser => Some("sys user create"),
@@ -184,6 +188,7 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::GetDeviceProvider => None,
 
         // Unsupported commands
+        CliCommand::LocalLogin => None,
         CliCommand::AuthzCodeRedirect => None,
         CliCommand::AuthzCodeCallback => None,
         CliCommand::AuthzCodeExchange => None,
@@ -369,7 +374,14 @@ impl ProgenitorCliConfig for Context {
                 .unwrap()
                 .output_search_results(reserialize(value)),
             "RfdAttr" => self.printer().unwrap().output_rfd_attr(reserialize(value)),
-            _ => eprintln!("Unhandled response"),
+            "ReserveRfdResponse" => self
+                .printer()
+                .unwrap()
+                .output_reserved_rfd(reserialize(value)),
+            other => eprintln!(
+                "Unhandled response type: {}. Please report this as a bug.",
+                other
+            ),
         }
     }
 

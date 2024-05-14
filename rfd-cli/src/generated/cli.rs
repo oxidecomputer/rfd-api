@@ -31,6 +31,7 @@ impl<T: CliConfig> Cli<T> {
             CliCommand::CreateGroup => Self::cli_create_group(),
             CliCommand::UpdateGroup => Self::cli_update_group(),
             CliCommand::DeleteGroup => Self::cli_delete_group(),
+            CliCommand::LocalLogin => Self::cli_local_login(),
             CliCommand::AuthzCodeRedirect => Self::cli_authz_code_redirect(),
             CliCommand::AuthzCodeCallback => Self::cli_authz_code_callback(),
             CliCommand::AuthzCodeExchange => Self::cli_authz_code_exchange(),
@@ -51,10 +52,14 @@ impl<T: CliConfig> Cli<T> {
             CliCommand::CreateOauthClientSecret => Self::cli_create_oauth_client_secret(),
             CliCommand::DeleteOauthClientSecret => Self::cli_delete_oauth_client_secret(),
             CliCommand::GetRfds => Self::cli_get_rfds(),
+            CliCommand::ReserveRfd => Self::cli_reserve_rfd(),
             CliCommand::GetRfd => Self::cli_get_rfd(),
-            CliCommand::SetRfdContent => Self::cli_set_rfd_content(),
+            CliCommand::SetRfdDocument => Self::cli_set_rfd_document(),
             CliCommand::GetRfdAttr => Self::cli_get_rfd_attr(),
             CliCommand::SetRfdAttr => Self::cli_set_rfd_attr(),
+            CliCommand::SetRfdContent => Self::cli_set_rfd_content(),
+            CliCommand::DiscussRfd => Self::cli_discuss_rfd(),
+            CliCommand::PublishRfd => Self::cli_publish_rfd(),
             CliCommand::UpdateRfdVisibility => Self::cli_update_rfd_visibility(),
             CliCommand::SearchRfds => Self::cli_search_rfds(),
             CliCommand::GetSelf => Self::cli_get_self(),
@@ -332,6 +337,36 @@ impl<T: CliConfig> Cli<T> {
                 .value_parser(clap::value_parser!(uuid::Uuid))
                 .required(true),
         )
+    }
+
+    pub fn cli_local_login() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("email")
+                    .long("email")
+                    .value_parser(clap::value_parser!(String))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
+                clap::Arg::new("external-id")
+                    .long("external-id")
+                    .value_parser(clap::value_parser!(String))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
+                clap::Arg::new("json-body")
+                    .long("json-body")
+                    .value_name("JSON-FILE")
+                    .required(false)
+                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .help("Path to a file that contains the full json body."),
+            )
+            .arg(
+                clap::Arg::new("json-body-template")
+                    .long("json-body-template")
+                    .action(clap::ArgAction::SetTrue)
+                    .help("XXX"),
+            )
     }
 
     pub fn cli_authz_code_redirect() -> clap::Command {
@@ -694,6 +729,39 @@ impl<T: CliConfig> Cli<T> {
         clap::Command::new("").about("List all available RFDs")
     }
 
+    pub fn cli_reserve_rfd() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("content")
+                    .long("content")
+                    .value_parser(clap::value_parser!(String))
+                    .required(false)
+                    .help("Optional contents of the RFD"),
+            )
+            .arg(
+                clap::Arg::new("title")
+                    .long("title")
+                    .value_parser(clap::value_parser!(String))
+                    .required_unless_present("json-body")
+                    .help("Title of the RFD"),
+            )
+            .arg(
+                clap::Arg::new("json-body")
+                    .long("json-body")
+                    .value_name("JSON-FILE")
+                    .required(false)
+                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .help("Path to a file that contains the full json body."),
+            )
+            .arg(
+                clap::Arg::new("json-body-template")
+                    .long("json-body-template")
+                    .action(clap::ArgAction::SetTrue)
+                    .help("XXX"),
+            )
+            .about("Create a new RFD")
+    }
+
     pub fn cli_get_rfd() -> clap::Command {
         clap::Command::new("")
             .arg(
@@ -703,17 +771,17 @@ impl<T: CliConfig> Cli<T> {
                     .required(true)
                     .help("The RFD number (examples: 1 or 123)"),
             )
-            .about("Get the latest representation of an RFD")
+            .about("Get the latest representation of a RFD")
     }
 
-    pub fn cli_set_rfd_content() -> clap::Command {
+    pub fn cli_set_rfd_document() -> clap::Command {
         clap::Command::new("")
             .arg(
-                clap::Arg::new("content")
-                    .long("content")
+                clap::Arg::new("document")
+                    .long("document")
                     .value_parser(clap::value_parser!(String))
                     .required_unless_present("json-body")
-                    .help("Full Asciidoc content to store for this RFD"),
+                    .help("Full Asciidoc document to store for this RFD"),
             )
             .arg(
                 clap::Arg::new("message")
@@ -743,6 +811,7 @@ impl<T: CliConfig> Cli<T> {
                     .action(clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
+            .about("Replace the full document of a RFD")
     }
 
     pub fn cli_get_rfd_attr() -> clap::Command {
@@ -766,7 +835,7 @@ impl<T: CliConfig> Cli<T> {
                     .value_parser(clap::value_parser!(String))
                     .required(true),
             )
-            .about("Get an attribute of a given RFD")
+            .about("Get an attribute of a RFD")
     }
 
     pub fn cli_set_rfd_attr() -> clap::Command {
@@ -818,7 +887,71 @@ impl<T: CliConfig> Cli<T> {
                     .action(clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
-            .about("Set an attribute of a given RFD")
+            .about("Set an attribute of a RFD")
+    }
+
+    pub fn cli_set_rfd_content() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("content")
+                    .long("content")
+                    .value_parser(clap::value_parser!(String))
+                    .required_unless_present("json-body")
+                    .help("Asciidoc content to store for this RFD"),
+            )
+            .arg(
+                clap::Arg::new("message")
+                    .long("message")
+                    .value_parser(clap::value_parser!(String))
+                    .required(false)
+                    .help("Optional Git commit message to send with this update (recommended)"),
+            )
+            .arg(
+                clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(clap::value_parser!(String))
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
+            )
+            .arg(
+                clap::Arg::new("json-body")
+                    .long("json-body")
+                    .value_name("JSON-FILE")
+                    .required(false)
+                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .help("Path to a file that contains the full json body."),
+            )
+            .arg(
+                clap::Arg::new("json-body-template")
+                    .long("json-body-template")
+                    .action(clap::ArgAction::SetTrue)
+                    .help("XXX"),
+            )
+            .about("Replace the contents of a RFD")
+    }
+
+    pub fn cli_discuss_rfd() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(clap::value_parser!(String))
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
+            )
+            .about("Open a RFD for discussion")
+    }
+
+    pub fn cli_publish_rfd() -> clap::Command {
+        clap::Command::new("")
+            .arg(
+                clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(clap::value_parser!(String))
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
+            )
+            .about("Publish a RFD")
     }
 
     pub fn cli_update_rfd_visibility() -> clap::Command {
@@ -856,7 +989,7 @@ impl<T: CliConfig> Cli<T> {
                     .action(clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
-            .about("Modify the visibility of an RFD")
+            .about("Modify the visibility of a RFD")
     }
 
     pub fn cli_search_rfds() -> clap::Command {
@@ -924,6 +1057,7 @@ impl<T: CliConfig> Cli<T> {
             CliCommand::CreateGroup => self.execute_create_group(matches).await,
             CliCommand::UpdateGroup => self.execute_update_group(matches).await,
             CliCommand::DeleteGroup => self.execute_delete_group(matches).await,
+            CliCommand::LocalLogin => self.execute_local_login(matches).await,
             CliCommand::AuthzCodeRedirect => self.execute_authz_code_redirect(matches).await,
             CliCommand::AuthzCodeCallback => self.execute_authz_code_callback(matches).await,
             CliCommand::AuthzCodeExchange => self.execute_authz_code_exchange(matches).await,
@@ -948,10 +1082,14 @@ impl<T: CliConfig> Cli<T> {
                 self.execute_delete_oauth_client_secret(matches).await
             }
             CliCommand::GetRfds => self.execute_get_rfds(matches).await,
+            CliCommand::ReserveRfd => self.execute_reserve_rfd(matches).await,
             CliCommand::GetRfd => self.execute_get_rfd(matches).await,
-            CliCommand::SetRfdContent => self.execute_set_rfd_content(matches).await,
+            CliCommand::SetRfdDocument => self.execute_set_rfd_document(matches).await,
             CliCommand::GetRfdAttr => self.execute_get_rfd_attr(matches).await,
             CliCommand::SetRfdAttr => self.execute_set_rfd_attr(matches).await,
+            CliCommand::SetRfdContent => self.execute_set_rfd_content(matches).await,
+            CliCommand::DiscussRfd => self.execute_discuss_rfd(matches).await,
+            CliCommand::PublishRfd => self.execute_publish_rfd(matches).await,
             CliCommand::UpdateRfdVisibility => self.execute_update_rfd_visibility(matches).await,
             CliCommand::SearchRfds => self.execute_search_rfds(matches).await,
             CliCommand::GetSelf => self.execute_get_self(matches).await,
@@ -1355,6 +1493,34 @@ impl<T: CliConfig> Cli<T> {
             Err(r) => {
                 self.config.item_error(&r);
                 Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
+    pub async fn execute_local_login(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+        let mut request = self.client.local_login();
+        if let Some(value) = matches.get_one::<String>("email") {
+            request = request.body_map(|body| body.email(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<String>("external-id") {
+            request = request.body_map(|body| body.external_id(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value = serde_json::from_str::<types::LocalLogin>(&body_txt).unwrap();
+            request = request.body(body_value);
+        }
+
+        self.config.execute_local_login(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                todo!()
+            }
+            Err(r) => {
+                todo!()
             }
         }
     }
@@ -1819,6 +1985,36 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
+    pub async fn execute_reserve_rfd(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+        let mut request = self.client.reserve_rfd();
+        if let Some(value) = matches.get_one::<String>("content") {
+            request = request.body_map(|body| body.content(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<String>("title") {
+            request = request.body_map(|body| body.title(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value = serde_json::from_str::<types::ReserveRfdBody>(&body_txt).unwrap();
+            request = request.body(body_value);
+        }
+
+        self.config.execute_reserve_rfd(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
     pub async fn execute_get_rfd(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.get_rfd();
         if let Some(value) = matches.get_one::<String>("number") {
@@ -1839,10 +2035,10 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_set_rfd_content(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
-        let mut request = self.client.set_rfd_content();
-        if let Some(value) = matches.get_one::<String>("content") {
-            request = request.body_map(|body| body.content(value.clone()))
+    pub async fn execute_set_rfd_document(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+        let mut request = self.client.set_rfd_document();
+        if let Some(value) = matches.get_one::<String>("document") {
+            request = request.body_map(|body| body.document(value.clone()))
         }
 
         if let Some(value) = matches.get_one::<String>("message") {
@@ -1859,7 +2055,8 @@ impl<T: CliConfig> Cli<T> {
             request = request.body(body_value);
         }
 
-        self.config.execute_set_rfd_content(matches, &mut request)?;
+        self.config
+            .execute_set_rfd_document(matches, &mut request)?;
         let result = request.send().await;
         match result {
             Ok(r) => {
@@ -1922,6 +2119,81 @@ impl<T: CliConfig> Cli<T> {
         }
 
         self.config.execute_set_rfd_attr(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
+    pub async fn execute_set_rfd_content(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+        let mut request = self.client.set_rfd_content();
+        if let Some(value) = matches.get_one::<String>("content") {
+            request = request.body_map(|body| body.content(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<String>("message") {
+            request = request.body_map(|body| body.message(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<String>("number") {
+            request = request.number(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value =
+                serde_json::from_str::<types::RfdUpdateContentBody>(&body_txt).unwrap();
+            request = request.body(body_value);
+        }
+
+        self.config.execute_set_rfd_content(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
+    pub async fn execute_discuss_rfd(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+        let mut request = self.client.discuss_rfd();
+        if let Some(value) = matches.get_one::<String>("number") {
+            request = request.number(value.clone());
+        }
+
+        self.config.execute_discuss_rfd(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.item_success(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.item_error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
+    pub async fn execute_publish_rfd(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+        let mut request = self.client.publish_rfd();
+        if let Some(value) = matches.get_one::<String>("number") {
+            request = request.number(value.clone());
+        }
+
+        self.config.execute_publish_rfd(matches, &mut request)?;
         let result = request.send().await;
         match result {
             Ok(r) => {
@@ -2173,6 +2445,14 @@ pub trait CliConfig {
         Ok(())
     }
 
+    fn execute_local_login(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::LocalLogin,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     fn execute_authz_code_redirect(
         &self,
         matches: &clap::ArgMatches,
@@ -2301,6 +2581,14 @@ pub trait CliConfig {
         Ok(())
     }
 
+    fn execute_reserve_rfd(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::ReserveRfd,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     fn execute_get_rfd(
         &self,
         matches: &clap::ArgMatches,
@@ -2309,10 +2597,10 @@ pub trait CliConfig {
         Ok(())
     }
 
-    fn execute_set_rfd_content(
+    fn execute_set_rfd_document(
         &self,
         matches: &clap::ArgMatches,
-        request: &mut builder::SetRfdContent,
+        request: &mut builder::SetRfdDocument,
     ) -> anyhow::Result<()> {
         Ok(())
     }
@@ -2329,6 +2617,30 @@ pub trait CliConfig {
         &self,
         matches: &clap::ArgMatches,
         request: &mut builder::SetRfdAttr,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn execute_set_rfd_content(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::SetRfdContent,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn execute_discuss_rfd(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::DiscussRfd,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn execute_publish_rfd(
+        &self,
+        matches: &clap::ArgMatches,
+        request: &mut builder::PublishRfd,
     ) -> anyhow::Result<()> {
         Ok(())
     }
@@ -2376,6 +2688,7 @@ pub enum CliCommand {
     CreateGroup,
     UpdateGroup,
     DeleteGroup,
+    LocalLogin,
     AuthzCodeRedirect,
     AuthzCodeCallback,
     AuthzCodeExchange,
@@ -2392,10 +2705,14 @@ pub enum CliCommand {
     CreateOauthClientSecret,
     DeleteOauthClientSecret,
     GetRfds,
+    ReserveRfd,
     GetRfd,
-    SetRfdContent,
+    SetRfdDocument,
     GetRfdAttr,
     SetRfdAttr,
+    SetRfdContent,
+    DiscussRfd,
+    PublishRfd,
     UpdateRfdVisibility,
     SearchRfds,
     GetSelf,
@@ -2420,6 +2737,7 @@ impl CliCommand {
             CliCommand::CreateGroup,
             CliCommand::UpdateGroup,
             CliCommand::DeleteGroup,
+            CliCommand::LocalLogin,
             CliCommand::AuthzCodeRedirect,
             CliCommand::AuthzCodeCallback,
             CliCommand::AuthzCodeExchange,
@@ -2436,10 +2754,14 @@ impl CliCommand {
             CliCommand::CreateOauthClientSecret,
             CliCommand::DeleteOauthClientSecret,
             CliCommand::GetRfds,
+            CliCommand::ReserveRfd,
             CliCommand::GetRfd,
-            CliCommand::SetRfdContent,
+            CliCommand::SetRfdDocument,
             CliCommand::GetRfdAttr,
             CliCommand::SetRfdAttr,
+            CliCommand::SetRfdContent,
+            CliCommand::DiscussRfd,
+            CliCommand::PublishRfd,
             CliCommand::UpdateRfdVisibility,
             CliCommand::SearchRfds,
             CliCommand::GetSelf,

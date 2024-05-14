@@ -95,7 +95,7 @@ determining the RFD number to update. Instead they use the numeric portion of th
 
 ### Revisions
 
-Every revision is tied to a commit* against an RFD readme file. There is no guarantee though that
+Every revision is tied to a commit* against a RFD readme file. There is no guarantee though that
 there exists a revision though for every commit. While the RFD API will attempt to create a revision
 for every commit, outages, missing webhooks, or internal errors can result in missing revisions.
 Currently the background periodic processor does not attempt to backfill missing revisions, it only
@@ -111,7 +111,7 @@ as a separate action. Currently the supported actions are:
 
 | Action                 | Purpose |
 |------------------------|------------
-| copy_images_to_storage | Copies images and static files associated with an RFD to cloud storage
+| copy_images_to_storage | Copies images and static files associated with a RFD to cloud storage
 | create_pull_request    | Create a PR for the RFD if it does not have one and the RFD is in discussion
 | ensure_default_state   | Checks that RFDs on the default branch have appropriate states
 | ensure_pr_state        | Updates the state attribute for RFDs not on the default branch as needed
@@ -123,16 +123,16 @@ as a separate action. Currently the supported actions are:
 ### Content Updates
 
 RFD processing manipulates both internally stored state as well as the source content document of
-the RFD it is processing. The two cases where the processor will update the contents of an RFD are:
+the RFD it is processing. The two cases where the processor will update the contents of a RFD are:
 
-1. An RFD has an incorrect discussion url
-2. An RFD is in an incorrect state
+1. a RFD has an incorrect discussion url
+2. a RFD is in an incorrect state
 
 The first update is the easier of the two. For any RFD that has an open discussion PR, the processor
 will check that the `discussion` attribute in the RFD document matches the url of the discussion PR.
 Note though that there is a bug here currently related to the order in which revisions may be processed.
 
-State checking is a bit more complex. For an RFD that has an open discussion PR, the processor will
+State checking is a bit more complex. For a RFD that has an open discussion PR, the processor will
 ensure that the RFD state is set to `discussion`. For RFDs that are merged to the default branch
 though, there is not a good determination as to which of the final states to assign them. Instead
 the processor will emit a warning when it encounters such a case.

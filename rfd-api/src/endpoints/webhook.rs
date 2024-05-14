@@ -95,7 +95,7 @@ impl GitHubCommitPayload {
     fn affected_rfds(&self) -> Vec<i32> {
         // Check the committed files for changes to specific RFDs. Depending on the branch of the
         // commit, changes will be accepted to rejected. Changes on the default repository branch
-        // are accepted for all RFDs, but on an RFD specific branch (i.e. 0123) on changes to
+        // are accepted for all RFDs, but on a RFD specific branch (i.e. 0123) on changes to
         // RFD 123 are accepted. Changes on non-default, non-rfd branches are always rejected
         let pattern = Regex::new(r#"^rfd/(\d{4})/"#).unwrap();
         let branch = self.branch();
