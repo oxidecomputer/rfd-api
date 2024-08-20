@@ -4,5 +4,8 @@
     "local>oxidecomputer/renovate-config",
     "local>oxidecomputer/renovate-config//rust/autocreate",
     "helpers:pinGitHubActionDigests"
+  ],
+  "ignorePaths": [
+    ".github/workflows/release.yml"
   ]
 }
