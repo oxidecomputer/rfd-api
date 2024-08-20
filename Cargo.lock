@@ -1005,16 +1005,16 @@ dependencies = [
 
 [[package]]
 name = "google-cloudkms1"
-version = "5.0.4+20240219"
+version = "5.0.5+20240621"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05980332a85d458b9cfd8c071dee92811dad827c5bca75037bab052d75e8e66a"
+checksum = "e4556238b21a764504285fe961c71055efef10a0f3cc8508c84688510bedc26c"
 dependencies = [
  "anyhow",
  "google-apis-common",
  "http 0.2.12",
  "hyper",
- "hyper-rustls",
- "itertools 0.10.5",
+ "hyper-rustls 0.25.0",
+ "itertools 0.13.0",
  "mime",
  "serde",
  "serde_json",
@@ -1033,7 +1033,7 @@ dependencies = [
  "google-apis-common",
  "http 0.2.12",
  "hyper",
- "hyper-rustls",
+ "hyper-rustls 0.24.2",
  "itertools 0.10.5",
  "mime",
  "serde",
@@ -1053,7 +1053,7 @@ dependencies = [
  "google-apis-common",
  "http 0.2.12",
  "hyper",
- "hyper-rustls",
+ "hyper-rustls 0.24.2",
  "itertools 0.10.5",
  "mime",
  "serde",
@@ -1237,9 +1237,26 @@ dependencies = [
  "hyper",
  "log",
  "rustls 0.21.12",
- "rustls-native-certs",
+ "rustls-native-certs 0.6.3",
  "tokio",
  "tokio-rustls 0.24.1",
+]
+
+[[package]]
+name = "hyper-rustls"
+version = "0.25.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "399c78f9338483cb7e630c8474b07268983c6bd5acee012e4211f9f7bb21b070"
+dependencies = [
+ "futures-util",
+ "http 0.2.12",
+ "hyper",
+ "log",
+ "rustls 0.22.4",
+ "rustls-native-certs 0.7.2",
+ "rustls-pki-types",
+ "tokio",
+ "tokio-rustls 0.25.0",
 ]
 
 [[package]]
@@ -1372,6 +1389,15 @@ name = "itertools"
 version = "0.12.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba291022dbbd398a455acf126c1e341954079855bc60dfdda641363bd6922569"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "413ee7dfc52ee1a4949ceeb7dbc8a33f2d6c088194d9f922fb8318faf1f01186"
 dependencies = [
  "either",
 ]
@@ -2381,7 +2407,7 @@ dependencies = [
  "http 0.2.12",
  "http-body",
  "hyper",
- "hyper-rustls",
+ "hyper-rustls 0.24.2",
  "ipnet",
  "js-sys",
  "log",
@@ -2540,7 +2566,7 @@ dependencies = [
  "hex",
  "http 0.2.12",
  "hyper",
- "hyper-rustls",
+ "hyper-rustls 0.24.2",
  "jsonwebtoken 9.3.0",
  "meilisearch-sdk",
  "mockall",
@@ -2857,6 +2883,19 @@ checksum = "a9aace74cb666635c918e9c12bc0d348266037aa8eb599b5cba565709a8dff00"
 dependencies = [
  "openssl-probe",
  "rustls-pemfile 1.0.4",
+ "schannel",
+ "security-framework",
+]
+
+[[package]]
+name = "rustls-native-certs"
+version = "0.7.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "04182dffc9091a404e0fc069ea5cd60e5b866c3adf881eff99a32d048242dffa"
+dependencies = [
+ "openssl-probe",
+ "rustls-pemfile 2.1.2",
+ "rustls-pki-types",
  "schannel",
  "security-framework",
 ]
@@ -4406,7 +4445,7 @@ dependencies = [
  "futures",
  "http 0.2.12",
  "hyper",
- "hyper-rustls",
+ "hyper-rustls 0.24.2",
  "itertools 0.12.1",
  "log",
  "percent-encoding 2.3.1",
