@@ -745,7 +745,7 @@ dependencies = [
  "async-trait",
  "base64 0.22.1",
  "dropshot",
- "http 0.2.12",
+ "http 1.1.0",
  "tracing",
 ]
 
@@ -2562,7 +2562,7 @@ dependencies = [
  "dropshot-verified-body",
  "google-cloudkms1",
  "hex",
- "http 0.2.12",
+ "http 1.1.0",
  "hyper",
  "hyper-rustls",
  "jsonwebtoken 9.3.0",
@@ -2649,7 +2649,7 @@ dependencies = [
  "async-trait",
  "base64 0.22.1",
  "chrono",
- "http 0.2.12",
+ "http 1.1.0",
  "octorust",
  "regex",
  "rfd-data",
@@ -2694,7 +2694,7 @@ dependencies = [
  "google-storage1",
  "hex",
  "hmac",
- "http 0.2.12",
+ "http 1.1.0",
  "md-5",
  "meilisearch-sdk",
  "mime_guess",
@@ -3714,7 +3714,7 @@ name = "trace-request"
 version = "0.1.0"
 dependencies = [
  "dropshot",
- "http 0.2.12",
+ "http 1.1.0",
  "proc-macro2",
  "quote",
  "syn 2.0.63",
