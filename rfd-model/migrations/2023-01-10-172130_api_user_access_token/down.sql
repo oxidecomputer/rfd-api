@@ -1,1 +1,0 @@
-DROP TABLE api_user_access_token;

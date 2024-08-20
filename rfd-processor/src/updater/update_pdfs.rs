@@ -3,14 +3,15 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use async_trait::async_trait;
+use newtype_uuid::TypedUuid;
 use rfd_github::GitHubRfdUpdate;
 use rfd_model::{
     schema_ext::PdfSource,
-    storage::{DbError, RfdPdfStore, StoreError},
+    storage::{DbError, RfdPdfStore},
     NewRfdPdf,
 };
 use tracing::instrument;
-use uuid::Uuid;
+use v_model::storage::StoreError;
 
 use crate::{
     content::RfdOutputError,
@@ -123,7 +124,7 @@ impl RfdUpdateAction for UpdatePdfs {
             let response = RfdPdfStore::upsert(
                 &ctx.db.storage,
                 NewRfdPdf {
-                    id: Uuid::new_v4(),
+                    id: TypedUuid::new_v4(),
                     rfd_revision_id: new.revision.id,
                     source: PdfSource::Google,
                     link: pdf_location.url,

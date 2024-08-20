@@ -10,7 +10,6 @@ members = [
   "rfd-processor",
   "rfd-sdk",
   "trace-request",
-  "w-api-permissions",
   "xtask"
 ]
 resolver = "2"
@@ -31,14 +30,13 @@ dirs = "5.0.1"
 dropshot = "0.10.1"
 dropshot-verified-body = { git = "https://github.com/oxidecomputer/dropshot-verified-body" }
 futures = "0.3.30"
-google-cloudkms1 = "5.0.4"
-google-drive3 = "5.0.4"
-google-storage1 = "5.0.4"
+google-drive3 = "=5.0.4"
+google-storage1 = "=5.0.4"
 hex = "0.4.3"
 hmac = "0.12.1"
 http = "0.2.12"
 hyper = "0.14.30"
-hyper-rustls = "0.24.2"
+hyper-rustls = { version = "0.24.2", features = ["http2"] }
 itertools = "0.13.0"
 jsonwebtoken = "9.3.0"
 meilisearch-sdk = { version = "0.24.3", default-features = false, features = ["reqwest-rustls"] }
@@ -46,7 +44,8 @@ md-5 = "0.10.6"
 mime_guess = "2.0.5"
 mockall = "0.13.0"
 newline-converter = "0.3.0"
-oauth2 = "4.4.2"
+newtype-uuid = { version = "1.1.0", features = ["schemars08", "serde", "v4"] }
+oauth2 = { version = "4.4.2", default-features = false, features = ["rustls-tls"] }
 octorust = { git = "https://github.com/oxidecomputer/third-party-api-clients", branch = "handle-cache-miss" }
 owo-colors = "4.0.0"
 partial-struct = { git = "https://github.com/oxidecomputer/partial-struct" }
@@ -56,9 +55,9 @@ rand = "0.8.5"
 rand_core = "0.6"
 regex = "1.10.6"
 reqwest = { version = "0.11", default-features = false, features = ["json", "stream"] }
-reqwest-middleware = "0.2"
-reqwest-retry = "0.3.0"
-reqwest-tracing = "0.4.6"
+reqwest-middleware = "0.2.5"
+reqwest-retry = "0.4"
+reqwest-tracing = "0.4"
 ring = "0.17.8"
 rsa = "0.9.6"
 rustfmt-wrapper = "0.2.1"
@@ -81,13 +80,15 @@ tokio = "1.39.3"
 toml = "0.8.19"
 tracing = "0.1.40"
 tracing-appender = "0.2.3"
-tracing-bunyan-formatter = "0.3.9"
-tracing-core = "0.1.32"
-tracing-slog = { git = "https://github.com/oxidecomputer/tracing-slog" }
+tracing-slog = { git = "https://github.com/oxidecomputer/tracing-slog", default-features = false }
 tracing-subscriber = "0.3.18"
 uuid = "1.10.0"
 valuable = "0.1.0"
-yup-oauth2 = "8.3.2"
+v-api = { git = "https://github.com/oxidecomputer/v-api" }
+v-api-installer = { git = "https://github.com/oxidecomputer/v-api" }
+v-model = { git = "https://github.com/oxidecomputer/v-api" }
+v-api-permission-derive = { git = "https://github.com/oxidecomputer/v-api" }
+yup-oauth2 = { version = "9.0.0" }
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]

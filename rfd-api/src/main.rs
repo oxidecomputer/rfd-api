@@ -2,9 +2,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use context::ApiContext;
-use permissions::ApiPermission;
-use rfd_model::{storage::postgres::PostgresStore, AccessGroup, ApiKey, ApiUser};
+use context::RfdContext;
+use rfd_model::storage::postgres::PostgresStore;
 use server::{server, ServerConfig};
 use std::{
     net::{SocketAddr, SocketAddrV4},
@@ -13,35 +12,30 @@ use std::{
 use tap::TapFallible;
 use tracing_appender::non_blocking::NonBlocking;
 use tracing_subscriber::EnvFilter;
-use w_api_permissions::{Caller, Permissions};
-
-use crate::{
-    config::{AppConfig, ServerLogFormat},
+use v_api::{
     endpoints::login::oauth::{
         github::GitHubOAuthProvider, google::GoogleOAuthProvider, OAuthProviderName,
     },
+    ApiContext, VContext,
+};
+use v_model::storage::postgres::PostgresStore as VApiPostgressStore;
+
+use crate::{
+    config::{AppConfig, ServerLogFormat},
     initial_data::InitialData,
 };
 
-mod authn;
 mod caller;
 mod config;
 mod context;
 mod endpoints;
 mod error;
 mod initial_data;
-mod mapper;
 mod permissions;
 mod search;
 mod secrets;
 mod server;
 mod util;
-
-pub type ApiCaller = Caller<ApiPermission>;
-pub type ApiPermissions = Permissions<ApiPermission>;
-pub type Group = AccessGroup<ApiPermission>;
-pub type User = ApiUser<ApiPermission>;
-pub type UserToken = ApiKey<ApiPermission>;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -71,10 +65,10 @@ async fn main() -> anyhow::Result<()> {
 
     tracing::info!("Initialized logger");
 
-    let mut context = ApiContext::new(
-        config.public_url,
+    let mut v_ctx = VContext::new(
+        config.public_url.clone(),
         Arc::new(
-            PostgresStore::new(&config.database_url)
+            VApiPostgressStore::new(&config.database_url)
                 .await
                 .tap_err(|err| {
                     tracing::error!(?err, "Failed to establish initial database connection");
@@ -82,25 +76,11 @@ async fn main() -> anyhow::Result<()> {
         ),
         config.jwt,
         config.keys,
-        config.search,
-        config.content,
-        config.services,
     )
     .await?;
 
-    tracing::info!("Configured server context");
-
-    let init_data = InitialData::new(config.initial_mappers.map(|p| vec![p])).tap_err(|err| {
-        tracing::error!(?err, "Failed to load initial data from configuration");
-    })?;
-    init_data.initialize(&context).await.tap_err(|err| {
-        tracing::error!(?err, "Failed to install initial data");
-    })?;
-
-    tracing::info!("Loaded initial data");
-
     if let Some(github) = config.authn.oauth.github {
-        context.insert_oauth_provider(
+        v_ctx.insert_oauth_provider(
             OAuthProviderName::GitHub,
             Box::new(move || {
                 Box::new(GitHubOAuthProvider::new(
@@ -108,6 +88,7 @@ async fn main() -> anyhow::Result<()> {
                     github.device.client_secret.clone(),
                     github.web.client_id.clone(),
                     github.web.client_secret.clone(),
+                    None,
                 ))
             }),
         );
@@ -116,7 +97,7 @@ async fn main() -> anyhow::Result<()> {
     }
 
     if let Some(google) = config.authn.oauth.google {
-        context.insert_oauth_provider(
+        v_ctx.insert_oauth_provider(
             OAuthProviderName::Google,
             Box::new(move || {
                 Box::new(GoogleOAuthProvider::new(
@@ -124,12 +105,43 @@ async fn main() -> anyhow::Result<()> {
                     google.device.client_secret.clone(),
                     google.web.client_id.clone(),
                     google.web.client_secret.clone(),
+                    None,
                 ))
             }),
         );
 
         tracing::info!("Added Google OAuth provider");
     }
+
+    let context = RfdContext::new(
+        config.public_url,
+        Arc::new(
+            PostgresStore::new(&config.database_url)
+                .await
+                .tap_err(|err| {
+                    tracing::error!(?err, "Failed to establish initial database connection");
+                })?,
+        ),
+        config.search,
+        config.content,
+        config.services,
+        v_ctx,
+    )
+    .await?;
+
+    tracing::info!("Configured server context");
+
+    let init_data = InitialData::new(config.initial_mappers.map(|p| vec![p])).tap_err(|err| {
+        tracing::error!(?err, "Failed to load initial data from configuration");
+    })?;
+    init_data
+        .initialize(&context.v_ctx())
+        .await
+        .tap_err(|err| {
+            tracing::error!(?err, "Failed to install initial data");
+        })?;
+
+    tracing::info!("Loaded initial data");
 
     tracing::debug!(?config.spec, "Spec configuration");
 

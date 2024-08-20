@@ -4,12 +4,13 @@
 
 use futures::TryFutureExt;
 use rfd_github::{GitHubRfdLocation, GitHubRfdUpdate};
-use rfd_model::storage::{JobFilter, JobStore, ListPagination, StoreError};
+use rfd_model::storage::{JobFilter, JobStore};
 use std::sync::Arc;
 use tap::TapFallible;
 use thiserror::Error;
 use tokio::time::interval;
 use tracing::Instrument;
+use v_model::storage::{ListPagination, StoreError};
 
 use crate::{context::Context, updater::RfdUpdater};
 

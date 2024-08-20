@@ -5,19 +5,19 @@
 use std::sync::Mutex;
 
 use chrono::{DateTime, Utc};
+use newtype_uuid::TypedUuid;
 use octorust::{Client, ClientError};
 use rfd_data::{content::RfdDocument, RfdNumber};
 use rfd_github::{GitHubError, GitHubRfdReadme, GitHubRfdUpdate};
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
     storage::{
-        ListPagination, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionStore,
-        RfdStore, StoreError,
+        RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionStore, RfdStore,
     },
     CommitSha, FileSha, NewRfd, NewRfdRevision, Rfd, RfdRevision,
 };
 use thiserror::Error;
-use uuid::Uuid;
+use v_model::storage::{ListPagination, StoreError};
 
 use crate::content::RenderableRfd;
 
@@ -339,7 +339,7 @@ impl RemoteRfd {
         .into_iter()
         .next()
         .map(|rfd| (rfd.id, rfd.visibility))
-        .unwrap_or_else(|| (Uuid::new_v4(), Visibility::Private));
+        .unwrap_or_else(|| (TypedUuid::new_v4(), Visibility::Private));
 
         let rfd = RfdStore::upsert(
             storage,
@@ -368,7 +368,7 @@ impl RemoteRfd {
         })
         .unwrap_or_else(|| {
             tracing::info!("No existing revisions exist for this commit. Creating a new revision.");
-            Uuid::new_v4()
+            TypedUuid::new_v4()
         });
 
         let revision = RfdRevisionStore::upsert(
