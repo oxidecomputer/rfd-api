@@ -695,13 +695,13 @@ checksum = "1435fa1053d8b2fbbe9be7e97eca7f33d37b28409959813daefc1446a14247f1"
 
 [[package]]
 name = "dropshot"
-version = "0.10.0"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f992694fcf0ee8f1f8efa152e0e0cda728743a4ec0279d4fc037e612594caaa"
+checksum = "a391eeedf8a75a188eb670327c704b7ab10eb2bb890e2ec0880dd21d609fb6e8"
 dependencies = [
  "async-stream",
  "async-trait",
- "base64 0.21.7",
+ "base64 0.22.1",
  "bytes",
  "camino",
  "chrono",
@@ -709,7 +709,7 @@ dependencies = [
  "dropshot_endpoint",
  "form_urlencoded",
  "futures",
- "hostname",
+ "hostname 0.4.0",
  "http 0.2.12",
  "hyper",
  "indexmap 2.2.6",
@@ -717,10 +717,10 @@ dependencies = [
  "openapiv3",
  "paste",
  "percent-encoding 2.3.1",
- "proc-macro2",
  "rustls 0.22.4",
  "rustls-pemfile 2.1.2",
  "schemars",
+ "scopeguard",
  "serde",
  "serde_json",
  "serde_path_to_error",
@@ -772,9 +772,9 @@ dependencies = [
 
 [[package]]
 name = "dropshot_endpoint"
-version = "0.10.0"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92a76c22c3ee276484797ee496af16c5b13e0bb3239e2828d41d98e59a23f9ff"
+checksum = "9058c9c7e4a6b378cd12e71dc155bb15d0d4f8e1e6039ce2cf0a7c0c81043e33"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1170,6 +1170,17 @@ dependencies = [
  "libc",
  "match_cfg",
  "winapi",
+]
+
+[[package]]
+name = "hostname"
+version = "0.4.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f9c7c7c8ac16c798734b8a24560c1362120597c40d5e1459f09498f8f6c8f2ba"
+dependencies = [
+ "cfg-if",
+ "libc",
+ "windows",
 ]
 
 [[package]]
@@ -3279,7 +3290,7 @@ version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dcaaf6e68789d3f0411f1e72bc443214ef252a1038b6e344836e50442541f190"
 dependencies = [
- "hostname",
+ "hostname 0.3.1",
  "slog",
  "slog-json",
  "time",
@@ -4171,6 +4182,16 @@ name = "winapi-x86_64-pc-windows-gnu"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
+
+[[package]]
+name = "windows"
+version = "0.52.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e48a53791691ab099e5e2ad123536d0fff50652600abaf43bbf952894110d0be"
+dependencies = [
+ "windows-core",
+ "windows-targets 0.52.5",
+]
 
 [[package]]
 name = "windows-core"
