@@ -198,7 +198,6 @@ pub struct RfdPayload {
     pub discussion: Option<String>,
     // Revision
     pub state: String,
-    pub name: String,
     pub title: String,
     pub content: RenderableRfd<'static>,
     pub content_format: ContentFormat,
@@ -207,12 +206,6 @@ pub struct RfdPayload {
     pub sha: FileSha,
     pub commit_sha: CommitSha,
     pub commit_date: DateTime<Utc>,
-}
-
-impl RfdPayload {
-    pub fn generate_name(number: i32, title: &str) -> String {
-        format!("RFD {} {}", number, title)
-    }
 }
 
 #[derive(Debug, Error)]
@@ -277,7 +270,6 @@ impl RemoteRfd {
             .get_title()
             .ok_or(RemoteRfdError::MissingTitle)?
             .to_string();
-        let name = RfdPayload::generate_name(self.number.into(), &title);
         let authors = self
             .readme
             .content
@@ -311,7 +303,6 @@ impl RemoteRfd {
 
             // Revision
             state,
-            name,
             title,
             content: RenderableRfd::new(self.readme.content),
             content_format,

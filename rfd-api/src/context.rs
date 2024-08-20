@@ -738,6 +738,7 @@ impl RfdContext {
 pub(crate) mod test_mocks {
     use async_trait::async_trait;
     use newtype_uuid::TypedUuid;
+    use rand::RngCore;
     use rfd_data::content::RfdTemplate;
     use rfd_model::{
         storage::{
@@ -746,9 +747,13 @@ pub(crate) mod test_mocks {
         },
         NewJob, NewRfd, NewRfdPdf, NewRfdRevision, RfdId, RfdPdfId, RfdRevisionId,
     };
+    use rsa::{
+        pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
+        RsaPrivateKey, RsaPublicKey,
+    };
     use std::sync::Arc;
     use v_api::{
-        config::JwtConfig,
+        config::{AsymmetricKey, JwtConfig},
         endpoints::login::oauth::{google::GoogleOAuthProvider, OAuthProviderName},
         VContext,
     };
@@ -770,13 +775,34 @@ pub(crate) mod test_mocks {
             .templates
             .insert("placeholder".to_string(), RfdTemplate::default());
 
+        let mut rng = rand::thread_rng();
+        let bits = 2048;
+        let priv_key = RsaPrivateKey::new(&mut rng, bits).expect("Failed to generate a key");
+        let pub_key = RsaPublicKey::from(&priv_key);
+
+        let mut kid = [0; 24];
+        rng.fill_bytes(&mut kid);
+
+        let key = AsymmetricKey::Local {
+            kid: hex::encode(kid),
+            private: String::from_utf8(
+                priv_key
+                    .to_pkcs8_pem(LineEnding::LF)
+                    .unwrap()
+                    .as_bytes()
+                    .to_vec(),
+            )
+            .unwrap(),
+            public: pub_key.to_public_key_pem(LineEnding::LF).unwrap(),
+        };
+
         let mut v_context = VContext::new(
             String::new(),
             Arc::new(PostgresStore::new("").await.unwrap()),
             JwtConfig {
                 default_expiration: 0,
             },
-            vec![],
+            vec![key],
         )
         .await
         .unwrap();
