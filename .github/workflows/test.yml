@@ -49,4 +49,4 @@ jobs:
           command: test
         env:
           TEST_DATABASE: postgres://test:test@localhost
-          RUST_LOG: rfd=trace
+          RUST_LOG: v=trace,rfd=trace
