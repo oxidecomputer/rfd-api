@@ -49,7 +49,7 @@ impl InitialData {
     pub fn new(config_sources: Option<Vec<String>>) -> Result<Self, InitError> {
         let mut config = Config::builder()
             .add_source(File::with_name("mappers.toml").required(false))
-            .add_source(File::with_name("turnstile-api/mappers.toml").required(false));
+            .add_source(File::with_name("rfd-api/mappers.toml").required(false));
 
         for source in config_sources.unwrap_or_default() {
             config = config.add_source(File::with_name(&source).required(false));
