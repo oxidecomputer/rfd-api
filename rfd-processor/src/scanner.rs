@@ -4,13 +4,11 @@
 
 use diesel::result::{DatabaseErrorKind, Error as DieselError};
 use rfd_github::{GitHubError, GitHubRfdUpdate};
-use rfd_model::{
-    storage::{JobStore, StoreError},
-    NewJob,
-};
+use rfd_model::{storage::JobStore, NewJob};
 use std::sync::Arc;
 use thiserror::Error;
 use tokio::time::interval;
+use v_model::storage::StoreError;
 
 use crate::context::Context;
 

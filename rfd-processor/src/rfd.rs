@@ -5,19 +5,19 @@
 use std::sync::Mutex;
 
 use chrono::{DateTime, Utc};
+use newtype_uuid::TypedUuid;
 use octorust::{Client, ClientError};
 use rfd_data::{content::RfdDocument, RfdNumber};
 use rfd_github::{GitHubError, GitHubRfdReadme, GitHubRfdUpdate};
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
     storage::{
-        ListPagination, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionStore,
-        RfdStore, StoreError,
+        RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionStore, RfdStore,
     },
     CommitSha, FileSha, NewRfd, NewRfdRevision, Rfd, RfdRevision,
 };
 use thiserror::Error;
-use uuid::Uuid;
+use v_model::storage::{ListPagination, StoreError};
 
 use crate::content::RenderableRfd;
 
@@ -198,7 +198,6 @@ pub struct RfdPayload {
     pub discussion: Option<String>,
     // Revision
     pub state: String,
-    pub name: String,
     pub title: String,
     pub content: RenderableRfd<'static>,
     pub content_format: ContentFormat,
@@ -207,12 +206,6 @@ pub struct RfdPayload {
     pub sha: FileSha,
     pub commit_sha: CommitSha,
     pub commit_date: DateTime<Utc>,
-}
-
-impl RfdPayload {
-    pub fn generate_name(number: i32, title: &str) -> String {
-        format!("RFD {} {}", number, title)
-    }
 }
 
 #[derive(Debug, Error)]
@@ -277,7 +270,6 @@ impl RemoteRfd {
             .get_title()
             .ok_or(RemoteRfdError::MissingTitle)?
             .to_string();
-        let name = RfdPayload::generate_name(self.number.into(), &title);
         let authors = self
             .readme
             .content
@@ -311,7 +303,6 @@ impl RemoteRfd {
 
             // Revision
             state,
-            name,
             title,
             content: RenderableRfd::new(self.readme.content),
             content_format,
@@ -339,7 +330,7 @@ impl RemoteRfd {
         .into_iter()
         .next()
         .map(|rfd| (rfd.id, rfd.visibility))
-        .unwrap_or_else(|| (Uuid::new_v4(), Visibility::Private));
+        .unwrap_or_else(|| (TypedUuid::new_v4(), Visibility::Private));
 
         let rfd = RfdStore::upsert(
             storage,
@@ -368,7 +359,7 @@ impl RemoteRfd {
         })
         .unwrap_or_else(|| {
             tracing::info!("No existing revisions exist for this commit. Creating a new revision.");
-            Uuid::new_v4()
+            TypedUuid::new_v4()
         });
 
         let revision = RfdRevisionStore::upsert(

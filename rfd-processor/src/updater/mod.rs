@@ -2,17 +2,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::fmt::Debug;
-
 use async_trait::async_trait;
+use newtype_uuid::TypedUuid;
 use octorust::types::{LabelsData, PullRequestData, PullRequestSimple};
 use rfd_data::content::RfdDocument;
 use rfd_github::{GitHubError, GitHubRfdUpdate};
-use rfd_model::storage::StoreError;
+use rfd_model::RfdId;
 use serde::Deserialize;
+use std::fmt::Debug;
 use thiserror::Error;
 use tracing::instrument;
-use uuid::Uuid;
+use v_model::storage::StoreError;
 
 use crate::{
     context::Context,
@@ -55,7 +55,7 @@ pub enum RfdUpdaterError {
     #[error("Failed to update RFD {0}")]
     RfdUpdate(RfdError),
     #[error("Newly persisted RFD has an internal id that does match the expected existing id")]
-    RfdIdMismatch((Uuid, Uuid)),
+    RfdIdMismatch((TypedUuid<RfdId>, TypedUuid<RfdId>)),
 }
 
 trait Validate {

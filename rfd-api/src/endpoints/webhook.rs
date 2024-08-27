@@ -10,14 +10,15 @@ use dropshot::{
 };
 use dropshot_verified_body::{hmac::HmacVerifiedBody, services::github::GitHubWebhookVerification};
 use http::HeaderName;
+use newtype_uuid::{GenericUuid, TypedUuid};
 use regex::Regex;
-use rfd_model::NewJob;
+use rfd_model::{NewJob, WebhookDeliveryId};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use tracing::instrument;
 use uuid::Uuid;
 
-use crate::{context::ApiContext, error::ApiError};
+use crate::{context::RfdContext, error::ApiError};
 
 #[endpoint {
     method = POST,
@@ -34,7 +35,7 @@ use crate::{context::ApiContext, error::ApiError};
     err(Debug)
 )]
 pub async fn github_webhook(
-    rqctx: RequestContext<ApiContext>,
+    rqctx: RequestContext<RfdContext>,
     DeliveryId(delivery_id): DeliveryId,
     EventType(event): EventType,
     body: HmacVerifiedBody<GitHubWebhookVerification, GitHubCommitPayload>,
@@ -67,7 +68,7 @@ pub struct GitHubCommitPayload {
 }
 
 impl GitHubCommitPayload {
-    pub fn create_jobs(&self, delivery_id: Uuid) -> Vec<NewJob> {
+    pub fn create_jobs(&self, delivery_id: TypedUuid<WebhookDeliveryId>) -> Vec<NewJob> {
         self.affected_rfds()
             .into_iter()
             .filter_map(|rfd| {
@@ -177,7 +178,7 @@ pub struct GitHubInstallation {
 pub const GITHUB_DELIVERY_HEADER: HeaderName = HeaderName::from_static("x-github-delivery");
 
 #[derive(Debug)]
-pub struct DeliveryId(pub Uuid);
+pub struct DeliveryId(pub TypedUuid<WebhookDeliveryId>);
 
 #[async_trait]
 impl SharedExtractor for DeliveryId {
@@ -210,7 +211,7 @@ impl SharedExtractor for DeliveryId {
                 })
             })?;
 
-        Ok(DeliveryId(delivery_id))
+        Ok(DeliveryId(TypedUuid::from_untyped_uuid(delivery_id)))
     }
 
     fn metadata(_body_content_type: ApiEndpointBodyContentType) -> ExtractorMetadata {

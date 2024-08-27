@@ -1,0 +1,20 @@
+[package]
+name = "rfd-installer"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "rfd_installer"
+path = "src/lib.rs"
+
+[[bin]]
+name = "rfd-installer"
+path = "src/main.rs"
+
+[dependencies]
+diesel = { workspace = true, features = ["postgres", "r2d2"] }
+diesel_migrations = { workspace = true, features = ["postgres"] }
+v-api-installer = { workspace = true }
+
+[package.metadata.dist]
+targets = []

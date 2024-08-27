@@ -1,1 +1,0 @@
-ALTER TABLE login_attempt DROP COLUMN scope;

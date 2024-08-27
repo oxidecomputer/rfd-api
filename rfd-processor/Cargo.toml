@@ -20,6 +20,7 @@ http = { workspace = true }
 meilisearch-sdk = { workspace = true }
 md-5 = { workspace = true }
 mime_guess = { workspace = true }
+newtype-uuid = { workspace = true }
 octorust = { workspace = true, features = ["httpcache"] }
 parse-rfd = { path = "../parse-rfd" }
 regex = { workspace = true }
@@ -38,6 +39,7 @@ tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 tracing = { workspace = true }
 tracing-appender = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter", "fmt", "json"] }
+v-model = { workspace = true }
 uuid = { workspace = true }
 yup-oauth2 = { workspace = true }
 

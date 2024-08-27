@@ -1,1 +1,0 @@
-ALTER TABLE api_key ALTER COLUMN permissions SET NOT NULL;

@@ -7,5 +7,6 @@ mappers.toml
 spec.toml
 key.json
 test-key.json
+gcp.json
 
 node_modules

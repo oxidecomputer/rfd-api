@@ -1,5 +1,2 @@
 [alias]
 xtask = "run --package xtask --"
-
-[build]
-rustflags = ["--cfg", "tracing_unstable"]

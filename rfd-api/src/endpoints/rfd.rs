@@ -19,14 +19,15 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use trace_request::trace_request;
 use tracing::instrument;
+use v_api::ApiContext;
+use v_model::permissions::Caller;
 
 use crate::{
     caller::CallerExt,
-    context::{ApiContext, FullRfd, ListRfd},
-    permissions::ApiPermission,
+    context::{FullRfd, ListRfd, RfdContext},
+    permissions::RfdPermission,
     search::{MeiliSearchResult, SearchRequest},
     util::response::{client_error, internal_error, unauthorized},
-    ApiCaller,
 };
 
 /// List all available RFDs
@@ -37,17 +38,17 @@ use crate::{
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn get_rfds(
-    rqctx: RequestContext<ApiContext>,
+    rqctx: RequestContext<RfdContext>,
 ) -> Result<HttpResponseOk<Vec<ListRfd>>, HttpError> {
     let ctx = rqctx.context();
-    let auth = ctx.authn_token(&rqctx).await?;
-    get_rfds_op(ctx, &ctx.get_caller(auth.as_ref()).await?).await
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    get_rfds_op(ctx, &caller).await
 }
 
 #[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
 async fn get_rfds_op(
-    ctx: &ApiContext,
-    caller: &ApiCaller,
+    ctx: &RfdContext,
+    caller: &Caller<RfdPermission>,
 ) -> Result<HttpResponseOk<Vec<ListRfd>>, HttpError> {
     let rfds = ctx.list_rfds(caller, None).await?;
     Ok(HttpResponseOk(rfds))
@@ -74,23 +75,18 @@ pub struct ReserveRfdResponse {
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn reserve_rfd(
-    rqctx: RequestContext<ApiContext>,
+    rqctx: RequestContext<RfdContext>,
     body: TypedBody<ReserveRfdBody>,
 ) -> Result<HttpResponseAccepted<ReserveRfdResponse>, HttpError> {
     let ctx = rqctx.context();
-    let auth = ctx.authn_token(&rqctx).await?;
-    reserve_rfd_op(
-        ctx,
-        &ctx.get_caller(auth.as_ref()).await?,
-        body.into_inner(),
-    )
-    .await
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    reserve_rfd_op(ctx, &caller, body.into_inner()).await
 }
 
 #[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
 async fn reserve_rfd_op(
-    ctx: &ApiContext,
-    caller: &ApiCaller,
+    ctx: &RfdContext,
+    caller: &Caller<RfdPermission>,
     body: ReserveRfdBody,
 ) -> Result<HttpResponseAccepted<ReserveRfdResponse>, HttpError> {
     let number = ctx.create_rfd(caller, body.title, body.content).await?;
@@ -113,23 +109,18 @@ pub struct RfdPathParams {
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn get_rfd(
-    rqctx: RequestContext<ApiContext>,
+    rqctx: RequestContext<RfdContext>,
     path: Path<RfdPathParams>,
 ) -> Result<HttpResponseOk<FullRfd>, HttpError> {
     let ctx = rqctx.context();
-    let auth = ctx.authn_token(&rqctx).await?;
-    get_rfd_op(
-        ctx,
-        &ctx.get_caller(auth.as_ref()).await?,
-        path.into_inner().number,
-    )
-    .await
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    get_rfd_op(ctx, &caller, path.into_inner().number).await
 }
 
 #[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
 async fn get_rfd_op(
-    ctx: &ApiContext,
-    caller: &ApiCaller,
+    ctx: &RfdContext,
+    caller: &Caller<RfdPermission>,
     number: String,
 ) -> Result<HttpResponseOk<FullRfd>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
@@ -157,24 +148,18 @@ pub struct RfdUpdateBody {
     path = "/rfd/{number}",
 }]
 pub async fn set_rfd_document(
-    rqctx: RequestContext<ApiContext>,
+    rqctx: RequestContext<RfdContext>,
     path: Path<RfdPathParams>,
     body: TypedBody<RfdUpdateBody>,
 ) -> Result<HttpResponseAccepted<()>, HttpError> {
     let ctx = rqctx.context();
-    let auth = ctx.authn_token(&rqctx).await?;
-    set_rfd_document_op(
-        ctx,
-        &ctx.get_caller(auth.as_ref()).await?,
-        path.into_inner().number,
-        body.into_inner(),
-    )
-    .await
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    set_rfd_document_op(ctx, &caller, path.into_inner().number, body.into_inner()).await
 }
 
 async fn set_rfd_document_op(
-    ctx: &ApiContext,
-    caller: &ApiCaller,
+    ctx: &RfdContext,
+    caller: &Caller<RfdPermission>,
     number: String,
     body: RfdUpdateBody,
 ) -> Result<HttpResponseAccepted<()>, HttpError> {
@@ -211,24 +196,18 @@ pub struct RfdUpdateContentBody {
     path = "/rfd/{number}/content",
 }]
 pub async fn set_rfd_content(
-    rqctx: RequestContext<ApiContext>,
+    rqctx: RequestContext<RfdContext>,
     path: Path<RfdPathParams>,
     body: TypedBody<RfdUpdateContentBody>,
 ) -> Result<HttpResponseAccepted<()>, HttpError> {
     let ctx = rqctx.context();
-    let auth = ctx.authn_token(&rqctx).await?;
-    set_rfd_content_op(
-        ctx,
-        &ctx.get_caller(auth.as_ref()).await?,
-        path.into_inner().number,
-        body.into_inner(),
-    )
-    .await
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    set_rfd_content_op(ctx, &caller, path.into_inner().number, body.into_inner()).await
 }
 
 async fn set_rfd_content_op(
-    ctx: &ApiContext,
-    caller: &ApiCaller,
+    ctx: &RfdContext,
+    caller: &Caller<RfdPermission>,
     number: String,
     body: RfdUpdateContentBody,
 ) -> Result<HttpResponseAccepted<()>, HttpError> {
@@ -280,25 +259,19 @@ pub enum RfdAttr {
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn get_rfd_attr(
-    rqctx: RequestContext<ApiContext>,
+    rqctx: RequestContext<RfdContext>,
     path: Path<RfdAttrPathParams>,
 ) -> Result<HttpResponseOk<RfdAttr>, HttpError> {
     let ctx = rqctx.context();
-    let auth = ctx.authn_token(&rqctx).await?;
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
     let path = path.into_inner();
-    get_rfd_attr_op(
-        ctx,
-        &ctx.get_caller(auth.as_ref()).await?,
-        path.number,
-        path.attr,
-    )
-    .await
+    get_rfd_attr_op(ctx, &caller, path.number, path.attr).await
 }
 
 #[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
 async fn get_rfd_attr_op(
-    ctx: &ApiContext,
-    caller: &ApiCaller,
+    ctx: &RfdContext,
+    caller: &Caller<RfdPermission>,
     number: String,
     attr: RfdAttrName,
 ) -> Result<HttpResponseOk<RfdAttr>, HttpError> {
@@ -334,27 +307,20 @@ pub struct RfdAttrValue {
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn set_rfd_attr(
-    rqctx: RequestContext<ApiContext>,
+    rqctx: RequestContext<RfdContext>,
     path: Path<RfdAttrPathParams>,
     body: TypedBody<RfdAttrValue>,
 ) -> Result<HttpResponseAccepted<RfdAttr>, HttpError> {
     let ctx = rqctx.context();
-    let auth = ctx.authn_token(&rqctx).await?;
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
     let path = path.into_inner();
-    set_rfd_attr_op(
-        ctx,
-        &ctx.get_caller(auth.as_ref()).await?,
-        path.number,
-        path.attr,
-        &body.into_inner(),
-    )
-    .await
+    set_rfd_attr_op(ctx, &caller, path.number, path.attr, &body.into_inner()).await
 }
 
 #[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
 async fn set_rfd_attr_op(
-    ctx: &ApiContext,
-    caller: &ApiCaller,
+    ctx: &RfdContext,
+    caller: &Caller<RfdPermission>,
     number: String,
     attr: RfdAttrName,
     body: &RfdAttrValue,
@@ -413,15 +379,15 @@ async fn set_rfd_attr_op(
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn discuss_rfd(
-    rqctx: RequestContext<ApiContext>,
+    rqctx: RequestContext<RfdContext>,
     path: Path<RfdPathParams>,
 ) -> Result<HttpResponseAccepted<RfdAttr>, HttpError> {
     let ctx = rqctx.context();
-    let auth = ctx.authn_token(&rqctx).await?;
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
     let path = path.into_inner();
     set_rfd_attr_op(
         ctx,
-        &ctx.get_caller(auth.as_ref()).await?,
+        &caller,
         path.number,
         RfdAttrName::State,
         &RfdAttrValue {
@@ -440,15 +406,15 @@ pub async fn discuss_rfd(
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn publish_rfd(
-    rqctx: RequestContext<ApiContext>,
+    rqctx: RequestContext<RfdContext>,
     path: Path<RfdPathParams>,
 ) -> Result<HttpResponseAccepted<RfdAttr>, HttpError> {
     let ctx = rqctx.context();
-    let auth = ctx.authn_token(&rqctx).await?;
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
     let path = path.into_inner();
     set_rfd_attr_op(
         ctx,
-        &ctx.get_caller(auth.as_ref()).await?,
+        &caller,
         path.number,
         RfdAttrName::State,
         &RfdAttrValue {
@@ -517,12 +483,11 @@ pub struct RfdSearchQuery {
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn search_rfds(
-    rqctx: RequestContext<ApiContext>,
+    rqctx: RequestContext<RfdContext>,
     query: Query<RfdSearchQuery>,
 ) -> Result<HttpResponseOk<SearchResults>, HttpError> {
     let ctx = rqctx.context();
-    let auth = ctx.authn_token(&rqctx).await?;
-    let caller = ctx.get_caller(auth.as_ref()).await?;
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
     search_rfds_op(ctx, &caller, query.into_inner()).await
 }
 
@@ -561,14 +526,14 @@ pub struct FormattedSearchResultHit {
 
 #[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
 async fn search_rfds_op(
-    ctx: &ApiContext,
-    caller: &ApiCaller,
+    ctx: &RfdContext,
+    caller: &Caller<RfdPermission>,
     query: RfdSearchQuery,
 ) -> Result<HttpResponseOk<SearchResults>, HttpError> {
     // TODO: Move all of this into a ctx
 
     // Ensure that the user has the search permission before searching
-    if caller.can(&ApiPermission::SearchRfds) {
+    if caller.can(&RfdPermission::SearchRfds) {
         tracing::debug!("Fetching from remote search API");
 
         // Transform the inbound query into a meilisearch request
@@ -578,7 +543,7 @@ async fn search_rfds_op(
         // all RFDs or they access to some smaller set. If we need to filter down the RFD list we
         // construct a filter that will search across the RFDs the caller has direct access to as
         // well as any RFDs that are marked as publicly accessible.
-        search_request.filter = if caller.can(&ApiPermission::GetRfdsAll) {
+        search_request.filter = if caller.can(&RfdPermission::GetRfdsAll) {
             None
         } else {
             let mut filter = "public = true".to_string();
@@ -646,25 +611,19 @@ pub struct RfdVisibility {
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn update_rfd_visibility(
-    rqctx: RequestContext<ApiContext>,
+    rqctx: RequestContext<RfdContext>,
     path: Path<RfdPathParams>,
     body: TypedBody<RfdVisibility>,
 ) -> Result<HttpResponseOk<Rfd>, HttpError> {
     let ctx = rqctx.context();
-    let auth = ctx.authn_token(&rqctx).await?;
-    update_rfd_visibility_op(
-        ctx,
-        &ctx.get_caller(auth.as_ref()).await?,
-        path.into_inner().number,
-        body.into_inner(),
-    )
-    .await
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    update_rfd_visibility_op(ctx, &caller, path.into_inner().number, body.into_inner()).await
 }
 
 #[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
 async fn update_rfd_visibility_op(
-    ctx: &ApiContext,
-    caller: &ApiCaller,
+    ctx: &RfdContext,
+    caller: &Caller<RfdPermission>,
     number: String,
     body: RfdVisibility,
 ) -> Result<HttpResponseOk<Rfd>, HttpError> {
@@ -688,25 +647,27 @@ mod tests {
     use chrono::Utc;
     use dropshot::HttpResponseOk;
     use http::StatusCode;
+    use newtype_uuid::{GenericUuid, TypedUuid};
     use rfd_model::{
         storage::{MockRfdPdfStore, MockRfdRevisionStore, MockRfdStore},
         Rfd, RfdRevision,
     };
     use uuid::Uuid;
-    use w_api_permissions::Caller;
+    use v_api::ApiContext;
+    use v_model::{permissions::Caller, Permissions};
 
     use crate::{
         context::{
             test_mocks::{mock_context, MockStorage},
-            ApiContext,
+            RfdContext,
         },
         endpoints::rfd::get_rfd_op,
-        permissions::ApiPermission,
+        permissions::RfdPermission,
     };
 
     use super::get_rfds_op;
 
-    async fn ctx() -> ApiContext {
+    async fn ctx() -> RfdContext {
         let private_rfd_id_1 = Uuid::new_v4();
         let private_rfd_id_2 = Uuid::new_v4();
         let public_rfd_id = Uuid::new_v4();
@@ -715,7 +676,7 @@ mod tests {
         rfd_store.expect_list().returning(move |filter, _| {
             let mut results = vec![
                 Rfd {
-                    id: private_rfd_id_1,
+                    id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
                     rfd_number: 123,
                     link: None,
                     created_at: Utc::now(),
@@ -724,7 +685,7 @@ mod tests {
                     visibility: rfd_model::schema_ext::Visibility::Private,
                 },
                 Rfd {
-                    id: public_rfd_id,
+                    id: TypedUuid::from_untyped_uuid(public_rfd_id),
                     rfd_number: 456,
                     link: None,
                     created_at: Utc::now(),
@@ -733,7 +694,7 @@ mod tests {
                     visibility: rfd_model::schema_ext::Visibility::Public,
                 },
                 Rfd {
-                    id: private_rfd_id_2,
+                    id: TypedUuid::from_untyped_uuid(private_rfd_id_2),
                     rfd_number: 789,
                     link: None,
                     created_at: Utc::now(),
@@ -761,8 +722,8 @@ mod tests {
             .returning(move |filter, _| {
                 let mut results = vec![
                     RfdRevision {
-                        id: Uuid::new_v4(),
-                        rfd_id: private_rfd_id_1,
+                        id: TypedUuid::new_v4(),
+                        rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
                         title: "Private Test RFD 1".to_string(),
                         state: None,
                         discussion: None,
@@ -778,8 +739,8 @@ mod tests {
                         deleted_at: None,
                     },
                     RfdRevision {
-                        id: Uuid::new_v4(),
-                        rfd_id: public_rfd_id,
+                        id: TypedUuid::new_v4(),
+                        rfd_id: TypedUuid::from_untyped_uuid(public_rfd_id),
                         title: "Public Test RFD".to_string(),
                         state: None,
                         discussion: None,
@@ -795,8 +756,8 @@ mod tests {
                         deleted_at: None,
                     },
                     RfdRevision {
-                        id: Uuid::new_v4(),
-                        rfd_id: private_rfd_id_2,
+                        id: TypedUuid::new_v4(),
+                        rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_2),
                         title: "Private Test RFD 2".to_string(),
                         state: None,
                         discussion: None,
@@ -838,10 +799,7 @@ mod tests {
     #[tokio::test]
     async fn list_rfds_via_all_permission() {
         let ctx = ctx().await;
-        let caller = Caller {
-            id: Uuid::new_v4(),
-            permissions: vec![ApiPermission::GetRfdsAll].into(),
-        };
+        let caller = Caller::from(Permissions::from(vec![RfdPermission::GetRfdsAll]));
 
         let HttpResponseOk(rfds) = get_rfds_op(&ctx, &caller).await.unwrap();
         assert_eq!(3, rfds.len());
@@ -853,10 +811,7 @@ mod tests {
     #[tokio::test]
     async fn get_rfd_via_all_permission() {
         let ctx = ctx().await;
-        let caller = Caller {
-            id: Uuid::new_v4(),
-            permissions: vec![ApiPermission::GetRfdsAll].into(),
-        };
+        let caller = Caller::from(Permissions::from(vec![RfdPermission::GetRfdsAll]));
 
         let HttpResponseOk(rfd) = get_rfd_op(&ctx, &caller, "0123".to_string()).await.unwrap();
         assert_eq!(123, rfd.rfd_number);
@@ -870,10 +825,7 @@ mod tests {
     #[tokio::test]
     async fn list_rfds_with_direct_permission() {
         let ctx = ctx().await;
-        let caller = Caller {
-            id: Uuid::new_v4(),
-            permissions: vec![ApiPermission::GetRfd(123)].into(),
-        };
+        let caller = Caller::from(Permissions::from(vec![RfdPermission::GetRfd(123)]));
 
         let HttpResponseOk(rfds) = get_rfds_op(&ctx, &caller).await.unwrap();
         assert_eq!(2, rfds.len());
@@ -884,10 +836,7 @@ mod tests {
     #[tokio::test]
     async fn get_rfd_with_direct_permission() {
         let ctx = ctx().await;
-        let caller = Caller {
-            id: Uuid::new_v4(),
-            permissions: vec![ApiPermission::GetRfd(123)].into(),
-        };
+        let caller = Caller::from(Permissions::from(vec![RfdPermission::GetRfd(123)]));
 
         let HttpResponseOk(rfd) = get_rfd_op(&ctx, &caller, "0123".to_string()).await.unwrap();
         assert_eq!(123, rfd.rfd_number);
@@ -901,10 +850,7 @@ mod tests {
     #[tokio::test]
     async fn list_rfds_without_permission() {
         let ctx = ctx().await;
-        let caller = Caller {
-            id: Uuid::new_v4(),
-            permissions: vec![].into(),
-        };
+        let caller = Caller::from(Permissions::<RfdPermission>::new());
 
         let HttpResponseOk(rfds) = get_rfds_op(&ctx, &caller).await.unwrap();
         assert_eq!(1, rfds.len());
@@ -914,10 +860,7 @@ mod tests {
     #[tokio::test]
     async fn get_rfd_without_permission() {
         let ctx = ctx().await;
-        let caller = Caller {
-            id: Uuid::new_v4(),
-            permissions: vec![].into(),
-        };
+        let caller = Caller::from(Permissions::<RfdPermission>::new());
 
         let result = get_rfd_op(&ctx, &caller, "0123".to_string()).await;
 
@@ -939,7 +882,7 @@ mod tests {
     async fn list_rfds_as_unauthenticated() {
         let ctx = ctx().await;
 
-        let HttpResponseOk(rfds) = get_rfds_op(&ctx, &ctx.builtin_unauthenticated_caller())
+        let HttpResponseOk(rfds) = get_rfds_op(&ctx, &ctx.v_ctx().builtin_unauthenticated_caller())
             .await
             .unwrap();
         assert_eq!(1, rfds.len());
@@ -949,9 +892,9 @@ mod tests {
     #[tokio::test]
     async fn get_rfd_as_unauthenticated() {
         let ctx = ctx().await;
-        let caller = ctx.builtin_unauthenticated_caller();
+        let caller = ctx.v_ctx().builtin_unauthenticated_caller();
 
-        let result = get_rfd_op(&ctx, caller, "0123".to_string()).await;
+        let result = get_rfd_op(&ctx, &caller, "0123".to_string()).await;
         match result {
             Err(err) => assert_eq!(StatusCode::FORBIDDEN, err.status_code),
             Ok(response) => panic!(
@@ -960,7 +903,7 @@ mod tests {
             ),
         }
 
-        let HttpResponseOk(rfd) = get_rfd_op(&ctx, caller, "0456".to_string()).await.unwrap();
+        let HttpResponseOk(rfd) = get_rfd_op(&ctx, &caller, "0456".to_string()).await.unwrap();
         assert_eq!(456, rfd.rfd_number);
     }
 }

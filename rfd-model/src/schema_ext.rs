@@ -17,7 +17,7 @@ use std::{
     io::Write,
 };
 
-use crate::schema::sql_types::{AttemptState, RfdContentFormat, RfdPdfSource, RfdVisibility};
+use crate::schema::sql_types::{RfdContentFormat, RfdPdfSource, RfdVisibility};
 
 macro_rules! sql_conversion {
     (
@@ -93,41 +93,6 @@ impl Display for PdfSource {
             PdfSource::GitHub => write!(f, "github"),
             PdfSource::Google => write!(f, "google"),
         }
-    }
-}
-
-#[derive(Debug, PartialEq, Clone, FromSqlRow, AsExpression, Serialize, Deserialize, JsonSchema)]
-#[diesel(sql_type = AttemptState)]
-#[serde(rename_all = "lowercase")]
-pub enum LoginAttemptState {
-    Complete,
-    Failed,
-    New,
-    RemoteAuthenticated,
-}
-
-sql_conversion! {
-    AttemptState => LoginAttemptState,
-    Complete => b"complete",
-    Failed => b"failed",
-    New => b"new",
-    RemoteAuthenticated => b"remote_authenticated",
-}
-
-impl Display for LoginAttemptState {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            LoginAttemptState::Complete => write!(f, "complete"),
-            LoginAttemptState::Failed => write!(f, "failed"),
-            LoginAttemptState::New => write!(f, "new"),
-            LoginAttemptState::RemoteAuthenticated => write!(f, "remote_authenticated"),
-        }
-    }
-}
-
-impl Default for LoginAttemptState {
-    fn default() -> Self {
-        Self::New
     }
 }
 

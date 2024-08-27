@@ -3,11 +3,15 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use base64::{prelude::BASE64_STANDARD, DecodeError, Engine};
-use google_drive3::{hyper, hyper_rustls, DriveHub};
+use google_drive3::{
+    hyper,
+    hyper_rustls::{self, HttpsConnector},
+    DriveHub,
+};
 use std::path::Path;
 use thiserror::Error;
 use tokio::{fs, io::AsyncWriteExt};
-use yup_oauth2::{hyper::client::HttpConnector, hyper_rustls::HttpsConnector};
+use yup_oauth2::hyper::client::HttpConnector;
 
 #[derive(Debug, Error)]
 pub enum FileIoError {
