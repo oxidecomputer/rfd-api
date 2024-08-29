@@ -710,7 +710,7 @@ dependencies = [
  "futures",
  "hostname 0.4.0",
  "http 0.2.12",
- "hyper",
+ "hyper 0.14.30",
  "indexmap 2.2.6",
  "multer",
  "openapiv3",
@@ -760,7 +760,7 @@ dependencies = [
  "hex",
  "hmac",
  "http 0.2.12",
- "hyper",
+ "hyper 0.14.30",
  "schemars",
  "serde",
  "serde_json",
@@ -1005,7 +1005,7 @@ dependencies = [
  "base64 0.13.1",
  "chrono",
  "http 0.2.12",
- "hyper",
+ "hyper 0.14.30",
  "itertools 0.10.5",
  "mime",
  "serde",
@@ -1026,7 +1026,7 @@ dependencies = [
  "anyhow",
  "google-apis-common",
  "http 0.2.12",
- "hyper",
+ "hyper 0.14.30",
  "hyper-rustls",
  "itertools 0.10.5",
  "mime",
@@ -1046,7 +1046,7 @@ dependencies = [
  "anyhow",
  "google-apis-common",
  "http 0.2.12",
- "hyper",
+ "hyper 0.14.30",
  "hyper-rustls",
  "itertools 0.10.5",
  "mime",
@@ -1066,7 +1066,7 @@ dependencies = [
  "anyhow",
  "google-apis-common",
  "http 0.2.12",
- "hyper",
+ "hyper 0.14.30",
  "hyper-rustls",
  "itertools 0.10.5",
  "mime",
@@ -1216,6 +1216,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "http-body"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1efedce1fb8e6913f23e0c92de8e62cd5b772a67e7b3946df930a62566c93184"
+dependencies = [
+ "bytes",
+ "http 1.1.0",
+]
+
+[[package]]
 name = "httparse"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1239,7 +1249,7 @@ dependencies = [
  "futures-util",
  "h2",
  "http 0.2.12",
- "http-body",
+ "http-body 0.4.6",
  "httparse",
  "httpdate",
  "itoa",
@@ -1252,6 +1262,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "hyper"
+version = "1.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "50dfd22e0e76d0f662d429a5f80fcaf3855009297eab6a0a9f8543834744ba05"
+dependencies = [
+ "bytes",
+ "http 1.1.0",
+ "http-body 1.0.1",
+ "tokio",
+]
+
+[[package]]
 name = "hyper-rustls"
 version = "0.24.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1259,7 +1281,7 @@ checksum = "ec3efd23720e2049821a693cbc7e65ea87c72f1c58ff2f9522ff332b1491e590"
 dependencies = [
  "futures-util",
  "http 0.2.12",
- "hyper",
+ "hyper 0.14.30",
  "log",
  "rustls 0.21.12",
  "rustls-native-certs",
@@ -2403,8 +2425,8 @@ dependencies = [
  "futures-util",
  "h2",
  "http 0.2.12",
- "http-body",
- "hyper",
+ "http-body 0.4.6",
+ "hyper 0.14.30",
  "hyper-rustls",
  "ipnet",
  "js-sys",
@@ -2473,7 +2495,7 @@ dependencies = [
  "futures",
  "getrandom",
  "http 0.2.12",
- "hyper",
+ "hyper 0.14.30",
  "parking_lot 0.11.2",
  "reqwest",
  "reqwest-middleware",
@@ -2496,7 +2518,7 @@ dependencies = [
  "futures",
  "getrandom",
  "http 0.2.12",
- "hyper",
+ "hyper 0.14.30",
  "parking_lot 0.11.2",
  "reqwest",
  "reqwest-middleware",
@@ -2563,7 +2585,7 @@ dependencies = [
  "google-cloudkms1",
  "hex",
  "http 0.2.12",
- "hyper",
+ "hyper 1.4.1",
  "hyper-rustls",
  "jsonwebtoken 9.3.0",
  "meilisearch-sdk",
@@ -4404,7 +4426,7 @@ dependencies = [
  "base64 0.21.7",
  "futures",
  "http 0.2.12",
- "hyper",
+ "hyper 0.14.30",
  "hyper-rustls",
  "itertools 0.12.1",
  "log",
