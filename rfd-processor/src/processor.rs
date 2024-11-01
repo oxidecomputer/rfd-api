@@ -24,9 +24,10 @@ pub enum JobError {
 
 pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
     let mut interval = interval(ctx.processor.interval);
-    interval.tick().await;
-
     let pagination = ListPagination::default().limit(ctx.processor.batch_size);
+    tracing::info!(?interval, ?pagination, "Starting processor");
+
+    interval.tick().await;
 
     loop {
         if ctx.processor.enabled {
@@ -39,12 +40,30 @@ pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
             )
             .await?;
 
+            tracing::info!(jobs = ?jobs.iter().map(|job| job.id).collect::<Vec<_>>(), "Spawning jobs");
+
             for job in jobs {
                 let job_id = job.id;
-                tokio::spawn(run_job(ctx.clone(), job).or_else(move |err| async move {
-                    tracing::error!(id = ?job_id, ?err, "Spawned job failed");
-                    Err(err)
-                }));
+                tracing::info!("Starting job processing");
+                match JobStore::start(&ctx.db.storage, job.id).await {
+                    Ok(Some(job)) => {
+                        tracing::info!(job = ?job_id, "Spawning job");
+                        tokio::spawn(run_job(ctx.clone(), job).or_else(move |err| async move {
+                            tracing::error!(id = ?job_id, ?err, "Spawned job failed");
+                            Err(err)
+                        }));
+                    }
+                    Ok(None) => {
+                        tracing::error!(?job, "Job that was scheduled to run has gone missing! Was it started by a different task?");
+                    }
+                    Err(err) => {
+                        tracing::warn!(
+                            ?job,
+                            ?err,
+                            "Failed to start job. Was it previously started?"
+                        );
+                    }
+                }
             }
         }
 
@@ -54,48 +73,35 @@ pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
 
 #[instrument(skip(ctx, job), fields(id = job.id, rfd = job.rfd, sha = ?job.sha, commited_at = ?job.committed_at))]
 async fn run_job(ctx: Arc<Context>, job: Job) -> Result<(), JobError> {
-    tracing::info!("Starting job processing");
-    match JobStore::start(&ctx.db.storage, job.id).await {
-        Ok(Some(job)) => {
-            let location = GitHubRfdLocation {
-                client: ctx.github.client.clone(),
-                owner: job.owner.clone(),
-                repo: job.repository.clone(),
-                branch: job.branch.clone(),
-                commit: job.sha.clone(),
-                default_branch: ctx.github.repository.default_branch.clone(),
-            };
+    tracing::info!("Running job");
 
-            let update = GitHubRfdUpdate {
-                location,
-                number: job.rfd.into(),
-                committed_at: job.committed_at,
-            };
+    let location = GitHubRfdLocation {
+        client: ctx.github.client.clone(),
+        owner: job.owner.clone(),
+        repo: job.repository.clone(),
+        branch: job.branch.clone(),
+        commit: job.sha.clone(),
+        default_branch: ctx.github.repository.default_branch.clone(),
+    };
 
-            let updater = RfdUpdater::new(&ctx.actions, ctx.processor.update_mode);
+    let update = GitHubRfdUpdate {
+        location,
+        number: job.rfd.into(),
+        committed_at: job.committed_at,
+    };
 
-            match updater.handle(&ctx, &[update]).await {
-                Ok(_) => {
-                    let _ = JobStore::complete(&ctx.db.storage, job.id)
-                        .await
-                        .tap_err(|err| tracing::error!(?err, "Failed to mark job as completed"));
-                }
-                Err(err) => {
-                    tracing::error!(?err, "RFD update failed");
+    let updater = RfdUpdater::new(&ctx.actions, ctx.processor.update_mode);
 
-                    // TODO: Mark job as failed or retry?
-                }
-            }
-        }
-        Ok(None) => {
-            tracing::error!(?job, "Job that was scheduled to run has gone missing! Was it started by a different task?");
+    match updater.handle(&ctx, &[update]).await {
+        Ok(_) => {
+            let _ = JobStore::complete(&ctx.db.storage, job.id)
+                .await
+                .tap_err(|err| tracing::error!(?err, "Failed to mark job as completed"));
         }
         Err(err) => {
-            tracing::warn!(
-                ?job,
-                ?err,
-                "Failed to start job. Was it previously started?"
-            );
+            tracing::error!(?err, "RFD update failed");
+
+            // TODO: Mark job as failed or retry?
         }
     }
 
