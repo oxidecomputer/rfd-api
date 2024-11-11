@@ -5,7 +5,8 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use progenitor_client::Error;
-use rfd_sdk::types::{self, MappingRules};
+use rfd_sdk::types::RfdPermission;
+use serde_json::json;
 use uuid::Uuid;
 
 use crate::{printer::CliOutput, Context};
@@ -38,11 +39,12 @@ impl GitHubMapper {
         request = request.body_map(|body| {
             body.max_activations(1)
                 .name(format!("map-github-{}", Uuid::new_v4()))
-                .rule(MappingRules::GithubUsername {
-                    github_username: self.username.clone(),
-                    groups: vec![self.group.to_string()],
-                    permissions: vec![].into(),
-                })
+                .rule(json!({
+                    "rule": "github_username",
+                    "github_username": self.username.clone(),
+                    "groups": vec![self.group.to_string()],
+                    "permissions": Vec::<RfdPermission>::new(),
+                }))
         });
 
         let result = request.send().await;
@@ -62,11 +64,12 @@ impl EmailMapper {
         request = request.body_map(|body| {
             body.max_activations(1)
                 .name(format!("map-email-{}", Uuid::new_v4()))
-                .rule(MappingRules::EmailAddress {
-                    email: self.email.clone(),
-                    groups: vec![self.group.to_string()],
-                    permissions: vec![].into(),
-                })
+                .rule(json!({
+                    "rule": "email_address",
+                    "email": self.email.clone(),
+                    "groups": vec![self.group.to_string()],
+                    "permissions": Vec::<RfdPermission>::new(),
+                }))
         });
 
         let result = request.send().await;

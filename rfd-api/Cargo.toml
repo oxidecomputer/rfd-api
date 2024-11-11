@@ -22,7 +22,6 @@ dropshot-verified-body = { workspace = true, features = ["github"] }
 hex = { workspace = true }
 http = { workspace = true }
 hyper = { workspace = true }
-hyper-rustls = { workspace = true }
 jsonwebtoken = { workspace = true }
 meilisearch-sdk = { workspace = true }
 newtype-uuid = { workspace = true }

@@ -9,6 +9,7 @@ use serde::Deserialize;
 use slog::Drain;
 use std::{collections::HashMap, error::Error, fs::File, net::SocketAddr, path::PathBuf};
 use tracing_slog::TracingSlogDrain;
+use v_api::{inject_endpoints, v_system_endpoints};
 
 use crate::{
     context::RfdContext,
@@ -19,6 +20,7 @@ use crate::{
         },
         webhook::github_webhook,
     },
+    permissions::RfdPermission,
 };
 
 #[derive(Clone, Debug, Deserialize)]
@@ -36,6 +38,8 @@ pub struct ServerConfig {
     pub spec_output: Option<SpecConfig>,
 }
 
+v_system_endpoints!(RfdContext, RfdPermission);
+
 pub fn server(
     config: ServerConfig,
 ) -> Result<HttpServerStarter<RfdContext>, Box<dyn Error + Send + Sync>> {
@@ -50,8 +54,8 @@ pub fn server(
         slog::Logger::root(async_drain, slog::o!())
     };
 
-    let mut tag_definitions = HashMap::new();
-    tag_definitions.insert(
+    let mut tags = HashMap::new();
+    tags.insert(
         "hidden".to_string(),
         TagDetails {
             description: Some("Internal endpoints".to_string()),
@@ -61,9 +65,11 @@ pub fn server(
 
     let mut api = ApiDescription::new().tag_config(TagConfig {
         allow_other_tags: false,
-        endpoint_tag_policy: EndpointTagPolicy::Any,
-        tag_definitions,
+        policy: EndpointTagPolicy::Any,
+        tags,
     });
+
+    inject_endpoints!(api);
 
     // RFDs
     api.register(get_rfds).expect("Failed to register endpoint");

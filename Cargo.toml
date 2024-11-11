@@ -26,19 +26,18 @@ clap = { version = "4.5.16", features = ["derive", "string", "env"] }
 config = { version = "0.14.0", features = ["toml"] }
 cookie = { version = "0.18.1" }
 crc32c = "0.6.8"
-diesel = { version = "2.2.2", features = ["postgres"] }
+diesel = { version = "2.2.4", features = ["postgres"] }
 diesel_migrations = { version = "2.2.0" }
 dirs = "5.0.1"
-dropshot = "0.10.1"
+dropshot = "0.12.0"
 dropshot-verified-body = { git = "https://github.com/oxidecomputer/dropshot-verified-body" }
 futures = "0.3.30"
-google-drive3 = "=5.0.4"
-google-storage1 = "=5.0.4"
+google-drive3 = "6"
+google-storage1 = "6"
 hex = "0.4.3"
 hmac = "0.12.1"
-http = "0.2.12"
-hyper = "0.14.30"
-hyper-rustls = { version = "0.24.2", features = ["http2"] }
+http = "1.1.0"
+hyper = "1.5.0"
 itertools = "0.13.0"
 jsonwebtoken = "9.3.0"
 meilisearch-sdk = { version = "0.24.3", default-features = false, features = ["reqwest-rustls"] }
@@ -56,10 +55,10 @@ progenitor-client = { git = "https://github.com/oxidecomputer/progenitor" }
 rand = "0.8.5"
 rand_core = "0.6"
 regex = "1.10.6"
-reqwest = { version = "0.11", default-features = false, features = ["json", "stream"] }
-reqwest-middleware = "0.2.5"
-reqwest-retry = "0.4"
-reqwest-tracing = "0.4"
+reqwest = { version = "0.12", default-features = false, features = ["json", "stream"] }
+reqwest-middleware = "0.4"
+reqwest-retry = "0.7"
+reqwest-tracing = "0.5"
 ring = "0.17.8"
 rsa = "0.9.6"
 rustfmt-wrapper = "0.2.1"
@@ -84,13 +83,13 @@ tracing = "0.1.40"
 tracing-appender = "0.2.3"
 tracing-slog = { git = "https://github.com/oxidecomputer/tracing-slog", default-features = false }
 tracing-subscriber = "0.3.18"
-uuid = "1.10.0"
+uuid = { version = "1.10.0", features = ["serde"] }
 valuable = "0.1.0"
 v-api = { git = "https://github.com/oxidecomputer/v-api" }
 v-api-installer = { git = "https://github.com/oxidecomputer/v-api" }
 v-model = { git = "https://github.com/oxidecomputer/v-api" }
 v-api-permission-derive = { git = "https://github.com/oxidecomputer/v-api" }
-yup-oauth2 = { version = "9.0.0" }
+yup-oauth2 = { version = "11.0.0" }
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]

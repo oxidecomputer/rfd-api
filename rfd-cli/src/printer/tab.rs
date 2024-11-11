@@ -6,11 +6,11 @@ use itertools::{EitherOrBoth, Itertools};
 use owo_colors::{OwoColorize, Style};
 use progenitor_client::ResponseValue;
 use rfd_sdk::types::{
-    self, AccessGroupForApiPermissionResponse, ApiKeyResponse, ApiPermission,
-    ApiUserForApiPermissionResponse, Error, FullRfd, FullRfdPdfEntry, GetUserResponse,
-    InitialApiKeyResponse, InitialOAuthClientSecretResponse, ListRfd, Mapper, OAuthClient,
-    OAuthClientRedirectUri, OAuthClientSecret, PermissionsForApiPermissionResponse,
-    ReserveRfdResponse, RfdAttr, SearchResultHit, SearchResults, Visibility,
+    self, AccessGroupForRfdPermission, ApiKeyResponseForRfdPermission, ApiUserForRfdPermission,
+    Error, FullRfd, FullRfdPdfEntry, InitialApiKeyResponseForRfdPermission,
+    InitialOAuthClientSecretResponse, ListRfd, Mapper, OAuthClient, OAuthClientRedirectUri,
+    OAuthClientSecret, PermissionsForRfdPermission, ReserveRfdResponse, RfdAttr, SearchResultHit,
+    SearchResults, Visibility,
 };
 use std::{collections::HashMap, fmt::Display, fs::File, io::Write, process::Command};
 use tabwriter::TabWriter;
@@ -40,11 +40,11 @@ pub struct RfdTabPrinter {
 }
 
 impl CliOutput for RfdTabPrinter {
-    fn output_api_user(&self, value: types::ApiUserForApiPermissionResponse) {
+    fn output_api_user(&self, value: types::ApiUserForRfdPermission) {
         self.print_cli_output(&value, None);
     }
 
-    fn output_user(&self, value: types::GetUserResponse) {
+    fn output_user(&self, value: types::GetUserResponseForRfdPermission) {
         let mut tw = TabWriter::new(vec![]).ansi(true);
 
         value.info.display(&mut tw, 0, self);
@@ -73,23 +73,23 @@ impl CliOutput for RfdTabPrinter {
         output_writer(tw);
     }
 
-    fn output_api_key_list(&self, value: Vec<types::ApiKeyResponse>) {
+    fn output_api_key_list(&self, value: Vec<types::ApiKeyResponseForRfdPermission>) {
         self.print_cli_output(&value, Some("providers".to_string()));
     }
 
-    fn output_api_key_initial(&self, value: types::InitialApiKeyResponse) {
+    fn output_api_key_initial(&self, value: types::InitialApiKeyResponseForRfdPermission) {
         self.print_cli_output(&value, None);
     }
 
-    fn output_api_key(&self, value: types::ApiKeyResponse) {
+    fn output_api_key(&self, value: types::ApiKeyResponseForRfdPermission) {
         self.print_cli_output(&value, None);
     }
 
-    fn output_group_list(&self, value: Vec<types::AccessGroupForApiPermissionResponse>) {
+    fn output_group_list(&self, value: Vec<types::AccessGroupForRfdPermission>) {
         self.print_cli_output(&value, Some("groups".to_string()));
     }
 
-    fn output_group(&self, value: types::AccessGroupForApiPermissionResponse) {
+    fn output_group(&self, value: types::AccessGroupForRfdPermission) {
         self.print_cli_output(&value, None);
     }
 
@@ -171,7 +171,7 @@ impl TabDisplay for types::Rfd {
     }
 }
 
-impl TabDisplay for ApiUserForApiPermissionResponse {
+impl TabDisplay for ApiUserForRfdPermission {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "id", &self.id);
         printer.print_list(
@@ -203,7 +203,7 @@ impl TabDisplay for ApiUserForApiPermissionResponse {
     }
 }
 
-impl TabDisplay for ApiKeyResponse {
+impl TabDisplay for ApiKeyResponseForRfdPermission {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "id", &self.id);
         printer.print_list(
@@ -214,7 +214,7 @@ impl TabDisplay for ApiKeyResponse {
                 self.permissions
                     .as_ref()
                     .cloned()
-                    .unwrap_or_else(|| PermissionsForApiPermissionResponse(vec![])),
+                    .unwrap_or_else(|| PermissionsForRfdPermission(vec![])),
             )
             .iter()
             .map(|p| p.to_string())
@@ -224,7 +224,7 @@ impl TabDisplay for ApiKeyResponse {
     }
 }
 
-impl TabDisplay for InitialApiKeyResponse {
+impl TabDisplay for InitialApiKeyResponseForRfdPermission {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "id", &self.id);
         printer.print_field(tw, level, "key", &self.key.0);
@@ -236,7 +236,7 @@ impl TabDisplay for InitialApiKeyResponse {
                 self.permissions
                     .as_ref()
                     .cloned()
-                    .unwrap_or_else(|| PermissionsForApiPermissionResponse(vec![])),
+                    .unwrap_or_else(|| PermissionsForRfdPermission(vec![])),
             )
             .iter()
             .map(|p| p.to_string())
@@ -246,7 +246,7 @@ impl TabDisplay for InitialApiKeyResponse {
     }
 }
 
-impl TabDisplay for AccessGroupForApiPermissionResponse {
+impl TabDisplay for AccessGroupForRfdPermission {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "id", &self.id);
         printer.print_field(tw, level, "name", &self.name);
@@ -640,7 +640,7 @@ impl RfdTabPrinter {
                 writeln!(tw, "{:#?}", err);
             }
             progenitor_client::Error::ErrorResponse(err) => {
-                let err: types::Error = reserialize(err);
+                let err: types::Error = reserialize(err.as_ref());
                 writeln!(tw, "Received error from the remote API",);
                 writeln!(tw, "Message\t{}", err.message);
                 if let Some(code) = &err.error_code {

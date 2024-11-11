@@ -4,14 +4,16 @@
 
 use base64::{prelude::BASE64_STANDARD, DecodeError, Engine};
 use google_drive3::{
-    hyper,
-    hyper_rustls::{self, HttpsConnector},
+    hyper_rustls::{HttpsConnector, HttpsConnectorBuilder},
+    hyper_util::{
+        client::legacy::{connect::HttpConnector, Client},
+        rt::TokioExecutor,
+    },
     DriveHub,
 };
 use std::path::Path;
 use thiserror::Error;
 use tokio::{fs, io::AsyncWriteExt};
-use yup_oauth2::hyper::client::HttpConnector;
 
 #[derive(Debug, Error)]
 pub enum FileIoError {
@@ -112,9 +114,10 @@ pub async fn gdrive_client() -> Result<DriveHub<HttpsConnector<HttpConnector>>, 
     };
 
     Ok(DriveHub::new(
-        hyper::Client::builder().build(
-            hyper_rustls::HttpsConnectorBuilder::new()
+        Client::builder(TokioExecutor::new()).build(
+            HttpsConnectorBuilder::new()
                 .with_native_roots()
+                .unwrap()
                 .https_only()
                 .enable_http2()
                 .build(),
