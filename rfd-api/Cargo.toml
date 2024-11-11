@@ -5,7 +5,7 @@ edition = "2021"
 repository = "https://github.com/oxidecomputer/rfd-api"
 
 [features]
-local-dev = []
+local-dev = ["v-api/local-dev"]
 
 [dependencies]
 anyhow = { workspace = true }
