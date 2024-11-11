@@ -2181,51 +2181,6 @@ pub mod types {
         }
     }
 
-    /// LocalLogin
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "email",
-    ///    "external_id"
-    ///  ],
-    ///  "properties": {
-    ///    "email": {
-    ///      "type": "string"
-    ///    },
-    ///    "external_id": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(
-        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
-    )]
-    pub struct LocalLogin {
-        pub email: String,
-        pub external_id: String,
-    }
-
-    impl From<&LocalLogin> for LocalLogin {
-        fn from(value: &LocalLogin) -> Self {
-            value.clone()
-        }
-    }
-
-    impl LocalLogin {
-        pub fn builder() -> builder::LocalLogin {
-            Default::default()
-        }
-    }
-
     /// MagicLink
     ///
     /// <details><summary>JSON schema</summary>
@@ -8656,63 +8611,6 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
-        pub struct LocalLogin {
-            email: Result<String, String>,
-            external_id: Result<String, String>,
-        }
-
-        impl Default for LocalLogin {
-            fn default() -> Self {
-                Self {
-                    email: Err("no value supplied for email".to_string()),
-                    external_id: Err("no value supplied for external_id".to_string()),
-                }
-            }
-        }
-
-        impl LocalLogin {
-            pub fn email<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<String>,
-                T::Error: std::fmt::Display,
-            {
-                self.email = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for email: {}", e));
-                self
-            }
-            pub fn external_id<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<String>,
-                T::Error: std::fmt::Display,
-            {
-                self.external_id = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for external_id: {}", e));
-                self
-            }
-        }
-
-        impl std::convert::TryFrom<LocalLogin> for super::LocalLogin {
-            type Error = super::error::ConversionError;
-            fn try_from(value: LocalLogin) -> Result<Self, super::error::ConversionError> {
-                Ok(Self {
-                    email: value.email?,
-                    external_id: value.external_id?,
-                })
-            }
-        }
-
-        impl From<super::LocalLogin> for LocalLogin {
-            fn from(value: super::LocalLogin) -> Self {
-                Self {
-                    email: Ok(value.email),
-                    external_id: Ok(value.external_id),
-                }
-            }
-        }
-
-        #[derive(Clone, Debug)]
         pub struct MagicLink {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
@@ -11084,18 +10982,6 @@ impl Client {
         builder::DeleteGroup::new(self)
     }
 
-    /// Sends a `POST` request to `/login/local`
-    ///
-    /// ```ignore
-    /// let response = client.local_login()
-    ///    .body(body)
-    ///    .send()
-    ///    .await;
-    /// ```
-    pub fn local_login(&self) -> builder::LocalLogin {
-        builder::LocalLogin::new(self)
-    }
-
     /// Sends a `POST` request to `/login/magic/{channel}/exchange`
     ///
     /// ```ignore
@@ -13036,61 +12922,6 @@ pub mod builder {
                     ResponseValue::from_response(response).await?,
                 )),
                 _ => Err(Error::UnexpectedResponse(response)),
-            }
-        }
-    }
-
-    /// Builder for [`Client::local_login`]
-    ///
-    /// [`Client::local_login`]: super::Client::local_login
-    #[derive(Debug, Clone)]
-    pub struct LocalLogin<'a> {
-        client: &'a super::Client,
-        body: Result<types::builder::LocalLogin, String>,
-    }
-
-    impl<'a> LocalLogin<'a> {
-        pub fn new(client: &'a super::Client) -> Self {
-            Self {
-                client: client,
-                body: Ok(types::builder::LocalLogin::default()),
-            }
-        }
-
-        pub fn body<V>(mut self, value: V) -> Self
-        where
-            V: std::convert::TryInto<types::LocalLogin>,
-            <V as std::convert::TryInto<types::LocalLogin>>::Error: std::fmt::Display,
-        {
-            self.body = value
-                .try_into()
-                .map(From::from)
-                .map_err(|s| format!("conversion to `LocalLogin` for body failed: {}", s));
-            self
-        }
-
-        pub fn body_map<F>(mut self, f: F) -> Self
-        where
-            F: std::ops::FnOnce(types::builder::LocalLogin) -> types::builder::LocalLogin,
-        {
-            self.body = self.body.map(f);
-            self
-        }
-
-        /// Sends a `POST` request to `/login/local`
-        pub async fn send(self) -> Result<ResponseValue<ByteStream>, Error<ByteStream>> {
-            let Self { client, body } = self;
-            let body = body
-                .and_then(|v| types::LocalLogin::try_from(v).map_err(|e| e.to_string()))
-                .map_err(Error::InvalidRequest)?;
-            let url = format!("{}/login/local", client.baseurl,);
-            #[allow(unused_mut)]
-            let mut request = client.client.post(url).json(&body).build()?;
-            let result = client.client.execute(request).await;
-            let response = result?;
-            match response.status().as_u16() {
-                200..=299 => Ok(ResponseValue::stream(response)),
-                _ => Err(Error::ErrorResponse(ResponseValue::stream(response))),
             }
         }
     }

@@ -33,7 +33,6 @@ impl<T: CliConfig> Cli<T> {
             CliCommand::CreateGroup => Self::cli_create_group(),
             CliCommand::UpdateGroup => Self::cli_update_group(),
             CliCommand::DeleteGroup => Self::cli_delete_group(),
-            CliCommand::LocalLogin => Self::cli_local_login(),
             CliCommand::MagicLinkExchange => Self::cli_magic_link_exchange(),
             CliCommand::MagicLinkSend => Self::cli_magic_link_send(),
             CliCommand::AuthzCodeRedirect => Self::cli_authz_code_redirect(),
@@ -410,36 +409,6 @@ impl<T: CliConfig> Cli<T> {
                 .value_parser(clap::value_parser!(types::TypedUuidForAccessGroupId))
                 .required(true),
         )
-    }
-
-    pub fn cli_local_login() -> clap::Command {
-        clap::Command::new("")
-            .arg(
-                clap::Arg::new("email")
-                    .long("email")
-                    .value_parser(clap::value_parser!(String))
-                    .required_unless_present("json-body"),
-            )
-            .arg(
-                clap::Arg::new("external-id")
-                    .long("external-id")
-                    .value_parser(clap::value_parser!(String))
-                    .required_unless_present("json-body"),
-            )
-            .arg(
-                clap::Arg::new("json-body")
-                    .long("json-body")
-                    .value_name("JSON-FILE")
-                    .required(false)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
-                    .help("Path to a file that contains the full json body."),
-            )
-            .arg(
-                clap::Arg::new("json-body-template")
-                    .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
-                    .help("XXX"),
-            )
     }
 
     pub fn cli_magic_link_exchange() -> clap::Command {
@@ -1336,7 +1305,6 @@ impl<T: CliConfig> Cli<T> {
             CliCommand::CreateGroup => self.execute_create_group(matches).await,
             CliCommand::UpdateGroup => self.execute_update_group(matches).await,
             CliCommand::DeleteGroup => self.execute_delete_group(matches).await,
-            CliCommand::LocalLogin => self.execute_local_login(matches).await,
             CliCommand::MagicLinkExchange => self.execute_magic_link_exchange(matches).await,
             CliCommand::MagicLinkSend => self.execute_magic_link_send(matches).await,
             CliCommand::AuthzCodeRedirect => self.execute_authz_code_redirect(matches).await,
@@ -1863,34 +1831,6 @@ impl<T: CliConfig> Cli<T> {
             Err(r) => {
                 self.config.error(&r);
                 Err(anyhow::Error::new(r))
-            }
-        }
-    }
-
-    pub async fn execute_local_login(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
-        let mut request = self.client.local_login();
-        if let Some(value) = matches.get_one::<String>("email") {
-            request = request.body_map(|body| body.email(value.clone()))
-        }
-
-        if let Some(value) = matches.get_one::<String>("external-id") {
-            request = request.body_map(|body| body.external_id(value.clone()))
-        }
-
-        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
-            let body_txt = std::fs::read_to_string(value).unwrap();
-            let body_value = serde_json::from_str::<types::LocalLogin>(&body_txt).unwrap();
-            request = request.body(body_value);
-        }
-
-        self.config.execute_local_login(matches, &mut request)?;
-        let result = request.send().await;
-        match result {
-            Ok(r) => {
-                todo!()
-            }
-            Err(r) => {
-                todo!()
             }
         }
     }
@@ -3103,14 +3043,6 @@ pub trait CliConfig {
         Ok(())
     }
 
-    fn execute_local_login(
-        &self,
-        matches: &clap::ArgMatches,
-        request: &mut builder::LocalLogin,
-    ) -> anyhow::Result<()> {
-        Ok(())
-    }
-
     fn execute_magic_link_exchange(
         &self,
         matches: &clap::ArgMatches,
@@ -3420,7 +3352,6 @@ pub enum CliCommand {
     CreateGroup,
     UpdateGroup,
     DeleteGroup,
-    LocalLogin,
     MagicLinkExchange,
     MagicLinkSend,
     AuthzCodeRedirect,
@@ -3480,7 +3411,6 @@ impl CliCommand {
             CliCommand::CreateGroup,
             CliCommand::UpdateGroup,
             CliCommand::DeleteGroup,
-            CliCommand::LocalLogin,
             CliCommand::MagicLinkExchange,
             CliCommand::MagicLinkSend,
             CliCommand::AuthzCodeRedirect,
