@@ -7,3 +7,6 @@ SELECT diesel_manage_updated_at('login_attempt');
 
 ALTER TABLE mapper ADD COLUMN updated_at TIMESTAMPTZ NOT NULL DEFAULT now();
 SELECT diesel_manage_updated_at('mapper');
+
+UPDATE api_user SET permissions = '[]' WHERE permissions = '[{"ManageGroupMemberships": []}, {"ManageGroups": []}, {"GetRfds": []}, {"UpdateRfds": []}, {"GetDiscussions": []}, {"GetOAuthClients": []}, {"UpdateOAuthClients": []}, {"DeleteOAuthClients": []}]';
+UPDATE api_user SET permissions = '[]' WHERE permissions = '[{"ManageGroupMemberships": []}, {"ManageGroups": []}, {"GetRfds": []}, {"GetDiscussions": []}, {"GetOAuthClients": []}, {"UpdateOAuthClients": []}, {"DeleteOAuthClients": []}]';
