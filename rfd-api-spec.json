@@ -662,31 +662,6 @@
         }
       }
     },
-    "/login/local": {
-      "post": {
-        "operationId": "local_login",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LocalLogin"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "default": {
-            "description": "",
-            "content": {
-              "*/*": {
-                "schema": {}
-              }
-            }
-          }
-        }
-      }
-    },
     "/login/magic/{channel}/exchange": {
       "post": {
         "operationId": "magic_link_exchange",
@@ -2926,21 +2901,6 @@
           "sha",
           "title",
           "visibility"
-        ]
-      },
-      "LocalLogin": {
-        "type": "object",
-        "properties": {
-          "email": {
-            "type": "string"
-          },
-          "external_id": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "email",
-          "external_id"
         ]
       },
       "MagicLink": {
