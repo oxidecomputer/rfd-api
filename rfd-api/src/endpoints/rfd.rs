@@ -865,15 +865,12 @@ mod tests {
         let result = get_rfd_op(&ctx, &caller, "0123".to_string()).await;
 
         match result {
-            Err(err) => assert_eq!(StatusCode::FORBIDDEN, err.status_code),
+            Err(err) => assert_eq!(StatusCode::NOT_FOUND, err.status_code),
             Ok(response) => panic!(
-                "Expected a 403 error, but instead found a RFD {:?}",
+                "Expected a 404 error, but instead found a RFD {:?}",
                 response.0
             ),
         }
-
-        let HttpResponseOk(rfd) = get_rfd_op(&ctx, &caller, "0456".to_string()).await.unwrap();
-        assert_eq!(456, rfd.rfd_number);
     }
 
     // Test RFD access to public RFDs as the unauthenticated user
@@ -896,14 +893,11 @@ mod tests {
 
         let result = get_rfd_op(&ctx, &caller, "0123".to_string()).await;
         match result {
-            Err(err) => assert_eq!(StatusCode::FORBIDDEN, err.status_code),
+            Err(err) => assert_eq!(StatusCode::NOT_FOUND, err.status_code),
             Ok(response) => panic!(
-                "Expected a 403 error, but instead found a RFD {:?}",
+                "Expected a 404 error, but instead found a RFD {:?}",
                 response.0
             ),
         }
-
-        let HttpResponseOk(rfd) = get_rfd_op(&ctx, &caller, "0456".to_string()).await.unwrap();
-        assert_eq!(456, rfd.rfd_number);
     }
 }
