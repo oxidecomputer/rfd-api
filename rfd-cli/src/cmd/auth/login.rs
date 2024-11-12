@@ -9,7 +9,7 @@ use chrono::{Duration, NaiveDate, Utc};
 use clap::{Parser, Subcommand, ValueEnum};
 use futures::stream::StreamExt;
 use oauth2::{basic::BasicTokenType, EmptyExtraTokenFields, StandardTokenResponse, TokenResponse};
-use rfd_sdk::types::{ApiPermission, OAuthProviderName};
+use rfd_sdk::types::OAuthProviderName;
 
 use crate::{cmd::auth::oauth, Context};
 
@@ -64,6 +64,9 @@ pub enum AuthenticationMode {
 }
 
 pub struct OAuthProviderRunner(OAuthProviderName);
+
+#[cfg(feature = "local-dev")]
+
 pub struct LocalProviderRunner {
     email: String,
     external_id: String,
@@ -103,7 +106,7 @@ impl ProviderRunner for OAuthProviderRunner {
             let user = client.get_self().send().await?;
             Ok(client
                 .create_api_user_token()
-                .identifier(user.info.id)
+                .user_id(&user.info.id)
                 .body_map(|body| body.expires_at(Utc::now().add(Duration::days(365))))
                 .send()
                 .await?
@@ -114,6 +117,8 @@ impl ProviderRunner for OAuthProviderRunner {
         }
     }
 }
+
+#[cfg(feature = "local-dev")]
 
 impl ProviderRunner for LocalProviderRunner {
     async fn run(&self, ctx: &mut Context, mode: &AuthenticationMode) -> Result<String> {
@@ -148,7 +153,7 @@ impl ProviderRunner for LocalProviderRunner {
             let user = client.get_self().send().await?;
             Ok(client
                 .create_api_user_token()
-                .identifier(user.info.id)
+                .user_id(&user.info.id)
                 .body_map(|body| body.expires_at(Utc::now().add(Duration::days(365))))
                 .send()
                 .await?

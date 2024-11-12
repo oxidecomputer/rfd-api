@@ -11,31 +11,31 @@ use super::CliOutput;
 pub struct RfdJsonPrinter;
 
 impl CliOutput for RfdJsonPrinter {
-    fn output_api_user(&self, value: types::ApiUserForApiPermissionResponse) {
+    fn output_api_user(&self, value: types::ApiUserForRfdPermission) {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 
-    fn output_user(&self, value: types::GetUserResponse) {
+    fn output_user(&self, value: types::GetUserResponseForRfdPermission) {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 
-    fn output_api_key_list(&self, value: Vec<types::ApiKeyResponse>) {
+    fn output_api_key_list(&self, value: Vec<types::ApiKeyResponseForRfdPermission>) {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 
-    fn output_api_key_initial(&self, value: types::InitialApiKeyResponse) {
+    fn output_api_key_initial(&self, value: types::InitialApiKeyResponseForRfdPermission) {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 
-    fn output_api_key(&self, value: types::ApiKeyResponse) {
+    fn output_api_key(&self, value: types::ApiKeyResponseForRfdPermission) {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 
-    fn output_group_list(&self, value: Vec<types::AccessGroupForApiPermissionResponse>) {
+    fn output_group_list(&self, value: Vec<types::AccessGroupForRfdPermission>) {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 
-    fn output_group(&self, value: types::AccessGroupForApiPermissionResponse) {
+    fn output_group(&self, value: types::AccessGroupForRfdPermission) {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 

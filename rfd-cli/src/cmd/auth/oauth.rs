@@ -51,8 +51,7 @@ impl DeviceOAuth {
     pub async fn login(
         &self,
         details: &StandardDeviceAuthorizationResponse,
-    ) -> Result<StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>, DeviceCodeExchangeError>
-    {
+    ) -> Result<StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>> {
         let token = self
             .client
             .exchange_device_access_token(&details)
@@ -64,12 +63,10 @@ impl DeviceOAuth {
             )
             .await;
 
-        token
+        Ok(token?)
     }
 
-    pub async fn get_device_authorization(
-        &self,
-    ) -> Result<StandardDeviceAuthorizationResponse, DeviceAuthorizationCodeError> {
+    pub async fn get_device_authorization(&self) -> Result<StandardDeviceAuthorizationResponse> {
         let mut req = self
             .client
             .exchange_device_code()
@@ -83,6 +80,6 @@ impl DeviceOAuth {
 
         let res = req.request_async(async_http_client).await;
 
-        res
+        Ok(res?)
     }
 }

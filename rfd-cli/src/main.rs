@@ -9,12 +9,11 @@ use clap::{value_parser, Arg, ArgAction, Command, CommandFactory, FromArgMatches
 use generated::cli::{CliConfig as ProgenitorCliConfig, *};
 use printer::{CliOutput, Printer, RfdJsonPrinter, RfdTabPrinter};
 use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
-use rfd_sdk::types::MappingRules;
 use rfd_sdk::Client;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::any::Any;
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 use std::ops::Deref;
 use std::time::Duration;
 use std::{collections::HashMap, error::Error};
@@ -156,8 +155,8 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::GetSelf => Some("self"),
 
         // Link commands are handled separately
-        // CliCommand::CreateLinkToken => None,
-        // CliCommand::LinkProvider => None,
+        CliCommand::CreateLinkToken => None,
+        CliCommand::LinkProvider => None,
 
         // Group commands
         CliCommand::GetGroups => Some("sys group list"),
@@ -183,12 +182,24 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::CreateOauthClientSecret => Some("sys oauth secret create"),
         CliCommand::DeleteOauthClientSecret => Some("sys oauth secret delete"),
 
+        // Magic link client commands
+        CliCommand::ListMagicLinks => Some("sys mlink list"),
+        CliCommand::CreateMagicLink => Some("sys mlink create"),
+        CliCommand::GetMagicLink => Some("sys mlink get"),
+        CliCommand::CreateMagicLinkRedirectUri => Some("sys mlink redirect create"),
+        CliCommand::DeleteMagicLinkRedirectUri => Some("sys mlink redirect delete"),
+        CliCommand::CreateMagicLinkSecret => Some("sys mlink secret create"),
+        CliCommand::DeleteMagicLinkSecret => Some("sys mlink secret delete"),
+
         // Authentication is handled separately
         CliCommand::ExchangeDeviceToken => None,
         CliCommand::GetDeviceProvider => None,
+        CliCommand::MagicLinkSend => None,
+        CliCommand::MagicLinkExchange => None,
+        #[cfg(feature = "local-dev")]
+        CliCommand::LocalLogin => None,
 
         // Unsupported commands
-        CliCommand::LocalLogin => None,
         CliCommand::AuthzCodeRedirect => None,
         CliCommand::AuthzCodeCallback => None,
         CliCommand::AuthzCodeExchange => None,
@@ -307,16 +318,40 @@ async fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn reserialize<T, U>(value: &progenitor_client::ResponseValue<T>) -> U
+pub fn reserialize<T, U>(value: &T) -> U
 where
-    T: Serialize,
+    T: Serialize + Debug,
     U: DeserializeOwned,
 {
-    serde_json::from_str::<U>(&serde_json::to_string::<T>(value.as_ref()).unwrap()).unwrap()
+    serde_json::from_str::<U>(&serde_json::to_string::<T>(value).unwrap()).unwrap()
 }
 
 impl ProgenitorCliConfig for Context {
-    fn item_success<T>(&self, value: &progenitor_client::ResponseValue<T>)
+    fn success_item<T>(&self, value: &progenitor_client::ResponseValue<T>)
+    where
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
+    {
+        self.list_item(value.as_ref())
+    }
+
+    fn success_no_item(&self, value: &rfd_sdk::ResponseValue<()>) {
+        self.list_item(value.as_ref())
+    }
+
+    fn error<T>(&self, value: &progenitor_client::Error<T>)
+    where
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
+    {
+        self.printer().unwrap().output_error(value)
+    }
+
+    fn list_start<T>(&self)
+    where
+        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
+    {
+    }
+
+    fn list_item<T>(&self, value: &T)
     where
         T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
     {
@@ -383,25 +418,6 @@ impl ProgenitorCliConfig for Context {
                 other
             ),
         }
-    }
-
-    fn item_error<T>(&self, value: &progenitor_client::Error<T>)
-    where
-        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
-    {
-        self.printer().unwrap().output_error(value)
-    }
-
-    fn list_start<T>(&self)
-    where
-        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
-    {
-    }
-
-    fn list_item<T>(&self, value: &T)
-    where
-        T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
-    {
     }
 
     fn list_end_success<T>(&self)

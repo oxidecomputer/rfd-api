@@ -4,15 +4,14 @@
 
 use config::{Config, ConfigError, Environment, File};
 use diesel::result::{DatabaseErrorKind, Error as DieselError};
-use rfd_model::{storage::StoreError, NewAccessGroup, NewMapper};
+use newtype_uuid::TypedUuid;
 use serde::Deserialize;
 use thiserror::Error;
 use tracing::Instrument;
-use uuid::Uuid;
+use v_api::{mapper::MappingRulesData, response::ResourceError, VContext};
+use v_model::{storage::StoreError, NewAccessGroup, NewMapper, Permissions};
 
-use crate::{
-    context::ApiContext, mapper::MappingRules, util::response::ResourceError, ApiPermissions,
-};
+use crate::permissions::RfdPermission;
 
 #[derive(Debug, Deserialize)]
 pub struct InitialData {
@@ -23,14 +22,14 @@ pub struct InitialData {
 #[derive(Debug, Deserialize)]
 pub struct InitialGroup {
     pub name: String,
-    pub permissions: ApiPermissions,
+    pub permissions: Permissions<RfdPermission>,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct InitialMapper {
     pub name: String,
     #[serde(flatten)]
-    pub rule: MappingRules,
+    pub rule: MappingRulesData<RfdPermission>,
     pub max_activations: Option<u32>,
 }
 
@@ -62,8 +61,11 @@ impl InitialData {
             .try_deserialize()?)
     }
 
-    pub async fn initialize(self, ctx: &ApiContext) -> Result<(), InitError> {
-        let existing_groups = ctx.get_groups(&ctx.builtin_registration_user()).await?;
+    pub async fn initialize(self, ctx: &VContext<RfdPermission>) -> Result<(), InitError> {
+        let existing_groups = ctx
+            .group
+            .get_groups(&ctx.builtin_registration_user())
+            .await?;
 
         for group in self.groups {
             let span = tracing::info_span!("Initializing group", group = ?group);
@@ -73,19 +75,20 @@ impl InitialData {
                     .iter()
                     .find(|g| g.name == group.name)
                     .map(|g| g.id)
-                    .unwrap_or(Uuid::new_v4());
+                    .unwrap_or_else(|| TypedUuid::new_v4());
 
-                ctx.create_group(
-                    ctx.builtin_registration_user(),
-                    NewAccessGroup {
-                        id,
-                        name: group.name,
-                        permissions: group.permissions,
-                    },
-                )
-                .await
-                .map(|_| ())
-                .or_else(handle_unique_violation_error)
+                ctx.group
+                    .create_group(
+                        &ctx.builtin_registration_user(),
+                        NewAccessGroup {
+                            id,
+                            name: group.name,
+                            permissions: group.permissions,
+                        },
+                    )
+                    .await
+                    .map(|_| ())
+                    .or_else(handle_unique_violation_error)
             }
             .instrument(span)
             .await?
@@ -95,14 +98,15 @@ impl InitialData {
             let span = tracing::info_span!("Initializing mapper", mapper = ?mapper);
             async {
                 let new_mapper = NewMapper {
-                    id: Uuid::new_v4(),
+                    id: TypedUuid::new_v4(),
                     name: mapper.name,
                     rule: serde_json::to_value(&mapper.rule)?,
                     activations: None,
                     max_activations: mapper.max_activations.map(|i| i as i32),
                 };
 
-                ctx.add_mapper(ctx.builtin_registration_user(), &new_mapper)
+                ctx.mapping
+                    .add_mapper(&ctx.builtin_registration_user(), &new_mapper)
                     .await
                     .map(|_| ())
                     .or_else(handle_unique_violation_error)?;

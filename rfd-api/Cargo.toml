@@ -5,7 +5,7 @@ edition = "2021"
 repository = "https://github.com/oxidecomputer/rfd-api"
 
 [features]
-local-dev = []
+local-dev = ["v-api/local-dev"]
 
 [dependencies]
 anyhow = { workspace = true }
@@ -19,13 +19,12 @@ diesel = { workspace = true }
 dropshot = { workspace = true }
 dropshot-authorization-header = { path = "../dropshot-authorization-header" }
 dropshot-verified-body = { workspace = true, features = ["github"] }
-google-cloudkms1 = { workspace = true }
 hex = { workspace = true }
 http = { workspace = true }
 hyper = { workspace = true }
-hyper-rustls = { workspace = true }
 jsonwebtoken = { workspace = true }
 meilisearch-sdk = { workspace = true }
+newtype-uuid = { workspace = true }
 oauth2 = { workspace = true }
 octorust = { workspace = true, features = ["httpcache"] }
 partial-struct = { workspace = true }
@@ -59,7 +58,9 @@ tracing-appender = { workspace = true }
 tracing-slog = { workspace = true }
 tracing-subscriber = { workspace = true, features = ["env-filter", "fmt", "json"] }
 uuid = { workspace = true, features = ["v4", "serde"]  }
-w-api-permissions = { path = "../w-api-permissions" }
+v-api = { workspace = true }
+v-model = { workspace = true }
+v-api-permission-derive = { workspace = true }
 yup-oauth2 = { workspace = true }
 
 [dev-dependencies]

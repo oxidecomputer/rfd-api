@@ -6,12 +6,12 @@ use std::{collections::HashMap, path::PathBuf};
 
 use config::{Config, ConfigError, Environment, File};
 use rfd_data::content::RfdTemplate;
-use secrecy::SecretString;
 use serde::{
     de::{self, Visitor},
     Deserialize, Deserializer,
 };
 use thiserror::Error;
+use v_api::config::{AsymmetricKey, AuthnProviders, JwtConfig};
 
 use crate::server::SpecConfig;
 
@@ -72,72 +72,6 @@ impl<'de> Deserialize<'de> for ServerLogFormat {
 
         deserializer.deserialize_any(ExternalId)
     }
-}
-
-#[derive(Debug, Default, Deserialize)]
-pub struct JwtConfig {
-    pub default_expiration: i64,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(tag = "kind", rename_all = "lowercase")]
-pub enum AsymmetricKey {
-    Local {
-        kid: String,
-        // #[serde(with = "serde_bytes")]
-        private: String,
-        public: String,
-    },
-    // Kms {
-    //     id: String,
-    // },
-    Ckms {
-        kid: String,
-        version: u16,
-        key: String,
-        keyring: String,
-        location: String,
-        project: String,
-    },
-}
-
-impl AsymmetricKey {
-    pub fn kid(&self) -> &str {
-        match self {
-            Self::Local { kid, .. } => kid,
-            Self::Ckms { kid, .. } => kid,
-        }
-    }
-}
-
-#[derive(Debug, Deserialize)]
-pub struct AuthnProviders {
-    pub oauth: OAuthProviders,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct OAuthProviders {
-    pub github: Option<OAuthConfig>,
-    pub google: Option<OAuthConfig>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct OAuthConfig {
-    pub device: OAuthDeviceConfig,
-    pub web: OAuthWebConfig,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct OAuthDeviceConfig {
-    pub client_id: String,
-    pub client_secret: SecretString,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct OAuthWebConfig {
-    pub client_id: String,
-    pub client_secret: SecretString,
-    pub redirect_uri: String,
 }
 
 #[derive(Debug, Default, Deserialize)]

@@ -9,24 +9,21 @@ use reqwest::header::{HeaderMap, HeaderValue};
 /// Types used as operation parameters and responses.
 #[allow(clippy::all)]
 pub mod types {
-    use serde::{Deserialize, Serialize};
-    #[allow(unused_imports)]
-    use std::convert::TryFrom;
     /// Error types.
     pub mod error {
         /// Error from a TryFrom or FromStr implementation.
-        pub struct ConversionError(std::borrow::Cow<'static, str>);
-        impl std::error::Error for ConversionError {}
+        pub struct ConversionError(::std::borrow::Cow<'static, str>);
+        impl ::std::error::Error for ConversionError {}
 
-        impl std::fmt::Display for ConversionError {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-                std::fmt::Display::fmt(&self.0, f)
+        impl ::std::fmt::Display for ConversionError {
+            fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> Result<(), ::std::fmt::Error> {
+                ::std::fmt::Display::fmt(&self.0, f)
             }
         }
 
-        impl std::fmt::Debug for ConversionError {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
-                std::fmt::Debug::fmt(&self.0, f)
+        impl ::std::fmt::Debug for ConversionError {
+            fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> Result<(), ::std::fmt::Error> {
+                ::std::fmt::Debug::fmt(&self.0, f)
             }
         }
 
@@ -43,7 +40,7 @@ pub mod types {
         }
     }
 
-    /// AccessGroupForApiPermissionResponse
+    /// AccessGroupForRfdPermission
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -70,15 +67,13 @@ pub mod types {
     ///      "format": "date-time"
     ///    },
     ///    "id": {
-    ///      "type": "string",
-    ///      "format": "uuid"
+    ///      "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
     ///    },
     ///    "name": {
     ///      "type": "string"
     ///    },
     ///    "permissions": {
-    ///      "$ref":
-    /// "#/components/schemas/Permissions_for_ApiPermissionResponse"
+    ///      "$ref": "#/components/schemas/Permissions_for_RfdPermission"
     ///    },
     ///    "updated_at": {
     ///      "type": "string",
@@ -91,30 +86,32 @@ pub mod types {
 
     /// ```
     /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct AccessGroupForApiPermissionResponse {
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct AccessGroupForRfdPermission {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
-        pub id: uuid::Uuid,
+        pub id: TypedUuidForAccessGroupId,
         pub name: String,
-        pub permissions: PermissionsForApiPermissionResponse,
+        pub permissions: PermissionsForRfdPermission,
         pub updated_at: chrono::DateTime<chrono::offset::Utc>,
     }
 
-    impl From<&AccessGroupForApiPermissionResponse> for AccessGroupForApiPermissionResponse {
-        fn from(value: &AccessGroupForApiPermissionResponse) -> Self {
+    impl From<&AccessGroupForRfdPermission> for AccessGroupForRfdPermission {
+        fn from(value: &AccessGroupForRfdPermission) -> Self {
             value.clone()
         }
     }
 
-    impl AccessGroupForApiPermissionResponse {
-        pub fn builder() -> builder::AccessGroupForApiPermissionResponse {
+    impl AccessGroupForRfdPermission {
+        pub fn builder() -> builder::AccessGroupForRfdPermission {
             Default::default()
         }
     }
 
-    /// AccessGroupUpdateParams
+    /// AccessGroupUpdateParamsForRfdPermission
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -130,7 +127,7 @@ pub mod types {
     ///      "type": "string"
     ///    },
     ///    "permissions": {
-    ///      "$ref": "#/components/schemas/Permissions_for_ApiPermission"
+    ///      "$ref": "#/components/schemas/Permissions_for_RfdPermission"
     ///    }
 
     ///  }
@@ -139,20 +136,22 @@ pub mod types {
 
     /// ```
     /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct AccessGroupUpdateParams {
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct AccessGroupUpdateParamsForRfdPermission {
         pub name: String,
-        pub permissions: PermissionsForApiPermission,
+        pub permissions: PermissionsForRfdPermission,
     }
 
-    impl From<&AccessGroupUpdateParams> for AccessGroupUpdateParams {
-        fn from(value: &AccessGroupUpdateParams) -> Self {
+    impl From<&AccessGroupUpdateParamsForRfdPermission> for AccessGroupUpdateParamsForRfdPermission {
+        fn from(value: &AccessGroupUpdateParamsForRfdPermission) -> Self {
             value.clone()
         }
     }
 
-    impl AccessGroupUpdateParams {
-        pub fn builder() -> builder::AccessGroupUpdateParams {
+    impl AccessGroupUpdateParamsForRfdPermission {
+        pub fn builder() -> builder::AccessGroupUpdateParamsForRfdPermission {
             Default::default()
         }
     }
@@ -189,7 +188,9 @@ pub mod types {
 
     /// ```
     /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
     pub struct AccessTokenExchangeRequest {
         pub device_code: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -221,8 +222,7 @@ pub mod types {
     ///  ],
     ///  "properties": {
     ///    "group_id": {
-    ///      "type": "string",
-    ///      "format": "uuid"
+    ///      "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
     ///    }
 
     ///  }
@@ -231,9 +231,11 @@ pub mod types {
 
     /// ```
     /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
     pub struct AddGroupBody {
-        pub group_id: uuid::Uuid,
+        pub group_id: TypedUuidForAccessGroupId,
     }
 
     impl From<&AddGroupBody> for AddGroupBody {
@@ -244,6 +246,46 @@ pub mod types {
 
     impl AddGroupBody {
         pub fn builder() -> builder::AddGroupBody {
+            Default::default()
+        }
+    }
+
+    /// AddMagicLinkRedirectBody
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "redirect_uri"
+    ///  ],
+    ///  "properties": {
+    ///    "redirect_uri": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct AddMagicLinkRedirectBody {
+        pub redirect_uri: String,
+    }
+
+    impl From<&AddMagicLinkRedirectBody> for AddMagicLinkRedirectBody {
+        fn from(value: &AddMagicLinkRedirectBody) -> Self {
+            value.clone()
+        }
+    }
+
+    impl AddMagicLinkRedirectBody {
+        pub fn builder() -> builder::AddMagicLinkRedirectBody {
             Default::default()
         }
     }
@@ -269,7 +311,9 @@ pub mod types {
 
     /// ```
     /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
     pub struct AddOAuthClientRedirectBody {
         pub redirect_uri: String,
     }
@@ -286,7 +330,7 @@ pub mod types {
         }
     }
 
-    /// ApiKeyCreateParams
+    /// ApiKeyCreateParamsForRfdPermission
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -302,10 +346,18 @@ pub mod types {
     ///      "format": "date-time"
     ///    },
     ///    "permissions": {
-    ///      "allOf": [
+    ///      "oneOf": [
     ///        {
-    ///          "$ref":
-    /// "#/components/schemas/Permissions_for_ApiPermissionResponse"
+    ///          "type": "null"
+    ///        },
+    ///        {
+    ///          "allOf": [
+    ///            {
+    ///              "$ref":
+    /// "#/components/schemas/Permissions_for_RfdPermission"
+    ///            }
+
+    ///          ]
     ///        }
 
     ///      ]
@@ -317,26 +369,28 @@ pub mod types {
 
     /// ```
     /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct ApiKeyCreateParams {
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct ApiKeyCreateParamsForRfdPermission {
         pub expires_at: chrono::DateTime<chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub permissions: Option<PermissionsForApiPermissionResponse>,
+        pub permissions: Option<PermissionsForRfdPermission>,
     }
 
-    impl From<&ApiKeyCreateParams> for ApiKeyCreateParams {
-        fn from(value: &ApiKeyCreateParams) -> Self {
+    impl From<&ApiKeyCreateParamsForRfdPermission> for ApiKeyCreateParamsForRfdPermission {
+        fn from(value: &ApiKeyCreateParamsForRfdPermission) -> Self {
             value.clone()
         }
     }
 
-    impl ApiKeyCreateParams {
-        pub fn builder() -> builder::ApiKeyCreateParams {
+    impl ApiKeyCreateParamsForRfdPermission {
+        pub fn builder() -> builder::ApiKeyCreateParamsForRfdPermission {
             Default::default()
         }
     }
 
-    /// ApiKeyResponse
+    /// ApiKeyResponseForRfdPermission
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -353,14 +407,21 @@ pub mod types {
     ///      "format": "date-time"
     ///    },
     ///    "id": {
-    ///      "type": "string",
-    ///      "format": "uuid"
+    ///      "$ref": "#/components/schemas/TypedUuidForApiKeyId"
     ///    },
     ///    "permissions": {
-    ///      "allOf": [
+    ///      "oneOf": [
     ///        {
-    ///          "$ref":
-    /// "#/components/schemas/Permissions_for_ApiPermissionResponse"
+    ///          "type": "null"
+    ///        },
+    ///        {
+    ///          "allOf": [
+    ///            {
+    ///              "$ref":
+    /// "#/components/schemas/Permissions_for_RfdPermission"
+    ///            }
+
+    ///          ]
     ///        }
 
     ///      ]
@@ -372,27 +433,3280 @@ pub mod types {
 
     /// ```
     /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct ApiKeyResponse {
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct ApiKeyResponseForRfdPermission {
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
-        pub id: uuid::Uuid,
+        pub id: TypedUuidForApiKeyId,
         #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub permissions: Option<PermissionsForApiPermissionResponse>,
+        pub permissions: Option<PermissionsForRfdPermission>,
     }
 
-    impl From<&ApiKeyResponse> for ApiKeyResponse {
-        fn from(value: &ApiKeyResponse) -> Self {
+    impl From<&ApiKeyResponseForRfdPermission> for ApiKeyResponseForRfdPermission {
+        fn from(value: &ApiKeyResponseForRfdPermission) -> Self {
             value.clone()
         }
     }
 
-    impl ApiKeyResponse {
-        pub fn builder() -> builder::ApiKeyResponse {
+    impl ApiKeyResponseForRfdPermission {
+        pub fn builder() -> builder::ApiKeyResponseForRfdPermission {
             Default::default()
         }
     }
 
-    /// ApiPermission
+    /// ApiUserForRfdPermission
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "groups",
+    ///    "id",
+    ///    "permissions",
+    ///    "updated_at"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "groups": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
+    ///      },
+    ///      "uniqueItems": true
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForUserId"
+    ///    },
+    ///    "permissions": {
+    ///      "$ref": "#/components/schemas/Permissions_for_RfdPermission"
+    ///    },
+    ///    "updated_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct ApiUserForRfdPermission {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub groups: Vec<TypedUuidForAccessGroupId>,
+        pub id: TypedUuidForUserId,
+        pub permissions: PermissionsForRfdPermission,
+        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
+    }
+
+    impl From<&ApiUserForRfdPermission> for ApiUserForRfdPermission {
+        fn from(value: &ApiUserForRfdPermission) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ApiUserForRfdPermission {
+        pub fn builder() -> builder::ApiUserForRfdPermission {
+            Default::default()
+        }
+    }
+
+    /// ApiUserLinkRequestPayload
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "user_id"
+    ///  ],
+    ///  "properties": {
+    ///    "user_id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForUserId"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct ApiUserLinkRequestPayload {
+        pub user_id: TypedUuidForUserId,
+    }
+
+    impl From<&ApiUserLinkRequestPayload> for ApiUserLinkRequestPayload {
+        fn from(value: &ApiUserLinkRequestPayload) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ApiUserLinkRequestPayload {
+        pub fn builder() -> builder::ApiUserLinkRequestPayload {
+            Default::default()
+        }
+    }
+
+    /// ApiUserLinkRequestResponse
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "token"
+    ///  ],
+    ///  "properties": {
+    ///    "token": {
+    ///      "$ref": "#/components/schemas/SecretString"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct ApiUserLinkRequestResponse {
+        pub token: SecretString,
+    }
+
+    impl From<&ApiUserLinkRequestResponse> for ApiUserLinkRequestResponse {
+        fn from(value: &ApiUserLinkRequestResponse) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ApiUserLinkRequestResponse {
+        pub fn builder() -> builder::ApiUserLinkRequestResponse {
+            Default::default()
+        }
+    }
+
+    /// ApiUserProvider
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "display_names",
+    ///    "emails",
+    ///    "id",
+    ///    "provider",
+    ///    "provider_id",
+    ///    "updated_at",
+    ///    "user_id"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "display_names": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      }
+
+    ///    },
+    ///    "emails": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      }
+
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForUserProviderId"
+    ///    },
+    ///    "provider": {
+    ///      "type": "string"
+    ///    },
+    ///    "provider_id": {
+    ///      "type": "string"
+    ///    },
+    ///    "updated_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "user_id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForUserId"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct ApiUserProvider {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub display_names: Vec<String>,
+        pub emails: Vec<String>,
+        pub id: TypedUuidForUserProviderId,
+        pub provider: String,
+        pub provider_id: String,
+        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
+        pub user_id: TypedUuidForUserId,
+    }
+
+    impl From<&ApiUserProvider> for ApiUserProvider {
+        fn from(value: &ApiUserProvider) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ApiUserProvider {
+        pub fn builder() -> builder::ApiUserProvider {
+            Default::default()
+        }
+    }
+
+    /// ApiUserProviderLinkPayload
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "token"
+    ///  ],
+    ///  "properties": {
+    ///    "token": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct ApiUserProviderLinkPayload {
+        pub token: String,
+    }
+
+    impl From<&ApiUserProviderLinkPayload> for ApiUserProviderLinkPayload {
+        fn from(value: &ApiUserProviderLinkPayload) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ApiUserProviderLinkPayload {
+        pub fn builder() -> builder::ApiUserProviderLinkPayload {
+            Default::default()
+        }
+    }
+
+    /// ApiUserUpdateParamsForRfdPermission
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "group_ids",
+    ///    "permissions"
+    ///  ],
+    ///  "properties": {
+    ///    "group_ids": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
+    ///      },
+    ///      "uniqueItems": true
+    ///    },
+    ///    "permissions": {
+    ///      "$ref": "#/components/schemas/Permissions_for_RfdPermission"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct ApiUserUpdateParamsForRfdPermission {
+        pub group_ids: Vec<TypedUuidForAccessGroupId>,
+        pub permissions: PermissionsForRfdPermission,
+    }
+
+    impl From<&ApiUserUpdateParamsForRfdPermission> for ApiUserUpdateParamsForRfdPermission {
+        fn from(value: &ApiUserUpdateParamsForRfdPermission) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ApiUserUpdateParamsForRfdPermission {
+        pub fn builder() -> builder::ApiUserUpdateParamsForRfdPermission {
+            Default::default()
+        }
+    }
+
+    /// CommitSha
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    pub struct CommitSha(pub String);
+    impl ::std::ops::Deref for CommitSha {
+        type Target = String;
+        fn deref(&self) -> &String {
+            &self.0
+        }
+    }
+
+    impl From<CommitSha> for String {
+        fn from(value: CommitSha) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&CommitSha> for CommitSha {
+        fn from(value: &CommitSha) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<String> for CommitSha {
+        fn from(value: String) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for CommitSha {
+        type Err = std::convert::Infallible;
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ::std::fmt::Display for CommitSha {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    /// ContentFormat
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "asciidoc",
+    ///    "markdown"
+    ///  ]
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    pub enum ContentFormat {
+        #[serde(rename = "asciidoc")]
+        Asciidoc,
+        #[serde(rename = "markdown")]
+        Markdown,
+    }
+
+    impl From<&ContentFormat> for ContentFormat {
+        fn from(value: &ContentFormat) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ::std::fmt::Display for ContentFormat {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Asciidoc => write!(f, "asciidoc"),
+                Self::Markdown => write!(f, "markdown"),
+            }
+        }
+    }
+
+    impl std::str::FromStr for ContentFormat {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> Result<Self, self::error::ConversionError> {
+            match value {
+                "asciidoc" => Ok(Self::Asciidoc),
+                "markdown" => Ok(Self::Markdown),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for ContentFormat {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for ContentFormat {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &String) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for ContentFormat {
+        type Error = self::error::ConversionError;
+        fn try_from(value: String) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    /// CreateMapper
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "name",
+    ///    "rule"
+    ///  ],
+    ///  "properties": {
+    ///    "max_activations": {
+    ///      "type": [
+    ///        "integer",
+    ///        "null"
+    ///      ],
+    ///      "format": "int32"
+    ///    },
+    ///    "name": {
+    ///      "type": "string"
+    ///    },
+    ///    "rule": {}
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct CreateMapper {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub max_activations: Option<i32>,
+        pub name: String,
+        pub rule: ::serde_json::Value,
+    }
+
+    impl From<&CreateMapper> for CreateMapper {
+        fn from(value: &CreateMapper) -> Self {
+            value.clone()
+        }
+    }
+
+    impl CreateMapper {
+        pub fn builder() -> builder::CreateMapper {
+            Default::default()
+        }
+    }
+
+    /// Error information from a response.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "description": "Error information from a response.",
+    ///  "type": "object",
+    ///  "required": [
+    ///    "message",
+    ///    "request_id"
+    ///  ],
+    ///  "properties": {
+    ///    "error_code": {
+    ///      "type": "string"
+    ///    },
+    ///    "message": {
+    ///      "type": "string"
+    ///    },
+    ///    "request_id": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct Error {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub error_code: Option<String>,
+        pub message: String,
+        pub request_id: String,
+    }
+
+    impl From<&Error> for Error {
+        fn from(value: &Error) -> Self {
+            value.clone()
+        }
+    }
+
+    impl Error {
+        pub fn builder() -> builder::Error {
+            Default::default()
+        }
+    }
+
+    /// FileSha
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    pub struct FileSha(pub String);
+    impl ::std::ops::Deref for FileSha {
+        type Target = String;
+        fn deref(&self) -> &String {
+            &self.0
+        }
+    }
+
+    impl From<FileSha> for String {
+        fn from(value: FileSha) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&FileSha> for FileSha {
+        fn from(value: &FileSha) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<String> for FileSha {
+        fn from(value: String) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for FileSha {
+        type Err = std::convert::Infallible;
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ::std::fmt::Display for FileSha {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    /// FormattedSearchResultHit
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "hierarchy",
+    ///    "hierarchy_radio",
+    ///    "object_id",
+    ///    "rfd_number"
+    ///  ],
+    ///  "properties": {
+    ///    "anchor": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "content": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "hierarchy": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": [
+    ///          "string",
+    ///          "null"
+    ///        ]
+    ///      },
+    ///      "maxItems": 6,
+    ///      "minItems": 6
+    ///    },
+    ///    "hierarchy_radio": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": [
+    ///          "string",
+    ///          "null"
+    ///        ]
+    ///      },
+    ///      "maxItems": 6,
+    ///      "minItems": 6
+    ///    },
+    ///    "object_id": {
+    ///      "type": "string"
+    ///    },
+    ///    "rfd_number": {
+    ///      "type": "integer",
+    ///      "format": "uint64",
+    ///      "minimum": 0.0
+    ///    },
+    ///    "url": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct FormattedSearchResultHit {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub anchor: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub content: Option<String>,
+        pub hierarchy: [Option<String>; 6usize],
+        pub hierarchy_radio: [Option<String>; 6usize],
+        pub object_id: String,
+        pub rfd_number: u64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub url: Option<String>,
+    }
+
+    impl From<&FormattedSearchResultHit> for FormattedSearchResultHit {
+        fn from(value: &FormattedSearchResultHit) -> Self {
+            value.clone()
+        }
+    }
+
+    impl FormattedSearchResultHit {
+        pub fn builder() -> builder::FormattedSearchResultHit {
+            Default::default()
+        }
+    }
+
+    /// FullRfd
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "commit",
+    ///    "committed_at",
+    ///    "content",
+    ///    "format",
+    ///    "id",
+    ///    "pdfs",
+    ///    "rfd_number",
+    ///    "sha",
+    ///    "title",
+    ///    "visibility"
+    ///  ],
+    ///  "properties": {
+    ///    "authors": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "commit": {
+    ///      "$ref": "#/components/schemas/CommitSha"
+    ///    },
+    ///    "committed_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "content": {
+    ///      "type": "string"
+    ///    },
+    ///    "discussion": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "format": {
+    ///      "$ref": "#/components/schemas/ContentFormat"
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForRfdId"
+    ///    },
+    ///    "labels": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "link": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "pdfs": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/FullRfdPdfEntry"
+    ///      }
+
+    ///    },
+    ///    "rfd_number": {
+    ///      "type": "integer",
+    ///      "format": "int32"
+    ///    },
+    ///    "sha": {
+    ///      "$ref": "#/components/schemas/FileSha"
+    ///    },
+    ///    "state": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "title": {
+    ///      "type": "string"
+    ///    },
+    ///    "visibility": {
+    ///      "$ref": "#/components/schemas/Visibility"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct FullRfd {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub authors: Option<String>,
+        pub commit: CommitSha,
+        pub committed_at: chrono::DateTime<chrono::offset::Utc>,
+        pub content: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub discussion: Option<String>,
+        pub format: ContentFormat,
+        pub id: TypedUuidForRfdId,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub labels: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub link: Option<String>,
+        pub pdfs: Vec<FullRfdPdfEntry>,
+        pub rfd_number: i32,
+        pub sha: FileSha,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub state: Option<String>,
+        pub title: String,
+        pub visibility: Visibility,
+    }
+
+    impl From<&FullRfd> for FullRfd {
+        fn from(value: &FullRfd) -> Self {
+            value.clone()
+        }
+    }
+
+    impl FullRfd {
+        pub fn builder() -> builder::FullRfd {
+            Default::default()
+        }
+    }
+
+    /// FullRfdPdfEntry
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "link",
+    ///    "source"
+    ///  ],
+    ///  "properties": {
+    ///    "link": {
+    ///      "type": "string"
+    ///    },
+    ///    "source": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct FullRfdPdfEntry {
+        pub link: String,
+        pub source: String,
+    }
+
+    impl From<&FullRfdPdfEntry> for FullRfdPdfEntry {
+        fn from(value: &FullRfdPdfEntry) -> Self {
+            value.clone()
+        }
+    }
+
+    impl FullRfdPdfEntry {
+        pub fn builder() -> builder::FullRfdPdfEntry {
+            Default::default()
+        }
+    }
+
+    /// GetUserResponseForRfdPermission
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "info",
+    ///    "providers"
+    ///  ],
+    ///  "properties": {
+    ///    "info": {
+    ///      "$ref": "#/components/schemas/ApiUser_for_RfdPermission"
+    ///    },
+    ///    "providers": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/ApiUserProvider"
+    ///      }
+
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct GetUserResponseForRfdPermission {
+        pub info: ApiUserForRfdPermission,
+        pub providers: Vec<ApiUserProvider>,
+    }
+
+    impl From<&GetUserResponseForRfdPermission> for GetUserResponseForRfdPermission {
+        fn from(value: &GetUserResponseForRfdPermission) -> Self {
+            value.clone()
+        }
+    }
+
+    impl GetUserResponseForRfdPermission {
+        pub fn builder() -> builder::GetUserResponseForRfdPermission {
+            Default::default()
+        }
+    }
+
+    /// GitHubCommit
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "added",
+    ///    "id",
+    ///    "modified",
+    ///    "removed",
+    ///    "timestamp"
+    ///  ],
+    ///  "properties": {
+    ///    "added": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      }
+
+    ///    },
+    ///    "id": {
+    ///      "type": "string"
+    ///    },
+    ///    "modified": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      }
+
+    ///    },
+    ///    "removed": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      }
+
+    ///    },
+    ///    "timestamp": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct GitHubCommit {
+        pub added: Vec<String>,
+        pub id: String,
+        pub modified: Vec<String>,
+        pub removed: Vec<String>,
+        pub timestamp: chrono::DateTime<chrono::offset::Utc>,
+    }
+
+    impl From<&GitHubCommit> for GitHubCommit {
+        fn from(value: &GitHubCommit) -> Self {
+            value.clone()
+        }
+    }
+
+    impl GitHubCommit {
+        pub fn builder() -> builder::GitHubCommit {
+            Default::default()
+        }
+    }
+
+    /// GitHubCommitPayload
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "commits",
+    ///    "installation",
+    ///    "ref",
+    ///    "repository",
+    ///    "sender"
+    ///  ],
+    ///  "properties": {
+    ///    "commits": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/GitHubCommit"
+    ///      }
+
+    ///    },
+    ///    "head_commit": {
+    ///      "oneOf": [
+    ///        {
+    ///          "type": "null"
+    ///        },
+    ///        {
+    ///          "allOf": [
+    ///            {
+    ///              "$ref": "#/components/schemas/GitHubCommit"
+    ///            }
+
+    ///          ]
+    ///        }
+
+    ///      ]
+    ///    },
+    ///    "installation": {
+    ///      "$ref": "#/components/schemas/GitHubInstallation"
+    ///    },
+    ///    "ref": {
+    ///      "type": "string"
+    ///    },
+    ///    "repository": {
+    ///      "$ref": "#/components/schemas/GitHubRepository"
+    ///    },
+    ///    "sender": {
+    ///      "$ref": "#/components/schemas/GitHubSender"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct GitHubCommitPayload {
+        pub commits: Vec<GitHubCommit>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub head_commit: Option<GitHubCommit>,
+        pub installation: GitHubInstallation,
+        #[serde(rename = "ref")]
+        pub ref_: String,
+        pub repository: GitHubRepository,
+        pub sender: GitHubSender,
+    }
+
+    impl From<&GitHubCommitPayload> for GitHubCommitPayload {
+        fn from(value: &GitHubCommitPayload) -> Self {
+            value.clone()
+        }
+    }
+
+    impl GitHubCommitPayload {
+        pub fn builder() -> builder::GitHubCommitPayload {
+            Default::default()
+        }
+    }
+
+    /// GitHubInstallation
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "id",
+    ///    "node_id"
+    ///  ],
+    ///  "properties": {
+    ///    "id": {
+    ///      "type": "integer",
+    ///      "format": "uint64",
+    ///      "minimum": 0.0
+    ///    },
+    ///    "node_id": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct GitHubInstallation {
+        pub id: u64,
+        pub node_id: String,
+    }
+
+    impl From<&GitHubInstallation> for GitHubInstallation {
+        fn from(value: &GitHubInstallation) -> Self {
+            value.clone()
+        }
+    }
+
+    impl GitHubInstallation {
+        pub fn builder() -> builder::GitHubInstallation {
+            Default::default()
+        }
+    }
+
+    /// GitHubRepository
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "default_branch",
+    ///    "id",
+    ///    "name",
+    ///    "node_id",
+    ///    "owner"
+    ///  ],
+    ///  "properties": {
+    ///    "default_branch": {
+    ///      "type": "string"
+    ///    },
+    ///    "id": {
+    ///      "type": "integer",
+    ///      "format": "uint64",
+    ///      "minimum": 0.0
+    ///    },
+    ///    "name": {
+    ///      "type": "string"
+    ///    },
+    ///    "node_id": {
+    ///      "type": "string"
+    ///    },
+    ///    "owner": {
+    ///      "$ref": "#/components/schemas/GitHubRepositoryOwner"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct GitHubRepository {
+        pub default_branch: String,
+        pub id: u64,
+        pub name: String,
+        pub node_id: String,
+        pub owner: GitHubRepositoryOwner,
+    }
+
+    impl From<&GitHubRepository> for GitHubRepository {
+        fn from(value: &GitHubRepository) -> Self {
+            value.clone()
+        }
+    }
+
+    impl GitHubRepository {
+        pub fn builder() -> builder::GitHubRepository {
+            Default::default()
+        }
+    }
+
+    /// GitHubRepositoryOwner
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "login"
+    ///  ],
+    ///  "properties": {
+    ///    "login": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct GitHubRepositoryOwner {
+        pub login: String,
+    }
+
+    impl From<&GitHubRepositoryOwner> for GitHubRepositoryOwner {
+        fn from(value: &GitHubRepositoryOwner) -> Self {
+            value.clone()
+        }
+    }
+
+    impl GitHubRepositoryOwner {
+        pub fn builder() -> builder::GitHubRepositoryOwner {
+            Default::default()
+        }
+    }
+
+    /// GitHubSender
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "id",
+    ///    "login",
+    ///    "node_id",
+    ///    "type"
+    ///  ],
+    ///  "properties": {
+    ///    "id": {
+    ///      "type": "integer",
+    ///      "format": "uint64",
+    ///      "minimum": 0.0
+    ///    },
+    ///    "login": {
+    ///      "type": "string"
+    ///    },
+    ///    "node_id": {
+    ///      "type": "string"
+    ///    },
+    ///    "type": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct GitHubSender {
+        pub id: u64,
+        pub login: String,
+        pub node_id: String,
+        #[serde(rename = "type")]
+        pub type_: String,
+    }
+
+    impl From<&GitHubSender> for GitHubSender {
+        fn from(value: &GitHubSender) -> Self {
+            value.clone()
+        }
+    }
+
+    impl GitHubSender {
+        pub fn builder() -> builder::GitHubSender {
+            Default::default()
+        }
+    }
+
+    /// InitialApiKeyResponseForRfdPermission
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "key"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForApiKeyId"
+    ///    },
+    ///    "key": {
+    ///      "$ref": "#/components/schemas/SecretString"
+    ///    },
+    ///    "permissions": {
+    ///      "oneOf": [
+    ///        {
+    ///          "type": "null"
+    ///        },
+    ///        {
+    ///          "allOf": [
+    ///            {
+    ///              "$ref":
+    /// "#/components/schemas/Permissions_for_RfdPermission"
+    ///            }
+
+    ///          ]
+    ///        }
+
+    ///      ]
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct InitialApiKeyResponseForRfdPermission {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub id: TypedUuidForApiKeyId,
+        pub key: SecretString,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub permissions: Option<PermissionsForRfdPermission>,
+    }
+
+    impl From<&InitialApiKeyResponseForRfdPermission> for InitialApiKeyResponseForRfdPermission {
+        fn from(value: &InitialApiKeyResponseForRfdPermission) -> Self {
+            value.clone()
+        }
+    }
+
+    impl InitialApiKeyResponseForRfdPermission {
+        pub fn builder() -> builder::InitialApiKeyResponseForRfdPermission {
+            Default::default()
+        }
+    }
+
+    /// InitialMagicLinkSecretResponse
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "key"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForMagicLinkSecretId"
+    ///    },
+    ///    "key": {
+    ///      "$ref": "#/components/schemas/SecretString"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct InitialMagicLinkSecretResponse {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub id: TypedUuidForMagicLinkSecretId,
+        pub key: SecretString,
+    }
+
+    impl From<&InitialMagicLinkSecretResponse> for InitialMagicLinkSecretResponse {
+        fn from(value: &InitialMagicLinkSecretResponse) -> Self {
+            value.clone()
+        }
+    }
+
+    impl InitialMagicLinkSecretResponse {
+        pub fn builder() -> builder::InitialMagicLinkSecretResponse {
+            Default::default()
+        }
+    }
+
+    /// InitialOAuthClientSecretResponse
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "key"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForOAuthSecretId"
+    ///    },
+    ///    "key": {
+    ///      "$ref": "#/components/schemas/SecretString"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct InitialOAuthClientSecretResponse {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub id: TypedUuidForOAuthSecretId,
+        pub key: SecretString,
+    }
+
+    impl From<&InitialOAuthClientSecretResponse> for InitialOAuthClientSecretResponse {
+        fn from(value: &InitialOAuthClientSecretResponse) -> Self {
+            value.clone()
+        }
+    }
+
+    impl InitialOAuthClientSecretResponse {
+        pub fn builder() -> builder::InitialOAuthClientSecretResponse {
+            Default::default()
+        }
+    }
+
+    /// Jwk
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "e",
+    ///    "kid",
+    ///    "kty",
+    ///    "n",
+    ///    "use"
+    ///  ],
+    ///  "properties": {
+    ///    "e": {
+    ///      "type": "string"
+    ///    },
+    ///    "kid": {
+    ///      "type": "string"
+    ///    },
+    ///    "kty": {
+    ///      "type": "string"
+    ///    },
+    ///    "n": {
+    ///      "type": "string"
+    ///    },
+    ///    "use": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct Jwk {
+        pub e: String,
+        pub kid: String,
+        pub kty: String,
+        pub n: String,
+        #[serde(rename = "use")]
+        pub use_: String,
+    }
+
+    impl From<&Jwk> for Jwk {
+        fn from(value: &Jwk) -> Self {
+            value.clone()
+        }
+    }
+
+    impl Jwk {
+        pub fn builder() -> builder::Jwk {
+            Default::default()
+        }
+    }
+
+    /// Jwks
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "keys"
+    ///  ],
+    ///  "properties": {
+    ///    "keys": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/Jwk"
+    ///      }
+
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct Jwks {
+        pub keys: Vec<Jwk>,
+    }
+
+    impl From<&Jwks> for Jwks {
+        fn from(value: &Jwks) -> Self {
+            value.clone()
+        }
+    }
+
+    impl Jwks {
+        pub fn builder() -> builder::Jwks {
+            Default::default()
+        }
+    }
+
+    /// ListRfd
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "commit",
+    ///    "committed_at",
+    ///    "format",
+    ///    "id",
+    ///    "rfd_number",
+    ///    "sha",
+    ///    "title",
+    ///    "visibility"
+    ///  ],
+    ///  "properties": {
+    ///    "authors": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "commit": {
+    ///      "$ref": "#/components/schemas/CommitSha"
+    ///    },
+    ///    "committed_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "discussion": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "format": {
+    ///      "$ref": "#/components/schemas/ContentFormat"
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForRfdId"
+    ///    },
+    ///    "labels": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "link": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "rfd_number": {
+    ///      "type": "integer",
+    ///      "format": "int32"
+    ///    },
+    ///    "sha": {
+    ///      "$ref": "#/components/schemas/FileSha"
+    ///    },
+    ///    "state": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "title": {
+    ///      "type": "string"
+    ///    },
+    ///    "visibility": {
+    ///      "$ref": "#/components/schemas/Visibility"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct ListRfd {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub authors: Option<String>,
+        pub commit: CommitSha,
+        pub committed_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub discussion: Option<String>,
+        pub format: ContentFormat,
+        pub id: TypedUuidForRfdId,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub labels: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub link: Option<String>,
+        pub rfd_number: i32,
+        pub sha: FileSha,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub state: Option<String>,
+        pub title: String,
+        pub visibility: Visibility,
+    }
+
+    impl From<&ListRfd> for ListRfd {
+        fn from(value: &ListRfd) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ListRfd {
+        pub fn builder() -> builder::ListRfd {
+            Default::default()
+        }
+    }
+
+    /// MagicLink
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "redirect_uris",
+    ///    "secrets"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForMagicLinkId"
+    ///    },
+    ///    "redirect_uris": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/MagicLinkRedirectUri"
+    ///      }
+
+    ///    },
+    ///    "secrets": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/MagicLinkSecret"
+    ///      }
+
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct MagicLink {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub id: TypedUuidForMagicLinkId,
+        pub redirect_uris: Vec<MagicLinkRedirectUri>,
+        pub secrets: Vec<MagicLinkSecret>,
+    }
+
+    impl From<&MagicLink> for MagicLink {
+        fn from(value: &MagicLink) -> Self {
+            value.clone()
+        }
+    }
+
+    impl MagicLink {
+        pub fn builder() -> builder::MagicLink {
+            Default::default()
+        }
+    }
+
+    /// MagicLinkExchangeRequest
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "attempt_id",
+    ///    "recipient",
+    ///    "secret"
+    ///  ],
+    ///  "properties": {
+    ///    "attempt_id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForMagicLinkAttemptId"
+    ///    },
+    ///    "recipient": {
+    ///      "type": "string"
+    ///    },
+    ///    "secret": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct MagicLinkExchangeRequest {
+        pub attempt_id: TypedUuidForMagicLinkAttemptId,
+        pub recipient: String,
+        pub secret: String,
+    }
+
+    impl From<&MagicLinkExchangeRequest> for MagicLinkExchangeRequest {
+        fn from(value: &MagicLinkExchangeRequest) -> Self {
+            value.clone()
+        }
+    }
+
+    impl MagicLinkExchangeRequest {
+        pub fn builder() -> builder::MagicLinkExchangeRequest {
+            Default::default()
+        }
+    }
+
+    /// MagicLinkExchangeResponse
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "access_token",
+    ///    "expires_in",
+    ///    "token_type"
+    ///  ],
+    ///  "properties": {
+    ///    "access_token": {
+    ///      "type": "string"
+    ///    },
+    ///    "expires_in": {
+    ///      "type": "integer",
+    ///      "format": "int64"
+    ///    },
+    ///    "token_type": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct MagicLinkExchangeResponse {
+        pub access_token: String,
+        pub expires_in: i64,
+        pub token_type: String,
+    }
+
+    impl From<&MagicLinkExchangeResponse> for MagicLinkExchangeResponse {
+        fn from(value: &MagicLinkExchangeResponse) -> Self {
+            value.clone()
+        }
+    }
+
+    impl MagicLinkExchangeResponse {
+        pub fn builder() -> builder::MagicLinkExchangeResponse {
+            Default::default()
+        }
+    }
+
+    /// MagicLinkMedium
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "email"
+    ///  ]
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    pub enum MagicLinkMedium {
+        #[serde(rename = "email")]
+        Email,
+    }
+
+    impl From<&MagicLinkMedium> for MagicLinkMedium {
+        fn from(value: &MagicLinkMedium) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ::std::fmt::Display for MagicLinkMedium {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Email => write!(f, "email"),
+            }
+        }
+    }
+
+    impl std::str::FromStr for MagicLinkMedium {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> Result<Self, self::error::ConversionError> {
+            match value {
+                "email" => Ok(Self::Email),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for MagicLinkMedium {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for MagicLinkMedium {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &String) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for MagicLinkMedium {
+        type Error = self::error::ConversionError;
+        fn try_from(value: String) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    /// MagicLinkRedirectUri
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "magic_link_client_id",
+    ///    "redirect_uri"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForMagicLinkRedirectUriId"
+    ///    },
+    ///    "magic_link_client_id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForMagicLinkId"
+    ///    },
+    ///    "redirect_uri": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct MagicLinkRedirectUri {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub id: TypedUuidForMagicLinkRedirectUriId,
+        pub magic_link_client_id: TypedUuidForMagicLinkId,
+        pub redirect_uri: String,
+    }
+
+    impl From<&MagicLinkRedirectUri> for MagicLinkRedirectUri {
+        fn from(value: &MagicLinkRedirectUri) -> Self {
+            value.clone()
+        }
+    }
+
+    impl MagicLinkRedirectUri {
+        pub fn builder() -> builder::MagicLinkRedirectUri {
+            Default::default()
+        }
+    }
+
+    /// MagicLinkSecret
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "magic_link_client_id",
+    ///    "secret_signature"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForMagicLinkSecretId"
+    ///    },
+    ///    "magic_link_client_id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForMagicLinkId"
+    ///    },
+    ///    "secret_signature": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct MagicLinkSecret {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub id: TypedUuidForMagicLinkSecretId,
+        pub magic_link_client_id: TypedUuidForMagicLinkId,
+        pub secret_signature: String,
+    }
+
+    impl From<&MagicLinkSecret> for MagicLinkSecret {
+        fn from(value: &MagicLinkSecret) -> Self {
+            value.clone()
+        }
+    }
+
+    impl MagicLinkSecret {
+        pub fn builder() -> builder::MagicLinkSecret {
+            Default::default()
+        }
+    }
+
+    /// MagicLinkSendRequest
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "expires_in",
+    ///    "medium",
+    ///    "recipient",
+    ///    "redirect_uri",
+    ///    "scope",
+    ///    "secret"
+    ///  ],
+    ///  "properties": {
+    ///    "expires_in": {
+    ///      "type": "integer",
+    ///      "format": "int64"
+    ///    },
+    ///    "medium": {
+    ///      "$ref": "#/components/schemas/MagicLinkMedium"
+    ///    },
+    ///    "recipient": {
+    ///      "type": "string"
+    ///    },
+    ///    "redirect_uri": {
+    ///      "type": "string",
+    ///      "format": "uri"
+    ///    },
+    ///    "scope": {
+    ///      "type": "string"
+    ///    },
+    ///    "secret": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct MagicLinkSendRequest {
+        pub expires_in: i64,
+        pub medium: MagicLinkMedium,
+        pub recipient: String,
+        pub redirect_uri: String,
+        pub scope: String,
+        pub secret: String,
+    }
+
+    impl From<&MagicLinkSendRequest> for MagicLinkSendRequest {
+        fn from(value: &MagicLinkSendRequest) -> Self {
+            value.clone()
+        }
+    }
+
+    impl MagicLinkSendRequest {
+        pub fn builder() -> builder::MagicLinkSendRequest {
+            Default::default()
+        }
+    }
+
+    /// MagicLinkSendResponse
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "attempt_id"
+    ///  ],
+    ///  "properties": {
+    ///    "attempt_id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForMagicLinkAttemptId"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct MagicLinkSendResponse {
+        pub attempt_id: TypedUuidForMagicLinkAttemptId,
+    }
+
+    impl From<&MagicLinkSendResponse> for MagicLinkSendResponse {
+        fn from(value: &MagicLinkSendResponse) -> Self {
+            value.clone()
+        }
+    }
+
+    impl MagicLinkSendResponse {
+        pub fn builder() -> builder::MagicLinkSendResponse {
+            Default::default()
+        }
+    }
+
+    /// Mapper
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "name",
+    ///    "rule"
+    ///  ],
+    ///  "properties": {
+    ///    "activations": {
+    ///      "type": [
+    ///        "integer",
+    ///        "null"
+    ///      ],
+    ///      "format": "int32"
+    ///    },
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "depleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForMapperId"
+    ///    },
+    ///    "max_activations": {
+    ///      "type": [
+    ///        "integer",
+    ///        "null"
+    ///      ],
+    ///      "format": "int32"
+    ///    },
+    ///    "name": {
+    ///      "type": "string"
+    ///    },
+    ///    "rule": {}
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct Mapper {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub activations: Option<i32>,
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub depleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub id: TypedUuidForMapperId,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub max_activations: Option<i32>,
+        pub name: String,
+        pub rule: ::serde_json::Value,
+    }
+
+    impl From<&Mapper> for Mapper {
+        fn from(value: &Mapper) -> Self {
+            value.clone()
+        }
+    }
+
+    impl Mapper {
+        pub fn builder() -> builder::Mapper {
+            Default::default()
+        }
+    }
+
+    /// OAuthAuthzCodeExchangeBody
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "client_id",
+    ///    "client_secret",
+    ///    "code",
+    ///    "grant_type",
+    ///    "redirect_uri"
+    ///  ],
+    ///  "properties": {
+    ///    "client_id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
+    ///    },
+    ///    "client_secret": {
+    ///      "$ref": "#/components/schemas/SecretString"
+    ///    },
+    ///    "code": {
+    ///      "type": "string"
+    ///    },
+    ///    "grant_type": {
+    ///      "type": "string"
+    ///    },
+    ///    "pkce_verifier": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "redirect_uri": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct OAuthAuthzCodeExchangeBody {
+        pub client_id: TypedUuidForOAuthClientId,
+        pub client_secret: SecretString,
+        pub code: String,
+        pub grant_type: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub pkce_verifier: Option<String>,
+        pub redirect_uri: String,
+    }
+
+    impl From<&OAuthAuthzCodeExchangeBody> for OAuthAuthzCodeExchangeBody {
+        fn from(value: &OAuthAuthzCodeExchangeBody) -> Self {
+            value.clone()
+        }
+    }
+
+    impl OAuthAuthzCodeExchangeBody {
+        pub fn builder() -> builder::OAuthAuthzCodeExchangeBody {
+            Default::default()
+        }
+    }
+
+    /// OAuthAuthzCodeExchangeResponse
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "access_token",
+    ///    "expires_in",
+    ///    "token_type"
+    ///  ],
+    ///  "properties": {
+    ///    "access_token": {
+    ///      "type": "string"
+    ///    },
+    ///    "expires_in": {
+    ///      "type": "integer",
+    ///      "format": "int64"
+    ///    },
+    ///    "token_type": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct OAuthAuthzCodeExchangeResponse {
+        pub access_token: String,
+        pub expires_in: i64,
+        pub token_type: String,
+    }
+
+    impl From<&OAuthAuthzCodeExchangeResponse> for OAuthAuthzCodeExchangeResponse {
+        fn from(value: &OAuthAuthzCodeExchangeResponse) -> Self {
+            value.clone()
+        }
+    }
+
+    impl OAuthAuthzCodeExchangeResponse {
+        pub fn builder() -> builder::OAuthAuthzCodeExchangeResponse {
+            Default::default()
+        }
+    }
+
+    /// OAuthClient
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "redirect_uris",
+    ///    "secrets"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
+    ///    },
+    ///    "redirect_uris": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/OAuthClientRedirectUri"
+    ///      }
+
+    ///    },
+    ///    "secrets": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/OAuthClientSecret"
+    ///      }
+
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct OAuthClient {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub id: TypedUuidForOAuthClientId,
+        pub redirect_uris: Vec<OAuthClientRedirectUri>,
+        pub secrets: Vec<OAuthClientSecret>,
+    }
+
+    impl From<&OAuthClient> for OAuthClient {
+        fn from(value: &OAuthClient) -> Self {
+            value.clone()
+        }
+    }
+
+    impl OAuthClient {
+        pub fn builder() -> builder::OAuthClient {
+            Default::default()
+        }
+    }
+
+    /// OAuthClientRedirectUri
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "oauth_client_id",
+    ///    "redirect_uri"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForOAuthRedirectUriId"
+    ///    },
+    ///    "oauth_client_id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
+    ///    },
+    ///    "redirect_uri": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct OAuthClientRedirectUri {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub id: TypedUuidForOAuthRedirectUriId,
+        pub oauth_client_id: TypedUuidForOAuthClientId,
+        pub redirect_uri: String,
+    }
+
+    impl From<&OAuthClientRedirectUri> for OAuthClientRedirectUri {
+        fn from(value: &OAuthClientRedirectUri) -> Self {
+            value.clone()
+        }
+    }
+
+    impl OAuthClientRedirectUri {
+        pub fn builder() -> builder::OAuthClientRedirectUri {
+            Default::default()
+        }
+    }
+
+    /// OAuthClientSecret
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "oauth_client_id",
+    ///    "secret_signature"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForOAuthSecretId"
+    ///    },
+    ///    "oauth_client_id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
+    ///    },
+    ///    "secret_signature": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct OAuthClientSecret {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub id: TypedUuidForOAuthSecretId,
+        pub oauth_client_id: TypedUuidForOAuthClientId,
+        pub secret_signature: String,
+    }
+
+    impl From<&OAuthClientSecret> for OAuthClientSecret {
+        fn from(value: &OAuthClientSecret) -> Self {
+            value.clone()
+        }
+    }
+
+    impl OAuthClientSecret {
+        pub fn builder() -> builder::OAuthClientSecret {
+            Default::default()
+        }
+    }
+
+    /// OAuthProviderInfo
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "auth_url_endpoint",
+    ///    "client_id",
+    ///    "device_code_endpoint",
+    ///    "provider",
+    ///    "scopes",
+    ///    "token_endpoint"
+    ///  ],
+    ///  "properties": {
+    ///    "auth_url_endpoint": {
+    ///      "type": "string"
+    ///    },
+    ///    "client_id": {
+    ///      "type": "string"
+    ///    },
+    ///    "device_code_endpoint": {
+    ///      "type": "string"
+    ///    },
+    ///    "provider": {
+    ///      "$ref": "#/components/schemas/OAuthProviderName"
+    ///    },
+    ///    "scopes": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "type": "string"
+    ///      }
+
+    ///    },
+    ///    "token_endpoint": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct OAuthProviderInfo {
+        pub auth_url_endpoint: String,
+        pub client_id: String,
+        pub device_code_endpoint: String,
+        pub provider: OAuthProviderName,
+        pub scopes: Vec<String>,
+        pub token_endpoint: String,
+    }
+
+    impl From<&OAuthProviderInfo> for OAuthProviderInfo {
+        fn from(value: &OAuthProviderInfo) -> Self {
+            value.clone()
+        }
+    }
+
+    impl OAuthProviderInfo {
+        pub fn builder() -> builder::OAuthProviderInfo {
+            Default::default()
+        }
+    }
+
+    /// OAuthProviderName
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "github",
+    ///    "google"
+    ///  ]
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    pub enum OAuthProviderName {
+        #[serde(rename = "github")]
+        Github,
+        #[serde(rename = "google")]
+        Google,
+    }
+
+    impl From<&OAuthProviderName> for OAuthProviderName {
+        fn from(value: &OAuthProviderName) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ::std::fmt::Display for OAuthProviderName {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Github => write!(f, "github"),
+                Self::Google => write!(f, "google"),
+            }
+        }
+    }
+
+    impl std::str::FromStr for OAuthProviderName {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> Result<Self, self::error::ConversionError> {
+            match value {
+                "github" => Ok(Self::Github),
+                "google" => Ok(Self::Google),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for OAuthProviderName {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for OAuthProviderName {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &String) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for OAuthProviderName {
+        type Error = self::error::ConversionError;
+        fn try_from(value: String) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    /// OpenIdConfiguration
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "jwks_uri"
+    ///  ],
+    ///  "properties": {
+    ///    "jwks_uri": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct OpenIdConfiguration {
+        pub jwks_uri: String,
+    }
+
+    impl From<&OpenIdConfiguration> for OpenIdConfiguration {
+        fn from(value: &OpenIdConfiguration) -> Self {
+            value.clone()
+        }
+    }
+
+    impl OpenIdConfiguration {
+        pub fn builder() -> builder::OpenIdConfiguration {
+            Default::default()
+        }
+    }
+
+    /// PermissionsForRfdPermission
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "array",
+    ///  "items": {
+    ///    "$ref": "#/components/schemas/RfdPermission"
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct PermissionsForRfdPermission(pub Vec<RfdPermission>);
+    impl ::std::ops::Deref for PermissionsForRfdPermission {
+        type Target = Vec<RfdPermission>;
+        fn deref(&self) -> &Vec<RfdPermission> {
+            &self.0
+        }
+    }
+
+    impl From<PermissionsForRfdPermission> for Vec<RfdPermission> {
+        fn from(value: PermissionsForRfdPermission) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&PermissionsForRfdPermission> for PermissionsForRfdPermission {
+        fn from(value: &PermissionsForRfdPermission) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<Vec<RfdPermission>> for PermissionsForRfdPermission {
+        fn from(value: Vec<RfdPermission>) -> Self {
+            Self(value)
+        }
+    }
+
+    /// ReserveRfdBody
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "title"
+    ///  ],
+    ///  "properties": {
+    ///    "content": {
+    ///      "description": "Optional contents of the RFD",
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "title": {
+    ///      "description": "Title of the RFD",
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct ReserveRfdBody {
+        /// Optional contents of the RFD
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub content: Option<String>,
+        /// Title of the RFD
+        pub title: String,
+    }
+
+    impl From<&ReserveRfdBody> for ReserveRfdBody {
+        fn from(value: &ReserveRfdBody) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ReserveRfdBody {
+        pub fn builder() -> builder::ReserveRfdBody {
+            Default::default()
+        }
+    }
+
+    /// ReserveRfdResponse
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "number"
+    ///  ],
+    ///  "properties": {
+    ///    "number": {
+    ///      "type": "integer",
+    ///      "format": "int32"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct ReserveRfdResponse {
+        pub number: i32,
+    }
+
+    impl From<&ReserveRfdResponse> for ReserveRfdResponse {
+        fn from(value: &ReserveRfdResponse) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ReserveRfdResponse {
+        pub fn builder() -> builder::ReserveRfdResponse {
+            Default::default()
+        }
+    }
+
+    /// Rfd
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "created_at",
+    ///    "id",
+    ///    "rfd_number",
+    ///    "updated_at",
+    ///    "visibility"
+    ///  ],
+    ///  "properties": {
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForRfdId"
+    ///    },
+    ///    "link": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "rfd_number": {
+    ///      "type": "integer",
+    ///      "format": "int32"
+    ///    },
+    ///    "updated_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "visibility": {
+    ///      "$ref": "#/components/schemas/Visibility"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct Rfd {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub id: TypedUuidForRfdId,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub link: Option<String>,
+        pub rfd_number: i32,
+        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
+        pub visibility: Visibility,
+    }
+
+    impl From<&Rfd> for Rfd {
+        fn from(value: &Rfd) -> Self {
+            value.clone()
+        }
+    }
+
+    impl Rfd {
+        pub fn builder() -> builder::Rfd {
+            Default::default()
+        }
+    }
+
+    /// RfdAttr
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "oneOf": [
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "discussion"
+    ///      ],
+    ///      "properties": {
+    ///        "discussion": {
+    ///          "type": "string"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "labels"
+    ///      ],
+    ///      "properties": {
+    ///        "labels": {
+    ///          "type": "string"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "state"
+    ///      ],
+    ///      "properties": {
+    ///        "state": {
+    ///          "$ref": "#/components/schemas/RfdState"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    }
+
+    ///  ]
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub enum RfdAttr {
+        #[serde(rename = "discussion")]
+        Discussion(String),
+        #[serde(rename = "labels")]
+        Labels(String),
+        #[serde(rename = "state")]
+        State(RfdState),
+    }
+
+    impl From<&RfdAttr> for RfdAttr {
+        fn from(value: &RfdAttr) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<RfdState> for RfdAttr {
+        fn from(value: RfdState) -> Self {
+            Self::State(value)
+        }
+    }
+
+    /// RfdAttrName
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "discussion",
+    ///    "labels",
+    ///    "state"
+    ///  ]
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    pub enum RfdAttrName {
+        #[serde(rename = "discussion")]
+        Discussion,
+        #[serde(rename = "labels")]
+        Labels,
+        #[serde(rename = "state")]
+        State,
+    }
+
+    impl From<&RfdAttrName> for RfdAttrName {
+        fn from(value: &RfdAttrName) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ::std::fmt::Display for RfdAttrName {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Discussion => write!(f, "discussion"),
+                Self::Labels => write!(f, "labels"),
+                Self::State => write!(f, "state"),
+            }
+        }
+    }
+
+    impl std::str::FromStr for RfdAttrName {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> Result<Self, self::error::ConversionError> {
+            match value {
+                "discussion" => Ok(Self::Discussion),
+                "labels" => Ok(Self::Labels),
+                "state" => Ok(Self::State),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for RfdAttrName {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for RfdAttrName {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &String) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for RfdAttrName {
+        type Error = self::error::ConversionError;
+        fn try_from(value: String) -> Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    /// RfdAttrValue
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "value"
+    ///  ],
+    ///  "properties": {
+    ///    "message": {
+    ///      "description": "Optional Git commit message to send with this
+    /// update (recommended)",
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "value": {
+    ///      "description": "Full value to set this attribute to in the existing
+    /// RFD contents",
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct RfdAttrValue {
+        /// Optional Git commit message to send with this update (recommended)
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        pub message: Option<String>,
+        /// Full value to set this attribute to in the existing RFD contents
+        pub value: String,
+    }
+
+    impl From<&RfdAttrValue> for RfdAttrValue {
+        fn from(value: &RfdAttrValue) -> Self {
+            value.clone()
+        }
+    }
+
+    impl RfdAttrValue {
+        pub fn builder() -> builder::RfdAttrValue {
+            Default::default()
+        }
+    }
+
+    /// RfdPermission
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -402,34 +3716,6 @@ pub mod types {
     ///    {
     ///      "type": "string",
     ///      "enum": [
-    ///        "CreateApiUserTokenSelf",
-    ///        "CreateApiUserTokenAssigned",
-    ///        "CreateApiUserTokenAll",
-    ///        "GetApiUserSelf",
-    ///        "GetApiUserAssigned",
-    ///        "GetApiUserAll",
-    ///        "GetApiUserTokenSelf",
-    ///        "GetApiUserTokenAssigned",
-    ///        "GetApiUserTokenAll",
-    ///        "DeleteApiUserTokenSelf",
-    ///        "DeleteApiUserTokenAssigned",
-    ///        "DeleteApiUserTokenAll",
-    ///        "CreateApiUser",
-    ///        "UpdateApiUserSelf",
-    ///        "UpdateApiUserAssigned",
-    ///        "UpdateApiUserAll",
-    ///        "CreateUserApiProviderLinkToken",
-    ///        "GetGroupsJoined",
-    ///        "GetGroupsAll",
-    ///        "CreateGroup",
-    ///        "ManageGroupMembershipAssigned",
-    ///        "ManageGroupMembershipAll",
-    ///        "ManageGroupsAssigned",
-    ///        "ManageGroupsAll",
-    ///        "ListMappers",
-    ///        "CreateMapper",
-    ///        "ManageMappersAssigned",
-    ///        "ManageMappersAll",
     ///        "GetRfdsAssigned",
     ///        "GetRfdsAll",
     ///        "CreateRfd",
@@ -440,266 +3726,44 @@ pub mod types {
     ///        "GetDiscussionsAssigned",
     ///        "GetDiscussionsAll",
     ///        "SearchRfds",
+    ///        "CreateApiUser",
+    ///        "GetApiUserSelf",
+    ///        "GetApiUsersAssigned",
+    ///        "GetApiUsersAll",
+    ///        "ManageApiUsersAssigned",
+    ///        "ManageApiUsersAll",
+    ///        "CreateApiKeySelf",
+    ///        "CreateApiKeyAssigned",
+    ///        "CreateApiKeyAll",
+    ///        "GetApiKeysAssigned",
+    ///        "GetApiKeysAll",
+    ///        "ManageApiKeysAssigned",
+    ///        "ManageApiKeysAll",
+    ///        "CreateUserApiProviderLinkToken",
+    ///        "CreateGroup",
+    ///        "GetGroupsJoined",
+    ///        "GetGroupsAll",
+    ///        "ManageGroupsAssigned",
+    ///        "ManageGroupsAll",
+    ///        "ManageGroupMembershipsAssigned",
+    ///        "ManageGroupMembershipsAll",
+    ///        "CreateMapper",
+    ///        "GetMappersAll",
+    ///        "ManageMappersAssigned",
+    ///        "ManageMappersAll",
     ///        "CreateOAuthClient",
     ///        "GetOAuthClientsAssigned",
     ///        "GetOAuthClientsAll",
-    ///        "UpdateOAuthClientsAssigned",
-    ///        "UpdateOAuthClientsAll",
-    ///        "DeleteOAuthClientsAssigned",
-    ///        "DeleteOAuthClientsAll",
+    ///        "ManageOAuthClientsAssigned",
+    ///        "ManageOAuthClientsAll",
+    ///        "CreateMagicLinkClient",
+    ///        "GetMagicLinkClientsAssigned",
+    ///        "GetMagicLinkClientsAll",
+    ///        "ManageMagicLinkClientsAssigned",
+    ///        "ManageMagicLinkClientsAll",
     ///        "CreateAccessToken",
     ///        "Removed"
     ///      ]
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "CreateApiUserToken"
-    ///      ],
-    ///      "properties": {
-    ///        "CreateApiUserToken": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "GetApiUser"
-    ///      ],
-    ///      "properties": {
-    ///        "GetApiUser": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "GetApiUserToken"
-    ///      ],
-    ///      "properties": {
-    ///        "GetApiUserToken": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "DeleteApiUserToken"
-    ///      ],
-    ///      "properties": {
-    ///        "DeleteApiUserToken": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "UpdateApiUser"
-    ///      ],
-    ///      "properties": {
-    ///        "UpdateApiUser": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "UpdateGroup"
-    ///      ],
-    ///      "properties": {
-    ///        "UpdateGroup": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "AddToGroup"
-    ///      ],
-    ///      "properties": {
-    ///        "AddToGroup": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "RemoveFromGroup"
-    ///      ],
-    ///      "properties": {
-    ///        "RemoveFromGroup": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageGroupMembership"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageGroupMembership": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageGroupMemberships"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageGroupMemberships": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "string",
-    ///            "format": "uuid"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "DeleteGroup"
-    ///      ],
-    ///      "properties": {
-    ///        "DeleteGroup": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageGroup"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageGroup": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageGroups"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageGroups": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "string",
-    ///            "format": "uuid"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "UpdateMapper"
-    ///      ],
-    ///      "properties": {
-    ///        "UpdateMapper": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "DeleteMapper"
-    ///      ],
-    ///      "properties": {
-    ///        "DeleteMapper": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageMapper"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageMapper": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageMappers"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageMappers": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "string",
-    ///            "format": "uuid"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
     ///    },
     ///    {
     ///      "type": "object",
@@ -832,12 +3896,247 @@ pub mod types {
     ///    {
     ///      "type": "object",
     ///      "required": [
+    ///        "GetApiUser"
+    ///      ],
+    ///      "properties": {
+    ///        "GetApiUser": {
+    ///          "$ref": "#/components/schemas/TypedUuidForUserId"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "GetApiUsers"
+    ///      ],
+    ///      "properties": {
+    ///        "GetApiUsers": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "$ref": "#/components/schemas/TypedUuidForUserId"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "ManageApiUser"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageApiUser": {
+    ///          "$ref": "#/components/schemas/TypedUuidForUserId"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "ManageApiUsers"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageApiUsers": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "$ref": "#/components/schemas/TypedUuidForUserId"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "CreateApiKey"
+    ///      ],
+    ///      "properties": {
+    ///        "CreateApiKey": {
+    ///          "$ref": "#/components/schemas/TypedUuidForUserId"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "GetApiKey"
+    ///      ],
+    ///      "properties": {
+    ///        "GetApiKey": {
+    ///          "$ref": "#/components/schemas/TypedUuidForApiKeyId"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "GetApiKeys"
+    ///      ],
+    ///      "properties": {
+    ///        "GetApiKeys": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "$ref": "#/components/schemas/TypedUuidForApiKeyId"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "ManageApiKey"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageApiKey": {
+    ///          "$ref": "#/components/schemas/TypedUuidForApiKeyId"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "ManageApiKeys"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageApiKeys": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "$ref": "#/components/schemas/TypedUuidForApiKeyId"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "GetGroup"
+    ///      ],
+    ///      "properties": {
+    ///        "GetGroup": {
+    ///          "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "ManageGroup"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageGroup": {
+    ///          "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "ManageGroups"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageGroups": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "ManageGroupMembership"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageGroupMembership": {
+    ///          "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "ManageGroupMemberships"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageGroupMemberships": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "ManageMapper"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageMapper": {
+    ///          "$ref": "#/components/schemas/TypedUuidForMapperId"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "ManageMappers"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageMappers": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "$ref": "#/components/schemas/TypedUuidForMapperId"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
     ///        "GetOAuthClient"
     ///      ],
     ///      "properties": {
     ///        "GetOAuthClient": {
-    ///          "type": "string",
-    ///          "format": "uuid"
+    ///          "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
     ///        }
 
     ///      },
@@ -852,8 +4151,7 @@ pub mod types {
     ///        "GetOAuthClients": {
     ///          "type": "array",
     ///          "items": {
-    ///            "type": "string",
-    ///            "format": "uuid"
+    ///            "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
     ///          },
     ///          "uniqueItems": true
     ///        }
@@ -864,12 +4162,11 @@ pub mod types {
     ///    {
     ///      "type": "object",
     ///      "required": [
-    ///        "UpdateOAuthClient"
+    ///        "ManageOAuthClient"
     ///      ],
     ///      "properties": {
-    ///        "UpdateOAuthClient": {
-    ///          "type": "string",
-    ///          "format": "uuid"
+    ///        "ManageOAuthClient": {
+    ///          "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
     ///        }
 
     ///      },
@@ -878,14 +4175,13 @@ pub mod types {
     ///    {
     ///      "type": "object",
     ///      "required": [
-    ///        "UpdateOAuthClients"
+    ///        "ManageOAuthClients"
     ///      ],
     ///      "properties": {
-    ///        "UpdateOAuthClients": {
+    ///        "ManageOAuthClients": {
     ///          "type": "array",
     ///          "items": {
-    ///            "type": "string",
-    ///            "format": "uuid"
+    ///            "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
     ///          },
     ///          "uniqueItems": true
     ///        }
@@ -896,12 +4192,11 @@ pub mod types {
     ///    {
     ///      "type": "object",
     ///      "required": [
-    ///        "DeleteOAuthClient"
+    ///        "GetMagicLinkClient"
     ///      ],
     ///      "properties": {
-    ///        "DeleteOAuthClient": {
-    ///          "type": "string",
-    ///          "format": "uuid"
+    ///        "GetMagicLinkClient": {
+    ///          "$ref": "#/components/schemas/TypedUuidForMagicLinkId"
     ///        }
 
     ///      },
@@ -910,14 +4205,43 @@ pub mod types {
     ///    {
     ///      "type": "object",
     ///      "required": [
-    ///        "DeleteOAuthClients"
+    ///        "GetMagicLinkClients"
     ///      ],
     ///      "properties": {
-    ///        "DeleteOAuthClients": {
+    ///        "GetMagicLinkClients": {
     ///          "type": "array",
     ///          "items": {
-    ///            "type": "string",
-    ///            "format": "uuid"
+    ///            "$ref": "#/components/schemas/TypedUuidForMagicLinkId"
+    ///          },
+    ///          "uniqueItems": true
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "ManageMagicLinkClient"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageMagicLinkClient": {
+    ///          "$ref": "#/components/schemas/TypedUuidForMagicLinkId"
+    ///        }
+
+    ///      },
+    ///      "additionalProperties": false
+    ///    },
+    ///    {
+    ///      "type": "object",
+    ///      "required": [
+    ///        "ManageMagicLinkClients"
+    ///      ],
+    ///      "properties": {
+    ///        "ManageMagicLinkClients": {
+    ///          "type": "array",
+    ///          "items": {
+    ///            "$ref": "#/components/schemas/TypedUuidForMagicLinkId"
     ///          },
     ///          "uniqueItems": true
     ///        }
@@ -931,36 +4255,10 @@ pub mod types {
 
     /// ```
     /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub enum ApiPermission {
-        CreateApiUserTokenSelf,
-        CreateApiUserTokenAssigned,
-        CreateApiUserTokenAll,
-        GetApiUserSelf,
-        GetApiUserAssigned,
-        GetApiUserAll,
-        GetApiUserTokenSelf,
-        GetApiUserTokenAssigned,
-        GetApiUserTokenAll,
-        DeleteApiUserTokenSelf,
-        DeleteApiUserTokenAssigned,
-        DeleteApiUserTokenAll,
-        CreateApiUser,
-        UpdateApiUserSelf,
-        UpdateApiUserAssigned,
-        UpdateApiUserAll,
-        CreateUserApiProviderLinkToken,
-        GetGroupsJoined,
-        GetGroupsAll,
-        CreateGroup,
-        ManageGroupMembershipAssigned,
-        ManageGroupMembershipAll,
-        ManageGroupsAssigned,
-        ManageGroupsAll,
-        ListMappers,
-        CreateMapper,
-        ManageMappersAssigned,
-        ManageMappersAll,
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub enum RfdPermission {
         GetRfdsAssigned,
         GetRfdsAll,
         CreateRfd,
@@ -971,4412 +4269,92 @@ pub mod types {
         GetDiscussionsAssigned,
         GetDiscussionsAll,
         SearchRfds,
-        CreateOAuthClient,
-        GetOAuthClientsAssigned,
-        GetOAuthClientsAll,
-        UpdateOAuthClientsAssigned,
-        UpdateOAuthClientsAll,
-        DeleteOAuthClientsAssigned,
-        DeleteOAuthClientsAll,
-        CreateAccessToken,
-        Removed,
-        CreateApiUserToken(uuid::Uuid),
-        GetApiUser(uuid::Uuid),
-        GetApiUserToken(uuid::Uuid),
-        DeleteApiUserToken(uuid::Uuid),
-        UpdateApiUser(uuid::Uuid),
-        UpdateGroup(uuid::Uuid),
-        AddToGroup(uuid::Uuid),
-        RemoveFromGroup(uuid::Uuid),
-        ManageGroupMembership(uuid::Uuid),
-        ManageGroupMemberships(Vec<uuid::Uuid>),
-        DeleteGroup(uuid::Uuid),
-        ManageGroup(uuid::Uuid),
-        ManageGroups(Vec<uuid::Uuid>),
-        UpdateMapper(uuid::Uuid),
-        DeleteMapper(uuid::Uuid),
-        ManageMapper(uuid::Uuid),
-        ManageMappers(Vec<uuid::Uuid>),
-        GetRfd(i32),
-        GetRfds(Vec<i32>),
-        UpdateRfd(i32),
-        UpdateRfds(Vec<i32>),
-        ManageRfdVisibility(i32),
-        ManageRfdsVisibility(Vec<i32>),
-        GetDiscussion(i32),
-        GetDiscussions(Vec<i32>),
-        GetOAuthClient(uuid::Uuid),
-        GetOAuthClients(Vec<uuid::Uuid>),
-        UpdateOAuthClient(uuid::Uuid),
-        UpdateOAuthClients(Vec<uuid::Uuid>),
-        DeleteOAuthClient(uuid::Uuid),
-        DeleteOAuthClients(Vec<uuid::Uuid>),
-    }
-
-    impl From<&ApiPermission> for ApiPermission {
-        fn from(value: &ApiPermission) -> Self {
-            value.clone()
-        }
-    }
-
-    /// ApiPermissionResponse
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "oneOf": [
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "CreateApiUserToken"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "CreateApiUserTokenSelf"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "CreateApiUserTokenAssigned"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "CreateApiUserTokenAll"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetApiUser"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetApiUserSelf"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetApiUserAssigned"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetApiUserAll"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetApiUserToken"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetApiUserTokenSelf"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetApiUserTokenAssigned"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetApiUserTokenAll"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "DeleteApiUserToken"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "DeleteApiUserTokenSelf"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "DeleteApiUserTokenAssigned"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "DeleteApiUserTokenAll"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "CreateApiUser"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "UpdateApiUser"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "UpdateApiUserSelf"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "UpdateApiUserAssigned"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "UpdateApiUserAll"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "CreateUserApiProviderLinkToken"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetGroupsJoined"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetGroupsAll"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "CreateGroup"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "UpdateGroup"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "AddToGroup"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "RemoveFromGroup"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "ManageGroupMembership"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "ManageGroupMemberships"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "string",
-    ///            "format": "uuid"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "ManageGroupMembershipAssigned"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "ManageGroupMembershipAll"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "DeleteGroup"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "ManageGroup"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "ManageGroups"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "string",
-    ///            "format": "uuid"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "ManageGroupsAssigned"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "ManageGroupsAll"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "ListMappers"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "CreateMapper"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "UpdateMapper"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "DeleteMapper"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "ManageMapper"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "ManageMappers"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "string",
-    ///            "format": "uuid"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "ManageMappersAssigned"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "ManageMappersAll"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetRfd"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "integer",
-    ///          "format": "int32"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetRfds"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "integer",
-    ///            "format": "int32"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetRfdsAssigned"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetRfdsAll"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "CreateRfd"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "UpdateRfd"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "integer",
-    ///          "format": "int32"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "UpdateRfds"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "integer",
-    ///            "format": "int32"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "UpdateRfdsAssigned"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "UpdateRfdsAll"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "ManageRfdVisibility"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "integer",
-    ///          "format": "int32"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "ManageRfdsVisibility"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "integer",
-    ///            "format": "int32"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "ManageRfdsVisibilityAssigned"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "ManageRfdsVisibilityAll"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetDiscussion"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "integer",
-    ///          "format": "int32"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetDiscussions"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "integer",
-    ///            "format": "int32"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetDiscussionsAssigned"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetDiscussionsAll"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "SearchRfds"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "CreateOAuthClient"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetOAuthClient"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetOAuthClients"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "string",
-    ///            "format": "uuid"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetOAuthClientsAssigned"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "GetOAuthClientsAll"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "UpdateOAuthClient"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "UpdateOAuthClients"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "string",
-    ///            "format": "uuid"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "UpdateOAuthClientsAssigned"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "UpdateOAuthClientsAll"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "DeleteOAuthClient"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "string",
-    ///          "format": "uuid"
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind",
-    ///        "value"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "DeleteOAuthClients"
-    ///          ]
-    ///        },
-    ///        "value": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "string",
-    ///            "format": "uuid"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "DeleteOAuthClientsAssigned"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "DeleteOAuthClientsAll"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "CreateAccessToken"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "kind"
-    ///      ],
-    ///      "properties": {
-    ///        "kind": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "Removed"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    }
-
-    ///  ]
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    #[serde(tag = "kind", content = "value")]
-    pub enum ApiPermissionResponse {
-        CreateApiUserToken(uuid::Uuid),
-        CreateApiUserTokenSelf,
-        CreateApiUserTokenAssigned,
-        CreateApiUserTokenAll,
-        GetApiUser(uuid::Uuid),
-        GetApiUserSelf,
-        GetApiUserAssigned,
-        GetApiUserAll,
-        GetApiUserToken(uuid::Uuid),
-        GetApiUserTokenSelf,
-        GetApiUserTokenAssigned,
-        GetApiUserTokenAll,
-        DeleteApiUserToken(uuid::Uuid),
-        DeleteApiUserTokenSelf,
-        DeleteApiUserTokenAssigned,
-        DeleteApiUserTokenAll,
         CreateApiUser,
-        UpdateApiUser(uuid::Uuid),
-        UpdateApiUserSelf,
-        UpdateApiUserAssigned,
-        UpdateApiUserAll,
+        GetApiUserSelf,
+        GetApiUsersAssigned,
+        GetApiUsersAll,
+        ManageApiUsersAssigned,
+        ManageApiUsersAll,
+        CreateApiKeySelf,
+        CreateApiKeyAssigned,
+        CreateApiKeyAll,
+        GetApiKeysAssigned,
+        GetApiKeysAll,
+        ManageApiKeysAssigned,
+        ManageApiKeysAll,
         CreateUserApiProviderLinkToken,
+        CreateGroup,
         GetGroupsJoined,
         GetGroupsAll,
-        CreateGroup,
-        UpdateGroup(uuid::Uuid),
-        AddToGroup(uuid::Uuid),
-        RemoveFromGroup(uuid::Uuid),
-        ManageGroupMembership(uuid::Uuid),
-        ManageGroupMemberships(Vec<uuid::Uuid>),
-        ManageGroupMembershipAssigned,
-        ManageGroupMembershipAll,
-        DeleteGroup(uuid::Uuid),
-        ManageGroup(uuid::Uuid),
-        ManageGroups(Vec<uuid::Uuid>),
         ManageGroupsAssigned,
         ManageGroupsAll,
-        ListMappers,
+        ManageGroupMembershipsAssigned,
+        ManageGroupMembershipsAll,
         CreateMapper,
-        UpdateMapper(uuid::Uuid),
-        DeleteMapper(uuid::Uuid),
-        ManageMapper(uuid::Uuid),
-        ManageMappers(Vec<uuid::Uuid>),
+        GetMappersAll,
         ManageMappersAssigned,
         ManageMappersAll,
-        GetRfd(i32),
-        GetRfds(Vec<i32>),
-        GetRfdsAssigned,
-        GetRfdsAll,
-        CreateRfd,
-        UpdateRfd(i32),
-        UpdateRfds(Vec<i32>),
-        UpdateRfdsAssigned,
-        UpdateRfdsAll,
-        ManageRfdVisibility(i32),
-        ManageRfdsVisibility(Vec<i32>),
-        ManageRfdsVisibilityAssigned,
-        ManageRfdsVisibilityAll,
-        GetDiscussion(i32),
-        GetDiscussions(Vec<i32>),
-        GetDiscussionsAssigned,
-        GetDiscussionsAll,
-        SearchRfds,
         CreateOAuthClient,
-        GetOAuthClient(uuid::Uuid),
-        GetOAuthClients(Vec<uuid::Uuid>),
         GetOAuthClientsAssigned,
         GetOAuthClientsAll,
-        UpdateOAuthClient(uuid::Uuid),
-        UpdateOAuthClients(Vec<uuid::Uuid>),
-        UpdateOAuthClientsAssigned,
-        UpdateOAuthClientsAll,
-        DeleteOAuthClient(uuid::Uuid),
-        DeleteOAuthClients(Vec<uuid::Uuid>),
-        DeleteOAuthClientsAssigned,
-        DeleteOAuthClientsAll,
+        ManageOAuthClientsAssigned,
+        ManageOAuthClientsAll,
+        CreateMagicLinkClient,
+        GetMagicLinkClientsAssigned,
+        GetMagicLinkClientsAll,
+        ManageMagicLinkClientsAssigned,
+        ManageMagicLinkClientsAll,
         CreateAccessToken,
         Removed,
+        GetRfd(i32),
+        GetRfds(Vec<i32>),
+        UpdateRfd(i32),
+        UpdateRfds(Vec<i32>),
+        ManageRfdVisibility(i32),
+        ManageRfdsVisibility(Vec<i32>),
+        GetDiscussion(i32),
+        GetDiscussions(Vec<i32>),
+        GetApiUser(TypedUuidForUserId),
+        GetApiUsers(Vec<TypedUuidForUserId>),
+        ManageApiUser(TypedUuidForUserId),
+        ManageApiUsers(Vec<TypedUuidForUserId>),
+        CreateApiKey(TypedUuidForUserId),
+        GetApiKey(TypedUuidForApiKeyId),
+        GetApiKeys(Vec<TypedUuidForApiKeyId>),
+        ManageApiKey(TypedUuidForApiKeyId),
+        ManageApiKeys(Vec<TypedUuidForApiKeyId>),
+        GetGroup(TypedUuidForAccessGroupId),
+        ManageGroup(TypedUuidForAccessGroupId),
+        ManageGroups(Vec<TypedUuidForAccessGroupId>),
+        ManageGroupMembership(TypedUuidForAccessGroupId),
+        ManageGroupMemberships(Vec<TypedUuidForAccessGroupId>),
+        ManageMapper(TypedUuidForMapperId),
+        ManageMappers(Vec<TypedUuidForMapperId>),
+        GetOAuthClient(TypedUuidForOAuthClientId),
+        GetOAuthClients(Vec<TypedUuidForOAuthClientId>),
+        ManageOAuthClient(TypedUuidForOAuthClientId),
+        ManageOAuthClients(Vec<TypedUuidForOAuthClientId>),
+        GetMagicLinkClient(TypedUuidForMagicLinkId),
+        GetMagicLinkClients(Vec<TypedUuidForMagicLinkId>),
+        ManageMagicLinkClient(TypedUuidForMagicLinkId),
+        ManageMagicLinkClients(Vec<TypedUuidForMagicLinkId>),
     }
 
-    impl From<&ApiPermissionResponse> for ApiPermissionResponse {
-        fn from(value: &ApiPermissionResponse) -> Self {
+    impl From<&RfdPermission> for RfdPermission {
+        fn from(value: &RfdPermission) -> Self {
             value.clone()
         }
     }
 
-    /// ApiUserForApiPermissionResponse
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "groups",
-    ///    "id",
-    ///    "permissions",
-    ///    "updated_at"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "groups": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": "string",
-    ///        "format": "uuid"
-    ///      },
-    ///      "uniqueItems": true
-    ///    },
-    ///    "id": {
-    ///      "type": "string",
-    ///      "format": "uuid"
-    ///    },
-    ///    "permissions": {
-    ///      "$ref":
-    /// "#/components/schemas/Permissions_for_ApiPermissionResponse"
-    ///    },
-    ///    "updated_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct ApiUserForApiPermissionResponse {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
-        pub groups: Vec<uuid::Uuid>,
-        pub id: uuid::Uuid,
-        pub permissions: PermissionsForApiPermissionResponse,
-        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
-    }
-
-    impl From<&ApiUserForApiPermissionResponse> for ApiUserForApiPermissionResponse {
-        fn from(value: &ApiUserForApiPermissionResponse) -> Self {
-            value.clone()
-        }
-    }
-
-    impl ApiUserForApiPermissionResponse {
-        pub fn builder() -> builder::ApiUserForApiPermissionResponse {
-            Default::default()
-        }
-    }
-
-    /// ApiUserProvider
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "api_user_id",
-    ///    "created_at",
-    ///    "display_names",
-    ///    "emails",
-    ///    "id",
-    ///    "provider",
-    ///    "provider_id",
-    ///    "updated_at"
-    ///  ],
-    ///  "properties": {
-    ///    "api_user_id": {
-    ///      "type": "string",
-    ///      "format": "uuid"
-    ///    },
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "display_names": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": "string"
-    ///      }
-
-    ///    },
-    ///    "emails": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": "string"
-    ///      }
-
-    ///    },
-    ///    "id": {
-    ///      "type": "string",
-    ///      "format": "uuid"
-    ///    },
-    ///    "provider": {
-    ///      "type": "string"
-    ///    },
-    ///    "provider_id": {
-    ///      "type": "string"
-    ///    },
-    ///    "updated_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct ApiUserProvider {
-        pub api_user_id: uuid::Uuid,
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
-        pub display_names: Vec<String>,
-        pub emails: Vec<String>,
-        pub id: uuid::Uuid,
-        pub provider: String,
-        pub provider_id: String,
-        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
-    }
-
-    impl From<&ApiUserProvider> for ApiUserProvider {
-        fn from(value: &ApiUserProvider) -> Self {
-            value.clone()
-        }
-    }
-
-    impl ApiUserProvider {
-        pub fn builder() -> builder::ApiUserProvider {
-            Default::default()
-        }
-    }
-
-    /// ApiUserUpdateParams
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "groups",
-    ///    "permissions"
-    ///  ],
-    ///  "properties": {
-    ///    "groups": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": "string",
-    ///        "format": "uuid"
-    ///      },
-    ///      "uniqueItems": true
-    ///    },
-    ///    "permissions": {
-    ///      "$ref": "#/components/schemas/Permissions_for_ApiPermission"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct ApiUserUpdateParams {
-        pub groups: Vec<uuid::Uuid>,
-        pub permissions: PermissionsForApiPermission,
-    }
-
-    impl From<&ApiUserUpdateParams> for ApiUserUpdateParams {
-        fn from(value: &ApiUserUpdateParams) -> Self {
-            value.clone()
-        }
-    }
-
-    impl ApiUserUpdateParams {
-        pub fn builder() -> builder::ApiUserUpdateParams {
-            Default::default()
-        }
-    }
-
-    /// CommitSha
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string"
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(
-        Clone,
-        Debug,
-        Deserialize,
-        Eq,
-        Hash,
-        Ord,
-        PartialEq,
-        PartialOrd,
-        Serialize,
-        schemars :: JsonSchema,
-    )]
-    pub struct CommitSha(pub String);
-    impl std::ops::Deref for CommitSha {
-        type Target = String;
-        fn deref(&self) -> &String {
-            &self.0
-        }
-    }
-
-    impl From<CommitSha> for String {
-        fn from(value: CommitSha) -> Self {
-            value.0
-        }
-    }
-
-    impl From<&CommitSha> for CommitSha {
-        fn from(value: &CommitSha) -> Self {
-            value.clone()
-        }
-    }
-
-    impl From<String> for CommitSha {
-        fn from(value: String) -> Self {
-            Self(value)
-        }
-    }
-
-    impl std::str::FromStr for CommitSha {
-        type Err = std::convert::Infallible;
-        fn from_str(value: &str) -> Result<Self, Self::Err> {
-            Ok(Self(value.to_string()))
-        }
-    }
-
-    impl ToString for CommitSha {
-        fn to_string(&self) -> String {
-            self.0.to_string()
-        }
-    }
-
-    /// ContentFormat
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "enum": [
-    ///    "asciidoc",
-    ///    "markdown"
-    ///  ]
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        Deserialize,
-        Eq,
-        Hash,
-        Ord,
-        PartialEq,
-        PartialOrd,
-        Serialize,
-        schemars :: JsonSchema,
-    )]
-    pub enum ContentFormat {
-        #[serde(rename = "asciidoc")]
-        Asciidoc,
-        #[serde(rename = "markdown")]
-        Markdown,
-    }
-
-    impl From<&ContentFormat> for ContentFormat {
-        fn from(value: &ContentFormat) -> Self {
-            value.clone()
-        }
-    }
-
-    impl ToString for ContentFormat {
-        fn to_string(&self) -> String {
-            match *self {
-                Self::Asciidoc => "asciidoc".to_string(),
-                Self::Markdown => "markdown".to_string(),
-            }
-        }
-    }
-
-    impl std::str::FromStr for ContentFormat {
-        type Err = self::error::ConversionError;
-        fn from_str(value: &str) -> Result<Self, self::error::ConversionError> {
-            match value {
-                "asciidoc" => Ok(Self::Asciidoc),
-                "markdown" => Ok(Self::Markdown),
-                _ => Err("invalid value".into()),
-            }
-        }
-    }
-
-    impl std::convert::TryFrom<&str> for ContentFormat {
-        type Error = self::error::ConversionError;
-        fn try_from(value: &str) -> Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-
-    impl std::convert::TryFrom<&String> for ContentFormat {
-        type Error = self::error::ConversionError;
-        fn try_from(value: &String) -> Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-
-    impl std::convert::TryFrom<String> for ContentFormat {
-        type Error = self::error::ConversionError;
-        fn try_from(value: String) -> Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-
-    /// CreateMapper
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "name",
-    ///    "rule"
-    ///  ],
-    ///  "properties": {
-    ///    "max_activations": {
-    ///      "type": [
-    ///        "integer",
-    ///        "null"
-    ///      ],
-    ///      "format": "int32"
-    ///    },
-    ///    "name": {
-    ///      "type": "string"
-    ///    },
-    ///    "rule": {
-    ///      "$ref": "#/components/schemas/MappingRules"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct CreateMapper {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub max_activations: Option<i32>,
-        pub name: String,
-        pub rule: MappingRules,
-    }
-
-    impl From<&CreateMapper> for CreateMapper {
-        fn from(value: &CreateMapper) -> Self {
-            value.clone()
-        }
-    }
-
-    impl CreateMapper {
-        pub fn builder() -> builder::CreateMapper {
-            Default::default()
-        }
-    }
-
-    /// Error information from a response.
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "description": "Error information from a response.",
-    ///  "type": "object",
-    ///  "required": [
-    ///    "message",
-    ///    "request_id"
-    ///  ],
-    ///  "properties": {
-    ///    "error_code": {
-    ///      "type": "string"
-    ///    },
-    ///    "message": {
-    ///      "type": "string"
-    ///    },
-    ///    "request_id": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct Error {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub error_code: Option<String>,
-        pub message: String,
-        pub request_id: String,
-    }
-
-    impl From<&Error> for Error {
-        fn from(value: &Error) -> Self {
-            value.clone()
-        }
-    }
-
-    impl Error {
-        pub fn builder() -> builder::Error {
-            Default::default()
-        }
-    }
-
-    /// FileSha
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string"
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(
-        Clone,
-        Debug,
-        Deserialize,
-        Eq,
-        Hash,
-        Ord,
-        PartialEq,
-        PartialOrd,
-        Serialize,
-        schemars :: JsonSchema,
-    )]
-    pub struct FileSha(pub String);
-    impl std::ops::Deref for FileSha {
-        type Target = String;
-        fn deref(&self) -> &String {
-            &self.0
-        }
-    }
-
-    impl From<FileSha> for String {
-        fn from(value: FileSha) -> Self {
-            value.0
-        }
-    }
-
-    impl From<&FileSha> for FileSha {
-        fn from(value: &FileSha) -> Self {
-            value.clone()
-        }
-    }
-
-    impl From<String> for FileSha {
-        fn from(value: String) -> Self {
-            Self(value)
-        }
-    }
-
-    impl std::str::FromStr for FileSha {
-        type Err = std::convert::Infallible;
-        fn from_str(value: &str) -> Result<Self, Self::Err> {
-            Ok(Self(value.to_string()))
-        }
-    }
-
-    impl ToString for FileSha {
-        fn to_string(&self) -> String {
-            self.0.to_string()
-        }
-    }
-
-    /// FormattedSearchResultHit
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "hierarchy",
-    ///    "hierarchy_radio",
-    ///    "object_id",
-    ///    "rfd_number"
-    ///  ],
-    ///  "properties": {
-    ///    "anchor": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "content": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "hierarchy": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": [
-    ///          "string",
-    ///          "null"
-    ///        ]
-    ///      },
-    ///      "maxItems": 6,
-    ///      "minItems": 6
-    ///    },
-    ///    "hierarchy_radio": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": [
-    ///          "string",
-    ///          "null"
-    ///        ]
-    ///      },
-    ///      "maxItems": 6,
-    ///      "minItems": 6
-    ///    },
-    ///    "object_id": {
-    ///      "type": "string"
-    ///    },
-    ///    "rfd_number": {
-    ///      "type": "integer",
-    ///      "format": "uint64",
-    ///      "minimum": 0.0
-    ///    },
-    ///    "url": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct FormattedSearchResultHit {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub anchor: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub content: Option<String>,
-        pub hierarchy: [Option<String>; 6usize],
-        pub hierarchy_radio: [Option<String>; 6usize],
-        pub object_id: String,
-        pub rfd_number: u64,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub url: Option<String>,
-    }
-
-    impl From<&FormattedSearchResultHit> for FormattedSearchResultHit {
-        fn from(value: &FormattedSearchResultHit) -> Self {
-            value.clone()
-        }
-    }
-
-    impl FormattedSearchResultHit {
-        pub fn builder() -> builder::FormattedSearchResultHit {
-            Default::default()
-        }
-    }
-
-    /// FullRfd
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "commit",
-    ///    "committed_at",
-    ///    "content",
-    ///    "format",
-    ///    "id",
-    ///    "pdfs",
-    ///    "rfd_number",
-    ///    "sha",
-    ///    "title",
-    ///    "visibility"
-    ///  ],
-    ///  "properties": {
-    ///    "authors": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "commit": {
-    ///      "$ref": "#/components/schemas/CommitSha"
-    ///    },
-    ///    "committed_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "content": {
-    ///      "type": "string"
-    ///    },
-    ///    "discussion": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "format": {
-    ///      "$ref": "#/components/schemas/ContentFormat"
-    ///    },
-    ///    "id": {
-    ///      "type": "string",
-    ///      "format": "uuid"
-    ///    },
-    ///    "labels": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "link": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "pdfs": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "$ref": "#/components/schemas/FullRfdPdfEntry"
-    ///      }
-
-    ///    },
-    ///    "rfd_number": {
-    ///      "type": "integer",
-    ///      "format": "int32"
-    ///    },
-    ///    "sha": {
-    ///      "$ref": "#/components/schemas/FileSha"
-    ///    },
-    ///    "state": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "title": {
-    ///      "type": "string"
-    ///    },
-    ///    "visibility": {
-    ///      "$ref": "#/components/schemas/Visibility"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct FullRfd {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub authors: Option<String>,
-        pub commit: CommitSha,
-        pub committed_at: chrono::DateTime<chrono::offset::Utc>,
-        pub content: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub discussion: Option<String>,
-        pub format: ContentFormat,
-        pub id: uuid::Uuid,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub labels: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub link: Option<String>,
-        pub pdfs: Vec<FullRfdPdfEntry>,
-        pub rfd_number: i32,
-        pub sha: FileSha,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub state: Option<String>,
-        pub title: String,
-        pub visibility: Visibility,
-    }
-
-    impl From<&FullRfd> for FullRfd {
-        fn from(value: &FullRfd) -> Self {
-            value.clone()
-        }
-    }
-
-    impl FullRfd {
-        pub fn builder() -> builder::FullRfd {
-            Default::default()
-        }
-    }
-
-    /// FullRfdPdfEntry
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "link",
-    ///    "source"
-    ///  ],
-    ///  "properties": {
-    ///    "link": {
-    ///      "type": "string"
-    ///    },
-    ///    "source": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct FullRfdPdfEntry {
-        pub link: String,
-        pub source: String,
-    }
-
-    impl From<&FullRfdPdfEntry> for FullRfdPdfEntry {
-        fn from(value: &FullRfdPdfEntry) -> Self {
-            value.clone()
-        }
-    }
-
-    impl FullRfdPdfEntry {
-        pub fn builder() -> builder::FullRfdPdfEntry {
-            Default::default()
-        }
-    }
-
-    /// GetUserResponse
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "info",
-    ///    "providers"
-    ///  ],
-    ///  "properties": {
-    ///    "info": {
-    ///      "$ref": "#/components/schemas/ApiUser_for_ApiPermissionResponse"
-    ///    },
-    ///    "providers": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "$ref": "#/components/schemas/ApiUserProvider"
-    ///      }
-
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct GetUserResponse {
-        pub info: ApiUserForApiPermissionResponse,
-        pub providers: Vec<ApiUserProvider>,
-    }
-
-    impl From<&GetUserResponse> for GetUserResponse {
-        fn from(value: &GetUserResponse) -> Self {
-            value.clone()
-        }
-    }
-
-    impl GetUserResponse {
-        pub fn builder() -> builder::GetUserResponse {
-            Default::default()
-        }
-    }
-
-    /// GitHubCommit
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "added",
-    ///    "id",
-    ///    "modified",
-    ///    "removed",
-    ///    "timestamp"
-    ///  ],
-    ///  "properties": {
-    ///    "added": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": "string"
-    ///      }
-
-    ///    },
-    ///    "id": {
-    ///      "type": "string"
-    ///    },
-    ///    "modified": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": "string"
-    ///      }
-
-    ///    },
-    ///    "removed": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": "string"
-    ///      }
-
-    ///    },
-    ///    "timestamp": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct GitHubCommit {
-        pub added: Vec<String>,
-        pub id: String,
-        pub modified: Vec<String>,
-        pub removed: Vec<String>,
-        pub timestamp: chrono::DateTime<chrono::offset::Utc>,
-    }
-
-    impl From<&GitHubCommit> for GitHubCommit {
-        fn from(value: &GitHubCommit) -> Self {
-            value.clone()
-        }
-    }
-
-    impl GitHubCommit {
-        pub fn builder() -> builder::GitHubCommit {
-            Default::default()
-        }
-    }
-
-    /// GitHubCommitPayload
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "commits",
-    ///    "installation",
-    ///    "ref",
-    ///    "repository",
-    ///    "sender"
-    ///  ],
-    ///  "properties": {
-    ///    "commits": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "$ref": "#/components/schemas/GitHubCommit"
-    ///      }
-
-    ///    },
-    ///    "head_commit": {
-    ///      "allOf": [
-    ///        {
-    ///          "$ref": "#/components/schemas/GitHubCommit"
-    ///        }
-
-    ///      ]
-    ///    },
-    ///    "installation": {
-    ///      "$ref": "#/components/schemas/GitHubInstallation"
-    ///    },
-    ///    "ref": {
-    ///      "type": "string"
-    ///    },
-    ///    "repository": {
-    ///      "$ref": "#/components/schemas/GitHubRepository"
-    ///    },
-    ///    "sender": {
-    ///      "$ref": "#/components/schemas/GitHubSender"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct GitHubCommitPayload {
-        pub commits: Vec<GitHubCommit>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub head_commit: Option<GitHubCommit>,
-        pub installation: GitHubInstallation,
-        #[serde(rename = "ref")]
-        pub ref_: String,
-        pub repository: GitHubRepository,
-        pub sender: GitHubSender,
-    }
-
-    impl From<&GitHubCommitPayload> for GitHubCommitPayload {
-        fn from(value: &GitHubCommitPayload) -> Self {
-            value.clone()
-        }
-    }
-
-    impl GitHubCommitPayload {
-        pub fn builder() -> builder::GitHubCommitPayload {
-            Default::default()
-        }
-    }
-
-    /// GitHubInstallation
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "id",
-    ///    "node_id"
-    ///  ],
-    ///  "properties": {
-    ///    "id": {
-    ///      "type": "integer",
-    ///      "format": "uint64",
-    ///      "minimum": 0.0
-    ///    },
-    ///    "node_id": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct GitHubInstallation {
-        pub id: u64,
-        pub node_id: String,
-    }
-
-    impl From<&GitHubInstallation> for GitHubInstallation {
-        fn from(value: &GitHubInstallation) -> Self {
-            value.clone()
-        }
-    }
-
-    impl GitHubInstallation {
-        pub fn builder() -> builder::GitHubInstallation {
-            Default::default()
-        }
-    }
-
-    /// GitHubRepository
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "default_branch",
-    ///    "id",
-    ///    "name",
-    ///    "node_id",
-    ///    "owner"
-    ///  ],
-    ///  "properties": {
-    ///    "default_branch": {
-    ///      "type": "string"
-    ///    },
-    ///    "id": {
-    ///      "type": "integer",
-    ///      "format": "uint64",
-    ///      "minimum": 0.0
-    ///    },
-    ///    "name": {
-    ///      "type": "string"
-    ///    },
-    ///    "node_id": {
-    ///      "type": "string"
-    ///    },
-    ///    "owner": {
-    ///      "$ref": "#/components/schemas/GitHubRepositoryOwner"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct GitHubRepository {
-        pub default_branch: String,
-        pub id: u64,
-        pub name: String,
-        pub node_id: String,
-        pub owner: GitHubRepositoryOwner,
-    }
-
-    impl From<&GitHubRepository> for GitHubRepository {
-        fn from(value: &GitHubRepository) -> Self {
-            value.clone()
-        }
-    }
-
-    impl GitHubRepository {
-        pub fn builder() -> builder::GitHubRepository {
-            Default::default()
-        }
-    }
-
-    /// GitHubRepositoryOwner
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "login"
-    ///  ],
-    ///  "properties": {
-    ///    "login": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct GitHubRepositoryOwner {
-        pub login: String,
-    }
-
-    impl From<&GitHubRepositoryOwner> for GitHubRepositoryOwner {
-        fn from(value: &GitHubRepositoryOwner) -> Self {
-            value.clone()
-        }
-    }
-
-    impl GitHubRepositoryOwner {
-        pub fn builder() -> builder::GitHubRepositoryOwner {
-            Default::default()
-        }
-    }
-
-    /// GitHubSender
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "id",
-    ///    "login",
-    ///    "node_id",
-    ///    "type"
-    ///  ],
-    ///  "properties": {
-    ///    "id": {
-    ///      "type": "integer",
-    ///      "format": "uint64",
-    ///      "minimum": 0.0
-    ///    },
-    ///    "login": {
-    ///      "type": "string"
-    ///    },
-    ///    "node_id": {
-    ///      "type": "string"
-    ///    },
-    ///    "type": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct GitHubSender {
-        pub id: u64,
-        pub login: String,
-        pub node_id: String,
-        #[serde(rename = "type")]
-        pub type_: String,
-    }
-
-    impl From<&GitHubSender> for GitHubSender {
-        fn from(value: &GitHubSender) -> Self {
-            value.clone()
-        }
-    }
-
-    impl GitHubSender {
-        pub fn builder() -> builder::GitHubSender {
-            Default::default()
-        }
-    }
-
-    /// InitialApiKeyResponse
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id",
-    ///    "key"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "type": "string",
-    ///      "format": "uuid"
-    ///    },
-    ///    "key": {
-    ///      "$ref": "#/components/schemas/SecretString"
-    ///    },
-    ///    "permissions": {
-    ///      "allOf": [
-    ///        {
-    ///          "$ref":
-    /// "#/components/schemas/Permissions_for_ApiPermissionResponse"
-    ///        }
-
-    ///      ]
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct InitialApiKeyResponse {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
-        pub id: uuid::Uuid,
-        pub key: SecretString,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub permissions: Option<PermissionsForApiPermissionResponse>,
-    }
-
-    impl From<&InitialApiKeyResponse> for InitialApiKeyResponse {
-        fn from(value: &InitialApiKeyResponse) -> Self {
-            value.clone()
-        }
-    }
-
-    impl InitialApiKeyResponse {
-        pub fn builder() -> builder::InitialApiKeyResponse {
-            Default::default()
-        }
-    }
-
-    /// InitialOAuthClientSecretResponse
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id",
-    ///    "key"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "type": "string",
-    ///      "format": "uuid"
-    ///    },
-    ///    "key": {
-    ///      "$ref": "#/components/schemas/SecretString"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct InitialOAuthClientSecretResponse {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
-        pub id: uuid::Uuid,
-        pub key: SecretString,
-    }
-
-    impl From<&InitialOAuthClientSecretResponse> for InitialOAuthClientSecretResponse {
-        fn from(value: &InitialOAuthClientSecretResponse) -> Self {
-            value.clone()
-        }
-    }
-
-    impl InitialOAuthClientSecretResponse {
-        pub fn builder() -> builder::InitialOAuthClientSecretResponse {
-            Default::default()
-        }
-    }
-
-    /// Jwk
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "e",
-    ///    "kid",
-    ///    "kty",
-    ///    "n",
-    ///    "use"
-    ///  ],
-    ///  "properties": {
-    ///    "e": {
-    ///      "type": "string"
-    ///    },
-    ///    "kid": {
-    ///      "type": "string"
-    ///    },
-    ///    "kty": {
-    ///      "type": "string"
-    ///    },
-    ///    "n": {
-    ///      "type": "string"
-    ///    },
-    ///    "use": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct Jwk {
-        pub e: String,
-        pub kid: String,
-        pub kty: String,
-        pub n: String,
-        #[serde(rename = "use")]
-        pub use_: String,
-    }
-
-    impl From<&Jwk> for Jwk {
-        fn from(value: &Jwk) -> Self {
-            value.clone()
-        }
-    }
-
-    impl Jwk {
-        pub fn builder() -> builder::Jwk {
-            Default::default()
-        }
-    }
-
-    /// Jwks
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "keys"
-    ///  ],
-    ///  "properties": {
-    ///    "keys": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "$ref": "#/components/schemas/Jwk"
-    ///      }
-
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct Jwks {
-        pub keys: Vec<Jwk>,
-    }
-
-    impl From<&Jwks> for Jwks {
-        fn from(value: &Jwks) -> Self {
-            value.clone()
-        }
-    }
-
-    impl Jwks {
-        pub fn builder() -> builder::Jwks {
-            Default::default()
-        }
-    }
-
-    /// ListRfd
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "commit",
-    ///    "committed_at",
-    ///    "format",
-    ///    "id",
-    ///    "rfd_number",
-    ///    "sha",
-    ///    "title",
-    ///    "visibility"
-    ///  ],
-    ///  "properties": {
-    ///    "authors": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "commit": {
-    ///      "$ref": "#/components/schemas/CommitSha"
-    ///    },
-    ///    "committed_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "discussion": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "format": {
-    ///      "$ref": "#/components/schemas/ContentFormat"
-    ///    },
-    ///    "id": {
-    ///      "type": "string",
-    ///      "format": "uuid"
-    ///    },
-    ///    "labels": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "link": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "rfd_number": {
-    ///      "type": "integer",
-    ///      "format": "int32"
-    ///    },
-    ///    "sha": {
-    ///      "$ref": "#/components/schemas/FileSha"
-    ///    },
-    ///    "state": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "title": {
-    ///      "type": "string"
-    ///    },
-    ///    "visibility": {
-    ///      "$ref": "#/components/schemas/Visibility"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct ListRfd {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub authors: Option<String>,
-        pub commit: CommitSha,
-        pub committed_at: chrono::DateTime<chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub discussion: Option<String>,
-        pub format: ContentFormat,
-        pub id: uuid::Uuid,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub labels: Option<String>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub link: Option<String>,
-        pub rfd_number: i32,
-        pub sha: FileSha,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub state: Option<String>,
-        pub title: String,
-        pub visibility: Visibility,
-    }
-
-    impl From<&ListRfd> for ListRfd {
-        fn from(value: &ListRfd) -> Self {
-            value.clone()
-        }
-    }
-
-    impl ListRfd {
-        pub fn builder() -> builder::ListRfd {
-            Default::default()
-        }
-    }
-
-    /// LocalLogin
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "email",
-    ///    "external_id"
-    ///  ],
-    ///  "properties": {
-    ///    "email": {
-    ///      "type": "string"
-    ///    },
-    ///    "external_id": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct LocalLogin {
-        pub email: String,
-        pub external_id: String,
-    }
-
-    impl From<&LocalLogin> for LocalLogin {
-        fn from(value: &LocalLogin) -> Self {
-            value.clone()
-        }
-    }
-
-    impl LocalLogin {
-        pub fn builder() -> builder::LocalLogin {
-            Default::default()
-        }
-    }
-
-    /// Mapper
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id",
-    ///    "name",
-    ///    "rule"
-    ///  ],
-    ///  "properties": {
-    ///    "activations": {
-    ///      "type": [
-    ///        "integer",
-    ///        "null"
-    ///      ],
-    ///      "format": "int32"
-    ///    },
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "depleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "type": "string",
-    ///      "format": "uuid"
-    ///    },
-    ///    "max_activations": {
-    ///      "type": [
-    ///        "integer",
-    ///        "null"
-    ///      ],
-    ///      "format": "int32"
-    ///    },
-    ///    "name": {
-    ///      "type": "string"
-    ///    },
-    ///    "rule": {}
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct Mapper {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub activations: Option<i32>,
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub depleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
-        pub id: uuid::Uuid,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub max_activations: Option<i32>,
-        pub name: String,
-        pub rule: serde_json::Value,
-    }
-
-    impl From<&Mapper> for Mapper {
-        fn from(value: &Mapper) -> Self {
-            value.clone()
-        }
-    }
-
-    impl Mapper {
-        pub fn builder() -> builder::Mapper {
-            Default::default()
-        }
-    }
-
-    /// MappingRules
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "oneOf": [
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "rule"
-    ///      ],
-    ///      "properties": {
-    ///        "groups": {
-    ///          "default": [],
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "string"
-    ///          }
-
-    ///        },
-    ///        "permissions": {
-    ///          "default": [],
-    ///          "allOf": [
-    ///            {
-    ///              "$ref":
-    /// "#/components/schemas/Permissions_for_ApiPermission"
-    ///            }
-
-    ///          ]
-    ///        },
-    ///        "rule": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "default"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "email",
-    ///        "rule"
-    ///      ],
-    ///      "properties": {
-    ///        "email": {
-    ///          "type": "string"
-    ///        },
-    ///        "groups": {
-    ///          "default": [],
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "string"
-    ///          }
-
-    ///        },
-    ///        "permissions": {
-    ///          "default": [],
-    ///          "allOf": [
-    ///            {
-    ///              "$ref":
-    /// "#/components/schemas/Permissions_for_ApiPermission"
-    ///            }
-
-    ///          ]
-    ///        },
-    ///        "rule": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "email_address"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "domain",
-    ///        "rule"
-    ///      ],
-    ///      "properties": {
-    ///        "domain": {
-    ///          "type": "string"
-    ///        },
-    ///        "groups": {
-    ///          "default": [],
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "string"
-    ///          }
-
-    ///        },
-    ///        "permissions": {
-    ///          "default": [],
-    ///          "allOf": [
-    ///            {
-    ///              "$ref":
-    /// "#/components/schemas/Permissions_for_ApiPermission"
-    ///            }
-
-    ///          ]
-    ///        },
-    ///        "rule": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "email_domain"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "github_username",
-    ///        "rule"
-    ///      ],
-    ///      "properties": {
-    ///        "github_username": {
-    ///          "type": "string"
-    ///        },
-    ///        "groups": {
-    ///          "default": [],
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "string"
-    ///          }
-
-    ///        },
-    ///        "permissions": {
-    ///          "default": [],
-    ///          "allOf": [
-    ///            {
-    ///              "$ref":
-    /// "#/components/schemas/Permissions_for_ApiPermission"
-    ///            }
-
-    ///          ]
-    ///        },
-    ///        "rule": {
-    ///          "type": "string",
-    ///          "enum": [
-    ///            "github_username"
-    ///          ]
-    ///        }
-
-    ///      }
-
-    ///    }
-
-    ///  ]
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    #[serde(tag = "rule")]
-    pub enum MappingRules {
-        #[serde(rename = "default")]
-        Default {
-            #[serde(default, skip_serializing_if = "Vec::is_empty")]
-            groups: Vec<String>,
-            #[serde(default = "defaults::mapping_rules_default_permissions")]
-            permissions: PermissionsForApiPermission,
-        },
-        #[serde(rename = "email_address")]
-        EmailAddress {
-            email: String,
-            #[serde(default, skip_serializing_if = "Vec::is_empty")]
-            groups: Vec<String>,
-            #[serde(default = "defaults::mapping_rules_email_address_permissions")]
-            permissions: PermissionsForApiPermission,
-        },
-        #[serde(rename = "email_domain")]
-        EmailDomain {
-            domain: String,
-            #[serde(default, skip_serializing_if = "Vec::is_empty")]
-            groups: Vec<String>,
-            #[serde(default = "defaults::mapping_rules_email_domain_permissions")]
-            permissions: PermissionsForApiPermission,
-        },
-        #[serde(rename = "github_username")]
-        GithubUsername {
-            github_username: String,
-            #[serde(default, skip_serializing_if = "Vec::is_empty")]
-            groups: Vec<String>,
-            #[serde(default = "defaults::mapping_rules_github_username_permissions")]
-            permissions: PermissionsForApiPermission,
-        },
-    }
-
-    impl From<&MappingRules> for MappingRules {
-        fn from(value: &MappingRules) -> Self {
-            value.clone()
-        }
-    }
-
-    /// OAuthAuthzCodeExchangeBody
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "client_id",
-    ///    "client_secret",
-    ///    "code",
-    ///    "grant_type",
-    ///    "redirect_uri"
-    ///  ],
-    ///  "properties": {
-    ///    "client_id": {
-    ///      "type": "string",
-    ///      "format": "uuid"
-    ///    },
-    ///    "client_secret": {
-    ///      "$ref": "#/components/schemas/SecretString"
-    ///    },
-    ///    "code": {
-    ///      "type": "string"
-    ///    },
-    ///    "grant_type": {
-    ///      "type": "string"
-    ///    },
-    ///    "pkce_verifier": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "redirect_uri": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct OAuthAuthzCodeExchangeBody {
-        pub client_id: uuid::Uuid,
-        pub client_secret: SecretString,
-        pub code: String,
-        pub grant_type: String,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub pkce_verifier: Option<String>,
-        pub redirect_uri: String,
-    }
-
-    impl From<&OAuthAuthzCodeExchangeBody> for OAuthAuthzCodeExchangeBody {
-        fn from(value: &OAuthAuthzCodeExchangeBody) -> Self {
-            value.clone()
-        }
-    }
-
-    impl OAuthAuthzCodeExchangeBody {
-        pub fn builder() -> builder::OAuthAuthzCodeExchangeBody {
-            Default::default()
-        }
-    }
-
-    /// OAuthAuthzCodeExchangeResponse
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "access_token",
-    ///    "expires_in",
-    ///    "token_type"
-    ///  ],
-    ///  "properties": {
-    ///    "access_token": {
-    ///      "type": "string"
-    ///    },
-    ///    "expires_in": {
-    ///      "type": "integer",
-    ///      "format": "int64"
-    ///    },
-    ///    "token_type": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct OAuthAuthzCodeExchangeResponse {
-        pub access_token: String,
-        pub expires_in: i64,
-        pub token_type: String,
-    }
-
-    impl From<&OAuthAuthzCodeExchangeResponse> for OAuthAuthzCodeExchangeResponse {
-        fn from(value: &OAuthAuthzCodeExchangeResponse) -> Self {
-            value.clone()
-        }
-    }
-
-    impl OAuthAuthzCodeExchangeResponse {
-        pub fn builder() -> builder::OAuthAuthzCodeExchangeResponse {
-            Default::default()
-        }
-    }
-
-    /// OAuthClient
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id",
-    ///    "redirect_uris",
-    ///    "secrets"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "type": "string",
-    ///      "format": "uuid"
-    ///    },
-    ///    "redirect_uris": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "$ref": "#/components/schemas/OAuthClientRedirectUri"
-    ///      }
-
-    ///    },
-    ///    "secrets": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "$ref": "#/components/schemas/OAuthClientSecret"
-    ///      }
-
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct OAuthClient {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
-        pub id: uuid::Uuid,
-        pub redirect_uris: Vec<OAuthClientRedirectUri>,
-        pub secrets: Vec<OAuthClientSecret>,
-    }
-
-    impl From<&OAuthClient> for OAuthClient {
-        fn from(value: &OAuthClient) -> Self {
-            value.clone()
-        }
-    }
-
-    impl OAuthClient {
-        pub fn builder() -> builder::OAuthClient {
-            Default::default()
-        }
-    }
-
-    /// OAuthClientRedirectUri
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id",
-    ///    "oauth_client_id",
-    ///    "redirect_uri"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "type": "string",
-    ///      "format": "uuid"
-    ///    },
-    ///    "oauth_client_id": {
-    ///      "type": "string",
-    ///      "format": "uuid"
-    ///    },
-    ///    "redirect_uri": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct OAuthClientRedirectUri {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
-        pub id: uuid::Uuid,
-        pub oauth_client_id: uuid::Uuid,
-        pub redirect_uri: String,
-    }
-
-    impl From<&OAuthClientRedirectUri> for OAuthClientRedirectUri {
-        fn from(value: &OAuthClientRedirectUri) -> Self {
-            value.clone()
-        }
-    }
-
-    impl OAuthClientRedirectUri {
-        pub fn builder() -> builder::OAuthClientRedirectUri {
-            Default::default()
-        }
-    }
-
-    /// OAuthClientSecret
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id",
-    ///    "oauth_client_id",
-    ///    "secret_signature"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "type": "string",
-    ///      "format": "uuid"
-    ///    },
-    ///    "oauth_client_id": {
-    ///      "type": "string",
-    ///      "format": "uuid"
-    ///    },
-    ///    "secret_signature": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct OAuthClientSecret {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
-        pub id: uuid::Uuid,
-        pub oauth_client_id: uuid::Uuid,
-        pub secret_signature: String,
-    }
-
-    impl From<&OAuthClientSecret> for OAuthClientSecret {
-        fn from(value: &OAuthClientSecret) -> Self {
-            value.clone()
-        }
-    }
-
-    impl OAuthClientSecret {
-        pub fn builder() -> builder::OAuthClientSecret {
-            Default::default()
-        }
-    }
-
-    /// OAuthProviderInfo
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "auth_url_endpoint",
-    ///    "client_id",
-    ///    "device_code_endpoint",
-    ///    "provider",
-    ///    "scopes",
-    ///    "token_endpoint"
-    ///  ],
-    ///  "properties": {
-    ///    "auth_url_endpoint": {
-    ///      "type": "string"
-    ///    },
-    ///    "client_id": {
-    ///      "type": "string"
-    ///    },
-    ///    "device_code_endpoint": {
-    ///      "type": "string"
-    ///    },
-    ///    "provider": {
-    ///      "$ref": "#/components/schemas/OAuthProviderName"
-    ///    },
-    ///    "scopes": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": "string"
-    ///      }
-
-    ///    },
-    ///    "token_endpoint": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct OAuthProviderInfo {
-        pub auth_url_endpoint: String,
-        pub client_id: String,
-        pub device_code_endpoint: String,
-        pub provider: OAuthProviderName,
-        pub scopes: Vec<String>,
-        pub token_endpoint: String,
-    }
-
-    impl From<&OAuthProviderInfo> for OAuthProviderInfo {
-        fn from(value: &OAuthProviderInfo) -> Self {
-            value.clone()
-        }
-    }
-
-    impl OAuthProviderInfo {
-        pub fn builder() -> builder::OAuthProviderInfo {
-            Default::default()
-        }
-    }
-
-    /// OAuthProviderName
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "enum": [
-    ///    "github",
-    ///    "google"
-    ///  ]
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        Deserialize,
-        Eq,
-        Hash,
-        Ord,
-        PartialEq,
-        PartialOrd,
-        Serialize,
-        schemars :: JsonSchema,
-    )]
-    pub enum OAuthProviderName {
-        #[serde(rename = "github")]
-        Github,
-        #[serde(rename = "google")]
-        Google,
-    }
-
-    impl From<&OAuthProviderName> for OAuthProviderName {
-        fn from(value: &OAuthProviderName) -> Self {
-            value.clone()
-        }
-    }
-
-    impl ToString for OAuthProviderName {
-        fn to_string(&self) -> String {
-            match *self {
-                Self::Github => "github".to_string(),
-                Self::Google => "google".to_string(),
-            }
-        }
-    }
-
-    impl std::str::FromStr for OAuthProviderName {
-        type Err = self::error::ConversionError;
-        fn from_str(value: &str) -> Result<Self, self::error::ConversionError> {
-            match value {
-                "github" => Ok(Self::Github),
-                "google" => Ok(Self::Google),
-                _ => Err("invalid value".into()),
-            }
-        }
-    }
-
-    impl std::convert::TryFrom<&str> for OAuthProviderName {
-        type Error = self::error::ConversionError;
-        fn try_from(value: &str) -> Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-
-    impl std::convert::TryFrom<&String> for OAuthProviderName {
-        type Error = self::error::ConversionError;
-        fn try_from(value: &String) -> Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-
-    impl std::convert::TryFrom<String> for OAuthProviderName {
-        type Error = self::error::ConversionError;
-        fn try_from(value: String) -> Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-
-    /// OpenIdConfiguration
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "jwks_uri"
-    ///  ],
-    ///  "properties": {
-    ///    "jwks_uri": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct OpenIdConfiguration {
-        pub jwks_uri: String,
-    }
-
-    impl From<&OpenIdConfiguration> for OpenIdConfiguration {
-        fn from(value: &OpenIdConfiguration) -> Self {
-            value.clone()
-        }
-    }
-
-    impl OpenIdConfiguration {
-        pub fn builder() -> builder::OpenIdConfiguration {
-            Default::default()
-        }
-    }
-
-    /// PermissionsForApiPermission
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "array",
-    ///  "items": {
-    ///    "$ref": "#/components/schemas/ApiPermission"
-    ///  },
-    ///  "uniqueItems": true
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct PermissionsForApiPermission(pub Vec<ApiPermission>);
-    impl std::ops::Deref for PermissionsForApiPermission {
-        type Target = Vec<ApiPermission>;
-        fn deref(&self) -> &Vec<ApiPermission> {
-            &self.0
-        }
-    }
-
-    impl From<PermissionsForApiPermission> for Vec<ApiPermission> {
-        fn from(value: PermissionsForApiPermission) -> Self {
-            value.0
-        }
-    }
-
-    impl From<&PermissionsForApiPermission> for PermissionsForApiPermission {
-        fn from(value: &PermissionsForApiPermission) -> Self {
-            value.clone()
-        }
-    }
-
-    impl From<Vec<ApiPermission>> for PermissionsForApiPermission {
-        fn from(value: Vec<ApiPermission>) -> Self {
-            Self(value)
-        }
-    }
-
-    /// PermissionsForApiPermissionResponse
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "array",
-    ///  "items": {
-    ///    "$ref": "#/components/schemas/ApiPermissionResponse"
-    ///  },
-    ///  "uniqueItems": true
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct PermissionsForApiPermissionResponse(pub Vec<ApiPermissionResponse>);
-    impl std::ops::Deref for PermissionsForApiPermissionResponse {
-        type Target = Vec<ApiPermissionResponse>;
-        fn deref(&self) -> &Vec<ApiPermissionResponse> {
-            &self.0
-        }
-    }
-
-    impl From<PermissionsForApiPermissionResponse> for Vec<ApiPermissionResponse> {
-        fn from(value: PermissionsForApiPermissionResponse) -> Self {
-            value.0
-        }
-    }
-
-    impl From<&PermissionsForApiPermissionResponse> for PermissionsForApiPermissionResponse {
-        fn from(value: &PermissionsForApiPermissionResponse) -> Self {
-            value.clone()
-        }
-    }
-
-    impl From<Vec<ApiPermissionResponse>> for PermissionsForApiPermissionResponse {
-        fn from(value: Vec<ApiPermissionResponse>) -> Self {
-            Self(value)
-        }
-    }
-
-    /// ReserveRfdBody
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "title"
-    ///  ],
-    ///  "properties": {
-    ///    "content": {
-    ///      "description": "Optional contents of the RFD",
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "title": {
-    ///      "description": "Title of the RFD",
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct ReserveRfdBody {
-        /// Optional contents of the RFD
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub content: Option<String>,
-        /// Title of the RFD
-        pub title: String,
-    }
-
-    impl From<&ReserveRfdBody> for ReserveRfdBody {
-        fn from(value: &ReserveRfdBody) -> Self {
-            value.clone()
-        }
-    }
-
-    impl ReserveRfdBody {
-        pub fn builder() -> builder::ReserveRfdBody {
-            Default::default()
-        }
-    }
-
-    /// ReserveRfdResponse
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "number"
-    ///  ],
-    ///  "properties": {
-    ///    "number": {
-    ///      "type": "integer",
-    ///      "format": "int32"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct ReserveRfdResponse {
-        pub number: i32,
-    }
-
-    impl From<&ReserveRfdResponse> for ReserveRfdResponse {
-        fn from(value: &ReserveRfdResponse) -> Self {
-            value.clone()
-        }
-    }
-
-    impl ReserveRfdResponse {
-        pub fn builder() -> builder::ReserveRfdResponse {
-            Default::default()
-        }
-    }
-
-    /// Rfd
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id",
-    ///    "rfd_number",
-    ///    "updated_at",
-    ///    "visibility"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "type": "string",
-    ///      "format": "uuid"
-    ///    },
-    ///    "link": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "rfd_number": {
-    ///      "type": "integer",
-    ///      "format": "int32"
-    ///    },
-    ///    "updated_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "visibility": {
-    ///      "$ref": "#/components/schemas/Visibility"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct Rfd {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub deleted_at: Option<chrono::DateTime<chrono::offset::Utc>>,
-        pub id: uuid::Uuid,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub link: Option<String>,
-        pub rfd_number: i32,
-        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
-        pub visibility: Visibility,
-    }
-
-    impl From<&Rfd> for Rfd {
-        fn from(value: &Rfd) -> Self {
-            value.clone()
-        }
-    }
-
-    impl Rfd {
-        pub fn builder() -> builder::Rfd {
-            Default::default()
-        }
-    }
-
-    /// RfdAttr
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "oneOf": [
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "discussion"
-    ///      ],
-    ///      "properties": {
-    ///        "discussion": {
-    ///          "type": "string"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "labels"
-    ///      ],
-    ///      "properties": {
-    ///        "labels": {
-    ///          "type": "string"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "state"
-    ///      ],
-    ///      "properties": {
-    ///        "state": {
-    ///          "$ref": "#/components/schemas/RfdState"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    }
-
-    ///  ]
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub enum RfdAttr {
-        #[serde(rename = "discussion")]
-        Discussion(String),
-        #[serde(rename = "labels")]
-        Labels(String),
-        #[serde(rename = "state")]
-        State(RfdState),
-    }
-
-    impl From<&RfdAttr> for RfdAttr {
-        fn from(value: &RfdAttr) -> Self {
-            value.clone()
-        }
-    }
-
-    impl From<RfdState> for RfdAttr {
-        fn from(value: RfdState) -> Self {
-            Self::State(value)
-        }
-    }
-
-    /// RfdAttrName
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "enum": [
-    ///    "discussion",
-    ///    "labels",
-    ///    "state"
-    ///  ]
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(
-        Clone,
-        Copy,
-        Debug,
-        Deserialize,
-        Eq,
-        Hash,
-        Ord,
-        PartialEq,
-        PartialOrd,
-        Serialize,
-        schemars :: JsonSchema,
-    )]
-    pub enum RfdAttrName {
-        #[serde(rename = "discussion")]
-        Discussion,
-        #[serde(rename = "labels")]
-        Labels,
-        #[serde(rename = "state")]
-        State,
-    }
-
-    impl From<&RfdAttrName> for RfdAttrName {
-        fn from(value: &RfdAttrName) -> Self {
-            value.clone()
-        }
-    }
-
-    impl ToString for RfdAttrName {
-        fn to_string(&self) -> String {
-            match *self {
-                Self::Discussion => "discussion".to_string(),
-                Self::Labels => "labels".to_string(),
-                Self::State => "state".to_string(),
-            }
-        }
-    }
-
-    impl std::str::FromStr for RfdAttrName {
-        type Err = self::error::ConversionError;
-        fn from_str(value: &str) -> Result<Self, self::error::ConversionError> {
-            match value {
-                "discussion" => Ok(Self::Discussion),
-                "labels" => Ok(Self::Labels),
-                "state" => Ok(Self::State),
-                _ => Err("invalid value".into()),
-            }
-        }
-    }
-
-    impl std::convert::TryFrom<&str> for RfdAttrName {
-        type Error = self::error::ConversionError;
-        fn try_from(value: &str) -> Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-
-    impl std::convert::TryFrom<&String> for RfdAttrName {
-        type Error = self::error::ConversionError;
-        fn try_from(value: &String) -> Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-
-    impl std::convert::TryFrom<String> for RfdAttrName {
-        type Error = self::error::ConversionError;
-        fn try_from(value: String) -> Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-
-    /// RfdAttrValue
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "value"
-    ///  ],
-    ///  "properties": {
-    ///    "message": {
-    ///      "description": "Optional Git commit message to send with this
-    /// update (recommended)",
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "value": {
-    ///      "description": "Full value to set this attribute to in the existing
-    /// RFD contents",
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
-    pub struct RfdAttrValue {
-        /// Optional Git commit message to send with this update (recommended)
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        pub message: Option<String>,
-        /// Full value to set this attribute to in the existing RFD contents
-        pub value: String,
-    }
-
-    impl From<&RfdAttrValue> for RfdAttrValue {
-        fn from(value: &RfdAttrValue) -> Self {
-            value.clone()
+    impl From<TypedUuidForMapperId> for RfdPermission {
+        fn from(value: TypedUuidForMapperId) -> Self {
+            Self::ManageMapper(value)
         }
     }
 
-    impl RfdAttrValue {
-        pub fn builder() -> builder::RfdAttrValue {
-            Default::default()
+    impl From<Vec<TypedUuidForMapperId>> for RfdPermission {
+        fn from(value: Vec<TypedUuidForMapperId>) -> Self {
+            Self::ManageMappers(value)
         }
     }
 
@@ -5400,16 +4378,16 @@ pub mod types {
     /// ```
     /// </details>
     #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
         Clone,
         Copy,
         Debug,
-        Deserialize,
         Eq,
         Hash,
         Ord,
         PartialEq,
         PartialOrd,
-        Serialize,
         schemars :: JsonSchema,
     )]
     pub enum RfdState {
@@ -5433,15 +4411,15 @@ pub mod types {
         }
     }
 
-    impl ToString for RfdState {
-        fn to_string(&self) -> String {
+    impl ::std::fmt::Display for RfdState {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match *self {
-                Self::Abandoned => "abandoned".to_string(),
-                Self::Committed => "committed".to_string(),
-                Self::Discussion => "discussion".to_string(),
-                Self::Ideation => "ideation".to_string(),
-                Self::Prediscussion => "prediscussion".to_string(),
-                Self::Published => "published".to_string(),
+                Self::Abandoned => write!(f, "abandoned"),
+                Self::Committed => write!(f, "committed"),
+                Self::Discussion => write!(f, "discussion"),
+                Self::Ideation => write!(f, "ideation"),
+                Self::Prediscussion => write!(f, "prediscussion"),
+                Self::Published => write!(f, "published"),
             }
         }
     }
@@ -5512,7 +4490,9 @@ pub mod types {
 
     /// ```
     /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
     pub struct RfdUpdateBody {
         /// Full Asciidoc document to store for this RFD
         pub document: String,
@@ -5563,7 +4543,9 @@ pub mod types {
 
     /// ```
     /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
     pub struct RfdUpdateContentBody {
         /// Asciidoc content to store for this RFD
         pub content: String,
@@ -5605,7 +4587,9 @@ pub mod types {
 
     /// ```
     /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
     pub struct RfdVisibility {
         pub visibility: Visibility,
     }
@@ -5647,9 +4631,17 @@ pub mod types {
     ///      "type": "string"
     ///    },
     ///    "formatted": {
-    ///      "allOf": [
+    ///      "oneOf": [
     ///        {
-    ///          "$ref": "#/components/schemas/FormattedSearchResultHit"
+    ///          "type": "null"
+    ///        },
+    ///        {
+    ///          "allOf": [
+    ///            {
+    ///              "$ref": "#/components/schemas/FormattedSearchResultHit"
+    ///            }
+
+    ///          ]
     ///        }
 
     ///      ]
@@ -5697,7 +4689,9 @@ pub mod types {
 
     /// ```
     /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
     pub struct SearchResultHit {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         pub anchor: Option<String>,
@@ -5769,7 +4763,9 @@ pub mod types {
 
     /// ```
     /// </details>
-    #[derive(Clone, Debug, Deserialize, Serialize, schemars :: JsonSchema)]
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
     pub struct SearchResults {
         pub hits: Vec<SearchResultHit>,
         #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -5803,19 +4799,19 @@ pub mod types {
     /// ```
     /// </details>
     #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
         Clone,
         Debug,
-        Deserialize,
         Eq,
         Hash,
         Ord,
         PartialEq,
         PartialOrd,
-        Serialize,
         schemars :: JsonSchema,
     )]
     pub struct SecretString(pub String);
-    impl std::ops::Deref for SecretString {
+    impl ::std::ops::Deref for SecretString {
         type Target = String;
         fn deref(&self) -> &String {
             &self.0
@@ -5847,9 +4843,984 @@ pub mod types {
         }
     }
 
-    impl ToString for SecretString {
-        fn to_string(&self) -> String {
-            self.0.to_string()
+    impl ::std::fmt::Display for SecretString {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    /// TypedUuidForAccessGroupId
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "format": "uuid"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct TypedUuidForAccessGroupId(pub uuid::Uuid);
+    impl ::std::ops::Deref for TypedUuidForAccessGroupId {
+        type Target = uuid::Uuid;
+        fn deref(&self) -> &uuid::Uuid {
+            &self.0
+        }
+    }
+
+    impl From<TypedUuidForAccessGroupId> for uuid::Uuid {
+        fn from(value: TypedUuidForAccessGroupId) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&TypedUuidForAccessGroupId> for TypedUuidForAccessGroupId {
+        fn from(value: &TypedUuidForAccessGroupId) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<uuid::Uuid> for TypedUuidForAccessGroupId {
+        fn from(value: uuid::Uuid) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for TypedUuidForAccessGroupId {
+        type Err = <uuid::Uuid as std::str::FromStr>::Err;
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            Ok(Self(value.parse()?))
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for TypedUuidForAccessGroupId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &str) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for TypedUuidForAccessGroupId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for TypedUuidForAccessGroupId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl ::std::fmt::Display for TypedUuidForAccessGroupId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    /// TypedUuidForApiKeyId
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "format": "uuid"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct TypedUuidForApiKeyId(pub uuid::Uuid);
+    impl ::std::ops::Deref for TypedUuidForApiKeyId {
+        type Target = uuid::Uuid;
+        fn deref(&self) -> &uuid::Uuid {
+            &self.0
+        }
+    }
+
+    impl From<TypedUuidForApiKeyId> for uuid::Uuid {
+        fn from(value: TypedUuidForApiKeyId) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&TypedUuidForApiKeyId> for TypedUuidForApiKeyId {
+        fn from(value: &TypedUuidForApiKeyId) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<uuid::Uuid> for TypedUuidForApiKeyId {
+        fn from(value: uuid::Uuid) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for TypedUuidForApiKeyId {
+        type Err = <uuid::Uuid as std::str::FromStr>::Err;
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            Ok(Self(value.parse()?))
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for TypedUuidForApiKeyId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &str) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for TypedUuidForApiKeyId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for TypedUuidForApiKeyId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl ::std::fmt::Display for TypedUuidForApiKeyId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    /// TypedUuidForMagicLinkAttemptId
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "format": "uuid"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct TypedUuidForMagicLinkAttemptId(pub uuid::Uuid);
+    impl ::std::ops::Deref for TypedUuidForMagicLinkAttemptId {
+        type Target = uuid::Uuid;
+        fn deref(&self) -> &uuid::Uuid {
+            &self.0
+        }
+    }
+
+    impl From<TypedUuidForMagicLinkAttemptId> for uuid::Uuid {
+        fn from(value: TypedUuidForMagicLinkAttemptId) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&TypedUuidForMagicLinkAttemptId> for TypedUuidForMagicLinkAttemptId {
+        fn from(value: &TypedUuidForMagicLinkAttemptId) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<uuid::Uuid> for TypedUuidForMagicLinkAttemptId {
+        fn from(value: uuid::Uuid) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for TypedUuidForMagicLinkAttemptId {
+        type Err = <uuid::Uuid as std::str::FromStr>::Err;
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            Ok(Self(value.parse()?))
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for TypedUuidForMagicLinkAttemptId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &str) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for TypedUuidForMagicLinkAttemptId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for TypedUuidForMagicLinkAttemptId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl ::std::fmt::Display for TypedUuidForMagicLinkAttemptId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    /// TypedUuidForMagicLinkId
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "format": "uuid"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct TypedUuidForMagicLinkId(pub uuid::Uuid);
+    impl ::std::ops::Deref for TypedUuidForMagicLinkId {
+        type Target = uuid::Uuid;
+        fn deref(&self) -> &uuid::Uuid {
+            &self.0
+        }
+    }
+
+    impl From<TypedUuidForMagicLinkId> for uuid::Uuid {
+        fn from(value: TypedUuidForMagicLinkId) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&TypedUuidForMagicLinkId> for TypedUuidForMagicLinkId {
+        fn from(value: &TypedUuidForMagicLinkId) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<uuid::Uuid> for TypedUuidForMagicLinkId {
+        fn from(value: uuid::Uuid) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for TypedUuidForMagicLinkId {
+        type Err = <uuid::Uuid as std::str::FromStr>::Err;
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            Ok(Self(value.parse()?))
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for TypedUuidForMagicLinkId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &str) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for TypedUuidForMagicLinkId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for TypedUuidForMagicLinkId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl ::std::fmt::Display for TypedUuidForMagicLinkId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    /// TypedUuidForMagicLinkRedirectUriId
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "format": "uuid"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct TypedUuidForMagicLinkRedirectUriId(pub uuid::Uuid);
+    impl ::std::ops::Deref for TypedUuidForMagicLinkRedirectUriId {
+        type Target = uuid::Uuid;
+        fn deref(&self) -> &uuid::Uuid {
+            &self.0
+        }
+    }
+
+    impl From<TypedUuidForMagicLinkRedirectUriId> for uuid::Uuid {
+        fn from(value: TypedUuidForMagicLinkRedirectUriId) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&TypedUuidForMagicLinkRedirectUriId> for TypedUuidForMagicLinkRedirectUriId {
+        fn from(value: &TypedUuidForMagicLinkRedirectUriId) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<uuid::Uuid> for TypedUuidForMagicLinkRedirectUriId {
+        fn from(value: uuid::Uuid) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for TypedUuidForMagicLinkRedirectUriId {
+        type Err = <uuid::Uuid as std::str::FromStr>::Err;
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            Ok(Self(value.parse()?))
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for TypedUuidForMagicLinkRedirectUriId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &str) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for TypedUuidForMagicLinkRedirectUriId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for TypedUuidForMagicLinkRedirectUriId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl ::std::fmt::Display for TypedUuidForMagicLinkRedirectUriId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    /// TypedUuidForMagicLinkSecretId
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "format": "uuid"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct TypedUuidForMagicLinkSecretId(pub uuid::Uuid);
+    impl ::std::ops::Deref for TypedUuidForMagicLinkSecretId {
+        type Target = uuid::Uuid;
+        fn deref(&self) -> &uuid::Uuid {
+            &self.0
+        }
+    }
+
+    impl From<TypedUuidForMagicLinkSecretId> for uuid::Uuid {
+        fn from(value: TypedUuidForMagicLinkSecretId) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&TypedUuidForMagicLinkSecretId> for TypedUuidForMagicLinkSecretId {
+        fn from(value: &TypedUuidForMagicLinkSecretId) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<uuid::Uuid> for TypedUuidForMagicLinkSecretId {
+        fn from(value: uuid::Uuid) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for TypedUuidForMagicLinkSecretId {
+        type Err = <uuid::Uuid as std::str::FromStr>::Err;
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            Ok(Self(value.parse()?))
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for TypedUuidForMagicLinkSecretId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &str) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for TypedUuidForMagicLinkSecretId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for TypedUuidForMagicLinkSecretId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl ::std::fmt::Display for TypedUuidForMagicLinkSecretId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    /// TypedUuidForMapperId
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "format": "uuid"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct TypedUuidForMapperId(pub uuid::Uuid);
+    impl ::std::ops::Deref for TypedUuidForMapperId {
+        type Target = uuid::Uuid;
+        fn deref(&self) -> &uuid::Uuid {
+            &self.0
+        }
+    }
+
+    impl From<TypedUuidForMapperId> for uuid::Uuid {
+        fn from(value: TypedUuidForMapperId) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&TypedUuidForMapperId> for TypedUuidForMapperId {
+        fn from(value: &TypedUuidForMapperId) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<uuid::Uuid> for TypedUuidForMapperId {
+        fn from(value: uuid::Uuid) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for TypedUuidForMapperId {
+        type Err = <uuid::Uuid as std::str::FromStr>::Err;
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            Ok(Self(value.parse()?))
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for TypedUuidForMapperId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &str) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for TypedUuidForMapperId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for TypedUuidForMapperId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl ::std::fmt::Display for TypedUuidForMapperId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    /// TypedUuidForOAuthClientId
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "format": "uuid"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct TypedUuidForOAuthClientId(pub uuid::Uuid);
+    impl ::std::ops::Deref for TypedUuidForOAuthClientId {
+        type Target = uuid::Uuid;
+        fn deref(&self) -> &uuid::Uuid {
+            &self.0
+        }
+    }
+
+    impl From<TypedUuidForOAuthClientId> for uuid::Uuid {
+        fn from(value: TypedUuidForOAuthClientId) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&TypedUuidForOAuthClientId> for TypedUuidForOAuthClientId {
+        fn from(value: &TypedUuidForOAuthClientId) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<uuid::Uuid> for TypedUuidForOAuthClientId {
+        fn from(value: uuid::Uuid) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for TypedUuidForOAuthClientId {
+        type Err = <uuid::Uuid as std::str::FromStr>::Err;
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            Ok(Self(value.parse()?))
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for TypedUuidForOAuthClientId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &str) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for TypedUuidForOAuthClientId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for TypedUuidForOAuthClientId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl ::std::fmt::Display for TypedUuidForOAuthClientId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    /// TypedUuidForOAuthRedirectUriId
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "format": "uuid"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct TypedUuidForOAuthRedirectUriId(pub uuid::Uuid);
+    impl ::std::ops::Deref for TypedUuidForOAuthRedirectUriId {
+        type Target = uuid::Uuid;
+        fn deref(&self) -> &uuid::Uuid {
+            &self.0
+        }
+    }
+
+    impl From<TypedUuidForOAuthRedirectUriId> for uuid::Uuid {
+        fn from(value: TypedUuidForOAuthRedirectUriId) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&TypedUuidForOAuthRedirectUriId> for TypedUuidForOAuthRedirectUriId {
+        fn from(value: &TypedUuidForOAuthRedirectUriId) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<uuid::Uuid> for TypedUuidForOAuthRedirectUriId {
+        fn from(value: uuid::Uuid) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for TypedUuidForOAuthRedirectUriId {
+        type Err = <uuid::Uuid as std::str::FromStr>::Err;
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            Ok(Self(value.parse()?))
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for TypedUuidForOAuthRedirectUriId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &str) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for TypedUuidForOAuthRedirectUriId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for TypedUuidForOAuthRedirectUriId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl ::std::fmt::Display for TypedUuidForOAuthRedirectUriId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    /// TypedUuidForOAuthSecretId
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "format": "uuid"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct TypedUuidForOAuthSecretId(pub uuid::Uuid);
+    impl ::std::ops::Deref for TypedUuidForOAuthSecretId {
+        type Target = uuid::Uuid;
+        fn deref(&self) -> &uuid::Uuid {
+            &self.0
+        }
+    }
+
+    impl From<TypedUuidForOAuthSecretId> for uuid::Uuid {
+        fn from(value: TypedUuidForOAuthSecretId) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&TypedUuidForOAuthSecretId> for TypedUuidForOAuthSecretId {
+        fn from(value: &TypedUuidForOAuthSecretId) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<uuid::Uuid> for TypedUuidForOAuthSecretId {
+        fn from(value: uuid::Uuid) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for TypedUuidForOAuthSecretId {
+        type Err = <uuid::Uuid as std::str::FromStr>::Err;
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            Ok(Self(value.parse()?))
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for TypedUuidForOAuthSecretId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &str) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for TypedUuidForOAuthSecretId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for TypedUuidForOAuthSecretId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl ::std::fmt::Display for TypedUuidForOAuthSecretId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    /// TypedUuidForRfdId
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "format": "uuid"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct TypedUuidForRfdId(pub uuid::Uuid);
+    impl ::std::ops::Deref for TypedUuidForRfdId {
+        type Target = uuid::Uuid;
+        fn deref(&self) -> &uuid::Uuid {
+            &self.0
+        }
+    }
+
+    impl From<TypedUuidForRfdId> for uuid::Uuid {
+        fn from(value: TypedUuidForRfdId) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&TypedUuidForRfdId> for TypedUuidForRfdId {
+        fn from(value: &TypedUuidForRfdId) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<uuid::Uuid> for TypedUuidForRfdId {
+        fn from(value: uuid::Uuid) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for TypedUuidForRfdId {
+        type Err = <uuid::Uuid as std::str::FromStr>::Err;
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            Ok(Self(value.parse()?))
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for TypedUuidForRfdId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &str) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for TypedUuidForRfdId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for TypedUuidForRfdId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl ::std::fmt::Display for TypedUuidForRfdId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    /// TypedUuidForUserId
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "format": "uuid"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct TypedUuidForUserId(pub uuid::Uuid);
+    impl ::std::ops::Deref for TypedUuidForUserId {
+        type Target = uuid::Uuid;
+        fn deref(&self) -> &uuid::Uuid {
+            &self.0
+        }
+    }
+
+    impl From<TypedUuidForUserId> for uuid::Uuid {
+        fn from(value: TypedUuidForUserId) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&TypedUuidForUserId> for TypedUuidForUserId {
+        fn from(value: &TypedUuidForUserId) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<uuid::Uuid> for TypedUuidForUserId {
+        fn from(value: uuid::Uuid) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for TypedUuidForUserId {
+        type Err = <uuid::Uuid as std::str::FromStr>::Err;
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            Ok(Self(value.parse()?))
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for TypedUuidForUserId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &str) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for TypedUuidForUserId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for TypedUuidForUserId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl ::std::fmt::Display for TypedUuidForUserId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    /// TypedUuidForUserProviderId
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "format": "uuid"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct TypedUuidForUserProviderId(pub uuid::Uuid);
+    impl ::std::ops::Deref for TypedUuidForUserProviderId {
+        type Target = uuid::Uuid;
+        fn deref(&self) -> &uuid::Uuid {
+            &self.0
+        }
+    }
+
+    impl From<TypedUuidForUserProviderId> for uuid::Uuid {
+        fn from(value: TypedUuidForUserProviderId) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&TypedUuidForUserProviderId> for TypedUuidForUserProviderId {
+        fn from(value: &TypedUuidForUserProviderId) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<uuid::Uuid> for TypedUuidForUserProviderId {
+        fn from(value: uuid::Uuid) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for TypedUuidForUserProviderId {
+        type Err = <uuid::Uuid as std::str::FromStr>::Err;
+        fn from_str(value: &str) -> Result<Self, Self::Err> {
+            Ok(Self(value.parse()?))
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for TypedUuidForUserProviderId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &str) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for TypedUuidForUserProviderId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: &String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for TypedUuidForUserProviderId {
+        type Error = <uuid::Uuid as std::str::FromStr>::Err;
+        fn try_from(value: String) -> Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl ::std::fmt::Display for TypedUuidForUserProviderId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
         }
     }
 
@@ -5869,16 +5840,16 @@ pub mod types {
     /// ```
     /// </details>
     #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
         Clone,
         Copy,
         Debug,
-        Deserialize,
         Eq,
         Hash,
         Ord,
         PartialEq,
         PartialOrd,
-        Serialize,
         schemars :: JsonSchema,
     )]
     pub enum Visibility {
@@ -5894,11 +5865,11 @@ pub mod types {
         }
     }
 
-    impl ToString for Visibility {
-        fn to_string(&self) -> String {
+    impl ::std::fmt::Display for Visibility {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match *self {
-                Self::Public => "public".to_string(),
-                Self::Private => "private".to_string(),
+                Self::Public => write!(f, "public"),
+                Self::Private => write!(f, "private"),
             }
         }
     }
@@ -5938,16 +5909,16 @@ pub mod types {
     /// Types for composing complex structures.
     pub mod builder {
         #[derive(Clone, Debug)]
-        pub struct AccessGroupForApiPermissionResponse {
+        pub struct AccessGroupForRfdPermission {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
-            id: Result<uuid::Uuid, String>,
+            id: Result<super::TypedUuidForAccessGroupId, String>,
             name: Result<String, String>,
-            permissions: Result<super::PermissionsForApiPermissionResponse, String>,
+            permissions: Result<super::PermissionsForRfdPermission, String>,
             updated_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
         }
 
-        impl Default for AccessGroupForApiPermissionResponse {
+        impl Default for AccessGroupForRfdPermission {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -5960,7 +5931,7 @@ pub mod types {
             }
         }
 
-        impl AccessGroupForApiPermissionResponse {
+        impl AccessGroupForRfdPermission {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
                 T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
@@ -5983,7 +5954,7 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<uuid::Uuid>,
+                T: std::convert::TryInto<super::TypedUuidForAccessGroupId>,
                 T::Error: std::fmt::Display,
             {
                 self.id = value
@@ -6003,7 +5974,7 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::PermissionsForApiPermissionResponse>,
+                T: std::convert::TryInto<super::PermissionsForRfdPermission>,
                 T::Error: std::fmt::Display,
             {
                 self.permissions = value
@@ -6023,12 +5994,10 @@ pub mod types {
             }
         }
 
-        impl std::convert::TryFrom<AccessGroupForApiPermissionResponse>
-            for super::AccessGroupForApiPermissionResponse
-        {
+        impl std::convert::TryFrom<AccessGroupForRfdPermission> for super::AccessGroupForRfdPermission {
             type Error = super::error::ConversionError;
             fn try_from(
-                value: AccessGroupForApiPermissionResponse,
+                value: AccessGroupForRfdPermission,
             ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     created_at: value.created_at?,
@@ -6041,8 +6010,8 @@ pub mod types {
             }
         }
 
-        impl From<super::AccessGroupForApiPermissionResponse> for AccessGroupForApiPermissionResponse {
-            fn from(value: super::AccessGroupForApiPermissionResponse) -> Self {
+        impl From<super::AccessGroupForRfdPermission> for AccessGroupForRfdPermission {
+            fn from(value: super::AccessGroupForRfdPermission) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
                     deleted_at: Ok(value.deleted_at),
@@ -6055,12 +6024,12 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
-        pub struct AccessGroupUpdateParams {
+        pub struct AccessGroupUpdateParamsForRfdPermission {
             name: Result<String, String>,
-            permissions: Result<super::PermissionsForApiPermission, String>,
+            permissions: Result<super::PermissionsForRfdPermission, String>,
         }
 
-        impl Default for AccessGroupUpdateParams {
+        impl Default for AccessGroupUpdateParamsForRfdPermission {
             fn default() -> Self {
                 Self {
                     name: Err("no value supplied for name".to_string()),
@@ -6069,7 +6038,7 @@ pub mod types {
             }
         }
 
-        impl AccessGroupUpdateParams {
+        impl AccessGroupUpdateParamsForRfdPermission {
             pub fn name<T>(mut self, value: T) -> Self
             where
                 T: std::convert::TryInto<String>,
@@ -6082,7 +6051,7 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::PermissionsForApiPermission>,
+                T: std::convert::TryInto<super::PermissionsForRfdPermission>,
                 T::Error: std::fmt::Display,
             {
                 self.permissions = value
@@ -6092,10 +6061,12 @@ pub mod types {
             }
         }
 
-        impl std::convert::TryFrom<AccessGroupUpdateParams> for super::AccessGroupUpdateParams {
+        impl std::convert::TryFrom<AccessGroupUpdateParamsForRfdPermission>
+            for super::AccessGroupUpdateParamsForRfdPermission
+        {
             type Error = super::error::ConversionError;
             fn try_from(
-                value: AccessGroupUpdateParams,
+                value: AccessGroupUpdateParamsForRfdPermission,
             ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     name: value.name?,
@@ -6104,8 +6075,10 @@ pub mod types {
             }
         }
 
-        impl From<super::AccessGroupUpdateParams> for AccessGroupUpdateParams {
-            fn from(value: super::AccessGroupUpdateParams) -> Self {
+        impl From<super::AccessGroupUpdateParamsForRfdPermission>
+            for AccessGroupUpdateParamsForRfdPermission
+        {
+            fn from(value: super::AccessGroupUpdateParamsForRfdPermission) -> Self {
                 Self {
                     name: Ok(value.name),
                     permissions: Ok(value.permissions),
@@ -6188,7 +6161,7 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct AddGroupBody {
-            group_id: Result<uuid::Uuid, String>,
+            group_id: Result<super::TypedUuidForAccessGroupId, String>,
         }
 
         impl Default for AddGroupBody {
@@ -6202,7 +6175,7 @@ pub mod types {
         impl AddGroupBody {
             pub fn group_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<uuid::Uuid>,
+                T: std::convert::TryInto<super::TypedUuidForAccessGroupId>,
                 T::Error: std::fmt::Display,
             {
                 self.group_id = value
@@ -6225,6 +6198,51 @@ pub mod types {
             fn from(value: super::AddGroupBody) -> Self {
                 Self {
                     group_id: Ok(value.group_id),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct AddMagicLinkRedirectBody {
+            redirect_uri: Result<String, String>,
+        }
+
+        impl Default for AddMagicLinkRedirectBody {
+            fn default() -> Self {
+                Self {
+                    redirect_uri: Err("no value supplied for redirect_uri".to_string()),
+                }
+            }
+        }
+
+        impl AddMagicLinkRedirectBody {
+            pub fn redirect_uri<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.redirect_uri = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for redirect_uri: {}", e)
+                });
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<AddMagicLinkRedirectBody> for super::AddMagicLinkRedirectBody {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: AddMagicLinkRedirectBody,
+            ) -> Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    redirect_uri: value.redirect_uri?,
+                })
+            }
+        }
+
+        impl From<super::AddMagicLinkRedirectBody> for AddMagicLinkRedirectBody {
+            fn from(value: super::AddMagicLinkRedirectBody) -> Self {
+                Self {
+                    redirect_uri: Ok(value.redirect_uri),
                 }
             }
         }
@@ -6275,12 +6293,12 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
-        pub struct ApiKeyCreateParams {
+        pub struct ApiKeyCreateParamsForRfdPermission {
             expires_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
-            permissions: Result<Option<super::PermissionsForApiPermissionResponse>, String>,
+            permissions: Result<Option<super::PermissionsForRfdPermission>, String>,
         }
 
-        impl Default for ApiKeyCreateParams {
+        impl Default for ApiKeyCreateParamsForRfdPermission {
             fn default() -> Self {
                 Self {
                     expires_at: Err("no value supplied for expires_at".to_string()),
@@ -6289,7 +6307,7 @@ pub mod types {
             }
         }
 
-        impl ApiKeyCreateParams {
+        impl ApiKeyCreateParamsForRfdPermission {
             pub fn expires_at<T>(mut self, value: T) -> Self
             where
                 T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
@@ -6302,7 +6320,7 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<Option<super::PermissionsForApiPermissionResponse>>,
+                T: std::convert::TryInto<Option<super::PermissionsForRfdPermission>>,
                 T::Error: std::fmt::Display,
             {
                 self.permissions = value
@@ -6312,9 +6330,13 @@ pub mod types {
             }
         }
 
-        impl std::convert::TryFrom<ApiKeyCreateParams> for super::ApiKeyCreateParams {
+        impl std::convert::TryFrom<ApiKeyCreateParamsForRfdPermission>
+            for super::ApiKeyCreateParamsForRfdPermission
+        {
             type Error = super::error::ConversionError;
-            fn try_from(value: ApiKeyCreateParams) -> Result<Self, super::error::ConversionError> {
+            fn try_from(
+                value: ApiKeyCreateParamsForRfdPermission,
+            ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     expires_at: value.expires_at?,
                     permissions: value.permissions?,
@@ -6322,8 +6344,8 @@ pub mod types {
             }
         }
 
-        impl From<super::ApiKeyCreateParams> for ApiKeyCreateParams {
-            fn from(value: super::ApiKeyCreateParams) -> Self {
+        impl From<super::ApiKeyCreateParamsForRfdPermission> for ApiKeyCreateParamsForRfdPermission {
+            fn from(value: super::ApiKeyCreateParamsForRfdPermission) -> Self {
                 Self {
                     expires_at: Ok(value.expires_at),
                     permissions: Ok(value.permissions),
@@ -6332,13 +6354,13 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
-        pub struct ApiKeyResponse {
+        pub struct ApiKeyResponseForRfdPermission {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
-            id: Result<uuid::Uuid, String>,
-            permissions: Result<Option<super::PermissionsForApiPermissionResponse>, String>,
+            id: Result<super::TypedUuidForApiKeyId, String>,
+            permissions: Result<Option<super::PermissionsForRfdPermission>, String>,
         }
 
-        impl Default for ApiKeyResponse {
+        impl Default for ApiKeyResponseForRfdPermission {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -6348,7 +6370,7 @@ pub mod types {
             }
         }
 
-        impl ApiKeyResponse {
+        impl ApiKeyResponseForRfdPermission {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
                 T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
@@ -6361,7 +6383,7 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<uuid::Uuid>,
+                T: std::convert::TryInto<super::TypedUuidForApiKeyId>,
                 T::Error: std::fmt::Display,
             {
                 self.id = value
@@ -6371,7 +6393,7 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<Option<super::PermissionsForApiPermissionResponse>>,
+                T: std::convert::TryInto<Option<super::PermissionsForRfdPermission>>,
                 T::Error: std::fmt::Display,
             {
                 self.permissions = value
@@ -6381,9 +6403,13 @@ pub mod types {
             }
         }
 
-        impl std::convert::TryFrom<ApiKeyResponse> for super::ApiKeyResponse {
+        impl std::convert::TryFrom<ApiKeyResponseForRfdPermission>
+            for super::ApiKeyResponseForRfdPermission
+        {
             type Error = super::error::ConversionError;
-            fn try_from(value: ApiKeyResponse) -> Result<Self, super::error::ConversionError> {
+            fn try_from(
+                value: ApiKeyResponseForRfdPermission,
+            ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     created_at: value.created_at?,
                     id: value.id?,
@@ -6392,8 +6418,8 @@ pub mod types {
             }
         }
 
-        impl From<super::ApiKeyResponse> for ApiKeyResponse {
-            fn from(value: super::ApiKeyResponse) -> Self {
+        impl From<super::ApiKeyResponseForRfdPermission> for ApiKeyResponseForRfdPermission {
+            fn from(value: super::ApiKeyResponseForRfdPermission) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
                     id: Ok(value.id),
@@ -6403,16 +6429,16 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
-        pub struct ApiUserForApiPermissionResponse {
+        pub struct ApiUserForRfdPermission {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
-            groups: Result<Vec<uuid::Uuid>, String>,
-            id: Result<uuid::Uuid, String>,
-            permissions: Result<super::PermissionsForApiPermissionResponse, String>,
+            groups: Result<Vec<super::TypedUuidForAccessGroupId>, String>,
+            id: Result<super::TypedUuidForUserId, String>,
+            permissions: Result<super::PermissionsForRfdPermission, String>,
             updated_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
         }
 
-        impl Default for ApiUserForApiPermissionResponse {
+        impl Default for ApiUserForRfdPermission {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -6425,7 +6451,7 @@ pub mod types {
             }
         }
 
-        impl ApiUserForApiPermissionResponse {
+        impl ApiUserForRfdPermission {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
                 T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
@@ -6448,7 +6474,7 @@ pub mod types {
             }
             pub fn groups<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<Vec<uuid::Uuid>>,
+                T: std::convert::TryInto<Vec<super::TypedUuidForAccessGroupId>>,
                 T::Error: std::fmt::Display,
             {
                 self.groups = value
@@ -6458,7 +6484,7 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<uuid::Uuid>,
+                T: std::convert::TryInto<super::TypedUuidForUserId>,
                 T::Error: std::fmt::Display,
             {
                 self.id = value
@@ -6468,7 +6494,7 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::PermissionsForApiPermissionResponse>,
+                T: std::convert::TryInto<super::PermissionsForRfdPermission>,
                 T::Error: std::fmt::Display,
             {
                 self.permissions = value
@@ -6488,12 +6514,10 @@ pub mod types {
             }
         }
 
-        impl std::convert::TryFrom<ApiUserForApiPermissionResponse>
-            for super::ApiUserForApiPermissionResponse
-        {
+        impl std::convert::TryFrom<ApiUserForRfdPermission> for super::ApiUserForRfdPermission {
             type Error = super::error::ConversionError;
             fn try_from(
-                value: ApiUserForApiPermissionResponse,
+                value: ApiUserForRfdPermission,
             ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     created_at: value.created_at?,
@@ -6506,8 +6530,8 @@ pub mod types {
             }
         }
 
-        impl From<super::ApiUserForApiPermissionResponse> for ApiUserForApiPermissionResponse {
-            fn from(value: super::ApiUserForApiPermissionResponse) -> Self {
+        impl From<super::ApiUserForRfdPermission> for ApiUserForRfdPermission {
+            fn from(value: super::ApiUserForRfdPermission) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
                     deleted_at: Ok(value.deleted_at),
@@ -6520,22 +6544,111 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
+        pub struct ApiUserLinkRequestPayload {
+            user_id: Result<super::TypedUuidForUserId, String>,
+        }
+
+        impl Default for ApiUserLinkRequestPayload {
+            fn default() -> Self {
+                Self {
+                    user_id: Err("no value supplied for user_id".to_string()),
+                }
+            }
+        }
+
+        impl ApiUserLinkRequestPayload {
+            pub fn user_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::TypedUuidForUserId>,
+                T::Error: std::fmt::Display,
+            {
+                self.user_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for user_id: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<ApiUserLinkRequestPayload> for super::ApiUserLinkRequestPayload {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: ApiUserLinkRequestPayload,
+            ) -> Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    user_id: value.user_id?,
+                })
+            }
+        }
+
+        impl From<super::ApiUserLinkRequestPayload> for ApiUserLinkRequestPayload {
+            fn from(value: super::ApiUserLinkRequestPayload) -> Self {
+                Self {
+                    user_id: Ok(value.user_id),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct ApiUserLinkRequestResponse {
+            token: Result<super::SecretString, String>,
+        }
+
+        impl Default for ApiUserLinkRequestResponse {
+            fn default() -> Self {
+                Self {
+                    token: Err("no value supplied for token".to_string()),
+                }
+            }
+        }
+
+        impl ApiUserLinkRequestResponse {
+            pub fn token<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::SecretString>,
+                T::Error: std::fmt::Display,
+            {
+                self.token = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for token: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<ApiUserLinkRequestResponse> for super::ApiUserLinkRequestResponse {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: ApiUserLinkRequestResponse,
+            ) -> Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    token: value.token?,
+                })
+            }
+        }
+
+        impl From<super::ApiUserLinkRequestResponse> for ApiUserLinkRequestResponse {
+            fn from(value: super::ApiUserLinkRequestResponse) -> Self {
+                Self {
+                    token: Ok(value.token),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
         pub struct ApiUserProvider {
-            api_user_id: Result<uuid::Uuid, String>,
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
             display_names: Result<Vec<String>, String>,
             emails: Result<Vec<String>, String>,
-            id: Result<uuid::Uuid, String>,
+            id: Result<super::TypedUuidForUserProviderId, String>,
             provider: Result<String, String>,
             provider_id: Result<String, String>,
             updated_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+            user_id: Result<super::TypedUuidForUserId, String>,
         }
 
         impl Default for ApiUserProvider {
             fn default() -> Self {
                 Self {
-                    api_user_id: Err("no value supplied for api_user_id".to_string()),
                     created_at: Err("no value supplied for created_at".to_string()),
                     deleted_at: Ok(Default::default()),
                     display_names: Err("no value supplied for display_names".to_string()),
@@ -6544,21 +6657,12 @@ pub mod types {
                     provider: Err("no value supplied for provider".to_string()),
                     provider_id: Err("no value supplied for provider_id".to_string()),
                     updated_at: Err("no value supplied for updated_at".to_string()),
+                    user_id: Err("no value supplied for user_id".to_string()),
                 }
             }
         }
 
         impl ApiUserProvider {
-            pub fn api_user_id<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<uuid::Uuid>,
-                T::Error: std::fmt::Display,
-            {
-                self.api_user_id = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for api_user_id: {}", e));
-                self
-            }
             pub fn created_at<T>(mut self, value: T) -> Self
             where
                 T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
@@ -6601,7 +6705,7 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<uuid::Uuid>,
+                T: std::convert::TryInto<super::TypedUuidForUserProviderId>,
                 T::Error: std::fmt::Display,
             {
                 self.id = value
@@ -6639,13 +6743,22 @@ pub mod types {
                     .map_err(|e| format!("error converting supplied value for updated_at: {}", e));
                 self
             }
+            pub fn user_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::TypedUuidForUserId>,
+                T::Error: std::fmt::Display,
+            {
+                self.user_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for user_id: {}", e));
+                self
+            }
         }
 
         impl std::convert::TryFrom<ApiUserProvider> for super::ApiUserProvider {
             type Error = super::error::ConversionError;
             fn try_from(value: ApiUserProvider) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
-                    api_user_id: value.api_user_id?,
                     created_at: value.created_at?,
                     deleted_at: value.deleted_at?,
                     display_names: value.display_names?,
@@ -6654,6 +6767,7 @@ pub mod types {
                     provider: value.provider?,
                     provider_id: value.provider_id?,
                     updated_at: value.updated_at?,
+                    user_id: value.user_id?,
                 })
             }
         }
@@ -6661,7 +6775,6 @@ pub mod types {
         impl From<super::ApiUserProvider> for ApiUserProvider {
             fn from(value: super::ApiUserProvider) -> Self {
                 Self {
-                    api_user_id: Ok(value.api_user_id),
                     created_at: Ok(value.created_at),
                     deleted_at: Ok(value.deleted_at),
                     display_names: Ok(value.display_names),
@@ -6670,39 +6783,85 @@ pub mod types {
                     provider: Ok(value.provider),
                     provider_id: Ok(value.provider_id),
                     updated_at: Ok(value.updated_at),
+                    user_id: Ok(value.user_id),
                 }
             }
         }
 
         #[derive(Clone, Debug)]
-        pub struct ApiUserUpdateParams {
-            groups: Result<Vec<uuid::Uuid>, String>,
-            permissions: Result<super::PermissionsForApiPermission, String>,
+        pub struct ApiUserProviderLinkPayload {
+            token: Result<String, String>,
         }
 
-        impl Default for ApiUserUpdateParams {
+        impl Default for ApiUserProviderLinkPayload {
             fn default() -> Self {
                 Self {
-                    groups: Err("no value supplied for groups".to_string()),
+                    token: Err("no value supplied for token".to_string()),
+                }
+            }
+        }
+
+        impl ApiUserProviderLinkPayload {
+            pub fn token<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.token = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for token: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<ApiUserProviderLinkPayload> for super::ApiUserProviderLinkPayload {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: ApiUserProviderLinkPayload,
+            ) -> Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    token: value.token?,
+                })
+            }
+        }
+
+        impl From<super::ApiUserProviderLinkPayload> for ApiUserProviderLinkPayload {
+            fn from(value: super::ApiUserProviderLinkPayload) -> Self {
+                Self {
+                    token: Ok(value.token),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct ApiUserUpdateParamsForRfdPermission {
+            group_ids: Result<Vec<super::TypedUuidForAccessGroupId>, String>,
+            permissions: Result<super::PermissionsForRfdPermission, String>,
+        }
+
+        impl Default for ApiUserUpdateParamsForRfdPermission {
+            fn default() -> Self {
+                Self {
+                    group_ids: Err("no value supplied for group_ids".to_string()),
                     permissions: Err("no value supplied for permissions".to_string()),
                 }
             }
         }
 
-        impl ApiUserUpdateParams {
-            pub fn groups<T>(mut self, value: T) -> Self
+        impl ApiUserUpdateParamsForRfdPermission {
+            pub fn group_ids<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<Vec<uuid::Uuid>>,
+                T: std::convert::TryInto<Vec<super::TypedUuidForAccessGroupId>>,
                 T::Error: std::fmt::Display,
             {
-                self.groups = value
+                self.group_ids = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for groups: {}", e));
+                    .map_err(|e| format!("error converting supplied value for group_ids: {}", e));
                 self
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::PermissionsForApiPermission>,
+                T: std::convert::TryInto<super::PermissionsForRfdPermission>,
                 T::Error: std::fmt::Display,
             {
                 self.permissions = value
@@ -6712,20 +6871,24 @@ pub mod types {
             }
         }
 
-        impl std::convert::TryFrom<ApiUserUpdateParams> for super::ApiUserUpdateParams {
+        impl std::convert::TryFrom<ApiUserUpdateParamsForRfdPermission>
+            for super::ApiUserUpdateParamsForRfdPermission
+        {
             type Error = super::error::ConversionError;
-            fn try_from(value: ApiUserUpdateParams) -> Result<Self, super::error::ConversionError> {
+            fn try_from(
+                value: ApiUserUpdateParamsForRfdPermission,
+            ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
-                    groups: value.groups?,
+                    group_ids: value.group_ids?,
                     permissions: value.permissions?,
                 })
             }
         }
 
-        impl From<super::ApiUserUpdateParams> for ApiUserUpdateParams {
-            fn from(value: super::ApiUserUpdateParams) -> Self {
+        impl From<super::ApiUserUpdateParamsForRfdPermission> for ApiUserUpdateParamsForRfdPermission {
+            fn from(value: super::ApiUserUpdateParamsForRfdPermission) -> Self {
                 Self {
-                    groups: Ok(value.groups),
+                    group_ids: Ok(value.group_ids),
                     permissions: Ok(value.permissions),
                 }
             }
@@ -6735,7 +6898,7 @@ pub mod types {
         pub struct CreateMapper {
             max_activations: Result<Option<i32>, String>,
             name: Result<String, String>,
-            rule: Result<super::MappingRules, String>,
+            rule: Result<::serde_json::Value, String>,
         }
 
         impl Default for CreateMapper {
@@ -6771,7 +6934,7 @@ pub mod types {
             }
             pub fn rule<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::MappingRules>,
+                T: std::convert::TryInto<::serde_json::Value>,
                 T::Error: std::fmt::Display,
             {
                 self.rule = value
@@ -7010,7 +7173,7 @@ pub mod types {
             content: Result<String, String>,
             discussion: Result<Option<String>, String>,
             format: Result<super::ContentFormat, String>,
-            id: Result<uuid::Uuid, String>,
+            id: Result<super::TypedUuidForRfdId, String>,
             labels: Result<Option<String>, String>,
             link: Result<Option<String>, String>,
             pdfs: Result<Vec<super::FullRfdPdfEntry>, String>,
@@ -7106,7 +7269,7 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<uuid::Uuid>,
+                T: std::convert::TryInto<super::TypedUuidForRfdId>,
                 T::Error: std::fmt::Display,
             {
                 self.id = value
@@ -7299,12 +7462,12 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
-        pub struct GetUserResponse {
-            info: Result<super::ApiUserForApiPermissionResponse, String>,
+        pub struct GetUserResponseForRfdPermission {
+            info: Result<super::ApiUserForRfdPermission, String>,
             providers: Result<Vec<super::ApiUserProvider>, String>,
         }
 
-        impl Default for GetUserResponse {
+        impl Default for GetUserResponseForRfdPermission {
             fn default() -> Self {
                 Self {
                     info: Err("no value supplied for info".to_string()),
@@ -7313,10 +7476,10 @@ pub mod types {
             }
         }
 
-        impl GetUserResponse {
+        impl GetUserResponseForRfdPermission {
             pub fn info<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::ApiUserForApiPermissionResponse>,
+                T: std::convert::TryInto<super::ApiUserForRfdPermission>,
                 T::Error: std::fmt::Display,
             {
                 self.info = value
@@ -7336,9 +7499,13 @@ pub mod types {
             }
         }
 
-        impl std::convert::TryFrom<GetUserResponse> for super::GetUserResponse {
+        impl std::convert::TryFrom<GetUserResponseForRfdPermission>
+            for super::GetUserResponseForRfdPermission
+        {
             type Error = super::error::ConversionError;
-            fn try_from(value: GetUserResponse) -> Result<Self, super::error::ConversionError> {
+            fn try_from(
+                value: GetUserResponseForRfdPermission,
+            ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     info: value.info?,
                     providers: value.providers?,
@@ -7346,8 +7513,8 @@ pub mod types {
             }
         }
 
-        impl From<super::GetUserResponse> for GetUserResponse {
-            fn from(value: super::GetUserResponse) -> Self {
+        impl From<super::GetUserResponseForRfdPermission> for GetUserResponseForRfdPermission {
+            fn from(value: super::GetUserResponseForRfdPermission) -> Self {
                 Self {
                     info: Ok(value.info),
                     providers: Ok(value.providers),
@@ -7854,14 +8021,14 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
-        pub struct InitialApiKeyResponse {
+        pub struct InitialApiKeyResponseForRfdPermission {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
-            id: Result<uuid::Uuid, String>,
+            id: Result<super::TypedUuidForApiKeyId, String>,
             key: Result<super::SecretString, String>,
-            permissions: Result<Option<super::PermissionsForApiPermissionResponse>, String>,
+            permissions: Result<Option<super::PermissionsForRfdPermission>, String>,
         }
 
-        impl Default for InitialApiKeyResponse {
+        impl Default for InitialApiKeyResponseForRfdPermission {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -7872,7 +8039,7 @@ pub mod types {
             }
         }
 
-        impl InitialApiKeyResponse {
+        impl InitialApiKeyResponseForRfdPermission {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
                 T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
@@ -7885,7 +8052,7 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<uuid::Uuid>,
+                T: std::convert::TryInto<super::TypedUuidForApiKeyId>,
                 T::Error: std::fmt::Display,
             {
                 self.id = value
@@ -7905,7 +8072,7 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<Option<super::PermissionsForApiPermissionResponse>>,
+                T: std::convert::TryInto<Option<super::PermissionsForRfdPermission>>,
                 T::Error: std::fmt::Display,
             {
                 self.permissions = value
@@ -7915,10 +8082,12 @@ pub mod types {
             }
         }
 
-        impl std::convert::TryFrom<InitialApiKeyResponse> for super::InitialApiKeyResponse {
+        impl std::convert::TryFrom<InitialApiKeyResponseForRfdPermission>
+            for super::InitialApiKeyResponseForRfdPermission
+        {
             type Error = super::error::ConversionError;
             fn try_from(
-                value: InitialApiKeyResponse,
+                value: InitialApiKeyResponseForRfdPermission,
             ) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     created_at: value.created_at?,
@@ -7929,8 +8098,8 @@ pub mod types {
             }
         }
 
-        impl From<super::InitialApiKeyResponse> for InitialApiKeyResponse {
-            fn from(value: super::InitialApiKeyResponse) -> Self {
+        impl From<super::InitialApiKeyResponseForRfdPermission> for InitialApiKeyResponseForRfdPermission {
+            fn from(value: super::InitialApiKeyResponseForRfdPermission) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
                     id: Ok(value.id),
@@ -7941,9 +8110,84 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
+        pub struct InitialMagicLinkSecretResponse {
+            created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+            id: Result<super::TypedUuidForMagicLinkSecretId, String>,
+            key: Result<super::SecretString, String>,
+        }
+
+        impl Default for InitialMagicLinkSecretResponse {
+            fn default() -> Self {
+                Self {
+                    created_at: Err("no value supplied for created_at".to_string()),
+                    id: Err("no value supplied for id".to_string()),
+                    key: Err("no value supplied for key".to_string()),
+                }
+            }
+        }
+
+        impl InitialMagicLinkSecretResponse {
+            pub fn created_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.created_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::TypedUuidForMagicLinkSecretId>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn key<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::SecretString>,
+                T::Error: std::fmt::Display,
+            {
+                self.key = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for key: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<InitialMagicLinkSecretResponse>
+            for super::InitialMagicLinkSecretResponse
+        {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: InitialMagicLinkSecretResponse,
+            ) -> Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    created_at: value.created_at?,
+                    id: value.id?,
+                    key: value.key?,
+                })
+            }
+        }
+
+        impl From<super::InitialMagicLinkSecretResponse> for InitialMagicLinkSecretResponse {
+            fn from(value: super::InitialMagicLinkSecretResponse) -> Self {
+                Self {
+                    created_at: Ok(value.created_at),
+                    id: Ok(value.id),
+                    key: Ok(value.key),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
         pub struct InitialOAuthClientSecretResponse {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
-            id: Result<uuid::Uuid, String>,
+            id: Result<super::TypedUuidForOAuthSecretId, String>,
             key: Result<super::SecretString, String>,
         }
 
@@ -7970,7 +8214,7 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<uuid::Uuid>,
+                T: std::convert::TryInto<super::TypedUuidForOAuthSecretId>,
                 T::Error: std::fmt::Display,
             {
                 self.id = value
@@ -8162,7 +8406,7 @@ pub mod types {
             committed_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             discussion: Result<Option<String>, String>,
             format: Result<super::ContentFormat, String>,
-            id: Result<uuid::Uuid, String>,
+            id: Result<super::TypedUuidForRfdId, String>,
             labels: Result<Option<String>, String>,
             link: Result<Option<String>, String>,
             rfd_number: Result<i32, String>,
@@ -8245,7 +8489,7 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<uuid::Uuid>,
+                T: std::convert::TryInto<super::TypedUuidForRfdId>,
                 T::Error: std::fmt::Display,
             {
                 self.id = value
@@ -8367,58 +8611,619 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
-        pub struct LocalLogin {
-            email: Result<String, String>,
-            external_id: Result<String, String>,
+        pub struct MagicLink {
+            created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+            deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
+            id: Result<super::TypedUuidForMagicLinkId, String>,
+            redirect_uris: Result<Vec<super::MagicLinkRedirectUri>, String>,
+            secrets: Result<Vec<super::MagicLinkSecret>, String>,
         }
 
-        impl Default for LocalLogin {
+        impl Default for MagicLink {
             fn default() -> Self {
                 Self {
-                    email: Err("no value supplied for email".to_string()),
-                    external_id: Err("no value supplied for external_id".to_string()),
+                    created_at: Err("no value supplied for created_at".to_string()),
+                    deleted_at: Ok(Default::default()),
+                    id: Err("no value supplied for id".to_string()),
+                    redirect_uris: Err("no value supplied for redirect_uris".to_string()),
+                    secrets: Err("no value supplied for secrets".to_string()),
                 }
             }
         }
 
-        impl LocalLogin {
-            pub fn email<T>(mut self, value: T) -> Self
+        impl MagicLink {
+            pub fn created_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<String>,
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
                 T::Error: std::fmt::Display,
             {
-                self.email = value
+                self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for email: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
                 self
             }
-            pub fn external_id<T>(mut self, value: T) -> Self
+            pub fn deleted_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<String>,
+                T: std::convert::TryInto<Option<chrono::DateTime<chrono::offset::Utc>>>,
                 T::Error: std::fmt::Display,
             {
-                self.external_id = value
+                self.deleted_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for external_id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::TypedUuidForMagicLinkId>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn redirect_uris<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Vec<super::MagicLinkRedirectUri>>,
+                T::Error: std::fmt::Display,
+            {
+                self.redirect_uris = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for redirect_uris: {}", e)
+                });
+                self
+            }
+            pub fn secrets<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Vec<super::MagicLinkSecret>>,
+                T::Error: std::fmt::Display,
+            {
+                self.secrets = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for secrets: {}", e));
                 self
             }
         }
 
-        impl std::convert::TryFrom<LocalLogin> for super::LocalLogin {
+        impl std::convert::TryFrom<MagicLink> for super::MagicLink {
             type Error = super::error::ConversionError;
-            fn try_from(value: LocalLogin) -> Result<Self, super::error::ConversionError> {
+            fn try_from(value: MagicLink) -> Result<Self, super::error::ConversionError> {
                 Ok(Self {
-                    email: value.email?,
-                    external_id: value.external_id?,
+                    created_at: value.created_at?,
+                    deleted_at: value.deleted_at?,
+                    id: value.id?,
+                    redirect_uris: value.redirect_uris?,
+                    secrets: value.secrets?,
                 })
             }
         }
 
-        impl From<super::LocalLogin> for LocalLogin {
-            fn from(value: super::LocalLogin) -> Self {
+        impl From<super::MagicLink> for MagicLink {
+            fn from(value: super::MagicLink) -> Self {
                 Self {
-                    email: Ok(value.email),
-                    external_id: Ok(value.external_id),
+                    created_at: Ok(value.created_at),
+                    deleted_at: Ok(value.deleted_at),
+                    id: Ok(value.id),
+                    redirect_uris: Ok(value.redirect_uris),
+                    secrets: Ok(value.secrets),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct MagicLinkExchangeRequest {
+            attempt_id: Result<super::TypedUuidForMagicLinkAttemptId, String>,
+            recipient: Result<String, String>,
+            secret: Result<String, String>,
+        }
+
+        impl Default for MagicLinkExchangeRequest {
+            fn default() -> Self {
+                Self {
+                    attempt_id: Err("no value supplied for attempt_id".to_string()),
+                    recipient: Err("no value supplied for recipient".to_string()),
+                    secret: Err("no value supplied for secret".to_string()),
+                }
+            }
+        }
+
+        impl MagicLinkExchangeRequest {
+            pub fn attempt_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::TypedUuidForMagicLinkAttemptId>,
+                T::Error: std::fmt::Display,
+            {
+                self.attempt_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for attempt_id: {}", e));
+                self
+            }
+            pub fn recipient<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.recipient = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for recipient: {}", e));
+                self
+            }
+            pub fn secret<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.secret = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for secret: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<MagicLinkExchangeRequest> for super::MagicLinkExchangeRequest {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: MagicLinkExchangeRequest,
+            ) -> Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    attempt_id: value.attempt_id?,
+                    recipient: value.recipient?,
+                    secret: value.secret?,
+                })
+            }
+        }
+
+        impl From<super::MagicLinkExchangeRequest> for MagicLinkExchangeRequest {
+            fn from(value: super::MagicLinkExchangeRequest) -> Self {
+                Self {
+                    attempt_id: Ok(value.attempt_id),
+                    recipient: Ok(value.recipient),
+                    secret: Ok(value.secret),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct MagicLinkExchangeResponse {
+            access_token: Result<String, String>,
+            expires_in: Result<i64, String>,
+            token_type: Result<String, String>,
+        }
+
+        impl Default for MagicLinkExchangeResponse {
+            fn default() -> Self {
+                Self {
+                    access_token: Err("no value supplied for access_token".to_string()),
+                    expires_in: Err("no value supplied for expires_in".to_string()),
+                    token_type: Err("no value supplied for token_type".to_string()),
+                }
+            }
+        }
+
+        impl MagicLinkExchangeResponse {
+            pub fn access_token<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.access_token = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for access_token: {}", e)
+                });
+                self
+            }
+            pub fn expires_in<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<i64>,
+                T::Error: std::fmt::Display,
+            {
+                self.expires_in = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for expires_in: {}", e));
+                self
+            }
+            pub fn token_type<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.token_type = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for token_type: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<MagicLinkExchangeResponse> for super::MagicLinkExchangeResponse {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: MagicLinkExchangeResponse,
+            ) -> Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    access_token: value.access_token?,
+                    expires_in: value.expires_in?,
+                    token_type: value.token_type?,
+                })
+            }
+        }
+
+        impl From<super::MagicLinkExchangeResponse> for MagicLinkExchangeResponse {
+            fn from(value: super::MagicLinkExchangeResponse) -> Self {
+                Self {
+                    access_token: Ok(value.access_token),
+                    expires_in: Ok(value.expires_in),
+                    token_type: Ok(value.token_type),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct MagicLinkRedirectUri {
+            created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+            deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
+            id: Result<super::TypedUuidForMagicLinkRedirectUriId, String>,
+            magic_link_client_id: Result<super::TypedUuidForMagicLinkId, String>,
+            redirect_uri: Result<String, String>,
+        }
+
+        impl Default for MagicLinkRedirectUri {
+            fn default() -> Self {
+                Self {
+                    created_at: Err("no value supplied for created_at".to_string()),
+                    deleted_at: Ok(Default::default()),
+                    id: Err("no value supplied for id".to_string()),
+                    magic_link_client_id: Err(
+                        "no value supplied for magic_link_client_id".to_string()
+                    ),
+                    redirect_uri: Err("no value supplied for redirect_uri".to_string()),
+                }
+            }
+        }
+
+        impl MagicLinkRedirectUri {
+            pub fn created_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.created_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                self
+            }
+            pub fn deleted_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<chrono::DateTime<chrono::offset::Utc>>>,
+                T::Error: std::fmt::Display,
+            {
+                self.deleted_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::TypedUuidForMagicLinkRedirectUriId>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn magic_link_client_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::TypedUuidForMagicLinkId>,
+                T::Error: std::fmt::Display,
+            {
+                self.magic_link_client_id = value.try_into().map_err(|e| {
+                    format!(
+                        "error converting supplied value for magic_link_client_id: {}",
+                        e
+                    )
+                });
+                self
+            }
+            pub fn redirect_uri<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.redirect_uri = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for redirect_uri: {}", e)
+                });
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<MagicLinkRedirectUri> for super::MagicLinkRedirectUri {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: MagicLinkRedirectUri,
+            ) -> Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    created_at: value.created_at?,
+                    deleted_at: value.deleted_at?,
+                    id: value.id?,
+                    magic_link_client_id: value.magic_link_client_id?,
+                    redirect_uri: value.redirect_uri?,
+                })
+            }
+        }
+
+        impl From<super::MagicLinkRedirectUri> for MagicLinkRedirectUri {
+            fn from(value: super::MagicLinkRedirectUri) -> Self {
+                Self {
+                    created_at: Ok(value.created_at),
+                    deleted_at: Ok(value.deleted_at),
+                    id: Ok(value.id),
+                    magic_link_client_id: Ok(value.magic_link_client_id),
+                    redirect_uri: Ok(value.redirect_uri),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct MagicLinkSecret {
+            created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
+            deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
+            id: Result<super::TypedUuidForMagicLinkSecretId, String>,
+            magic_link_client_id: Result<super::TypedUuidForMagicLinkId, String>,
+            secret_signature: Result<String, String>,
+        }
+
+        impl Default for MagicLinkSecret {
+            fn default() -> Self {
+                Self {
+                    created_at: Err("no value supplied for created_at".to_string()),
+                    deleted_at: Ok(Default::default()),
+                    id: Err("no value supplied for id".to_string()),
+                    magic_link_client_id: Err(
+                        "no value supplied for magic_link_client_id".to_string()
+                    ),
+                    secret_signature: Err("no value supplied for secret_signature".to_string()),
+                }
+            }
+        }
+
+        impl MagicLinkSecret {
+            pub fn created_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.created_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                self
+            }
+            pub fn deleted_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<Option<chrono::DateTime<chrono::offset::Utc>>>,
+                T::Error: std::fmt::Display,
+            {
+                self.deleted_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::TypedUuidForMagicLinkSecretId>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn magic_link_client_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::TypedUuidForMagicLinkId>,
+                T::Error: std::fmt::Display,
+            {
+                self.magic_link_client_id = value.try_into().map_err(|e| {
+                    format!(
+                        "error converting supplied value for magic_link_client_id: {}",
+                        e
+                    )
+                });
+                self
+            }
+            pub fn secret_signature<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.secret_signature = value.try_into().map_err(|e| {
+                    format!(
+                        "error converting supplied value for secret_signature: {}",
+                        e
+                    )
+                });
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<MagicLinkSecret> for super::MagicLinkSecret {
+            type Error = super::error::ConversionError;
+            fn try_from(value: MagicLinkSecret) -> Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    created_at: value.created_at?,
+                    deleted_at: value.deleted_at?,
+                    id: value.id?,
+                    magic_link_client_id: value.magic_link_client_id?,
+                    secret_signature: value.secret_signature?,
+                })
+            }
+        }
+
+        impl From<super::MagicLinkSecret> for MagicLinkSecret {
+            fn from(value: super::MagicLinkSecret) -> Self {
+                Self {
+                    created_at: Ok(value.created_at),
+                    deleted_at: Ok(value.deleted_at),
+                    id: Ok(value.id),
+                    magic_link_client_id: Ok(value.magic_link_client_id),
+                    secret_signature: Ok(value.secret_signature),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct MagicLinkSendRequest {
+            expires_in: Result<i64, String>,
+            medium: Result<super::MagicLinkMedium, String>,
+            recipient: Result<String, String>,
+            redirect_uri: Result<String, String>,
+            scope: Result<String, String>,
+            secret: Result<String, String>,
+        }
+
+        impl Default for MagicLinkSendRequest {
+            fn default() -> Self {
+                Self {
+                    expires_in: Err("no value supplied for expires_in".to_string()),
+                    medium: Err("no value supplied for medium".to_string()),
+                    recipient: Err("no value supplied for recipient".to_string()),
+                    redirect_uri: Err("no value supplied for redirect_uri".to_string()),
+                    scope: Err("no value supplied for scope".to_string()),
+                    secret: Err("no value supplied for secret".to_string()),
+                }
+            }
+        }
+
+        impl MagicLinkSendRequest {
+            pub fn expires_in<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<i64>,
+                T::Error: std::fmt::Display,
+            {
+                self.expires_in = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for expires_in: {}", e));
+                self
+            }
+            pub fn medium<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::MagicLinkMedium>,
+                T::Error: std::fmt::Display,
+            {
+                self.medium = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for medium: {}", e));
+                self
+            }
+            pub fn recipient<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.recipient = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for recipient: {}", e));
+                self
+            }
+            pub fn redirect_uri<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.redirect_uri = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for redirect_uri: {}", e)
+                });
+                self
+            }
+            pub fn scope<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.scope = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for scope: {}", e));
+                self
+            }
+            pub fn secret<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<String>,
+                T::Error: std::fmt::Display,
+            {
+                self.secret = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for secret: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<MagicLinkSendRequest> for super::MagicLinkSendRequest {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: MagicLinkSendRequest,
+            ) -> Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    expires_in: value.expires_in?,
+                    medium: value.medium?,
+                    recipient: value.recipient?,
+                    redirect_uri: value.redirect_uri?,
+                    scope: value.scope?,
+                    secret: value.secret?,
+                })
+            }
+        }
+
+        impl From<super::MagicLinkSendRequest> for MagicLinkSendRequest {
+            fn from(value: super::MagicLinkSendRequest) -> Self {
+                Self {
+                    expires_in: Ok(value.expires_in),
+                    medium: Ok(value.medium),
+                    recipient: Ok(value.recipient),
+                    redirect_uri: Ok(value.redirect_uri),
+                    scope: Ok(value.scope),
+                    secret: Ok(value.secret),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct MagicLinkSendResponse {
+            attempt_id: Result<super::TypedUuidForMagicLinkAttemptId, String>,
+        }
+
+        impl Default for MagicLinkSendResponse {
+            fn default() -> Self {
+                Self {
+                    attempt_id: Err("no value supplied for attempt_id".to_string()),
+                }
+            }
+        }
+
+        impl MagicLinkSendResponse {
+            pub fn attempt_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::TypedUuidForMagicLinkAttemptId>,
+                T::Error: std::fmt::Display,
+            {
+                self.attempt_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for attempt_id: {}", e));
+                self
+            }
+        }
+
+        impl std::convert::TryFrom<MagicLinkSendResponse> for super::MagicLinkSendResponse {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: MagicLinkSendResponse,
+            ) -> Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    attempt_id: value.attempt_id?,
+                })
+            }
+        }
+
+        impl From<super::MagicLinkSendResponse> for MagicLinkSendResponse {
+            fn from(value: super::MagicLinkSendResponse) -> Self {
+                Self {
+                    attempt_id: Ok(value.attempt_id),
                 }
             }
         }
@@ -8429,10 +9234,10 @@ pub mod types {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
             depleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
-            id: Result<uuid::Uuid, String>,
+            id: Result<super::TypedUuidForMapperId, String>,
             max_activations: Result<Option<i32>, String>,
             name: Result<String, String>,
-            rule: Result<serde_json::Value, String>,
+            rule: Result<::serde_json::Value, String>,
         }
 
         impl Default for Mapper {
@@ -8493,7 +9298,7 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<uuid::Uuid>,
+                T: std::convert::TryInto<super::TypedUuidForMapperId>,
                 T::Error: std::fmt::Display,
             {
                 self.id = value
@@ -8523,7 +9328,7 @@ pub mod types {
             }
             pub fn rule<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<serde_json::Value>,
+                T: std::convert::TryInto<::serde_json::Value>,
                 T::Error: std::fmt::Display,
             {
                 self.rule = value
@@ -8566,7 +9371,7 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct OAuthAuthzCodeExchangeBody {
-            client_id: Result<uuid::Uuid, String>,
+            client_id: Result<super::TypedUuidForOAuthClientId, String>,
             client_secret: Result<super::SecretString, String>,
             code: Result<String, String>,
             grant_type: Result<String, String>,
@@ -8590,7 +9395,7 @@ pub mod types {
         impl OAuthAuthzCodeExchangeBody {
             pub fn client_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<uuid::Uuid>,
+                T: std::convert::TryInto<super::TypedUuidForOAuthClientId>,
                 T::Error: std::fmt::Display,
             {
                 self.client_id = value
@@ -8758,7 +9563,7 @@ pub mod types {
         pub struct OAuthClient {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
-            id: Result<uuid::Uuid, String>,
+            id: Result<super::TypedUuidForOAuthClientId, String>,
             redirect_uris: Result<Vec<super::OAuthClientRedirectUri>, String>,
             secrets: Result<Vec<super::OAuthClientSecret>, String>,
         }
@@ -8798,7 +9603,7 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<uuid::Uuid>,
+                T: std::convert::TryInto<super::TypedUuidForOAuthClientId>,
                 T::Error: std::fmt::Display,
             {
                 self.id = value
@@ -8857,8 +9662,8 @@ pub mod types {
         pub struct OAuthClientRedirectUri {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
-            id: Result<uuid::Uuid, String>,
-            oauth_client_id: Result<uuid::Uuid, String>,
+            id: Result<super::TypedUuidForOAuthRedirectUriId, String>,
+            oauth_client_id: Result<super::TypedUuidForOAuthClientId, String>,
             redirect_uri: Result<String, String>,
         }
 
@@ -8897,7 +9702,7 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<uuid::Uuid>,
+                T: std::convert::TryInto<super::TypedUuidForOAuthRedirectUriId>,
                 T::Error: std::fmt::Display,
             {
                 self.id = value
@@ -8907,7 +9712,7 @@ pub mod types {
             }
             pub fn oauth_client_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<uuid::Uuid>,
+                T: std::convert::TryInto<super::TypedUuidForOAuthClientId>,
                 T::Error: std::fmt::Display,
             {
                 self.oauth_client_id = value.try_into().map_err(|e| {
@@ -8958,8 +9763,8 @@ pub mod types {
         pub struct OAuthClientSecret {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
-            id: Result<uuid::Uuid, String>,
-            oauth_client_id: Result<uuid::Uuid, String>,
+            id: Result<super::TypedUuidForOAuthSecretId, String>,
+            oauth_client_id: Result<super::TypedUuidForOAuthClientId, String>,
             secret_signature: Result<String, String>,
         }
 
@@ -8998,7 +9803,7 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<uuid::Uuid>,
+                T: std::convert::TryInto<super::TypedUuidForOAuthSecretId>,
                 T::Error: std::fmt::Display,
             {
                 self.id = value
@@ -9008,7 +9813,7 @@ pub mod types {
             }
             pub fn oauth_client_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<uuid::Uuid>,
+                T: std::convert::TryInto<super::TypedUuidForOAuthClientId>,
                 T::Error: std::fmt::Display,
             {
                 self.oauth_client_id = value.try_into().map_err(|e| {
@@ -9324,7 +10129,7 @@ pub mod types {
         pub struct Rfd {
             created_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
             deleted_at: Result<Option<chrono::DateTime<chrono::offset::Utc>>, String>,
-            id: Result<uuid::Uuid, String>,
+            id: Result<super::TypedUuidForRfdId, String>,
             link: Result<Option<String>, String>,
             rfd_number: Result<i32, String>,
             updated_at: Result<chrono::DateTime<chrono::offset::Utc>, String>,
@@ -9368,7 +10173,7 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<uuid::Uuid>,
+                T: std::convert::TryInto<super::TypedUuidForRfdId>,
                 T::Error: std::fmt::Display,
             {
                 self.id = value
@@ -9889,28 +10694,6 @@ pub mod types {
             }
         }
     }
-
-    /// Generation of default values for serde.
-    pub mod defaults {
-        pub(super) fn mapping_rules_default_permissions() -> super::PermissionsForApiPermission {
-            super::PermissionsForApiPermission(vec![])
-        }
-
-        pub(super) fn mapping_rules_email_address_permissions() -> super::PermissionsForApiPermission
-        {
-            super::PermissionsForApiPermission(vec![])
-        }
-
-        pub(super) fn mapping_rules_email_domain_permissions() -> super::PermissionsForApiPermission
-        {
-            super::PermissionsForApiPermission(vec![])
-        }
-
-        pub(super) fn mapping_rules_github_username_permissions(
-        ) -> super::PermissionsForApiPermission {
-            super::PermissionsForApiPermission(vec![])
-        }
-    }
 }
 
 #[derive(Clone, Debug)]
@@ -10014,11 +10797,11 @@ impl Client {
 
     /// Get user information for a given user id
     ///
-    /// Sends a `GET` request to `/api-user/{identifier}`
+    /// Sends a `GET` request to `/api-user/{user_id}`
     ///
     /// ```ignore
     /// let response = client.get_api_user()
-    ///    .identifier(identifier)
+    ///    .user_id(user_id)
     ///    .send()
     ///    .await;
     /// ```
@@ -10028,11 +10811,11 @@ impl Client {
 
     /// Update the permissions assigned to a given user
     ///
-    /// Sends a `POST` request to `/api-user/{identifier}`
+    /// Sends a `POST` request to `/api-user/{user_id}`
     ///
     /// ```ignore
     /// let response = client.update_api_user()
-    ///    .identifier(identifier)
+    ///    .user_id(user_id)
     ///    .body(body)
     ///    .send()
     ///    .await;
@@ -10041,11 +10824,11 @@ impl Client {
         builder::UpdateApiUser::new(self)
     }
 
-    /// Sends a `POST` request to `/api-user/{identifier}/group`
+    /// Sends a `POST` request to `/api-user/{user_id}/group`
     ///
     /// ```ignore
     /// let response = client.add_api_user_to_group()
-    ///    .identifier(identifier)
+    ///    .user_id(user_id)
     ///    .body(body)
     ///    .send()
     ///    .await;
@@ -10054,11 +10837,11 @@ impl Client {
         builder::AddApiUserToGroup::new(self)
     }
 
-    /// Sends a `DELETE` request to `/api-user/{identifier}/group/{group_id}`
+    /// Sends a `DELETE` request to `/api-user/{user_id}/group/{group_id}`
     ///
     /// ```ignore
     /// let response = client.remove_api_user_from_group()
-    ///    .identifier(identifier)
+    ///    .user_id(user_id)
     ///    .group_id(group_id)
     ///    .send()
     ///    .await;
@@ -10067,13 +10850,28 @@ impl Client {
         builder::RemoveApiUserFromGroup::new(self)
     }
 
+    /// Link an existing login provider to this user
+    ///
+    /// Sends a `POST` request to `/api-user/{user_id}/link`
+    ///
+    /// ```ignore
+    /// let response = client.link_provider()
+    ///    .user_id(user_id)
+    ///    .body(body)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn link_provider(&self) -> builder::LinkProvider {
+        builder::LinkProvider::new(self)
+    }
+
     /// List the active and expired API tokens for a given user
     ///
-    /// Sends a `GET` request to `/api-user/{identifier}/token`
+    /// Sends a `GET` request to `/api-user/{user_id}/token`
     ///
     /// ```ignore
     /// let response = client.list_api_user_tokens()
-    ///    .identifier(identifier)
+    ///    .user_id(user_id)
     ///    .send()
     ///    .await;
     /// ```
@@ -10081,11 +10879,11 @@ impl Client {
         builder::ListApiUserTokens::new(self)
     }
 
-    /// Sends a `POST` request to `/api-user/{identifier}/token`
+    /// Sends a `POST` request to `/api-user/{user_id}/token`
     ///
     /// ```ignore
     /// let response = client.create_api_user_token()
-    ///    .identifier(identifier)
+    ///    .user_id(user_id)
     ///    .body(body)
     ///    .send()
     ///    .await;
@@ -10094,13 +10892,12 @@ impl Client {
         builder::CreateApiUserToken::new(self)
     }
 
-    /// Sends a `GET` request to
-    /// `/api-user/{identifier}/token/{token_identifier}`
+    /// Sends a `GET` request to `/api-user/{user_id}/token/{api_key_id}`
     ///
     /// ```ignore
     /// let response = client.get_api_user_token()
-    ///    .identifier(identifier)
-    ///    .token_identifier(token_identifier)
+    ///    .user_id(user_id)
+    ///    .api_key_id(api_key_id)
     ///    .send()
     ///    .await;
     /// ```
@@ -10108,18 +10905,33 @@ impl Client {
         builder::GetApiUserToken::new(self)
     }
 
-    /// Sends a `DELETE` request to
-    /// `/api-user/{identifier}/token/{token_identifier}`
+    /// Sends a `DELETE` request to `/api-user/{user_id}/token/{api_key_id}`
     ///
     /// ```ignore
     /// let response = client.delete_api_user_token()
-    ///    .identifier(identifier)
-    ///    .token_identifier(token_identifier)
+    ///    .user_id(user_id)
+    ///    .api_key_id(api_key_id)
     ///    .send()
     ///    .await;
     /// ```
     pub fn delete_api_user_token(&self) -> builder::DeleteApiUserToken {
         builder::DeleteApiUserToken::new(self)
+    }
+
+    /// Create a new link token for linking this provider to a different api
+    /// user
+    ///
+    /// Sends a `POST` request to `/api-user-provider/{provider_id}/link-token`
+    ///
+    /// ```ignore
+    /// let response = client.create_link_token()
+    ///    .provider_id(provider_id)
+    ///    .body(body)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn create_link_token(&self) -> builder::CreateLinkToken {
+        builder::CreateLinkToken::new(self)
     }
 
     /// Sends a `GET` request to `/group`
@@ -10170,16 +10982,30 @@ impl Client {
         builder::DeleteGroup::new(self)
     }
 
-    /// Sends a `POST` request to `/login/local`
+    /// Sends a `POST` request to `/login/magic/{channel}/exchange`
     ///
     /// ```ignore
-    /// let response = client.local_login()
+    /// let response = client.magic_link_exchange()
+    ///    .channel(channel)
     ///    .body(body)
     ///    .send()
     ///    .await;
     /// ```
-    pub fn local_login(&self) -> builder::LocalLogin {
-        builder::LocalLogin::new(self)
+    pub fn magic_link_exchange(&self) -> builder::MagicLinkExchange {
+        builder::MagicLinkExchange::new(self)
+    }
+
+    /// Sends a `POST` request to `/login/magic/{channel}/send`
+    ///
+    /// ```ignore
+    /// let response = client.magic_link_send()
+    ///    .channel(channel)
+    ///    .body(body)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn magic_link_send(&self) -> builder::MagicLinkSend {
+        builder::MagicLinkSend::new(self)
     }
 
     /// Generate the remote provider login url and redirect the user
@@ -10258,6 +11084,107 @@ impl Client {
         builder::ExchangeDeviceToken::new(self)
     }
 
+    /// List Magic Link clients
+    ///
+    /// Sends a `GET` request to `/magic/client`
+    ///
+    /// ```ignore
+    /// let response = client.list_magic_links()
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn list_magic_links(&self) -> builder::ListMagicLinks {
+        builder::ListMagicLinks::new(self)
+    }
+
+    /// Create a new Magic Link Client
+    ///
+    /// Sends a `POST` request to `/magic/client`
+    ///
+    /// ```ignore
+    /// let response = client.create_magic_link()
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn create_magic_link(&self) -> builder::CreateMagicLink {
+        builder::CreateMagicLink::new(self)
+    }
+
+    /// Get a Magic Link Client
+    ///
+    /// Sends a `GET` request to `/magic/client/{client_id}`
+    ///
+    /// ```ignore
+    /// let response = client.get_magic_link()
+    ///    .client_id(client_id)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn get_magic_link(&self) -> builder::GetMagicLink {
+        builder::GetMagicLink::new(self)
+    }
+
+    /// Add a Magic Link client redirect uri
+    ///
+    /// Sends a `POST` request to `/magic/client/{client_id}/redirect_uri`
+    ///
+    /// ```ignore
+    /// let response = client.create_magic_link_redirect_uri()
+    ///    .client_id(client_id)
+    ///    .body(body)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn create_magic_link_redirect_uri(&self) -> builder::CreateMagicLinkRedirectUri {
+        builder::CreateMagicLinkRedirectUri::new(self)
+    }
+
+    /// Delete a Magic Link client redirect uri
+    ///
+    /// Sends a `DELETE` request to
+    /// `/magic/client/{client_id}/redirect_uri/{redirect_uri_id}`
+    ///
+    /// ```ignore
+    /// let response = client.delete_magic_link_redirect_uri()
+    ///    .client_id(client_id)
+    ///    .redirect_uri_id(redirect_uri_id)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn delete_magic_link_redirect_uri(&self) -> builder::DeleteMagicLinkRedirectUri {
+        builder::DeleteMagicLinkRedirectUri::new(self)
+    }
+
+    /// Add a Magic Link client secret
+    ///
+    /// Sends a `POST` request to `/magic/client/{client_id}/secret`
+    ///
+    /// ```ignore
+    /// let response = client.create_magic_link_secret()
+    ///    .client_id(client_id)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn create_magic_link_secret(&self) -> builder::CreateMagicLinkSecret {
+        builder::CreateMagicLinkSecret::new(self)
+    }
+
+    /// Delete a Magic Link client secret
+    ///
+    /// Sends a `DELETE` request to
+    /// `/magic/client/{client_id}/secret/{secret_id}`
+    ///
+    /// ```ignore
+    /// let response = client.delete_magic_link_secret()
+    ///    .client_id(client_id)
+    ///    .secret_id(secret_id)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn delete_magic_link_secret(&self) -> builder::DeleteMagicLinkSecret {
+        builder::DeleteMagicLinkSecret::new(self)
+    }
+
     /// Sends a `GET` request to `/mapper`
     ///
     /// Arguments:
@@ -10284,11 +11211,11 @@ impl Client {
         builder::CreateMapper::new(self)
     }
 
-    /// Sends a `DELETE` request to `/mapper/{identifier}`
+    /// Sends a `DELETE` request to `/mapper/{mapper_id}`
     ///
     /// ```ignore
     /// let response = client.delete_mapper()
-    ///    .identifier(identifier)
+    ///    .mapper_id(mapper_id)
     ///    .send()
     ///    .await;
     /// ```
@@ -10707,34 +11634,37 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct CreateApiUser<'a> {
         client: &'a super::Client,
-        body: Result<types::builder::ApiUserUpdateParams, String>,
+        body: Result<types::builder::ApiUserUpdateParamsForRfdPermission, String>,
     }
 
     impl<'a> CreateApiUser<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
-                body: Ok(types::builder::ApiUserUpdateParams::default()),
+                body: Ok(types::builder::ApiUserUpdateParamsForRfdPermission::default()),
             }
         }
 
         pub fn body<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<types::ApiUserUpdateParams>,
-            <V as std::convert::TryInto<types::ApiUserUpdateParams>>::Error: std::fmt::Display,
+            V: std::convert::TryInto<types::ApiUserUpdateParamsForRfdPermission>,
+            <V as std::convert::TryInto<types::ApiUserUpdateParamsForRfdPermission>>::Error:
+                std::fmt::Display,
         {
-            self.body = value
-                .try_into()
-                .map(From::from)
-                .map_err(|s| format!("conversion to `ApiUserUpdateParams` for body failed: {}", s));
+            self.body = value.try_into().map(From::from).map_err(|s| {
+                format!(
+                    "conversion to `ApiUserUpdateParamsForRfdPermission` for body failed: {}",
+                    s
+                )
+            });
             self
         }
 
         pub fn body_map<F>(mut self, f: F) -> Self
         where
             F: std::ops::FnOnce(
-                types::builder::ApiUserUpdateParams,
-            ) -> types::builder::ApiUserUpdateParams,
+                types::builder::ApiUserUpdateParamsForRfdPermission,
+            ) -> types::builder::ApiUserUpdateParamsForRfdPermission,
         {
             self.body = self.body.map(f);
             self
@@ -10743,11 +11673,13 @@ pub mod builder {
         /// Sends a `POST` request to `/api-user`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::ApiUserForApiPermissionResponse>, Error<types::Error>>
-        {
+        ) -> Result<ResponseValue<types::ApiUserForRfdPermission>, Error<types::Error>> {
             let Self { client, body } = self;
             let body = body
-                .and_then(|v| types::ApiUserUpdateParams::try_from(v).map_err(|e| e.to_string()))
+                .and_then(|v| {
+                    types::ApiUserUpdateParamsForRfdPermission::try_from(v)
+                        .map_err(|e| e.to_string())
+                })
                 .map_err(Error::InvalidRequest)?;
             let url = format!("{}/api-user", client.baseurl,);
             #[allow(unused_mut)]
@@ -10781,37 +11713,38 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct GetApiUser<'a> {
         client: &'a super::Client,
-        identifier: Result<uuid::Uuid, String>,
+        user_id: Result<types::TypedUuidForUserId, String>,
     }
 
     impl<'a> GetApiUser<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
-                identifier: Err("identifier was not initialized".to_string()),
+                user_id: Err("user_id was not initialized".to_string()),
             }
         }
 
-        pub fn identifier<V>(mut self, value: V) -> Self
+        pub fn user_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForUserId>,
         {
-            self.identifier = value
+            self.user_id = value
                 .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for identifier failed".to_string());
+                .map_err(|_| "conversion to `TypedUuidForUserId` for user_id failed".to_string());
             self
         }
 
-        /// Sends a `GET` request to `/api-user/{identifier}`
+        /// Sends a `GET` request to `/api-user/{user_id}`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::GetUserResponse>, Error<types::Error>> {
-            let Self { client, identifier } = self;
-            let identifier = identifier.map_err(Error::InvalidRequest)?;
+        ) -> Result<ResponseValue<types::GetUserResponseForRfdPermission>, Error<types::Error>>
+        {
+            let Self { client, user_id } = self;
+            let user_id = user_id.map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/api-user/{}",
                 client.baseurl,
-                encode_path(&identifier.to_string()),
+                encode_path(&user_id.to_string()),
             );
             #[allow(unused_mut)]
             let mut request = client
@@ -10843,69 +11776,74 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct UpdateApiUser<'a> {
         client: &'a super::Client,
-        identifier: Result<uuid::Uuid, String>,
-        body: Result<types::builder::ApiUserUpdateParams, String>,
+        user_id: Result<types::TypedUuidForUserId, String>,
+        body: Result<types::builder::ApiUserUpdateParamsForRfdPermission, String>,
     }
 
     impl<'a> UpdateApiUser<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
-                identifier: Err("identifier was not initialized".to_string()),
-                body: Ok(types::builder::ApiUserUpdateParams::default()),
+                user_id: Err("user_id was not initialized".to_string()),
+                body: Ok(types::builder::ApiUserUpdateParamsForRfdPermission::default()),
             }
         }
 
-        pub fn identifier<V>(mut self, value: V) -> Self
+        pub fn user_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForUserId>,
         {
-            self.identifier = value
+            self.user_id = value
                 .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for identifier failed".to_string());
+                .map_err(|_| "conversion to `TypedUuidForUserId` for user_id failed".to_string());
             self
         }
 
         pub fn body<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<types::ApiUserUpdateParams>,
-            <V as std::convert::TryInto<types::ApiUserUpdateParams>>::Error: std::fmt::Display,
+            V: std::convert::TryInto<types::ApiUserUpdateParamsForRfdPermission>,
+            <V as std::convert::TryInto<types::ApiUserUpdateParamsForRfdPermission>>::Error:
+                std::fmt::Display,
         {
-            self.body = value
-                .try_into()
-                .map(From::from)
-                .map_err(|s| format!("conversion to `ApiUserUpdateParams` for body failed: {}", s));
+            self.body = value.try_into().map(From::from).map_err(|s| {
+                format!(
+                    "conversion to `ApiUserUpdateParamsForRfdPermission` for body failed: {}",
+                    s
+                )
+            });
             self
         }
 
         pub fn body_map<F>(mut self, f: F) -> Self
         where
             F: std::ops::FnOnce(
-                types::builder::ApiUserUpdateParams,
-            ) -> types::builder::ApiUserUpdateParams,
+                types::builder::ApiUserUpdateParamsForRfdPermission,
+            ) -> types::builder::ApiUserUpdateParamsForRfdPermission,
         {
             self.body = self.body.map(f);
             self
         }
 
-        /// Sends a `POST` request to `/api-user/{identifier}`
+        /// Sends a `POST` request to `/api-user/{user_id}`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::ApiUserForApiPermissionResponse>, Error<types::Error>>
-        {
+        ) -> Result<ResponseValue<types::ApiUserForRfdPermission>, Error<types::Error>> {
             let Self {
                 client,
-                identifier,
+                user_id,
                 body,
             } = self;
-            let identifier = identifier.map_err(Error::InvalidRequest)?;
+            let user_id = user_id.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(|v| types::ApiUserUpdateParams::try_from(v).map_err(|e| e.to_string()))
+                .and_then(|v| {
+                    types::ApiUserUpdateParamsForRfdPermission::try_from(v)
+                        .map_err(|e| e.to_string())
+                })
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/api-user/{}",
                 client.baseurl,
-                encode_path(&identifier.to_string()),
+                encode_path(&user_id.to_string()),
             );
             #[allow(unused_mut)]
             let mut request = client
@@ -10938,7 +11876,7 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct AddApiUserToGroup<'a> {
         client: &'a super::Client,
-        identifier: Result<uuid::Uuid, String>,
+        user_id: Result<types::TypedUuidForUserId, String>,
         body: Result<types::builder::AddGroupBody, String>,
     }
 
@@ -10946,18 +11884,18 @@ pub mod builder {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
-                identifier: Err("identifier was not initialized".to_string()),
+                user_id: Err("user_id was not initialized".to_string()),
                 body: Ok(types::builder::AddGroupBody::default()),
             }
         }
 
-        pub fn identifier<V>(mut self, value: V) -> Self
+        pub fn user_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForUserId>,
         {
-            self.identifier = value
+            self.user_id = value
                 .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for identifier failed".to_string());
+                .map_err(|_| "conversion to `TypedUuidForUserId` for user_id failed".to_string());
             self
         }
 
@@ -10981,24 +11919,23 @@ pub mod builder {
             self
         }
 
-        /// Sends a `POST` request to `/api-user/{identifier}/group`
+        /// Sends a `POST` request to `/api-user/{user_id}/group`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::ApiUserForApiPermissionResponse>, Error<types::Error>>
-        {
+        ) -> Result<ResponseValue<types::ApiUserForRfdPermission>, Error<types::Error>> {
             let Self {
                 client,
-                identifier,
+                user_id,
                 body,
             } = self;
-            let identifier = identifier.map_err(Error::InvalidRequest)?;
+            let user_id = user_id.map_err(Error::InvalidRequest)?;
             let body = body
                 .and_then(|v| types::AddGroupBody::try_from(v).map_err(|e| e.to_string()))
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/api-user/{}/group",
                 client.baseurl,
-                encode_path(&identifier.to_string()),
+                encode_path(&user_id.to_string()),
             );
             #[allow(unused_mut)]
             let mut request = client
@@ -11031,56 +11968,54 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct RemoveApiUserFromGroup<'a> {
         client: &'a super::Client,
-        identifier: Result<uuid::Uuid, String>,
-        group_id: Result<uuid::Uuid, String>,
+        user_id: Result<types::TypedUuidForUserId, String>,
+        group_id: Result<types::TypedUuidForAccessGroupId, String>,
     }
 
     impl<'a> RemoveApiUserFromGroup<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
-                identifier: Err("identifier was not initialized".to_string()),
+                user_id: Err("user_id was not initialized".to_string()),
                 group_id: Err("group_id was not initialized".to_string()),
             }
         }
 
-        pub fn identifier<V>(mut self, value: V) -> Self
+        pub fn user_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForUserId>,
         {
-            self.identifier = value
+            self.user_id = value
                 .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for identifier failed".to_string());
+                .map_err(|_| "conversion to `TypedUuidForUserId` for user_id failed".to_string());
             self
         }
 
         pub fn group_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForAccessGroupId>,
         {
-            self.group_id = value
-                .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for group_id failed".to_string());
+            self.group_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForAccessGroupId` for group_id failed".to_string()
+            });
             self
         }
 
-        /// Sends a `DELETE` request to
-        /// `/api-user/{identifier}/group/{group_id}`
+        /// Sends a `DELETE` request to `/api-user/{user_id}/group/{group_id}`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::ApiUserForApiPermissionResponse>, Error<types::Error>>
-        {
+        ) -> Result<ResponseValue<types::ApiUserForRfdPermission>, Error<types::Error>> {
             let Self {
                 client,
-                identifier,
+                user_id,
                 group_id,
             } = self;
-            let identifier = identifier.map_err(Error::InvalidRequest)?;
+            let user_id = user_id.map_err(Error::InvalidRequest)?;
             let group_id = group_id.map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/api-user/{}/group/{}",
                 client.baseurl,
-                encode_path(&identifier.to_string()),
+                encode_path(&user_id.to_string()),
                 encode_path(&group_id.to_string()),
             );
             #[allow(unused_mut)]
@@ -11107,43 +12042,141 @@ pub mod builder {
         }
     }
 
+    /// Builder for [`Client::link_provider`]
+    ///
+    /// [`Client::link_provider`]: super::Client::link_provider
+    #[derive(Debug, Clone)]
+    pub struct LinkProvider<'a> {
+        client: &'a super::Client,
+        user_id: Result<types::TypedUuidForUserId, String>,
+        body: Result<types::builder::ApiUserProviderLinkPayload, String>,
+    }
+
+    impl<'a> LinkProvider<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                user_id: Err("user_id was not initialized".to_string()),
+                body: Ok(types::builder::ApiUserProviderLinkPayload::default()),
+            }
+        }
+
+        pub fn user_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::TypedUuidForUserId>,
+        {
+            self.user_id = value
+                .try_into()
+                .map_err(|_| "conversion to `TypedUuidForUserId` for user_id failed".to_string());
+            self
+        }
+
+        pub fn body<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::ApiUserProviderLinkPayload>,
+            <V as std::convert::TryInto<types::ApiUserProviderLinkPayload>>::Error:
+                std::fmt::Display,
+        {
+            self.body = value.try_into().map(From::from).map_err(|s| {
+                format!(
+                    "conversion to `ApiUserProviderLinkPayload` for body failed: {}",
+                    s
+                )
+            });
+            self
+        }
+
+        pub fn body_map<F>(mut self, f: F) -> Self
+        where
+            F: std::ops::FnOnce(
+                types::builder::ApiUserProviderLinkPayload,
+            ) -> types::builder::ApiUserProviderLinkPayload,
+        {
+            self.body = self.body.map(f);
+            self
+        }
+
+        /// Sends a `POST` request to `/api-user/{user_id}/link`
+        pub async fn send(self) -> Result<ResponseValue<()>, Error<types::Error>> {
+            let Self {
+                client,
+                user_id,
+                body,
+            } = self;
+            let user_id = user_id.map_err(Error::InvalidRequest)?;
+            let body = body
+                .and_then(|v| {
+                    types::ApiUserProviderLinkPayload::try_from(v).map_err(|e| e.to_string())
+                })
+                .map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/api-user/{}/link",
+                client.baseurl,
+                encode_path(&user_id.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .json(&body)
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                204u16 => Ok(ResponseValue::empty(response)),
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
     /// Builder for [`Client::list_api_user_tokens`]
     ///
     /// [`Client::list_api_user_tokens`]: super::Client::list_api_user_tokens
     #[derive(Debug, Clone)]
     pub struct ListApiUserTokens<'a> {
         client: &'a super::Client,
-        identifier: Result<uuid::Uuid, String>,
+        user_id: Result<types::TypedUuidForUserId, String>,
     }
 
     impl<'a> ListApiUserTokens<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
-                identifier: Err("identifier was not initialized".to_string()),
+                user_id: Err("user_id was not initialized".to_string()),
             }
         }
 
-        pub fn identifier<V>(mut self, value: V) -> Self
+        pub fn user_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForUserId>,
         {
-            self.identifier = value
+            self.user_id = value
                 .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for identifier failed".to_string());
+                .map_err(|_| "conversion to `TypedUuidForUserId` for user_id failed".to_string());
             self
         }
 
-        /// Sends a `GET` request to `/api-user/{identifier}/token`
+        /// Sends a `GET` request to `/api-user/{user_id}/token`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<Vec<types::ApiKeyResponse>>, Error<types::Error>> {
-            let Self { client, identifier } = self;
-            let identifier = identifier.map_err(Error::InvalidRequest)?;
+        ) -> Result<ResponseValue<Vec<types::ApiKeyResponseForRfdPermission>>, Error<types::Error>>
+        {
+            let Self { client, user_id } = self;
+            let user_id = user_id.map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/api-user/{}/token",
                 client.baseurl,
-                encode_path(&identifier.to_string()),
+                encode_path(&user_id.to_string()),
             );
             #[allow(unused_mut)]
             let mut request = client
@@ -11175,68 +12208,75 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct CreateApiUserToken<'a> {
         client: &'a super::Client,
-        identifier: Result<uuid::Uuid, String>,
-        body: Result<types::builder::ApiKeyCreateParams, String>,
+        user_id: Result<types::TypedUuidForUserId, String>,
+        body: Result<types::builder::ApiKeyCreateParamsForRfdPermission, String>,
     }
 
     impl<'a> CreateApiUserToken<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
-                identifier: Err("identifier was not initialized".to_string()),
-                body: Ok(types::builder::ApiKeyCreateParams::default()),
+                user_id: Err("user_id was not initialized".to_string()),
+                body: Ok(types::builder::ApiKeyCreateParamsForRfdPermission::default()),
             }
         }
 
-        pub fn identifier<V>(mut self, value: V) -> Self
+        pub fn user_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForUserId>,
         {
-            self.identifier = value
+            self.user_id = value
                 .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for identifier failed".to_string());
+                .map_err(|_| "conversion to `TypedUuidForUserId` for user_id failed".to_string());
             self
         }
 
         pub fn body<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<types::ApiKeyCreateParams>,
-            <V as std::convert::TryInto<types::ApiKeyCreateParams>>::Error: std::fmt::Display,
+            V: std::convert::TryInto<types::ApiKeyCreateParamsForRfdPermission>,
+            <V as std::convert::TryInto<types::ApiKeyCreateParamsForRfdPermission>>::Error:
+                std::fmt::Display,
         {
-            self.body = value
-                .try_into()
-                .map(From::from)
-                .map_err(|s| format!("conversion to `ApiKeyCreateParams` for body failed: {}", s));
+            self.body = value.try_into().map(From::from).map_err(|s| {
+                format!(
+                    "conversion to `ApiKeyCreateParamsForRfdPermission` for body failed: {}",
+                    s
+                )
+            });
             self
         }
 
         pub fn body_map<F>(mut self, f: F) -> Self
         where
             F: std::ops::FnOnce(
-                types::builder::ApiKeyCreateParams,
-            ) -> types::builder::ApiKeyCreateParams,
+                types::builder::ApiKeyCreateParamsForRfdPermission,
+            ) -> types::builder::ApiKeyCreateParamsForRfdPermission,
         {
             self.body = self.body.map(f);
             self
         }
 
-        /// Sends a `POST` request to `/api-user/{identifier}/token`
+        /// Sends a `POST` request to `/api-user/{user_id}/token`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::InitialApiKeyResponse>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::InitialApiKeyResponseForRfdPermission>, Error<types::Error>>
+        {
             let Self {
                 client,
-                identifier,
+                user_id,
                 body,
             } = self;
-            let identifier = identifier.map_err(Error::InvalidRequest)?;
+            let user_id = user_id.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(|v| types::ApiKeyCreateParams::try_from(v).map_err(|e| e.to_string()))
+                .and_then(|v| {
+                    types::ApiKeyCreateParamsForRfdPermission::try_from(v)
+                        .map_err(|e| e.to_string())
+                })
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/api-user/{}/token",
                 client.baseurl,
-                encode_path(&identifier.to_string()),
+                encode_path(&user_id.to_string()),
             );
             #[allow(unused_mut)]
             let mut request = client
@@ -11269,56 +12309,56 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct GetApiUserToken<'a> {
         client: &'a super::Client,
-        identifier: Result<uuid::Uuid, String>,
-        token_identifier: Result<uuid::Uuid, String>,
+        user_id: Result<types::TypedUuidForUserId, String>,
+        api_key_id: Result<types::TypedUuidForApiKeyId, String>,
     }
 
     impl<'a> GetApiUserToken<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
-                identifier: Err("identifier was not initialized".to_string()),
-                token_identifier: Err("token_identifier was not initialized".to_string()),
+                user_id: Err("user_id was not initialized".to_string()),
+                api_key_id: Err("api_key_id was not initialized".to_string()),
             }
         }
 
-        pub fn identifier<V>(mut self, value: V) -> Self
+        pub fn user_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForUserId>,
         {
-            self.identifier = value
+            self.user_id = value
                 .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for identifier failed".to_string());
+                .map_err(|_| "conversion to `TypedUuidForUserId` for user_id failed".to_string());
             self
         }
 
-        pub fn token_identifier<V>(mut self, value: V) -> Self
+        pub fn api_key_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForApiKeyId>,
         {
-            self.token_identifier = value.try_into().map_err(|_| {
-                "conversion to `uuid :: Uuid` for token_identifier failed".to_string()
+            self.api_key_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForApiKeyId` for api_key_id failed".to_string()
             });
             self
         }
 
-        /// Sends a `GET` request to
-        /// `/api-user/{identifier}/token/{token_identifier}`
+        /// Sends a `GET` request to `/api-user/{user_id}/token/{api_key_id}`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::ApiKeyResponse>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::ApiKeyResponseForRfdPermission>, Error<types::Error>>
+        {
             let Self {
                 client,
-                identifier,
-                token_identifier,
+                user_id,
+                api_key_id,
             } = self;
-            let identifier = identifier.map_err(Error::InvalidRequest)?;
-            let token_identifier = token_identifier.map_err(Error::InvalidRequest)?;
+            let user_id = user_id.map_err(Error::InvalidRequest)?;
+            let api_key_id = api_key_id.map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/api-user/{}/token/{}",
                 client.baseurl,
-                encode_path(&identifier.to_string()),
-                encode_path(&token_identifier.to_string()),
+                encode_path(&user_id.to_string()),
+                encode_path(&api_key_id.to_string()),
             );
             #[allow(unused_mut)]
             let mut request = client
@@ -11350,56 +12390,56 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct DeleteApiUserToken<'a> {
         client: &'a super::Client,
-        identifier: Result<uuid::Uuid, String>,
-        token_identifier: Result<uuid::Uuid, String>,
+        user_id: Result<types::TypedUuidForUserId, String>,
+        api_key_id: Result<types::TypedUuidForApiKeyId, String>,
     }
 
     impl<'a> DeleteApiUserToken<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
-                identifier: Err("identifier was not initialized".to_string()),
-                token_identifier: Err("token_identifier was not initialized".to_string()),
+                user_id: Err("user_id was not initialized".to_string()),
+                api_key_id: Err("api_key_id was not initialized".to_string()),
             }
         }
 
-        pub fn identifier<V>(mut self, value: V) -> Self
+        pub fn user_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForUserId>,
         {
-            self.identifier = value
+            self.user_id = value
                 .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for identifier failed".to_string());
+                .map_err(|_| "conversion to `TypedUuidForUserId` for user_id failed".to_string());
             self
         }
 
-        pub fn token_identifier<V>(mut self, value: V) -> Self
+        pub fn api_key_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForApiKeyId>,
         {
-            self.token_identifier = value.try_into().map_err(|_| {
-                "conversion to `uuid :: Uuid` for token_identifier failed".to_string()
+            self.api_key_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForApiKeyId` for api_key_id failed".to_string()
             });
             self
         }
 
-        /// Sends a `DELETE` request to
-        /// `/api-user/{identifier}/token/{token_identifier}`
+        /// Sends a `DELETE` request to `/api-user/{user_id}/token/{api_key_id}`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::ApiKeyResponse>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::ApiKeyResponseForRfdPermission>, Error<types::Error>>
+        {
             let Self {
                 client,
-                identifier,
-                token_identifier,
+                user_id,
+                api_key_id,
             } = self;
-            let identifier = identifier.map_err(Error::InvalidRequest)?;
-            let token_identifier = token_identifier.map_err(Error::InvalidRequest)?;
+            let user_id = user_id.map_err(Error::InvalidRequest)?;
+            let api_key_id = api_key_id.map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/api-user/{}/token/{}",
                 client.baseurl,
-                encode_path(&identifier.to_string()),
-                encode_path(&token_identifier.to_string()),
+                encode_path(&user_id.to_string()),
+                encode_path(&api_key_id.to_string()),
             );
             #[allow(unused_mut)]
             let mut request = client
@@ -11409,6 +12449,106 @@ pub mod builder {
                     reqwest::header::ACCEPT,
                     reqwest::header::HeaderValue::from_static("application/json"),
                 )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::create_link_token`]
+    ///
+    /// [`Client::create_link_token`]: super::Client::create_link_token
+    #[derive(Debug, Clone)]
+    pub struct CreateLinkToken<'a> {
+        client: &'a super::Client,
+        provider_id: Result<types::TypedUuidForUserProviderId, String>,
+        body: Result<types::builder::ApiUserLinkRequestPayload, String>,
+    }
+
+    impl<'a> CreateLinkToken<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                provider_id: Err("provider_id was not initialized".to_string()),
+                body: Ok(types::builder::ApiUserLinkRequestPayload::default()),
+            }
+        }
+
+        pub fn provider_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::TypedUuidForUserProviderId>,
+        {
+            self.provider_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForUserProviderId` for provider_id failed".to_string()
+            });
+            self
+        }
+
+        pub fn body<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::ApiUserLinkRequestPayload>,
+            <V as std::convert::TryInto<types::ApiUserLinkRequestPayload>>::Error:
+                std::fmt::Display,
+        {
+            self.body = value.try_into().map(From::from).map_err(|s| {
+                format!(
+                    "conversion to `ApiUserLinkRequestPayload` for body failed: {}",
+                    s
+                )
+            });
+            self
+        }
+
+        pub fn body_map<F>(mut self, f: F) -> Self
+        where
+            F: std::ops::FnOnce(
+                types::builder::ApiUserLinkRequestPayload,
+            ) -> types::builder::ApiUserLinkRequestPayload,
+        {
+            self.body = self.body.map(f);
+            self
+        }
+
+        /// Sends a `POST` request to
+        /// `/api-user-provider/{provider_id}/link-token`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::ApiUserLinkRequestResponse>, Error<types::Error>> {
+            let Self {
+                client,
+                provider_id,
+                body,
+            } = self;
+            let provider_id = provider_id.map_err(Error::InvalidRequest)?;
+            let body = body
+                .and_then(|v| {
+                    types::ApiUserLinkRequestPayload::try_from(v).map_err(|e| e.to_string())
+                })
+                .map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/api-user-provider/{}/link-token",
+                client.baseurl,
+                encode_path(&provider_id.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .json(&body)
                 .build()?;
             let result = client.client.execute(request).await;
             let response = result?;
@@ -11512,10 +12652,8 @@ pub mod builder {
         /// Sends a `GET` request to `/group`
         pub async fn send(
             self,
-        ) -> Result<
-            ResponseValue<Vec<types::AccessGroupForApiPermissionResponse>>,
-            Error<types::Error>,
-        > {
+        ) -> Result<ResponseValue<Vec<types::AccessGroupForRfdPermission>>, Error<types::Error>>
+        {
             let Self { client } = self;
             let url = format!("{}/group", client.baseurl,);
             #[allow(unused_mut)]
@@ -11548,25 +12686,26 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct CreateGroup<'a> {
         client: &'a super::Client,
-        body: Result<types::builder::AccessGroupUpdateParams, String>,
+        body: Result<types::builder::AccessGroupUpdateParamsForRfdPermission, String>,
     }
 
     impl<'a> CreateGroup<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
-                body: Ok(types::builder::AccessGroupUpdateParams::default()),
+                body: Ok(types::builder::AccessGroupUpdateParamsForRfdPermission::default()),
             }
         }
 
         pub fn body<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<types::AccessGroupUpdateParams>,
-            <V as std::convert::TryInto<types::AccessGroupUpdateParams>>::Error: std::fmt::Display,
+            V: std::convert::TryInto<types::AccessGroupUpdateParamsForRfdPermission>,
+            <V as std::convert::TryInto<types::AccessGroupUpdateParamsForRfdPermission>>::Error:
+                std::fmt::Display,
         {
             self.body = value.try_into().map(From::from).map_err(|s| {
                 format!(
-                    "conversion to `AccessGroupUpdateParams` for body failed: {}",
+                    "conversion to `AccessGroupUpdateParamsForRfdPermission` for body failed: {}",
                     s
                 )
             });
@@ -11576,8 +12715,9 @@ pub mod builder {
         pub fn body_map<F>(mut self, f: F) -> Self
         where
             F: std::ops::FnOnce(
-                types::builder::AccessGroupUpdateParams,
-            ) -> types::builder::AccessGroupUpdateParams,
+                types::builder::AccessGroupUpdateParamsForRfdPermission,
+            )
+                -> types::builder::AccessGroupUpdateParamsForRfdPermission,
         {
             self.body = self.body.map(f);
             self
@@ -11586,12 +12726,13 @@ pub mod builder {
         /// Sends a `POST` request to `/group`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::AccessGroupForApiPermissionResponse>, Error<types::Error>>
+        ) -> Result<ResponseValue<types::AccessGroupForRfdPermission>, Error<types::Error>>
         {
             let Self { client, body } = self;
             let body = body
                 .and_then(|v| {
-                    types::AccessGroupUpdateParams::try_from(v).map_err(|e| e.to_string())
+                    types::AccessGroupUpdateParamsForRfdPermission::try_from(v)
+                        .map_err(|e| e.to_string())
                 })
                 .map_err(Error::InvalidRequest)?;
             let url = format!("{}/group", client.baseurl,);
@@ -11626,8 +12767,8 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct UpdateGroup<'a> {
         client: &'a super::Client,
-        group_id: Result<uuid::Uuid, String>,
-        body: Result<types::builder::AccessGroupUpdateParams, String>,
+        group_id: Result<types::TypedUuidForAccessGroupId, String>,
+        body: Result<types::builder::AccessGroupUpdateParamsForRfdPermission, String>,
     }
 
     impl<'a> UpdateGroup<'a> {
@@ -11635,28 +12776,29 @@ pub mod builder {
             Self {
                 client: client,
                 group_id: Err("group_id was not initialized".to_string()),
-                body: Ok(types::builder::AccessGroupUpdateParams::default()),
+                body: Ok(types::builder::AccessGroupUpdateParamsForRfdPermission::default()),
             }
         }
 
         pub fn group_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForAccessGroupId>,
         {
-            self.group_id = value
-                .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for group_id failed".to_string());
+            self.group_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForAccessGroupId` for group_id failed".to_string()
+            });
             self
         }
 
         pub fn body<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<types::AccessGroupUpdateParams>,
-            <V as std::convert::TryInto<types::AccessGroupUpdateParams>>::Error: std::fmt::Display,
+            V: std::convert::TryInto<types::AccessGroupUpdateParamsForRfdPermission>,
+            <V as std::convert::TryInto<types::AccessGroupUpdateParamsForRfdPermission>>::Error:
+                std::fmt::Display,
         {
             self.body = value.try_into().map(From::from).map_err(|s| {
                 format!(
-                    "conversion to `AccessGroupUpdateParams` for body failed: {}",
+                    "conversion to `AccessGroupUpdateParamsForRfdPermission` for body failed: {}",
                     s
                 )
             });
@@ -11666,8 +12808,9 @@ pub mod builder {
         pub fn body_map<F>(mut self, f: F) -> Self
         where
             F: std::ops::FnOnce(
-                types::builder::AccessGroupUpdateParams,
-            ) -> types::builder::AccessGroupUpdateParams,
+                types::builder::AccessGroupUpdateParamsForRfdPermission,
+            )
+                -> types::builder::AccessGroupUpdateParamsForRfdPermission,
         {
             self.body = self.body.map(f);
             self
@@ -11676,7 +12819,7 @@ pub mod builder {
         /// Sends a `PUT` request to `/group/{group_id}`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::AccessGroupForApiPermissionResponse>, Error<types::Error>>
+        ) -> Result<ResponseValue<types::AccessGroupForRfdPermission>, Error<types::Error>>
         {
             let Self {
                 client,
@@ -11686,7 +12829,8 @@ pub mod builder {
             let group_id = group_id.map_err(Error::InvalidRequest)?;
             let body = body
                 .and_then(|v| {
-                    types::AccessGroupUpdateParams::try_from(v).map_err(|e| e.to_string())
+                    types::AccessGroupUpdateParamsForRfdPermission::try_from(v)
+                        .map_err(|e| e.to_string())
                 })
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
@@ -11725,7 +12869,7 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct DeleteGroup<'a> {
         client: &'a super::Client,
-        group_id: Result<uuid::Uuid, String>,
+        group_id: Result<types::TypedUuidForAccessGroupId, String>,
     }
 
     impl<'a> DeleteGroup<'a> {
@@ -11738,18 +12882,18 @@ pub mod builder {
 
         pub fn group_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForAccessGroupId>,
         {
-            self.group_id = value
-                .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for group_id failed".to_string());
+            self.group_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForAccessGroupId` for group_id failed".to_string()
+            });
             self
         }
 
         /// Sends a `DELETE` request to `/group/{group_id}`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::AccessGroupForApiPermissionResponse>, Error<types::Error>>
+        ) -> Result<ResponseValue<types::AccessGroupForRfdPermission>, Error<types::Error>>
         {
             let Self { client, group_id } = self;
             let group_id = group_id.map_err(Error::InvalidRequest)?;
@@ -11782,57 +12926,196 @@ pub mod builder {
         }
     }
 
-    /// Builder for [`Client::local_login`]
+    /// Builder for [`Client::magic_link_exchange`]
     ///
-    /// [`Client::local_login`]: super::Client::local_login
+    /// [`Client::magic_link_exchange`]: super::Client::magic_link_exchange
     #[derive(Debug, Clone)]
-    pub struct LocalLogin<'a> {
+    pub struct MagicLinkExchange<'a> {
         client: &'a super::Client,
-        body: Result<types::builder::LocalLogin, String>,
+        channel: Result<String, String>,
+        body: Result<types::builder::MagicLinkExchangeRequest, String>,
     }
 
-    impl<'a> LocalLogin<'a> {
+    impl<'a> MagicLinkExchange<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
-                body: Ok(types::builder::LocalLogin::default()),
+                channel: Err("channel was not initialized".to_string()),
+                body: Ok(types::builder::MagicLinkExchangeRequest::default()),
             }
+        }
+
+        pub fn channel<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<String>,
+        {
+            self.channel = value
+                .try_into()
+                .map_err(|_| "conversion to `String` for channel failed".to_string());
+            self
         }
 
         pub fn body<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<types::LocalLogin>,
-            <V as std::convert::TryInto<types::LocalLogin>>::Error: std::fmt::Display,
+            V: std::convert::TryInto<types::MagicLinkExchangeRequest>,
+            <V as std::convert::TryInto<types::MagicLinkExchangeRequest>>::Error: std::fmt::Display,
         {
-            self.body = value
-                .try_into()
-                .map(From::from)
-                .map_err(|s| format!("conversion to `LocalLogin` for body failed: {}", s));
+            self.body = value.try_into().map(From::from).map_err(|s| {
+                format!(
+                    "conversion to `MagicLinkExchangeRequest` for body failed: {}",
+                    s
+                )
+            });
             self
         }
 
         pub fn body_map<F>(mut self, f: F) -> Self
         where
-            F: std::ops::FnOnce(types::builder::LocalLogin) -> types::builder::LocalLogin,
+            F: std::ops::FnOnce(
+                types::builder::MagicLinkExchangeRequest,
+            ) -> types::builder::MagicLinkExchangeRequest,
         {
             self.body = self.body.map(f);
             self
         }
 
-        /// Sends a `POST` request to `/login/local`
-        pub async fn send(self) -> Result<ResponseValue<ByteStream>, Error<ByteStream>> {
-            let Self { client, body } = self;
+        /// Sends a `POST` request to `/login/magic/{channel}/exchange`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::MagicLinkExchangeResponse>, Error<types::Error>> {
+            let Self {
+                client,
+                channel,
+                body,
+            } = self;
+            let channel = channel.map_err(Error::InvalidRequest)?;
             let body = body
-                .and_then(|v| types::LocalLogin::try_from(v).map_err(|e| e.to_string()))
+                .and_then(|v| {
+                    types::MagicLinkExchangeRequest::try_from(v).map_err(|e| e.to_string())
+                })
                 .map_err(Error::InvalidRequest)?;
-            let url = format!("{}/login/local", client.baseurl,);
+            let url = format!(
+                "{}/login/magic/{}/exchange",
+                client.baseurl,
+                encode_path(&channel.to_string()),
+            );
             #[allow(unused_mut)]
-            let mut request = client.client.post(url).json(&body).build()?;
+            let mut request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .json(&body)
+                .build()?;
             let result = client.client.execute(request).await;
             let response = result?;
             match response.status().as_u16() {
-                200..=299 => Ok(ResponseValue::stream(response)),
-                _ => Err(Error::ErrorResponse(ResponseValue::stream(response))),
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::magic_link_send`]
+    ///
+    /// [`Client::magic_link_send`]: super::Client::magic_link_send
+    #[derive(Debug, Clone)]
+    pub struct MagicLinkSend<'a> {
+        client: &'a super::Client,
+        channel: Result<String, String>,
+        body: Result<types::builder::MagicLinkSendRequest, String>,
+    }
+
+    impl<'a> MagicLinkSend<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                channel: Err("channel was not initialized".to_string()),
+                body: Ok(types::builder::MagicLinkSendRequest::default()),
+            }
+        }
+
+        pub fn channel<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<String>,
+        {
+            self.channel = value
+                .try_into()
+                .map_err(|_| "conversion to `String` for channel failed".to_string());
+            self
+        }
+
+        pub fn body<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::MagicLinkSendRequest>,
+            <V as std::convert::TryInto<types::MagicLinkSendRequest>>::Error: std::fmt::Display,
+        {
+            self.body = value.try_into().map(From::from).map_err(|s| {
+                format!(
+                    "conversion to `MagicLinkSendRequest` for body failed: {}",
+                    s
+                )
+            });
+            self
+        }
+
+        pub fn body_map<F>(mut self, f: F) -> Self
+        where
+            F: std::ops::FnOnce(
+                types::builder::MagicLinkSendRequest,
+            ) -> types::builder::MagicLinkSendRequest,
+        {
+            self.body = self.body.map(f);
+            self
+        }
+
+        /// Sends a `POST` request to `/login/magic/{channel}/send`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::MagicLinkSendResponse>, Error<types::Error>> {
+            let Self {
+                client,
+                channel,
+                body,
+            } = self;
+            let channel = channel.map_err(Error::InvalidRequest)?;
+            let body = body
+                .and_then(|v| types::MagicLinkSendRequest::try_from(v).map_err(|e| e.to_string()))
+                .map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/login/magic/{}/send",
+                client.baseurl,
+                encode_path(&channel.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .json(&body)
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
             }
         }
     }
@@ -11844,7 +13127,7 @@ pub mod builder {
     pub struct AuthzCodeRedirect<'a> {
         client: &'a super::Client,
         provider: Result<types::OAuthProviderName, String>,
-        client_id: Result<uuid::Uuid, String>,
+        client_id: Result<types::TypedUuidForOAuthClientId, String>,
         redirect_uri: Result<String, String>,
         response_type: Result<String, String>,
         scope: Result<Option<String>, String>,
@@ -11876,11 +13159,11 @@ pub mod builder {
 
         pub fn client_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForOAuthClientId>,
         {
-            self.client_id = value
-                .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for client_id failed".to_string());
+            self.client_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForOAuthClientId` for client_id failed".to_string()
+            });
             self
         }
 
@@ -12322,6 +13605,474 @@ pub mod builder {
         }
     }
 
+    /// Builder for [`Client::list_magic_links`]
+    ///
+    /// [`Client::list_magic_links`]: super::Client::list_magic_links
+    #[derive(Debug, Clone)]
+    pub struct ListMagicLinks<'a> {
+        client: &'a super::Client,
+    }
+
+    impl<'a> ListMagicLinks<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self { client: client }
+        }
+
+        /// Sends a `GET` request to `/magic/client`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<Vec<types::MagicLink>>, Error<types::Error>> {
+            let Self { client } = self;
+            let url = format!("{}/magic/client", client.baseurl,);
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::create_magic_link`]
+    ///
+    /// [`Client::create_magic_link`]: super::Client::create_magic_link
+    #[derive(Debug, Clone)]
+    pub struct CreateMagicLink<'a> {
+        client: &'a super::Client,
+    }
+
+    impl<'a> CreateMagicLink<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self { client: client }
+        }
+
+        /// Sends a `POST` request to `/magic/client`
+        pub async fn send(self) -> Result<ResponseValue<types::MagicLink>, Error<types::Error>> {
+            let Self { client } = self;
+            let url = format!("{}/magic/client", client.baseurl,);
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                201u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::get_magic_link`]
+    ///
+    /// [`Client::get_magic_link`]: super::Client::get_magic_link
+    #[derive(Debug, Clone)]
+    pub struct GetMagicLink<'a> {
+        client: &'a super::Client,
+        client_id: Result<types::TypedUuidForMagicLinkId, String>,
+    }
+
+    impl<'a> GetMagicLink<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                client_id: Err("client_id was not initialized".to_string()),
+            }
+        }
+
+        pub fn client_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::TypedUuidForMagicLinkId>,
+        {
+            self.client_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForMagicLinkId` for client_id failed".to_string()
+            });
+            self
+        }
+
+        /// Sends a `GET` request to `/magic/client/{client_id}`
+        pub async fn send(self) -> Result<ResponseValue<types::MagicLink>, Error<types::Error>> {
+            let Self { client, client_id } = self;
+            let client_id = client_id.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/magic/client/{}",
+                client.baseurl,
+                encode_path(&client_id.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::create_magic_link_redirect_uri`]
+    ///
+    /// [`Client::create_magic_link_redirect_uri`]: super::Client::create_magic_link_redirect_uri
+    #[derive(Debug, Clone)]
+    pub struct CreateMagicLinkRedirectUri<'a> {
+        client: &'a super::Client,
+        client_id: Result<types::TypedUuidForMagicLinkId, String>,
+        body: Result<types::builder::AddMagicLinkRedirectBody, String>,
+    }
+
+    impl<'a> CreateMagicLinkRedirectUri<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                client_id: Err("client_id was not initialized".to_string()),
+                body: Ok(types::builder::AddMagicLinkRedirectBody::default()),
+            }
+        }
+
+        pub fn client_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::TypedUuidForMagicLinkId>,
+        {
+            self.client_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForMagicLinkId` for client_id failed".to_string()
+            });
+            self
+        }
+
+        pub fn body<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::AddMagicLinkRedirectBody>,
+            <V as std::convert::TryInto<types::AddMagicLinkRedirectBody>>::Error: std::fmt::Display,
+        {
+            self.body = value.try_into().map(From::from).map_err(|s| {
+                format!(
+                    "conversion to `AddMagicLinkRedirectBody` for body failed: {}",
+                    s
+                )
+            });
+            self
+        }
+
+        pub fn body_map<F>(mut self, f: F) -> Self
+        where
+            F: std::ops::FnOnce(
+                types::builder::AddMagicLinkRedirectBody,
+            ) -> types::builder::AddMagicLinkRedirectBody,
+        {
+            self.body = self.body.map(f);
+            self
+        }
+
+        /// Sends a `POST` request to `/magic/client/{client_id}/redirect_uri`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::MagicLinkRedirectUri>, Error<types::Error>> {
+            let Self {
+                client,
+                client_id,
+                body,
+            } = self;
+            let client_id = client_id.map_err(Error::InvalidRequest)?;
+            let body = body
+                .and_then(|v| {
+                    types::AddMagicLinkRedirectBody::try_from(v).map_err(|e| e.to_string())
+                })
+                .map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/magic/client/{}/redirect_uri",
+                client.baseurl,
+                encode_path(&client_id.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .json(&body)
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::delete_magic_link_redirect_uri`]
+    ///
+    /// [`Client::delete_magic_link_redirect_uri`]: super::Client::delete_magic_link_redirect_uri
+    #[derive(Debug, Clone)]
+    pub struct DeleteMagicLinkRedirectUri<'a> {
+        client: &'a super::Client,
+        client_id: Result<types::TypedUuidForMagicLinkId, String>,
+        redirect_uri_id: Result<types::TypedUuidForMagicLinkRedirectUriId, String>,
+    }
+
+    impl<'a> DeleteMagicLinkRedirectUri<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                client_id: Err("client_id was not initialized".to_string()),
+                redirect_uri_id: Err("redirect_uri_id was not initialized".to_string()),
+            }
+        }
+
+        pub fn client_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::TypedUuidForMagicLinkId>,
+        {
+            self.client_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForMagicLinkId` for client_id failed".to_string()
+            });
+            self
+        }
+
+        pub fn redirect_uri_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::TypedUuidForMagicLinkRedirectUriId>,
+        {
+            self.redirect_uri_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForMagicLinkRedirectUriId` for redirect_uri_id failed"
+                    .to_string()
+            });
+            self
+        }
+
+        /// Sends a `DELETE` request to
+        /// `/magic/client/{client_id}/redirect_uri/{redirect_uri_id}`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::MagicLinkRedirectUri>, Error<types::Error>> {
+            let Self {
+                client,
+                client_id,
+                redirect_uri_id,
+            } = self;
+            let client_id = client_id.map_err(Error::InvalidRequest)?;
+            let redirect_uri_id = redirect_uri_id.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/magic/client/{}/redirect_uri/{}",
+                client.baseurl,
+                encode_path(&client_id.to_string()),
+                encode_path(&redirect_uri_id.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .delete(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::create_magic_link_secret`]
+    ///
+    /// [`Client::create_magic_link_secret`]: super::Client::create_magic_link_secret
+    #[derive(Debug, Clone)]
+    pub struct CreateMagicLinkSecret<'a> {
+        client: &'a super::Client,
+        client_id: Result<types::TypedUuidForMagicLinkId, String>,
+    }
+
+    impl<'a> CreateMagicLinkSecret<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                client_id: Err("client_id was not initialized".to_string()),
+            }
+        }
+
+        pub fn client_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::TypedUuidForMagicLinkId>,
+        {
+            self.client_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForMagicLinkId` for client_id failed".to_string()
+            });
+            self
+        }
+
+        /// Sends a `POST` request to `/magic/client/{client_id}/secret`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::InitialMagicLinkSecretResponse>, Error<types::Error>>
+        {
+            let Self { client, client_id } = self;
+            let client_id = client_id.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/magic/client/{}/secret",
+                client.baseurl,
+                encode_path(&client_id.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::delete_magic_link_secret`]
+    ///
+    /// [`Client::delete_magic_link_secret`]: super::Client::delete_magic_link_secret
+    #[derive(Debug, Clone)]
+    pub struct DeleteMagicLinkSecret<'a> {
+        client: &'a super::Client,
+        client_id: Result<types::TypedUuidForMagicLinkId, String>,
+        secret_id: Result<types::TypedUuidForMagicLinkSecretId, String>,
+    }
+
+    impl<'a> DeleteMagicLinkSecret<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                client_id: Err("client_id was not initialized".to_string()),
+                secret_id: Err("secret_id was not initialized".to_string()),
+            }
+        }
+
+        pub fn client_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::TypedUuidForMagicLinkId>,
+        {
+            self.client_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForMagicLinkId` for client_id failed".to_string()
+            });
+            self
+        }
+
+        pub fn secret_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::TypedUuidForMagicLinkSecretId>,
+        {
+            self.secret_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForMagicLinkSecretId` for secret_id failed".to_string()
+            });
+            self
+        }
+
+        /// Sends a `DELETE` request to
+        /// `/magic/client/{client_id}/secret/{secret_id}`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::MagicLinkSecret>, Error<types::Error>> {
+            let Self {
+                client,
+                client_id,
+                secret_id,
+            } = self;
+            let client_id = client_id.map_err(Error::InvalidRequest)?;
+            let secret_id = secret_id.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/magic/client/{}/secret/{}",
+                client.baseurl,
+                encode_path(&client_id.to_string()),
+                encode_path(&secret_id.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .delete(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
     /// Builder for [`Client::get_mappers`]
     ///
     /// [`Client::get_mappers`]: super::Client::get_mappers
@@ -12462,35 +14213,35 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct DeleteMapper<'a> {
         client: &'a super::Client,
-        identifier: Result<uuid::Uuid, String>,
+        mapper_id: Result<types::TypedUuidForMapperId, String>,
     }
 
     impl<'a> DeleteMapper<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
-                identifier: Err("identifier was not initialized".to_string()),
+                mapper_id: Err("mapper_id was not initialized".to_string()),
             }
         }
 
-        pub fn identifier<V>(mut self, value: V) -> Self
+        pub fn mapper_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForMapperId>,
         {
-            self.identifier = value
-                .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for identifier failed".to_string());
+            self.mapper_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForMapperId` for mapper_id failed".to_string()
+            });
             self
         }
 
-        /// Sends a `DELETE` request to `/mapper/{identifier}`
+        /// Sends a `DELETE` request to `/mapper/{mapper_id}`
         pub async fn send(self) -> Result<ResponseValue<types::Mapper>, Error<types::Error>> {
-            let Self { client, identifier } = self;
-            let identifier = identifier.map_err(Error::InvalidRequest)?;
+            let Self { client, mapper_id } = self;
+            let mapper_id = mapper_id.map_err(Error::InvalidRequest)?;
             let url = format!(
                 "{}/mapper/{}",
                 client.baseurl,
-                encode_path(&identifier.to_string()),
+                encode_path(&mapper_id.to_string()),
             );
             #[allow(unused_mut)]
             let mut request = client
@@ -12606,7 +14357,7 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct GetOauthClient<'a> {
         client: &'a super::Client,
-        client_id: Result<uuid::Uuid, String>,
+        client_id: Result<types::TypedUuidForOAuthClientId, String>,
     }
 
     impl<'a> GetOauthClient<'a> {
@@ -12619,11 +14370,11 @@ pub mod builder {
 
         pub fn client_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForOAuthClientId>,
         {
-            self.client_id = value
-                .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for client_id failed".to_string());
+            self.client_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForOAuthClientId` for client_id failed".to_string()
+            });
             self
         }
 
@@ -12666,7 +14417,7 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct CreateOauthClientRedirectUri<'a> {
         client: &'a super::Client,
-        client_id: Result<uuid::Uuid, String>,
+        client_id: Result<types::TypedUuidForOAuthClientId, String>,
         body: Result<types::builder::AddOAuthClientRedirectBody, String>,
     }
 
@@ -12681,11 +14432,11 @@ pub mod builder {
 
         pub fn client_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForOAuthClientId>,
         {
-            self.client_id = value
-                .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for client_id failed".to_string());
+            self.client_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForOAuthClientId` for client_id failed".to_string()
+            });
             self
         }
 
@@ -12765,8 +14516,8 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct DeleteOauthClientRedirectUri<'a> {
         client: &'a super::Client,
-        client_id: Result<uuid::Uuid, String>,
-        redirect_uri_id: Result<uuid::Uuid, String>,
+        client_id: Result<types::TypedUuidForOAuthClientId, String>,
+        redirect_uri_id: Result<types::TypedUuidForOAuthRedirectUriId, String>,
     }
 
     impl<'a> DeleteOauthClientRedirectUri<'a> {
@@ -12780,21 +14531,22 @@ pub mod builder {
 
         pub fn client_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForOAuthClientId>,
         {
-            self.client_id = value
-                .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for client_id failed".to_string());
+            self.client_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForOAuthClientId` for client_id failed".to_string()
+            });
             self
         }
 
         pub fn redirect_uri_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForOAuthRedirectUriId>,
         {
-            self.redirect_uri_id = value
-                .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for redirect_uri_id failed".to_string());
+            self.redirect_uri_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForOAuthRedirectUriId` for redirect_uri_id failed"
+                    .to_string()
+            });
             self
         }
 
@@ -12846,7 +14598,7 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct CreateOauthClientSecret<'a> {
         client: &'a super::Client,
-        client_id: Result<uuid::Uuid, String>,
+        client_id: Result<types::TypedUuidForOAuthClientId, String>,
     }
 
     impl<'a> CreateOauthClientSecret<'a> {
@@ -12859,11 +14611,11 @@ pub mod builder {
 
         pub fn client_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForOAuthClientId>,
         {
-            self.client_id = value
-                .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for client_id failed".to_string());
+            self.client_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForOAuthClientId` for client_id failed".to_string()
+            });
             self
         }
 
@@ -12909,8 +14661,8 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct DeleteOauthClientSecret<'a> {
         client: &'a super::Client,
-        client_id: Result<uuid::Uuid, String>,
-        secret_id: Result<uuid::Uuid, String>,
+        client_id: Result<types::TypedUuidForOAuthClientId, String>,
+        secret_id: Result<types::TypedUuidForOAuthSecretId, String>,
     }
 
     impl<'a> DeleteOauthClientSecret<'a> {
@@ -12924,21 +14676,21 @@ pub mod builder {
 
         pub fn client_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForOAuthClientId>,
         {
-            self.client_id = value
-                .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for client_id failed".to_string());
+            self.client_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForOAuthClientId` for client_id failed".to_string()
+            });
             self
         }
 
         pub fn secret_id<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<uuid::Uuid>,
+            V: std::convert::TryInto<types::TypedUuidForOAuthSecretId>,
         {
-            self.secret_id = value
-                .try_into()
-                .map_err(|_| "conversion to `uuid :: Uuid` for secret_id failed".to_string());
+            self.secret_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForOAuthSecretId` for secret_id failed".to_string()
+            });
             self
         }
 
@@ -13903,7 +15655,8 @@ pub mod builder {
         /// Sends a `GET` request to `/self`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::GetUserResponse>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::GetUserResponseForRfdPermission>, Error<types::Error>>
+        {
             let Self { client } = self;
             let url = format!("{}/self", client.baseurl,);
             #[allow(unused_mut)]

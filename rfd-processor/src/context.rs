@@ -5,10 +5,12 @@
 use std::{io::Cursor, time::Duration};
 
 use async_trait::async_trait;
-use google_drive3::{api::File, DriveHub};
+use google_drive3::{api::File, hyper_util::rt::TokioExecutor, DriveHub};
 // use google_drive::{traits::FileOps, Client as GDriveClient};
 use google_storage1::{
-    hyper, hyper::client::HttpConnector, hyper_rustls, hyper_rustls::HttpsConnector, Storage,
+    hyper_rustls::{HttpsConnector, HttpsConnectorBuilder},
+    hyper_util::client::legacy::{connect::HttpConnector, Client},
+    Storage,
 };
 use octorust::{
     auth::{Credentials, InstallationTokenGenerator, JWTCredentials},
@@ -217,9 +219,10 @@ impl StaticAssetStorageCtx {
         };
 
         let storage = Storage::new(
-            hyper::Client::builder().build(
-                hyper_rustls::HttpsConnectorBuilder::new()
+            Client::builder(TokioExecutor::new()).build(
+                HttpsConnectorBuilder::new()
                     .with_native_roots()
+                    .unwrap()
                     .https_only()
                     .enable_http2()
                     .build(),

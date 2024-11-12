@@ -16,13 +16,13 @@ pub enum Printer {
 }
 
 pub trait CliOutput {
-    fn output_api_user(&self, value: types::ApiUserForApiPermissionResponse) {}
-    fn output_user(&self, value: types::GetUserResponse) {}
-    fn output_api_key_list(&self, value: Vec<types::ApiKeyResponse>) {}
-    fn output_api_key_initial(&self, value: types::InitialApiKeyResponse) {}
-    fn output_api_key(&self, value: types::ApiKeyResponse) {}
-    fn output_group_list(&self, value: Vec<types::AccessGroupForApiPermissionResponse>) {}
-    fn output_group(&self, value: types::AccessGroupForApiPermissionResponse) {}
+    fn output_api_user(&self, value: types::ApiUserForRfdPermission) {}
+    fn output_user(&self, value: types::GetUserResponseForRfdPermission) {}
+    fn output_api_key_list(&self, value: Vec<types::ApiKeyResponseForRfdPermission>) {}
+    fn output_api_key_initial(&self, value: types::InitialApiKeyResponseForRfdPermission) {}
+    fn output_api_key(&self, value: types::ApiKeyResponseForRfdPermission) {}
+    fn output_group_list(&self, value: Vec<types::AccessGroupForRfdPermission>) {}
+    fn output_group(&self, value: types::AccessGroupForRfdPermission) {}
     fn output_mapper_list(&self, value: Vec<types::Mapper>) {}
     fn output_mapper(&self, value: types::Mapper) {}
     fn output_oauth_client_list(&self, value: Vec<types::OAuthClient>) {}
@@ -42,49 +42,49 @@ pub trait CliOutput {
 }
 
 impl CliOutput for Printer {
-    fn output_api_user(&self, value: types::ApiUserForApiPermissionResponse) {
+    fn output_api_user(&self, value: types::ApiUserForRfdPermission) {
         match self {
             Self::Json(printer) => printer.output_api_user(value),
             Self::Tab(printer) => printer.output_api_user(value),
         }
     }
 
-    fn output_user(&self, value: types::GetUserResponse) {
+    fn output_user(&self, value: types::GetUserResponseForRfdPermission) {
         match self {
             Self::Json(printer) => printer.output_user(value),
             Self::Tab(printer) => printer.output_user(value),
         }
     }
 
-    fn output_api_key_list(&self, value: Vec<types::ApiKeyResponse>) {
+    fn output_api_key_list(&self, value: Vec<types::ApiKeyResponseForRfdPermission>) {
         match self {
             Self::Json(printer) => printer.output_api_key_list(value),
             Self::Tab(printer) => printer.output_api_key_list(value),
         }
     }
 
-    fn output_api_key_initial(&self, value: types::InitialApiKeyResponse) {
+    fn output_api_key_initial(&self, value: types::InitialApiKeyResponseForRfdPermission) {
         match self {
             Self::Json(printer) => printer.output_api_key_initial(value),
             Self::Tab(printer) => printer.output_api_key_initial(value),
         }
     }
 
-    fn output_api_key(&self, value: types::ApiKeyResponse) {
+    fn output_api_key(&self, value: types::ApiKeyResponseForRfdPermission) {
         match self {
             Self::Json(printer) => printer.output_api_key(value),
             Self::Tab(printer) => printer.output_api_key(value),
         }
     }
 
-    fn output_group_list(&self, value: Vec<types::AccessGroupForApiPermissionResponse>) {
+    fn output_group_list(&self, value: Vec<types::AccessGroupForRfdPermission>) {
         match self {
             Self::Json(printer) => printer.output_group_list(value),
             Self::Tab(printer) => printer.output_group_list(value),
         }
     }
 
-    fn output_group(&self, value: types::AccessGroupForApiPermissionResponse) {
+    fn output_group(&self, value: types::AccessGroupForRfdPermission) {
         match self {
             Self::Json(printer) => printer.output_group(value),
             Self::Tab(printer) => printer.output_group(value),

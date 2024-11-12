@@ -3,23 +3,23 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use std::collections::BTreeSet;
-use w_api_permissions::Caller;
+use v_model::permissions::Caller;
 
-use crate::permissions::ApiPermission;
+use crate::permissions::RfdPermission;
 
 pub trait CallerExt {
     fn allow_rfds(&self) -> BTreeSet<i32>;
 }
 
-impl CallerExt for Caller<ApiPermission> {
+impl CallerExt for Caller<RfdPermission> {
     fn allow_rfds(&self) -> BTreeSet<i32> {
         let mut allowed = BTreeSet::new();
         for permission in self.permissions.iter() {
             match permission {
-                ApiPermission::GetRfd(number) => {
+                RfdPermission::GetRfd(number) => {
                     allowed.insert(*number);
                 }
-                ApiPermission::GetRfds(numbers) => allowed.extend(numbers),
+                RfdPermission::GetRfds(numbers) => allowed.extend(numbers),
                 _ => (),
             }
         }
