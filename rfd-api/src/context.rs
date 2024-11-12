@@ -431,7 +431,7 @@ impl RfdContext {
             }
         } else {
             // Either the RFD does not exist, or the caller is not allowed to access it
-            resource_restricted()
+            resource_not_found()
         }
     }
 
