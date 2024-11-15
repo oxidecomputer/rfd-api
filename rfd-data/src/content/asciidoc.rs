@@ -111,30 +111,37 @@ impl<'a> RfdDocument for RfdAsciidoc<'a> {
     }
 
     fn get_authors(&self) -> Option<&str> {
-        self.body().and_then(|body| {
-            body.lines().nth(0).and_then(|first_line| {
-                // If {authors} is found, instead search the header for an authors attribute
-                if first_line == "{authors}" {
-                    self.attr("authors")
-                } else {
-                    // Given that we are in a fallback case we need to be slightly picky on what
-                    // lines we allow. We require that the line at least include a *@*.* word to
-                    // try and filter out lines that are not actually author lines
-                    let author_fallback_pattern =
-                        Regex::new(r"^.*?([\S]+@[\S]+.[\S]+).*?$").unwrap();
-                    let fallback_matches = author_fallback_pattern.is_match(first_line);
 
-                    if fallback_matches {
-                        Some(first_line)
-                    } else {
-                        // If none of our attempts have found an author, we drop back to the
-                        // attribute lookup. Eventually all of this logic should be removed and only
-                        // the attribute version should be supported
+        // If an authors attribute is defined anywhere in the document, then it is the first choice
+        // for the authors value
+        if let Some(attr) = self.attr("authors") {
+            Some(attr)
+        } else {
+            self.body().and_then(|body| {
+                body.lines().nth(0).and_then(|first_line| {
+                    // If {authors} is found, instead search the header for an authors attribute
+                    if first_line == "{authors}" {
                         self.attr("authors")
+                    } else {
+                        // Given that we are in a fallback case we need to be slightly picky on what
+                        // lines we allow. We require that the line at least include a *@*.* word to
+                        // try and filter out lines that are not actually author lines
+                        let author_fallback_pattern =
+                            Regex::new(r"^.*?([\S]+@[\S]+.[\S]+).*?$").unwrap();
+                        let fallback_matches = author_fallback_pattern.is_match(first_line);
+
+                        if fallback_matches {
+                            Some(first_line)
+                        } else {
+                            // If none of our attempts have found an author, we drop back to the
+                            // attribute lookup. Eventually all of this logic should be removed and only
+                            // the attribute version should be supported
+                            self.attr("authors")
+                        }
                     }
-                }
+                })
             })
-        })
+        }
     }
 
     fn get_labels(&self) -> Option<&str> {
@@ -236,6 +243,28 @@ dsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdf
 ## External References
 * https://company.com[link to company] - An external reference
 "#;
+        let rfd = RfdAsciidoc::new(content);
+        let authors = rfd.get_authors().unwrap();
+        let expected = r#"Author One <one@company>, Author Two <two@company>"#.to_string();
+        assert_eq!(expected, authors);
+    }
+
+    #[test]
+    fn test_get_asciidoc_attribute_authors_under_title() {
+        let content = r#"
+= RFD 363 Minibar
+:authors: Author One <one@company>, Author Two <two@company>
+:state: discussion
+:discussion: https://github.com/org/repo/pull/123
+:revremark: State: {state} | {discussion}
+:imagesdir: figures
+:sectnums: |,all|
+:sectnumlevels: 5
+:xrefstyle: short
+
+== Introduction
+"#;
+
         let rfd = RfdAsciidoc::new(content);
         let authors = rfd.get_authors().unwrap();
         let expected = r#"Author One <one@company>, Author Two <two@company>"#.to_string();
