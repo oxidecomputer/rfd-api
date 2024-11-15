@@ -103,7 +103,8 @@ pub fn server(
         // panics if the file path is not a valid path
 
         // Create the API schema.
-        let mut api_definition = &mut api.openapi(spec.title, Version::parse(env!("CARGO_PKG_VERSION"))?);
+        let mut api_definition =
+            &mut api.openapi(spec.title, Version::parse(env!("CARGO_PKG_VERSION"))?);
         api_definition = api_definition
             .description(spec.description)
             .contact_url(spec.contact_url)
