@@ -163,7 +163,7 @@ async fn main() -> anyhow::Result<()> {
         .expect("Failed to construct server")
         .start();
 
-    server
+    server?
         .await
         .tap_err(|err| {
             tracing::error!(?err, "Server exited with an error");

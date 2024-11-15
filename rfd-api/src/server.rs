@@ -3,8 +3,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use dropshot::{
-    ApiDescription, ConfigDropshot, EndpointTagPolicy, HttpServerStarter, TagConfig, TagDetails,
+    ApiDescription, ConfigDropshot, EndpointTagPolicy, ServerBuilder, TagConfig, TagDetails,
 };
+use semver::Version;
 use serde::Deserialize;
 use slog::Drain;
 use std::{collections::HashMap, error::Error, fs::File, net::SocketAddr, path::PathBuf};
@@ -42,7 +43,7 @@ v_system_endpoints!(RfdContext, RfdPermission);
 
 pub fn server(
     config: ServerConfig,
-) -> Result<HttpServerStarter<RfdContext>, Box<dyn Error + Send + Sync>> {
+) -> Result<ServerBuilder<RfdContext>, Box<dyn Error + Send + Sync>> {
     let mut config_dropshot = ConfigDropshot::default();
     config_dropshot.bind_address = config.server_address;
     config_dropshot.request_body_max_bytes = 1024 * 1024;
@@ -102,7 +103,7 @@ pub fn server(
         // panics if the file path is not a valid path
 
         // Create the API schema.
-        let mut api_definition = &mut api.openapi(spec.title, &"");
+        let mut api_definition = &mut api.openapi(spec.title, Version::parse(env!("CARGO_PKG_VERSION"))?);
         api_definition = api_definition
             .description(spec.description)
             .contact_url(spec.contact_url)
@@ -112,5 +113,5 @@ pub fn server(
         api_definition.write(&mut buffer).unwrap();
     }
 
-    HttpServerStarter::new(&config_dropshot, api, config.context, &dropshot_logger)
+    Ok(ServerBuilder::new(api, config.context, dropshot_logger).config(config_dropshot))
 }

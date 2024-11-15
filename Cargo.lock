@@ -719,9 +719,9 @@ checksum = "1435fa1053d8b2fbbe9be7e97eca7f33d37b28409959813daefc1446a14247f1"
 
 [[package]]
 name = "dropshot"
-version = "0.12.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ab804b8d4ab58d96e1e19c8ef87e1747a70d2819e92b659d6fe8d5ac5ac44d50"
+checksum = "50976b6bac0894e689bb8ce0e2e5892dfeedb0876408bc806f0582d81824a3b5"
 dependencies = [
  "async-stream",
  "async-trait",
@@ -747,6 +747,7 @@ dependencies = [
  "rustls-pemfile 2.2.0",
  "schemars",
  "scopeguard",
+ "semver",
  "serde",
  "serde_json",
  "serde_path_to_error",
@@ -757,6 +758,7 @@ dependencies = [
  "slog-bunyan",
  "slog-json",
  "slog-term",
+ "thiserror 1.0.69",
  "tokio",
  "tokio-rustls 0.25.0",
  "toml",
@@ -779,7 +781,7 @@ dependencies = [
 [[package]]
 name = "dropshot-authorization-header"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#862fcbb6baf2388599746228fa913192f809ab42"
+source = "git+https://github.com/oxidecomputer/v-api#f1eaeb8676d47a096250a51ea3144db254f27fd4"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -790,7 +792,7 @@ dependencies = [
 [[package]]
 name = "dropshot-verified-body"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/dropshot-verified-body#8575f00717b44d8effbce85c95b7469726a24b45"
+source = "git+https://github.com/oxidecomputer/dropshot-verified-body#444913dc7cac7c19a699007e05c6adcbb73a8ca9"
 dependencies = [
  "async-trait",
  "digest",
@@ -809,13 +811,14 @@ dependencies = [
 
 [[package]]
 name = "dropshot_endpoint"
-version = "0.12.0"
+version = "0.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "796be76b11b79de0decd7be2105add01220f8bbe04cf1f83214c0b801414a722"
+checksum = "e8371ca3d0ecdd13df8a00acb66312633fc66a5e412076ccbc414238536f8290"
 dependencies = [
  "heck 0.5.0",
  "proc-macro2",
  "quote",
+ "semver",
  "serde",
  "serde_tokenstream",
  "syn 2.0.87",
@@ -2884,6 +2887,7 @@ dependencies = [
  "rsa",
  "schemars",
  "secrecy",
+ "semver",
  "serde",
  "serde_json",
  "serde_urlencoded",
@@ -4358,7 +4362,7 @@ dependencies = [
 [[package]]
 name = "v-api"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#862fcbb6baf2388599746228fa913192f809ab42"
+source = "git+https://github.com/oxidecomputer/v-api#f1eaeb8676d47a096250a51ea3144db254f27fd4"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -4402,7 +4406,7 @@ dependencies = [
 [[package]]
 name = "v-api-installer"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#862fcbb6baf2388599746228fa913192f809ab42"
+source = "git+https://github.com/oxidecomputer/v-api#f1eaeb8676d47a096250a51ea3144db254f27fd4"
 dependencies = [
  "diesel",
  "diesel_migrations",
@@ -4411,7 +4415,7 @@ dependencies = [
 [[package]]
 name = "v-api-permission-derive"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#862fcbb6baf2388599746228fa913192f809ab42"
+source = "git+https://github.com/oxidecomputer/v-api#f1eaeb8676d47a096250a51ea3144db254f27fd4"
 dependencies = [
  "heck 0.5.0",
  "proc-macro2",
@@ -4422,7 +4426,7 @@ dependencies = [
 [[package]]
 name = "v-model"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#862fcbb6baf2388599746228fa913192f809ab42"
+source = "git+https://github.com/oxidecomputer/v-api#f1eaeb8676d47a096250a51ea3144db254f27fd4"
 dependencies = [
  "async-bb8-diesel",
  "async-trait",
