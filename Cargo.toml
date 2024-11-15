@@ -22,7 +22,7 @@ async-trait = "0.1.83"
 base64 = "0.22"
 bb8 = "0.8.6"
 chrono = "0.4.38"
-clap = { version = "4.5.16", features = ["derive", "string", "env"] }
+clap = { version = "4.5.21", features = ["derive", "string", "env"] }
 config = { version = "0.14.1", features = ["toml"] }
 cookie = { version = "0.18.1" }
 crc32c = "0.6.8"
