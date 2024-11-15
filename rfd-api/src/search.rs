@@ -30,12 +30,12 @@ impl SearchClient {
     where
         T: Display,
         U: Display,
-        V: ToString,
+        V: AsRef<str>,
     {
         Self {
             client: Client::new(),
             endpoint: format!("{}/indexes/{}/search", endpoint, index),
-            secret: SecretString::new(secret.to_string()),
+            secret: SecretString::from(secret.as_ref()),
         }
     }
 
