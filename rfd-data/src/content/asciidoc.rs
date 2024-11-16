@@ -111,7 +111,6 @@ impl<'a> RfdDocument for RfdAsciidoc<'a> {
     }
 
     fn get_authors(&self) -> Option<&str> {
-
         // If an authors attribute is defined anywhere in the document, then it is the first choice
         // for the authors value
         if let Some(attr) = self.attr("authors") {
