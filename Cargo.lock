@@ -781,7 +781,7 @@ dependencies = [
 [[package]]
 name = "dropshot-authorization-header"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#6fd2bdaba54b56798c7e9d8fb3a0ffe361d9ba76"
+source = "git+https://github.com/oxidecomputer/v-api#032cc120a38f7274c348db608bc78d67c89944bd"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -4362,7 +4362,7 @@ dependencies = [
 [[package]]
 name = "v-api"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#6fd2bdaba54b56798c7e9d8fb3a0ffe361d9ba76"
+source = "git+https://github.com/oxidecomputer/v-api#032cc120a38f7274c348db608bc78d67c89944bd"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -4406,7 +4406,7 @@ dependencies = [
 [[package]]
 name = "v-api-installer"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#6fd2bdaba54b56798c7e9d8fb3a0ffe361d9ba76"
+source = "git+https://github.com/oxidecomputer/v-api#032cc120a38f7274c348db608bc78d67c89944bd"
 dependencies = [
  "diesel",
  "diesel_migrations",
@@ -4415,7 +4415,7 @@ dependencies = [
 [[package]]
 name = "v-api-permission-derive"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#6fd2bdaba54b56798c7e9d8fb3a0ffe361d9ba76"
+source = "git+https://github.com/oxidecomputer/v-api#032cc120a38f7274c348db608bc78d67c89944bd"
 dependencies = [
  "heck 0.5.0",
  "proc-macro2",
@@ -4426,7 +4426,7 @@ dependencies = [
 [[package]]
 name = "v-model"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#6fd2bdaba54b56798c7e9d8fb3a0ffe361d9ba76"
+source = "git+https://github.com/oxidecomputer/v-api#032cc120a38f7274c348db608bc78d67c89944bd"
 dependencies = [
  "async-bb8-diesel",
  "async-trait",
