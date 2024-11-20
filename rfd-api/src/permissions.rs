@@ -10,7 +10,7 @@ use v_api_permission_derive::v_api;
 
 #[v_api(From(VPermission))]
 #[derive(
-    Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, PartialOrd, Ord,
+    Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema,
 )]
 pub enum RfdPermission {
     #[v_api(
