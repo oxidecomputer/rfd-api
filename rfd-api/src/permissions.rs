@@ -9,9 +9,7 @@ use v_api::permissions::VPermission;
 use v_api_permission_derive::v_api;
 
 #[v_api(From(VPermission))]
-#[derive(
-    Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema,
-)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
 pub enum RfdPermission {
     #[v_api(
         contract(kind = append, variant = GetRfds),
@@ -71,21 +69,21 @@ pub enum RfdPermission {
     ManageRfdsVisibilityAll,
     #[v_api(
         contract(kind = append, variant = GetDiscussions),
-        scope(to = "rfd:discussion:w")
+        scope(to = "rfd:discussion:r")
     )]
     GetDiscussion(i32),
     #[v_api(
         contract(kind = extend, variant = GetDiscussions),
         expand(kind = iter, variant = GetDiscussion)
-        scope(to = "rfd:discussion:w")
+        scope(to = "rfd:discussion:r")
     )]
     GetDiscussions(BTreeSet<i32>),
     #[v_api(
         expand(kind = alias, variant = GetDiscussion, source = actor),
-        scope(to = "rfd:discussion:w", from = "rfd:discussion:w")
+        scope(to = "rfd:discussion:r", from = "rfd:discussion:r")
     )]
     GetDiscussionsAssigned,
-    #[v_api(scope(to = "rfd:discussion:w", from = "rfd:discussion:w"))]
+    #[v_api(scope(to = "rfd:discussion:r", from = "rfd:discussion:r"))]
     GetDiscussionsAll,
     #[v_api(scope(to = "search", from = "search"))]
     SearchRfds,
