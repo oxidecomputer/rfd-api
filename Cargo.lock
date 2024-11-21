@@ -736,7 +736,7 @@ dependencies = [
  "hostname 0.4.0",
  "http 1.1.0",
  "http-body-util",
- "hyper 1.5.0",
+ "hyper 1.5.1",
  "hyper-util",
  "indexmap 2.6.0",
  "multer",
@@ -800,7 +800,7 @@ dependencies = [
  "hex",
  "hmac",
  "http 1.1.0",
- "hyper 1.5.0",
+ "hyper 1.5.1",
  "schemars",
  "serde",
  "serde_json",
@@ -1039,7 +1039,7 @@ dependencies = [
  "chrono",
  "http 1.1.0",
  "http-body-util",
- "hyper 1.5.0",
+ "hyper 1.5.1",
  "hyper-util",
  "itertools",
  "mime",
@@ -1060,7 +1060,7 @@ checksum = "82a9330f7af5181eee3077ba4221f5a45ecdbfb26c36d2b89a7682226c6b9af5"
 dependencies = [
  "chrono",
  "google-apis-common",
- "hyper 1.5.0",
+ "hyper 1.5.1",
  "hyper-rustls 0.27.3",
  "hyper-util",
  "mime",
@@ -1080,7 +1080,7 @@ checksum = "84e3944ee656d220932785cf1d8275519c0989830b9b239453983ac44f328d9f"
 dependencies = [
  "chrono",
  "google-apis-common",
- "hyper 1.5.0",
+ "hyper 1.5.1",
  "hyper-rustls 0.27.3",
  "hyper-util",
  "mime",
@@ -1100,7 +1100,7 @@ checksum = "6d3992b096680be53ba78886d1e2e1cc988c9131344769faf1427ca9adab25d1"
 dependencies = [
  "chrono",
  "google-apis-common",
- "hyper 1.5.0",
+ "hyper 1.5.1",
  "hyper-rustls 0.27.3",
  "hyper-util",
  "mime",
@@ -1345,9 +1345,9 @@ dependencies = [
 
 [[package]]
 name = "hyper"
-version = "1.5.0"
+version = "1.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bbbff0a806a4728c99295b254c8838933b5b082d75e3cb70c8dab21fdfbcfa9a"
+checksum = "97818827ef4f364230e16705d4706e2897df2bb60617d6ca15d598025a3c481f"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -1386,7 +1386,7 @@ checksum = "08afdbb5c31130e3034af566421053ab03787c640246a446327f550d11bcb333"
 dependencies = [
  "futures-util",
  "http 1.1.0",
- "hyper 1.5.0",
+ "hyper 1.5.1",
  "hyper-util",
  "rustls 0.23.16",
  "rustls-native-certs",
@@ -1408,7 +1408,7 @@ dependencies = [
  "futures-util",
  "http 1.1.0",
  "http-body 1.0.1",
- "hyper 1.5.0",
+ "hyper 1.5.1",
  "pin-project-lite",
  "socket2",
  "tokio",
@@ -2742,7 +2742,7 @@ dependencies = [
  "http 1.1.0",
  "http-body 1.0.1",
  "http-body-util",
- "hyper 1.5.0",
+ "hyper 1.5.1",
  "hyper-rustls 0.27.3",
  "hyper-util",
  "ipnet",
@@ -2812,7 +2812,7 @@ dependencies = [
  "futures",
  "getrandom",
  "http 1.1.0",
- "hyper 1.5.0",
+ "hyper 1.5.1",
  "parking_lot 0.11.2",
  "reqwest 0.12.9",
  "reqwest-middleware",
@@ -2865,7 +2865,7 @@ dependencies = [
  "dropshot-verified-body",
  "hex",
  "http 1.1.0",
- "hyper 1.5.0",
+ "hyper 1.5.1",
  "jsonwebtoken 9.3.0",
  "meilisearch-sdk",
  "mockall",
@@ -4376,7 +4376,7 @@ dependencies = [
  "hex",
  "http 1.1.0",
  "http-body-util",
- "hyper 1.5.0",
+ "hyper 1.5.1",
  "jsonwebtoken 9.3.0",
  "newtype-uuid",
  "oauth2",
@@ -4946,7 +4946,7 @@ dependencies = [
  "futures",
  "http 1.1.0",
  "http-body-util",
- "hyper 1.5.0",
+ "hyper 1.5.1",
  "hyper-rustls 0.27.3",
  "hyper-util",
  "log",
