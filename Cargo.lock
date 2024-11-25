@@ -569,9 +569,9 @@ dependencies = [
 
 [[package]]
 name = "diesel"
-version = "2.2.4"
+version = "2.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "158fe8e2e68695bd615d7e4f3227c0727b151330d3e253b525086c348d055d5e"
+checksum = "cbf9649c05e0a9dbd6d0b0b8301db5182b972d0fd02f0a7c6736cf632d7c0fd5"
 dependencies = [
  "bitflags 2.6.0",
  "byteorder",
@@ -781,7 +781,7 @@ dependencies = [
 [[package]]
 name = "dropshot-authorization-header"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#37f6927b88cedb2019287b66a847a0188e41fbbd"
+source = "git+https://github.com/oxidecomputer/v-api#556036e73b18c351460b4c8f8c33650440e509a8"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -2898,7 +2898,7 @@ dependencies = [
  "slog",
  "slog-async",
  "tap",
- "thiserror 1.0.69",
+ "thiserror 2.0.3",
  "tokio",
  "toml",
  "trace-request",
@@ -2947,7 +2947,7 @@ dependencies = [
  "rfd-model",
  "schemars",
  "serde",
- "thiserror 1.0.69",
+ "thiserror 2.0.3",
 ]
 
 [[package]]
@@ -2962,7 +2962,7 @@ dependencies = [
  "regex",
  "rfd-data",
  "rfd-model",
- "thiserror 1.0.69",
+ "thiserror 2.0.3",
  "tracing",
 ]
 
@@ -2991,7 +2991,7 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
+ "thiserror 2.0.3",
  "tokio",
  "tracing",
  "uuid",
@@ -3030,7 +3030,7 @@ dependencies = [
  "rsa",
  "serde",
  "tap",
- "thiserror 1.0.69",
+ "thiserror 2.0.3",
  "tokio",
  "tracing",
  "tracing-appender",
@@ -4368,7 +4368,7 @@ dependencies = [
 [[package]]
 name = "v-api"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#37f6927b88cedb2019287b66a847a0188e41fbbd"
+source = "git+https://github.com/oxidecomputer/v-api#556036e73b18c351460b4c8f8c33650440e509a8"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -4398,7 +4398,7 @@ dependencies = [
  "serde_urlencoded",
  "sha2",
  "tap",
- "thiserror 1.0.69",
+ "thiserror 2.0.3",
  "tokio",
  "toml",
  "tracing",
@@ -4412,7 +4412,7 @@ dependencies = [
 [[package]]
 name = "v-api-installer"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#37f6927b88cedb2019287b66a847a0188e41fbbd"
+source = "git+https://github.com/oxidecomputer/v-api#556036e73b18c351460b4c8f8c33650440e509a8"
 dependencies = [
  "diesel",
  "diesel_migrations",
@@ -4421,7 +4421,7 @@ dependencies = [
 [[package]]
 name = "v-api-permission-derive"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#37f6927b88cedb2019287b66a847a0188e41fbbd"
+source = "git+https://github.com/oxidecomputer/v-api#556036e73b18c351460b4c8f8c33650440e509a8"
 dependencies = [
  "heck 0.5.0",
  "proc-macro2",
@@ -4432,7 +4432,7 @@ dependencies = [
 [[package]]
 name = "v-model"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#37f6927b88cedb2019287b66a847a0188e41fbbd"
+source = "git+https://github.com/oxidecomputer/v-api#556036e73b18c351460b4c8f8c33650440e509a8"
 dependencies = [
  "async-bb8-diesel",
  "async-trait",
@@ -4444,7 +4444,7 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
- "thiserror 1.0.69",
+ "thiserror 2.0.3",
  "tracing",
  "uuid",
 ]
