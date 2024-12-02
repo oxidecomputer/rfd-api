@@ -26,7 +26,7 @@ clap = { version = "4.5.21", features = ["derive", "string", "env"] }
 config = { version = "0.14.1", features = ["toml"] }
 cookie = { version = "0.18.1" }
 crc32c = "0.6.8"
-diesel = { version = "2.2.4", features = ["postgres"] }
+diesel = { version = "2.2.5", features = ["postgres"] }
 diesel_migrations = { version = "2.2.0" }
 dirs = "5.0.1"
 dropshot = "0.13.0"
