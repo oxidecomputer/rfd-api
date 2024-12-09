@@ -8,7 +8,7 @@ use meilisearch_sdk::{
     errors::{Error as MeiliError, ErrorCode},
     indexes::Index,
     settings::Settings,
-    Client,
+    client::Client,
 };
 use parse_rfd::{parse, ParsedDoc, ParserError, Section};
 use rfd_data::RfdNumber;
@@ -36,11 +36,11 @@ impl RfdSearchIndex {
         host: impl Into<String>,
         api_key: impl Into<String>,
         index: impl Into<String>,
-    ) -> Self {
-        Self {
-            client: Client::new(host, Some(api_key)),
+    ) -> Result<Self, SearchError> {
+        Ok(Self {
+            client: Client::new(host, Some(api_key))?,
             index: index.into(),
-        }
+        })
     }
 
     /// Trigger updating the search index for the RFD.
