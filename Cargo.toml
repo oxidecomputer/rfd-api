@@ -40,7 +40,7 @@ http = "1.2.0"
 hyper = "1.5.1"
 itertools = "0.13.0"
 jsonwebtoken = "9.3.0"
-meilisearch-sdk = { version = "0.24.3", default-features = false, features = ["reqwest-rustls"] }
+meilisearch-sdk = "0.27.1"
 md-5 = "0.10.6"
 mime_guess = "2.0.5"
 mockall = "0.13.1"
@@ -103,9 +103,6 @@ installers = []
 targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
 # Publish jobs to run in CI
 pr-run-mode = "skip"
-
-[patch.crates-io]
-meilisearch-sdk = { git = "https://github.com/gibbz00/meilisearch-rust.git", branch = "request_clients" }
 
 # The profile that 'cargo dist' will build with
 [profile.dist]

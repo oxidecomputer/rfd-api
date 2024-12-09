@@ -30,7 +30,7 @@ use tracing::instrument;
 
 use crate::{
     pdf::{PdfFileLocation, PdfStorage, RfdPdf, RfdPdfError},
-    search::RfdSearchIndex,
+    search::{RfdSearchIndex, SearchError},
     updater::{BoxedAction, RfdUpdateMode, RfdUpdaterError},
     util::{gdrive_client, GDriveError},
     AppConfig, GitHubAuthConfig, PdfStorageConfig, SearchConfig, StaticStorageConfig,
@@ -69,6 +69,8 @@ pub enum ContextError {
     InvalidAction(#[from] RfdUpdaterError),
     #[error(transparent)]
     InvalidGitHubPrivateKey(#[from] rsa::pkcs1::Error),
+    #[error(transparent)]
+    Search(#[from] SearchError),
 }
 
 pub struct Context {
@@ -159,7 +161,7 @@ impl Context {
                 .collect::<Result<Vec<_>, RfdUpdaterError>>()?,
             assets: StaticAssetStorageCtx::new(&config.static_storage).await?,
             pdf: PdfStorageCtx::new(&config.pdf_storage).await?,
-            search: SearchCtx::new(&config.search_storage),
+            search: SearchCtx::new(&config.search_storage)?,
         })
     }
 }
@@ -350,12 +352,12 @@ pub struct SearchCtx {
 }
 
 impl SearchCtx {
-    pub fn new(entries: &[SearchConfig]) -> Self {
-        Self {
+    pub fn new(entries: &[SearchConfig]) -> Result<Self, SearchError> {
+        Ok(Self {
             indexes: entries
                 .iter()
                 .map(|c| RfdSearchIndex::new(&c.host, &c.key, &c.index))
-                .collect(),
-        }
+                .collect::<Result<Vec<_>, _>>()?,
+        })
     }
 }

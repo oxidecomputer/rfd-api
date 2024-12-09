@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use meilisearch_sdk::{SearchResult, SearchResults};
+use meilisearch_sdk::search::{SearchResult, SearchResults};
 use reqwest::Client;
 use secrecy::{ExposeSecret, SecretString};
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
