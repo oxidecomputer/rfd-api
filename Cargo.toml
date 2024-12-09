@@ -29,7 +29,7 @@ crc32c = "0.6.8"
 diesel = { version = "2.2.5", features = ["postgres"] }
 diesel_migrations = { version = "2.2.0" }
 dirs = "5.0.1"
-dropshot = "0.13.0"
+dropshot = "0.15"
 dropshot-verified-body = { git = "https://github.com/oxidecomputer/dropshot-verified-body" }
 futures = "0.3.31"
 google-drive3 = "6"

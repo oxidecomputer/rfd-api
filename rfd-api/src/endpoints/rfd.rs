@@ -3,10 +3,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use dropshot::{
-    endpoint, HttpError, HttpResponseAccepted, HttpResponseOk, Path, Query, RequestContext,
-    TypedBody,
+    endpoint, ClientErrorStatusCode, HttpError, HttpResponseAccepted, HttpResponseOk, Path, Query,
+    RequestContext, TypedBody,
 };
-use http::StatusCode;
 use rfd_data::{
     content::{RfdAsciidoc, RfdContent, RfdDocument, RfdMarkdown},
     RfdState,
@@ -127,7 +126,7 @@ async fn get_rfd_op(
         Ok(HttpResponseOk(ctx.get_rfd(caller, rfd_number, None).await?))
     } else {
         Err(client_error(
-            StatusCode::BAD_REQUEST,
+            ClientErrorStatusCode::BAD_REQUEST,
             "Malformed RFD number",
         ))
     }
@@ -175,7 +174,7 @@ async fn set_rfd_document_op(
         Ok(HttpResponseAccepted(()))
     } else {
         Err(client_error(
-            StatusCode::BAD_REQUEST,
+            ClientErrorStatusCode::BAD_REQUEST,
             "Malformed RFD number",
         ))
     }
@@ -223,7 +222,7 @@ async fn set_rfd_content_op(
         Ok(HttpResponseAccepted(()))
     } else {
         Err(client_error(
-            StatusCode::BAD_REQUEST,
+            ClientErrorStatusCode::BAD_REQUEST,
             "Malformed RFD number",
         ))
     }
@@ -285,7 +284,7 @@ async fn get_rfd_attr_op(
         extract_attr(&attr, &content).map(HttpResponseOk)
     } else {
         Err(client_error(
-            StatusCode::BAD_REQUEST,
+            ClientErrorStatusCode::BAD_REQUEST,
             "Malformed RFD number",
         ))
     }
@@ -365,7 +364,7 @@ async fn set_rfd_attr_op(
         extract_attr(&attr, &content).map(HttpResponseAccepted)
     } else {
         Err(client_error(
-            StatusCode::BAD_REQUEST,
+            ClientErrorStatusCode::BAD_REQUEST,
             "Malformed RFD number",
         ))
     }
@@ -634,7 +633,7 @@ async fn update_rfd_visibility_op(
         ))
     } else {
         Err(client_error(
-            StatusCode::BAD_REQUEST,
+            ClientErrorStatusCode::BAD_REQUEST,
             "Malformed RFD number",
         ))
     }
