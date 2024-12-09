@@ -5,10 +5,10 @@
 use hmac::{Hmac, Mac};
 use md5::Md5;
 use meilisearch_sdk::{
+    client::Client,
     errors::{Error as MeiliError, ErrorCode},
     indexes::Index,
     settings::Settings,
-    client::Client,
 };
 use parse_rfd::{parse, ParsedDoc, ParserError, Section};
 use rfd_data::RfdNumber;
