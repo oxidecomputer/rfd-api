@@ -3,16 +3,15 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 pub mod response {
-    use dropshot::HttpError;
-    use http::StatusCode;
+    use dropshot::{ClientErrorStatusCode, HttpError};
     use std::error::Error;
     use tracing::instrument;
 
     pub fn unauthorized() -> HttpError {
-        client_error(StatusCode::UNAUTHORIZED, "Unauthorized")
+        client_error(ClientErrorStatusCode::UNAUTHORIZED, "Unauthorized")
     }
 
-    pub fn client_error<S>(status_code: StatusCode, message: S) -> HttpError
+    pub fn client_error<S>(status_code: ClientErrorStatusCode, message: S) -> HttpError
     where
         S: ToString,
     {

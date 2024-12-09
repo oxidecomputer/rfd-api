@@ -678,6 +678,11 @@ impl RfdTabPrinter {
                 writeln!(tw, "{:?}", err);
                 writeln!(tw, "Please report this as a bug against the rfd-api");
             }
+            progenitor_client::Error::PostHookError(err) => {
+                writeln!(tw, "Internal CLI error");
+                writeln!(tw, "{:?}", err);
+                writeln!(tw, "Please report this as a bug against the rfd-api");
+            }
         }
 
         output_writer(tw);

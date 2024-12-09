@@ -62,6 +62,9 @@ pub fn format_api_err(ctx: &Context, client_err: ProgenitorClientError<ApiError>
         ProgenitorClientError::PreHookError(inner) => {
             err = err.context("Prehook call failed").context(inner)
         }
+        ProgenitorClientError::PostHookError(inner) => {
+            err = err.context("Posthook call failed").context(inner)
+        }
     }
 
     err

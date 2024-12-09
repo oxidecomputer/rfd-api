@@ -33,7 +33,7 @@ pub fn trace_request(_attr: TokenStream, input: TokenStream) -> TokenStream {
             fn get_status<T>(res: &Result<T, HttpError>) -> http::StatusCode where T: dropshot::HttpCodedResponse {
                 match res {
                     Ok(_) => T::STATUS_CODE,
-                    Err(err) => err.status_code,
+                    Err(err) => err.status_code.as_status(),
                 }
             }
 
