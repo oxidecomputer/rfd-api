@@ -376,6 +376,10 @@ impl ProgenitorCliConfig for Context {
             "AccessGroupForApiPermissionResponse" => {
                 self.printer().unwrap().output_api_user(reserialize(value))
             }
+            "Array_of_AccessGroupForRfdPermission" => self
+                .printer()
+                .unwrap()
+                .output_group_list(reserialize(value)),
             "Array_of_Mapper" => self
                 .printer()
                 .unwrap()
