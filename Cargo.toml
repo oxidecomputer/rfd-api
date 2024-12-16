@@ -47,7 +47,7 @@ mockall = "0.13.1"
 newline-converter = "0.3.0"
 newtype-uuid = { version = "1.1.3", features = ["schemars08", "serde", "v4"] }
 oauth2 = { version = "4.4.2", default-features = false, features = ["rustls-tls"] }
-octorust = { git = "https://github.com/oxidecomputer/third-party-api-clients", branch = "handle-cache-miss" }
+octorust = { git = "https://github.com/oxidecomputer/third-party-api-clients", branch = "optional-middleware" }
 owo-colors = "4.1.0"
 partial-struct = { git = "https://github.com/oxidecomputer/partial-struct" }
 progenitor = { git = "https://github.com/oxidecomputer/progenitor" }
