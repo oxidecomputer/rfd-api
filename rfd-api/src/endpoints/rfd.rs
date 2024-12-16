@@ -532,71 +532,68 @@ async fn search_rfds_op(
     // TODO: Move all of this into a ctx
 
     // Ensure that the user has the search permission before searching
+    if caller.can(&RfdPermission::SearchRfds) {
+        tracing::debug!("Fetching from remote search API");
 
-    // TODO: The unauthorized caller needs to be be able to have customized permissions to be able
-    // support this check. In this particular case the check is not needed
-    // if caller.can(&RfdPermission::SearchRfds) {
-    tracing::debug!("Fetching from remote search API");
+        // Transform the inbound query into a meilisearch request
+        let mut search_request: SearchRequest = query.into();
 
-    // Transform the inbound query into a meilisearch request
-    let mut search_request: SearchRequest = query.into();
+        // Construct a meilisearch formatted filter. Either the caller has permission to search across
+        // all RFDs or they access to some smaller set. If we need to filter down the RFD list we
+        // construct a filter that will search across the RFDs the caller has direct access to as
+        // well as any RFDs that are marked as publicly accessible.
+        search_request.filter = if caller.can(&RfdPermission::GetRfdsAll) {
+            None
+        } else {
+            let mut filter = "public = true".to_string();
 
-    // Construct a meilisearch formatted filter. Either the caller has permission to search across
-    // all RFDs or they access to some smaller set. If we need to filter down the RFD list we
-    // construct a filter that will search across the RFDs the caller has direct access to as
-    // well as any RFDs that are marked as publicly accessible.
-    search_request.filter = if caller.can(&RfdPermission::GetRfdsAll) {
-        None
+            let allowed_rfds = caller
+                .allow_rfds()
+                .iter()
+                .map(|num| num.to_string())
+                .collect::<Vec<_>>()
+                .join(", ");
+            if allowed_rfds.len() > 0 {
+                filter = filter + &format!("OR rfd_number in [{}]", allowed_rfds);
+            }
+
+            Some(filter)
+        };
+
+        // Pass the search request off to the meilisearch backend
+        let results = ctx
+            .search
+            .client
+            .search::<MeiliSearchResult>(&search_request)
+            .await;
+
+        tracing::debug!("Fetched results from remote search");
+
+        match results {
+            Ok(results) => {
+                let results = SearchResults {
+                    hits: results
+                        .hits
+                        .into_iter()
+                        .map(|hit| hit.into())
+                        .collect::<Vec<_>>(),
+                    query: results.query,
+                    limit: results.limit,
+                    offset: results.offset,
+                };
+
+                tracing::debug!(count = ?results.hits.len(), "Transformed search results");
+
+                Ok(HttpResponseOk(results))
+            }
+            Err(err) => {
+                tracing::error!(?err, "Search request failed");
+                Err(internal_error("Search failed".to_string()))
+            }
+        }
     } else {
-        let mut filter = "public = true".to_string();
-
-        let allowed_rfds = caller
-            .allow_rfds()
-            .iter()
-            .map(|num| num.to_string())
-            .collect::<Vec<_>>()
-            .join(", ");
-        if allowed_rfds.len() > 0 {
-            filter = filter + &format!("OR rfd_number in [{}]", allowed_rfds);
-        }
-
-        Some(filter)
-    };
-
-    // Pass the search request off to the meilisearch backend
-    let results = ctx
-        .search
-        .client
-        .search::<MeiliSearchResult>(&search_request)
-        .await;
-
-    tracing::debug!("Fetched results from remote search");
-
-    match results {
-        Ok(results) => {
-            let results = SearchResults {
-                hits: results
-                    .hits
-                    .into_iter()
-                    .map(|hit| hit.into())
-                    .collect::<Vec<_>>(),
-                query: results.query,
-                limit: results.limit,
-                offset: results.offset,
-            };
-
-            tracing::debug!(count = ?results.hits.len(), "Transformed search results");
-
-            Ok(HttpResponseOk(results))
-        }
-        Err(err) => {
-            tracing::error!(?err, "Search request failed");
-            Err(internal_error("Search failed".to_string()))
-        }
+        Err(unauthorized())
     }
-    // } else {
-    // Err(unauthorized())
-    // }
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]

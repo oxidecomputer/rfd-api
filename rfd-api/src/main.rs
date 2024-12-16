@@ -32,6 +32,7 @@ mod endpoints;
 mod error;
 mod initial_data;
 mod permissions;
+use permissions::RfdPermission;
 mod search;
 mod secrets;
 mod server;
@@ -112,6 +113,9 @@ async fn main() -> anyhow::Result<()> {
 
         tracing::info!("Added Google OAuth provider");
     }
+
+    // Configure permissions for the default unauthenticated user
+    v_ctx.add_unauthenticated_caller_permission(RfdPermission::SearchRfds);
 
     let context = RfdContext::new(
         config.public_url,
