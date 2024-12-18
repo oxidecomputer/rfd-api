@@ -4,6 +4,7 @@
 
 use chrono::{DateTime, Utc};
 use diesel::{Insertable, Queryable};
+use partial_struct::partial;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -24,6 +25,7 @@ pub struct RfdModel {
     pub visibility: Visibility,
 }
 
+#[partial(RfdRevisionMetaModel)]
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
 #[diesel(table_name = rfd_revision)]
 pub struct RfdRevisionModel {
@@ -33,6 +35,7 @@ pub struct RfdRevisionModel {
     pub state: Option<String>,
     pub discussion: Option<String>,
     pub authors: Option<String>,
+    #[partial(RfdRevisionMetaModel(skip))]
     pub content: String,
     pub content_format: ContentFormat,
     pub sha: String,

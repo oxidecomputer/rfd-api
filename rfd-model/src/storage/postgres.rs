@@ -7,7 +7,7 @@ use async_trait::async_trait;
 use bb8::Pool;
 use chrono::Utc;
 use diesel::{
-    insert_into,
+    debug_query, insert_into,
     pg::PgConnection,
     query_dsl::QueryDsl,
     update,
@@ -20,17 +20,17 @@ use thiserror::Error;
 use uuid::Uuid;
 
 use crate::{
-    db::{JobModel, RfdModel, RfdPdfModel, RfdRevisionModel},
+    db::{JobModel, RfdModel, RfdPdfModel, RfdRevisionMetaModel, RfdRevisionModel},
     schema::{job, rfd, rfd_pdf, rfd_revision},
     schema_ext::Visibility,
     storage::StoreError,
     Job, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdId, RfdPdf, RfdPdfId, RfdRevision,
-    RfdRevisionId,
+    RfdRevisionId, RfdRevisionMeta,
 };
 
 use super::{
     JobFilter, JobStore, ListPagination, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter,
-    RfdRevisionStore, RfdStore,
+    RfdRevisionMetaStore, RfdRevisionStore, RfdStore,
 };
 
 pub type DbPool = Pool<ConnectionManager<PgConnection>>;
@@ -212,10 +212,14 @@ impl RfdRevisionStore for PostgresStore {
             query = query.filter(rfd_revision::deleted_at.is_null());
         }
 
-        let results = query
+        let query = query
             .offset(pagination.offset)
             .limit(pagination.limit)
-            .order(rfd_revision::committed_at.desc())
+            .order(rfd_revision::committed_at.desc());
+
+        tracing::info!(query = ?debug_query(&query), "Run list rfds");
+
+        let results = query
             .get_results_async::<RfdRevisionModel>(&*self.pool.get().await?)
             .await?;
 
@@ -271,6 +275,8 @@ impl RfdRevisionStore for PostgresStore {
                 rfd_revision::rfd_id.asc(),
                 rfd_revision::committed_at.desc(),
             ));
+
+        tracing::info!(query = ?debug_query(&query), "Run list unique rfds");
 
         let results = query
             .get_results_async::<RfdRevisionModel>(&*self.pool.get().await?)
@@ -333,6 +339,174 @@ impl RfdRevisionStore for PostgresStore {
             .await?;
 
         RfdRevisionStore::get(self, id, true).await
+    }
+}
+
+#[async_trait]
+impl RfdRevisionMetaStore for PostgresStore {
+    async fn get(
+        &self,
+        id: &TypedUuid<RfdRevisionId>,
+        deleted: bool,
+    ) -> Result<Option<RfdRevisionMeta>, StoreError> {
+        let user = RfdRevisionMetaStore::list(
+            self,
+            RfdRevisionFilter::default()
+                .id(Some(vec![*id]))
+                .deleted(deleted),
+            &ListPagination::default().limit(1),
+        )
+        .await?;
+        Ok(user.into_iter().nth(0))
+    }
+
+    async fn list(
+        &self,
+        filter: RfdRevisionFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdRevisionMeta>, StoreError> {
+        let mut query = rfd_revision::dsl::rfd_revision
+            .select((
+                rfd_revision::id,
+                rfd_revision::rfd_id,
+                rfd_revision::title,
+                rfd_revision::state,
+                rfd_revision::discussion,
+                rfd_revision::authors,
+                rfd_revision::content_format,
+                rfd_revision::sha,
+                rfd_revision::commit_sha,
+                rfd_revision::committed_at,
+                rfd_revision::created_at,
+                rfd_revision::updated_at,
+                rfd_revision::deleted_at,
+                rfd_revision::labels,
+            ))
+            .into_boxed();
+
+        tracing::trace!(?filter, "Lookup RFD revision metadata");
+
+        let RfdRevisionFilter {
+            id,
+            rfd,
+            sha,
+            deleted,
+        } = filter;
+
+        if let Some(id) = id {
+            query = query.filter(
+                rfd_revision::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+            );
+        }
+
+        if let Some(rfd) = rfd {
+            query = query.filter(
+                rfd_revision::rfd_id.eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
+            );
+        }
+
+        if let Some(sha) = sha {
+            query = query.filter(rfd_revision::sha.eq_any(sha));
+        }
+
+        if !deleted {
+            query = query.filter(rfd_revision::deleted_at.is_null());
+        }
+
+        let query = query
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+            .order(rfd_revision::committed_at.desc());
+
+        tracing::info!(query = ?debug_query(&query), "Run list rfd metadata");
+
+        let results = query
+            .get_results_async::<RfdRevisionMetaModel>(&*self.pool.get().await?)
+            .await?;
+
+        tracing::trace!(count = ?results.len(), "Found RFD revision metadata");
+
+        Ok(results
+            .into_iter()
+            .map(|revision| revision.into())
+            .collect())
+    }
+
+    // TODO: Refactor into a group by arg in list. Diesel types here are a pain
+    async fn list_unique_rfd(
+        &self,
+        filter: RfdRevisionFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdRevisionMeta>, StoreError> {
+        let mut query = rfd_revision::dsl::rfd_revision
+            .select((
+                rfd_revision::id,
+                rfd_revision::rfd_id,
+                rfd_revision::title,
+                rfd_revision::state,
+                rfd_revision::discussion,
+                rfd_revision::authors,
+                rfd_revision::content_format,
+                rfd_revision::sha,
+                rfd_revision::commit_sha,
+                rfd_revision::committed_at,
+                rfd_revision::created_at,
+                rfd_revision::updated_at,
+                rfd_revision::deleted_at,
+                rfd_revision::labels,
+            ))
+            .distinct_on(rfd_revision::rfd_id)
+            .into_boxed();
+
+        tracing::trace!(rfd_ids = ?filter.rfd.as_ref().map(|list| list.len()), "Lookup unique RFD revision metadata");
+
+        let RfdRevisionFilter {
+            id,
+            rfd,
+            sha,
+            deleted,
+        } = filter;
+
+        if let Some(id) = id {
+            query = query.filter(
+                rfd_revision::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+            );
+        }
+
+        if let Some(rfd) = rfd {
+            query = query.filter(
+                rfd_revision::rfd_id.eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
+            );
+        }
+
+        if let Some(sha) = sha {
+            query = query.filter(rfd_revision::sha.eq_any(sha));
+        }
+
+        if !deleted {
+            query = query.filter(rfd_revision::deleted_at.is_null());
+        }
+
+        let query = query
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+            .order((
+                rfd_revision::rfd_id.asc(),
+                rfd_revision::committed_at.desc(),
+            ));
+
+        tracing::info!(query = ?debug_query(&query), "Run list unique rfd metadata");
+
+        let results = query
+            .get_results_async::<RfdRevisionMetaModel>(&*self.pool.get().await?)
+            .await?;
+
+        tracing::trace!(count = ?results.len(), "Found unique RFD revision metadata");
+
+        Ok(results
+            .into_iter()
+            .map(|revision| revision.into())
+            .collect())
     }
 }
 

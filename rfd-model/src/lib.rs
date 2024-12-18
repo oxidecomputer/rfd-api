@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use chrono::{DateTime, Utc};
-use db::{JobModel, RfdModel, RfdPdfModel, RfdRevisionModel};
+use db::{JobModel, RfdModel, RfdPdfModel, RfdRevisionMetaModel, RfdRevisionModel};
 use newtype_uuid::{GenericUuid, TypedUuid, TypedUuidKind, TypedUuidTag};
 use partial_struct::partial;
 use schema_ext::{ContentFormat, PdfSource, Visibility};
@@ -101,6 +101,7 @@ impl TypedUuidKind for RfdRevisionId {
 }
 
 #[partial(NewRfdRevision)]
+#[partial(RfdRevisionMeta)]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct RfdRevision {
     pub id: TypedUuid<RfdRevisionId>,
@@ -110,6 +111,7 @@ pub struct RfdRevision {
     pub discussion: Option<String>,
     pub authors: Option<String>,
     pub labels: Option<String>,
+    #[partial(RfdRevisionMeta(skip))]
     pub content: String,
     pub content_format: ContentFormat,
     pub sha: FileSha,
@@ -134,6 +136,27 @@ impl From<RfdRevisionModel> for RfdRevision {
             authors: value.authors,
             labels: value.labels,
             content: value.content,
+            content_format: value.content_format,
+            sha: value.sha.into(),
+            commit: value.commit_sha.into(),
+            committed_at: value.committed_at,
+            created_at: value.created_at,
+            updated_at: value.updated_at,
+            deleted_at: value.deleted_at,
+        }
+    }
+}
+
+impl From<RfdRevisionMetaModel> for RfdRevisionMeta {
+    fn from(value: RfdRevisionMetaModel) -> Self {
+        Self {
+            id: TypedUuid::from_untyped_uuid(value.id),
+            rfd_id: TypedUuid::from_untyped_uuid(value.rfd_id),
+            title: value.title,
+            state: value.state,
+            discussion: value.discussion,
+            authors: value.authors,
+            labels: value.labels,
             content_format: value.content_format,
             sha: value.sha.into(),
             commit: value.commit_sha.into(),
