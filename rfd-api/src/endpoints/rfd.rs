@@ -23,7 +23,7 @@ use v_model::permissions::Caller;
 
 use crate::{
     caller::CallerExt,
-    context::{FullRfd, ListRfd, RfdContext},
+    context::{FullRfd, RfdContext, RfdMeta},
     permissions::RfdPermission,
     search::{MeiliSearchResult, SearchRequest},
     util::response::{client_error, internal_error, unauthorized},
@@ -38,7 +38,7 @@ use crate::{
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn get_rfds(
     rqctx: RequestContext<RfdContext>,
-) -> Result<HttpResponseOk<Vec<ListRfd>>, HttpError> {
+) -> Result<HttpResponseOk<Vec<RfdMeta>>, HttpError> {
     let ctx = rqctx.context();
     let caller = ctx.v_ctx().get_caller(&rqctx).await?;
     get_rfds_op(ctx, &caller).await
@@ -48,7 +48,7 @@ pub async fn get_rfds(
 async fn get_rfds_op(
     ctx: &RfdContext,
     caller: &Caller<RfdPermission>,
-) -> Result<HttpResponseOk<Vec<ListRfd>>, HttpError> {
+) -> Result<HttpResponseOk<Vec<RfdMeta>>, HttpError> {
     let rfds = ctx.list_rfds(caller, None).await?;
     Ok(HttpResponseOk(rfds))
 }
@@ -648,8 +648,8 @@ mod tests {
     use http::StatusCode;
     use newtype_uuid::{GenericUuid, TypedUuid};
     use rfd_model::{
-        storage::{MockRfdPdfStore, MockRfdRevisionStore, MockRfdStore},
-        Rfd, RfdRevision,
+        storage::{MockRfdPdfStore, MockRfdRevisionMetaStore, MockRfdRevisionStore, MockRfdStore},
+        Rfd, RfdRevision, RfdRevisionMeta,
     };
     use uuid::Uuid;
     use v_api::ApiContext;
@@ -715,13 +715,16 @@ mod tests {
             Ok(results)
         });
 
+        let private_rfd_revision_id_1 = TypedUuid::new_v4();
+        let public_rfd_revision_id = TypedUuid::new_v4();
+        let private_rfd_revision_id_2 = TypedUuid::new_v4();
         let mut rfd_revision_store = MockRfdRevisionStore::new();
         rfd_revision_store
             .expect_list()
             .returning(move |filter, _| {
                 let mut results = vec![
                     RfdRevision {
-                        id: TypedUuid::new_v4(),
+                        id: private_rfd_revision_id_1,
                         rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
                         title: "Private Test RFD 1".to_string(),
                         state: None,
@@ -738,7 +741,7 @@ mod tests {
                         deleted_at: None,
                     },
                     RfdRevision {
-                        id: TypedUuid::new_v4(),
+                        id: public_rfd_revision_id,
                         rfd_id: TypedUuid::from_untyped_uuid(public_rfd_id),
                         title: "Public Test RFD".to_string(),
                         state: None,
@@ -755,7 +758,7 @@ mod tests {
                         deleted_at: None,
                     },
                     RfdRevision {
-                        id: TypedUuid::new_v4(),
+                        id: private_rfd_revision_id_2,
                         rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_2),
                         title: "Private Test RFD 2".to_string(),
                         state: None,
@@ -763,6 +766,68 @@ mod tests {
                         authors: None,
                         labels: None,
                         content: String::new(),
+                        content_format: rfd_model::schema_ext::ContentFormat::Asciidoc,
+                        sha: String::new().into(),
+                        commit: String::new().into(),
+                        committed_at: Utc::now(),
+                        created_at: Utc::now(),
+                        updated_at: Utc::now(),
+                        deleted_at: None,
+                    },
+                ];
+
+                results.retain(|revision| {
+                    filter.rfd.is_none() || filter.rfd.as_ref().unwrap().contains(&revision.rfd_id)
+                });
+
+                Ok(results)
+            });
+
+        let mut rfd_revision_meta_store = MockRfdRevisionMetaStore::new();
+        rfd_revision_meta_store
+            .expect_list()
+            .returning(move |filter, _| {
+                let mut results = vec![
+                    RfdRevisionMeta {
+                        id: private_rfd_revision_id_1,
+                        rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
+                        title: "Private Test RFD 1".to_string(),
+                        state: None,
+                        discussion: None,
+                        authors: None,
+                        labels: None,
+                        content_format: rfd_model::schema_ext::ContentFormat::Asciidoc,
+                        sha: String::new().into(),
+                        commit: String::new().into(),
+                        committed_at: Utc::now(),
+                        created_at: Utc::now(),
+                        updated_at: Utc::now(),
+                        deleted_at: None,
+                    },
+                    RfdRevisionMeta {
+                        id: public_rfd_revision_id,
+                        rfd_id: TypedUuid::from_untyped_uuid(public_rfd_id),
+                        title: "Public Test RFD".to_string(),
+                        state: None,
+                        discussion: None,
+                        authors: None,
+                        labels: None,
+                        content_format: rfd_model::schema_ext::ContentFormat::Asciidoc,
+                        sha: String::new().into(),
+                        commit: String::new().into(),
+                        committed_at: Utc::now(),
+                        created_at: Utc::now(),
+                        updated_at: Utc::now(),
+                        deleted_at: None,
+                    },
+                    RfdRevisionMeta {
+                        id: private_rfd_revision_id_2,
+                        rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_2),
+                        title: "Private Test RFD 2".to_string(),
+                        state: None,
+                        discussion: None,
+                        authors: None,
+                        labels: None,
                         content_format: rfd_model::schema_ext::ContentFormat::Asciidoc,
                         sha: String::new().into(),
                         commit: String::new().into(),
@@ -788,6 +853,7 @@ mod tests {
         let mut storage = MockStorage::new();
         storage.rfd_store = Some(Arc::new(rfd_store));
         storage.rfd_revision_store = Some(Arc::new(rfd_revision_store));
+        storage.rfd_revision_meta_store = Some(Arc::new(rfd_revision_meta_store));
         storage.rfd_pdf_store = Some(Arc::new(rfd_pdf_store));
 
         mock_context(storage).await

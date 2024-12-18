@@ -7,7 +7,7 @@
       "url": "https://oxide.computer",
       "email": "augustus@oxidecomputer.com"
     },
-    "version": ""
+    "version": "0.8.0"
   },
   "paths": {
     "/.well-known/jwks.json": {
@@ -58,7 +58,7 @@
     },
     "/api-user": {
       "post": {
-        "summary": "Create a new user with a given set of permissions",
+        "summary": "Create a new user",
         "operationId": "create_api_user",
         "requestBody": {
           "content": {
@@ -92,7 +92,7 @@
     },
     "/api-user/{user_id}": {
       "get": {
-        "summary": "Get user information for a given user id",
+        "summary": "View details for a user",
         "operationId": "get_api_user",
         "parameters": [
           {
@@ -166,8 +166,53 @@
         }
       }
     },
+    "/api-user/{user_id}/contact/email": {
+      "put": {
+        "summary": "Set the contact email for a user",
+        "operationId": "set_api_user_contact_email",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TypedUuidForUserId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiUserEmailUpdateParams"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiUserContactEmail"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
     "/api-user/{user_id}/group": {
       "post": {
+        "summary": "Add a user to a group",
         "operationId": "add_api_user_to_group",
         "parameters": [
           {
@@ -211,6 +256,7 @@
     },
     "/api-user/{user_id}/group/{group_id}": {
       "delete": {
+        "summary": "Remove a user from a group",
         "operationId": "remove_api_user_from_group",
         "parameters": [
           {
@@ -289,7 +335,7 @@
     },
     "/api-user/{user_id}/token": {
       "get": {
-        "summary": "List the active and expired API tokens for a given user",
+        "summary": "List api keys for a user",
         "operationId": "list_api_user_tokens",
         "parameters": [
           {
@@ -325,6 +371,7 @@
         }
       },
       "post": {
+        "summary": "Create a new api key for a user",
         "operationId": "create_api_user_token",
         "parameters": [
           {
@@ -368,6 +415,7 @@
     },
     "/api-user/{user_id}/token/{api_key_id}": {
       "get": {
+        "summary": "View details of an api key for a user",
         "operationId": "get_api_user_token",
         "parameters": [
           {
@@ -407,6 +455,7 @@
         }
       },
       "delete": {
+        "summary": "Revoke an api key for a user",
         "operationId": "delete_api_user_token",
         "parameters": [
           {
@@ -532,6 +581,7 @@
     },
     "/group": {
       "get": {
+        "summary": "List all groups",
         "operationId": "get_groups",
         "responses": {
           "200": {
@@ -557,6 +607,7 @@
         }
       },
       "post": {
+        "summary": "Create a group",
         "operationId": "create_group",
         "requestBody": {
           "content": {
@@ -590,6 +641,7 @@
     },
     "/group/{group_id}": {
       "put": {
+        "summary": "Update a group",
         "operationId": "update_group",
         "parameters": [
           {
@@ -631,6 +683,7 @@
         }
       },
       "delete": {
+        "summary": "Delete a group",
         "operationId": "delete_group",
         "parameters": [
           {
@@ -664,6 +717,7 @@
     },
     "/login/magic/{channel}/exchange": {
       "post": {
+        "summary": "Exchange a magic link access code for an access token",
         "operationId": "magic_link_exchange",
         "parameters": [
           {
@@ -707,6 +761,7 @@
     },
     "/login/magic/{channel}/send": {
       "post": {
+        "summary": "Send a new magic link authentication link",
         "operationId": "magic_link_send",
         "parameters": [
           {
@@ -921,6 +976,7 @@
     },
     "/login/oauth/{provider}/device": {
       "get": {
+        "summary": "Retrieve the metadata about an OAuth provider",
         "operationId": "get_device_provider",
         "parameters": [
           {
@@ -954,6 +1010,7 @@
     },
     "/login/oauth/{provider}/device/exchange": {
       "post": {
+        "summary": "Exchange an OAuth device code request for an access token",
         "operationId": "exchange_device_token",
         "parameters": [
           {
@@ -1235,6 +1292,7 @@
     },
     "/mapper": {
       "get": {
+        "summary": "List all mappers",
         "operationId": "get_mappers",
         "parameters": [
           {
@@ -1271,6 +1329,7 @@
         }
       },
       "post": {
+        "summary": "Create a mapper",
         "operationId": "create_mapper",
         "requestBody": {
           "content": {
@@ -1304,6 +1363,7 @@
     },
     "/mapper/{mapper_id}": {
       "delete": {
+        "summary": "Delete a mapper",
         "operationId": "delete_mapper",
         "parameters": [
           {
@@ -2059,7 +2119,7 @@
     },
     "/self": {
       "get": {
-        "summary": "Retrieve the user information of the calling user",
+        "summary": "View details for the calling user",
         "operationId": "get_self",
         "responses": {
           "200": {
@@ -2228,6 +2288,51 @@
         "required": [
           "created_at",
           "id"
+        ]
+      },
+      "ApiUserContactEmail": {
+        "type": "object",
+        "properties": {
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "email": {
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/TypedUuidForUserProviderId"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "user_id": {
+            "$ref": "#/components/schemas/TypedUuidForUserId"
+          }
+        },
+        "required": [
+          "created_at",
+          "email",
+          "id",
+          "updated_at",
+          "user_id"
+        ]
+      },
+      "ApiUserEmailUpdateParams": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
         ]
       },
       "ApiUserLinkRequestPayload": {
@@ -3059,6 +3164,7 @@
             "format": "uri"
           },
           "scope": {
+            "nullable": true,
             "type": "string"
           },
           "secret": {
@@ -3070,7 +3176,6 @@
           "medium",
           "recipient",
           "redirect_uri",
-          "scope",
           "secret"
         ]
       },
@@ -3118,13 +3223,18 @@
           "name": {
             "type": "string"
           },
-          "rule": {}
+          "rule": {},
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
         },
         "required": [
           "created_at",
           "id",
           "name",
-          "rule"
+          "rule",
+          "updated_at"
         ]
       },
       "OAuthAuthzCodeExchangeBody": {
@@ -3504,8 +3614,7 @@
               "GetMagicLinkClientsAll",
               "ManageMagicLinkClientsAssigned",
               "ManageMagicLinkClientsAll",
-              "CreateAccessToken",
-              "Removed"
+              "CreateAccessToken"
             ]
           },
           {
@@ -3957,6 +4066,16 @@
             },
             "required": [
               "ManageMagicLinkClients"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "Unsupported": {}
+            },
+            "required": [
+              "Unsupported"
             ],
             "additionalProperties": false
           }

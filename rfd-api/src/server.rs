@@ -15,6 +15,7 @@ use v_api::{inject_endpoints, v_system_endpoints};
 use crate::{
     context::RfdContext,
     endpoints::{
+        meta::get_rfd_meta,
         rfd::{
             discuss_rfd, get_rfd, get_rfd_attr, get_rfds, publish_rfd, reserve_rfd, search_rfds,
             set_rfd_attr, set_rfd_content, set_rfd_document, update_rfd_visibility,
@@ -75,6 +76,8 @@ pub fn server(
     // RFDs
     api.register(get_rfds).expect("Failed to register endpoint");
     api.register(get_rfd).expect("Failed to register endpoint");
+    api.register(get_rfd_meta)
+        .expect("Failed to register endpoint");
     api.register(reserve_rfd)
         .expect("Failed to register endpoint");
     api.register(set_rfd_document)

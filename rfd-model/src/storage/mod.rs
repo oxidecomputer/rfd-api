@@ -13,7 +13,7 @@ use v_model::storage::{ListPagination, StoreError};
 
 use crate::{
     schema_ext::PdfSource, Job, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdId, RfdPdf,
-    RfdPdfId, RfdRevision, RfdRevisionId,
+    RfdPdfId, RfdRevision, RfdRevisionId, RfdRevisionMeta,
 };
 
 pub mod postgres;
@@ -124,6 +124,26 @@ pub trait RfdRevisionStore {
         &self,
         id: &TypedUuid<RfdRevisionId>,
     ) -> Result<Option<RfdRevision>, StoreError>;
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait RfdRevisionMetaStore {
+    async fn get(
+        &self,
+        id: &TypedUuid<RfdRevisionId>,
+        deleted: bool,
+    ) -> Result<Option<RfdRevisionMeta>, StoreError>;
+    async fn list(
+        &self,
+        filter: RfdRevisionFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdRevisionMeta>, StoreError>;
+    async fn list_unique_rfd(
+        &self,
+        filter: RfdRevisionFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdRevisionMeta>, StoreError>;
 }
 
 #[derive(Debug, Default)]
