@@ -132,6 +132,7 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
     match cmd {
         // RFD commands
         CliCommand::GetRfd => Some("view"),
+        CliCommand::GetRfdMeta => Some("meta"),
         CliCommand::GetRfds => Some("list"),
         CliCommand::GetRfdAttr => Some("attr"),
         CliCommand::SearchRfds => Some("search"),
@@ -153,6 +154,9 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::ListApiUserTokens => Some("sys user token list"),
         CliCommand::UpdateApiUser => Some("sys user update"),
         CliCommand::GetSelf => Some("self"),
+
+        // Set user email
+        CliCommand::SetApiUserContactEmail => Some("sys user contact email set"),
 
         // Link commands are handled separately
         CliCommand::CreateLinkToken => None,

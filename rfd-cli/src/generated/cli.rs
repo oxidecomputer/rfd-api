@@ -13,13 +13,14 @@ impl<T: CliConfig> Cli<T> {
         Self { client, config }
     }
 
-    pub fn get_command(cmd: CliCommand) -> clap::Command {
+    pub fn get_command(cmd: CliCommand) -> ::clap::Command {
         match cmd {
             CliCommand::JwksJson => Self::cli_jwks_json(),
             CliCommand::OpenidConfiguration => Self::cli_openid_configuration(),
             CliCommand::CreateApiUser => Self::cli_create_api_user(),
             CliCommand::GetApiUser => Self::cli_get_api_user(),
             CliCommand::UpdateApiUser => Self::cli_update_api_user(),
+            CliCommand::SetApiUserContactEmail => Self::cli_set_api_user_contact_email(),
             CliCommand::AddApiUserToGroup => Self::cli_add_api_user_to_group(),
             CliCommand::RemoveApiUserFromGroup => Self::cli_remove_api_user_from_group(),
             CliCommand::LinkProvider => Self::cli_link_provider(),
@@ -50,6 +51,7 @@ impl<T: CliConfig> Cli<T> {
             CliCommand::GetMappers => Self::cli_get_mappers(),
             CliCommand::CreateMapper => Self::cli_create_mapper(),
             CliCommand::DeleteMapper => Self::cli_delete_mapper(),
+            CliCommand::GetRfdMeta => Self::cli_get_rfd_meta(),
             CliCommand::ListOauthClients => Self::cli_list_oauth_clients(),
             CliCommand::CreateOauthClient => Self::cli_create_oauth_client(),
             CliCommand::GetOauthClient => Self::cli_get_oauth_client(),
@@ -76,402 +78,443 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub fn cli_jwks_json() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_jwks_json() -> ::clap::Command {
+        ::clap::Command::new("")
     }
 
-    pub fn cli_openid_configuration() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_openid_configuration() -> ::clap::Command {
+        ::clap::Command::new("")
     }
 
-    pub fn cli_create_api_user() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_create_api_user() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("json-body")
+                ::clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
                     .required(true)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
             .arg(
-                clap::Arg::new("json-body-template")
+                ::clap::Arg::new("json-body-template")
                     .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
-            .about("Create a new user with a given set of permissions")
+            .about("Create a new user")
     }
 
-    pub fn cli_get_api_user() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_get_api_user() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("user-id")
+                ::clap::Arg::new("user-id")
                     .long("user-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForUserId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForUserId))
                     .required(true),
             )
-            .about("Get user information for a given user id")
+            .about("View details for a user")
     }
 
-    pub fn cli_update_api_user() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_update_api_user() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("user-id")
+                ::clap::Arg::new("user-id")
                     .long("user-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForUserId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForUserId))
                     .required(true),
             )
             .arg(
-                clap::Arg::new("json-body")
+                ::clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
                     .required(true)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
             .arg(
-                clap::Arg::new("json-body-template")
+                ::clap::Arg::new("json-body-template")
                     .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
             .about("Update the permissions assigned to a given user")
     }
 
-    pub fn cli_add_api_user_to_group() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_set_api_user_contact_email() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("group-id")
-                    .long("group-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForAccessGroupId))
+                ::clap::Arg::new("email")
+                    .long("email")
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("user-id")
+                ::clap::Arg::new("user-id")
                     .long("user-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForUserId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForUserId))
                     .required(true),
             )
             .arg(
-                clap::Arg::new("json-body")
+                ::clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
                     .required(false)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
             .arg(
-                clap::Arg::new("json-body-template")
+                ::clap::Arg::new("json-body-template")
                     .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
+            .about("Set the contact email for a user")
     }
 
-    pub fn cli_remove_api_user_from_group() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_add_api_user_to_group() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("group-id")
+                ::clap::Arg::new("group-id")
                     .long("group-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForAccessGroupId))
-                    .required(true),
-            )
-            .arg(
-                clap::Arg::new("user-id")
-                    .long("user-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForUserId))
-                    .required(true),
-            )
-    }
-
-    pub fn cli_link_provider() -> clap::Command {
-        clap::Command::new("")
-            .arg(
-                clap::Arg::new("token")
-                    .long("token")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForAccessGroupId))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("user-id")
+                ::clap::Arg::new("user-id")
                     .long("user-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForUserId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForUserId))
                     .required(true),
             )
             .arg(
-                clap::Arg::new("json-body")
+                ::clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
                     .required(false)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
             .arg(
-                clap::Arg::new("json-body-template")
+                ::clap::Arg::new("json-body-template")
                     .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(::clap::ArgAction::SetTrue)
+                    .help("XXX"),
+            )
+            .about("Add a user to a group")
+    }
+
+    pub fn cli_remove_api_user_from_group() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("group-id")
+                    .long("group-id")
+                    .value_parser(::clap::value_parser!(types::TypedUuidForAccessGroupId))
+                    .required(true),
+            )
+            .arg(
+                ::clap::Arg::new("user-id")
+                    .long("user-id")
+                    .value_parser(::clap::value_parser!(types::TypedUuidForUserId))
+                    .required(true),
+            )
+            .about("Remove a user from a group")
+    }
+
+    pub fn cli_link_provider() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("token")
+                    .long("token")
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
+                ::clap::Arg::new("user-id")
+                    .long("user-id")
+                    .value_parser(::clap::value_parser!(types::TypedUuidForUserId))
+                    .required(true),
+            )
+            .arg(
+                ::clap::Arg::new("json-body")
+                    .long("json-body")
+                    .value_name("JSON-FILE")
+                    .required(false)
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
+                    .help("Path to a file that contains the full json body."),
+            )
+            .arg(
+                ::clap::Arg::new("json-body-template")
+                    .long("json-body-template")
+                    .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
             .about("Link an existing login provider to this user")
     }
 
-    pub fn cli_list_api_user_tokens() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_list_api_user_tokens() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("user-id")
+                ::clap::Arg::new("user-id")
                     .long("user-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForUserId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForUserId))
                     .required(true),
             )
-            .about("List the active and expired API tokens for a given user")
+            .about("List api keys for a user")
     }
 
-    pub fn cli_create_api_user_token() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_create_api_user_token() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("expires-at")
+                ::clap::Arg::new("expires-at")
                     .long("expires-at")
-                    .value_parser(clap::value_parser!(chrono::DateTime<chrono::offset::Utc>))
+                    .value_parser(::clap::value_parser!(chrono::DateTime<chrono::offset::Utc>))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("user-id")
+                ::clap::Arg::new("user-id")
                     .long("user-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForUserId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForUserId))
                     .required(true),
             )
             .arg(
-                clap::Arg::new("json-body")
+                ::clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
                     .required(false)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
             .arg(
-                clap::Arg::new("json-body-template")
+                ::clap::Arg::new("json-body-template")
                     .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
+            .about("Create a new api key for a user")
     }
 
-    pub fn cli_get_api_user_token() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_get_api_user_token() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("api-key-id")
+                ::clap::Arg::new("api-key-id")
                     .long("api-key-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForApiKeyId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForApiKeyId))
                     .required(true),
             )
             .arg(
-                clap::Arg::new("user-id")
+                ::clap::Arg::new("user-id")
                     .long("user-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForUserId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForUserId))
                     .required(true),
             )
+            .about("View details of an api key for a user")
     }
 
-    pub fn cli_delete_api_user_token() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_delete_api_user_token() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("api-key-id")
+                ::clap::Arg::new("api-key-id")
                     .long("api-key-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForApiKeyId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForApiKeyId))
                     .required(true),
             )
             .arg(
-                clap::Arg::new("user-id")
+                ::clap::Arg::new("user-id")
                     .long("user-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForUserId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForUserId))
                     .required(true),
             )
+            .about("Revoke an api key for a user")
     }
 
-    pub fn cli_create_link_token() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_create_link_token() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("provider-id")
+                ::clap::Arg::new("provider-id")
                     .long("provider-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForUserProviderId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForUserProviderId))
                     .required(true),
             )
             .arg(
-                clap::Arg::new("user-id")
+                ::clap::Arg::new("user-id")
                     .long("user-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForUserId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForUserId))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("json-body")
+                ::clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
                     .required(false)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
             .arg(
-                clap::Arg::new("json-body-template")
+                ::clap::Arg::new("json-body-template")
                     .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
             .about("Create a new link token for linking this provider to a different api user")
     }
 
-    pub fn cli_github_webhook() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_github_webhook() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("ref")
+                ::clap::Arg::new("ref")
                     .long("ref")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("json-body")
+                ::clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
                     .required(true)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
             .arg(
-                clap::Arg::new("json-body-template")
+                ::clap::Arg::new("json-body-template")
                     .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
     }
 
-    pub fn cli_get_groups() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_get_groups() -> ::clap::Command {
+        ::clap::Command::new("").about("List all groups")
     }
 
-    pub fn cli_create_group() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_create_group() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("name")
+                ::clap::Arg::new("name")
                     .long("name")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("json-body")
+                ::clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
                     .required(true)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
             .arg(
-                clap::Arg::new("json-body-template")
+                ::clap::Arg::new("json-body-template")
                     .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
+            .about("Create a group")
     }
 
-    pub fn cli_update_group() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_update_group() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("group-id")
+                ::clap::Arg::new("group-id")
                     .long("group-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForAccessGroupId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForAccessGroupId))
                     .required(true),
             )
             .arg(
-                clap::Arg::new("name")
+                ::clap::Arg::new("name")
                     .long("name")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("json-body")
+                ::clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
                     .required(true)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
             .arg(
-                clap::Arg::new("json-body-template")
+                ::clap::Arg::new("json-body-template")
                     .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
+            .about("Update a group")
     }
 
-    pub fn cli_delete_group() -> clap::Command {
-        clap::Command::new("").arg(
-            clap::Arg::new("group-id")
-                .long("group-id")
-                .value_parser(clap::value_parser!(types::TypedUuidForAccessGroupId))
-                .required(true),
-        )
-    }
-
-    pub fn cli_magic_link_exchange() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_delete_group() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("attempt-id")
+                ::clap::Arg::new("group-id")
+                    .long("group-id")
+                    .value_parser(::clap::value_parser!(types::TypedUuidForAccessGroupId))
+                    .required(true),
+            )
+            .about("Delete a group")
+    }
+
+    pub fn cli_magic_link_exchange() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("attempt-id")
                     .long("attempt-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForMagicLinkAttemptId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForMagicLinkAttemptId))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("channel")
+                ::clap::Arg::new("channel")
                     .long("channel")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(true),
             )
             .arg(
-                clap::Arg::new("recipient")
+                ::clap::Arg::new("recipient")
                     .long("recipient")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("secret")
+                ::clap::Arg::new("secret")
                     .long("secret")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("json-body")
+                ::clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
                     .required(false)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
             .arg(
-                clap::Arg::new("json-body-template")
+                ::clap::Arg::new("json-body-template")
                     .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
+            .about("Exchange a magic link access code for an access token")
     }
 
-    pub fn cli_magic_link_send() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_magic_link_send() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("channel")
+                ::clap::Arg::new("channel")
                     .long("channel")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(true),
             )
             .arg(
-                clap::Arg::new("expires-in")
+                ::clap::Arg::new("expires-in")
                     .long("expires-in")
-                    .value_parser(clap::value_parser!(i64))
+                    .value_parser(::clap::value_parser!(i64))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("medium")
+                ::clap::Arg::new("medium")
                     .long("medium")
-                    .value_parser(clap::builder::TypedValueParser::map(
-                        clap::builder::PossibleValuesParser::new([
+                    .value_parser(::clap::builder::TypedValueParser::map(
+                        ::clap::builder::PossibleValuesParser::new([
                             types::MagicLinkMedium::Email.to_string()
                         ]),
                         |s| types::MagicLinkMedium::try_from(s).unwrap(),
@@ -479,58 +522,59 @@ impl<T: CliConfig> Cli<T> {
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("recipient")
+                ::clap::Arg::new("recipient")
                     .long("recipient")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("redirect-uri")
+                ::clap::Arg::new("redirect-uri")
                     .long("redirect-uri")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("scope")
+                ::clap::Arg::new("scope")
                     .long("scope")
-                    .value_parser(clap::value_parser!(String))
-                    .required_unless_present("json-body"),
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required(false),
             )
             .arg(
-                clap::Arg::new("secret")
+                ::clap::Arg::new("secret")
                     .long("secret")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("json-body")
+                ::clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
                     .required(false)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
             .arg(
-                clap::Arg::new("json-body-template")
+                ::clap::Arg::new("json-body-template")
                     .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
+            .about("Send a new magic link authentication link")
     }
 
-    pub fn cli_authz_code_redirect() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_authz_code_redirect() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("client-id")
+                ::clap::Arg::new("client-id")
                     .long("client-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForOAuthClientId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForOAuthClientId))
                     .required(true),
             )
             .arg(
-                clap::Arg::new("provider")
+                ::clap::Arg::new("provider")
                     .long("provider")
-                    .value_parser(clap::builder::TypedValueParser::map(
-                        clap::builder::PossibleValuesParser::new([
+                    .value_parser(::clap::builder::TypedValueParser::map(
+                        ::clap::builder::PossibleValuesParser::new([
                             types::OAuthProviderName::Github.to_string(),
                             types::OAuthProviderName::Google.to_string(),
                         ]),
@@ -539,51 +583,51 @@ impl<T: CliConfig> Cli<T> {
                     .required(true),
             )
             .arg(
-                clap::Arg::new("redirect-uri")
+                ::clap::Arg::new("redirect-uri")
                     .long("redirect-uri")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(true),
             )
             .arg(
-                clap::Arg::new("response-type")
+                ::clap::Arg::new("response-type")
                     .long("response-type")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(true),
             )
             .arg(
-                clap::Arg::new("scope")
+                ::clap::Arg::new("scope")
                     .long("scope")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(false),
             )
             .arg(
-                clap::Arg::new("state")
+                ::clap::Arg::new("state")
                     .long("state")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(true),
             )
             .about("Generate the remote provider login url and redirect the user")
     }
 
-    pub fn cli_authz_code_callback() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_authz_code_callback() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("code")
+                ::clap::Arg::new("code")
                     .long("code")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(false),
             )
             .arg(
-                clap::Arg::new("error")
+                ::clap::Arg::new("error")
                     .long("error")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(false),
             )
             .arg(
-                clap::Arg::new("provider")
+                ::clap::Arg::new("provider")
                     .long("provider")
-                    .value_parser(clap::builder::TypedValueParser::map(
-                        clap::builder::PossibleValuesParser::new([
+                    .value_parser(::clap::builder::TypedValueParser::map(
+                        ::clap::builder::PossibleValuesParser::new([
                             types::OAuthProviderName::Github.to_string(),
                             types::OAuthProviderName::Google.to_string(),
                         ]),
@@ -592,51 +636,51 @@ impl<T: CliConfig> Cli<T> {
                     .required(true),
             )
             .arg(
-                clap::Arg::new("state")
+                ::clap::Arg::new("state")
                     .long("state")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(false),
             )
             .about("Handle return calls from a remote OAuth provider")
     }
 
-    pub fn cli_authz_code_exchange() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_authz_code_exchange() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("client-id")
+                ::clap::Arg::new("client-id")
                     .long("client-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForOAuthClientId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForOAuthClientId))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("client-secret")
+                ::clap::Arg::new("client-secret")
                     .long("client-secret")
-                    .value_parser(clap::value_parser!(types::SecretString))
+                    .value_parser(::clap::value_parser!(types::SecretString))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("code")
+                ::clap::Arg::new("code")
                     .long("code")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("grant-type")
+                ::clap::Arg::new("grant-type")
                     .long("grant-type")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("pkce-verifier")
+                ::clap::Arg::new("pkce-verifier")
                     .long("pkce-verifier")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(false),
             )
             .arg(
-                clap::Arg::new("provider")
+                ::clap::Arg::new("provider")
                     .long("provider")
-                    .value_parser(clap::builder::TypedValueParser::map(
-                        clap::builder::PossibleValuesParser::new([
+                    .value_parser(::clap::builder::TypedValueParser::map(
+                        ::clap::builder::PossibleValuesParser::new([
                             types::OAuthProviderName::Github.to_string(),
                             types::OAuthProviderName::Google.to_string(),
                         ]),
@@ -645,68 +689,70 @@ impl<T: CliConfig> Cli<T> {
                     .required(true),
             )
             .arg(
-                clap::Arg::new("redirect-uri")
+                ::clap::Arg::new("redirect-uri")
                     .long("redirect-uri")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("json-body")
+                ::clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
                     .required(false)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
             .arg(
-                clap::Arg::new("json-body-template")
+                ::clap::Arg::new("json-body-template")
                     .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
             .about("Exchange an authorization code for an access token")
     }
 
-    pub fn cli_get_device_provider() -> clap::Command {
-        clap::Command::new("").arg(
-            clap::Arg::new("provider")
-                .long("provider")
-                .value_parser(clap::builder::TypedValueParser::map(
-                    clap::builder::PossibleValuesParser::new([
-                        types::OAuthProviderName::Github.to_string(),
-                        types::OAuthProviderName::Google.to_string(),
-                    ]),
-                    |s| types::OAuthProviderName::try_from(s).unwrap(),
-                ))
-                .required(true),
-        )
+    pub fn cli_get_device_provider() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("provider")
+                    .long("provider")
+                    .value_parser(::clap::builder::TypedValueParser::map(
+                        ::clap::builder::PossibleValuesParser::new([
+                            types::OAuthProviderName::Github.to_string(),
+                            types::OAuthProviderName::Google.to_string(),
+                        ]),
+                        |s| types::OAuthProviderName::try_from(s).unwrap(),
+                    ))
+                    .required(true),
+            )
+            .about("Retrieve the metadata about an OAuth provider")
     }
 
-    pub fn cli_exchange_device_token() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_exchange_device_token() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("device-code")
+                ::clap::Arg::new("device-code")
                     .long("device-code")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("expires-at")
+                ::clap::Arg::new("expires-at")
                     .long("expires-at")
-                    .value_parser(clap::value_parser!(chrono::DateTime<chrono::offset::Utc>))
+                    .value_parser(::clap::value_parser!(chrono::DateTime<chrono::offset::Utc>))
                     .required(false),
             )
             .arg(
-                clap::Arg::new("grant-type")
+                ::clap::Arg::new("grant-type")
                     .long("grant-type")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("provider")
+                ::clap::Arg::new("provider")
                     .long("provider")
-                    .value_parser(clap::builder::TypedValueParser::map(
-                        clap::builder::PossibleValuesParser::new([
+                    .value_parser(::clap::builder::TypedValueParser::map(
+                        ::clap::builder::PossibleValuesParser::new([
                             types::OAuthProviderName::Github.to_string(),
                             types::OAuthProviderName::Google.to_string(),
                         ]),
@@ -715,83 +761,84 @@ impl<T: CliConfig> Cli<T> {
                     .required(true),
             )
             .arg(
-                clap::Arg::new("json-body")
+                ::clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
                     .required(false)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
             .arg(
-                clap::Arg::new("json-body-template")
+                ::clap::Arg::new("json-body-template")
                     .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
+            .about("Exchange an OAuth device code request for an access token")
     }
 
-    pub fn cli_list_magic_links() -> clap::Command {
-        clap::Command::new("").about("List Magic Link clients")
+    pub fn cli_list_magic_links() -> ::clap::Command {
+        ::clap::Command::new("").about("List Magic Link clients")
     }
 
-    pub fn cli_create_magic_link() -> clap::Command {
-        clap::Command::new("").about("Create a new Magic Link Client")
+    pub fn cli_create_magic_link() -> ::clap::Command {
+        ::clap::Command::new("").about("Create a new Magic Link Client")
     }
 
-    pub fn cli_get_magic_link() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_get_magic_link() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("client-id")
+                ::clap::Arg::new("client-id")
                     .long("client-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForMagicLinkId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForMagicLinkId))
                     .required(true),
             )
             .about("Get a Magic Link Client")
     }
 
-    pub fn cli_create_magic_link_redirect_uri() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_create_magic_link_redirect_uri() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("client-id")
+                ::clap::Arg::new("client-id")
                     .long("client-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForMagicLinkId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForMagicLinkId))
                     .required(true),
             )
             .arg(
-                clap::Arg::new("redirect-uri")
+                ::clap::Arg::new("redirect-uri")
                     .long("redirect-uri")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("json-body")
+                ::clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
                     .required(false)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
             .arg(
-                clap::Arg::new("json-body-template")
+                ::clap::Arg::new("json-body-template")
                     .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
             .about("Add a Magic Link client redirect uri")
     }
 
-    pub fn cli_delete_magic_link_redirect_uri() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_delete_magic_link_redirect_uri() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("client-id")
+                ::clap::Arg::new("client-id")
                     .long("client-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForMagicLinkId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForMagicLinkId))
                     .required(true),
             )
             .arg(
-                clap::Arg::new("redirect-uri-id")
+                ::clap::Arg::new("redirect-uri-id")
                     .long("redirect-uri-id")
-                    .value_parser(clap::value_parser!(
+                    .value_parser(::clap::value_parser!(
                         types::TypedUuidForMagicLinkRedirectUriId
                     ))
                     .required(true),
@@ -799,274 +846,291 @@ impl<T: CliConfig> Cli<T> {
             .about("Delete a Magic Link client redirect uri")
     }
 
-    pub fn cli_create_magic_link_secret() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_create_magic_link_secret() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("client-id")
+                ::clap::Arg::new("client-id")
                     .long("client-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForMagicLinkId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForMagicLinkId))
                     .required(true),
             )
             .about("Add a Magic Link client secret")
     }
 
-    pub fn cli_delete_magic_link_secret() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_delete_magic_link_secret() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("client-id")
+                ::clap::Arg::new("client-id")
                     .long("client-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForMagicLinkId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForMagicLinkId))
                     .required(true),
             )
             .arg(
-                clap::Arg::new("secret-id")
+                ::clap::Arg::new("secret-id")
                     .long("secret-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForMagicLinkSecretId))
+                    .value_parser(::clap::value_parser!(types::TypedUuidForMagicLinkSecretId))
                     .required(true),
             )
             .about("Delete a Magic Link client secret")
     }
 
-    pub fn cli_get_mappers() -> clap::Command {
-        clap::Command::new("").arg(
-            clap::Arg::new("include-depleted")
-                .long("include-depleted")
-                .value_parser(clap::value_parser!(bool))
-                .required(false)
-                .help("Include depleted mappers in the returned results"),
-        )
+    pub fn cli_get_mappers() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("include-depleted")
+                    .long("include-depleted")
+                    .value_parser(::clap::value_parser!(bool))
+                    .required(false)
+                    .help("Include depleted mappers in the returned results"),
+            )
+            .about("List all mappers")
     }
 
-    pub fn cli_create_mapper() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_create_mapper() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("max-activations")
+                ::clap::Arg::new("max-activations")
                     .long("max-activations")
-                    .value_parser(clap::value_parser!(i32))
+                    .value_parser(::clap::value_parser!(i32))
                     .required(false),
             )
             .arg(
-                clap::Arg::new("name")
+                ::clap::Arg::new("name")
                     .long("name")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("json-body")
+                ::clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
                     .required(true)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
             .arg(
-                clap::Arg::new("json-body-template")
+                ::clap::Arg::new("json-body-template")
                     .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
+            .about("Create a mapper")
     }
 
-    pub fn cli_delete_mapper() -> clap::Command {
-        clap::Command::new("").arg(
-            clap::Arg::new("mapper-id")
-                .long("mapper-id")
-                .value_parser(clap::value_parser!(types::TypedUuidForMapperId))
-                .required(true),
-        )
-    }
-
-    pub fn cli_list_oauth_clients() -> clap::Command {
-        clap::Command::new("").about("List OAuth clients")
-    }
-
-    pub fn cli_create_oauth_client() -> clap::Command {
-        clap::Command::new("").about("Create a new OAuth Client")
-    }
-
-    pub fn cli_get_oauth_client() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_delete_mapper() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("client-id")
-                    .long("client-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForOAuthClientId))
+                ::clap::Arg::new("mapper-id")
+                    .long("mapper-id")
+                    .value_parser(::clap::value_parser!(types::TypedUuidForMapperId))
                     .required(true),
             )
-            .about("Get an new OAuth Client")
+            .about("Delete a mapper")
     }
 
-    pub fn cli_create_oauth_client_redirect_uri() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_get_rfd_meta() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("client-id")
-                    .long("client-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForOAuthClientId))
-                    .required(true),
-            )
-            .arg(
-                clap::Arg::new("redirect-uri")
-                    .long("redirect-uri")
-                    .value_parser(clap::value_parser!(String))
-                    .required_unless_present("json-body"),
-            )
-            .arg(
-                clap::Arg::new("json-body")
-                    .long("json-body")
-                    .value_name("JSON-FILE")
-                    .required(false)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
-                    .help("Path to a file that contains the full json body."),
-            )
-            .arg(
-                clap::Arg::new("json-body-template")
-                    .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
-                    .help("XXX"),
-            )
-            .about("Add an OAuth client redirect uri")
-    }
-
-    pub fn cli_delete_oauth_client_redirect_uri() -> clap::Command {
-        clap::Command::new("")
-            .arg(
-                clap::Arg::new("client-id")
-                    .long("client-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForOAuthClientId))
-                    .required(true),
-            )
-            .arg(
-                clap::Arg::new("redirect-uri-id")
-                    .long("redirect-uri-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForOAuthRedirectUriId))
-                    .required(true),
-            )
-            .about("Delete an OAuth client redirect uri")
-    }
-
-    pub fn cli_create_oauth_client_secret() -> clap::Command {
-        clap::Command::new("")
-            .arg(
-                clap::Arg::new("client-id")
-                    .long("client-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForOAuthClientId))
-                    .required(true),
-            )
-            .about("Add an OAuth client secret")
-    }
-
-    pub fn cli_delete_oauth_client_secret() -> clap::Command {
-        clap::Command::new("")
-            .arg(
-                clap::Arg::new("client-id")
-                    .long("client-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForOAuthClientId))
-                    .required(true),
-            )
-            .arg(
-                clap::Arg::new("secret-id")
-                    .long("secret-id")
-                    .value_parser(clap::value_parser!(types::TypedUuidForOAuthSecretId))
-                    .required(true),
-            )
-            .about("Delete an OAuth client secret")
-    }
-
-    pub fn cli_get_rfds() -> clap::Command {
-        clap::Command::new("").about("List all available RFDs")
-    }
-
-    pub fn cli_reserve_rfd() -> clap::Command {
-        clap::Command::new("")
-            .arg(
-                clap::Arg::new("content")
-                    .long("content")
-                    .value_parser(clap::value_parser!(String))
-                    .required(false)
-                    .help("Optional contents of the RFD"),
-            )
-            .arg(
-                clap::Arg::new("title")
-                    .long("title")
-                    .value_parser(clap::value_parser!(String))
-                    .required_unless_present("json-body")
-                    .help("Title of the RFD"),
-            )
-            .arg(
-                clap::Arg::new("json-body")
-                    .long("json-body")
-                    .value_name("JSON-FILE")
-                    .required(false)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
-                    .help("Path to a file that contains the full json body."),
-            )
-            .arg(
-                clap::Arg::new("json-body-template")
-                    .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
-                    .help("XXX"),
-            )
-            .about("Create a new RFD")
-    }
-
-    pub fn cli_get_rfd() -> clap::Command {
-        clap::Command::new("")
-            .arg(
-                clap::Arg::new("number")
+                ::clap::Arg::new("number")
                     .long("number")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(true)
                     .help("The RFD number (examples: 1 or 123)"),
             )
             .about("Get the latest representation of a RFD")
     }
 
-    pub fn cli_set_rfd_document() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_list_oauth_clients() -> ::clap::Command {
+        ::clap::Command::new("").about("List OAuth clients")
+    }
+
+    pub fn cli_create_oauth_client() -> ::clap::Command {
+        ::clap::Command::new("").about("Create a new OAuth Client")
+    }
+
+    pub fn cli_get_oauth_client() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("document")
+                ::clap::Arg::new("client-id")
+                    .long("client-id")
+                    .value_parser(::clap::value_parser!(types::TypedUuidForOAuthClientId))
+                    .required(true),
+            )
+            .about("Get an new OAuth Client")
+    }
+
+    pub fn cli_create_oauth_client_redirect_uri() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("client-id")
+                    .long("client-id")
+                    .value_parser(::clap::value_parser!(types::TypedUuidForOAuthClientId))
+                    .required(true),
+            )
+            .arg(
+                ::clap::Arg::new("redirect-uri")
+                    .long("redirect-uri")
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required_unless_present("json-body"),
+            )
+            .arg(
+                ::clap::Arg::new("json-body")
+                    .long("json-body")
+                    .value_name("JSON-FILE")
+                    .required(false)
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
+                    .help("Path to a file that contains the full json body."),
+            )
+            .arg(
+                ::clap::Arg::new("json-body-template")
+                    .long("json-body-template")
+                    .action(::clap::ArgAction::SetTrue)
+                    .help("XXX"),
+            )
+            .about("Add an OAuth client redirect uri")
+    }
+
+    pub fn cli_delete_oauth_client_redirect_uri() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("client-id")
+                    .long("client-id")
+                    .value_parser(::clap::value_parser!(types::TypedUuidForOAuthClientId))
+                    .required(true),
+            )
+            .arg(
+                ::clap::Arg::new("redirect-uri-id")
+                    .long("redirect-uri-id")
+                    .value_parser(::clap::value_parser!(types::TypedUuidForOAuthRedirectUriId))
+                    .required(true),
+            )
+            .about("Delete an OAuth client redirect uri")
+    }
+
+    pub fn cli_create_oauth_client_secret() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("client-id")
+                    .long("client-id")
+                    .value_parser(::clap::value_parser!(types::TypedUuidForOAuthClientId))
+                    .required(true),
+            )
+            .about("Add an OAuth client secret")
+    }
+
+    pub fn cli_delete_oauth_client_secret() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("client-id")
+                    .long("client-id")
+                    .value_parser(::clap::value_parser!(types::TypedUuidForOAuthClientId))
+                    .required(true),
+            )
+            .arg(
+                ::clap::Arg::new("secret-id")
+                    .long("secret-id")
+                    .value_parser(::clap::value_parser!(types::TypedUuidForOAuthSecretId))
+                    .required(true),
+            )
+            .about("Delete an OAuth client secret")
+    }
+
+    pub fn cli_get_rfds() -> ::clap::Command {
+        ::clap::Command::new("").about("List all available RFDs")
+    }
+
+    pub fn cli_reserve_rfd() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("content")
+                    .long("content")
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required(false)
+                    .help("Optional contents of the RFD"),
+            )
+            .arg(
+                ::clap::Arg::new("title")
+                    .long("title")
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required_unless_present("json-body")
+                    .help("Title of the RFD"),
+            )
+            .arg(
+                ::clap::Arg::new("json-body")
+                    .long("json-body")
+                    .value_name("JSON-FILE")
+                    .required(false)
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
+                    .help("Path to a file that contains the full json body."),
+            )
+            .arg(
+                ::clap::Arg::new("json-body-template")
+                    .long("json-body-template")
+                    .action(::clap::ArgAction::SetTrue)
+                    .help("XXX"),
+            )
+            .about("Create a new RFD")
+    }
+
+    pub fn cli_get_rfd() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
+            )
+            .about("Get the latest representation of a RFD")
+    }
+
+    pub fn cli_set_rfd_document() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("document")
                     .long("document")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required_unless_present("json-body")
                     .help("Full Asciidoc document to store for this RFD"),
             )
             .arg(
-                clap::Arg::new("message")
+                ::clap::Arg::new("message")
                     .long("message")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(false)
                     .help("Optional Git commit message to send with this update (recommended)"),
             )
             .arg(
-                clap::Arg::new("number")
+                ::clap::Arg::new("number")
                     .long("number")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(true)
                     .help("The RFD number (examples: 1 or 123)"),
             )
             .arg(
-                clap::Arg::new("json-body")
+                ::clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
                     .required(false)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
             .arg(
-                clap::Arg::new("json-body-template")
+                ::clap::Arg::new("json-body-template")
                     .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
             .about("Replace the full document of a RFD")
     }
 
-    pub fn cli_get_rfd_attr() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_get_rfd_attr() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("attr")
+                ::clap::Arg::new("attr")
                     .long("attr")
-                    .value_parser(clap::builder::TypedValueParser::map(
-                        clap::builder::PossibleValuesParser::new([
+                    .value_parser(::clap::builder::TypedValueParser::map(
+                        ::clap::builder::PossibleValuesParser::new([
                             types::RfdAttrName::Discussion.to_string(),
                             types::RfdAttrName::Labels.to_string(),
                             types::RfdAttrName::State.to_string(),
@@ -1076,21 +1140,21 @@ impl<T: CliConfig> Cli<T> {
                     .required(true),
             )
             .arg(
-                clap::Arg::new("number")
+                ::clap::Arg::new("number")
                     .long("number")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(true),
             )
             .about("Get an attribute of a RFD")
     }
 
-    pub fn cli_set_rfd_attr() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_set_rfd_attr() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("attr")
+                ::clap::Arg::new("attr")
                     .long("attr")
-                    .value_parser(clap::builder::TypedValueParser::map(
-                        clap::builder::PossibleValuesParser::new([
+                    .value_parser(::clap::builder::TypedValueParser::map(
+                        ::clap::builder::PossibleValuesParser::new([
                             types::RfdAttrName::Discussion.to_string(),
                             types::RfdAttrName::Labels.to_string(),
                             types::RfdAttrName::State.to_string(),
@@ -1100,120 +1164,120 @@ impl<T: CliConfig> Cli<T> {
                     .required(true),
             )
             .arg(
-                clap::Arg::new("message")
+                ::clap::Arg::new("message")
                     .long("message")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(false)
                     .help("Optional Git commit message to send with this update (recommended)"),
             )
             .arg(
-                clap::Arg::new("number")
+                ::clap::Arg::new("number")
                     .long("number")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(true),
             )
             .arg(
-                clap::Arg::new("value")
+                ::clap::Arg::new("value")
                     .long("value")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required_unless_present("json-body")
                     .help("Full value to set this attribute to in the existing RFD contents"),
             )
             .arg(
-                clap::Arg::new("json-body")
+                ::clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
                     .required(false)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
             .arg(
-                clap::Arg::new("json-body-template")
+                ::clap::Arg::new("json-body-template")
                     .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
             .about("Set an attribute of a RFD")
     }
 
-    pub fn cli_set_rfd_content() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_set_rfd_content() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("content")
+                ::clap::Arg::new("content")
                     .long("content")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required_unless_present("json-body")
                     .help("Asciidoc content to store for this RFD"),
             )
             .arg(
-                clap::Arg::new("message")
+                ::clap::Arg::new("message")
                     .long("message")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(false)
                     .help("Optional Git commit message to send with this update (recommended)"),
             )
             .arg(
-                clap::Arg::new("number")
+                ::clap::Arg::new("number")
                     .long("number")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(true)
                     .help("The RFD number (examples: 1 or 123)"),
             )
             .arg(
-                clap::Arg::new("json-body")
+                ::clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
                     .required(false)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
             .arg(
-                clap::Arg::new("json-body-template")
+                ::clap::Arg::new("json-body-template")
                     .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
             .about("Replace the contents of a RFD")
     }
 
-    pub fn cli_discuss_rfd() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_discuss_rfd() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("number")
+                ::clap::Arg::new("number")
                     .long("number")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(true)
                     .help("The RFD number (examples: 1 or 123)"),
             )
             .about("Open a RFD for discussion")
     }
 
-    pub fn cli_publish_rfd() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_publish_rfd() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("number")
+                ::clap::Arg::new("number")
                     .long("number")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(true)
                     .help("The RFD number (examples: 1 or 123)"),
             )
             .about("Publish a RFD")
     }
 
-    pub fn cli_update_rfd_visibility() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_update_rfd_visibility() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("number")
+                ::clap::Arg::new("number")
                     .long("number")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(true)
                     .help("The RFD number (examples: 1 or 123)"),
             )
             .arg(
-                clap::Arg::new("visibility")
+                ::clap::Arg::new("visibility")
                     .long("visibility")
-                    .value_parser(clap::builder::TypedValueParser::map(
-                        clap::builder::PossibleValuesParser::new([
+                    .value_parser(::clap::builder::TypedValueParser::map(
+                        ::clap::builder::PossibleValuesParser::new([
                             types::Visibility::Public.to_string(),
                             types::Visibility::Private.to_string(),
                         ]),
@@ -1222,74 +1286,81 @@ impl<T: CliConfig> Cli<T> {
                     .required_unless_present("json-body"),
             )
             .arg(
-                clap::Arg::new("json-body")
+                ::clap::Arg::new("json-body")
                     .long("json-body")
                     .value_name("JSON-FILE")
                     .required(false)
-                    .value_parser(clap::value_parser!(std::path::PathBuf))
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
                     .help("Path to a file that contains the full json body."),
             )
             .arg(
-                clap::Arg::new("json-body-template")
+                ::clap::Arg::new("json-body-template")
                     .long("json-body-template")
-                    .action(clap::ArgAction::SetTrue)
+                    .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
             .about("Modify the visibility of a RFD")
     }
 
-    pub fn cli_search_rfds() -> clap::Command {
-        clap::Command::new("")
+    pub fn cli_search_rfds() -> ::clap::Command {
+        ::clap::Command::new("")
             .arg(
-                clap::Arg::new("attributes-to-crop")
+                ::clap::Arg::new("attributes-to-crop")
                     .long("attributes-to-crop")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(false),
             )
             .arg(
-                clap::Arg::new("highlight-post-tag")
+                ::clap::Arg::new("highlight-post-tag")
                     .long("highlight-post-tag")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(false),
             )
             .arg(
-                clap::Arg::new("highlight-pre-tag")
+                ::clap::Arg::new("highlight-pre-tag")
                     .long("highlight-pre-tag")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(false),
             )
             .arg(
-                clap::Arg::new("limit")
+                ::clap::Arg::new("limit")
                     .long("limit")
-                    .value_parser(clap::value_parser!(u32))
+                    .value_parser(::clap::value_parser!(u32))
                     .required(false),
             )
             .arg(
-                clap::Arg::new("offset")
+                ::clap::Arg::new("offset")
                     .long("offset")
-                    .value_parser(clap::value_parser!(u32))
+                    .value_parser(::clap::value_parser!(u32))
                     .required(false),
             )
             .arg(
-                clap::Arg::new("q")
+                ::clap::Arg::new("q")
                     .long("q")
-                    .value_parser(clap::value_parser!(String))
+                    .value_parser(::clap::value_parser!(::std::string::String))
                     .required(true),
             )
             .about("Search the RFD index and get a list of results")
     }
 
-    pub fn cli_get_self() -> clap::Command {
-        clap::Command::new("").about("Retrieve the user information of the calling user")
+    pub fn cli_get_self() -> ::clap::Command {
+        ::clap::Command::new("").about("View details for the calling user")
     }
 
-    pub async fn execute(&self, cmd: CliCommand, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute(
+        &self,
+        cmd: CliCommand,
+        matches: &::clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         match cmd {
             CliCommand::JwksJson => self.execute_jwks_json(matches).await,
             CliCommand::OpenidConfiguration => self.execute_openid_configuration(matches).await,
             CliCommand::CreateApiUser => self.execute_create_api_user(matches).await,
             CliCommand::GetApiUser => self.execute_get_api_user(matches).await,
             CliCommand::UpdateApiUser => self.execute_update_api_user(matches).await,
+            CliCommand::SetApiUserContactEmail => {
+                self.execute_set_api_user_contact_email(matches).await
+            }
             CliCommand::AddApiUserToGroup => self.execute_add_api_user_to_group(matches).await,
             CliCommand::RemoveApiUserFromGroup => {
                 self.execute_remove_api_user_from_group(matches).await
@@ -1330,6 +1401,7 @@ impl<T: CliConfig> Cli<T> {
             CliCommand::GetMappers => self.execute_get_mappers(matches).await,
             CliCommand::CreateMapper => self.execute_create_mapper(matches).await,
             CliCommand::DeleteMapper => self.execute_delete_mapper(matches).await,
+            CliCommand::GetRfdMeta => self.execute_get_rfd_meta(matches).await,
             CliCommand::ListOauthClients => self.execute_list_oauth_clients(matches).await,
             CliCommand::CreateOauthClient => self.execute_create_oauth_client(matches).await,
             CliCommand::GetOauthClient => self.execute_get_oauth_client(matches).await,
@@ -1360,7 +1432,7 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_jwks_json(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_jwks_json(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.jwks_json();
         self.config.execute_jwks_json(matches, &mut request)?;
         let result = request.send().await;
@@ -1378,7 +1450,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_openid_configuration(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.openid_configuration();
         self.config
@@ -1396,7 +1468,10 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_create_api_user(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_create_api_user(
+        &self,
+        matches: &::clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.create_api_user();
         if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
             let body_txt = std::fs::read_to_string(value).unwrap();
@@ -1420,7 +1495,7 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_get_api_user(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_get_api_user(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.get_api_user();
         if let Some(value) = matches.get_one::<types::TypedUuidForUserId>("user-id") {
             request = request.user_id(value.clone());
@@ -1440,7 +1515,10 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_update_api_user(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_update_api_user(
+        &self,
+        matches: &::clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.update_api_user();
         if let Some(value) = matches.get_one::<types::TypedUuidForUserId>("user-id") {
             request = request.user_id(value.clone());
@@ -1468,9 +1546,44 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
+    pub async fn execute_set_api_user_contact_email(
+        &self,
+        matches: &::clap::ArgMatches,
+    ) -> anyhow::Result<()> {
+        let mut request = self.client.set_api_user_contact_email();
+        if let Some(value) = matches.get_one::<::std::string::String>("email") {
+            request = request.body_map(|body| body.email(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<types::TypedUuidForUserId>("user-id") {
+            request = request.user_id(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value =
+                serde_json::from_str::<types::ApiUserEmailUpdateParams>(&body_txt).unwrap();
+            request = request.body(body_value);
+        }
+
+        self.config
+            .execute_set_api_user_contact_email(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.success_item(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
     pub async fn execute_add_api_user_to_group(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.add_api_user_to_group();
         if let Some(value) = matches.get_one::<types::TypedUuidForAccessGroupId>("group-id") {
@@ -1504,7 +1617,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_remove_api_user_from_group(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.remove_api_user_from_group();
         if let Some(value) = matches.get_one::<types::TypedUuidForAccessGroupId>("group-id") {
@@ -1530,9 +1643,9 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_link_provider(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_link_provider(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.link_provider();
-        if let Some(value) = matches.get_one::<String>("token") {
+        if let Some(value) = matches.get_one::<::std::string::String>("token") {
             request = request.body_map(|body| body.token(value.clone()))
         }
 
@@ -1563,7 +1676,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_list_api_user_tokens(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.list_api_user_tokens();
         if let Some(value) = matches.get_one::<types::TypedUuidForUserId>("user-id") {
@@ -1587,7 +1700,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_create_api_user_token(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.create_api_user_token();
         if let Some(value) = matches.get_one::<chrono::DateTime<chrono::offset::Utc>>("expires-at")
@@ -1624,7 +1737,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_get_api_user_token(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.get_api_user_token();
         if let Some(value) = matches.get_one::<types::TypedUuidForApiKeyId>("api-key-id") {
@@ -1652,7 +1765,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_delete_api_user_token(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.delete_api_user_token();
         if let Some(value) = matches.get_one::<types::TypedUuidForApiKeyId>("api-key-id") {
@@ -1680,7 +1793,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_create_link_token(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.create_link_token();
         if let Some(value) = matches.get_one::<types::TypedUuidForUserProviderId>("provider-id") {
@@ -1713,9 +1826,9 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_github_webhook(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_github_webhook(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.github_webhook();
-        if let Some(value) = matches.get_one::<String>("ref") {
+        if let Some(value) = matches.get_one::<::std::string::String>("ref") {
             request = request.body_map(|body| body.ref_(value.clone()))
         }
 
@@ -1739,7 +1852,7 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_get_groups(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_get_groups(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.get_groups();
         self.config.execute_get_groups(matches, &mut request)?;
         let result = request.send().await;
@@ -1755,9 +1868,9 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_create_group(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_create_group(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.create_group();
-        if let Some(value) = matches.get_one::<String>("name") {
+        if let Some(value) = matches.get_one::<::std::string::String>("name") {
             request = request.body_map(|body| body.name(value.clone()))
         }
 
@@ -1783,13 +1896,13 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_update_group(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_update_group(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.update_group();
         if let Some(value) = matches.get_one::<types::TypedUuidForAccessGroupId>("group-id") {
             request = request.group_id(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("name") {
+        if let Some(value) = matches.get_one::<::std::string::String>("name") {
             request = request.body_map(|body| body.name(value.clone()))
         }
 
@@ -1815,7 +1928,7 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_delete_group(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_delete_group(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.delete_group();
         if let Some(value) = matches.get_one::<types::TypedUuidForAccessGroupId>("group-id") {
             request = request.group_id(value.clone());
@@ -1837,7 +1950,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_magic_link_exchange(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.magic_link_exchange();
         if let Some(value) = matches.get_one::<types::TypedUuidForMagicLinkAttemptId>("attempt-id")
@@ -1845,15 +1958,15 @@ impl<T: CliConfig> Cli<T> {
             request = request.body_map(|body| body.attempt_id(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<String>("channel") {
+        if let Some(value) = matches.get_one::<::std::string::String>("channel") {
             request = request.channel(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("recipient") {
+        if let Some(value) = matches.get_one::<::std::string::String>("recipient") {
             request = request.body_map(|body| body.recipient(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<String>("secret") {
+        if let Some(value) = matches.get_one::<::std::string::String>("secret") {
             request = request.body_map(|body| body.secret(value.clone()))
         }
 
@@ -1879,9 +1992,12 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_magic_link_send(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_magic_link_send(
+        &self,
+        matches: &::clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.magic_link_send();
-        if let Some(value) = matches.get_one::<String>("channel") {
+        if let Some(value) = matches.get_one::<::std::string::String>("channel") {
             request = request.channel(value.clone());
         }
 
@@ -1893,19 +2009,19 @@ impl<T: CliConfig> Cli<T> {
             request = request.body_map(|body| body.medium(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<String>("recipient") {
+        if let Some(value) = matches.get_one::<::std::string::String>("recipient") {
             request = request.body_map(|body| body.recipient(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<String>("redirect-uri") {
+        if let Some(value) = matches.get_one::<::std::string::String>("redirect-uri") {
             request = request.body_map(|body| body.redirect_uri(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<String>("scope") {
+        if let Some(value) = matches.get_one::<::std::string::String>("scope") {
             request = request.body_map(|body| body.scope(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<String>("secret") {
+        if let Some(value) = matches.get_one::<::std::string::String>("secret") {
             request = request.body_map(|body| body.secret(value.clone()))
         }
 
@@ -1932,7 +2048,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_authz_code_redirect(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.authz_code_redirect();
         if let Some(value) = matches.get_one::<types::TypedUuidForOAuthClientId>("client-id") {
@@ -1943,19 +2059,19 @@ impl<T: CliConfig> Cli<T> {
             request = request.provider(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("redirect-uri") {
+        if let Some(value) = matches.get_one::<::std::string::String>("redirect-uri") {
             request = request.redirect_uri(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("response-type") {
+        if let Some(value) = matches.get_one::<::std::string::String>("response-type") {
             request = request.response_type(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("scope") {
+        if let Some(value) = matches.get_one::<::std::string::String>("scope") {
             request = request.scope(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("state") {
+        if let Some(value) = matches.get_one::<::std::string::String>("state") {
             request = request.state(value.clone());
         }
 
@@ -1974,14 +2090,14 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_authz_code_callback(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.authz_code_callback();
-        if let Some(value) = matches.get_one::<String>("code") {
+        if let Some(value) = matches.get_one::<::std::string::String>("code") {
             request = request.code(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("error") {
+        if let Some(value) = matches.get_one::<::std::string::String>("error") {
             request = request.error(value.clone());
         }
 
@@ -1989,7 +2105,7 @@ impl<T: CliConfig> Cli<T> {
             request = request.provider(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("state") {
+        if let Some(value) = matches.get_one::<::std::string::String>("state") {
             request = request.state(value.clone());
         }
 
@@ -2009,7 +2125,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_authz_code_exchange(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.authz_code_exchange();
         if let Some(value) = matches.get_one::<types::TypedUuidForOAuthClientId>("client-id") {
@@ -2020,15 +2136,15 @@ impl<T: CliConfig> Cli<T> {
             request = request.body_map(|body| body.client_secret(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<String>("code") {
+        if let Some(value) = matches.get_one::<::std::string::String>("code") {
             request = request.body_map(|body| body.code(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<String>("grant-type") {
+        if let Some(value) = matches.get_one::<::std::string::String>("grant-type") {
             request = request.body_map(|body| body.grant_type(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<String>("pkce-verifier") {
+        if let Some(value) = matches.get_one::<::std::string::String>("pkce-verifier") {
             request = request.body_map(|body| body.pkce_verifier(value.clone()))
         }
 
@@ -2036,7 +2152,7 @@ impl<T: CliConfig> Cli<T> {
             request = request.provider(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("redirect-uri") {
+        if let Some(value) = matches.get_one::<::std::string::String>("redirect-uri") {
             request = request.body_map(|body| body.redirect_uri(value.clone()))
         }
 
@@ -2064,7 +2180,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_get_device_provider(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.get_device_provider();
         if let Some(value) = matches.get_one::<types::OAuthProviderName>("provider") {
@@ -2088,10 +2204,10 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_exchange_device_token(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.exchange_device_token();
-        if let Some(value) = matches.get_one::<String>("device-code") {
+        if let Some(value) = matches.get_one::<::std::string::String>("device-code") {
             request = request.body_map(|body| body.device_code(value.clone()))
         }
 
@@ -2100,7 +2216,7 @@ impl<T: CliConfig> Cli<T> {
             request = request.body_map(|body| body.expires_at(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<String>("grant-type") {
+        if let Some(value) = matches.get_one::<::std::string::String>("grant-type") {
             request = request.body_map(|body| body.grant_type(value.clone()))
         }
 
@@ -2128,7 +2244,10 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_list_magic_links(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_list_magic_links(
+        &self,
+        matches: &::clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.list_magic_links();
         self.config
             .execute_list_magic_links(matches, &mut request)?;
@@ -2147,7 +2266,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_create_magic_link(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.create_magic_link();
         self.config
@@ -2165,7 +2284,7 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_get_magic_link(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_get_magic_link(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.get_magic_link();
         if let Some(value) = matches.get_one::<types::TypedUuidForMagicLinkId>("client-id") {
             request = request.client_id(value.clone());
@@ -2187,14 +2306,14 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_create_magic_link_redirect_uri(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.create_magic_link_redirect_uri();
         if let Some(value) = matches.get_one::<types::TypedUuidForMagicLinkId>("client-id") {
             request = request.client_id(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("redirect-uri") {
+        if let Some(value) = matches.get_one::<::std::string::String>("redirect-uri") {
             request = request.body_map(|body| body.redirect_uri(value.clone()))
         }
 
@@ -2222,7 +2341,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_delete_magic_link_redirect_uri(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.delete_magic_link_redirect_uri();
         if let Some(value) = matches.get_one::<types::TypedUuidForMagicLinkId>("client-id") {
@@ -2252,7 +2371,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_create_magic_link_secret(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.create_magic_link_secret();
         if let Some(value) = matches.get_one::<types::TypedUuidForMagicLinkId>("client-id") {
@@ -2276,7 +2395,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_delete_magic_link_secret(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.delete_magic_link_secret();
         if let Some(value) = matches.get_one::<types::TypedUuidForMagicLinkId>("client-id") {
@@ -2302,7 +2421,7 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_get_mappers(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_get_mappers(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.get_mappers();
         if let Some(value) = matches.get_one::<bool>("include-depleted") {
             request = request.include_depleted(value.clone());
@@ -2322,13 +2441,13 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_create_mapper(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_create_mapper(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.create_mapper();
         if let Some(value) = matches.get_one::<i32>("max-activations") {
             request = request.body_map(|body| body.max_activations(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<String>("name") {
+        if let Some(value) = matches.get_one::<::std::string::String>("name") {
             request = request.body_map(|body| body.name(value.clone()))
         }
 
@@ -2352,7 +2471,7 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_delete_mapper(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_delete_mapper(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.delete_mapper();
         if let Some(value) = matches.get_one::<types::TypedUuidForMapperId>("mapper-id") {
             request = request.mapper_id(value.clone());
@@ -2372,9 +2491,29 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
+    pub async fn execute_get_rfd_meta(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
+        let mut request = self.client.get_rfd_meta();
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
+            request = request.number(value.clone());
+        }
+
+        self.config.execute_get_rfd_meta(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.success_item(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
     pub async fn execute_list_oauth_clients(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.list_oauth_clients();
         self.config
@@ -2394,7 +2533,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_create_oauth_client(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.create_oauth_client();
         self.config
@@ -2412,7 +2551,10 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_get_oauth_client(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_get_oauth_client(
+        &self,
+        matches: &::clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.get_oauth_client();
         if let Some(value) = matches.get_one::<types::TypedUuidForOAuthClientId>("client-id") {
             request = request.client_id(value.clone());
@@ -2435,14 +2577,14 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_create_oauth_client_redirect_uri(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.create_oauth_client_redirect_uri();
         if let Some(value) = matches.get_one::<types::TypedUuidForOAuthClientId>("client-id") {
             request = request.client_id(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("redirect-uri") {
+        if let Some(value) = matches.get_one::<::std::string::String>("redirect-uri") {
             request = request.body_map(|body| body.redirect_uri(value.clone()))
         }
 
@@ -2470,7 +2612,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_delete_oauth_client_redirect_uri(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.delete_oauth_client_redirect_uri();
         if let Some(value) = matches.get_one::<types::TypedUuidForOAuthClientId>("client-id") {
@@ -2500,7 +2642,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_create_oauth_client_secret(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.create_oauth_client_secret();
         if let Some(value) = matches.get_one::<types::TypedUuidForOAuthClientId>("client-id") {
@@ -2524,7 +2666,7 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_delete_oauth_client_secret(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.delete_oauth_client_secret();
         if let Some(value) = matches.get_one::<types::TypedUuidForOAuthClientId>("client-id") {
@@ -2550,7 +2692,7 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_get_rfds(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_get_rfds(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.get_rfds();
         self.config.execute_get_rfds(matches, &mut request)?;
         let result = request.send().await;
@@ -2566,13 +2708,13 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_reserve_rfd(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_reserve_rfd(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.reserve_rfd();
-        if let Some(value) = matches.get_one::<String>("content") {
+        if let Some(value) = matches.get_one::<::std::string::String>("content") {
             request = request.body_map(|body| body.content(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<String>("title") {
+        if let Some(value) = matches.get_one::<::std::string::String>("title") {
             request = request.body_map(|body| body.title(value.clone()))
         }
 
@@ -2596,9 +2738,9 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_get_rfd(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_get_rfd(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.get_rfd();
-        if let Some(value) = matches.get_one::<String>("number") {
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
             request = request.number(value.clone());
         }
 
@@ -2616,17 +2758,20 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_set_rfd_document(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_set_rfd_document(
+        &self,
+        matches: &::clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.set_rfd_document();
-        if let Some(value) = matches.get_one::<String>("document") {
+        if let Some(value) = matches.get_one::<::std::string::String>("document") {
             request = request.body_map(|body| body.document(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<String>("message") {
+        if let Some(value) = matches.get_one::<::std::string::String>("message") {
             request = request.body_map(|body| body.message(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<String>("number") {
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
             request = request.number(value.clone());
         }
 
@@ -2651,13 +2796,13 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_get_rfd_attr(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_get_rfd_attr(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.get_rfd_attr();
         if let Some(value) = matches.get_one::<types::RfdAttrName>("attr") {
             request = request.attr(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("number") {
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
             request = request.number(value.clone());
         }
 
@@ -2675,21 +2820,21 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_set_rfd_attr(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_set_rfd_attr(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.set_rfd_attr();
         if let Some(value) = matches.get_one::<types::RfdAttrName>("attr") {
             request = request.attr(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("message") {
+        if let Some(value) = matches.get_one::<::std::string::String>("message") {
             request = request.body_map(|body| body.message(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<String>("number") {
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
             request = request.number(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("value") {
+        if let Some(value) = matches.get_one::<::std::string::String>("value") {
             request = request.body_map(|body| body.value(value.clone()))
         }
 
@@ -2713,17 +2858,20 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_set_rfd_content(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_set_rfd_content(
+        &self,
+        matches: &::clap::ArgMatches,
+    ) -> anyhow::Result<()> {
         let mut request = self.client.set_rfd_content();
-        if let Some(value) = matches.get_one::<String>("content") {
+        if let Some(value) = matches.get_one::<::std::string::String>("content") {
             request = request.body_map(|body| body.content(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<String>("message") {
+        if let Some(value) = matches.get_one::<::std::string::String>("message") {
             request = request.body_map(|body| body.message(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<String>("number") {
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
             request = request.number(value.clone());
         }
 
@@ -2748,9 +2896,9 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_discuss_rfd(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_discuss_rfd(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.discuss_rfd();
-        if let Some(value) = matches.get_one::<String>("number") {
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
             request = request.number(value.clone());
         }
 
@@ -2768,9 +2916,9 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_publish_rfd(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_publish_rfd(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.publish_rfd();
-        if let Some(value) = matches.get_one::<String>("number") {
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
             request = request.number(value.clone());
         }
 
@@ -2790,10 +2938,10 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_update_rfd_visibility(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.update_rfd_visibility();
-        if let Some(value) = matches.get_one::<String>("number") {
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
             request = request.number(value.clone());
         }
 
@@ -2822,17 +2970,17 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_search_rfds(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_search_rfds(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.search_rfds();
-        if let Some(value) = matches.get_one::<String>("attributes-to-crop") {
+        if let Some(value) = matches.get_one::<::std::string::String>("attributes-to-crop") {
             request = request.attributes_to_crop(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("highlight-post-tag") {
+        if let Some(value) = matches.get_one::<::std::string::String>("highlight-post-tag") {
             request = request.highlight_post_tag(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("highlight-pre-tag") {
+        if let Some(value) = matches.get_one::<::std::string::String>("highlight-pre-tag") {
             request = request.highlight_pre_tag(value.clone());
         }
 
@@ -2844,7 +2992,7 @@ impl<T: CliConfig> Cli<T> {
             request = request.offset(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<String>("q") {
+        if let Some(value) = matches.get_one::<::std::string::String>("q") {
             request = request.q(value.clone());
         }
 
@@ -2862,7 +3010,7 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_get_self(&self, matches: &clap::ArgMatches) -> anyhow::Result<()> {
+    pub async fn execute_get_self(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.get_self();
         self.config.execute_get_self(matches, &mut request)?;
         let result = request.send().await;
@@ -2901,7 +3049,7 @@ pub trait CliConfig {
         T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug;
     fn execute_jwks_json(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::JwksJson,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -2909,7 +3057,7 @@ pub trait CliConfig {
 
     fn execute_openid_configuration(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::OpenidConfiguration,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -2917,7 +3065,7 @@ pub trait CliConfig {
 
     fn execute_create_api_user(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::CreateApiUser,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -2925,7 +3073,7 @@ pub trait CliConfig {
 
     fn execute_get_api_user(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::GetApiUser,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -2933,15 +3081,23 @@ pub trait CliConfig {
 
     fn execute_update_api_user(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::UpdateApiUser,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn execute_set_api_user_contact_email(
+        &self,
+        matches: &::clap::ArgMatches,
+        request: &mut builder::SetApiUserContactEmail,
     ) -> anyhow::Result<()> {
         Ok(())
     }
 
     fn execute_add_api_user_to_group(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::AddApiUserToGroup,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -2949,7 +3105,7 @@ pub trait CliConfig {
 
     fn execute_remove_api_user_from_group(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::RemoveApiUserFromGroup,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -2957,7 +3113,7 @@ pub trait CliConfig {
 
     fn execute_link_provider(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::LinkProvider,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -2965,7 +3121,7 @@ pub trait CliConfig {
 
     fn execute_list_api_user_tokens(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::ListApiUserTokens,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -2973,7 +3129,7 @@ pub trait CliConfig {
 
     fn execute_create_api_user_token(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::CreateApiUserToken,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -2981,7 +3137,7 @@ pub trait CliConfig {
 
     fn execute_get_api_user_token(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::GetApiUserToken,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -2989,7 +3145,7 @@ pub trait CliConfig {
 
     fn execute_delete_api_user_token(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::DeleteApiUserToken,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -2997,7 +3153,7 @@ pub trait CliConfig {
 
     fn execute_create_link_token(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::CreateLinkToken,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3005,7 +3161,7 @@ pub trait CliConfig {
 
     fn execute_github_webhook(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::GithubWebhook,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3013,7 +3169,7 @@ pub trait CliConfig {
 
     fn execute_get_groups(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::GetGroups,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3021,7 +3177,7 @@ pub trait CliConfig {
 
     fn execute_create_group(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::CreateGroup,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3029,7 +3185,7 @@ pub trait CliConfig {
 
     fn execute_update_group(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::UpdateGroup,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3037,7 +3193,7 @@ pub trait CliConfig {
 
     fn execute_delete_group(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::DeleteGroup,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3045,7 +3201,7 @@ pub trait CliConfig {
 
     fn execute_magic_link_exchange(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::MagicLinkExchange,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3053,7 +3209,7 @@ pub trait CliConfig {
 
     fn execute_magic_link_send(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::MagicLinkSend,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3061,7 +3217,7 @@ pub trait CliConfig {
 
     fn execute_authz_code_redirect(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::AuthzCodeRedirect,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3069,7 +3225,7 @@ pub trait CliConfig {
 
     fn execute_authz_code_callback(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::AuthzCodeCallback,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3077,7 +3233,7 @@ pub trait CliConfig {
 
     fn execute_authz_code_exchange(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::AuthzCodeExchange,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3085,7 +3241,7 @@ pub trait CliConfig {
 
     fn execute_get_device_provider(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::GetDeviceProvider,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3093,7 +3249,7 @@ pub trait CliConfig {
 
     fn execute_exchange_device_token(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::ExchangeDeviceToken,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3101,7 +3257,7 @@ pub trait CliConfig {
 
     fn execute_list_magic_links(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::ListMagicLinks,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3109,7 +3265,7 @@ pub trait CliConfig {
 
     fn execute_create_magic_link(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::CreateMagicLink,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3117,7 +3273,7 @@ pub trait CliConfig {
 
     fn execute_get_magic_link(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::GetMagicLink,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3125,7 +3281,7 @@ pub trait CliConfig {
 
     fn execute_create_magic_link_redirect_uri(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::CreateMagicLinkRedirectUri,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3133,7 +3289,7 @@ pub trait CliConfig {
 
     fn execute_delete_magic_link_redirect_uri(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::DeleteMagicLinkRedirectUri,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3141,7 +3297,7 @@ pub trait CliConfig {
 
     fn execute_create_magic_link_secret(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::CreateMagicLinkSecret,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3149,7 +3305,7 @@ pub trait CliConfig {
 
     fn execute_delete_magic_link_secret(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::DeleteMagicLinkSecret,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3157,7 +3313,7 @@ pub trait CliConfig {
 
     fn execute_get_mappers(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::GetMappers,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3165,7 +3321,7 @@ pub trait CliConfig {
 
     fn execute_create_mapper(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::CreateMapper,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3173,15 +3329,23 @@ pub trait CliConfig {
 
     fn execute_delete_mapper(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::DeleteMapper,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn execute_get_rfd_meta(
+        &self,
+        matches: &::clap::ArgMatches,
+        request: &mut builder::GetRfdMeta,
     ) -> anyhow::Result<()> {
         Ok(())
     }
 
     fn execute_list_oauth_clients(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::ListOauthClients,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3189,7 +3353,7 @@ pub trait CliConfig {
 
     fn execute_create_oauth_client(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::CreateOauthClient,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3197,7 +3361,7 @@ pub trait CliConfig {
 
     fn execute_get_oauth_client(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::GetOauthClient,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3205,7 +3369,7 @@ pub trait CliConfig {
 
     fn execute_create_oauth_client_redirect_uri(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::CreateOauthClientRedirectUri,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3213,7 +3377,7 @@ pub trait CliConfig {
 
     fn execute_delete_oauth_client_redirect_uri(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::DeleteOauthClientRedirectUri,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3221,7 +3385,7 @@ pub trait CliConfig {
 
     fn execute_create_oauth_client_secret(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::CreateOauthClientSecret,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3229,7 +3393,7 @@ pub trait CliConfig {
 
     fn execute_delete_oauth_client_secret(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::DeleteOauthClientSecret,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3237,7 +3401,7 @@ pub trait CliConfig {
 
     fn execute_get_rfds(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::GetRfds,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3245,7 +3409,7 @@ pub trait CliConfig {
 
     fn execute_reserve_rfd(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::ReserveRfd,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3253,7 +3417,7 @@ pub trait CliConfig {
 
     fn execute_get_rfd(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::GetRfd,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3261,7 +3425,7 @@ pub trait CliConfig {
 
     fn execute_set_rfd_document(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::SetRfdDocument,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3269,7 +3433,7 @@ pub trait CliConfig {
 
     fn execute_get_rfd_attr(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::GetRfdAttr,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3277,7 +3441,7 @@ pub trait CliConfig {
 
     fn execute_set_rfd_attr(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::SetRfdAttr,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3285,7 +3449,7 @@ pub trait CliConfig {
 
     fn execute_set_rfd_content(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::SetRfdContent,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3293,7 +3457,7 @@ pub trait CliConfig {
 
     fn execute_discuss_rfd(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::DiscussRfd,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3301,7 +3465,7 @@ pub trait CliConfig {
 
     fn execute_publish_rfd(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::PublishRfd,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3309,7 +3473,7 @@ pub trait CliConfig {
 
     fn execute_update_rfd_visibility(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::UpdateRfdVisibility,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3317,7 +3481,7 @@ pub trait CliConfig {
 
     fn execute_search_rfds(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::SearchRfds,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3325,7 +3489,7 @@ pub trait CliConfig {
 
     fn execute_get_self(
         &self,
-        matches: &clap::ArgMatches,
+        matches: &::clap::ArgMatches,
         request: &mut builder::GetSelf,
     ) -> anyhow::Result<()> {
         Ok(())
@@ -3339,6 +3503,7 @@ pub enum CliCommand {
     CreateApiUser,
     GetApiUser,
     UpdateApiUser,
+    SetApiUserContactEmail,
     AddApiUserToGroup,
     RemoveApiUserFromGroup,
     LinkProvider,
@@ -3369,6 +3534,7 @@ pub enum CliCommand {
     GetMappers,
     CreateMapper,
     DeleteMapper,
+    GetRfdMeta,
     ListOauthClients,
     CreateOauthClient,
     GetOauthClient,
@@ -3398,6 +3564,7 @@ impl CliCommand {
             CliCommand::CreateApiUser,
             CliCommand::GetApiUser,
             CliCommand::UpdateApiUser,
+            CliCommand::SetApiUserContactEmail,
             CliCommand::AddApiUserToGroup,
             CliCommand::RemoveApiUserFromGroup,
             CliCommand::LinkProvider,
@@ -3428,6 +3595,7 @@ impl CliCommand {
             CliCommand::GetMappers,
             CliCommand::CreateMapper,
             CliCommand::DeleteMapper,
+            CliCommand::GetRfdMeta,
             CliCommand::ListOauthClients,
             CliCommand::CreateOauthClient,
             CliCommand::GetOauthClient,

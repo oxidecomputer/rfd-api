@@ -67,7 +67,7 @@ impl CliOutput for RfdJsonPrinter {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 
-    fn output_rfd_list(&self, value: Vec<types::ListRfd>) {
+    fn output_rfd_list(&self, value: Vec<types::RfdMeta>) {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 

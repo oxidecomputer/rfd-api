@@ -8,9 +8,9 @@ use progenitor_client::ResponseValue;
 use rfd_sdk::types::{
     self, AccessGroupForRfdPermission, ApiKeyResponseForRfdPermission, ApiUserForRfdPermission,
     Error, FullRfd, FullRfdPdfEntry, InitialApiKeyResponseForRfdPermission,
-    InitialOAuthClientSecretResponse, ListRfd, Mapper, OAuthClient, OAuthClientRedirectUri,
-    OAuthClientSecret, PermissionsForRfdPermission, ReserveRfdResponse, RfdAttr, SearchResultHit,
-    SearchResults, Visibility,
+    InitialOAuthClientSecretResponse, Mapper, OAuthClient, OAuthClientRedirectUri,
+    OAuthClientSecret, PermissionsForRfdPermission, ReserveRfdResponse, RfdAttr, RfdMeta,
+    SearchResultHit, SearchResults, Visibility,
 };
 use std::{collections::HashMap, fmt::Display, fs::File, io::Write, process::Command};
 use tabwriter::TabWriter;
@@ -121,7 +121,7 @@ impl CliOutput for RfdTabPrinter {
         self.print_cli_output(&value, None);
     }
 
-    fn output_rfd_list(&self, value: Vec<types::ListRfd>) {
+    fn output_rfd_list(&self, value: Vec<types::RfdMeta>) {
         self.print_cli_output(&value, Some("rfds".to_string()));
     }
 
@@ -387,7 +387,7 @@ impl TabDisplay for InitialOAuthClientSecretResponse {
     }
 }
 
-impl TabDisplay for ListRfd {
+impl TabDisplay for RfdMeta {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "id", &self.id);
         printer.print_field(tw, level, "rfd_number", &self.rfd_number);
