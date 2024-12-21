@@ -23,7 +23,7 @@ base64 = "0.22"
 bb8 = "0.8.6"
 chrono = "0.4.39"
 clap = { version = "4.5.23", features = ["derive", "string", "env"] }
-config = { version = "0.15.0", features = ["toml"] }
+config = { version = "0.15.4", features = ["toml"] }
 cookie = { version = "0.18.1" }
 crc32c = "0.6.8"
 diesel = { version = "2.2.6", features = ["postgres"] }
