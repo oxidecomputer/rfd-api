@@ -65,9 +65,7 @@ mod tests {
     use http::StatusCode;
     use newtype_uuid::{GenericUuid, TypedUuid};
     use rfd_model::{
-        schema_ext::ContentFormat,
-        storage::{mock::MockStorage, MockRfdRevisionMetaStore, MockRfdStore},
-        CommitSha, FileSha, Rfd, RfdRevision, RfdRevisionMeta,
+        schema_ext::ContentFormat, storage::{mock::MockStorage, MockRfdMetaStore, MockRfdRevisionMetaStore, MockRfdStore}, CommitSha, FileSha, Rfd, RfdMeta, RfdRevision, RfdRevisionMeta
     };
     use uuid::Uuid;
     use v_api::ApiContext;
@@ -152,6 +150,98 @@ mod tests {
                         authors: None,
                         labels: None,
                         content: String::new(),
+                        content_format: ContentFormat::Asciidoc,
+                        sha: FileSha(String::new()),
+                        commit: CommitSha(String::new()),
+                        committed_at: Utc::now(),
+                        created_at: Utc::now(),
+                        updated_at: Utc::now(),
+                        deleted_at: None,
+                    },
+                    created_at: Utc::now(),
+                    updated_at: Utc::now(),
+                    deleted_at: None,
+                    visibility: rfd_model::schema_ext::Visibility::Private,
+                },
+            ];
+
+            results.retain(|rfd| {
+                filter.rfd_number.is_none()
+                    || filter
+                        .rfd_number
+                        .as_ref()
+                        .unwrap()
+                        .contains(&rfd.rfd_number)
+            });
+
+            Ok(results)
+        });
+
+        let mut rfd_meta_store = MockRfdMetaStore::new();
+        rfd_meta_store.expect_list().returning(move |filter, _| {
+            let mut results = vec![
+                RfdMeta {
+                    id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
+                    rfd_number: 123,
+                    link: None,
+                    content: RfdRevisionMeta {
+                        id: TypedUuid::new_v4(),
+                        rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
+                        title: String::new(),
+                        state: None,
+                        discussion: None,
+                        authors: None,
+                        labels: None,
+                        content_format: ContentFormat::Asciidoc,
+                        sha: FileSha(String::new()),
+                        commit: CommitSha(String::new()),
+                        committed_at: Utc::now(),
+                        created_at: Utc::now(),
+                        updated_at: Utc::now(),
+                        deleted_at: None,
+                    },
+                    created_at: Utc::now(),
+                    updated_at: Utc::now(),
+                    deleted_at: None,
+                    visibility: rfd_model::schema_ext::Visibility::Private,
+                },
+                RfdMeta {
+                    id: TypedUuid::from_untyped_uuid(public_rfd_id),
+                    rfd_number: 456,
+                    link: None,
+                    content: RfdRevisionMeta {
+                        id: TypedUuid::new_v4(),
+                        rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
+                        title: String::new(),
+                        state: None,
+                        discussion: None,
+                        authors: None,
+                        labels: None,
+                        content_format: ContentFormat::Asciidoc,
+                        sha: FileSha(String::new()),
+                        commit: CommitSha(String::new()),
+                        committed_at: Utc::now(),
+                        created_at: Utc::now(),
+                        updated_at: Utc::now(),
+                        deleted_at: None,
+                    },
+                    created_at: Utc::now(),
+                    updated_at: Utc::now(),
+                    deleted_at: None,
+                    visibility: rfd_model::schema_ext::Visibility::Public,
+                },
+                RfdMeta {
+                    id: TypedUuid::from_untyped_uuid(private_rfd_id_2),
+                    rfd_number: 789,
+                    link: None,
+                    content: RfdRevisionMeta {
+                        id: TypedUuid::new_v4(),
+                        rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
+                        title: String::new(),
+                        state: None,
+                        discussion: None,
+                        authors: None,
+                        labels: None,
                         content_format: ContentFormat::Asciidoc,
                         sha: FileSha(String::new()),
                         commit: CommitSha(String::new()),
