@@ -17,8 +17,8 @@ use rfd_data::{
 use rfd_github::{GitHubError, GitHubNewRfdNumber, GitHubRfdRepo};
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
-    storage::{JobStore, RfdFilter, RfdMetaStore, RfdStorage, RfdStore},
-    CommitSha, FileSha, Job, NewJob, Rfd, RfdId, RfdMeta, RfdRevision, RfdRevisionId,
+    storage::{JobStore, RfdFilter, RfdMetaStore, RfdPdfFilter, RfdPdfStore, RfdStorage, RfdStore},
+    CommitSha, FileSha, Job, NewJob, Rfd, RfdId, RfdMeta, RfdPdf, RfdRevision, RfdRevisionId,
 };
 use rsa::{
     pkcs1::{DecodeRsaPrivateKey, EncodeRsaPrivateKey},
@@ -489,6 +489,27 @@ impl RfdContext {
         rfd_number: i32,
     ) -> ResourceResult<RfdRevision, StoreError> {
         self.view_rfd_revision(caller, rfd_number, None).await
+    }
+
+    #[instrument(skip(self, caller))]
+    pub async fn view_rfd_pdfs(
+        &self,
+        caller: &Caller<RfdPermission>,
+        rfd_number: i32,
+        revision: Option<RfdRevisionIdentifier>,
+    ) -> ResourceResult<Vec<RfdPdf>, StoreError> {
+        let rfd = self.get_rfd_meta(caller, rfd_number, revision).await?;
+        let pdfs = RfdPdfStore::list(
+            &*self.storage,
+            vec![RfdPdfFilter::default()
+                .rfd(Some(vec![rfd.id]))
+                .rfd_revision(Some(vec![rfd.content.id]))],
+            &ListPagination::unlimited(),
+        )
+        .await
+        .to_resource_result()?;
+
+        Ok(pdfs)
     }
 
     #[instrument(skip(self, caller, content))]

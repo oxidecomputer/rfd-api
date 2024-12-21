@@ -13,7 +13,7 @@ use rfd_data::{
 };
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
-    Rfd, RfdRevisionId,
+    Rfd, RfdPdf, RfdRevisionId,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -141,7 +141,7 @@ pub async fn view_rfd(
 pub async fn view_rfd_pdf(
     rqctx: RequestContext<RfdContext>,
     path: Path<RfdPathParams>,
-) -> Result<HttpResponseOk<RfdWithContent>, HttpError> {
+) -> Result<HttpResponseOk<Vec<RfdPdf>>, HttpError> {
     let ctx = rqctx.context();
     let caller = ctx.v_ctx().get_caller(&rqctx).await?;
     let path = path.into_inner();
@@ -225,7 +225,7 @@ pub async fn view_rfd_revision(
 pub async fn view_rfd_revision_pdf(
     rqctx: RequestContext<RfdContext>,
     path: Path<RfdRevisionPathParams>,
-) -> Result<HttpResponseOk<RfdWithContent>, HttpError> {
+) -> Result<HttpResponseOk<Vec<RfdPdf>>, HttpError> {
     let ctx = rqctx.context();
     let caller = ctx.v_ctx().get_caller(&rqctx).await?;
     let path = path.into_inner();
@@ -384,8 +384,17 @@ async fn view_rfd_pdf_op(
     caller: &Caller<RfdPermission>,
     number: String,
     revision: Option<RfdRevisionIdentifier>,
-) -> Result<HttpResponseOk<RfdWithContent>, HttpError> {
-    unimplemented!()
+) -> Result<HttpResponseOk<Vec<RfdPdf>>, HttpError> {
+    if let Ok(rfd_number) = number.parse::<i32>() {
+        Ok(HttpResponseOk(
+            ctx.view_rfd_pdfs(caller, rfd_number, revision).await?,
+        ))
+    } else {
+        Err(client_error(
+            ClientErrorStatusCode::BAD_REQUEST,
+            "Malformed RFD number",
+        ))
+    }
 }
 
 #[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
