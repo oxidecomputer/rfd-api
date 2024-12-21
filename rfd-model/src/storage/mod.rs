@@ -316,12 +316,18 @@ pub trait RfdCommentUserStore {
 
 #[derive(Debug, Default)]
 pub struct RfdCommentFilter {
+    pub id: Option<Vec<TypedUuid<RfdCommentId>>>,
     pub rfd: Option<Vec<TypedUuid<RfdId>>>,
     pub user: Option<Vec<TypedUuid<RfdCommentUserId>>>,
     pub comment_created_before: Option<DateTime<Utc>>,
 }
 
 impl RfdCommentFilter {
+    pub fn id(mut self, id: Option<Vec<TypedUuid<RfdCommentId>>>) -> Self {
+        self.id = id;
+        self
+    }
+
     pub fn rfd(mut self, rfd: Option<Vec<TypedUuid<RfdId>>>) -> Self {
         self.rfd = rfd;
         self
@@ -341,11 +347,12 @@ impl RfdCommentFilter {
 #[cfg_attr(feature = "mock", automock)]
 #[async_trait]
 pub trait RfdCommentStore {
+    async fn get(&self, id: TypedUuid<RfdCommentId>) -> Result<Option<RfdComment>, StoreError>;
     async fn list(
         &self,
         filters: Vec<RfdCommentFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdComment>, StoreError>;
     async fn upsert(&self, new_rfd_comment: NewRfdComment) -> Result<RfdComment, StoreError>;
-    async fn delete(&self, id: &TypedUuid<RfdCommentId>) -> Result<Option<RfdComment>, StoreError>;
+    async fn delete(&self, id: &TypedUuid<RfdCommentId>) -> Result<(), StoreError>;
 }

@@ -3,7 +3,10 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use chrono::{DateTime, Utc};
-use db::{JobModel, RfdModel, RfdPdfModel, RfdRevisionMetaModel, RfdRevisionModel};
+use db::{
+    JobModel, RfdCommentModel, RfdCommentUserModel, RfdModel, RfdPdfModel, RfdRevisionMetaModel,
+    RfdRevisionModel,
+};
 use newtype_uuid::{GenericUuid, TypedUuid, TypedUuidKind, TypedUuidTag};
 use partial_struct::partial;
 use schema_ext::{ContentFormat, PdfSource, Visibility};
@@ -318,9 +321,28 @@ pub struct RfdCommentUser {
     pub github_user_username: Option<String>,
     pub github_user_avatar_url: Option<String>,
     pub github_user_type: String,
+    #[partial(NewRfdComment(skip))]
     pub created_at: DateTime<Utc>,
+    #[partial(NewRfdComment(skip))]
     pub updated_at: DateTime<Utc>,
+    #[partial(NewRfdComment(skip))]
     pub deleted_at: Option<DateTime<Utc>>,
+}
+
+impl From<RfdCommentUserModel> for RfdCommentUser {
+    fn from(value: RfdCommentUserModel) -> Self {
+        Self {
+            id: TypedUuid::from_untyped_uuid(value.id),
+            github_user_id: value.github_user_id,
+            github_user_node_id: value.github_user_node_id,
+            github_user_username: value.github_user_username,
+            github_user_avatar_url: value.github_user_avatar_url,
+            github_user_type: value.github_user_type,
+            created_at: value.created_at,
+            updated_at: value.updated_at,
+            deleted_at: value.deleted_at,
+        }
+    }
 }
 
 #[derive(JsonSchema)]
@@ -337,8 +359,9 @@ impl TypedUuidKind for RfdCommentId {
 pub struct RfdComment {
     pub id: TypedUuid<RfdCommentId>,
     pub rfd_id: TypedUuid<RfdId>,
+    #[partial(NewRfdComment(retype = TypedUuid<RfdCommentUserId>))]
     pub comment_user: RfdCommentUser,
-    pub external_id: Option<i32>,
+    pub external_id: i32,
     pub node_id: String,
     pub discussion_number: Option<i32>,
     pub diff_hunk: String,
@@ -356,7 +379,41 @@ pub struct RfdComment {
     pub in_reply_to: Option<i32>,
     pub comment_created_at: Option<DateTime<Utc>>,
     pub comment_updated_at: Option<DateTime<Utc>>,
+    #[partial(NewRfdComment(skip))]
     pub created_at: DateTime<Utc>,
+    #[partial(NewRfdComment(skip))]
     pub updated_at: DateTime<Utc>,
+    #[partial(NewRfdComment(skip))]
     pub deleted_at: Option<DateTime<Utc>>,
+}
+
+impl From<(RfdCommentModel, RfdCommentUserModel)> for RfdComment {
+    fn from((comment, user): (RfdCommentModel, RfdCommentUserModel)) -> Self {
+        Self {
+            id: TypedUuid::from_untyped_uuid(comment.id),
+            rfd_id: TypedUuid::from_untyped_uuid(comment.rfd_id),
+            comment_user: user.into(),
+            external_id: comment.external_id,
+            node_id: comment.node_id,
+            discussion_number: comment.discussion_number,
+            diff_hunk: comment.diff_hunk,
+            path: comment.path,
+            body: comment.body,
+            commit_id: comment.commit_id,
+            original_commit_id: comment.original_commit_id,
+            line: comment.line,
+            original_line: comment.original_line,
+            start_line: comment.start_line,
+            original_start_line: comment.original_start_line,
+            side: comment.side,
+            start_side: comment.start_side,
+            subject: comment.subject,
+            in_reply_to: comment.in_reply_to,
+            comment_created_at: comment.comment_created_at,
+            comment_updated_at: comment.comment_updated_at,
+            created_at: comment.created_at,
+            updated_at: comment.updated_at,
+            deleted_at: comment.deleted_at,
+        }
+    }
 }

@@ -12,15 +12,19 @@ use diesel::{
     sql_types::Bool,
     update,
     upsert::{excluded, on_constraint},
-    BoolExpressionMethods, BoxableExpression, ExpressionMethods, SelectableHelper,
+    BoolExpressionMethods, BoxableExpression, ExpressionMethods, NullableExpressionMethods,
+    SelectableHelper,
 };
 use newtype_uuid::{GenericUuid, TypedUuid};
 use uuid::Uuid;
 use v_model::storage::postgres::PostgresStore;
 
 use crate::{
-    db::{JobModel, RfdModel, RfdPdfModel, RfdRevisionMetaModel, RfdRevisionModel},
-    schema::{job, rfd, rfd_pdf, rfd_revision},
+    db::{
+        JobModel, RfdCommentModel, RfdCommentUserModel, RfdModel, RfdPdfModel,
+        RfdRevisionMetaModel, RfdRevisionModel,
+    },
+    schema::{job, rfd, rfd_comment, rfd_comment_user, rfd_pdf, rfd_revision},
     schema_ext::Visibility,
     storage::StoreError,
     Job, NewJob, NewRfd, NewRfdComment, NewRfdCommentUser, NewRfdPdf, NewRfdRevision, Rfd,
@@ -756,26 +760,144 @@ impl RfdCommentUserStore for PostgresStore {
         &self,
         new_rfd_comment_user: NewRfdCommentUser,
     ) -> Result<RfdCommentUser, StoreError> {
-        unimplemented!()
+        let user: RfdCommentUserModel = insert_into(rfd_comment_user::table)
+            .values((
+                rfd_comment_user::id.eq(new_rfd_comment_user.id.into_untyped_uuid()),
+                rfd_comment_user::github_user_id.eq(new_rfd_comment_user.github_user_id),
+                rfd_comment_user::github_user_node_id.eq(new_rfd_comment_user.github_user_node_id),
+                rfd_comment_user::github_user_username
+                    .eq(new_rfd_comment_user.github_user_username),
+                rfd_comment_user::github_user_avatar_url
+                    .eq(new_rfd_comment_user.github_user_avatar_url),
+                rfd_comment_user::github_user_type.eq(new_rfd_comment_user.github_user_type),
+            ))
+            // TODO: Handle updates
+            .get_result_async(&*self.pool.get().await?)
+            .await?;
+
+        Ok(user.into())
     }
 }
 
 #[async_trait]
 impl RfdCommentStore for PostgresStore {
+    async fn get(&self, id: TypedUuid<RfdCommentId>) -> Result<Option<RfdComment>, StoreError> {
+        let comment = RfdCommentStore::list(
+            self,
+            vec![RfdCommentFilter::default().id(Some(vec![id]))],
+            &ListPagination::default().limit(1),
+        )
+        .await?;
+        Ok(comment.into_iter().nth(0))
+    }
+
     async fn list(
         &self,
         filters: Vec<RfdCommentFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdComment>, StoreError> {
-        unimplemented!()
+        let mut query = rfd_comment::table
+            .inner_join(rfd_comment_user::table)
+            .into_boxed();
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let RfdCommentFilter {
+                    id,
+                    rfd,
+                    user,
+                    comment_created_before,
+                } = filter;
+
+                if let Some(id) = id {
+                    predicates.push(Box::new(
+                        rfd_comment::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
+
+                if let Some(rfd) = rfd {
+                    predicates.push(Box::new(
+                        rfd_comment::rfd_id
+                            .eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
+
+                if let Some(user) = user {
+                    predicates.push(Box::new(
+                        rfd_comment::comment_user_id
+                            .eq_any(user.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
+
+                if let Some(comment_created_before) = comment_created_before {
+                    predicates.push(Box::new(
+                        rfd_comment::comment_created_at
+                            .assume_not_null()
+                            .le(comment_created_before),
+                    ));
+                }
+
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
+        }
+
+        let results = query
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+            .get_results_async::<(RfdCommentModel, RfdCommentUserModel)>(&*self.pool.get().await?)
+            .await?;
+
+        Ok(results.into_iter().map(|record| record.into()).collect())
     }
 
     async fn upsert(&self, new_rfd_comment: NewRfdComment) -> Result<RfdComment, StoreError> {
-        unimplemented!()
+        let comment: RfdCommentModel = insert_into(rfd_comment::table)
+            .values((
+                rfd_comment::id.eq(new_rfd_comment.id.into_untyped_uuid()),
+                rfd_comment::rfd_id.eq(new_rfd_comment.rfd_id.into_untyped_uuid()),
+                rfd_comment::comment_user_id.eq(new_rfd_comment.comment_user.into_untyped_uuid()),
+                rfd_comment::external_id.eq(new_rfd_comment.external_id),
+                rfd_comment::node_id.eq(new_rfd_comment.node_id),
+                rfd_comment::discussion_number.eq(new_rfd_comment.discussion_number),
+                rfd_comment::diff_hunk.eq(new_rfd_comment.diff_hunk),
+                rfd_comment::path.eq(new_rfd_comment.path),
+                rfd_comment::body.eq(new_rfd_comment.body),
+                rfd_comment::commit_id.eq(new_rfd_comment.commit_id),
+                rfd_comment::original_commit_id.eq(new_rfd_comment.original_commit_id),
+                rfd_comment::line.eq(new_rfd_comment.line),
+                rfd_comment::original_line.eq(new_rfd_comment.original_line),
+                rfd_comment::start_line.eq(new_rfd_comment.start_line),
+                rfd_comment::original_start_line.eq(new_rfd_comment.original_start_line),
+                rfd_comment::side.eq(new_rfd_comment.side),
+                rfd_comment::start_side.eq(new_rfd_comment.start_side),
+                rfd_comment::subject.eq(new_rfd_comment.subject),
+                rfd_comment::in_reply_to.eq(new_rfd_comment.in_reply_to),
+                rfd_comment::comment_created_at.eq(new_rfd_comment.comment_created_at),
+                rfd_comment::comment_updated_at.eq(new_rfd_comment.comment_updated_at),
+            ))
+            // TODO: Handle updates
+            .get_result_async(&*self.pool.get().await?)
+            .await?;
+
+        Ok(
+            RfdCommentStore::get(self, TypedUuid::from_untyped_uuid(comment.id))
+                .await?
+                .expect("Upserted comment must exist"),
+        )
     }
 
-    async fn delete(&self, id: &TypedUuid<RfdCommentId>) -> Result<Option<RfdComment>, StoreError> {
-        unimplemented!()
+    async fn delete(&self, id: &TypedUuid<RfdCommentId>) -> Result<(), StoreError> {
+        let _ = update(rfd_comment::table)
+            .filter(rfd_comment::id.eq(id.into_untyped_uuid()))
+            .set(rfd_comment::deleted_at.eq(Utc::now()))
+            .execute_async(&*self.pool.get().await?)
+            .await?;
+        Ok(())
     }
 }
 

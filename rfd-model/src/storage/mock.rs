@@ -258,6 +258,10 @@ impl RfdCommentUserStore for MockStorage {
 
 #[async_trait]
 impl RfdCommentStore for MockStorage {
+    async fn get(&self, id: TypedUuid<RfdCommentId>) -> Result<Option<RfdComment>, StoreError> {
+        self.rfd_comment_store.as_ref().unwrap().get(id).await
+    }
+
     async fn list(
         &self,
         filters: Vec<RfdCommentFilter>,
@@ -278,7 +282,7 @@ impl RfdCommentStore for MockStorage {
             .await
     }
 
-    async fn delete(&self, id: &TypedUuid<RfdCommentId>) -> Result<Option<RfdComment>, StoreError> {
+    async fn delete(&self, id: &TypedUuid<RfdCommentId>) -> Result<(), StoreError> {
         self.rfd_comment_store.as_ref().unwrap().delete(id).await
     }
 }

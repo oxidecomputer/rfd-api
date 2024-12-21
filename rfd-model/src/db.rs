@@ -97,7 +97,7 @@ pub struct RfdCommentModel {
     pub id: Uuid,
     pub rfd_id: Uuid,
     pub comment_user_id: Uuid,
-    pub external_id: Option<i32>,
+    pub external_id: i32,
     pub node_id: String,
     pub discussion_number: Option<i32>,
     pub diff_hunk: String,

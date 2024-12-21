@@ -93,7 +93,7 @@ diesel::table! {
         github_user_id -> Integer,
         github_user_node_id -> Varchar,
         github_user_username -> Nullable<Varchar>,
-        github_user_avatar_url -> Varchar,
+        github_user_avatar_url -> Nullable<Varchar>,
         github_user_type -> Varchar,
         created_at -> Timestamptz,
         updated_at -> Timestamptz,
