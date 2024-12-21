@@ -337,7 +337,7 @@ impl TypedUuidKind for RfdCommentId {
 pub struct RfdComment {
     pub id: TypedUuid<RfdCommentId>,
     pub rfd_id: TypedUuid<RfdId>,
-    pub comment_user_id: TypedUuid<RfdCommentUserId>,
+    pub comment_user: RfdCommentUser,
     pub external_id: Option<i32>,
     pub node_id: String,
     pub discussion_number: Option<i32>,

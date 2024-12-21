@@ -23,13 +23,15 @@ use crate::{
     schema::{job, rfd, rfd_pdf, rfd_revision},
     schema_ext::Visibility,
     storage::StoreError,
-    Job, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdId, RfdMeta, RfdPdf, RfdPdfId,
-    RfdRevision, RfdRevisionId, RfdRevisionMeta,
+    Job, NewJob, NewRfd, NewRfdComment, NewRfdCommentUser, NewRfdPdf, NewRfdRevision, Rfd,
+    RfdComment, RfdCommentId, RfdCommentUser, RfdId, RfdMeta, RfdPdf, RfdPdfId, RfdRevision,
+    RfdRevisionId, RfdRevisionMeta,
 };
 
 use super::{
-    JobFilter, JobStore, ListPagination, RfdFilter, RfdMetaStore, RfdPdfFilter, RfdPdfStore,
-    RfdRevisionFilter, RfdRevisionMetaStore, RfdRevisionStore, RfdStore,
+    JobFilter, JobStore, ListPagination, RfdCommentFilter, RfdCommentStore, RfdCommentUserStore,
+    RfdFilter, RfdMetaStore, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionMetaStore,
+    RfdRevisionStore, RfdStore,
 };
 
 #[async_trait]
@@ -745,6 +747,35 @@ impl JobStore for PostgresStore {
             .await?;
 
         JobStore::get(self, id).await
+    }
+}
+
+#[async_trait]
+impl RfdCommentUserStore for PostgresStore {
+    async fn upsert(
+        &self,
+        new_rfd_comment_user: NewRfdCommentUser,
+    ) -> Result<RfdCommentUser, StoreError> {
+        unimplemented!()
+    }
+}
+
+#[async_trait]
+impl RfdCommentStore for PostgresStore {
+    async fn list(
+        &self,
+        filters: Vec<RfdCommentFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<Job>, StoreError> {
+        unimplemented!()
+    }
+
+    async fn upsert(&self, new_rfd_comment: NewRfdComment) -> Result<RfdComment, StoreError> {
+        unimplemented!()
+    }
+
+    async fn delete(&self, id: &TypedUuid<RfdCommentId>) -> Result<Option<RfdComment>, StoreError> {
+        unimplemented!()
     }
 }
 

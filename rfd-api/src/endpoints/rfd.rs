@@ -13,7 +13,7 @@ use rfd_data::{
 };
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
-    Rfd, RfdPdf, RfdRevisionId,
+    Rfd, RfdComment, RfdPdf, RfdRevisionId,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -175,8 +175,11 @@ pub async fn view_rfd_attr(
 pub async fn view_rfd_comments(
     rqctx: RequestContext<RfdContext>,
     path: Path<RfdPathParams>,
-) -> Result<HttpResponseOk<()>, HttpError> {
-    unimplemented!()
+) -> Result<HttpResponseOk<Vec<RfdComment>>, HttpError> {
+    let ctx = rqctx.context();
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let path = path.into_inner();
+    view_rfd_comments_op(ctx, &caller, path.number, None).await
 }
 
 // Specific RFD revision endpoints
@@ -266,8 +269,11 @@ pub async fn view_rfd_revision_attr(
 pub async fn view_rfd_revision_comments(
     rqctx: RequestContext<RfdContext>,
     path: Path<RfdRevisionPathParams>,
-) -> Result<HttpResponseOk<()>, HttpError> {
-    unimplemented!()
+) -> Result<HttpResponseOk<Vec<RfdComment>>, HttpError> {
+    let ctx = rqctx.context();
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let path = path.into_inner();
+    view_rfd_comments_op(ctx, &caller, path.number, Some(path.revision.into())).await
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -406,7 +412,7 @@ async fn view_rfd_attr_op(
     attr: RfdAttrName,
 ) -> Result<HttpResponseOk<RfdAttr>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
-        let rfd = ctx.view_rfd(caller, rfd_number, None).await?;
+        let rfd = ctx.view_rfd(caller, rfd_number, revision).await?;
         let content = match rfd.format {
             ContentFormat::Asciidoc => RfdContent::Asciidoc(RfdAsciidoc::new(rfd.content)),
             ContentFormat::Markdown => RfdContent::Markdown(RfdMarkdown::new(rfd.content)),
@@ -427,8 +433,16 @@ async fn view_rfd_comments_op(
     caller: &Caller<RfdPermission>,
     number: String,
     revision: Option<RfdRevisionIdentifier>,
-) -> Result<HttpResponseOk<RfdWithContent>, HttpError> {
-    unimplemented!()
+) -> Result<HttpResponseOk<Vec<RfdComment>>, HttpError> {
+    if let Ok(rfd_number) = number.parse::<i32>() {
+        let comments = ctx.view_rfd_comments(caller, rfd_number, revision).await?;
+        Ok(HttpResponseOk(comments))
+    } else {
+        Err(client_error(
+            ClientErrorStatusCode::BAD_REQUEST,
+            "Malformed RFD number",
+        ))
+    }
 }
 
 #[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]

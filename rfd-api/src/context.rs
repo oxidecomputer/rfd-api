@@ -18,7 +18,8 @@ use rfd_github::{GitHubError, GitHubNewRfdNumber, GitHubRfdRepo};
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
     storage::{JobStore, RfdFilter, RfdMetaStore, RfdPdfFilter, RfdPdfStore, RfdStorage, RfdStore},
-    CommitSha, FileSha, Job, NewJob, Rfd, RfdId, RfdMeta, RfdPdf, RfdRevision, RfdRevisionId,
+    CommitSha, FileSha, Job, NewJob, Rfd, RfdComment, RfdId, RfdMeta, RfdPdf, RfdRevision,
+    RfdRevisionId,
 };
 use rsa::{
     pkcs1::{DecodeRsaPrivateKey, EncodeRsaPrivateKey},
@@ -510,6 +511,15 @@ impl RfdContext {
         .to_resource_result()?;
 
         Ok(pdfs)
+    }
+
+    pub async fn view_rfd_comments(
+        &self,
+        caller: &Caller<RfdPermission>,
+        rfd_number: i32,
+        revision: Option<RfdRevisionIdentifier>,
+    ) -> ResourceResult<Vec<RfdComment>, StoreError> {
+        unimplemented!()
     }
 
     #[instrument(skip(self, caller, content))]

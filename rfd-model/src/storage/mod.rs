@@ -12,8 +12,9 @@ use std::fmt::Debug;
 use v_model::storage::{ListPagination, StoreError};
 
 use crate::{
-    schema_ext::PdfSource, CommitSha, Job, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdId,
-    RfdMeta, RfdPdf, RfdPdfId, RfdRevision, RfdRevisionId, RfdRevisionMeta,
+    schema_ext::PdfSource, CommitSha, Job, NewJob, NewRfd, NewRfdComment, NewRfdCommentUser,
+    NewRfdPdf, NewRfdRevision, Rfd, RfdComment, RfdCommentId, RfdCommentUser, RfdCommentUserId,
+    RfdId, RfdMeta, RfdPdf, RfdPdfId, RfdRevision, RfdRevisionId, RfdRevisionMeta,
 };
 
 #[cfg(feature = "mock")]
@@ -307,4 +308,43 @@ pub trait JobStore {
     async fn upsert(&self, new_job: NewJob) -> Result<Job, StoreError>;
     async fn start(&self, id: i32) -> Result<Option<Job>, StoreError>;
     async fn complete(&self, id: i32) -> Result<Option<Job>, StoreError>;
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait RfdCommentUserStore {
+    async fn upsert(
+        &self,
+        new_rfd_comment_user: NewRfdCommentUser,
+    ) -> Result<RfdCommentUser, StoreError>;
+}
+
+#[derive(Debug, Default)]
+pub struct RfdCommentFilter {
+    pub rfd: Option<Vec<TypedUuid<RfdId>>>,
+    pub user: Option<Vec<TypedUuid<RfdCommentUserId>>>,
+}
+
+impl RfdCommentFilter {
+    pub fn rfd(mut self, rfd: Option<Vec<TypedUuid<RfdId>>>) -> Self {
+        self.rfd = rfd;
+        self
+    }
+
+    pub fn user(mut self, user: Option<Vec<TypedUuid<RfdCommentUserId>>>) -> Self {
+        self.user = user;
+        self
+    }
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait RfdCommentStore {
+    async fn list(
+        &self,
+        filters: Vec<RfdCommentFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<Job>, StoreError>;
+    async fn upsert(&self, new_rfd_comment: NewRfdComment) -> Result<RfdComment, StoreError>;
+    async fn delete(&self, id: &TypedUuid<RfdCommentId>) -> Result<Option<RfdComment>, StoreError>;
 }
