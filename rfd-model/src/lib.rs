@@ -111,6 +111,17 @@ impl From<(RfdModel, RfdRevisionMetaModel)> for RfdMeta {
     }
 }
 
+impl From<RfdMeta> for NewRfd {
+    fn from(value: RfdMeta) -> Self {
+        Self {
+            id: value.id,
+            rfd_number: value.rfd_number,
+            link: value.link,
+            visibility: value.visibility,
+        }
+    }
+}
+
 #[derive(JsonSchema)]
 pub enum RfdRevisionId {}
 impl TypedUuidKind for RfdRevisionId {

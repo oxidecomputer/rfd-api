@@ -6,13 +6,14 @@ use dropshot::{
     endpoint, ClientErrorStatusCode, HttpError, HttpResponseAccepted, HttpResponseOk, Path, Query,
     RequestContext, TypedBody,
 };
+use newtype_uuid::TypedUuid;
 use rfd_data::{
     content::{RfdAsciidoc, RfdContent, RfdDocument, RfdMarkdown},
     RfdState,
 };
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
-    Rfd,
+    Rfd, RfdRevisionId,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -23,11 +24,61 @@ use v_model::permissions::Caller;
 
 use crate::{
     caller::CallerExt,
-    context::{RfdContext, RfdWithContent, RfdWithoutContent},
+    context::{RfdContext, RfdRevisionIdentifier, RfdWithContent, RfdWithoutContent},
     permissions::RfdPermission,
     search::{MeiliSearchResult, SearchRequest},
     util::response::{client_error, internal_error, unauthorized},
 };
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct RfdPathParams {
+    /// The RFD number (examples: 1 or 123)
+    number: String,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct RfdRevisionPathParams {
+    /// The RFD number (examples: 1 or 123)
+    number: String,
+    /// The revision id of the RFD
+    revision: TypedUuid<RfdRevisionId>,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct RfdAttrPathParams {
+    /// The RFD number (examples: 1 or 123)
+    number: String,
+    /// An attribute that can be defined in an RFD document
+    attr: RfdAttrName,
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct RfdRevisionAttrPathParams {
+    /// The RFD number (examples: 1 or 123)
+    number: String,
+    /// The revision id of the RFD
+    revision: TypedUuid<RfdRevisionId>,
+    /// An attribute that can be defined in an RFD document
+    attr: RfdAttrName,
+}
+
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub enum RfdAttrName {
+    Discussion,
+    Labels,
+    State,
+}
+
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub enum RfdAttr {
+    Discussion(String),
+    Labels(String),
+    State(RfdState),
+}
+
+// Read Endpoints
 
 /// List all available RFDs
 #[trace_request]
@@ -44,6 +95,242 @@ pub async fn list_rfds(
     list_rfds_op(ctx, &caller).await
 }
 
+// Latest RFD revision endpoints
+
+/// Get the latest representation of an RFD's metadata
+#[trace_request]
+#[endpoint {
+    method = GET,
+    path = "/rfd/{number}",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn view_rfd_meta(
+    rqctx: RequestContext<RfdContext>,
+    path: Path<RfdPathParams>,
+) -> Result<HttpResponseOk<RfdWithoutContent>, HttpError> {
+    let ctx = rqctx.context();
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let path = path.into_inner();
+    view_rfd_meta_op(ctx, &caller, path.number, None).await
+}
+
+/// Get the raw contents of the latest revision of a RFD
+#[trace_request]
+#[endpoint {
+    method = GET,
+    path = "/rfd/{number}/raw",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn view_rfd(
+    rqctx: RequestContext<RfdContext>,
+    path: Path<RfdPathParams>,
+) -> Result<HttpResponseOk<RfdWithContent>, HttpError> {
+    let ctx = rqctx.context();
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let path = path.into_inner();
+    view_rfd_op(ctx, &caller, path.number, None).await
+}
+
+/// Get the PDF locations of the latest revision of a RFD
+#[trace_request]
+#[endpoint {
+    method = GET,
+    path = "/rfd/{number}/pdf",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn view_rfd_pdf(
+    rqctx: RequestContext<RfdContext>,
+    path: Path<RfdPathParams>,
+) -> Result<HttpResponseOk<RfdWithContent>, HttpError> {
+    let ctx = rqctx.context();
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let path = path.into_inner();
+    view_rfd_pdf_op(ctx, &caller, path.number, None).await
+}
+
+/// Get the an attribute of the latest revision of a RFD
+#[trace_request]
+#[endpoint {
+    method = GET,
+    path = "/rfd/{number}/attr/{attr}",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn view_rfd_attr(
+    rqctx: RequestContext<RfdContext>,
+    path: Path<RfdAttrPathParams>,
+) -> Result<HttpResponseOk<RfdAttr>, HttpError> {
+    let ctx = rqctx.context();
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let path = path.into_inner();
+    view_rfd_attr_op(ctx, &caller, path.number, None, path.attr).await
+}
+
+/// Get the comments related to the latest revision of a RFD
+#[trace_request]
+#[endpoint {
+    method = GET,
+    path = "/rfd/{number}/comments",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn view_rfd_comments(
+    rqctx: RequestContext<RfdContext>,
+    path: Path<RfdPathParams>,
+) -> Result<HttpResponseOk<()>, HttpError> {
+    unimplemented!()
+}
+
+// Specific RFD revision endpoints
+
+/// Get an RFD revision's metadata
+#[trace_request]
+#[endpoint {
+    method = GET,
+    path = "/rfd/{number}/revision/{revision}",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn view_rfd_revision_meta(
+    rqctx: RequestContext<RfdContext>,
+    path: Path<RfdRevisionPathParams>,
+) -> Result<HttpResponseOk<RfdWithoutContent>, HttpError> {
+    let ctx = rqctx.context();
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let path = path.into_inner();
+    view_rfd_meta_op(ctx, &caller, path.number, Some(path.revision.into())).await
+}
+
+/// Get the raw contents of a revision of a RFD
+#[trace_request]
+#[endpoint {
+    method = GET,
+    path = "/rfd/{number}/revision/{revision}/raw",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn view_rfd_revision(
+    rqctx: RequestContext<RfdContext>,
+    path: Path<RfdRevisionPathParams>,
+) -> Result<HttpResponseOk<RfdWithContent>, HttpError> {
+    let ctx = rqctx.context();
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let path = path.into_inner();
+    view_rfd_op(ctx, &caller, path.number, Some(path.revision.into())).await
+}
+
+/// Get the PDF locations of a revision of a RFD
+#[trace_request]
+#[endpoint {
+    method = GET,
+    path = "/rfd/{number}/revision/{revision}/pdf",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn view_rfd_revision_pdf(
+    rqctx: RequestContext<RfdContext>,
+    path: Path<RfdRevisionPathParams>,
+) -> Result<HttpResponseOk<RfdWithContent>, HttpError> {
+    let ctx = rqctx.context();
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let path = path.into_inner();
+    view_rfd_pdf_op(ctx, &caller, path.number, Some(path.revision.into())).await
+}
+
+/// Get the an attribute of a revision of a RFD
+#[trace_request]
+#[endpoint {
+    method = GET,
+    path = "/rfd/{number}/revision/{revision}/attr/{attr}",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn view_rfd_revision_attr(
+    rqctx: RequestContext<RfdContext>,
+    path: Path<RfdRevisionAttrPathParams>,
+) -> Result<HttpResponseOk<RfdAttr>, HttpError> {
+    let ctx = rqctx.context();
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let path = path.into_inner();
+    view_rfd_attr_op(
+        ctx,
+        &caller,
+        path.number,
+        Some(path.revision.into()),
+        path.attr,
+    )
+    .await
+}
+
+/// Get the comments related to a revision of a RFD
+#[trace_request]
+#[endpoint {
+    method = GET,
+    path = "/rfd/{number}/revision/{revision}/comments",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn view_rfd_revision_comments(
+    rqctx: RequestContext<RfdContext>,
+    path: Path<RfdRevisionPathParams>,
+) -> Result<HttpResponseOk<()>, HttpError> {
+    unimplemented!()
+}
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct RfdSearchQuery {
+    pub q: String,
+    pub limit: Option<u32>,
+    pub offset: Option<u32>,
+    pub highlight_pre_tag: Option<String>,
+    pub highlight_post_tag: Option<String>,
+    pub attributes_to_crop: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+pub struct SearchResults {
+    hits: Vec<SearchResultHit>,
+    query: String,
+    limit: Option<usize>,
+    offset: Option<usize>,
+}
+
+// TODO: This should be a shared type across the api and processor, but it likely needs custom
+// deserialization, serialization, and schema implementations
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+pub struct SearchResultHit {
+    pub hierarchy: [Option<String>; 6],
+    pub hierarchy_radio: [Option<String>; 6],
+    pub content: String,
+    pub object_id: String,
+    pub rfd_number: u64,
+    pub anchor: Option<String>,
+    pub url: Option<String>,
+    pub formatted: Option<FormattedSearchResultHit>,
+}
+
+#[derive(Debug, Deserialize, Serialize, JsonSchema)]
+pub struct FormattedSearchResultHit {
+    pub hierarchy: [Option<String>; 6],
+    pub hierarchy_radio: [Option<String>; 6],
+    pub content: Option<String>,
+    pub object_id: String,
+    pub rfd_number: u64,
+    pub anchor: Option<String>,
+    pub url: Option<String>,
+}
+
+/// Search the RFD index and get a list of results
+#[trace_request]
+#[endpoint {
+    method = GET,
+    path = "/rfd-search",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn search_rfds(
+    rqctx: RequestContext<RfdContext>,
+    query: Query<RfdSearchQuery>,
+) -> Result<HttpResponseOk<SearchResults>, HttpError> {
+    let ctx = rqctx.context();
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    search_rfds_op(ctx, &caller, query.into_inner()).await
+}
+
+// Read operation
+
 #[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
 async fn list_rfds_op(
     ctx: &RfdContext,
@@ -52,6 +339,163 @@ async fn list_rfds_op(
     let rfds = ctx.list_rfds(caller, None).await?;
     Ok(HttpResponseOk(rfds))
 }
+
+#[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
+async fn view_rfd_meta_op(
+    ctx: &RfdContext,
+    caller: &Caller<RfdPermission>,
+    number: String,
+    revision: Option<RfdRevisionIdentifier>,
+) -> Result<HttpResponseOk<RfdWithoutContent>, HttpError> {
+    if let Ok(rfd_number) = number.parse::<i32>() {
+        Ok(HttpResponseOk(
+            ctx.view_rfd_meta(caller, rfd_number, revision).await?,
+        ))
+    } else {
+        Err(client_error(
+            ClientErrorStatusCode::BAD_REQUEST,
+            "Malformed RFD number",
+        ))
+    }
+}
+
+#[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
+async fn view_rfd_op(
+    ctx: &RfdContext,
+    caller: &Caller<RfdPermission>,
+    number: String,
+    revision: Option<RfdRevisionIdentifier>,
+) -> Result<HttpResponseOk<RfdWithContent>, HttpError> {
+    if let Ok(rfd_number) = number.parse::<i32>() {
+        Ok(HttpResponseOk(
+            ctx.view_rfd(caller, rfd_number, revision).await?,
+        ))
+    } else {
+        Err(client_error(
+            ClientErrorStatusCode::BAD_REQUEST,
+            "Malformed RFD number",
+        ))
+    }
+}
+
+#[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
+async fn view_rfd_pdf_op(
+    ctx: &RfdContext,
+    caller: &Caller<RfdPermission>,
+    number: String,
+    revision: Option<RfdRevisionIdentifier>,
+) -> Result<HttpResponseOk<RfdWithContent>, HttpError> {
+    unimplemented!()
+}
+
+#[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
+async fn view_rfd_attr_op(
+    ctx: &RfdContext,
+    caller: &Caller<RfdPermission>,
+    number: String,
+    revision: Option<RfdRevisionIdentifier>,
+    attr: RfdAttrName,
+) -> Result<HttpResponseOk<RfdAttr>, HttpError> {
+    if let Ok(rfd_number) = number.parse::<i32>() {
+        let rfd = ctx.view_rfd(caller, rfd_number, None).await?;
+        let content = match rfd.format {
+            ContentFormat::Asciidoc => RfdContent::Asciidoc(RfdAsciidoc::new(rfd.content)),
+            ContentFormat::Markdown => RfdContent::Markdown(RfdMarkdown::new(rfd.content)),
+        };
+
+        extract_attr(&attr, &content).map(HttpResponseOk)
+    } else {
+        Err(client_error(
+            ClientErrorStatusCode::BAD_REQUEST,
+            "Malformed RFD number",
+        ))
+    }
+}
+
+#[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
+async fn view_rfd_comments_op(
+    ctx: &RfdContext,
+    caller: &Caller<RfdPermission>,
+    number: String,
+    revision: Option<RfdRevisionIdentifier>,
+) -> Result<HttpResponseOk<RfdWithContent>, HttpError> {
+    unimplemented!()
+}
+
+#[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
+async fn search_rfds_op(
+    ctx: &RfdContext,
+    caller: &Caller<RfdPermission>,
+    query: RfdSearchQuery,
+) -> Result<HttpResponseOk<SearchResults>, HttpError> {
+    // TODO: Move all of this into a ctx
+
+    // Ensure that the user has the search permission before searching
+    if caller.can(&RfdPermission::SearchRfds) {
+        tracing::debug!("Fetching from remote search API");
+
+        // Transform the inbound query into a meilisearch request
+        let mut search_request: SearchRequest = query.into();
+
+        // Construct a meilisearch formatted filter. Either the caller has permission to search across
+        // all RFDs or they access to some smaller set. If we need to filter down the RFD list we
+        // construct a filter that will search across the RFDs the caller has direct access to as
+        // well as any RFDs that are marked as publicly accessible.
+        search_request.filter = if caller.can(&RfdPermission::GetRfdsAll) {
+            None
+        } else {
+            let mut filter = "public = true".to_string();
+
+            let allowed_rfds = caller
+                .allow_rfds()
+                .iter()
+                .map(|num| num.to_string())
+                .collect::<Vec<_>>()
+                .join(", ");
+            if allowed_rfds.len() > 0 {
+                filter = filter + &format!("OR rfd_number in [{}]", allowed_rfds);
+            }
+
+            Some(filter)
+        };
+
+        // Pass the search request off to the meilisearch backend
+        let results = ctx
+            .search
+            .client
+            .search::<MeiliSearchResult>(&search_request)
+            .await;
+
+        tracing::debug!("Fetched results from remote search");
+
+        match results {
+            Ok(results) => {
+                let results = SearchResults {
+                    hits: results
+                        .hits
+                        .into_iter()
+                        .map(|hit| hit.into())
+                        .collect::<Vec<_>>(),
+                    query: results.query,
+                    limit: results.limit,
+                    offset: results.offset,
+                };
+
+                tracing::debug!(count = ?results.hits.len(), "Transformed search results");
+
+                Ok(HttpResponseOk(results))
+            }
+            Err(err) => {
+                tracing::error!(?err, "Search request failed");
+                Err(internal_error("Search failed".to_string()))
+            }
+        }
+    } else {
+        Err(unauthorized())
+    }
+}
+
+// Write Endpoints
 
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct ReserveRfdBody {
@@ -95,46 +539,6 @@ async fn reserve_rfd_op(
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
-pub struct RfdPathParams {
-    /// The RFD number (examples: 1 or 123)
-    number: String,
-}
-
-/// Get the latest representation of a RFD
-#[trace_request]
-#[endpoint {
-    method = GET,
-    path = "/rfd/{number}",
-}]
-#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
-pub async fn view_rfd(
-    rqctx: RequestContext<RfdContext>,
-    path: Path<RfdPathParams>,
-) -> Result<HttpResponseOk<RfdWithContent>, HttpError> {
-    let ctx = rqctx.context();
-    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
-    view_rfd_op(ctx, &caller, path.into_inner().number).await
-}
-
-#[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
-async fn view_rfd_op(
-    ctx: &RfdContext,
-    caller: &Caller<RfdPermission>,
-    number: String,
-) -> Result<HttpResponseOk<RfdWithContent>, HttpError> {
-    if let Ok(rfd_number) = number.parse::<i32>() {
-        Ok(HttpResponseOk(
-            ctx.view_rfd(caller, rfd_number, None).await?,
-        ))
-    } else {
-        Err(client_error(
-            ClientErrorStatusCode::BAD_REQUEST,
-            "Malformed RFD number",
-        ))
-    }
-}
-
-#[derive(Debug, Deserialize, JsonSchema)]
 pub struct RfdUpdateBody {
     /// Full Asciidoc document to store for this RFD
     document: String,
@@ -146,7 +550,7 @@ pub struct RfdUpdateBody {
 #[trace_request]
 #[endpoint {
     method = POST,
-    path = "/rfd/{number}",
+    path = "/rfd/{number}/raw",
 }]
 pub async fn set_rfd_document(
     rqctx: RequestContext<RfdContext>,
@@ -222,68 +626,6 @@ async fn set_rfd_content_op(
         )
         .await?;
         Ok(HttpResponseAccepted(()))
-    } else {
-        Err(client_error(
-            ClientErrorStatusCode::BAD_REQUEST,
-            "Malformed RFD number",
-        ))
-    }
-}
-
-#[derive(Debug, Deserialize, JsonSchema)]
-pub struct RfdAttrPathParams {
-    number: String,
-    attr: RfdAttrName,
-}
-
-#[derive(Debug, Deserialize, Serialize, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
-pub enum RfdAttrName {
-    Discussion,
-    Labels,
-    State,
-}
-
-#[derive(Debug, Deserialize, Serialize, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
-pub enum RfdAttr {
-    Discussion(String),
-    Labels(String),
-    State(RfdState),
-}
-
-/// Get an attribute of a RFD
-#[trace_request]
-#[endpoint {
-    method = GET,
-    path = "/rfd/{number}/attr/{attr}",
-}]
-#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
-pub async fn view_rfd_attr(
-    rqctx: RequestContext<RfdContext>,
-    path: Path<RfdAttrPathParams>,
-) -> Result<HttpResponseOk<RfdAttr>, HttpError> {
-    let ctx = rqctx.context();
-    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
-    let path = path.into_inner();
-    view_rfd_attr_op(ctx, &caller, path.number, path.attr).await
-}
-
-#[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
-async fn view_rfd_attr_op(
-    ctx: &RfdContext,
-    caller: &Caller<RfdPermission>,
-    number: String,
-    attr: RfdAttrName,
-) -> Result<HttpResponseOk<RfdAttr>, HttpError> {
-    if let Ok(rfd_number) = number.parse::<i32>() {
-        let rfd = ctx.view_rfd(caller, rfd_number, None).await?;
-        let content = match rfd.format {
-            ContentFormat::Asciidoc => RfdContent::Asciidoc(RfdAsciidoc::new(rfd.content)),
-            ContentFormat::Markdown => RfdContent::Markdown(RfdMarkdown::new(rfd.content)),
-        };
-
-        extract_attr(&attr, &content).map(HttpResponseOk)
     } else {
         Err(client_error(
             ClientErrorStatusCode::BAD_REQUEST,
@@ -463,138 +805,6 @@ fn extract_attr(attr: &RfdAttrName, content: &RfdContent) -> Result<RfdAttr, Htt
                     ))
                 }
             }),
-    }
-}
-
-#[derive(Debug, Deserialize, JsonSchema)]
-pub struct RfdSearchQuery {
-    pub q: String,
-    pub limit: Option<u32>,
-    pub offset: Option<u32>,
-    pub highlight_pre_tag: Option<String>,
-    pub highlight_post_tag: Option<String>,
-    pub attributes_to_crop: Option<String>,
-}
-
-/// Search the RFD index and get a list of results
-#[trace_request]
-#[endpoint {
-    method = GET,
-    path = "/rfd-search",
-}]
-#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
-pub async fn search_rfds(
-    rqctx: RequestContext<RfdContext>,
-    query: Query<RfdSearchQuery>,
-) -> Result<HttpResponseOk<SearchResults>, HttpError> {
-    let ctx = rqctx.context();
-    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
-    search_rfds_op(ctx, &caller, query.into_inner()).await
-}
-
-#[derive(Debug, Deserialize, Serialize, JsonSchema)]
-pub struct SearchResults {
-    hits: Vec<SearchResultHit>,
-    query: String,
-    limit: Option<usize>,
-    offset: Option<usize>,
-}
-
-// TODO: This should be a shared type across the api and processor, but it likely needs custom
-// deserialization, serialization, and schema implementations
-#[derive(Debug, Deserialize, Serialize, JsonSchema)]
-pub struct SearchResultHit {
-    pub hierarchy: [Option<String>; 6],
-    pub hierarchy_radio: [Option<String>; 6],
-    pub content: String,
-    pub object_id: String,
-    pub rfd_number: u64,
-    pub anchor: Option<String>,
-    pub url: Option<String>,
-    pub formatted: Option<FormattedSearchResultHit>,
-}
-
-#[derive(Debug, Deserialize, Serialize, JsonSchema)]
-pub struct FormattedSearchResultHit {
-    pub hierarchy: [Option<String>; 6],
-    pub hierarchy_radio: [Option<String>; 6],
-    pub content: Option<String>,
-    pub object_id: String,
-    pub rfd_number: u64,
-    pub anchor: Option<String>,
-    pub url: Option<String>,
-}
-
-#[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
-async fn search_rfds_op(
-    ctx: &RfdContext,
-    caller: &Caller<RfdPermission>,
-    query: RfdSearchQuery,
-) -> Result<HttpResponseOk<SearchResults>, HttpError> {
-    // TODO: Move all of this into a ctx
-
-    // Ensure that the user has the search permission before searching
-    if caller.can(&RfdPermission::SearchRfds) {
-        tracing::debug!("Fetching from remote search API");
-
-        // Transform the inbound query into a meilisearch request
-        let mut search_request: SearchRequest = query.into();
-
-        // Construct a meilisearch formatted filter. Either the caller has permission to search across
-        // all RFDs or they access to some smaller set. If we need to filter down the RFD list we
-        // construct a filter that will search across the RFDs the caller has direct access to as
-        // well as any RFDs that are marked as publicly accessible.
-        search_request.filter = if caller.can(&RfdPermission::GetRfdsAll) {
-            None
-        } else {
-            let mut filter = "public = true".to_string();
-
-            let allowed_rfds = caller
-                .allow_rfds()
-                .iter()
-                .map(|num| num.to_string())
-                .collect::<Vec<_>>()
-                .join(", ");
-            if allowed_rfds.len() > 0 {
-                filter = filter + &format!("OR rfd_number in [{}]", allowed_rfds);
-            }
-
-            Some(filter)
-        };
-
-        // Pass the search request off to the meilisearch backend
-        let results = ctx
-            .search
-            .client
-            .search::<MeiliSearchResult>(&search_request)
-            .await;
-
-        tracing::debug!("Fetched results from remote search");
-
-        match results {
-            Ok(results) => {
-                let results = SearchResults {
-                    hits: results
-                        .hits
-                        .into_iter()
-                        .map(|hit| hit.into())
-                        .collect::<Vec<_>>(),
-                    query: results.query,
-                    limit: results.limit,
-                    offset: results.offset,
-                };
-
-                tracing::debug!(count = ?results.hits.len(), "Transformed search results");
-
-                Ok(HttpResponseOk(results))
-            }
-            Err(err) => {
-                tracing::error!(?err, "Search request failed");
-                Err(internal_error("Search failed".to_string()))
-            }
-        }
-    } else {
-        Err(unauthorized())
     }
 }
 
@@ -1030,12 +1240,12 @@ mod tests {
         let ctx = ctx().await;
         let caller = Caller::from(Permissions::from(vec![RfdPermission::GetRfdsAll]));
 
-        let HttpResponseOk(rfd) = view_rfd_op(&ctx, &caller, "0123".to_string())
+        let HttpResponseOk(rfd) = view_rfd_op(&ctx, &caller, "0123".to_string(), None)
             .await
             .unwrap();
         assert_eq!(123, rfd.rfd_number);
 
-        let HttpResponseOk(rfd) = view_rfd_op(&ctx, &caller, "0456".to_string())
+        let HttpResponseOk(rfd) = view_rfd_op(&ctx, &caller, "0456".to_string(), None)
             .await
             .unwrap();
         assert_eq!(456, rfd.rfd_number);
@@ -1059,12 +1269,12 @@ mod tests {
         let ctx = ctx().await;
         let caller = Caller::from(Permissions::from(vec![RfdPermission::GetRfd(123)]));
 
-        let HttpResponseOk(rfd) = view_rfd_op(&ctx, &caller, "0123".to_string())
+        let HttpResponseOk(rfd) = view_rfd_op(&ctx, &caller, "0123".to_string(), None)
             .await
             .unwrap();
         assert_eq!(123, rfd.rfd_number);
 
-        let HttpResponseOk(rfd) = view_rfd_op(&ctx, &caller, "0456".to_string())
+        let HttpResponseOk(rfd) = view_rfd_op(&ctx, &caller, "0456".to_string(), None)
             .await
             .unwrap();
         assert_eq!(456, rfd.rfd_number);
@@ -1087,7 +1297,7 @@ mod tests {
         let ctx = ctx().await;
         let caller = Caller::from(Permissions::<RfdPermission>::new());
 
-        let result = view_rfd_op(&ctx, &caller, "0123".to_string()).await;
+        let result = view_rfd_op(&ctx, &caller, "0123".to_string(), None).await;
 
         match result {
             Err(err) => assert_eq!(StatusCode::NOT_FOUND, err.status_code),
@@ -1117,7 +1327,7 @@ mod tests {
         let ctx = ctx().await;
         let caller = ctx.v_ctx().builtin_unauthenticated_caller();
 
-        let result = view_rfd_op(&ctx, &caller, "0123".to_string()).await;
+        let result = view_rfd_op(&ctx, &caller, "0123".to_string(), None).await;
         match result {
             Err(err) => assert_eq!(StatusCode::NOT_FOUND, err.status_code),
             Ok(response) => panic!(
