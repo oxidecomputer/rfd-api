@@ -15,10 +15,10 @@ use v_api::{inject_endpoints, v_system_endpoints};
 use crate::{
     context::RfdContext,
     endpoints::{
-        meta::get_rfd_meta,
+        meta::view_rfd_meta,
         rfd::{
-            discuss_rfd, get_rfd, get_rfd_attr, get_rfds, publish_rfd, reserve_rfd, search_rfds,
-            set_rfd_attr, set_rfd_content, set_rfd_document, update_rfd_visibility,
+            discuss_rfd, list_rfds, publish_rfd, reserve_rfd, search_rfds, set_rfd_attr,
+            set_rfd_content, set_rfd_document, update_rfd_visibility, view_rfd, view_rfd_attr,
         },
         webhook::github_webhook,
     },
@@ -74,9 +74,10 @@ pub fn server(
     inject_endpoints!(api);
 
     // RFDs
-    api.register(get_rfds).expect("Failed to register endpoint");
-    api.register(get_rfd).expect("Failed to register endpoint");
-    api.register(get_rfd_meta)
+    api.register(list_rfds)
+        .expect("Failed to register endpoint");
+    api.register(view_rfd).expect("Failed to register endpoint");
+    api.register(view_rfd_meta)
         .expect("Failed to register endpoint");
     api.register(reserve_rfd)
         .expect("Failed to register endpoint");
@@ -84,7 +85,7 @@ pub fn server(
         .expect("Failed to register endpoint");
     api.register(set_rfd_content)
         .expect("Failed to register endpoint");
-    api.register(get_rfd_attr)
+    api.register(view_rfd_attr)
         .expect("Failed to register endpoint");
     api.register(set_rfd_attr)
         .expect("Failed to register endpoint");

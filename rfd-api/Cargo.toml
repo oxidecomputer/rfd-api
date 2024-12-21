@@ -9,8 +9,10 @@ local-dev = ["v-api/local-dev"]
 
 [dependencies]
 anyhow = { workspace = true }
+async-bb8-diesel = { workspace = true }
 async-trait = { workspace = true }
 base64 = { workspace = true }
+bb8 = { workspace = true }
 chrono = { workspace = true, features = ["serde"] }
 config = { workspace = true }
 cookie = { workspace = true }
