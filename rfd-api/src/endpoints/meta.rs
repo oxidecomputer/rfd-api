@@ -11,7 +11,7 @@ use v_api::ApiContext;
 use v_model::permissions::Caller;
 
 use crate::{
-    context::{RfdContext, RfdMeta},
+    context::{RfdContext, RfdWithoutContent},
     permissions::RfdPermission,
     util::response::client_error,
 };
@@ -29,24 +29,24 @@ pub struct RfdPathParams {
     path = "/meta/rfd/{number}",
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
-pub async fn get_rfd_meta(
+pub async fn view_rfd_meta(
     rqctx: RequestContext<RfdContext>,
     path: Path<RfdPathParams>,
-) -> Result<HttpResponseOk<RfdMeta>, HttpError> {
+) -> Result<HttpResponseOk<RfdWithoutContent>, HttpError> {
     let ctx = rqctx.context();
     let caller = ctx.v_ctx().get_caller(&rqctx).await?;
-    get_rfd_meta_op(ctx, &caller, path.into_inner().number).await
+    view_rfd_meta_op(ctx, &caller, path.into_inner().number).await
 }
 
 #[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
-async fn get_rfd_meta_op(
+async fn view_rfd_meta_op(
     ctx: &RfdContext,
     caller: &Caller<RfdPermission>,
     number: String,
-) -> Result<HttpResponseOk<RfdMeta>, HttpError> {
+) -> Result<HttpResponseOk<RfdWithoutContent>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
         Ok(HttpResponseOk(
-            ctx.get_rfd_meta(caller, rfd_number, None).await?,
+            ctx.view_rfd_meta(caller, rfd_number, None).await?,
         ))
     } else {
         Err(client_error(
@@ -65,19 +65,17 @@ mod tests {
     use http::StatusCode;
     use newtype_uuid::{GenericUuid, TypedUuid};
     use rfd_model::{
-        storage::{MockRfdRevisionMetaStore, MockRfdStore},
-        Rfd, RfdRevisionMeta,
+        schema_ext::ContentFormat,
+        storage::{mock::MockStorage, MockRfdRevisionMetaStore, MockRfdStore},
+        CommitSha, FileSha, Rfd, RfdRevision, RfdRevisionMeta,
     };
     use uuid::Uuid;
     use v_api::ApiContext;
     use v_model::{permissions::Caller, Permissions};
 
     use crate::{
-        context::{
-            test_mocks::{mock_context, MockStorage},
-            RfdContext,
-        },
-        endpoints::meta::get_rfd_meta_op,
+        context::{test_mocks::mock_context, RfdContext},
+        endpoints::meta::view_rfd_meta_op,
         permissions::RfdPermission,
     };
 
@@ -93,6 +91,23 @@ mod tests {
                     id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
                     rfd_number: 123,
                     link: None,
+                    content: RfdRevision {
+                        id: TypedUuid::new_v4(),
+                        rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
+                        title: String::new(),
+                        state: None,
+                        discussion: None,
+                        authors: None,
+                        labels: None,
+                        content: String::new(),
+                        content_format: ContentFormat::Asciidoc,
+                        sha: FileSha(String::new()),
+                        commit: CommitSha(String::new()),
+                        committed_at: Utc::now(),
+                        created_at: Utc::now(),
+                        updated_at: Utc::now(),
+                        deleted_at: None,
+                    },
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,
@@ -102,6 +117,23 @@ mod tests {
                     id: TypedUuid::from_untyped_uuid(public_rfd_id),
                     rfd_number: 456,
                     link: None,
+                    content: RfdRevision {
+                        id: TypedUuid::new_v4(),
+                        rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
+                        title: String::new(),
+                        state: None,
+                        discussion: None,
+                        authors: None,
+                        labels: None,
+                        content: String::new(),
+                        content_format: ContentFormat::Asciidoc,
+                        sha: FileSha(String::new()),
+                        commit: CommitSha(String::new()),
+                        committed_at: Utc::now(),
+                        created_at: Utc::now(),
+                        updated_at: Utc::now(),
+                        deleted_at: None,
+                    },
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,
@@ -111,6 +143,23 @@ mod tests {
                     id: TypedUuid::from_untyped_uuid(private_rfd_id_2),
                     rfd_number: 789,
                     link: None,
+                    content: RfdRevision {
+                        id: TypedUuid::new_v4(),
+                        rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
+                        title: String::new(),
+                        state: None,
+                        discussion: None,
+                        authors: None,
+                        labels: None,
+                        content: String::new(),
+                        content_format: ContentFormat::Asciidoc,
+                        sha: FileSha(String::new()),
+                        commit: CommitSha(String::new()),
+                        committed_at: Utc::now(),
+                        created_at: Utc::now(),
+                        updated_at: Utc::now(),
+                        deleted_at: None,
+                    },
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,
@@ -206,12 +255,12 @@ mod tests {
         let ctx = ctx().await;
         let caller = Caller::from(Permissions::from(vec![RfdPermission::GetRfdsAll]));
 
-        let HttpResponseOk(rfd) = get_rfd_meta_op(&ctx, &caller, "0123".to_string())
+        let HttpResponseOk(rfd) = view_rfd_meta_op(&ctx, &caller, "0123".to_string())
             .await
             .unwrap();
         assert_eq!(123, rfd.rfd_number);
 
-        let HttpResponseOk(rfd) = get_rfd_meta_op(&ctx, &caller, "0456".to_string())
+        let HttpResponseOk(rfd) = view_rfd_meta_op(&ctx, &caller, "0456".to_string())
             .await
             .unwrap();
         assert_eq!(456, rfd.rfd_number);
@@ -224,12 +273,12 @@ mod tests {
         let ctx = ctx().await;
         let caller = Caller::from(Permissions::from(vec![RfdPermission::GetRfd(123)]));
 
-        let HttpResponseOk(rfd) = get_rfd_meta_op(&ctx, &caller, "0123".to_string())
+        let HttpResponseOk(rfd) = view_rfd_meta_op(&ctx, &caller, "0123".to_string())
             .await
             .unwrap();
         assert_eq!(123, rfd.rfd_number);
 
-        let HttpResponseOk(rfd) = get_rfd_meta_op(&ctx, &caller, "0456".to_string())
+        let HttpResponseOk(rfd) = view_rfd_meta_op(&ctx, &caller, "0456".to_string())
             .await
             .unwrap();
         assert_eq!(456, rfd.rfd_number);
@@ -242,7 +291,7 @@ mod tests {
         let ctx = ctx().await;
         let caller = Caller::from(Permissions::<RfdPermission>::new());
 
-        let result = get_rfd_meta_op(&ctx, &caller, "0123".to_string()).await;
+        let result = view_rfd_meta_op(&ctx, &caller, "0123".to_string()).await;
 
         match result {
             Err(err) => assert_eq!(StatusCode::NOT_FOUND, err.status_code),
@@ -260,7 +309,7 @@ mod tests {
         let ctx = ctx().await;
         let caller = ctx.v_ctx().builtin_unauthenticated_caller();
 
-        let result = get_rfd_meta_op(&ctx, &caller, "0123".to_string()).await;
+        let result = view_rfd_meta_op(&ctx, &caller, "0123".to_string()).await;
         match result {
             Err(err) => assert_eq!(StatusCode::NOT_FOUND, err.status_code),
             Ok(response) => panic!(

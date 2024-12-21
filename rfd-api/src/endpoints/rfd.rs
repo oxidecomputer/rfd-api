@@ -23,7 +23,7 @@ use v_model::permissions::Caller;
 
 use crate::{
     caller::CallerExt,
-    context::{FullRfd, RfdContext, RfdMeta},
+    context::{RfdContext, RfdWithContent, RfdWithoutContent},
     permissions::RfdPermission,
     search::{MeiliSearchResult, SearchRequest},
     util::response::{client_error, internal_error, unauthorized},
@@ -36,19 +36,19 @@ use crate::{
     path = "/rfd",
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
-pub async fn get_rfds(
+pub async fn list_rfds(
     rqctx: RequestContext<RfdContext>,
-) -> Result<HttpResponseOk<Vec<RfdMeta>>, HttpError> {
+) -> Result<HttpResponseOk<Vec<RfdWithoutContent>>, HttpError> {
     let ctx = rqctx.context();
     let caller = ctx.v_ctx().get_caller(&rqctx).await?;
-    get_rfds_op(ctx, &caller).await
+    list_rfds_op(ctx, &caller).await
 }
 
 #[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
-async fn get_rfds_op(
+async fn list_rfds_op(
     ctx: &RfdContext,
     caller: &Caller<RfdPermission>,
-) -> Result<HttpResponseOk<Vec<RfdMeta>>, HttpError> {
+) -> Result<HttpResponseOk<Vec<RfdWithoutContent>>, HttpError> {
     let rfds = ctx.list_rfds(caller, None).await?;
     Ok(HttpResponseOk(rfds))
 }
@@ -107,23 +107,25 @@ pub struct RfdPathParams {
     path = "/rfd/{number}",
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
-pub async fn get_rfd(
+pub async fn view_rfd(
     rqctx: RequestContext<RfdContext>,
     path: Path<RfdPathParams>,
-) -> Result<HttpResponseOk<FullRfd>, HttpError> {
+) -> Result<HttpResponseOk<RfdWithContent>, HttpError> {
     let ctx = rqctx.context();
     let caller = ctx.v_ctx().get_caller(&rqctx).await?;
-    get_rfd_op(ctx, &caller, path.into_inner().number).await
+    view_rfd_op(ctx, &caller, path.into_inner().number).await
 }
 
 #[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
-async fn get_rfd_op(
+async fn view_rfd_op(
     ctx: &RfdContext,
     caller: &Caller<RfdPermission>,
     number: String,
-) -> Result<HttpResponseOk<FullRfd>, HttpError> {
+) -> Result<HttpResponseOk<RfdWithContent>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
-        Ok(HttpResponseOk(ctx.get_rfd(caller, rfd_number, None).await?))
+        Ok(HttpResponseOk(
+            ctx.view_rfd(caller, rfd_number, None).await?,
+        ))
     } else {
         Err(client_error(
             ClientErrorStatusCode::BAD_REQUEST,
@@ -257,25 +259,25 @@ pub enum RfdAttr {
     path = "/rfd/{number}/attr/{attr}",
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
-pub async fn get_rfd_attr(
+pub async fn view_rfd_attr(
     rqctx: RequestContext<RfdContext>,
     path: Path<RfdAttrPathParams>,
 ) -> Result<HttpResponseOk<RfdAttr>, HttpError> {
     let ctx = rqctx.context();
     let caller = ctx.v_ctx().get_caller(&rqctx).await?;
     let path = path.into_inner();
-    get_rfd_attr_op(ctx, &caller, path.number, path.attr).await
+    view_rfd_attr_op(ctx, &caller, path.number, path.attr).await
 }
 
 #[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
-async fn get_rfd_attr_op(
+async fn view_rfd_attr_op(
     ctx: &RfdContext,
     caller: &Caller<RfdPermission>,
     number: String,
     attr: RfdAttrName,
 ) -> Result<HttpResponseOk<RfdAttr>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
-        let rfd = ctx.get_rfd(caller, rfd_number, None).await?;
+        let rfd = ctx.view_rfd(caller, rfd_number, None).await?;
         let content = match rfd.format {
             ContentFormat::Asciidoc => RfdContent::Asciidoc(RfdAsciidoc::new(rfd.content)),
             ContentFormat::Markdown => RfdContent::Markdown(RfdMarkdown::new(rfd.content)),
@@ -326,7 +328,7 @@ async fn set_rfd_attr_op(
 ) -> Result<HttpResponseAccepted<RfdAttr>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
         // Get the latest revision
-        let revision = ctx.get_rfd_revision(caller, rfd_number, None).await?;
+        let revision = ctx.view_rfd_revision(caller, rfd_number, None).await?;
 
         // TODO: Get rid of these clones
         let mut content = match revision.content_format {
@@ -648,23 +650,24 @@ mod tests {
     use http::StatusCode;
     use newtype_uuid::{GenericUuid, TypedUuid};
     use rfd_model::{
-        storage::{MockRfdPdfStore, MockRfdRevisionMetaStore, MockRfdRevisionStore, MockRfdStore},
-        Rfd, RfdRevision, RfdRevisionMeta,
+        schema_ext::ContentFormat,
+        storage::{
+            mock::MockStorage, MockRfdPdfStore, MockRfdRevisionMetaStore, MockRfdRevisionStore,
+            MockRfdStore,
+        },
+        CommitSha, FileSha, Rfd, RfdRevision, RfdRevisionMeta,
     };
     use uuid::Uuid;
     use v_api::ApiContext;
     use v_model::{permissions::Caller, Permissions};
 
     use crate::{
-        context::{
-            test_mocks::{mock_context, MockStorage},
-            RfdContext,
-        },
-        endpoints::rfd::get_rfd_op,
+        context::{test_mocks::mock_context, RfdContext},
+        endpoints::rfd::view_rfd_op,
         permissions::RfdPermission,
     };
 
-    use super::get_rfds_op;
+    use super::list_rfds_op;
 
     async fn ctx() -> RfdContext {
         let private_rfd_id_1 = Uuid::new_v4();
@@ -678,6 +681,23 @@ mod tests {
                     id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
                     rfd_number: 123,
                     link: None,
+                    content: RfdRevision {
+                        id: TypedUuid::new_v4(),
+                        rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
+                        title: String::new(),
+                        state: None,
+                        discussion: None,
+                        authors: None,
+                        labels: None,
+                        content: String::new(),
+                        content_format: ContentFormat::Asciidoc,
+                        sha: FileSha(String::new()),
+                        commit: CommitSha(String::new()),
+                        committed_at: Utc::now(),
+                        created_at: Utc::now(),
+                        updated_at: Utc::now(),
+                        deleted_at: None,
+                    },
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,
@@ -687,6 +707,23 @@ mod tests {
                     id: TypedUuid::from_untyped_uuid(public_rfd_id),
                     rfd_number: 456,
                     link: None,
+                    content: RfdRevision {
+                        id: TypedUuid::new_v4(),
+                        rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
+                        title: String::new(),
+                        state: None,
+                        discussion: None,
+                        authors: None,
+                        labels: None,
+                        content: String::new(),
+                        content_format: ContentFormat::Asciidoc,
+                        sha: FileSha(String::new()),
+                        commit: CommitSha(String::new()),
+                        committed_at: Utc::now(),
+                        created_at: Utc::now(),
+                        updated_at: Utc::now(),
+                        deleted_at: None,
+                    },
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,
@@ -696,6 +733,23 @@ mod tests {
                     id: TypedUuid::from_untyped_uuid(private_rfd_id_2),
                     rfd_number: 789,
                     link: None,
+                    content: RfdRevision {
+                        id: TypedUuid::new_v4(),
+                        rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
+                        title: String::new(),
+                        state: None,
+                        discussion: None,
+                        authors: None,
+                        labels: None,
+                        content: String::new(),
+                        content_format: ContentFormat::Asciidoc,
+                        sha: FileSha(String::new()),
+                        commit: CommitSha(String::new()),
+                        committed_at: Utc::now(),
+                        created_at: Utc::now(),
+                        updated_at: Utc::now(),
+                        deleted_at: None,
+                    },
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,
@@ -866,7 +920,7 @@ mod tests {
         let ctx = ctx().await;
         let caller = Caller::from(Permissions::from(vec![RfdPermission::GetRfdsAll]));
 
-        let HttpResponseOk(rfds) = get_rfds_op(&ctx, &caller).await.unwrap();
+        let HttpResponseOk(rfds) = list_rfds_op(&ctx, &caller).await.unwrap();
         assert_eq!(3, rfds.len());
         assert_eq!(789, rfds[0].rfd_number);
         assert_eq!(456, rfds[1].rfd_number);
@@ -874,14 +928,18 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn get_rfd_via_all_permission() {
+    async fn view_rfd_via_all_permission() {
         let ctx = ctx().await;
         let caller = Caller::from(Permissions::from(vec![RfdPermission::GetRfdsAll]));
 
-        let HttpResponseOk(rfd) = get_rfd_op(&ctx, &caller, "0123".to_string()).await.unwrap();
+        let HttpResponseOk(rfd) = view_rfd_op(&ctx, &caller, "0123".to_string())
+            .await
+            .unwrap();
         assert_eq!(123, rfd.rfd_number);
 
-        let HttpResponseOk(rfd) = get_rfd_op(&ctx, &caller, "0456".to_string()).await.unwrap();
+        let HttpResponseOk(rfd) = view_rfd_op(&ctx, &caller, "0456".to_string())
+            .await
+            .unwrap();
         assert_eq!(456, rfd.rfd_number);
     }
 
@@ -892,21 +950,25 @@ mod tests {
         let ctx = ctx().await;
         let caller = Caller::from(Permissions::from(vec![RfdPermission::GetRfd(123)]));
 
-        let HttpResponseOk(rfds) = get_rfds_op(&ctx, &caller).await.unwrap();
+        let HttpResponseOk(rfds) = list_rfds_op(&ctx, &caller).await.unwrap();
         assert_eq!(2, rfds.len());
         assert_eq!(456, rfds[0].rfd_number);
         assert_eq!(123, rfds[1].rfd_number);
     }
 
     #[tokio::test]
-    async fn get_rfd_with_direct_permission() {
+    async fn view_rfd_with_direct_permission() {
         let ctx = ctx().await;
         let caller = Caller::from(Permissions::from(vec![RfdPermission::GetRfd(123)]));
 
-        let HttpResponseOk(rfd) = get_rfd_op(&ctx, &caller, "0123".to_string()).await.unwrap();
+        let HttpResponseOk(rfd) = view_rfd_op(&ctx, &caller, "0123".to_string())
+            .await
+            .unwrap();
         assert_eq!(123, rfd.rfd_number);
 
-        let HttpResponseOk(rfd) = get_rfd_op(&ctx, &caller, "0456".to_string()).await.unwrap();
+        let HttpResponseOk(rfd) = view_rfd_op(&ctx, &caller, "0456".to_string())
+            .await
+            .unwrap();
         assert_eq!(456, rfd.rfd_number);
     }
 
@@ -917,17 +979,17 @@ mod tests {
         let ctx = ctx().await;
         let caller = Caller::from(Permissions::<RfdPermission>::new());
 
-        let HttpResponseOk(rfds) = get_rfds_op(&ctx, &caller).await.unwrap();
+        let HttpResponseOk(rfds) = list_rfds_op(&ctx, &caller).await.unwrap();
         assert_eq!(1, rfds.len());
         assert_eq!(456, rfds[0].rfd_number);
     }
 
     #[tokio::test]
-    async fn get_rfd_without_permission() {
+    async fn view_rfd_without_permission() {
         let ctx = ctx().await;
         let caller = Caller::from(Permissions::<RfdPermission>::new());
 
-        let result = get_rfd_op(&ctx, &caller, "0123".to_string()).await;
+        let result = view_rfd_op(&ctx, &caller, "0123".to_string()).await;
 
         match result {
             Err(err) => assert_eq!(StatusCode::NOT_FOUND, err.status_code),
@@ -944,19 +1006,20 @@ mod tests {
     async fn list_rfds_as_unauthenticated() {
         let ctx = ctx().await;
 
-        let HttpResponseOk(rfds) = get_rfds_op(&ctx, &ctx.v_ctx().builtin_unauthenticated_caller())
-            .await
-            .unwrap();
+        let HttpResponseOk(rfds) =
+            list_rfds_op(&ctx, &ctx.v_ctx().builtin_unauthenticated_caller())
+                .await
+                .unwrap();
         assert_eq!(1, rfds.len());
         assert_eq!(456, rfds[0].rfd_number);
     }
 
     #[tokio::test]
-    async fn get_rfd_as_unauthenticated() {
+    async fn view_rfd_as_unauthenticated() {
         let ctx = ctx().await;
         let caller = ctx.v_ctx().builtin_unauthenticated_caller();
 
-        let result = get_rfd_op(&ctx, &caller, "0123".to_string()).await;
+        let result = view_rfd_op(&ctx, &caller, "0123".to_string()).await;
         match result {
             Err(err) => assert_eq!(StatusCode::NOT_FOUND, err.status_code),
             Ok(response) => panic!(

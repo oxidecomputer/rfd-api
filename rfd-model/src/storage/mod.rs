@@ -12,16 +12,45 @@ use std::fmt::Debug;
 use v_model::storage::{ListPagination, StoreError};
 
 use crate::{
-    schema_ext::PdfSource, Job, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdId, RfdPdf,
-    RfdPdfId, RfdRevision, RfdRevisionId, RfdRevisionMeta,
+    schema_ext::PdfSource, Job, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdId, RfdMeta,
+    RfdPdf, RfdPdfId, RfdRevision, RfdRevisionId, RfdRevisionMeta,
 };
 
+#[cfg(feature = "mock")]
+pub mod mock;
 pub mod postgres;
+
+pub trait RfdStorage:
+    RfdStore
+    + RfdMetaStore
+    + RfdRevisionStore
+    + RfdRevisionMetaStore
+    + RfdPdfStore
+    + JobStore
+    + Send
+    + Sync
+    + 'static
+{
+}
+impl<T> RfdStorage for T where
+    T: RfdStore
+        + RfdMetaStore
+        + RfdRevisionStore
+        + RfdRevisionMetaStore
+        + RfdPdfStore
+        + JobStore
+        + Send
+        + Sync
+        + 'static
+{
+}
 
 #[derive(Debug, Default)]
 pub struct RfdFilter {
     pub id: Option<Vec<TypedUuid<RfdId>>>,
+    pub revision: Option<Vec<TypedUuid<RfdRevisionId>>>,
     pub rfd_number: Option<Vec<i32>>,
+    pub sha: Option<Vec<String>>,
     pub public: Option<bool>,
     pub deleted: bool,
 }
@@ -32,8 +61,18 @@ impl RfdFilter {
         self
     }
 
+    pub fn revision(mut self, revision: Option<Vec<TypedUuid<RfdRevisionId>>>) -> Self {
+        self.revision = revision;
+        self
+    }
+
     pub fn rfd_number(mut self, rfd_number: Option<Vec<i32>>) -> Self {
         self.rfd_number = rfd_number;
+        self
+    }
+
+    pub fn sha(mut self, sha: Option<Vec<String>>) -> Self {
+        self.sha = sha;
         self
     }
 
@@ -51,7 +90,12 @@ impl RfdFilter {
 #[cfg_attr(feature = "mock", automock)]
 #[async_trait]
 pub trait RfdStore {
-    async fn get(&self, id: &TypedUuid<RfdId>, deleted: bool) -> Result<Option<Rfd>, StoreError>;
+    async fn get(
+        &self,
+        id: &TypedUuid<RfdId>,
+        revision: Option<TypedUuid<RfdRevisionId>>,
+        deleted: bool,
+    ) -> Result<Option<Rfd>, StoreError>;
     async fn list(
         &self,
         filter: RfdFilter,
@@ -59,6 +103,22 @@ pub trait RfdStore {
     ) -> Result<Vec<Rfd>, StoreError>;
     async fn upsert(&self, new_rfd: NewRfd) -> Result<Rfd, StoreError>;
     async fn delete(&self, id: &TypedUuid<RfdId>) -> Result<Option<Rfd>, StoreError>;
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait RfdMetaStore {
+    async fn get(
+        &self,
+        id: TypedUuid<RfdId>,
+        revision: Option<TypedUuid<RfdRevisionId>>,
+        deleted: bool,
+    ) -> Result<Option<RfdMeta>, StoreError>;
+    async fn list(
+        &self,
+        filter: RfdFilter,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdMeta>, StoreError>;
 }
 
 // TODO: Make the revision store generic over a revision type. We want to be able to have a metadata

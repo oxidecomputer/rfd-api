@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use chrono::{DateTime, Utc};
-use diesel::{Insertable, Queryable};
+use diesel::{Insertable, Queryable, Selectable};
 use partial_struct::partial;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
@@ -13,7 +13,7 @@ use crate::{
     schema_ext::{ContentFormat, PdfSource, Visibility},
 };
 
-#[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[derive(Debug, Deserialize, Serialize, Queryable, Insertable, Selectable)]
 #[diesel(table_name = rfd)]
 pub struct RfdModel {
     pub id: Uuid,
@@ -26,7 +26,7 @@ pub struct RfdModel {
 }
 
 #[partial(RfdRevisionMetaModel)]
-#[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[derive(Debug, Deserialize, Serialize, Queryable, Insertable, Selectable)]
 #[diesel(table_name = rfd_revision)]
 pub struct RfdRevisionModel {
     pub id: Uuid,
