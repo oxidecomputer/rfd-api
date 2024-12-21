@@ -17,7 +17,10 @@ use rfd_data::{
 use rfd_github::{GitHubError, GitHubNewRfdNumber, GitHubRfdRepo};
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
-    storage::{JobStore, RfdFilter, RfdMetaStore, RfdPdfFilter, RfdPdfStore, RfdStorage, RfdStore},
+    storage::{
+        JobStore, RfdCommentFilter, RfdCommentStore, RfdFilter, RfdMetaStore, RfdPdfFilter,
+        RfdPdfStore, RfdStorage, RfdStore,
+    },
     CommitSha, FileSha, Job, NewJob, Rfd, RfdComment, RfdId, RfdMeta, RfdPdf, RfdRevision,
     RfdRevisionId,
 };
@@ -519,7 +522,17 @@ impl RfdContext {
         rfd_number: i32,
         revision: Option<RfdRevisionIdentifier>,
     ) -> ResourceResult<Vec<RfdComment>, StoreError> {
-        unimplemented!()
+        let rfd = self.get_rfd_meta(caller, rfd_number, revision).await?;
+        let comments = RfdCommentStore::list(
+            &*self.storage,
+            vec![RfdCommentFilter::default()
+                .rfd(Some(vec![rfd.id]))
+                .comment_created_before(Some(rfd.content.committed_at))],
+            &ListPagination::unlimited(),
+        )
+        .await
+        .to_resource_result()?;
+        Ok(comments)
     }
 
     #[instrument(skip(self, caller, content))]

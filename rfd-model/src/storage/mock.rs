@@ -8,14 +8,17 @@ use std::sync::Arc;
 use v_model::storage::StoreError;
 
 use crate::{
-    Job, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdId, RfdMeta, RfdPdf, RfdPdfId,
-    RfdRevision, RfdRevisionId, RfdRevisionMeta,
+    Job, NewJob, NewRfd, NewRfdComment, NewRfdCommentUser, NewRfdPdf, NewRfdRevision, Rfd,
+    RfdComment, RfdCommentId, RfdCommentUser, RfdId, RfdMeta, RfdPdf, RfdPdfId, RfdRevision,
+    RfdRevisionId, RfdRevisionMeta,
 };
 
 use super::{
-    JobFilter, JobStore, ListPagination, MockJobStore, MockRfdMetaStore, MockRfdPdfStore,
-    MockRfdRevisionMetaStore, MockRfdRevisionStore, MockRfdStore, RfdFilter, RfdMetaStore,
-    RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionMetaStore, RfdRevisionStore, RfdStore,
+    JobFilter, JobStore, ListPagination, MockJobStore, MockRfdCommentStore,
+    MockRfdCommentUserStore, MockRfdMetaStore, MockRfdPdfStore, MockRfdRevisionMetaStore,
+    MockRfdRevisionStore, MockRfdStore, RfdCommentFilter, RfdCommentStore, RfdCommentUserStore,
+    RfdFilter, RfdMetaStore, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionMetaStore,
+    RfdRevisionStore, RfdStore,
 };
 
 pub struct MockStorage {
@@ -25,6 +28,8 @@ pub struct MockStorage {
     pub rfd_revision_meta_store: Option<Arc<MockRfdRevisionMetaStore>>,
     pub rfd_pdf_store: Option<Arc<MockRfdPdfStore>>,
     pub job_store: Option<Arc<MockJobStore>>,
+    pub rfd_comment_user_store: Option<Arc<MockRfdCommentUserStore>>,
+    pub rfd_comment_store: Option<Arc<MockRfdCommentStore>>,
 }
 
 impl MockStorage {
@@ -36,6 +41,8 @@ impl MockStorage {
             rfd_revision_meta_store: None,
             rfd_pdf_store: None,
             job_store: None,
+            rfd_comment_user_store: None,
+            rfd_comment_store: None,
         }
     }
 }
@@ -232,5 +239,46 @@ impl JobStore for MockStorage {
 
     async fn complete(&self, id: i32) -> Result<Option<Job>, StoreError> {
         self.job_store.as_ref().unwrap().complete(id).await
+    }
+}
+
+#[async_trait]
+impl RfdCommentUserStore for MockStorage {
+    async fn upsert(
+        &self,
+        new_rfd_comment_user: NewRfdCommentUser,
+    ) -> Result<RfdCommentUser, StoreError> {
+        self.rfd_comment_user_store
+            .as_ref()
+            .unwrap()
+            .upsert(new_rfd_comment_user)
+            .await
+    }
+}
+
+#[async_trait]
+impl RfdCommentStore for MockStorage {
+    async fn list(
+        &self,
+        filters: Vec<RfdCommentFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdComment>, StoreError> {
+        self.rfd_comment_store
+            .as_ref()
+            .unwrap()
+            .list(filters, pagination)
+            .await
+    }
+
+    async fn upsert(&self, new_rfd_comment: NewRfdComment) -> Result<RfdComment, StoreError> {
+        self.rfd_comment_store
+            .as_ref()
+            .unwrap()
+            .upsert(new_rfd_comment)
+            .await
+    }
+
+    async fn delete(&self, id: &TypedUuid<RfdCommentId>) -> Result<Option<RfdComment>, StoreError> {
+        self.rfd_comment_store.as_ref().unwrap().delete(id).await
     }
 }

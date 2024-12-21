@@ -766,7 +766,7 @@ impl RfdCommentStore for PostgresStore {
         &self,
         filters: Vec<RfdCommentFilter>,
         pagination: &ListPagination,
-    ) -> Result<Vec<Job>, StoreError> {
+    ) -> Result<Vec<RfdComment>, StoreError> {
         unimplemented!()
     }
 

@@ -4,6 +4,7 @@
 
 pub use async_bb8_diesel::{ConnectionError, PoolError};
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 pub use diesel::result::Error as DbError;
 #[cfg(feature = "mock")]
 use mockall::automock;
@@ -28,6 +29,8 @@ pub trait RfdStorage:
     + RfdRevisionMetaStore
     + RfdPdfStore
     + JobStore
+    + RfdCommentUserStore
+    + RfdCommentStore
     + Send
     + Sync
     + 'static
@@ -40,6 +43,8 @@ impl<T> RfdStorage for T where
         + RfdRevisionMetaStore
         + RfdPdfStore
         + JobStore
+        + RfdCommentUserStore
+        + RfdCommentStore
         + Send
         + Sync
         + 'static
@@ -175,11 +180,6 @@ pub trait RfdRevisionStore {
         filters: Vec<RfdRevisionFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdRevision>, StoreError>;
-    // async fn list_unique_rfd(
-    //     &self,
-    //     filters: Vec<RfdRevisionFilter>,
-    //     pagination: &ListPagination,
-    // ) -> Result<Vec<RfdRevision>, StoreError>;
     async fn upsert(&self, new_revision: NewRfdRevision) -> Result<RfdRevision, StoreError>;
     async fn delete(
         &self,
@@ -200,11 +200,6 @@ pub trait RfdRevisionMetaStore {
         filters: Vec<RfdRevisionFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdRevisionMeta>, StoreError>;
-    // async fn list_unique_rfd(
-    //     &self,
-    //     filter: RfdRevisionFilter,
-    //     pagination: &ListPagination,
-    // ) -> Result<Vec<RfdRevisionMeta>, StoreError>;
 }
 
 #[derive(Debug, Default)]
@@ -323,6 +318,7 @@ pub trait RfdCommentUserStore {
 pub struct RfdCommentFilter {
     pub rfd: Option<Vec<TypedUuid<RfdId>>>,
     pub user: Option<Vec<TypedUuid<RfdCommentUserId>>>,
+    pub comment_created_before: Option<DateTime<Utc>>,
 }
 
 impl RfdCommentFilter {
@@ -335,6 +331,11 @@ impl RfdCommentFilter {
         self.user = user;
         self
     }
+
+    pub fn comment_created_before(mut self, comment_created_before: Option<DateTime<Utc>>) -> Self {
+        self.comment_created_before = comment_created_before;
+        self
+    }
 }
 
 #[cfg_attr(feature = "mock", automock)]
@@ -344,7 +345,7 @@ pub trait RfdCommentStore {
         &self,
         filters: Vec<RfdCommentFilter>,
         pagination: &ListPagination,
-    ) -> Result<Vec<Job>, StoreError>;
+    ) -> Result<Vec<RfdComment>, StoreError>;
     async fn upsert(&self, new_rfd_comment: NewRfdComment) -> Result<RfdComment, StoreError>;
     async fn delete(&self, id: &TypedUuid<RfdCommentId>) -> Result<Option<RfdComment>, StoreError>;
 }
