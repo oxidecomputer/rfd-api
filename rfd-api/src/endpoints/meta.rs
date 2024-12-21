@@ -168,8 +168,9 @@ mod tests {
             ];
 
             results.retain(|rfd| {
-                filter.rfd_number.is_none()
-                    || filter
+                filter.len() == 0
+                    || filter[0].rfd_number.is_none()
+                    || filter[0]
                         .rfd_number
                         .as_ref()
                         .unwrap()
@@ -260,8 +261,9 @@ mod tests {
             ];
 
             results.retain(|rfd| {
-                filter.rfd_number.is_none()
-                    || filter
+                filter.len() == 0
+                    || filter[0].rfd_number.is_none()
+                    || filter[0]
                         .rfd_number
                         .as_ref()
                         .unwrap()
@@ -327,7 +329,9 @@ mod tests {
                 ];
 
                 results.retain(|revision| {
-                    filter.rfd.is_none() || filter.rfd.as_ref().unwrap().contains(&revision.rfd_id)
+                    filter.len() == 0
+                        || filter[0].rfd.is_none()
+                        || filter[0].rfd.as_ref().unwrap().contains(&revision.rfd_id)
                 });
 
                 Ok(results)

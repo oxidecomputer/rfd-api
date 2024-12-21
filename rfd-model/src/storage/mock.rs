@@ -57,13 +57,13 @@ impl RfdStore for MockStorage {
 
     async fn list(
         &self,
-        filter: RfdFilter,
+        filters: Vec<RfdFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<Rfd>, StoreError> {
         self.rfd_store
             .as_ref()
             .unwrap()
-            .list(filter, pagination)
+            .list(filters, pagination)
             .await
     }
 
@@ -93,13 +93,13 @@ impl RfdMetaStore for MockStorage {
 
     async fn list(
         &self,
-        filter: RfdFilter,
+        filters: Vec<RfdFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdMeta>, StoreError> {
         self.rfd_meta_store
             .as_ref()
             .unwrap()
-            .list(filter, pagination)
+            .list(filters, pagination)
             .await
     }
 }
@@ -120,25 +120,13 @@ impl RfdRevisionStore for MockStorage {
 
     async fn list(
         &self,
-        filter: RfdRevisionFilter,
+        filters: Vec<RfdRevisionFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdRevision>, StoreError> {
         self.rfd_revision_store
             .as_ref()
             .unwrap()
-            .list(filter, pagination)
-            .await
-    }
-
-    async fn list_unique_rfd(
-        &self,
-        filter: RfdRevisionFilter,
-        pagination: &ListPagination,
-    ) -> Result<Vec<RfdRevision>, StoreError> {
-        self.rfd_revision_store
-            .as_ref()
-            .unwrap()
-            .list(filter, pagination)
+            .list(filters, pagination)
             .await
     }
 
@@ -174,25 +162,13 @@ impl RfdRevisionMetaStore for MockStorage {
 
     async fn list(
         &self,
-        filter: RfdRevisionFilter,
+        filters: Vec<RfdRevisionFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdRevisionMeta>, StoreError> {
         self.rfd_revision_meta_store
             .as_ref()
             .unwrap()
-            .list(filter, pagination)
-            .await
-    }
-
-    async fn list_unique_rfd(
-        &self,
-        filter: RfdRevisionFilter,
-        pagination: &ListPagination,
-    ) -> Result<Vec<RfdRevisionMeta>, StoreError> {
-        self.rfd_revision_meta_store
-            .as_ref()
-            .unwrap()
-            .list(filter, pagination)
+            .list(filters, pagination)
             .await
     }
 }
@@ -209,13 +185,13 @@ impl RfdPdfStore for MockStorage {
 
     async fn list(
         &self,
-        filter: RfdPdfFilter,
+        filters: Vec<RfdPdfFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdPdf>, StoreError> {
         self.rfd_pdf_store
             .as_ref()
             .unwrap()
-            .list(filter, pagination)
+            .list(filters, pagination)
             .await
     }
 
@@ -236,13 +212,13 @@ impl JobStore for MockStorage {
 
     async fn list(
         &self,
-        filter: JobFilter,
+        filters: Vec<JobFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<Job>, StoreError> {
         self.job_store
             .as_ref()
             .unwrap()
-            .list(filter, pagination)
+            .list(filters, pagination)
             .await
     }
 

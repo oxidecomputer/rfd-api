@@ -98,7 +98,7 @@ pub trait RfdStore {
     ) -> Result<Option<Rfd>, StoreError>;
     async fn list(
         &self,
-        filter: RfdFilter,
+        filters: Vec<RfdFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<Rfd>, StoreError>;
     async fn upsert(&self, new_rfd: NewRfd) -> Result<Rfd, StoreError>;
@@ -116,7 +116,7 @@ pub trait RfdMetaStore {
     ) -> Result<Option<RfdMeta>, StoreError>;
     async fn list(
         &self,
-        filter: RfdFilter,
+        filters: Vec<RfdFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdMeta>, StoreError>;
 }
@@ -171,14 +171,14 @@ pub trait RfdRevisionStore {
     ) -> Result<Option<RfdRevision>, StoreError>;
     async fn list(
         &self,
-        filter: RfdRevisionFilter,
+        filters: Vec<RfdRevisionFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdRevision>, StoreError>;
-    async fn list_unique_rfd(
-        &self,
-        filter: RfdRevisionFilter,
-        pagination: &ListPagination,
-    ) -> Result<Vec<RfdRevision>, StoreError>;
+    // async fn list_unique_rfd(
+    //     &self,
+    //     filters: Vec<RfdRevisionFilter>,
+    //     pagination: &ListPagination,
+    // ) -> Result<Vec<RfdRevision>, StoreError>;
     async fn upsert(&self, new_revision: NewRfdRevision) -> Result<RfdRevision, StoreError>;
     async fn delete(
         &self,
@@ -196,14 +196,14 @@ pub trait RfdRevisionMetaStore {
     ) -> Result<Option<RfdRevisionMeta>, StoreError>;
     async fn list(
         &self,
-        filter: RfdRevisionFilter,
+        filters: Vec<RfdRevisionFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdRevisionMeta>, StoreError>;
-    async fn list_unique_rfd(
-        &self,
-        filter: RfdRevisionFilter,
-        pagination: &ListPagination,
-    ) -> Result<Vec<RfdRevisionMeta>, StoreError>;
+    // async fn list_unique_rfd(
+    //     &self,
+    //     filter: RfdRevisionFilter,
+    //     pagination: &ListPagination,
+    // ) -> Result<Vec<RfdRevisionMeta>, StoreError>;
 }
 
 #[derive(Debug, Default)]
@@ -258,7 +258,7 @@ pub trait RfdPdfStore {
     ) -> Result<Option<RfdPdf>, StoreError>;
     async fn list(
         &self,
-        filter: RfdPdfFilter,
+        filters: Vec<RfdPdfFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdPdf>, StoreError>;
     async fn upsert(&self, new_revision: NewRfdPdf) -> Result<RfdPdf, StoreError>;
@@ -301,7 +301,7 @@ pub trait JobStore {
     async fn get(&self, id: i32) -> Result<Option<Job>, StoreError>;
     async fn list(
         &self,
-        filter: JobFilter,
+        filters: Vec<JobFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<Job>, StoreError>;
     async fn upsert(&self, new_job: NewJob) -> Result<Job, StoreError>;
