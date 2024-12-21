@@ -65,7 +65,9 @@ mod tests {
     use http::StatusCode;
     use newtype_uuid::{GenericUuid, TypedUuid};
     use rfd_model::{
-        schema_ext::ContentFormat, storage::{mock::MockStorage, MockRfdMetaStore, MockRfdRevisionMetaStore, MockRfdStore}, CommitSha, FileSha, Rfd, RfdMeta, RfdRevision, RfdRevisionMeta
+        schema_ext::ContentFormat,
+        storage::{mock::MockStorage, MockRfdMetaStore, MockRfdRevisionMetaStore, MockRfdStore},
+        CommitSha, FileSha, Rfd, RfdMeta, RfdRevision, RfdRevisionMeta,
     };
     use uuid::Uuid;
     use v_api::ApiContext;
@@ -333,6 +335,7 @@ mod tests {
 
         let mut storage = MockStorage::new();
         storage.rfd_store = Some(Arc::new(rfd_store));
+        storage.rfd_meta_store = Some(Arc::new(rfd_meta_store));
         storage.rfd_revision_meta_store = Some(Arc::new(rfd_revision_meta_store));
 
         mock_context(storage).await
