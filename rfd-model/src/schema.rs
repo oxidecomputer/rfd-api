@@ -87,8 +87,60 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    rfd_comment_user (id) {
+        id -> Uuid,
+        github_user_id -> Integer,
+        github_user_node_id -> Varchar,
+        github_user_username -> Nullable<Varchar>,
+        github_user_avatar_url -> Varchar,
+        github_user_type -> Varchar,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+        deleted_at -> Nullable<Timestamptz>,
+    }
+}
+
+diesel::table! {
+    rfd_comment (id) {
+        id -> Uuid,
+        rfd_id -> Uuid,
+        comment_user_id -> Uuid,
+        external_id -> Integer,
+        node_id -> Varchar,
+        discussion_number -> Nullable<Integer>,
+        diff_hunk -> Varchar,
+        path -> Varchar,
+        body -> Nullable<Varchar>,
+        commit_id -> Varchar,
+        original_commit_id -> Varchar,
+        line -> Nullable<Integer>,
+        original_line -> Nullable<Integer>,
+        start_line -> Nullable<Integer>,
+        original_start_line -> Nullable<Integer>,
+        side -> Nullable<Varchar>,
+        start_side -> Nullable<Varchar>,
+        subject -> Varchar,
+        in_reply_to -> Nullable<Integer>,
+        comment_created_at -> Nullable<Timestamptz>,
+        comment_updated_at -> Nullable<Timestamptz>,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+        deleted_at -> Nullable<Timestamptz>,
+    }
+}
+
 diesel::joinable!(rfd_pdf -> rfd (rfd_id));
 diesel::joinable!(rfd_pdf -> rfd_revision (rfd_revision_id));
 diesel::joinable!(rfd_revision -> rfd (rfd_id));
+diesel::joinable!(rfd_comment -> rfd (rfd_id));
+diesel::joinable!(rfd_comment -> rfd_comment_user (comment_user_id));
 
-diesel::allow_tables_to_appear_in_same_query!(job, rfd, rfd_pdf, rfd_revision,);
+diesel::allow_tables_to_appear_in_same_query!(
+    job,
+    rfd,
+    rfd_pdf,
+    rfd_revision,
+    rfd_comment,
+    rfd_comment_user
+);

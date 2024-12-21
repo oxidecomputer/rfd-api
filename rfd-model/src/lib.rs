@@ -299,3 +299,64 @@ impl Display for InvalidValueError {
         write!(f, "{} has an invalid value: {}", self.field, self.error)
     }
 }
+
+#[derive(JsonSchema)]
+pub enum RfdCommentUserId {}
+impl TypedUuidKind for RfdCommentUserId {
+    fn tag() -> TypedUuidTag {
+        const TAG: TypedUuidTag = TypedUuidTag::new("rfd-comment-user");
+        TAG
+    }
+}
+
+#[partial(NewRfdCommentUser)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct RfdCommentUser {
+    pub id: TypedUuid<RfdCommentId>,
+    pub github_user_id: i32,
+    pub github_user_node_id: String,
+    pub github_user_username: Option<String>,
+    pub github_user_avatar_url: Option<String>,
+    pub github_user_type: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+#[derive(JsonSchema)]
+pub enum RfdCommentId {}
+impl TypedUuidKind for RfdCommentId {
+    fn tag() -> TypedUuidTag {
+        const TAG: TypedUuidTag = TypedUuidTag::new("rfd-comment");
+        TAG
+    }
+}
+
+#[partial(NewRfdComment)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct RfdComment {
+    pub id: TypedUuid<RfdCommentId>,
+    pub rfd_id: TypedUuid<RfdId>,
+    pub comment_user_id: TypedUuid<RfdCommentUserId>,
+    pub external_id: Option<i32>,
+    pub node_id: String,
+    pub discussion_number: Option<i32>,
+    pub diff_hunk: String,
+    pub path: String,
+    pub body: Option<String>,
+    pub commit_id: String,
+    pub original_commit_id: String,
+    pub line: Option<i32>,
+    pub original_line: Option<i32>,
+    pub start_line: Option<i32>,
+    pub original_start_line: Option<i32>,
+    pub side: Option<String>,
+    pub start_side: Option<String>,
+    pub subject: String,
+    pub in_reply_to: Option<i32>,
+    pub comment_created_at: Option<DateTime<Utc>>,
+    pub comment_updated_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
+}

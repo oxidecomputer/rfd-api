@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
-    schema::{job, rfd, rfd_pdf, rfd_revision},
+    schema::{job, rfd, rfd_comment, rfd_comment_user, rfd_pdf, rfd_revision},
     schema_ext::{ContentFormat, PdfSource, Visibility},
 };
 
@@ -75,4 +75,47 @@ pub struct JobModel {
     pub processed: bool,
     pub created_at: DateTime<Utc>,
     pub started_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[diesel(table_name = rfd_comment_user)]
+pub struct RfdCommentUserModel {
+    pub id: Uuid,
+    pub github_user_id: i32,
+    pub github_user_node_id: String,
+    pub github_user_username: Option<String>,
+    pub github_user_avatar_url: Option<String>,
+    pub github_user_type: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[diesel(table_name = rfd_comment)]
+pub struct RfdCommentModel {
+    pub id: Uuid,
+    pub rfd_id: Uuid,
+    pub comment_user_id: Uuid,
+    pub external_id: Option<i32>,
+    pub node_id: String,
+    pub discussion_number: Option<i32>,
+    pub diff_hunk: String,
+    pub path: String,
+    pub body: Option<String>,
+    pub commit_id: String,
+    pub original_commit_id: String,
+    pub line: Option<i32>,
+    pub original_line: Option<i32>,
+    pub start_line: Option<i32>,
+    pub original_start_line: Option<i32>,
+    pub side: Option<String>,
+    pub start_side: Option<String>,
+    pub subject: String,
+    pub in_reply_to: Option<i32>,
+    pub comment_created_at: Option<DateTime<Utc>>,
+    pub comment_updated_at: Option<DateTime<Utc>>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
 }
