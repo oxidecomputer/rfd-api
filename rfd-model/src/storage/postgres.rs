@@ -771,7 +771,18 @@ impl RfdCommentUserStore for PostgresStore {
                     .eq(new_rfd_comment_user.github_user_avatar_url),
                 rfd_comment_user::github_user_type.eq(new_rfd_comment_user.github_user_type),
             ))
-            // TODO: Handle updates
+            .on_conflict(rfd_comment_user::github_user_id)
+            .do_update()
+            .set((
+                rfd_comment_user::github_user_id.eq(excluded(rfd_comment_user::github_user_id)),
+                rfd_comment_user::github_user_node_id
+                    .eq(excluded(rfd_comment_user::github_user_node_id)),
+                rfd_comment_user::github_user_username
+                    .eq(excluded(rfd_comment_user::github_user_username)),
+                rfd_comment_user::github_user_avatar_url
+                    .eq(excluded(rfd_comment_user::github_user_avatar_url)),
+                rfd_comment_user::github_user_type.eq(excluded(rfd_comment_user::github_user_type)),
+            ))
             .get_result_async(&*self.pool.get().await?)
             .await?;
 
@@ -880,7 +891,27 @@ impl RfdCommentStore for PostgresStore {
                 rfd_comment::comment_created_at.eq(new_rfd_comment.comment_created_at),
                 rfd_comment::comment_updated_at.eq(new_rfd_comment.comment_updated_at),
             ))
-            // TODO: Handle updates
+            .on_conflict(rfd_comment::external_id)
+            .do_update()
+            .set((
+                rfd_comment::comment_user_id.eq(excluded(rfd_comment::comment_user_id)),
+                rfd_comment::external_id.eq(excluded(rfd_comment::external_id)),
+                rfd_comment::node_id.eq(excluded(rfd_comment::node_id)),
+                rfd_comment::discussion_number.eq(excluded(rfd_comment::discussion_number)),
+                rfd_comment::diff_hunk.eq(excluded(rfd_comment::diff_hunk)),
+                rfd_comment::path.eq(excluded(rfd_comment::path)),
+                rfd_comment::body.eq(excluded(rfd_comment::body)),
+                rfd_comment::commit_id.eq(excluded(rfd_comment::commit_id)),
+                rfd_comment::original_commit_id.eq(excluded(rfd_comment::original_commit_id)),
+                rfd_comment::line.eq(excluded(rfd_comment::line)),
+                rfd_comment::original_line.eq(excluded(rfd_comment::original_line)),
+                rfd_comment::start_line.eq(excluded(rfd_comment::start_line)),
+                rfd_comment::original_start_line.eq(excluded(rfd_comment::original_start_line)),
+                rfd_comment::side.eq(excluded(rfd_comment::side)),
+                rfd_comment::start_side.eq(excluded(rfd_comment::start_side)),
+                rfd_comment::subject.eq(excluded(rfd_comment::subject)),
+                rfd_comment::in_reply_to.eq(excluded(rfd_comment::in_reply_to)),
+            ))
             .get_result_async(&*self.pool.get().await?)
             .await?;
 
