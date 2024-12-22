@@ -4,8 +4,8 @@
 
 use chrono::{DateTime, Utc};
 use db::{
-    JobModel, RfdCommentModel, RfdCommentUserModel, RfdModel, RfdPdfModel, RfdRevisionMetaModel,
-    RfdRevisionModel,
+    JobModel, RfdCommentModel, RfdCommentUserModel, RfdModel, RfdPdfModel, RfdReviewCommentModel,
+    RfdReviewModel, RfdRevisionMetaModel, RfdRevisionModel,
 };
 use newtype_uuid::{GenericUuid, TypedUuid, TypedUuidKind, TypedUuidTag};
 use partial_struct::partial;
@@ -315,17 +315,17 @@ impl TypedUuidKind for RfdCommentUserId {
 #[partial(NewRfdCommentUser)]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct RfdCommentUser {
-    pub id: TypedUuid<RfdCommentId>,
-    pub github_user_id: i32,
-    pub github_user_node_id: String,
-    pub github_user_username: Option<String>,
-    pub github_user_avatar_url: Option<String>,
-    pub github_user_type: String,
-    #[partial(NewRfdComment(skip))]
+    pub id: TypedUuid<RfdCommentUserId>,
+    pub external_id: i32,
+    pub node_id: String,
+    pub user_username: Option<String>,
+    pub user_avatar_url: Option<String>,
+    pub user_type: String,
+    #[partial(NewRfdCommentUser(skip))]
     pub created_at: DateTime<Utc>,
-    #[partial(NewRfdComment(skip))]
+    #[partial(NewRfdCommentUser(skip))]
     pub updated_at: DateTime<Utc>,
-    #[partial(NewRfdComment(skip))]
+    #[partial(NewRfdCommentUser(skip))]
     pub deleted_at: Option<DateTime<Utc>>,
 }
 
@@ -333,11 +333,11 @@ impl From<RfdCommentUserModel> for RfdCommentUser {
     fn from(value: RfdCommentUserModel) -> Self {
         Self {
             id: TypedUuid::from_untyped_uuid(value.id),
-            github_user_id: value.github_user_id,
-            github_user_node_id: value.github_user_node_id,
-            github_user_username: value.github_user_username,
-            github_user_avatar_url: value.github_user_avatar_url,
-            github_user_type: value.github_user_type,
+            external_id: value.external_id,
+            node_id: value.node_id,
+            user_username: value.user_username,
+            user_avatar_url: value.user_avatar_url,
+            user_type: value.user_type,
             created_at: value.created_at,
             updated_at: value.updated_at,
             deleted_at: value.deleted_at,
@@ -346,10 +346,145 @@ impl From<RfdCommentUserModel> for RfdCommentUser {
 }
 
 #[derive(JsonSchema)]
+pub enum RfdReviewId {}
+impl TypedUuidKind for RfdReviewId {
+    fn tag() -> TypedUuidTag {
+        const TAG: TypedUuidTag = TypedUuidTag::new("rfd-review");
+        TAG
+    }
+}
+
+#[partial(NewRfdReview)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct RfdReview {
+    pub id: TypedUuid<RfdReviewId>,
+    pub rfd_id: TypedUuid<RfdId>,
+    #[partial(NewRfdReview(retype = TypedUuid<RfdCommentUserId>))]
+    pub comment_user: RfdCommentUser,
+    pub external_id: i32,
+    pub node_id: String,
+    pub body: String,
+    pub state: String,
+    pub commit_id: String,
+    pub review_created_at: DateTime<Utc>,
+    #[partial(NewRfdReview(skip))]
+    pub created_at: DateTime<Utc>,
+    #[partial(NewRfdReview(skip))]
+    pub updated_at: DateTime<Utc>,
+    #[partial(NewRfdReview(skip))]
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+impl From<(RfdReviewModel, RfdCommentUserModel)> for RfdReview {
+    fn from((review, user): (RfdReviewModel, RfdCommentUserModel)) -> Self {
+        Self {
+            id: TypedUuid::from_untyped_uuid(review.id),
+            rfd_id: TypedUuid::from_untyped_uuid(review.rfd_id),
+            comment_user: user.into(),
+            external_id: review.external_id,
+            node_id: review.node_id,
+            body: review.body,
+            state: review.state,
+            commit_id: review.commit_id,
+            review_created_at: review.review_created_at,
+            created_at: review.created_at,
+            updated_at: review.updated_at,
+            deleted_at: review.deleted_at,
+        }
+    }
+}
+
+#[derive(JsonSchema)]
+pub enum RfdReviewCommentId {}
+impl TypedUuidKind for RfdReviewCommentId {
+    fn tag() -> TypedUuidTag {
+        const TAG: TypedUuidTag = TypedUuidTag::new("rfd-review-comment");
+        TAG
+    }
+}
+
+#[partial(NewRfdReviewComment)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+pub struct RfdReviewComment {
+    pub id: TypedUuid<RfdReviewCommentId>,
+    pub rfd_id: TypedUuid<RfdId>,
+    #[partial(NewRfdReviewComment(retype = TypedUuid<RfdCommentUserId>))]
+    pub comment_user: RfdCommentUser,
+    pub external_id: i32,
+    pub node_id: String,
+    #[partial(NewRfdReviewComment(retype = Option<TypedUuid<RfdReviewId>>))]
+    pub review: Option<RfdReview>,
+    pub diff_hunk: String,
+    pub path: String,
+    pub body: String,
+    pub commit_id: String,
+    pub original_commit_id: String,
+    pub line: Option<i32>,
+    pub original_line: Option<i32>,
+    pub start_line: Option<i32>,
+    pub original_start_line: Option<i32>,
+    pub side: Option<String>,
+    pub start_side: Option<String>,
+    pub subject: String,
+    pub in_reply_to: Option<i32>,
+    pub comment_created_at: DateTime<Utc>,
+    pub comment_updated_at: DateTime<Utc>,
+    #[partial(NewRfdReviewComment(skip))]
+    pub created_at: DateTime<Utc>,
+    #[partial(NewRfdReviewComment(skip))]
+    pub updated_at: DateTime<Utc>,
+    #[partial(NewRfdReviewComment(skip))]
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+impl
+    From<(
+        RfdReviewCommentModel,
+        RfdCommentUserModel,
+        Option<RfdReviewModel>,
+    )> for RfdReviewComment
+{
+    fn from(
+        (comment, user, review): (
+            RfdReviewCommentModel,
+            RfdCommentUserModel,
+            Option<RfdReviewModel>,
+        ),
+    ) -> Self {
+        Self {
+            id: TypedUuid::from_untyped_uuid(comment.id),
+            rfd_id: TypedUuid::from_untyped_uuid(comment.rfd_id),
+            comment_user: user.clone().into(),
+            external_id: comment.external_id,
+            node_id: comment.node_id,
+            review: review.map(|r| (r, user).into()),
+            diff_hunk: comment.diff_hunk,
+            path: comment.path,
+            body: comment.body,
+            commit_id: comment.commit_id,
+            original_commit_id: comment.original_commit_id,
+            line: comment.line,
+            original_line: comment.original_line,
+            start_line: comment.start_line,
+            original_start_line: comment.original_start_line,
+            side: comment.side,
+            start_side: comment.start_side,
+            subject: comment.subject,
+            in_reply_to: comment.in_reply_to,
+            comment_created_at: comment.comment_created_at,
+            comment_updated_at: comment.comment_updated_at,
+            created_at: comment.created_at,
+            updated_at: comment.updated_at,
+            deleted_at: comment.deleted_at,
+        }
+    }
+}
+
+#[derive(JsonSchema)]
 pub enum RfdCommentId {}
 impl TypedUuidKind for RfdCommentId {
     fn tag() -> TypedUuidTag {
-        const TAG: TypedUuidTag = TypedUuidTag::new("rfd-comment");
+        const TAG: TypedUuidTag = TypedUuidTag::new("rfd-review-comment");
         TAG
     }
 }
@@ -363,22 +498,9 @@ pub struct RfdComment {
     pub comment_user: RfdCommentUser,
     pub external_id: i32,
     pub node_id: String,
-    pub discussion_number: Option<i32>,
-    pub diff_hunk: String,
-    pub path: String,
-    pub body: Option<String>,
-    pub commit_id: String,
-    pub original_commit_id: String,
-    pub line: Option<i32>,
-    pub original_line: Option<i32>,
-    pub start_line: Option<i32>,
-    pub original_start_line: Option<i32>,
-    pub side: Option<String>,
-    pub start_side: Option<String>,
-    pub subject: String,
-    pub in_reply_to: Option<i32>,
-    pub comment_created_at: Option<DateTime<Utc>>,
-    pub comment_updated_at: Option<DateTime<Utc>>,
+    pub body: String,
+    pub comment_created_at: DateTime<Utc>,
+    pub comment_updated_at: DateTime<Utc>,
     #[partial(NewRfdComment(skip))]
     pub created_at: DateTime<Utc>,
     #[partial(NewRfdComment(skip))]
@@ -395,20 +517,7 @@ impl From<(RfdCommentModel, RfdCommentUserModel)> for RfdComment {
             comment_user: user.into(),
             external_id: comment.external_id,
             node_id: comment.node_id,
-            discussion_number: comment.discussion_number,
-            diff_hunk: comment.diff_hunk,
-            path: comment.path,
             body: comment.body,
-            commit_id: comment.commit_id,
-            original_commit_id: comment.original_commit_id,
-            line: comment.line,
-            original_line: comment.original_line,
-            start_line: comment.start_line,
-            original_start_line: comment.original_start_line,
-            side: comment.side,
-            start_side: comment.start_side,
-            subject: comment.subject,
-            in_reply_to: comment.in_reply_to,
             comment_created_at: comment.comment_created_at,
             comment_updated_at: comment.comment_updated_at,
             created_at: comment.created_at,
