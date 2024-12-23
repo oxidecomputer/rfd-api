@@ -2852,8 +2852,10 @@ name = "rfd-api"
 version = "0.8.0"
 dependencies = [
  "anyhow",
+ "async-bb8-diesel",
  "async-trait",
  "base64 0.22.1",
+ "bb8",
  "chrono",
  "config",
  "cookie",

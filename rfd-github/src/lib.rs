@@ -730,6 +730,28 @@ impl GitHubRfdLocation {
     }
 }
 
+#[derive(Clone)]
+struct GitHubPullRequestComments {
+    pub client: Client,
+}
+
+impl GitHubPullRequestComments {
+    async fn comments(&self) {
+        let pulls = self.client.pulls();
+        let comments = pulls
+            .list_all_review_comments(
+                "owner",
+                "repo",
+                0,
+                octorust::types::Sort::Created,
+                octorust::types::Order::Desc,
+                None,
+            )
+            .await
+            .unwrap();
+    }
+}
+
 struct FetchedRfdContent {
     decoded: Vec<u8>,
     parsed: String,
