@@ -169,10 +169,10 @@ pub async fn view_rfd_attr(
 #[trace_request]
 #[endpoint {
     method = GET,
-    path = "/rfd/{number}/comments",
+    path = "/rfd/{number}/discussion",
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
-pub async fn view_rfd_comments(
+pub async fn view_rfd_discussion(
     rqctx: RequestContext<RfdContext>,
     path: Path<RfdPathParams>,
 ) -> Result<HttpResponseOk<Vec<RfdReviewComment>>, HttpError> {
@@ -263,10 +263,10 @@ pub async fn view_rfd_revision_attr(
 #[trace_request]
 #[endpoint {
     method = GET,
-    path = "/rfd/{number}/revision/{revision}/comments",
+    path = "/rfd/{number}/revision/{revision}/discussion",
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
-pub async fn view_rfd_revision_comments(
+pub async fn view_rfd_revision_discussion(
     rqctx: RequestContext<RfdContext>,
     path: Path<RfdRevisionPathParams>,
 ) -> Result<HttpResponseOk<Vec<RfdReviewComment>>, HttpError> {
@@ -428,7 +428,7 @@ async fn view_rfd_attr_op(
 }
 
 #[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
-async fn view_rfd_comments_op(
+async fn view_rfd_discussion_op(
     ctx: &RfdContext,
     caller: &Caller<RfdPermission>,
     number: String,
