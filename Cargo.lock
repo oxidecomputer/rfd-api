@@ -296,9 +296,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.4"
+version = "1.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9157bbaa6b165880c27a4293a474c91cdcf265cc68cc829bf10be0964a391caf"
+checksum = "c31a0499c1dc64f458ad13872de75c0eb7e3fdb0e67964610c914b034fc5956e"
 dependencies = [
  "shlex",
 ]
@@ -1065,7 +1065,7 @@ dependencies = [
  "chrono",
  "google-apis-common",
  "hyper 1.5.2",
- "hyper-rustls 0.27.4",
+ "hyper-rustls 0.27.5",
  "hyper-util",
  "mime",
  "serde",
@@ -1085,7 +1085,7 @@ dependencies = [
  "chrono",
  "google-apis-common",
  "hyper 1.5.2",
- "hyper-rustls 0.27.4",
+ "hyper-rustls 0.27.5",
  "hyper-util",
  "mime",
  "serde",
@@ -1105,7 +1105,7 @@ dependencies = [
  "chrono",
  "google-apis-common",
  "hyper 1.5.2",
- "hyper-rustls 0.27.4",
+ "hyper-rustls 0.27.5",
  "hyper-util",
  "mime",
  "serde",
@@ -1372,9 +1372,9 @@ dependencies = [
 
 [[package]]
 name = "hyper-rustls"
-version = "0.27.4"
+version = "0.27.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f6884a48c6826ec44f524c7456b163cebe9e55a18d7b5e307cb4f100371cc767"
+checksum = "2d191583f3da1305256f22463b9bb0471acad48a4e534a5218b9963e9c1f59b2"
 dependencies = [
  "futures-util",
  "http 1.2.0",
@@ -1718,9 +1718,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.168"
+version = "0.2.169"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5aaeb2981e0606ca11d79718f8bb01164f1d6ed75080182d3abf017e6d244b6d"
+checksum = "b5aba8db14291edd000dfcc4d620c7ebfb122c613afb886ca8803fa4e128a20a"
 
 [[package]]
 name = "libm"
@@ -2086,9 +2086,9 @@ dependencies = [
 
 [[package]]
 name = "object"
-version = "0.36.5"
+version = "0.36.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aedf0a2d09c573ed1d8d85b30c119153926a2b36dce0ab28322c09a117a4683e"
+checksum = "62948e14d923ea95ea2c7c86c71013138b66525b86bdc08d2dcc262bdb497b87"
 dependencies = [
  "memchr",
 ]
@@ -2406,9 +2406,9 @@ dependencies = [
 
 [[package]]
 name = "predicates"
-version = "3.1.2"
+version = "3.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e9086cc7640c29a356d1a29fd134380bee9d8f79a17410aa76e7ad295f42c97"
+checksum = "a5d19ee57562043d37e82899fade9a22ebab7be9cef5026b07fda9cdd4293573"
 dependencies = [
  "anstyle",
  "predicates-core",
@@ -2416,15 +2416,15 @@ dependencies = [
 
 [[package]]
 name = "predicates-core"
-version = "1.0.8"
+version = "1.0.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae8177bee8e75d6846599c6b9ff679ed51e882816914eec639944d7c9aa11931"
+checksum = "727e462b119fe9c93fd0eb1429a5f7647394014cf3c04ab2c0350eeb09095ffa"
 
 [[package]]
 name = "predicates-tree"
-version = "1.0.11"
+version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41b740d195ed3166cd147c8047ec98db0e22ec019eb8eeb76d343b795304fb13"
+checksum = "72dd2d6d381dfb73a193c7fca536518d7caee39fc8503f74e7dc0be0531b425c"
 dependencies = [
  "predicates-core",
  "termtree",
@@ -2442,7 +2442,7 @@ dependencies = [
 [[package]]
 name = "progenitor"
 version = "0.8.0"
-source = "git+https://github.com/oxidecomputer/progenitor#e65651f06c16674a68aae64c5143e36b8b7efeaf"
+source = "git+https://github.com/oxidecomputer/progenitor#ed29f1b3cded562f19bf18d96c6c07bf1b4b7eba"
 dependencies = [
  "progenitor-client",
  "progenitor-impl",
@@ -2452,7 +2452,7 @@ dependencies = [
 [[package]]
 name = "progenitor-client"
 version = "0.8.0"
-source = "git+https://github.com/oxidecomputer/progenitor#e65651f06c16674a68aae64c5143e36b8b7efeaf"
+source = "git+https://github.com/oxidecomputer/progenitor#ed29f1b3cded562f19bf18d96c6c07bf1b4b7eba"
 dependencies = [
  "bytes",
  "futures-core",
@@ -2466,7 +2466,7 @@ dependencies = [
 [[package]]
 name = "progenitor-impl"
 version = "0.8.0"
-source = "git+https://github.com/oxidecomputer/progenitor#e65651f06c16674a68aae64c5143e36b8b7efeaf"
+source = "git+https://github.com/oxidecomputer/progenitor#ed29f1b3cded562f19bf18d96c6c07bf1b4b7eba"
 dependencies = [
  "heck",
  "http 1.2.0",
@@ -2487,7 +2487,7 @@ dependencies = [
 [[package]]
 name = "progenitor-macro"
 version = "0.8.0"
-source = "git+https://github.com/oxidecomputer/progenitor#e65651f06c16674a68aae64c5143e36b8b7efeaf"
+source = "git+https://github.com/oxidecomputer/progenitor#ed29f1b3cded562f19bf18d96c6c07bf1b4b7eba"
 dependencies = [
  "openapiv3",
  "proc-macro2",
@@ -2742,7 +2742,7 @@ dependencies = [
  "http-body 1.0.1",
  "http-body-util",
  "hyper 1.5.2",
- "hyper-rustls 0.27.4",
+ "hyper-rustls 0.27.5",
  "hyper-util",
  "ipnet",
  "js-sys",
@@ -3852,9 +3852,9 @@ dependencies = [
 
 [[package]]
 name = "termtree"
-version = "0.4.1"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3369f5ac52d5eb6ab48c6b4ffdc8efbcad6b89c765749064ba298f2c68a16a76"
+checksum = "8f50febec83f5ee1df3015341d8bd429f2d1cc62bcba7ea2076759d315084683"
 
 [[package]]
 name = "thiserror"
@@ -3960,9 +3960,9 @@ dependencies = [
 
 [[package]]
 name = "tinyvec"
-version = "1.8.0"
+version = "1.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "445e881f4f6d382d5f27c034e25eb92edd7c784ceab92a0937db7f2e9471b938"
+checksum = "022db8904dfa342efe721985167e9fcd16c29b226db4397ed752a761cfce81e8"
 dependencies = [
  "tinyvec_macros",
 ]
@@ -4227,7 +4227,7 @@ checksum = "42ff0bf0c66b8238c6f3b578df37d0b7848e55df8577b3f74f92a69acceeb825"
 [[package]]
 name = "typify"
 version = "0.2.0"
-source = "git+https://github.com/oxidecomputer/typify#9065106fc0bf1c0611dd7a5aea0c7366b7f00135"
+source = "git+https://github.com/oxidecomputer/typify#d849736d6271b418faaa337ff9cfc4bf56bbaede"
 dependencies = [
  "typify-impl",
  "typify-macro",
@@ -4236,7 +4236,7 @@ dependencies = [
 [[package]]
 name = "typify-impl"
 version = "0.2.0"
-source = "git+https://github.com/oxidecomputer/typify#9065106fc0bf1c0611dd7a5aea0c7366b7f00135"
+source = "git+https://github.com/oxidecomputer/typify#d849736d6271b418faaa337ff9cfc4bf56bbaede"
 dependencies = [
  "heck",
  "log",
@@ -4255,7 +4255,7 @@ dependencies = [
 [[package]]
 name = "typify-macro"
 version = "0.2.0"
-source = "git+https://github.com/oxidecomputer/typify#9065106fc0bf1c0611dd7a5aea0c7366b7f00135"
+source = "git+https://github.com/oxidecomputer/typify#d849736d6271b418faaa337ff9cfc4bf56bbaede"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4956,7 +4956,7 @@ dependencies = [
  "http 1.2.0",
  "http-body-util",
  "hyper 1.5.2",
- "hyper-rustls 0.27.4",
+ "hyper-rustls 0.27.5",
  "hyper-util",
  "log",
  "percent-encoding",
