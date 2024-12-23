@@ -18,8 +18,8 @@ use crate::{
         rfd::{
             discuss_rfd, list_rfds, publish_rfd, reserve_rfd, search_rfds, set_rfd_attr,
             set_rfd_content, set_rfd_document, update_rfd_visibility, view_rfd, view_rfd_attr,
-            view_rfd_comments, view_rfd_meta, view_rfd_pdf, view_rfd_revision,
-            view_rfd_revision_attr, view_rfd_revision_comments, view_rfd_revision_meta,
+            view_rfd_discussion, view_rfd_meta, view_rfd_pdf, view_rfd_revision,
+            view_rfd_revision_attr, view_rfd_revision_discussion, view_rfd_revision_meta,
             view_rfd_revision_pdf,
         },
         webhook::github_webhook,
@@ -86,7 +86,7 @@ pub fn server(
         .expect("Failed to register endpoint");
     api.register(view_rfd_attr)
         .expect("Failed to register endpoint");
-    api.register(view_rfd_comments)
+    api.register(view_rfd_discussion)
         .expect("Failed to register endpoint");
 
     api.register(view_rfd_revision_meta)
@@ -97,7 +97,7 @@ pub fn server(
         .expect("Failed to register endpoint");
     api.register(view_rfd_revision_attr)
         .expect("Failed to register endpoint");
-    api.register(view_rfd_revision_comments)
+    api.register(view_rfd_revision_discussion)
         .expect("Failed to register endpoint");
 
     api.register(search_rfds)
