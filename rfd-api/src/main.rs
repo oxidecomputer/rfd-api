@@ -3,7 +3,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use context::RfdContext;
-use rfd_model::storage::postgres::PostgresStore;
 use server::{server, ServerConfig};
 use std::{
     net::{SocketAddr, SocketAddrV4},
@@ -18,7 +17,7 @@ use v_api::{
     },
     ApiContext, VContext,
 };
-use v_model::storage::postgres::PostgresStore as VApiPostgressStore;
+use v_model::storage::postgres::PostgresStore as VApiPostgresStore;
 
 use crate::{
     config::{AppConfig, ServerLogFormat},
@@ -69,7 +68,7 @@ async fn main() -> anyhow::Result<()> {
     let mut v_ctx = VContext::new(
         config.public_url.clone(),
         Arc::new(
-            VApiPostgressStore::new(&config.database_url)
+            VApiPostgresStore::new(&config.database_url)
                 .await
                 .tap_err(|err| {
                     tracing::error!(?err, "Failed to establish initial database connection");
@@ -120,7 +119,7 @@ async fn main() -> anyhow::Result<()> {
     let context = RfdContext::new(
         config.public_url,
         Arc::new(
-            PostgresStore::new(&config.database_url)
+            VApiPostgresStore::new(&config.database_url)
                 .await
                 .tap_err(|err| {
                     tracing::error!(?err, "Failed to establish initial database connection");

@@ -34,9 +34,9 @@ pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
         if ctx.processor.enabled {
             let jobs = JobStore::list(
                 &ctx.db.storage,
-                JobFilter::default()
+                vec![JobFilter::default()
                     .processed(Some(false))
-                    .started(Some(false)),
+                    .started(Some(false))],
                 &pagination,
             )
             .await?;

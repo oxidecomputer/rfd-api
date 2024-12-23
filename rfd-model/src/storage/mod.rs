@@ -4,6 +4,7 @@
 
 pub use async_bb8_diesel::{ConnectionError, PoolError};
 use async_trait::async_trait;
+use chrono::{DateTime, Utc};
 pub use diesel::result::Error as DbError;
 #[cfg(feature = "mock")]
 use mockall::automock;
@@ -12,16 +13,55 @@ use std::fmt::Debug;
 use v_model::storage::{ListPagination, StoreError};
 
 use crate::{
-    schema_ext::PdfSource, Job, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdId, RfdPdf,
-    RfdPdfId, RfdRevision, RfdRevisionId, RfdRevisionMeta,
+    schema_ext::PdfSource, CommitSha, Job, NewJob, NewRfd, NewRfdComment, NewRfdCommentUser,
+    NewRfdPdf, NewRfdReview, NewRfdReviewComment, NewRfdRevision, Rfd, RfdComment, RfdCommentId,
+    RfdCommentUser, RfdCommentUserId, RfdId, RfdMeta, RfdPdf, RfdPdfId, RfdReview,
+    RfdReviewComment, RfdReviewCommentId, RfdReviewId, RfdRevision, RfdRevisionId, RfdRevisionMeta,
 };
 
+#[cfg(feature = "mock")]
+pub mod mock;
 pub mod postgres;
+
+pub trait RfdStorage:
+    RfdStore
+    + RfdMetaStore
+    + RfdRevisionStore
+    + RfdRevisionMetaStore
+    + RfdPdfStore
+    + JobStore
+    + RfdCommentUserStore
+    + RfdReviewStore
+    + RfdReviewCommentStore
+    + RfdCommentStore
+    + Send
+    + Sync
+    + 'static
+{
+}
+impl<T> RfdStorage for T where
+    T: RfdStore
+        + RfdMetaStore
+        + RfdRevisionStore
+        + RfdRevisionMetaStore
+        + RfdPdfStore
+        + JobStore
+        + RfdCommentUserStore
+        + RfdReviewStore
+        + RfdReviewCommentStore
+        + RfdCommentStore
+        + Send
+        + Sync
+        + 'static
+{
+}
 
 #[derive(Debug, Default)]
 pub struct RfdFilter {
     pub id: Option<Vec<TypedUuid<RfdId>>>,
+    pub revision: Option<Vec<TypedUuid<RfdRevisionId>>>,
     pub rfd_number: Option<Vec<i32>>,
+    pub commit_sha: Option<Vec<CommitSha>>,
     pub public: Option<bool>,
     pub deleted: bool,
 }
@@ -32,8 +72,18 @@ impl RfdFilter {
         self
     }
 
+    pub fn revision(mut self, revision: Option<Vec<TypedUuid<RfdRevisionId>>>) -> Self {
+        self.revision = revision;
+        self
+    }
+
     pub fn rfd_number(mut self, rfd_number: Option<Vec<i32>>) -> Self {
         self.rfd_number = rfd_number;
+        self
+    }
+
+    pub fn commit_sha(mut self, commit_sha: Option<Vec<CommitSha>>) -> Self {
+        self.commit_sha = commit_sha;
         self
     }
 
@@ -51,14 +101,35 @@ impl RfdFilter {
 #[cfg_attr(feature = "mock", automock)]
 #[async_trait]
 pub trait RfdStore {
-    async fn get(&self, id: &TypedUuid<RfdId>, deleted: bool) -> Result<Option<Rfd>, StoreError>;
+    async fn get(
+        &self,
+        id: &TypedUuid<RfdId>,
+        revision: Option<TypedUuid<RfdRevisionId>>,
+        deleted: bool,
+    ) -> Result<Option<Rfd>, StoreError>;
     async fn list(
         &self,
-        filter: RfdFilter,
+        filters: Vec<RfdFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<Rfd>, StoreError>;
     async fn upsert(&self, new_rfd: NewRfd) -> Result<Rfd, StoreError>;
     async fn delete(&self, id: &TypedUuid<RfdId>) -> Result<Option<Rfd>, StoreError>;
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait RfdMetaStore {
+    async fn get(
+        &self,
+        id: TypedUuid<RfdId>,
+        revision: Option<TypedUuid<RfdRevisionId>>,
+        deleted: bool,
+    ) -> Result<Option<RfdMeta>, StoreError>;
+    async fn list(
+        &self,
+        filters: Vec<RfdFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdMeta>, StoreError>;
 }
 
 // TODO: Make the revision store generic over a revision type. We want to be able to have a metadata
@@ -111,12 +182,7 @@ pub trait RfdRevisionStore {
     ) -> Result<Option<RfdRevision>, StoreError>;
     async fn list(
         &self,
-        filter: RfdRevisionFilter,
-        pagination: &ListPagination,
-    ) -> Result<Vec<RfdRevision>, StoreError>;
-    async fn list_unique_rfd(
-        &self,
-        filter: RfdRevisionFilter,
+        filters: Vec<RfdRevisionFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdRevision>, StoreError>;
     async fn upsert(&self, new_revision: NewRfdRevision) -> Result<RfdRevision, StoreError>;
@@ -136,12 +202,7 @@ pub trait RfdRevisionMetaStore {
     ) -> Result<Option<RfdRevisionMeta>, StoreError>;
     async fn list(
         &self,
-        filter: RfdRevisionFilter,
-        pagination: &ListPagination,
-    ) -> Result<Vec<RfdRevisionMeta>, StoreError>;
-    async fn list_unique_rfd(
-        &self,
-        filter: RfdRevisionFilter,
+        filters: Vec<RfdRevisionFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdRevisionMeta>, StoreError>;
 }
@@ -198,7 +259,7 @@ pub trait RfdPdfStore {
     ) -> Result<Option<RfdPdf>, StoreError>;
     async fn list(
         &self,
-        filter: RfdPdfFilter,
+        filters: Vec<RfdPdfFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdPdf>, StoreError>;
     async fn upsert(&self, new_revision: NewRfdPdf) -> Result<RfdPdf, StoreError>;
@@ -241,10 +302,188 @@ pub trait JobStore {
     async fn get(&self, id: i32) -> Result<Option<Job>, StoreError>;
     async fn list(
         &self,
-        filter: JobFilter,
+        filters: Vec<JobFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<Job>, StoreError>;
     async fn upsert(&self, new_job: NewJob) -> Result<Job, StoreError>;
     async fn start(&self, id: i32) -> Result<Option<Job>, StoreError>;
     async fn complete(&self, id: i32) -> Result<Option<Job>, StoreError>;
+}
+
+#[derive(Debug, Default)]
+pub struct RfdCommentUserFilter {
+    pub id: Option<Vec<TypedUuid<RfdCommentUserId>>>,
+}
+
+impl RfdCommentUserFilter {
+    pub fn id(mut self, id: Option<Vec<TypedUuid<RfdCommentUserId>>>) -> Self {
+        self.id = id;
+        self
+    }
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait RfdCommentUserStore {
+    async fn get(
+        &self,
+        id: TypedUuid<RfdCommentUserId>,
+    ) -> Result<Option<RfdCommentUser>, StoreError>;
+    async fn list(
+        &self,
+        filters: Vec<RfdCommentUserFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdCommentUser>, StoreError>;
+    async fn upsert(
+        &self,
+        new_rfd_comment_user: NewRfdCommentUser,
+    ) -> Result<RfdCommentUser, StoreError>;
+    async fn delete(
+        &self,
+        id: TypedUuid<RfdCommentUserId>,
+    ) -> Result<Option<RfdCommentUser>, StoreError>;
+}
+
+#[derive(Debug, Default)]
+pub struct RfdReviewFilter {
+    pub id: Option<Vec<TypedUuid<RfdReviewId>>>,
+    pub rfd: Option<Vec<TypedUuid<RfdId>>>,
+    pub user: Option<Vec<TypedUuid<RfdCommentUserId>>>,
+    pub review_created_before: Option<DateTime<Utc>>,
+}
+
+impl RfdReviewFilter {
+    pub fn id(mut self, id: Option<Vec<TypedUuid<RfdReviewId>>>) -> Self {
+        self.id = id;
+        self
+    }
+
+    pub fn rfd(mut self, rfd: Option<Vec<TypedUuid<RfdId>>>) -> Self {
+        self.rfd = rfd;
+        self
+    }
+
+    pub fn user(mut self, user: Option<Vec<TypedUuid<RfdCommentUserId>>>) -> Self {
+        self.user = user;
+        self
+    }
+
+    pub fn review_created_before(mut self, review_created_before: Option<DateTime<Utc>>) -> Self {
+        self.review_created_before = review_created_before;
+        self
+    }
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait RfdReviewStore {
+    async fn get(&self, id: TypedUuid<RfdReviewId>) -> Result<Option<RfdReview>, StoreError>;
+    async fn list(
+        &self,
+        filters: Vec<RfdReviewFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdReview>, StoreError>;
+    async fn upsert(&self, new_rfd_review: NewRfdReview) -> Result<RfdReview, StoreError>;
+    async fn delete(&self, id: TypedUuid<RfdReviewId>) -> Result<Option<RfdReview>, StoreError>;
+}
+
+#[derive(Debug, Default)]
+pub struct RfdReviewCommentFilter {
+    pub id: Option<Vec<TypedUuid<RfdReviewCommentId>>>,
+    pub rfd: Option<Vec<TypedUuid<RfdId>>>,
+    pub user: Option<Vec<TypedUuid<RfdCommentUserId>>>,
+    pub review: Option<Vec<TypedUuid<RfdReviewId>>>,
+    pub comment_created_before: Option<DateTime<Utc>>,
+}
+
+impl RfdReviewCommentFilter {
+    pub fn id(mut self, id: Option<Vec<TypedUuid<RfdReviewCommentId>>>) -> Self {
+        self.id = id;
+        self
+    }
+
+    pub fn rfd(mut self, rfd: Option<Vec<TypedUuid<RfdId>>>) -> Self {
+        self.rfd = rfd;
+        self
+    }
+
+    pub fn user(mut self, user: Option<Vec<TypedUuid<RfdCommentUserId>>>) -> Self {
+        self.user = user;
+        self
+    }
+
+    pub fn review(mut self, review: Option<Vec<TypedUuid<RfdReviewId>>>) -> Self {
+        self.review = review;
+        self
+    }
+
+    pub fn comment_created_before(mut self, comment_created_before: Option<DateTime<Utc>>) -> Self {
+        self.comment_created_before = comment_created_before;
+        self
+    }
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait RfdReviewCommentStore {
+    async fn get(
+        &self,
+        id: TypedUuid<RfdReviewCommentId>,
+    ) -> Result<Option<RfdReviewComment>, StoreError>;
+    async fn list(
+        &self,
+        filters: Vec<RfdReviewCommentFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdReviewComment>, StoreError>;
+    async fn upsert(
+        &self,
+        new_rfd_review_comment: NewRfdReviewComment,
+    ) -> Result<RfdReviewComment, StoreError>;
+    async fn delete(
+        &self,
+        id: TypedUuid<RfdReviewCommentId>,
+    ) -> Result<Option<RfdReviewComment>, StoreError>;
+}
+
+#[derive(Debug, Default)]
+pub struct RfdCommentFilter {
+    pub id: Option<Vec<TypedUuid<RfdCommentId>>>,
+    pub rfd: Option<Vec<TypedUuid<RfdId>>>,
+    pub user: Option<Vec<TypedUuid<RfdCommentUserId>>>,
+    pub comment_created_before: Option<DateTime<Utc>>,
+}
+
+impl RfdCommentFilter {
+    pub fn id(mut self, id: Option<Vec<TypedUuid<RfdCommentId>>>) -> Self {
+        self.id = id;
+        self
+    }
+
+    pub fn rfd(mut self, rfd: Option<Vec<TypedUuid<RfdId>>>) -> Self {
+        self.rfd = rfd;
+        self
+    }
+
+    pub fn user(mut self, user: Option<Vec<TypedUuid<RfdCommentUserId>>>) -> Self {
+        self.user = user;
+        self
+    }
+
+    pub fn comment_created_before(mut self, comment_created_before: Option<DateTime<Utc>>) -> Self {
+        self.comment_created_before = comment_created_before;
+        self
+    }
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait RfdCommentStore {
+    async fn get(&self, id: TypedUuid<RfdCommentId>) -> Result<Option<RfdComment>, StoreError>;
+    async fn list(
+        &self,
+        filters: Vec<RfdCommentFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdComment>, StoreError>;
+    async fn upsert(&self, new_rfd_review: NewRfdComment) -> Result<RfdComment, StoreError>;
+    async fn delete(&self, id: TypedUuid<RfdCommentId>) -> Result<Option<RfdComment>, StoreError>;
 }

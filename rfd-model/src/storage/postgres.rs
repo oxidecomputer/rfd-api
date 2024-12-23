@@ -2,74 +2,61 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use async_bb8_diesel::{AsyncRunQueryDsl, ConnectionError, ConnectionManager};
+use async_bb8_diesel::AsyncRunQueryDsl;
 use async_trait::async_trait;
-use bb8::Pool;
 use chrono::Utc;
 use diesel::{
     debug_query, insert_into,
-    pg::PgConnection,
+    pg::Pg,
     query_dsl::QueryDsl,
+    sql_types::Bool,
     update,
     upsert::{excluded, on_constraint},
-    ExpressionMethods,
+    BoolExpressionMethods, BoxableExpression, ExpressionMethods, NullableExpressionMethods,
+    SelectableHelper,
 };
 use newtype_uuid::{GenericUuid, TypedUuid};
-use std::time::Duration;
-use thiserror::Error;
 use uuid::Uuid;
+use v_model::storage::postgres::PostgresStore;
 
 use crate::{
-    db::{JobModel, RfdModel, RfdPdfModel, RfdRevisionMetaModel, RfdRevisionModel},
-    schema::{job, rfd, rfd_pdf, rfd_revision},
+    db::{
+        JobModel, RfdCommentModel, RfdCommentUserModel, RfdModel, RfdPdfModel,
+        RfdReviewCommentModel, RfdReviewModel, RfdRevisionMetaModel, RfdRevisionModel,
+    },
+    schema::{
+        job, rfd, rfd_comment, rfd_comment_user, rfd_pdf, rfd_review, rfd_review_comment,
+        rfd_revision,
+    },
     schema_ext::Visibility,
     storage::StoreError,
-    Job, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdId, RfdPdf, RfdPdfId, RfdRevision,
-    RfdRevisionId, RfdRevisionMeta,
+    Job, NewJob, NewRfd, NewRfdComment, NewRfdCommentUser, NewRfdPdf, NewRfdReview,
+    NewRfdReviewComment, NewRfdRevision, Rfd, RfdComment, RfdCommentId, RfdCommentUser,
+    RfdCommentUserId, RfdId, RfdMeta, RfdPdf, RfdPdfId, RfdReview, RfdReviewComment,
+    RfdReviewCommentId, RfdReviewId, RfdRevision, RfdRevisionId, RfdRevisionMeta,
 };
 
 use super::{
-    JobFilter, JobStore, ListPagination, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter,
-    RfdRevisionMetaStore, RfdRevisionStore, RfdStore,
+    JobFilter, JobStore, ListPagination, RfdCommentFilter, RfdCommentStore, RfdCommentUserFilter,
+    RfdCommentUserStore, RfdFilter, RfdMetaStore, RfdPdfFilter, RfdPdfStore,
+    RfdReviewCommentFilter, RfdReviewCommentStore, RfdReviewFilter, RfdReviewStore,
+    RfdRevisionFilter, RfdRevisionMetaStore, RfdRevisionStore, RfdStore,
 };
-
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
-
-pub struct PostgresStore {
-    pool: DbPool,
-}
-
-#[derive(Debug, Error)]
-pub enum PostgresError {
-    #[error("Failed to connect to database")]
-    Connection(ConnectionError),
-}
-
-impl From<ConnectionError> for PostgresError {
-    fn from(error: ConnectionError) -> Self {
-        PostgresError::Connection(error)
-    }
-}
-
-impl PostgresStore {
-    pub async fn new(url: &str) -> Result<Self, PostgresError> {
-        let manager = ConnectionManager::<PgConnection>::new(url);
-
-        Ok(Self {
-            pool: Pool::builder()
-                .connection_timeout(Duration::from_secs(30))
-                .build(manager)
-                .await?,
-        })
-    }
-}
 
 #[async_trait]
 impl RfdStore for PostgresStore {
-    async fn get(&self, id: &TypedUuid<RfdId>, deleted: bool) -> Result<Option<Rfd>, StoreError> {
+    async fn get(
+        &self,
+        id: &TypedUuid<RfdId>,
+        revision: Option<TypedUuid<RfdRevisionId>>,
+        deleted: bool,
+    ) -> Result<Option<Rfd>, StoreError> {
         let rfd = RfdStore::list(
             self,
-            RfdFilter::default().id(Some(vec![*id])).deleted(deleted),
+            vec![RfdFilter::default()
+                .id(Some(vec![*id]))
+                .revision(revision.map(|rev| vec![rev]))
+                .deleted(deleted)],
             &ListPagination::default().limit(1),
         )
         .await?;
@@ -78,46 +65,81 @@ impl RfdStore for PostgresStore {
 
     async fn list(
         &self,
-        filter: RfdFilter,
+        filters: Vec<RfdFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<Rfd>, StoreError> {
-        let mut query = rfd::dsl::rfd.into_boxed();
+        let mut query = rfd::table
+            .inner_join(rfd_revision::table)
+            .distinct_on(rfd::id)
+            .into_boxed();
 
-        tracing::trace!(?filter, "Lookup RFDs");
+        tracing::trace!(?filters, "Lookup RFDs");
 
-        let RfdFilter {
-            id,
-            rfd_number,
-            public,
-            deleted,
-        } = filter;
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let RfdFilter {
+                    id,
+                    revision,
+                    rfd_number,
+                    commit_sha,
+                    public,
+                    deleted,
+                } = filter;
 
-        if let Some(id) = id {
-            query =
-                query.filter(rfd::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)));
-        }
+                if let Some(id) = id {
+                    predicates.push(Box::new(
+                        rfd::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
 
-        if let Some(rfd_number) = rfd_number {
-            query = query.filter(rfd::rfd_number.eq_any(rfd_number));
-        }
+                if let Some(revision) = revision {
+                    predicates
+                        .push(Box::new(rfd_revision::id.eq_any(
+                            revision.into_iter().map(GenericUuid::into_untyped_uuid),
+                        )));
+                }
 
-        if let Some(public) = public {
-            query = query.filter(
-                rfd::visibility.eq(public
-                    .then(|| Visibility::Public)
-                    .unwrap_or(Visibility::Private)),
-            );
-        }
+                if let Some(rfd_number) = rfd_number {
+                    predicates.push(Box::new(rfd::rfd_number.eq_any(rfd_number)));
+                }
 
-        if !deleted {
-            query = query.filter(rfd::deleted_at.is_null());
+                if let Some(commit_sha) = commit_sha {
+                    predicates.push(Box::new(
+                        rfd_revision::commit_sha.eq_any(commit_sha.into_iter().map(|sha| sha.0)),
+                    ));
+                }
+
+                if let Some(public) = public {
+                    predicates.push(Box::new(
+                        rfd::visibility.eq(public
+                            .then(|| Visibility::Public)
+                            .unwrap_or(Visibility::Private)),
+                    ));
+                }
+
+                if !deleted {
+                    predicates.push(Box::new(rfd::deleted_at.is_null()));
+                    predicates.push(Box::new(rfd_revision::deleted_at.is_null()));
+                }
+
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
         }
 
         let results = query
             .offset(pagination.offset)
             .limit(pagination.limit)
-            .order(rfd::rfd_number.desc())
-            .get_results_async::<RfdModel>(&*self.pool.get().await?)
+            .order((
+                rfd_revision::rfd_id.asc(),
+                rfd_revision::committed_at.desc(),
+            ))
+            .get_results_async::<(RfdModel, RfdRevisionModel)>(&*self.pool.get().await?)
             .await?;
 
         tracing::trace!(count = ?results.len(), "Found RFDs");
@@ -126,7 +148,7 @@ impl RfdStore for PostgresStore {
     }
 
     async fn upsert(&self, new_rfd: NewRfd) -> Result<Rfd, StoreError> {
-        let rfd: RfdModel = insert_into(rfd::dsl::rfd)
+        let _: RfdModel = insert_into(rfd::dsl::rfd)
             .values((
                 rfd::id.eq(new_rfd.id.into_untyped_uuid()),
                 rfd::rfd_number.eq(new_rfd.rfd_number.clone()),
@@ -144,7 +166,11 @@ impl RfdStore for PostgresStore {
             .get_result_async(&*self.pool.get().await?)
             .await?;
 
-        Ok(rfd.into())
+        // There is a race condition here than case a failure where a delete occurs between
+        // the upsert and the get
+        Ok(RfdStore::get(self, &new_rfd.id, None, false)
+            .await?
+            .unwrap())
     }
 
     async fn delete(&self, id: &TypedUuid<RfdId>) -> Result<Option<Rfd>, StoreError> {
@@ -154,7 +180,113 @@ impl RfdStore for PostgresStore {
             .execute_async(&*self.pool.get().await?)
             .await?;
 
-        RfdStore::get(self, id, true).await
+        RfdStore::get(self, id, None, true).await
+    }
+}
+
+#[async_trait]
+impl RfdMetaStore for PostgresStore {
+    async fn get(
+        &self,
+        id: TypedUuid<RfdId>,
+        revision: Option<TypedUuid<RfdRevisionId>>,
+        deleted: bool,
+    ) -> Result<Option<RfdMeta>, StoreError> {
+        let rfd = RfdMetaStore::list(
+            self,
+            vec![RfdFilter::default()
+                .id(Some(vec![id]))
+                .revision(revision.map(|rev| vec![rev]))
+                .deleted(deleted)],
+            &ListPagination::default().limit(1),
+        )
+        .await?;
+        Ok(rfd.into_iter().nth(0))
+    }
+
+    async fn list(
+        &self,
+        filters: Vec<RfdFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdMeta>, StoreError> {
+        let mut query = rfd::table
+            .inner_join(rfd_revision::table)
+            .distinct_on(rfd::id)
+            .select((RfdModel::as_select(), RfdRevisionMetaModel::as_select()))
+            .into_boxed();
+
+        tracing::trace!(?filters, "Lookup RFDs");
+
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let RfdFilter {
+                    id,
+                    revision,
+                    rfd_number,
+                    commit_sha,
+                    public,
+                    deleted,
+                } = filter;
+
+                if let Some(id) = id {
+                    predicates.push(Box::new(
+                        rfd::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
+
+                if let Some(revision) = revision {
+                    predicates
+                        .push(Box::new(rfd_revision::id.eq_any(
+                            revision.into_iter().map(GenericUuid::into_untyped_uuid),
+                        )));
+                }
+
+                if let Some(rfd_number) = rfd_number {
+                    predicates.push(Box::new(rfd::rfd_number.eq_any(rfd_number)));
+                }
+
+                if let Some(commit_sha) = commit_sha {
+                    predicates.push(Box::new(
+                        rfd_revision::commit_sha.eq_any(commit_sha.into_iter().map(|sha| sha.0)),
+                    ));
+                }
+
+                if let Some(public) = public {
+                    predicates.push(Box::new(
+                        rfd::visibility.eq(public
+                            .then(|| Visibility::Public)
+                            .unwrap_or(Visibility::Private)),
+                    ));
+                }
+
+                if !deleted {
+                    predicates.push(Box::new(rfd::deleted_at.is_null()));
+                    predicates.push(Box::new(rfd_revision::deleted_at.is_null()));
+                }
+
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
+        }
+
+        let results = query
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+            .order((
+                rfd_revision::rfd_id.asc(),
+                rfd_revision::committed_at.desc(),
+            ))
+            .get_results_async::<(RfdModel, RfdRevisionMetaModel)>(&*self.pool.get().await?)
+            .await?;
+
+        tracing::trace!(count = ?results.len(), "Found RFDs");
+
+        Ok(results.into_iter().map(|rfd| rfd.into()).collect())
     }
 }
 
@@ -167,9 +299,9 @@ impl RfdRevisionStore for PostgresStore {
     ) -> Result<Option<RfdRevision>, StoreError> {
         let user = RfdRevisionStore::list(
             self,
-            RfdRevisionFilter::default()
+            vec![RfdRevisionFilter::default()
                 .id(Some(vec![*id]))
-                .deleted(deleted),
+                .deleted(deleted)],
             &ListPagination::default().limit(1),
         )
         .await?;
@@ -178,38 +310,51 @@ impl RfdRevisionStore for PostgresStore {
 
     async fn list(
         &self,
-        filter: RfdRevisionFilter,
+        filters: Vec<RfdRevisionFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdRevision>, StoreError> {
         let mut query = rfd_revision::dsl::rfd_revision.into_boxed();
 
-        tracing::trace!(?filter, "Lookup RFD revisions");
+        tracing::trace!(?filters, "Lookup RFD revisions");
 
-        let RfdRevisionFilter {
-            id,
-            rfd,
-            sha,
-            deleted,
-        } = filter;
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let RfdRevisionFilter {
+                    id,
+                    rfd,
+                    sha,
+                    deleted,
+                } = filter;
 
-        if let Some(id) = id {
-            query = query.filter(
-                rfd_revision::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
+                if let Some(id) = id {
+                    predicates.push(Box::new(
+                        rfd_revision::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
 
-        if let Some(rfd) = rfd {
-            query = query.filter(
-                rfd_revision::rfd_id.eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
+                if let Some(rfd) = rfd {
+                    predicates.push(Box::new(
+                        rfd_revision::rfd_id
+                            .eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
 
-        if let Some(sha) = sha {
-            query = query.filter(rfd_revision::sha.eq_any(sha));
-        }
+                if let Some(sha) = sha {
+                    predicates.push(Box::new(rfd_revision::sha.eq_any(sha)));
+                }
 
-        if !deleted {
-            query = query.filter(rfd_revision::deleted_at.is_null());
+                if !deleted {
+                    predicates.push(Box::new(rfd_revision::deleted_at.is_null()));
+                }
+
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
         }
 
         let query = query
@@ -222,67 +367,6 @@ impl RfdRevisionStore for PostgresStore {
         let results = query
             .get_results_async::<RfdRevisionModel>(&*self.pool.get().await?)
             .await?;
-
-        Ok(results
-            .into_iter()
-            .map(|revision| revision.into())
-            .collect())
-    }
-
-    // TODO: Refactor into a group by arg in list. Diesel types here are a pain
-    async fn list_unique_rfd(
-        &self,
-        filter: RfdRevisionFilter,
-        pagination: &ListPagination,
-    ) -> Result<Vec<RfdRevision>, StoreError> {
-        let mut query = rfd_revision::dsl::rfd_revision
-            .distinct_on(rfd_revision::rfd_id)
-            .into_boxed();
-
-        tracing::trace!(rfd_ids = ?filter.rfd.as_ref().map(|list| list.len()), "Lookup unique RFD revisions");
-
-        let RfdRevisionFilter {
-            id,
-            rfd,
-            sha,
-            deleted,
-        } = filter;
-
-        if let Some(id) = id {
-            query = query.filter(
-                rfd_revision::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
-
-        if let Some(rfd) = rfd {
-            query = query.filter(
-                rfd_revision::rfd_id.eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
-
-        if let Some(sha) = sha {
-            query = query.filter(rfd_revision::sha.eq_any(sha));
-        }
-
-        if !deleted {
-            query = query.filter(rfd_revision::deleted_at.is_null());
-        }
-
-        let query = query
-            .offset(pagination.offset)
-            .limit(pagination.limit)
-            .order((
-                rfd_revision::rfd_id.asc(),
-                rfd_revision::committed_at.desc(),
-            ));
-
-        tracing::info!(query = ?debug_query(&query), "Run list unique rfds");
-
-        let results = query
-            .get_results_async::<RfdRevisionModel>(&*self.pool.get().await?)
-            .await?;
-
-        tracing::trace!(count = ?results.len(), "Found unique RFD revisions");
 
         Ok(results
             .into_iter()
@@ -351,9 +435,9 @@ impl RfdRevisionMetaStore for PostgresStore {
     ) -> Result<Option<RfdRevisionMeta>, StoreError> {
         let user = RfdRevisionMetaStore::list(
             self,
-            RfdRevisionFilter::default()
+            vec![RfdRevisionFilter::default()
                 .id(Some(vec![*id]))
-                .deleted(deleted),
+                .deleted(deleted)],
             &ListPagination::default().limit(1),
         )
         .await?;
@@ -362,7 +446,7 @@ impl RfdRevisionMetaStore for PostgresStore {
 
     async fn list(
         &self,
-        filter: RfdRevisionFilter,
+        filters: Vec<RfdRevisionFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdRevisionMeta>, StoreError> {
         let mut query = rfd_revision::dsl::rfd_revision
@@ -384,33 +468,46 @@ impl RfdRevisionMetaStore for PostgresStore {
             ))
             .into_boxed();
 
-        tracing::trace!(?filter, "Lookup RFD revision metadata");
+        tracing::trace!(?filters, "Lookup RFD revision metadata");
 
-        let RfdRevisionFilter {
-            id,
-            rfd,
-            sha,
-            deleted,
-        } = filter;
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let RfdRevisionFilter {
+                    id,
+                    rfd,
+                    sha,
+                    deleted,
+                } = filter;
 
-        if let Some(id) = id {
-            query = query.filter(
-                rfd_revision::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
+                if let Some(id) = id {
+                    predicates.push(Box::new(
+                        rfd_revision::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
 
-        if let Some(rfd) = rfd {
-            query = query.filter(
-                rfd_revision::rfd_id.eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
+                if let Some(rfd) = rfd {
+                    predicates.push(Box::new(
+                        rfd_revision::rfd_id
+                            .eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
 
-        if let Some(sha) = sha {
-            query = query.filter(rfd_revision::sha.eq_any(sha));
-        }
+                if let Some(sha) = sha {
+                    predicates.push(Box::new(rfd_revision::sha.eq_any(sha)));
+                }
 
-        if !deleted {
-            query = query.filter(rfd_revision::deleted_at.is_null());
+                if !deleted {
+                    predicates.push(Box::new(rfd_revision::deleted_at.is_null()));
+                }
+
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
         }
 
         let query = query
@@ -431,83 +528,6 @@ impl RfdRevisionMetaStore for PostgresStore {
             .map(|revision| revision.into())
             .collect())
     }
-
-    // TODO: Refactor into a group by arg in list. Diesel types here are a pain
-    async fn list_unique_rfd(
-        &self,
-        filter: RfdRevisionFilter,
-        pagination: &ListPagination,
-    ) -> Result<Vec<RfdRevisionMeta>, StoreError> {
-        let mut query = rfd_revision::dsl::rfd_revision
-            .select((
-                rfd_revision::id,
-                rfd_revision::rfd_id,
-                rfd_revision::title,
-                rfd_revision::state,
-                rfd_revision::discussion,
-                rfd_revision::authors,
-                rfd_revision::content_format,
-                rfd_revision::sha,
-                rfd_revision::commit_sha,
-                rfd_revision::committed_at,
-                rfd_revision::created_at,
-                rfd_revision::updated_at,
-                rfd_revision::deleted_at,
-                rfd_revision::labels,
-            ))
-            .distinct_on(rfd_revision::rfd_id)
-            .into_boxed();
-
-        tracing::trace!(rfd_ids = ?filter.rfd.as_ref().map(|list| list.len()), "Lookup unique RFD revision metadata");
-
-        let RfdRevisionFilter {
-            id,
-            rfd,
-            sha,
-            deleted,
-        } = filter;
-
-        if let Some(id) = id {
-            query = query.filter(
-                rfd_revision::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
-
-        if let Some(rfd) = rfd {
-            query = query.filter(
-                rfd_revision::rfd_id.eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
-
-        if let Some(sha) = sha {
-            query = query.filter(rfd_revision::sha.eq_any(sha));
-        }
-
-        if !deleted {
-            query = query.filter(rfd_revision::deleted_at.is_null());
-        }
-
-        let query = query
-            .offset(pagination.offset)
-            .limit(pagination.limit)
-            .order((
-                rfd_revision::rfd_id.asc(),
-                rfd_revision::committed_at.desc(),
-            ));
-
-        tracing::info!(query = ?debug_query(&query), "Run list unique rfd metadata");
-
-        let results = query
-            .get_results_async::<RfdRevisionMetaModel>(&*self.pool.get().await?)
-            .await?;
-
-        tracing::trace!(count = ?results.len(), "Found unique RFD revision metadata");
-
-        Ok(results
-            .into_iter()
-            .map(|revision| revision.into())
-            .collect())
-    }
 }
 
 #[async_trait]
@@ -519,7 +539,7 @@ impl RfdPdfStore for PostgresStore {
     ) -> Result<Option<RfdPdf>, StoreError> {
         let user = RfdPdfStore::list(
             self,
-            RfdPdfFilter::default().id(Some(vec![*id])).deleted(deleted),
+            vec![RfdPdfFilter::default().id(Some(vec![*id])).deleted(deleted)],
             &ListPagination::default().limit(1),
         )
         .await?;
@@ -528,50 +548,63 @@ impl RfdPdfStore for PostgresStore {
 
     async fn list(
         &self,
-        filter: super::RfdPdfFilter,
+        filters: Vec<RfdPdfFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdPdf>, StoreError> {
         let mut query = rfd_pdf::dsl::rfd_pdf.into_boxed();
 
-        tracing::trace!(?filter, "Lookup RFD pdfs");
+        tracing::trace!(?filters, "Lookup RFD pdfs");
 
-        let RfdPdfFilter {
-            id,
-            rfd_revision,
-            source,
-            deleted,
-            rfd,
-            external_id,
-        } = filter;
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let RfdPdfFilter {
+                    id,
+                    rfd_revision,
+                    source,
+                    deleted,
+                    rfd,
+                    external_id,
+                } = filter;
 
-        if let Some(id) = id {
-            query = query
-                .filter(rfd_pdf::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)));
-        }
+                if let Some(id) = id {
+                    predicates.push(Box::new(
+                        rfd_pdf::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
 
-        if let Some(rfd_revision) = rfd_revision {
-            query = query.filter(
-                rfd_pdf::rfd_revision_id
-                    .eq_any(rfd_revision.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
+                if let Some(rfd_revision) = rfd_revision {
+                    predicates
+                        .push(Box::new(rfd_pdf::rfd_revision_id.eq_any(
+                            rfd_revision.into_iter().map(GenericUuid::into_untyped_uuid),
+                        )));
+                }
 
-        if let Some(source) = source {
-            query = query.filter(rfd_pdf::source.eq_any(source));
-        }
+                if let Some(source) = source {
+                    predicates.push(Box::new(rfd_pdf::source.eq_any(source)));
+                }
 
-        if let Some(rfd) = rfd {
-            query = query.filter(
-                rfd_pdf::rfd_id.eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
+                if let Some(rfd) = rfd {
+                    predicates.push(Box::new(
+                        rfd_pdf::rfd_id.eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
 
-        if let Some(external_id) = external_id {
-            query = query.filter(rfd_pdf::external_id.eq_any(external_id));
-        }
+                if let Some(external_id) = external_id {
+                    predicates.push(Box::new(rfd_pdf::external_id.eq_any(external_id)));
+                }
 
-        if !deleted {
-            query = query.filter(rfd_pdf::deleted_at.is_null());
+                if !deleted {
+                    predicates.push(Box::new(rfd_pdf::deleted_at.is_null()));
+                }
+
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
         }
 
         let results = query
@@ -621,7 +654,7 @@ impl JobStore for PostgresStore {
     async fn get(&self, id: i32) -> Result<Option<Job>, StoreError> {
         let user = JobStore::list(
             self,
-            JobFilter::default().id(Some(vec![id])),
+            vec![JobFilter::default().id(Some(vec![id]))],
             &ListPagination::default().limit(1),
         )
         .await?;
@@ -630,36 +663,47 @@ impl JobStore for PostgresStore {
 
     async fn list(
         &self,
-        filter: super::JobFilter,
+        filters: Vec<JobFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<Job>, StoreError> {
         let mut query = job::dsl::job.into_boxed();
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let JobFilter {
+                    id,
+                    sha,
+                    processed,
+                    started,
+                } = filter;
 
-        let JobFilter {
-            id,
-            sha,
-            processed,
-            started,
-        } = filter;
+                if let Some(id) = id {
+                    predicates.push(Box::new(job::id.eq_any(id)));
+                }
 
-        if let Some(id) = id {
-            query = query.filter(job::id.eq_any(id));
-        }
+                if let Some(sha) = sha {
+                    predicates.push(Box::new(job::sha.eq_any(sha)));
+                }
 
-        if let Some(sha) = sha {
-            query = query.filter(job::sha.eq_any(sha));
-        }
+                if let Some(processed) = processed {
+                    predicates.push(Box::new(job::processed.eq(processed)));
+                }
 
-        if let Some(processed) = processed {
-            query = query.filter(job::processed.eq(processed));
-        }
+                if let Some(started) = started {
+                    if started {
+                        predicates.push(Box::new(job::started_at.is_not_null()));
+                    } else {
+                        predicates.push(Box::new(job::started_at.is_null()));
+                    }
+                }
 
-        if let Some(started) = started {
-            if started {
-                query = query.filter(job::started_at.is_not_null());
-            } else {
-                query = query.filter(job::started_at.is_null());
-            }
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
         }
 
         let results = query
@@ -713,4 +757,511 @@ impl JobStore for PostgresStore {
 
         JobStore::get(self, id).await
     }
+}
+
+#[async_trait]
+impl RfdCommentUserStore for PostgresStore {
+    async fn get(
+        &self,
+        id: TypedUuid<RfdCommentUserId>,
+    ) -> Result<Option<RfdCommentUser>, StoreError> {
+        let user = RfdCommentUserStore::list(
+            self,
+            vec![RfdCommentUserFilter::default().id(Some(vec![id]))],
+            &ListPagination::default().limit(1),
+        )
+        .await?;
+        Ok(user.into_iter().nth(0))
+    }
+
+    async fn list(
+        &self,
+        filters: Vec<RfdCommentUserFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdCommentUser>, StoreError> {
+        let mut query = rfd_comment_user::table.into_boxed();
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let RfdCommentUserFilter { id } = filter;
+
+                if let Some(id) = id {
+                    predicates.push(Box::new(
+                        rfd_comment_user::id
+                            .eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
+
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
+        }
+
+        let results = query
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+            .get_results_async::<RfdCommentUserModel>(&*self.pool.get().await?)
+            .await?;
+
+        Ok(results.into_iter().map(|record| record.into()).collect())
+    }
+
+    async fn upsert(
+        &self,
+        new_rfd_comment_user: NewRfdCommentUser,
+    ) -> Result<RfdCommentUser, StoreError> {
+        let user: RfdCommentUserModel = insert_into(rfd_comment_user::table)
+            .values((
+                rfd_comment_user::id.eq(new_rfd_comment_user.id.into_untyped_uuid()),
+                rfd_comment_user::external_id.eq(new_rfd_comment_user.external_id),
+                rfd_comment_user::node_id.eq(new_rfd_comment_user.node_id),
+                rfd_comment_user::user_username.eq(new_rfd_comment_user.user_username),
+                rfd_comment_user::user_avatar_url.eq(new_rfd_comment_user.user_avatar_url),
+                rfd_comment_user::user_type.eq(new_rfd_comment_user.user_type),
+            ))
+            .on_conflict(rfd_comment_user::external_id)
+            .do_update()
+            .set((
+                rfd_comment_user::external_id.eq(excluded(rfd_comment_user::external_id)),
+                rfd_comment_user::node_id.eq(excluded(rfd_comment_user::node_id)),
+                rfd_comment_user::user_username.eq(excluded(rfd_comment_user::user_username)),
+                rfd_comment_user::user_avatar_url.eq(excluded(rfd_comment_user::user_avatar_url)),
+                rfd_comment_user::user_type.eq(excluded(rfd_comment_user::user_type)),
+            ))
+            .get_result_async(&*self.pool.get().await?)
+            .await?;
+
+        Ok(user.into())
+    }
+
+    async fn delete(
+        &self,
+        id: TypedUuid<RfdCommentUserId>,
+    ) -> Result<Option<RfdCommentUser>, StoreError> {
+        let _ = update(rfd_comment_user::table)
+            .filter(rfd_comment_user::id.eq(id.into_untyped_uuid()))
+            .set(rfd_comment_user::deleted_at.eq(Utc::now()))
+            .execute_async(&*self.pool.get().await?)
+            .await?;
+        RfdCommentUserStore::get(self, id).await
+    }
+}
+
+#[async_trait]
+impl RfdReviewStore for PostgresStore {
+    async fn get(&self, id: TypedUuid<RfdReviewId>) -> Result<Option<RfdReview>, StoreError> {
+        let review = RfdReviewStore::list(
+            self,
+            vec![RfdReviewFilter::default().id(Some(vec![id]))],
+            &ListPagination::default().limit(1),
+        )
+        .await?;
+        Ok(review.into_iter().nth(0))
+    }
+
+    async fn list(
+        &self,
+        filters: Vec<RfdReviewFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdReview>, StoreError> {
+        let mut query = rfd_review::table.into_boxed();
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let RfdReviewFilter {
+                    id,
+                    rfd,
+                    user,
+                    review_created_before,
+                } = filter;
+
+                if let Some(id) = id {
+                    predicates.push(Box::new(
+                        rfd_review::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
+
+                if let Some(rfd) = rfd {
+                    let rfd_ids = rfd.into_iter().map(GenericUuid::into_untyped_uuid);
+                    predicates.push(Box::new(rfd_review::rfd_id.eq_any(rfd_ids.clone())));
+                }
+
+                if let Some(user) = user {
+                    predicates.push(Box::new(
+                        rfd_review::comment_user_id
+                            .eq_any(user.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
+
+                if let Some(review_created_before) = review_created_before {
+                    predicates.push(Box::new(
+                        rfd_review::review_created_at
+                            .assume_not_null()
+                            .le(review_created_before),
+                    ));
+                }
+
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
+        }
+
+        let results = query
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+            .get_results_async::<RfdReviewModel>(&*self.pool.get().await?)
+            .await?;
+
+        Ok(results.into_iter().map(|record| record.into()).collect())
+    }
+
+    async fn upsert(&self, new_rfd_review: NewRfdReview) -> Result<RfdReview, StoreError> {
+        let user: RfdReviewModel = insert_into(rfd_review::table)
+            .values((
+                rfd_review::id.eq(new_rfd_review.id.into_untyped_uuid()),
+                rfd_review::rfd_id.eq(new_rfd_review.rfd_id.into_untyped_uuid()),
+                rfd_review::comment_user_id.eq(new_rfd_review.comment_user_id.into_untyped_uuid()),
+                rfd_review::external_id.eq(new_rfd_review.external_id),
+                rfd_review::node_id.eq(new_rfd_review.node_id),
+                rfd_review::body.eq(new_rfd_review.body),
+                rfd_review::state.eq(new_rfd_review.state),
+                rfd_review::commit_id.eq(new_rfd_review.commit_id),
+                rfd_review::review_created_at.eq(new_rfd_review.review_created_at),
+            ))
+            .on_conflict(rfd_review::external_id)
+            .do_update()
+            .set((
+                rfd_review::rfd_id.eq(excluded(rfd_review::rfd_id)),
+                rfd_review::comment_user_id.eq(excluded(rfd_review::comment_user_id)),
+                rfd_review::external_id.eq(excluded(rfd_review::external_id)),
+                rfd_review::node_id.eq(excluded(rfd_review::node_id)),
+                rfd_review::body.eq(excluded(rfd_review::body)),
+                rfd_review::state.eq(excluded(rfd_review::state)),
+                rfd_review::commit_id.eq(excluded(rfd_review::commit_id)),
+                rfd_review::review_created_at.eq(excluded(rfd_review::review_created_at)),
+            ))
+            .get_result_async(&*self.pool.get().await?)
+            .await?;
+
+        Ok(user.into())
+    }
+
+    async fn delete(&self, id: TypedUuid<RfdReviewId>) -> Result<Option<RfdReview>, StoreError> {
+        let _ = update(rfd_review::table)
+            .filter(rfd_review::id.eq(id.into_untyped_uuid()))
+            .set(rfd_review::deleted_at.eq(Utc::now()))
+            .execute_async(&*self.pool.get().await?)
+            .await?;
+        RfdReviewStore::get(self, id).await
+    }
+}
+
+#[async_trait]
+impl RfdReviewCommentStore for PostgresStore {
+    async fn get(
+        &self,
+        id: TypedUuid<RfdReviewCommentId>,
+    ) -> Result<Option<RfdReviewComment>, StoreError> {
+        let comment = RfdReviewCommentStore::list(
+            self,
+            vec![RfdReviewCommentFilter::default().id(Some(vec![id]))],
+            &ListPagination::default().limit(1),
+        )
+        .await?;
+        Ok(comment.into_iter().nth(0))
+    }
+
+    async fn list(
+        &self,
+        filters: Vec<RfdReviewCommentFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdReviewComment>, StoreError> {
+        let mut query = rfd_review_comment::table.into_boxed();
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let RfdReviewCommentFilter {
+                    id,
+                    rfd,
+                    user,
+                    review,
+                    comment_created_before,
+                } = filter;
+
+                if let Some(id) = id {
+                    predicates.push(Box::new(
+                        rfd_review_comment::id
+                            .eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
+
+                if let Some(rfd) = rfd {
+                    let rfd_ids = rfd.into_iter().map(GenericUuid::into_untyped_uuid);
+                    predicates.push(Box::new(rfd_review_comment::rfd_id.eq_any(rfd_ids.clone())));
+                }
+
+                if let Some(user) = user {
+                    predicates.push(Box::new(
+                        rfd_review_comment::comment_user_id
+                            .eq_any(user.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
+
+                if let Some(review) = review {
+                    let review_ids = review.into_iter().map(GenericUuid::into_untyped_uuid);
+                    predicates.push(Box::new(
+                        rfd_review_comment::review_id.eq_any(review_ids.clone()),
+                    ));
+                }
+
+                if let Some(comment_created_before) = comment_created_before {
+                    predicates.push(Box::new(
+                        rfd_review_comment::comment_created_at
+                            .assume_not_null()
+                            .le(comment_created_before),
+                    ));
+                }
+
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
+        }
+
+        let results = query
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+            .get_results_async::<RfdReviewCommentModel>(&*self.pool.get().await?)
+            .await?;
+
+        Ok(results.into_iter().map(|record| record.into()).collect())
+    }
+
+    async fn upsert(
+        &self,
+        new_comment: NewRfdReviewComment,
+    ) -> Result<RfdReviewComment, StoreError> {
+        let comment: RfdReviewCommentModel = insert_into(rfd_review_comment::table)
+            .values((
+                rfd_review_comment::id.eq(new_comment.id.into_untyped_uuid()),
+                rfd_review_comment::rfd_id.eq(new_comment.rfd_id.into_untyped_uuid()),
+                rfd_review_comment::comment_user_id
+                    .eq(new_comment.comment_user_id.into_untyped_uuid()),
+                rfd_review_comment::external_id.eq(new_comment.external_id),
+                rfd_review_comment::node_id.eq(new_comment.node_id),
+                rfd_review_comment::review_id
+                    .eq(new_comment.review_id.map(GenericUuid::into_untyped_uuid)),
+                rfd_review_comment::diff_hunk.eq(new_comment.diff_hunk),
+                rfd_review_comment::path.eq(new_comment.path),
+                rfd_review_comment::body.eq(new_comment.body),
+                rfd_review_comment::commit_id.eq(new_comment.commit_id),
+                rfd_review_comment::original_commit_id.eq(new_comment.original_commit_id),
+                rfd_review_comment::line.eq(new_comment.line),
+                rfd_review_comment::original_line.eq(new_comment.original_line),
+                rfd_review_comment::start_line.eq(new_comment.start_line),
+                rfd_review_comment::original_start_line.eq(new_comment.original_start_line),
+                rfd_review_comment::side.eq(new_comment.side),
+                rfd_review_comment::start_side.eq(new_comment.start_side),
+                rfd_review_comment::subject.eq(new_comment.subject),
+                rfd_review_comment::in_reply_to.eq(new_comment.in_reply_to),
+                rfd_review_comment::comment_created_at.eq(new_comment.comment_created_at),
+                rfd_review_comment::comment_updated_at.eq(new_comment.comment_updated_at),
+            ))
+            .on_conflict(rfd_review_comment::external_id)
+            .do_update()
+            .set((
+                rfd_review_comment::comment_user_id
+                    .eq(excluded(rfd_review_comment::comment_user_id)),
+                rfd_review_comment::external_id.eq(excluded(rfd_review_comment::external_id)),
+                rfd_review_comment::node_id.eq(excluded(rfd_review_comment::node_id)),
+                rfd_review_comment::review_id.eq(excluded(rfd_review_comment::review_id)),
+                rfd_review_comment::diff_hunk.eq(excluded(rfd_review_comment::diff_hunk)),
+                rfd_review_comment::path.eq(excluded(rfd_review_comment::path)),
+                rfd_review_comment::body.eq(excluded(rfd_review_comment::body)),
+                rfd_review_comment::commit_id.eq(excluded(rfd_review_comment::commit_id)),
+                rfd_review_comment::original_commit_id
+                    .eq(excluded(rfd_review_comment::original_commit_id)),
+                rfd_review_comment::line.eq(excluded(rfd_review_comment::line)),
+                rfd_review_comment::original_line.eq(excluded(rfd_review_comment::original_line)),
+                rfd_review_comment::start_line.eq(excluded(rfd_review_comment::start_line)),
+                rfd_review_comment::original_start_line
+                    .eq(excluded(rfd_review_comment::original_start_line)),
+                rfd_review_comment::side.eq(excluded(rfd_review_comment::side)),
+                rfd_review_comment::start_side.eq(excluded(rfd_review_comment::start_side)),
+                rfd_review_comment::subject.eq(excluded(rfd_review_comment::subject)),
+                rfd_review_comment::in_reply_to.eq(excluded(rfd_review_comment::in_reply_to)),
+                rfd_review_comment::comment_created_at
+                    .eq(excluded(rfd_review_comment::comment_created_at)),
+                rfd_review_comment::comment_updated_at
+                    .eq(excluded(rfd_review_comment::comment_updated_at)),
+            ))
+            .get_result_async(&*self.pool.get().await?)
+            .await?;
+
+        Ok(
+            RfdReviewCommentStore::get(self, TypedUuid::from_untyped_uuid(comment.id))
+                .await?
+                .expect("Upserted comment must exist"),
+        )
+    }
+
+    async fn delete(
+        &self,
+        id: TypedUuid<RfdReviewCommentId>,
+    ) -> Result<Option<RfdReviewComment>, StoreError> {
+        let _ = update(rfd_review_comment::table)
+            .filter(rfd_review_comment::id.eq(id.into_untyped_uuid()))
+            .set(rfd_review_comment::deleted_at.eq(Utc::now()))
+            .execute_async(&*self.pool.get().await?)
+            .await?;
+        RfdReviewCommentStore::get(self, id).await
+    }
+}
+
+#[async_trait]
+impl RfdCommentStore for PostgresStore {
+    async fn get(&self, id: TypedUuid<RfdCommentId>) -> Result<Option<RfdComment>, StoreError> {
+        let comment = RfdCommentStore::list(
+            self,
+            vec![RfdCommentFilter::default().id(Some(vec![id]))],
+            &ListPagination::default().limit(1),
+        )
+        .await?;
+        Ok(comment.into_iter().nth(0))
+    }
+
+    async fn list(
+        &self,
+        filters: Vec<RfdCommentFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdComment>, StoreError> {
+        let mut query = rfd_comment::table.into_boxed();
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let RfdCommentFilter {
+                    id,
+                    rfd,
+                    user,
+                    comment_created_before,
+                } = filter;
+
+                if let Some(id) = id {
+                    predicates.push(Box::new(
+                        rfd_comment::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
+
+                if let Some(rfd) = rfd {
+                    let rfd_ids = rfd.into_iter().map(GenericUuid::into_untyped_uuid);
+                    predicates.push(Box::new(rfd_comment::rfd_id.eq_any(rfd_ids.clone())));
+                }
+
+                if let Some(user) = user {
+                    predicates.push(Box::new(
+                        rfd_comment::comment_user_id
+                            .eq_any(user.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
+
+                if let Some(comment_created_before) = comment_created_before {
+                    predicates.push(Box::new(
+                        rfd_comment::comment_created_at
+                            .assume_not_null()
+                            .le(comment_created_before),
+                    ));
+                }
+
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
+        }
+
+        let results = query
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+            .get_results_async::<RfdCommentModel>(&*self.pool.get().await?)
+            .await?;
+
+        Ok(results.into_iter().map(|record| record.into()).collect())
+    }
+
+    async fn upsert(&self, new_comment: NewRfdComment) -> Result<RfdComment, StoreError> {
+        let comment: RfdCommentModel = insert_into(rfd_comment::table)
+            .values((
+                rfd_comment::id.eq(new_comment.id.into_untyped_uuid()),
+                rfd_comment::rfd_id.eq(new_comment.rfd_id.into_untyped_uuid()),
+                rfd_comment::comment_user_id.eq(new_comment.comment_user_id.into_untyped_uuid()),
+                rfd_comment::external_id.eq(new_comment.external_id),
+                rfd_comment::node_id.eq(new_comment.node_id),
+                rfd_comment::body.eq(new_comment.body),
+                rfd_comment::comment_created_at.eq(new_comment.comment_created_at),
+                rfd_comment::comment_updated_at.eq(new_comment.comment_updated_at),
+            ))
+            .on_conflict(rfd_comment::external_id)
+            .do_update()
+            .set((
+                rfd_comment::rfd_id.eq(new_comment.rfd_id.into_untyped_uuid()),
+                rfd_comment::comment_user_id.eq(excluded(rfd_comment::comment_user_id)),
+                rfd_comment::external_id.eq(excluded(rfd_comment::external_id)),
+                rfd_comment::node_id.eq(excluded(rfd_comment::node_id)),
+                rfd_comment::body.eq(excluded(rfd_comment::body)),
+                rfd_comment::comment_created_at.eq(excluded(rfd_comment::comment_created_at)),
+                rfd_comment::comment_updated_at.eq(excluded(rfd_comment::comment_updated_at)),
+            ))
+            .get_result_async(&*self.pool.get().await?)
+            .await?;
+
+        Ok(
+            RfdCommentStore::get(self, TypedUuid::from_untyped_uuid(comment.id))
+                .await?
+                .expect("Upserted comment must exist"),
+        )
+    }
+
+    async fn delete(&self, id: TypedUuid<RfdCommentId>) -> Result<Option<RfdComment>, StoreError> {
+        let _ = update(rfd_comment::table)
+            .filter(rfd_comment::id.eq(id.into_untyped_uuid()))
+            .set(rfd_comment::deleted_at.eq(Utc::now()))
+            .execute_async(&*self.pool.get().await?)
+            .await?;
+        RfdCommentStore::get(self, id).await
+    }
+}
+
+fn flatten_predicates<T>(
+    predicates: Vec<Vec<Box<dyn BoxableExpression<T, Pg, SqlType = Bool>>>>,
+) -> Option<Box<dyn BoxableExpression<T, Pg, SqlType = Bool>>>
+where
+    T: 'static,
+{
+    let mut filter_predicates = vec![];
+
+    for p in predicates {
+        let flat = p
+            .into_iter()
+            .reduce(|combined, entry| Box::new(combined.and(entry)));
+        if let Some(flat) = flat {
+            filter_predicates.push(flat);
+        }
+    }
+
+    filter_predicates
+        .into_iter()
+        .reduce(|combined, entry| Box::new(combined.or(entry)))
 }

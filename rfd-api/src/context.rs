@@ -18,10 +18,12 @@ use rfd_github::{GitHubError, GitHubNewRfdNumber, GitHubRfdRepo};
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
     storage::{
-        JobStore, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionMetaStore,
-        RfdRevisionStore, RfdStore,
+        JobStore, RfdCommentFilter, RfdCommentStore, RfdCommentUserFilter, RfdCommentUserStore,
+        RfdFilter, RfdMetaStore, RfdPdfFilter, RfdPdfStore, RfdReviewCommentFilter,
+        RfdReviewCommentStore, RfdReviewFilter, RfdReviewStore, RfdStorage, RfdStore,
     },
-    CommitSha, FileSha, Job, NewJob, Rfd, RfdId, RfdRevision,
+    CommitSha, FileSha, Job, NewJob, Rfd, RfdComment, RfdCommentUser, RfdId, RfdMeta, RfdPdf,
+    RfdReview, RfdReviewComment, RfdRevision, RfdRevisionId,
 };
 use rsa::{
     pkcs1::{DecodeRsaPrivateKey, EncodeRsaPrivateKey},
@@ -29,7 +31,7 @@ use rsa::{
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
-use std::{cmp::Ordering, collections::BTreeSet, sync::Arc};
+use std::{cmp::Ordering, sync::Arc};
 use tap::TapFallible;
 use thiserror::Error;
 use tracing::instrument;
@@ -51,25 +53,9 @@ use crate::{
 
 static UNLIMITED: i64 = 9999999;
 
-pub trait Storage:
-    RfdStore + RfdRevisionStore + RfdPdfStore + RfdRevisionMetaStore + JobStore + Send + Sync + 'static
-{
-}
-impl<T> Storage for T where
-    T: RfdStore
-        + RfdRevisionStore
-        + RfdPdfStore
-        + RfdRevisionMetaStore
-        + JobStore
-        + Send
-        + Sync
-        + 'static
-{
-}
-
 pub struct RfdContext {
     pub public_url: String,
-    pub storage: Arc<dyn Storage>,
+    pub storage: Arc<dyn RfdStorage>,
     pub search: SearchContext,
     pub content: ContentContext,
     pub github: GitHubRfdRepo,
@@ -107,9 +93,9 @@ pub enum UpdateRfdContentError {
     Storage(#[from] StoreError),
 }
 
-#[partial(RfdMeta)]
+#[partial(RfdWithoutContent)]
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
-pub struct FullRfd {
+pub struct RfdWithContent {
     pub id: TypedUuid<RfdId>,
     pub rfd_number: i32,
     pub link: Option<String>,
@@ -118,27 +104,92 @@ pub struct FullRfd {
     pub state: Option<String>,
     pub authors: Option<String>,
     pub labels: Option<String>,
-    #[partial(RfdMeta(skip))]
+    #[partial(RfdWithoutContent(skip))]
     pub content: String,
     pub format: ContentFormat,
     pub sha: FileSha,
     pub commit: CommitSha,
     pub committed_at: DateTime<Utc>,
-    #[partial(RfdMeta(skip))]
-    pub pdfs: Vec<FullRfdPdfEntry>,
     pub visibility: Visibility,
 }
 
+impl From<Rfd> for RfdWithContent {
+    fn from(value: Rfd) -> Self {
+        RfdWithContent {
+            id: value.id,
+            rfd_number: value.rfd_number,
+            link: value.link,
+            discussion: value.content.discussion,
+            title: value.content.title,
+            state: value.content.state,
+            authors: value.content.authors,
+            labels: value.content.labels,
+            content: value.content.content,
+            format: value.content.content_format,
+            sha: value.content.sha,
+            commit: value.content.commit.into(),
+            committed_at: value.content.committed_at,
+            visibility: value.visibility,
+        }
+    }
+}
+
+impl From<RfdMeta> for RfdWithoutContent {
+    fn from(value: RfdMeta) -> Self {
+        RfdWithoutContent {
+            id: value.id,
+            rfd_number: value.rfd_number,
+            link: value.link,
+            discussion: value.content.discussion,
+            title: value.content.title,
+            state: value.content.state,
+            authors: value.content.authors,
+            labels: value.content.labels,
+            format: value.content.content_format,
+            sha: value.content.sha,
+            commit: value.content.commit.into(),
+            committed_at: value.content.committed_at,
+            visibility: value.visibility,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
-pub struct FullRfdPdfEntry {
+pub struct PdfEntry {
     pub source: String,
     pub link: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
+pub enum RfdRevisionIdentifier {
+    Commit(CommitSha),
+    Id(TypedUuid<RfdRevisionId>),
+}
+
+impl From<CommitSha> for RfdRevisionIdentifier {
+    fn from(value: CommitSha) -> Self {
+        Self::Commit(value)
+    }
+}
+
+impl From<TypedUuid<RfdRevisionId>> for RfdRevisionIdentifier {
+    fn from(value: TypedUuid<RfdRevisionId>) -> Self {
+        Self::Id(value)
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
+pub struct RfdDiscussion {
+    pub users: Vec<RfdCommentUser>,
+    pub reviews: Vec<RfdReview>,
+    pub review_comments: Vec<RfdReviewComment>,
+    pub comments: Vec<RfdComment>,
 }
 
 impl RfdContext {
     pub async fn new(
         public_url: String,
-        storage: Arc<dyn Storage>,
+        storage: Arc<dyn RfdStorage>,
         search: SearchConfig,
         content: ContentConfig,
         services: ServicesConfig,
@@ -215,81 +266,6 @@ impl RfdContext {
     }
 
     // RFD Operations
-
-    pub async fn list_rfds(
-        &self,
-        caller: &Caller<RfdPermission>,
-        filter: Option<RfdFilter>,
-    ) -> ResourceResult<Vec<RfdMeta>, StoreError> {
-        // List all of the RFDs first and then perform filter. This should be be improved once
-        // filters can be combined to support OR expressions. Effectively we need to be able to
-        // express "Has access to OR is public" with a filter
-        let mut rfds = RfdStore::list(
-            &*self.storage,
-            filter.unwrap_or_default(),
-            &ListPagination::default().limit(UNLIMITED),
-        )
-        .await
-        .tap_err(|err| tracing::error!(?err, "Failed to lookup RFDs"))
-        .to_resource_result()?;
-
-        // Determine the list of RFDs the caller has direct access to
-        let direct_access_rfds = caller
-            .permissions
-            .iter()
-            .filter_map(|p| match p {
-                RfdPermission::GetRfd(number) => Some(*number),
-                _ => None,
-            })
-            .collect::<BTreeSet<_>>();
-
-        // Filter the list of RFDs down to only those that the caller is allowed to access
-        rfds.retain_mut(|rfd| {
-            caller.can(&RfdPermission::GetRfdsAll)
-                || rfd.visibility == Visibility::Public
-                || direct_access_rfds.contains(&rfd.rfd_number)
-        });
-
-        // Fetch the latest revision for each of the RFDs that is to be returned
-        let mut rfd_revisions = RfdRevisionMetaStore::list_unique_rfd(
-            &*self.storage,
-            RfdRevisionFilter::default().rfd(Some(rfds.iter().map(|rfd| rfd.id).collect())),
-            &ListPagination::default().limit(UNLIMITED),
-        )
-        .await
-        .tap_err(|err| tracing::error!(?err, "Failed to lookup RFD revisions"))
-        .to_resource_result()?;
-
-        // Sort both the RFDs and revisions based on their RFD id to ensure they line up
-        rfds.sort_by(|a, b| a.id.cmp(&b.id));
-        rfd_revisions.sort_by(|a, b| a.rfd_id.cmp(&b.rfd_id));
-
-        // Zip together the RFDs with their associated revision
-        let mut rfd_list = rfds
-            .into_iter()
-            .zip(rfd_revisions)
-            .map(|(rfd, revision)| RfdMeta {
-                id: rfd.id,
-                rfd_number: rfd.rfd_number,
-                link: rfd.link,
-                discussion: revision.discussion,
-                title: revision.title,
-                state: revision.state,
-                authors: revision.authors,
-                labels: revision.labels,
-                format: revision.content_format,
-                sha: revision.sha,
-                commit: revision.commit.into(),
-                committed_at: revision.committed_at,
-                visibility: rfd.visibility,
-            })
-            .collect::<Vec<_>>();
-
-        // Finally sort the RFD list by RFD number
-        rfd_list.sort_by(|a, b| b.rfd_number.cmp(&a.rfd_number));
-
-        Ok(rfd_list)
-    }
 
     #[instrument(skip(self, caller), err(Debug))]
     pub async fn create_rfd(
@@ -368,143 +344,156 @@ impl RfdContext {
         }
     }
 
+    pub async fn list_rfds(
+        &self,
+        caller: &Caller<RfdPermission>,
+        filter: Option<RfdFilter>,
+    ) -> ResourceResult<Vec<RfdWithoutContent>, StoreError> {
+        // List all of the RFDs first and then perform filter. This should be be improved once
+        // filters can be combined to support OR expressions. Effectively we need to be able to
+        // express "Has access to OR is public" with a filter
+        let mut rfds = RfdMetaStore::list(
+            &*self.storage,
+            filter.map(|filter| vec![filter]).unwrap_or_default(),
+            &ListPagination::default().limit(UNLIMITED),
+        )
+        .await
+        .tap_err(|err| tracing::error!(?err, "Failed to lookup RFDs"))
+        .to_resource_result()?;
+
+        // Filter the list of RFDs down to only those that the caller is allowed to access
+        rfds.retain_mut(|rfd| {
+            caller.can(&RfdPermission::GetRfdsAll)
+                || caller.can(&RfdPermission::GetRfd(rfd.rfd_number))
+                || rfd.visibility == Visibility::Public
+        });
+
+        let mut rfd_list = rfds
+            .into_iter()
+            .map(|rfd| RfdWithoutContent {
+                id: rfd.id,
+                rfd_number: rfd.rfd_number,
+                link: rfd.link,
+                discussion: rfd.content.discussion,
+                title: rfd.content.title,
+                state: rfd.content.state,
+                authors: rfd.content.authors,
+                labels: rfd.content.labels,
+                format: rfd.content.content_format,
+                sha: rfd.content.sha,
+                commit: rfd.content.commit.into(),
+                committed_at: rfd.content.committed_at,
+                visibility: rfd.visibility,
+            })
+            .collect::<Vec<_>>();
+
+        // Finally sort the RFD list by RFD number
+        rfd_list.sort_by(|a, b| b.rfd_number.cmp(&a.rfd_number));
+
+        Ok(rfd_list)
+    }
+
     #[instrument(skip(self, caller))]
-    pub async fn get_rfd(
+    async fn get_rfd(
         &self,
         caller: &Caller<RfdPermission>,
         rfd_number: i32,
-        sha: Option<String>,
-    ) -> ResourceResult<FullRfd, StoreError> {
-        // list_rfds performs authorization checks, if the caller does not have access to the
-        // requested RFD an empty Vec will be returned
-        let rfds = self
-            .list_rfds(
-                caller,
-                Some(RfdFilter::default().rfd_number(Some(vec![rfd_number]))),
-            )
-            .await?;
+        revision: Option<RfdRevisionIdentifier>,
+    ) -> ResourceResult<Rfd, StoreError> {
+        let mut filter = RfdFilter::default().rfd_number(Some(vec![rfd_number]));
+        filter = match revision {
+            Some(RfdRevisionIdentifier::Commit(commit_sha)) => {
+                filter.commit_sha(Some(vec![commit_sha]))
+            }
+            Some(RfdRevisionIdentifier::Id(revision)) => filter.revision(Some(vec![revision])),
+            None => filter,
+        };
 
-        if let Some(rfd) = rfds.into_iter().nth(0) {
-            // If list_rfds returned a RFD, then the caller is allowed to access that RFD and we
-            // can return the full RFD revision. This is sub-optimal as we are required to execute
-            // the revision lookup twice
-            let latest_revision = RfdRevisionStore::list(
-                &*self.storage,
-                RfdRevisionFilter::default()
-                    .rfd(Some(vec![rfd.id]))
-                    .sha(sha.map(|sha| vec![sha])),
-                &ListPagination::default().limit(1),
-            )
+        let rfd = RfdStore::list(&*self.storage, vec![filter], &ListPagination::latest())
             .await
-            .to_resource_result()?;
+            .to_resource_result()?
+            .pop();
 
-            if let Some(revision) = latest_revision.into_iter().nth(0) {
-                let pdfs = RfdPdfStore::list(
-                    &*self.storage,
-                    RfdPdfFilter::default().rfd_revision(Some(vec![revision.id])),
-                    &ListPagination::default(),
-                )
-                .await
-                .to_resource_result()?;
-
-                Ok(FullRfd {
-                    id: rfd.id,
-                    rfd_number: rfd.rfd_number,
-                    link: rfd.link,
-                    discussion: revision.discussion,
-                    title: revision.title,
-                    state: revision.state,
-                    authors: revision.authors,
-                    labels: revision.labels,
-                    content: revision.content,
-                    format: revision.content_format,
-                    sha: revision.sha,
-                    commit: revision.commit.into(),
-                    committed_at: revision.committed_at,
-                    pdfs: pdfs
-                        .into_iter()
-                        .map(|pdf| FullRfdPdfEntry {
-                            source: pdf.source.to_string(),
-                            link: pdf.link,
-                        })
-                        .collect(),
-                    visibility: rfd.visibility,
-                })
+        if let Some(rfd) = rfd {
+            if caller.can(&RfdPermission::GetRfdsAll)
+                || caller.can(&RfdPermission::GetRfd(rfd.rfd_number))
+                || rfd.visibility == Visibility::Public
+            {
+                Ok(rfd)
             } else {
-                // It should not be possible to reach this branch. If we have then the database
-                // has entered an inconsistent state
-                tracing::error!("Looking up revision for RFD returned no results");
                 resource_not_found()
             }
         } else {
-            // Either the RFD does not exist, or the caller is not allowed to access it
             resource_not_found()
         }
     }
 
     #[instrument(skip(self, caller))]
-    pub async fn get_rfd_meta(
+    async fn get_rfd_meta(
         &self,
         caller: &Caller<RfdPermission>,
         rfd_number: i32,
-        sha: Option<String>,
+        revision: Option<RfdRevisionIdentifier>,
     ) -> ResourceResult<RfdMeta, StoreError> {
-        // list_rfds performs authorization checks, if the caller does not have access to the
-        // requested RFD an empty Vec will be returned
-        let rfds = self
-            .list_rfds(
-                caller,
-                Some(RfdFilter::default().rfd_number(Some(vec![rfd_number]))),
-            )
-            .await?;
+        let mut filter = RfdFilter::default().rfd_number(Some(vec![rfd_number]));
+        filter = match revision {
+            Some(RfdRevisionIdentifier::Commit(commit_sha)) => {
+                filter.commit_sha(Some(vec![commit_sha]))
+            }
+            Some(RfdRevisionIdentifier::Id(revision)) => filter.revision(Some(vec![revision])),
+            None => filter,
+        };
 
-        if let Some(rfd) = rfds.into_iter().nth(0) {
-            Ok(rfd)
+        let rfd = RfdMetaStore::list(&*self.storage, vec![filter], &ListPagination::latest())
+            .await
+            .to_resource_result()?
+            .pop();
+
+        if let Some(rfd) = rfd {
+            if caller.can(&RfdPermission::GetRfdsAll)
+                || caller.can(&RfdPermission::GetRfd(rfd.rfd_number))
+                || rfd.visibility == Visibility::Public
+            {
+                Ok(rfd)
+            } else {
+                resource_not_found()
+            }
         } else {
-            // Either the RFD does not exist, or the caller is not allowed to access it
             resource_not_found()
         }
     }
 
     #[instrument(skip(self, caller))]
-    pub async fn get_rfd_revision(
+    pub async fn view_rfd(
         &self,
         caller: &Caller<RfdPermission>,
         rfd_number: i32,
-        sha: Option<String>,
-    ) -> ResourceResult<RfdRevision, StoreError> {
-        if caller.any(&[
-            &RfdPermission::GetRfd(rfd_number),
-            &RfdPermission::GetRfdsAll,
-        ]) {
-            let rfds = RfdStore::list(
-                &*self.storage,
-                RfdFilter::default().rfd_number(Some(vec![rfd_number])),
-                &ListPagination::default().limit(1),
-            )
-            .await
-            .to_resource_result()?;
-            if let Some(rfd) = rfds.into_iter().nth(0) {
-                let latest_revision = RfdRevisionStore::list(
-                    &*self.storage,
-                    RfdRevisionFilter::default()
-                        .rfd(Some(vec![rfd.id]))
-                        .sha(sha.map(|sha| vec![sha])),
-                    &ListPagination::default().limit(1),
-                )
-                .await
-                .to_resource_result()?;
+        revision: Option<RfdRevisionIdentifier>,
+    ) -> ResourceResult<RfdWithContent, StoreError> {
+        let rfd = self.get_rfd(caller, rfd_number, revision).await?;
+        Ok(rfd.into())
+    }
 
-                match latest_revision.into_iter().nth(0) {
-                    Some(revision) => Ok(revision),
-                    None => resource_not_found(),
-                }
-            } else {
-                resource_not_found()
-            }
-        } else {
-            resource_restricted()
-        }
+    #[instrument(skip(self, caller))]
+    pub async fn view_rfd_meta(
+        &self,
+        caller: &Caller<RfdPermission>,
+        rfd_number: i32,
+        revision: Option<RfdRevisionIdentifier>,
+    ) -> ResourceResult<RfdWithoutContent, StoreError> {
+        let rfd = self.get_rfd_meta(caller, rfd_number, revision).await?;
+        Ok(rfd.into())
+    }
+
+    #[instrument(skip(self, caller))]
+    pub async fn view_rfd_revision(
+        &self,
+        caller: &Caller<RfdPermission>,
+        rfd_number: i32,
+        revision: Option<RfdRevisionIdentifier>,
+    ) -> ResourceResult<RfdRevision, StoreError> {
+        let rfd = self.get_rfd(caller, rfd_number, revision).await?;
+        Ok(rfd.content)
     }
 
     async fn get_latest_rfd_revision(
@@ -512,37 +501,81 @@ impl RfdContext {
         caller: &Caller<RfdPermission>,
         rfd_number: i32,
     ) -> ResourceResult<RfdRevision, StoreError> {
-        if caller.any(&[
-            &RfdPermission::GetRfd(rfd_number),
-            &RfdPermission::GetRfdsAll,
-        ]) {
-            let rfds = RfdStore::list(
-                &*self.storage,
-                RfdFilter::default().rfd_number(Some(vec![rfd_number])),
-                &ListPagination::default().limit(1),
-            )
-            .await
-            .to_resource_result()?;
+        self.view_rfd_revision(caller, rfd_number, None).await
+    }
 
-            if let Some(rfd) = rfds.into_iter().nth(0) {
-                let revisions = RfdRevisionStore::list(
-                    &*self.storage,
-                    RfdRevisionFilter::default().rfd(Some(vec![rfd.id])),
-                    &ListPagination::default().limit(1),
-                )
-                .await
-                .to_resource_result()?;
+    #[instrument(skip(self, caller))]
+    pub async fn view_rfd_pdfs(
+        &self,
+        caller: &Caller<RfdPermission>,
+        rfd_number: i32,
+        revision: Option<RfdRevisionIdentifier>,
+    ) -> ResourceResult<Vec<RfdPdf>, StoreError> {
+        let rfd = self.get_rfd_meta(caller, rfd_number, revision).await?;
+        let pdfs = RfdPdfStore::list(
+            &*self.storage,
+            vec![RfdPdfFilter::default()
+                .rfd(Some(vec![rfd.id]))
+                .rfd_revision(Some(vec![rfd.content.id]))],
+            &ListPagination::unlimited(),
+        )
+        .await
+        .to_resource_result()?;
 
-                match revisions.into_iter().nth(0) {
-                    Some(revision) => Ok(revision),
-                    None => resource_not_found(),
-                }
-            } else {
-                resource_not_found()
-            }
-        } else {
-            resource_restricted()
-        }
+        Ok(pdfs)
+    }
+
+    pub async fn view_rfd_discussion(
+        &self,
+        caller: &Caller<RfdPermission>,
+        rfd_number: i32,
+        revision: Option<RfdRevisionIdentifier>,
+    ) -> ResourceResult<RfdDiscussion, StoreError> {
+        let rfd = self.get_rfd_meta(caller, rfd_number, revision).await?;
+        let reviews = RfdReviewStore::list(
+            &*self.storage,
+            vec![RfdReviewFilter::default().rfd(Some(vec![rfd.id]))],
+            &ListPagination::unlimited(),
+        )
+        .await
+        .to_resource_result()?;
+        let review_ids = reviews.iter().map(|review| review.id).collect::<Vec<_>>();
+        let user_ids = reviews
+            .iter()
+            .map(|review| review.comment_user_id)
+            .collect::<Vec<_>>();
+        let users = RfdCommentUserStore::list(
+            &*self.storage,
+            vec![RfdCommentUserFilter::default().id(Some(user_ids.clone()))],
+            &ListPagination::unlimited(),
+        )
+        .await
+        .to_resource_result()?;
+        let review_comments = RfdReviewCommentStore::list(
+            &*self.storage,
+            vec![RfdReviewCommentFilter::default()
+                .rfd(Some(vec![rfd.id]))
+                .user(Some(user_ids.clone()))
+                .review(Some(review_ids))],
+            &ListPagination::unlimited(),
+        )
+        .await
+        .to_resource_result()?;
+        let comments = RfdCommentStore::list(
+            &*self.storage,
+            vec![RfdCommentFilter::default()
+                .rfd(Some(vec![rfd.id]))
+                .user(Some(user_ids))],
+            &ListPagination::unlimited(),
+        )
+        .await
+        .to_resource_result()?;
+        Ok(RfdDiscussion {
+            users,
+            reviews,
+            review_comments,
+            comments,
+        })
     }
 
     #[instrument(skip(self, caller, content))]
@@ -737,22 +770,11 @@ impl RfdContext {
             &RfdPermission::ManageRfdVisibility(rfd_number),
             &RfdPermission::ManageRfdsVisibilityAll,
         ]) {
-            let mut rfds = RfdStore::list(
-                &*self.storage,
-                RfdFilter::default().rfd_number(Some(vec![rfd_number])),
-                &ListPagination::default().limit(1),
-            )
-            .await
-            .to_resource_result()?;
-
-            if let Some(mut rfd) = rfds.pop() {
-                rfd.visibility = visibility;
-                RfdStore::upsert(&*self.storage, rfd.into())
-                    .await
-                    .to_resource_result()
-            } else {
-                resource_not_found()
-            }
+            let mut rfd = self.get_rfd_meta(caller, rfd_number, None).await?;
+            rfd.visibility = visibility;
+            RfdStore::upsert(&*self.storage, rfd.into())
+                .await
+                .to_resource_result()
         } else {
             resource_restricted()
         }
@@ -767,18 +789,9 @@ impl RfdContext {
 
 #[cfg(test)]
 pub(crate) mod test_mocks {
-    use async_trait::async_trait;
-    use newtype_uuid::TypedUuid;
     use rand::RngCore;
     use rfd_data::content::RfdTemplate;
-    use rfd_model::{
-        storage::{
-            JobStore, MockJobStore, MockRfdPdfStore, MockRfdRevisionMetaStore,
-            MockRfdRevisionStore, MockRfdStore, RfdPdfStore, RfdRevisionMetaStore,
-            RfdRevisionStore, RfdStore,
-        },
-        NewJob, NewRfd, NewRfdPdf, NewRfdRevision, RfdId, RfdPdfId, RfdRevisionId,
-    };
+    use rfd_model::storage::mock::MockStorage;
     use rsa::{
         pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
         RsaPrivateKey, RsaPublicKey,
@@ -789,7 +802,7 @@ pub(crate) mod test_mocks {
         endpoints::login::oauth::{google::GoogleOAuthProvider, OAuthProviderName},
         VContext,
     };
-    use v_model::storage::{postgres::PostgresStore, ListPagination, StoreError};
+    use v_model::storage::postgres::PostgresStore;
 
     use crate::config::{
         ContentConfig, GitHubAuthConfig, GitHubConfig, SearchConfig, ServicesConfig,
@@ -873,221 +886,5 @@ pub(crate) mod test_mocks {
         .unwrap();
 
         ctx
-    }
-
-    // Construct a mock storage engine that can be wrapped in an ApiContext for testing
-    pub struct MockStorage {
-        pub rfd_store: Option<Arc<MockRfdStore>>,
-        pub rfd_revision_store: Option<Arc<MockRfdRevisionStore>>,
-        pub rfd_pdf_store: Option<Arc<MockRfdPdfStore>>,
-        pub rfd_revision_meta_store: Option<Arc<MockRfdRevisionMetaStore>>,
-        pub job_store: Option<Arc<MockJobStore>>,
-    }
-
-    impl MockStorage {
-        pub fn new() -> Self {
-            Self {
-                rfd_store: None,
-                rfd_revision_store: None,
-                rfd_pdf_store: None,
-                rfd_revision_meta_store: None,
-                job_store: None,
-            }
-        }
-    }
-
-    #[async_trait]
-    impl RfdStore for MockStorage {
-        async fn get(
-            &self,
-            id: &TypedUuid<RfdId>,
-            deleted: bool,
-        ) -> Result<Option<rfd_model::Rfd>, StoreError> {
-            self.rfd_store.as_ref().unwrap().get(id, deleted).await
-        }
-
-        async fn list(
-            &self,
-            filter: rfd_model::storage::RfdFilter,
-            pagination: &ListPagination,
-        ) -> Result<Vec<rfd_model::Rfd>, StoreError> {
-            self.rfd_store
-                .as_ref()
-                .unwrap()
-                .list(filter, pagination)
-                .await
-        }
-
-        async fn upsert(&self, new_rfd: NewRfd) -> Result<rfd_model::Rfd, StoreError> {
-            self.rfd_store.as_ref().unwrap().upsert(new_rfd).await
-        }
-
-        async fn delete(
-            &self,
-            id: &TypedUuid<RfdId>,
-        ) -> Result<Option<rfd_model::Rfd>, StoreError> {
-            self.rfd_store.as_ref().unwrap().delete(id).await
-        }
-    }
-
-    #[async_trait]
-    impl RfdRevisionStore for MockStorage {
-        async fn get(
-            &self,
-            id: &TypedUuid<RfdRevisionId>,
-            deleted: bool,
-        ) -> Result<Option<rfd_model::RfdRevision>, StoreError> {
-            self.rfd_revision_store
-                .as_ref()
-                .unwrap()
-                .get(id, deleted)
-                .await
-        }
-
-        async fn list(
-            &self,
-            filter: rfd_model::storage::RfdRevisionFilter,
-            pagination: &ListPagination,
-        ) -> Result<Vec<rfd_model::RfdRevision>, StoreError> {
-            self.rfd_revision_store
-                .as_ref()
-                .unwrap()
-                .list(filter, pagination)
-                .await
-        }
-
-        async fn list_unique_rfd(
-            &self,
-            filter: rfd_model::storage::RfdRevisionFilter,
-            pagination: &ListPagination,
-        ) -> Result<Vec<rfd_model::RfdRevision>, StoreError> {
-            self.rfd_revision_store
-                .as_ref()
-                .unwrap()
-                .list(filter, pagination)
-                .await
-        }
-
-        async fn upsert(
-            &self,
-            new_revision: NewRfdRevision,
-        ) -> Result<rfd_model::RfdRevision, StoreError> {
-            self.rfd_revision_store
-                .as_ref()
-                .unwrap()
-                .upsert(new_revision)
-                .await
-        }
-
-        async fn delete(
-            &self,
-            id: &TypedUuid<RfdRevisionId>,
-        ) -> Result<Option<rfd_model::RfdRevision>, StoreError> {
-            self.rfd_revision_store.as_ref().unwrap().delete(id).await
-        }
-    }
-
-    #[async_trait]
-    impl RfdRevisionMetaStore for MockStorage {
-        async fn get(
-            &self,
-            id: &TypedUuid<RfdRevisionId>,
-            deleted: bool,
-        ) -> Result<Option<rfd_model::RfdRevisionMeta>, StoreError> {
-            self.rfd_revision_meta_store
-                .as_ref()
-                .unwrap()
-                .get(id, deleted)
-                .await
-        }
-
-        async fn list(
-            &self,
-            filter: rfd_model::storage::RfdRevisionFilter,
-            pagination: &ListPagination,
-        ) -> Result<Vec<rfd_model::RfdRevisionMeta>, StoreError> {
-            self.rfd_revision_meta_store
-                .as_ref()
-                .unwrap()
-                .list(filter, pagination)
-                .await
-        }
-
-        async fn list_unique_rfd(
-            &self,
-            filter: rfd_model::storage::RfdRevisionFilter,
-            pagination: &ListPagination,
-        ) -> Result<Vec<rfd_model::RfdRevisionMeta>, StoreError> {
-            self.rfd_revision_meta_store
-                .as_ref()
-                .unwrap()
-                .list(filter, pagination)
-                .await
-        }
-    }
-
-    #[async_trait]
-    impl RfdPdfStore for MockStorage {
-        async fn get(
-            &self,
-            id: &TypedUuid<RfdPdfId>,
-            deleted: bool,
-        ) -> Result<Option<rfd_model::RfdPdf>, StoreError> {
-            self.rfd_pdf_store.as_ref().unwrap().get(id, deleted).await
-        }
-
-        async fn list(
-            &self,
-            filter: rfd_model::storage::RfdPdfFilter,
-            pagination: &ListPagination,
-        ) -> Result<Vec<rfd_model::RfdPdf>, StoreError> {
-            self.rfd_pdf_store
-                .as_ref()
-                .unwrap()
-                .list(filter, pagination)
-                .await
-        }
-
-        async fn upsert(&self, new_pdf: NewRfdPdf) -> Result<rfd_model::RfdPdf, StoreError> {
-            self.rfd_pdf_store.as_ref().unwrap().upsert(new_pdf).await
-        }
-
-        async fn delete(
-            &self,
-            id: &TypedUuid<RfdPdfId>,
-        ) -> Result<Option<rfd_model::RfdPdf>, StoreError> {
-            self.rfd_pdf_store.as_ref().unwrap().delete(id).await
-        }
-    }
-
-    #[async_trait]
-    impl JobStore for MockStorage {
-        async fn get(&self, id: i32) -> Result<Option<rfd_model::Job>, StoreError> {
-            self.job_store.as_ref().unwrap().get(id).await
-        }
-
-        async fn list(
-            &self,
-            filter: rfd_model::storage::JobFilter,
-            pagination: &ListPagination,
-        ) -> Result<Vec<rfd_model::Job>, StoreError> {
-            self.job_store
-                .as_ref()
-                .unwrap()
-                .list(filter, pagination)
-                .await
-        }
-
-        async fn upsert(&self, new_job: NewJob) -> Result<rfd_model::Job, StoreError> {
-            self.job_store.as_ref().unwrap().upsert(new_job).await
-        }
-
-        async fn start(&self, id: i32) -> Result<Option<rfd_model::Job>, StoreError> {
-            self.job_store.as_ref().unwrap().start(id).await
-        }
-
-        async fn complete(&self, id: i32) -> Result<Option<rfd_model::Job>, StoreError> {
-            self.job_store.as_ref().unwrap().complete(id).await
-        }
     }
 }

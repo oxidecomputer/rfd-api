@@ -3,17 +3,20 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use chrono::{DateTime, Utc};
-use diesel::{Insertable, Queryable};
+use diesel::{Insertable, Queryable, Selectable};
 use partial_struct::partial;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
-    schema::{job, rfd, rfd_pdf, rfd_revision},
+    schema::{
+        job, rfd, rfd_comment, rfd_comment_user, rfd_pdf, rfd_review, rfd_review_comment,
+        rfd_revision,
+    },
     schema_ext::{ContentFormat, PdfSource, Visibility},
 };
 
-#[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[derive(Debug, Deserialize, Serialize, Queryable, Insertable, Selectable)]
 #[diesel(table_name = rfd)]
 pub struct RfdModel {
     pub id: Uuid,
@@ -26,7 +29,7 @@ pub struct RfdModel {
 }
 
 #[partial(RfdRevisionMetaModel)]
-#[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[derive(Debug, Deserialize, Serialize, Queryable, Insertable, Selectable)]
 #[diesel(table_name = rfd_revision)]
 pub struct RfdRevisionModel {
     pub id: Uuid,
@@ -75,4 +78,80 @@ pub struct JobModel {
     pub processed: bool,
     pub created_at: DateTime<Utc>,
     pub started_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[diesel(table_name = rfd_comment_user)]
+pub struct RfdCommentUserModel {
+    pub id: Uuid,
+    pub external_id: i32,
+    pub node_id: String,
+    pub user_username: Option<String>,
+    pub user_avatar_url: Option<String>,
+    pub user_type: String,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[diesel(table_name = rfd_review)]
+pub struct RfdReviewModel {
+    pub id: Uuid,
+    pub rfd_id: Uuid,
+    pub comment_user_id: Uuid,
+    pub external_id: i32,
+    pub node_id: String,
+    pub body: String,
+    pub state: String,
+    pub commit_id: String,
+    pub review_created_at: DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[diesel(table_name = rfd_review_comment)]
+pub struct RfdReviewCommentModel {
+    pub id: Uuid,
+    pub rfd_id: Uuid,
+    pub comment_user_id: Uuid,
+    pub external_id: i32,
+    pub node_id: String,
+    pub review_id: Option<Uuid>,
+    pub diff_hunk: String,
+    pub path: String,
+    pub body: String,
+    pub commit_id: String,
+    pub original_commit_id: String,
+    pub line: Option<i32>,
+    pub original_line: Option<i32>,
+    pub start_line: Option<i32>,
+    pub original_start_line: Option<i32>,
+    pub side: Option<String>,
+    pub start_side: Option<String>,
+    pub subject: String,
+    pub in_reply_to: Option<i32>,
+    pub comment_created_at: DateTime<Utc>,
+    pub comment_updated_at: DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, Queryable, Insertable)]
+#[diesel(table_name = rfd_comment)]
+pub struct RfdCommentModel {
+    pub id: Uuid,
+    pub rfd_id: Uuid,
+    pub comment_user_id: Uuid,
+    pub external_id: i32,
+    pub node_id: String,
+    pub body: String,
+    pub comment_created_at: DateTime<Utc>,
+    pub comment_updated_at: DateTime<Utc>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
 }

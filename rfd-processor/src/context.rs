@@ -19,7 +19,7 @@ use octorust::{
 };
 use reqwest::Error as ReqwestError;
 use rfd_github::{GitHubError, GitHubRfdRepo};
-use rfd_model::{schema_ext::PdfSource, storage::postgres::PostgresStore};
+use rfd_model::schema_ext::PdfSource;
 use rsa::{
     pkcs1::{DecodeRsaPrivateKey, EncodeRsaPrivateKey},
     RsaPrivateKey,
@@ -27,6 +27,7 @@ use rsa::{
 use tap::TapFallible;
 use thiserror::Error;
 use tracing::instrument;
+use v_model::storage::postgres::PostgresStore;
 
 use crate::{
     pdf::{PdfFileLocation, PdfStorage, RfdPdf, RfdPdfError},

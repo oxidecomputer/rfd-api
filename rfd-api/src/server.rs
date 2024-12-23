@@ -15,10 +15,12 @@ use v_api::{inject_endpoints, v_system_endpoints};
 use crate::{
     context::RfdContext,
     endpoints::{
-        meta::get_rfd_meta,
         rfd::{
-            discuss_rfd, get_rfd, get_rfd_attr, get_rfds, publish_rfd, reserve_rfd, search_rfds,
-            set_rfd_attr, set_rfd_content, set_rfd_document, update_rfd_visibility,
+            discuss_rfd, list_rfds, publish_rfd, reserve_rfd, search_rfds, set_rfd_attr,
+            set_rfd_content, set_rfd_document, update_rfd_visibility, view_rfd, view_rfd_attr,
+            view_rfd_discussion, view_rfd_meta, view_rfd_pdf, view_rfd_revision,
+            view_rfd_revision_attr, view_rfd_revision_discussion, view_rfd_revision_meta,
+            view_rfd_revision_pdf,
         },
         webhook::github_webhook,
     },
@@ -74,17 +76,38 @@ pub fn server(
     inject_endpoints!(api);
 
     // RFDs
-    api.register(get_rfds).expect("Failed to register endpoint");
-    api.register(get_rfd).expect("Failed to register endpoint");
-    api.register(get_rfd_meta)
+    api.register(list_rfds)
         .expect("Failed to register endpoint");
+
+    api.register(view_rfd_meta)
+        .expect("Failed to register endpoint");
+    api.register(view_rfd).expect("Failed to register endpoint");
+    api.register(view_rfd_pdf)
+        .expect("Failed to register endpoint");
+    api.register(view_rfd_attr)
+        .expect("Failed to register endpoint");
+    api.register(view_rfd_discussion)
+        .expect("Failed to register endpoint");
+
+    api.register(view_rfd_revision_meta)
+        .expect("Failed to register endpoint");
+    api.register(view_rfd_revision)
+        .expect("Failed to register endpoint");
+    api.register(view_rfd_revision_pdf)
+        .expect("Failed to register endpoint");
+    api.register(view_rfd_revision_attr)
+        .expect("Failed to register endpoint");
+    api.register(view_rfd_revision_discussion)
+        .expect("Failed to register endpoint");
+
+    api.register(search_rfds)
+        .expect("Failed to register endpoint");
+
     api.register(reserve_rfd)
         .expect("Failed to register endpoint");
     api.register(set_rfd_document)
         .expect("Failed to register endpoint");
     api.register(set_rfd_content)
-        .expect("Failed to register endpoint");
-    api.register(get_rfd_attr)
         .expect("Failed to register endpoint");
     api.register(set_rfd_attr)
         .expect("Failed to register endpoint");
@@ -93,8 +116,6 @@ pub fn server(
     api.register(publish_rfd)
         .expect("Failed to register endpoint");
     api.register(update_rfd_visibility)
-        .expect("Failed to register endpoint");
-    api.register(search_rfds)
         .expect("Failed to register endpoint");
 
     // Webhooks
