@@ -179,7 +179,7 @@ pub async fn view_rfd_discussion(
     let ctx = rqctx.context();
     let caller = ctx.v_ctx().get_caller(&rqctx).await?;
     let path = path.into_inner();
-    view_rfd_comments_op(ctx, &caller, path.number, None).await
+    view_rfd_discussion_op(ctx, &caller, path.number, None).await
 }
 
 // Specific RFD revision endpoints
@@ -273,7 +273,7 @@ pub async fn view_rfd_revision_discussion(
     let ctx = rqctx.context();
     let caller = ctx.v_ctx().get_caller(&rqctx).await?;
     let path = path.into_inner();
-    view_rfd_comments_op(ctx, &caller, path.number, Some(path.revision.into())).await
+    view_rfd_discussion_op(ctx, &caller, path.number, Some(path.revision.into())).await
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
