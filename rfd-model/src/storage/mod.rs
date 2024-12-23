@@ -31,7 +31,9 @@ pub trait RfdStorage:
     + RfdPdfStore
     + JobStore
     + RfdCommentUserStore
+    + RfdReviewStore
     + RfdReviewCommentStore
+    + RfdCommentStore
     + Send
     + Sync
     + 'static
@@ -45,7 +47,9 @@ impl<T> RfdStorage for T where
         + RfdPdfStore
         + JobStore
         + RfdCommentUserStore
+        + RfdReviewStore
         + RfdReviewCommentStore
+        + RfdCommentStore
         + Send
         + Sync
         + 'static

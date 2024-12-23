@@ -13,7 +13,7 @@ use rfd_data::{
 };
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
-    Rfd, RfdPdf, RfdReviewComment, RfdRevisionId,
+    Rfd, RfdPdf, RfdRevisionId,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -24,7 +24,9 @@ use v_model::permissions::Caller;
 
 use crate::{
     caller::CallerExt,
-    context::{RfdContext, RfdRevisionIdentifier, RfdWithContent, RfdWithoutContent},
+    context::{
+        RfdContext, RfdDiscussion, RfdRevisionIdentifier, RfdWithContent, RfdWithoutContent,
+    },
     permissions::RfdPermission,
     search::{MeiliSearchResult, SearchRequest},
     util::response::{client_error, internal_error, unauthorized},
@@ -175,7 +177,7 @@ pub async fn view_rfd_attr(
 pub async fn view_rfd_discussion(
     rqctx: RequestContext<RfdContext>,
     path: Path<RfdPathParams>,
-) -> Result<HttpResponseOk<Vec<RfdReviewComment>>, HttpError> {
+) -> Result<HttpResponseOk<RfdDiscussion>, HttpError> {
     let ctx = rqctx.context();
     let caller = ctx.v_ctx().get_caller(&rqctx).await?;
     let path = path.into_inner();
@@ -269,7 +271,7 @@ pub async fn view_rfd_revision_attr(
 pub async fn view_rfd_revision_discussion(
     rqctx: RequestContext<RfdContext>,
     path: Path<RfdRevisionPathParams>,
-) -> Result<HttpResponseOk<Vec<RfdReviewComment>>, HttpError> {
+) -> Result<HttpResponseOk<RfdDiscussion>, HttpError> {
     let ctx = rqctx.context();
     let caller = ctx.v_ctx().get_caller(&rqctx).await?;
     let path = path.into_inner();
@@ -433,9 +435,11 @@ async fn view_rfd_discussion_op(
     caller: &Caller<RfdPermission>,
     number: String,
     revision: Option<RfdRevisionIdentifier>,
-) -> Result<HttpResponseOk<Vec<RfdReviewComment>>, HttpError> {
+) -> Result<HttpResponseOk<RfdDiscussion>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
-        let comments = ctx.view_rfd_comments(caller, rfd_number, revision).await?;
+        let comments = ctx
+            .view_rfd_discussion(caller, rfd_number, revision)
+            .await?;
         Ok(HttpResponseOk(comments))
     } else {
         Err(client_error(

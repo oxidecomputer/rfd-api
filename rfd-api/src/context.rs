@@ -18,11 +18,12 @@ use rfd_github::{GitHubError, GitHubNewRfdNumber, GitHubRfdRepo};
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
     storage::{
-        JobStore, RfdFilter, RfdMetaStore, RfdPdfFilter, RfdPdfStore, RfdReviewCommentFilter,
-        RfdReviewCommentStore, RfdStorage, RfdStore,
+        JobStore, RfdCommentFilter, RfdCommentStore, RfdCommentUserFilter, RfdCommentUserStore,
+        RfdFilter, RfdMetaStore, RfdPdfFilter, RfdPdfStore, RfdReviewCommentFilter,
+        RfdReviewCommentStore, RfdReviewFilter, RfdReviewStore, RfdStorage, RfdStore,
     },
-    CommitSha, FileSha, Job, NewJob, Rfd, RfdId, RfdMeta, RfdPdf, RfdReviewComment, RfdRevision,
-    RfdRevisionId,
+    CommitSha, FileSha, Job, NewJob, Rfd, RfdComment, RfdCommentUser, RfdId, RfdMeta, RfdPdf,
+    RfdReview, RfdReviewComment, RfdRevision, RfdRevisionId,
 };
 use rsa::{
     pkcs1::{DecodeRsaPrivateKey, EncodeRsaPrivateKey},
@@ -175,6 +176,14 @@ impl From<TypedUuid<RfdRevisionId>> for RfdRevisionIdentifier {
     fn from(value: TypedUuid<RfdRevisionId>) -> Self {
         Self::Id(value)
     }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
+pub struct RfdDiscussion {
+    pub users: Vec<RfdCommentUser>,
+    pub reviews: Vec<RfdReview>,
+    pub review_comments: Vec<RfdReviewComment>,
+    pub comments: Vec<RfdComment>,
 }
 
 impl RfdContext {
@@ -516,23 +525,57 @@ impl RfdContext {
         Ok(pdfs)
     }
 
-    pub async fn view_rfd_comments(
+    pub async fn view_rfd_discussion(
         &self,
         caller: &Caller<RfdPermission>,
         rfd_number: i32,
         revision: Option<RfdRevisionIdentifier>,
-    ) -> ResourceResult<Vec<RfdReviewComment>, StoreError> {
+    ) -> ResourceResult<RfdDiscussion, StoreError> {
         let rfd = self.get_rfd_meta(caller, rfd_number, revision).await?;
-        let comments = RfdReviewCommentStore::list(
+        let reviews = RfdReviewStore::list(
             &*self.storage,
-            vec![RfdReviewCommentFilter::default()
-                .rfd(Some(vec![rfd.id]))
-                .comment_created_before(Some(rfd.content.committed_at))],
+            vec![RfdReviewFilter::default().rfd(Some(vec![rfd.id]))],
             &ListPagination::unlimited(),
         )
         .await
         .to_resource_result()?;
-        Ok(comments)
+        let review_ids = reviews.iter().map(|review| review.id).collect::<Vec<_>>();
+        let user_ids = reviews
+            .iter()
+            .map(|review| review.comment_user_id)
+            .collect::<Vec<_>>();
+        let users = RfdCommentUserStore::list(
+            &*self.storage,
+            vec![RfdCommentUserFilter::default().id(Some(user_ids.clone()))],
+            &ListPagination::unlimited(),
+        )
+        .await
+        .to_resource_result()?;
+        let review_comments = RfdReviewCommentStore::list(
+            &*self.storage,
+            vec![RfdReviewCommentFilter::default()
+                .rfd(Some(vec![rfd.id]))
+                .user(Some(user_ids.clone()))
+                .review(Some(review_ids))],
+            &ListPagination::unlimited(),
+        )
+        .await
+        .to_resource_result()?;
+        let comments = RfdCommentStore::list(
+            &*self.storage,
+            vec![RfdCommentFilter::default()
+                .rfd(Some(vec![rfd.id]))
+                .user(Some(user_ids))],
+            &ListPagination::unlimited(),
+        )
+        .await
+        .to_resource_result()?;
+        Ok(RfdDiscussion {
+            users,
+            reviews,
+            review_comments,
+            comments,
+        })
     }
 
     #[instrument(skip(self, caller, content))]
