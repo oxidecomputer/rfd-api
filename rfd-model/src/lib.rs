@@ -359,8 +359,7 @@ impl TypedUuidKind for RfdReviewId {
 pub struct RfdReview {
     pub id: TypedUuid<RfdReviewId>,
     pub rfd_id: TypedUuid<RfdId>,
-    #[partial(NewRfdReview(retype = TypedUuid<RfdCommentUserId>))]
-    pub comment_user: RfdCommentUser,
+    pub comment_user_id: TypedUuid<RfdCommentUserId>,
     pub external_id: i32,
     pub node_id: String,
     pub body: String,
@@ -375,12 +374,12 @@ pub struct RfdReview {
     pub deleted_at: Option<DateTime<Utc>>,
 }
 
-impl From<(RfdReviewModel, RfdCommentUserModel)> for RfdReview {
-    fn from((review, user): (RfdReviewModel, RfdCommentUserModel)) -> Self {
+impl From<RfdReviewModel> for RfdReview {
+    fn from(review: RfdReviewModel) -> Self {
         Self {
             id: TypedUuid::from_untyped_uuid(review.id),
             rfd_id: TypedUuid::from_untyped_uuid(review.rfd_id),
-            comment_user: user.into(),
+            comment_user_id: TypedUuid::from_untyped_uuid(review.comment_user_id),
             external_id: review.external_id,
             node_id: review.node_id,
             body: review.body,
@@ -408,12 +407,10 @@ impl TypedUuidKind for RfdReviewCommentId {
 pub struct RfdReviewComment {
     pub id: TypedUuid<RfdReviewCommentId>,
     pub rfd_id: TypedUuid<RfdId>,
-    #[partial(NewRfdReviewComment(retype = TypedUuid<RfdCommentUserId>))]
-    pub comment_user: RfdCommentUser,
+    pub comment_user_id: TypedUuid<RfdCommentUserId>,
     pub external_id: i32,
     pub node_id: String,
-    #[partial(NewRfdReviewComment(retype = Option<TypedUuid<RfdReviewId>>))]
-    pub review: Option<RfdReview>,
+    pub review_id: Option<TypedUuid<RfdReviewId>>,
     pub diff_hunk: String,
     pub path: String,
     pub body: String,
@@ -437,27 +434,15 @@ pub struct RfdReviewComment {
     pub deleted_at: Option<DateTime<Utc>>,
 }
 
-impl
-    From<(
-        RfdReviewCommentModel,
-        RfdCommentUserModel,
-        Option<RfdReviewModel>,
-    )> for RfdReviewComment
-{
-    fn from(
-        (comment, user, review): (
-            RfdReviewCommentModel,
-            RfdCommentUserModel,
-            Option<RfdReviewModel>,
-        ),
-    ) -> Self {
+impl From<RfdReviewCommentModel> for RfdReviewComment {
+    fn from(comment: RfdReviewCommentModel) -> Self {
         Self {
             id: TypedUuid::from_untyped_uuid(comment.id),
             rfd_id: TypedUuid::from_untyped_uuid(comment.rfd_id),
-            comment_user: user.clone().into(),
+            comment_user_id: TypedUuid::from_untyped_uuid(comment.comment_user_id),
             external_id: comment.external_id,
             node_id: comment.node_id,
-            review: review.map(|r| (r, user).into()),
+            review_id: comment.review_id.map(TypedUuid::from_untyped_uuid),
             diff_hunk: comment.diff_hunk,
             path: comment.path,
             body: comment.body,
@@ -494,8 +479,7 @@ impl TypedUuidKind for RfdCommentId {
 pub struct RfdComment {
     pub id: TypedUuid<RfdCommentId>,
     pub rfd_id: TypedUuid<RfdId>,
-    #[partial(NewRfdComment(retype = TypedUuid<RfdCommentUserId>))]
-    pub comment_user: RfdCommentUser,
+    pub comment_user_id: TypedUuid<RfdCommentUserId>,
     pub external_id: i32,
     pub node_id: String,
     pub body: String,
@@ -509,12 +493,12 @@ pub struct RfdComment {
     pub deleted_at: Option<DateTime<Utc>>,
 }
 
-impl From<(RfdCommentModel, RfdCommentUserModel)> for RfdComment {
-    fn from((comment, user): (RfdCommentModel, RfdCommentUserModel)) -> Self {
+impl From<RfdCommentModel> for RfdComment {
+    fn from(comment: RfdCommentModel) -> Self {
         Self {
             id: TypedUuid::from_untyped_uuid(comment.id),
             rfd_id: TypedUuid::from_untyped_uuid(comment.rfd_id),
-            comment_user: user.into(),
+            comment_user_id: TypedUuid::from_untyped_uuid(comment.comment_user_id),
             external_id: comment.external_id,
             node_id: comment.node_id,
             body: comment.body,

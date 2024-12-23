@@ -18,10 +18,10 @@ use rfd_github::{GitHubError, GitHubNewRfdNumber, GitHubRfdRepo};
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
     storage::{
-        JobStore, RfdCommentFilter, RfdCommentStore, RfdFilter, RfdMetaStore, RfdPdfFilter,
-        RfdPdfStore, RfdStorage, RfdStore,
+        JobStore, RfdFilter, RfdMetaStore, RfdPdfFilter, RfdPdfStore, RfdReviewCommentFilter,
+        RfdReviewCommentStore, RfdStorage, RfdStore,
     },
-    CommitSha, FileSha, Job, NewJob, Rfd, RfdComment, RfdId, RfdMeta, RfdPdf, RfdRevision,
+    CommitSha, FileSha, Job, NewJob, Rfd, RfdId, RfdMeta, RfdPdf, RfdReviewComment, RfdRevision,
     RfdRevisionId,
 };
 use rsa::{
@@ -521,11 +521,11 @@ impl RfdContext {
         caller: &Caller<RfdPermission>,
         rfd_number: i32,
         revision: Option<RfdRevisionIdentifier>,
-    ) -> ResourceResult<Vec<RfdComment>, StoreError> {
+    ) -> ResourceResult<Vec<RfdReviewComment>, StoreError> {
         let rfd = self.get_rfd_meta(caller, rfd_number, revision).await?;
-        let comments = RfdCommentStore::list(
+        let comments = RfdReviewCommentStore::list(
             &*self.storage,
-            vec![RfdCommentFilter::default()
+            vec![RfdReviewCommentFilter::default()
                 .rfd(Some(vec![rfd.id]))
                 .comment_created_before(Some(rfd.content.committed_at))],
             &ListPagination::unlimited(),

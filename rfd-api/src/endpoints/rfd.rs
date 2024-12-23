@@ -13,7 +13,7 @@ use rfd_data::{
 };
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
-    Rfd, RfdComment, RfdPdf, RfdRevisionId,
+    Rfd, RfdPdf, RfdReviewComment, RfdRevisionId,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -175,7 +175,7 @@ pub async fn view_rfd_attr(
 pub async fn view_rfd_comments(
     rqctx: RequestContext<RfdContext>,
     path: Path<RfdPathParams>,
-) -> Result<HttpResponseOk<Vec<RfdComment>>, HttpError> {
+) -> Result<HttpResponseOk<Vec<RfdReviewComment>>, HttpError> {
     let ctx = rqctx.context();
     let caller = ctx.v_ctx().get_caller(&rqctx).await?;
     let path = path.into_inner();
@@ -269,7 +269,7 @@ pub async fn view_rfd_revision_attr(
 pub async fn view_rfd_revision_comments(
     rqctx: RequestContext<RfdContext>,
     path: Path<RfdRevisionPathParams>,
-) -> Result<HttpResponseOk<Vec<RfdComment>>, HttpError> {
+) -> Result<HttpResponseOk<Vec<RfdReviewComment>>, HttpError> {
     let ctx = rqctx.context();
     let caller = ctx.v_ctx().get_caller(&rqctx).await?;
     let path = path.into_inner();
@@ -433,7 +433,7 @@ async fn view_rfd_comments_op(
     caller: &Caller<RfdPermission>,
     number: String,
     revision: Option<RfdRevisionIdentifier>,
-) -> Result<HttpResponseOk<Vec<RfdComment>>, HttpError> {
+) -> Result<HttpResponseOk<Vec<RfdReviewComment>>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
         let comments = ctx.view_rfd_comments(caller, rfd_number, revision).await?;
         Ok(HttpResponseOk(comments))

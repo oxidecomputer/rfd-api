@@ -22,20 +22,25 @@ use v_model::storage::postgres::PostgresStore;
 use crate::{
     db::{
         JobModel, RfdCommentModel, RfdCommentUserModel, RfdModel, RfdPdfModel,
-        RfdRevisionMetaModel, RfdRevisionModel,
+        RfdReviewCommentModel, RfdReviewModel, RfdRevisionMetaModel, RfdRevisionModel,
     },
-    schema::{job, rfd, rfd_comment, rfd_comment_user, rfd_pdf, rfd_revision},
+    schema::{
+        job, rfd, rfd_comment, rfd_comment_user, rfd_pdf, rfd_review, rfd_review_comment,
+        rfd_revision,
+    },
     schema_ext::Visibility,
     storage::StoreError,
-    Job, NewJob, NewRfd, NewRfdComment, NewRfdCommentUser, NewRfdPdf, NewRfdRevision, Rfd,
-    RfdComment, RfdCommentId, RfdCommentUser, RfdId, RfdMeta, RfdPdf, RfdPdfId, RfdRevision,
-    RfdRevisionId, RfdRevisionMeta,
+    Job, NewJob, NewRfd, NewRfdComment, NewRfdCommentUser, NewRfdPdf, NewRfdReview,
+    NewRfdReviewComment, NewRfdRevision, Rfd, RfdComment, RfdCommentId, RfdCommentUser,
+    RfdCommentUserId, RfdId, RfdMeta, RfdPdf, RfdPdfId, RfdReview, RfdReviewComment,
+    RfdReviewCommentId, RfdReviewId, RfdRevision, RfdRevisionId, RfdRevisionMeta,
 };
 
 use super::{
-    JobFilter, JobStore, ListPagination, RfdCommentFilter, RfdCommentStore, RfdCommentUserStore,
-    RfdFilter, RfdMetaStore, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionMetaStore,
-    RfdRevisionStore, RfdStore,
+    JobFilter, JobStore, ListPagination, RfdCommentFilter, RfdCommentStore, RfdCommentUserFilter,
+    RfdCommentUserStore, RfdFilter, RfdMetaStore, RfdPdfFilter, RfdPdfStore,
+    RfdReviewCommentFilter, RfdReviewCommentStore, RfdReviewFilter, RfdReviewStore,
+    RfdRevisionFilter, RfdRevisionMetaStore, RfdRevisionStore, RfdStore,
 };
 
 #[async_trait]
@@ -756,6 +761,55 @@ impl JobStore for PostgresStore {
 
 #[async_trait]
 impl RfdCommentUserStore for PostgresStore {
+    async fn get(
+        &self,
+        id: TypedUuid<RfdCommentUserId>,
+    ) -> Result<Option<RfdCommentUser>, StoreError> {
+        let user = RfdCommentUserStore::list(
+            self,
+            vec![RfdCommentUserFilter::default().id(Some(vec![id]))],
+            &ListPagination::default().limit(1),
+        )
+        .await?;
+        Ok(user.into_iter().nth(0))
+    }
+
+    async fn list(
+        &self,
+        filters: Vec<RfdCommentUserFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdCommentUser>, StoreError> {
+        let mut query = rfd_comment_user::table.into_boxed();
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let RfdCommentUserFilter { id } = filter;
+
+                if let Some(id) = id {
+                    predicates.push(Box::new(
+                        rfd_comment_user::id
+                            .eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
+
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
+        }
+
+        let results = query
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+            .get_results_async::<RfdCommentUserModel>(&*self.pool.get().await?)
+            .await?;
+
+        Ok(results.into_iter().map(|record| record.into()).collect())
+    }
+
     async fn upsert(
         &self,
         new_rfd_comment_user: NewRfdCommentUser,
@@ -763,30 +817,315 @@ impl RfdCommentUserStore for PostgresStore {
         let user: RfdCommentUserModel = insert_into(rfd_comment_user::table)
             .values((
                 rfd_comment_user::id.eq(new_rfd_comment_user.id.into_untyped_uuid()),
-                rfd_comment_user::github_user_id.eq(new_rfd_comment_user.github_user_id),
-                rfd_comment_user::github_user_node_id.eq(new_rfd_comment_user.github_user_node_id),
-                rfd_comment_user::github_user_username
-                    .eq(new_rfd_comment_user.github_user_username),
-                rfd_comment_user::github_user_avatar_url
-                    .eq(new_rfd_comment_user.github_user_avatar_url),
-                rfd_comment_user::github_user_type.eq(new_rfd_comment_user.github_user_type),
+                rfd_comment_user::external_id.eq(new_rfd_comment_user.external_id),
+                rfd_comment_user::node_id.eq(new_rfd_comment_user.node_id),
+                rfd_comment_user::user_username.eq(new_rfd_comment_user.user_username),
+                rfd_comment_user::user_avatar_url.eq(new_rfd_comment_user.user_avatar_url),
+                rfd_comment_user::user_type.eq(new_rfd_comment_user.user_type),
             ))
-            .on_conflict(rfd_comment_user::github_user_id)
+            .on_conflict(rfd_comment_user::external_id)
             .do_update()
             .set((
-                rfd_comment_user::github_user_id.eq(excluded(rfd_comment_user::github_user_id)),
-                rfd_comment_user::github_user_node_id
-                    .eq(excluded(rfd_comment_user::github_user_node_id)),
-                rfd_comment_user::github_user_username
-                    .eq(excluded(rfd_comment_user::github_user_username)),
-                rfd_comment_user::github_user_avatar_url
-                    .eq(excluded(rfd_comment_user::github_user_avatar_url)),
-                rfd_comment_user::github_user_type.eq(excluded(rfd_comment_user::github_user_type)),
+                rfd_comment_user::external_id.eq(excluded(rfd_comment_user::external_id)),
+                rfd_comment_user::node_id.eq(excluded(rfd_comment_user::node_id)),
+                rfd_comment_user::user_username.eq(excluded(rfd_comment_user::user_username)),
+                rfd_comment_user::user_avatar_url.eq(excluded(rfd_comment_user::user_avatar_url)),
+                rfd_comment_user::user_type.eq(excluded(rfd_comment_user::user_type)),
             ))
             .get_result_async(&*self.pool.get().await?)
             .await?;
 
         Ok(user.into())
+    }
+
+    async fn delete(
+        &self,
+        id: TypedUuid<RfdCommentUserId>,
+    ) -> Result<Option<RfdCommentUser>, StoreError> {
+        let _ = update(rfd_comment_user::table)
+            .filter(rfd_comment_user::id.eq(id.into_untyped_uuid()))
+            .set(rfd_comment_user::deleted_at.eq(Utc::now()))
+            .execute_async(&*self.pool.get().await?)
+            .await?;
+        RfdCommentUserStore::get(self, id).await
+    }
+}
+
+#[async_trait]
+impl RfdReviewStore for PostgresStore {
+    async fn get(&self, id: TypedUuid<RfdReviewId>) -> Result<Option<RfdReview>, StoreError> {
+        let review = RfdReviewStore::list(
+            self,
+            vec![RfdReviewFilter::default().id(Some(vec![id]))],
+            &ListPagination::default().limit(1),
+        )
+        .await?;
+        Ok(review.into_iter().nth(0))
+    }
+
+    async fn list(
+        &self,
+        filters: Vec<RfdReviewFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdReview>, StoreError> {
+        let mut query = rfd_review::table.into_boxed();
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let RfdReviewFilter {
+                    id,
+                    rfd,
+                    user,
+                    review_created_before,
+                } = filter;
+
+                if let Some(id) = id {
+                    predicates.push(Box::new(
+                        rfd_review::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
+
+                if let Some(rfd) = rfd {
+                    let rfd_ids = rfd.into_iter().map(GenericUuid::into_untyped_uuid);
+                    predicates.push(Box::new(rfd_review::rfd_id.eq_any(rfd_ids.clone())));
+                }
+
+                if let Some(user) = user {
+                    predicates.push(Box::new(
+                        rfd_review::comment_user_id
+                            .eq_any(user.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
+
+                if let Some(review_created_before) = review_created_before {
+                    predicates.push(Box::new(
+                        rfd_review::review_created_at
+                            .assume_not_null()
+                            .le(review_created_before),
+                    ));
+                }
+
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
+        }
+
+        let results = query
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+            .get_results_async::<RfdReviewModel>(&*self.pool.get().await?)
+            .await?;
+
+        Ok(results.into_iter().map(|record| record.into()).collect())
+    }
+
+    async fn upsert(&self, new_rfd_review: NewRfdReview) -> Result<RfdReview, StoreError> {
+        let user: RfdReviewModel = insert_into(rfd_review::table)
+            .values((
+                rfd_review::id.eq(new_rfd_review.id.into_untyped_uuid()),
+                rfd_review::rfd_id.eq(new_rfd_review.rfd_id.into_untyped_uuid()),
+                rfd_review::comment_user_id.eq(new_rfd_review.comment_user_id.into_untyped_uuid()),
+                rfd_review::external_id.eq(new_rfd_review.external_id),
+                rfd_review::node_id.eq(new_rfd_review.node_id),
+                rfd_review::body.eq(new_rfd_review.body),
+                rfd_review::state.eq(new_rfd_review.state),
+                rfd_review::commit_id.eq(new_rfd_review.commit_id),
+                rfd_review::review_created_at.eq(new_rfd_review.review_created_at),
+            ))
+            .on_conflict(rfd_review::external_id)
+            .do_update()
+            .set((
+                rfd_review::rfd_id.eq(excluded(rfd_review::rfd_id)),
+                rfd_review::comment_user_id.eq(excluded(rfd_review::comment_user_id)),
+                rfd_review::external_id.eq(excluded(rfd_review::external_id)),
+                rfd_review::node_id.eq(excluded(rfd_review::node_id)),
+                rfd_review::body.eq(excluded(rfd_review::body)),
+                rfd_review::state.eq(excluded(rfd_review::state)),
+                rfd_review::commit_id.eq(excluded(rfd_review::commit_id)),
+                rfd_review::review_created_at.eq(excluded(rfd_review::review_created_at)),
+            ))
+            .get_result_async(&*self.pool.get().await?)
+            .await?;
+
+        Ok(user.into())
+    }
+
+    async fn delete(&self, id: TypedUuid<RfdReviewId>) -> Result<Option<RfdReview>, StoreError> {
+        let _ = update(rfd_review::table)
+            .filter(rfd_review::id.eq(id.into_untyped_uuid()))
+            .set(rfd_review::deleted_at.eq(Utc::now()))
+            .execute_async(&*self.pool.get().await?)
+            .await?;
+        RfdReviewStore::get(self, id).await
+    }
+}
+
+#[async_trait]
+impl RfdReviewCommentStore for PostgresStore {
+    async fn get(
+        &self,
+        id: TypedUuid<RfdReviewCommentId>,
+    ) -> Result<Option<RfdReviewComment>, StoreError> {
+        let comment = RfdReviewCommentStore::list(
+            self,
+            vec![RfdReviewCommentFilter::default().id(Some(vec![id]))],
+            &ListPagination::default().limit(1),
+        )
+        .await?;
+        Ok(comment.into_iter().nth(0))
+    }
+
+    async fn list(
+        &self,
+        filters: Vec<RfdReviewCommentFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdReviewComment>, StoreError> {
+        let mut query = rfd_review_comment::table.into_boxed();
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let RfdReviewCommentFilter {
+                    id,
+                    rfd,
+                    user,
+                    review,
+                    comment_created_before,
+                } = filter;
+
+                if let Some(id) = id {
+                    predicates.push(Box::new(
+                        rfd_review_comment::id
+                            .eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
+
+                if let Some(rfd) = rfd {
+                    let rfd_ids = rfd.into_iter().map(GenericUuid::into_untyped_uuid);
+                    predicates.push(Box::new(rfd_review_comment::rfd_id.eq_any(rfd_ids.clone())));
+                }
+
+                if let Some(user) = user {
+                    predicates.push(Box::new(
+                        rfd_review_comment::comment_user_id
+                            .eq_any(user.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
+
+                if let Some(review) = review {
+                    let review_ids = review.into_iter().map(GenericUuid::into_untyped_uuid);
+                    predicates.push(Box::new(
+                        rfd_review_comment::review_id.eq_any(review_ids.clone()),
+                    ));
+                }
+
+                if let Some(comment_created_before) = comment_created_before {
+                    predicates.push(Box::new(
+                        rfd_review_comment::comment_created_at
+                            .assume_not_null()
+                            .le(comment_created_before),
+                    ));
+                }
+
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
+        }
+
+        let results = query
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+            .get_results_async::<RfdReviewCommentModel>(&*self.pool.get().await?)
+            .await?;
+
+        Ok(results.into_iter().map(|record| record.into()).collect())
+    }
+
+    async fn upsert(
+        &self,
+        new_comment: NewRfdReviewComment,
+    ) -> Result<RfdReviewComment, StoreError> {
+        let comment: RfdReviewCommentModel = insert_into(rfd_review_comment::table)
+            .values((
+                rfd_review_comment::id.eq(new_comment.id.into_untyped_uuid()),
+                rfd_review_comment::rfd_id.eq(new_comment.rfd_id.into_untyped_uuid()),
+                rfd_review_comment::comment_user_id
+                    .eq(new_comment.comment_user_id.into_untyped_uuid()),
+                rfd_review_comment::external_id.eq(new_comment.external_id),
+                rfd_review_comment::node_id.eq(new_comment.node_id),
+                rfd_review_comment::review_id
+                    .eq(new_comment.review_id.map(GenericUuid::into_untyped_uuid)),
+                rfd_review_comment::diff_hunk.eq(new_comment.diff_hunk),
+                rfd_review_comment::path.eq(new_comment.path),
+                rfd_review_comment::body.eq(new_comment.body),
+                rfd_review_comment::commit_id.eq(new_comment.commit_id),
+                rfd_review_comment::original_commit_id.eq(new_comment.original_commit_id),
+                rfd_review_comment::line.eq(new_comment.line),
+                rfd_review_comment::original_line.eq(new_comment.original_line),
+                rfd_review_comment::start_line.eq(new_comment.start_line),
+                rfd_review_comment::original_start_line.eq(new_comment.original_start_line),
+                rfd_review_comment::side.eq(new_comment.side),
+                rfd_review_comment::start_side.eq(new_comment.start_side),
+                rfd_review_comment::subject.eq(new_comment.subject),
+                rfd_review_comment::in_reply_to.eq(new_comment.in_reply_to),
+                rfd_review_comment::comment_created_at.eq(new_comment.comment_created_at),
+                rfd_review_comment::comment_updated_at.eq(new_comment.comment_updated_at),
+            ))
+            .on_conflict(rfd_review_comment::external_id)
+            .do_update()
+            .set((
+                rfd_review_comment::comment_user_id
+                    .eq(excluded(rfd_review_comment::comment_user_id)),
+                rfd_review_comment::external_id.eq(excluded(rfd_review_comment::external_id)),
+                rfd_review_comment::node_id.eq(excluded(rfd_review_comment::node_id)),
+                rfd_review_comment::review_id.eq(excluded(rfd_review_comment::review_id)),
+                rfd_review_comment::diff_hunk.eq(excluded(rfd_review_comment::diff_hunk)),
+                rfd_review_comment::path.eq(excluded(rfd_review_comment::path)),
+                rfd_review_comment::body.eq(excluded(rfd_review_comment::body)),
+                rfd_review_comment::commit_id.eq(excluded(rfd_review_comment::commit_id)),
+                rfd_review_comment::original_commit_id
+                    .eq(excluded(rfd_review_comment::original_commit_id)),
+                rfd_review_comment::line.eq(excluded(rfd_review_comment::line)),
+                rfd_review_comment::original_line.eq(excluded(rfd_review_comment::original_line)),
+                rfd_review_comment::start_line.eq(excluded(rfd_review_comment::start_line)),
+                rfd_review_comment::original_start_line
+                    .eq(excluded(rfd_review_comment::original_start_line)),
+                rfd_review_comment::side.eq(excluded(rfd_review_comment::side)),
+                rfd_review_comment::start_side.eq(excluded(rfd_review_comment::start_side)),
+                rfd_review_comment::subject.eq(excluded(rfd_review_comment::subject)),
+                rfd_review_comment::in_reply_to.eq(excluded(rfd_review_comment::in_reply_to)),
+                rfd_review_comment::comment_created_at
+                    .eq(excluded(rfd_review_comment::comment_created_at)),
+                rfd_review_comment::comment_updated_at
+                    .eq(excluded(rfd_review_comment::comment_updated_at)),
+            ))
+            .get_result_async(&*self.pool.get().await?)
+            .await?;
+
+        Ok(
+            RfdReviewCommentStore::get(self, TypedUuid::from_untyped_uuid(comment.id))
+                .await?
+                .expect("Upserted comment must exist"),
+        )
+    }
+
+    async fn delete(
+        &self,
+        id: TypedUuid<RfdReviewCommentId>,
+    ) -> Result<Option<RfdReviewComment>, StoreError> {
+        let _ = update(rfd_review_comment::table)
+            .filter(rfd_review_comment::id.eq(id.into_untyped_uuid()))
+            .set(rfd_review_comment::deleted_at.eq(Utc::now()))
+            .execute_async(&*self.pool.get().await?)
+            .await?;
+        RfdReviewCommentStore::get(self, id).await
     }
 }
 
@@ -807,9 +1146,7 @@ impl RfdCommentStore for PostgresStore {
         filters: Vec<RfdCommentFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdComment>, StoreError> {
-        let mut query = rfd_comment::table
-            .inner_join(rfd_comment_user::table)
-            .into_boxed();
+        let mut query = rfd_comment::table.into_boxed();
         let filter_predicates = filters
             .into_iter()
             .map(|filter| {
@@ -828,10 +1165,8 @@ impl RfdCommentStore for PostgresStore {
                 }
 
                 if let Some(rfd) = rfd {
-                    predicates.push(Box::new(
-                        rfd_comment::rfd_id
-                            .eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
-                    ));
+                    let rfd_ids = rfd.into_iter().map(GenericUuid::into_untyped_uuid);
+                    predicates.push(Box::new(rfd_comment::rfd_id.eq_any(rfd_ids.clone())));
                 }
 
                 if let Some(user) = user {
@@ -860,57 +1195,34 @@ impl RfdCommentStore for PostgresStore {
         let results = query
             .offset(pagination.offset)
             .limit(pagination.limit)
-            .get_results_async::<(RfdCommentModel, RfdCommentUserModel)>(&*self.pool.get().await?)
+            .get_results_async::<RfdCommentModel>(&*self.pool.get().await?)
             .await?;
 
         Ok(results.into_iter().map(|record| record.into()).collect())
     }
 
-    async fn upsert(&self, new_rfd_comment: NewRfdComment) -> Result<RfdComment, StoreError> {
+    async fn upsert(&self, new_comment: NewRfdComment) -> Result<RfdComment, StoreError> {
         let comment: RfdCommentModel = insert_into(rfd_comment::table)
             .values((
-                rfd_comment::id.eq(new_rfd_comment.id.into_untyped_uuid()),
-                rfd_comment::rfd_id.eq(new_rfd_comment.rfd_id.into_untyped_uuid()),
-                rfd_comment::comment_user_id.eq(new_rfd_comment.comment_user.into_untyped_uuid()),
-                rfd_comment::external_id.eq(new_rfd_comment.external_id),
-                rfd_comment::node_id.eq(new_rfd_comment.node_id),
-                rfd_comment::discussion_number.eq(new_rfd_comment.discussion_number),
-                rfd_comment::diff_hunk.eq(new_rfd_comment.diff_hunk),
-                rfd_comment::path.eq(new_rfd_comment.path),
-                rfd_comment::body.eq(new_rfd_comment.body),
-                rfd_comment::commit_id.eq(new_rfd_comment.commit_id),
-                rfd_comment::original_commit_id.eq(new_rfd_comment.original_commit_id),
-                rfd_comment::line.eq(new_rfd_comment.line),
-                rfd_comment::original_line.eq(new_rfd_comment.original_line),
-                rfd_comment::start_line.eq(new_rfd_comment.start_line),
-                rfd_comment::original_start_line.eq(new_rfd_comment.original_start_line),
-                rfd_comment::side.eq(new_rfd_comment.side),
-                rfd_comment::start_side.eq(new_rfd_comment.start_side),
-                rfd_comment::subject.eq(new_rfd_comment.subject),
-                rfd_comment::in_reply_to.eq(new_rfd_comment.in_reply_to),
-                rfd_comment::comment_created_at.eq(new_rfd_comment.comment_created_at),
-                rfd_comment::comment_updated_at.eq(new_rfd_comment.comment_updated_at),
+                rfd_comment::id.eq(new_comment.id.into_untyped_uuid()),
+                rfd_comment::rfd_id.eq(new_comment.rfd_id.into_untyped_uuid()),
+                rfd_comment::comment_user_id.eq(new_comment.comment_user_id.into_untyped_uuid()),
+                rfd_comment::external_id.eq(new_comment.external_id),
+                rfd_comment::node_id.eq(new_comment.node_id),
+                rfd_comment::body.eq(new_comment.body),
+                rfd_comment::comment_created_at.eq(new_comment.comment_created_at),
+                rfd_comment::comment_updated_at.eq(new_comment.comment_updated_at),
             ))
             .on_conflict(rfd_comment::external_id)
             .do_update()
             .set((
+                rfd_comment::rfd_id.eq(new_comment.rfd_id.into_untyped_uuid()),
                 rfd_comment::comment_user_id.eq(excluded(rfd_comment::comment_user_id)),
                 rfd_comment::external_id.eq(excluded(rfd_comment::external_id)),
                 rfd_comment::node_id.eq(excluded(rfd_comment::node_id)),
-                rfd_comment::discussion_number.eq(excluded(rfd_comment::discussion_number)),
-                rfd_comment::diff_hunk.eq(excluded(rfd_comment::diff_hunk)),
-                rfd_comment::path.eq(excluded(rfd_comment::path)),
                 rfd_comment::body.eq(excluded(rfd_comment::body)),
-                rfd_comment::commit_id.eq(excluded(rfd_comment::commit_id)),
-                rfd_comment::original_commit_id.eq(excluded(rfd_comment::original_commit_id)),
-                rfd_comment::line.eq(excluded(rfd_comment::line)),
-                rfd_comment::original_line.eq(excluded(rfd_comment::original_line)),
-                rfd_comment::start_line.eq(excluded(rfd_comment::start_line)),
-                rfd_comment::original_start_line.eq(excluded(rfd_comment::original_start_line)),
-                rfd_comment::side.eq(excluded(rfd_comment::side)),
-                rfd_comment::start_side.eq(excluded(rfd_comment::start_side)),
-                rfd_comment::subject.eq(excluded(rfd_comment::subject)),
-                rfd_comment::in_reply_to.eq(excluded(rfd_comment::in_reply_to)),
+                rfd_comment::comment_created_at.eq(excluded(rfd_comment::comment_created_at)),
+                rfd_comment::comment_updated_at.eq(excluded(rfd_comment::comment_updated_at)),
             ))
             .get_result_async(&*self.pool.get().await?)
             .await?;
@@ -922,13 +1234,13 @@ impl RfdCommentStore for PostgresStore {
         )
     }
 
-    async fn delete(&self, id: &TypedUuid<RfdCommentId>) -> Result<(), StoreError> {
+    async fn delete(&self, id: TypedUuid<RfdCommentId>) -> Result<Option<RfdComment>, StoreError> {
         let _ = update(rfd_comment::table)
             .filter(rfd_comment::id.eq(id.into_untyped_uuid()))
             .set(rfd_comment::deleted_at.eq(Utc::now()))
             .execute_async(&*self.pool.get().await?)
             .await?;
-        Ok(())
+        RfdCommentStore::get(self, id).await
     }
 }
 
