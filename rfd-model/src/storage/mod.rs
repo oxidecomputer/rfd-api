@@ -50,7 +50,7 @@ pub struct RfdFilter {
     pub id: Option<Vec<TypedUuid<RfdId>>>,
     pub revision: Option<Vec<TypedUuid<RfdRevisionId>>>,
     pub rfd_number: Option<Vec<i32>>,
-    pub commit_sha: Option<Vec<CommitSha>>,
+    pub commit: Option<Vec<CommitSha>>,
     pub public: Option<bool>,
     pub deleted: bool,
 }
@@ -71,8 +71,8 @@ impl RfdFilter {
         self
     }
 
-    pub fn commit_sha(mut self, commit_sha: Option<Vec<CommitSha>>) -> Self {
-        self.commit_sha = commit_sha;
+    pub fn commit(mut self, commit: Option<Vec<CommitSha>>) -> Self {
+        self.commit = commit;
         self
     }
 
@@ -128,7 +128,7 @@ pub trait RfdMetaStore {
 pub struct RfdRevisionFilter {
     pub id: Option<Vec<TypedUuid<RfdRevisionId>>>,
     pub rfd: Option<Vec<TypedUuid<RfdId>>>,
-    pub sha: Option<Vec<String>>,
+    pub commit: Option<Vec<CommitSha>>,
     pub deleted: bool,
 }
 
@@ -143,8 +143,8 @@ impl RfdRevisionFilter {
         self
     }
 
-    pub fn sha(mut self, sha: Option<Vec<String>>) -> Self {
-        self.sha = sha;
+    pub fn commit(mut self, commit: Option<Vec<CommitSha>>) -> Self {
+        self.commit = commit;
         self
     }
 

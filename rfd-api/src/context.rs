@@ -389,9 +389,7 @@ impl RfdContext {
     ) -> ResourceResult<Rfd, StoreError> {
         let mut filter = RfdFilter::default().rfd_number(Some(vec![rfd_number]));
         filter = match revision {
-            Some(RfdRevisionIdentifier::Commit(commit_sha)) => {
-                filter.commit_sha(Some(vec![commit_sha]))
-            }
+            Some(RfdRevisionIdentifier::Commit(commit)) => filter.commit(Some(vec![commit])),
             Some(RfdRevisionIdentifier::Id(revision)) => filter.revision(Some(vec![revision])),
             None => filter,
         };
@@ -424,9 +422,7 @@ impl RfdContext {
     ) -> ResourceResult<RfdMeta, StoreError> {
         let mut filter = RfdFilter::default().rfd_number(Some(vec![rfd_number]));
         filter = match revision {
-            Some(RfdRevisionIdentifier::Commit(commit_sha)) => {
-                filter.commit_sha(Some(vec![commit_sha]))
-            }
+            Some(RfdRevisionIdentifier::Commit(commit)) => filter.commit(Some(vec![commit])),
             Some(RfdRevisionIdentifier::Id(revision)) => filter.revision(Some(vec![revision])),
             None => filter,
         };

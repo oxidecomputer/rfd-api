@@ -1307,7 +1307,6 @@ mod tests {
         let caller = Caller::from(Permissions::<RfdPermission>::new());
 
         let result = view_rfd_op(&ctx, &caller, "0123".to_string(), None).await;
-
         match result {
             Err(err) => assert_eq!(StatusCode::NOT_FOUND, err.status_code),
             Ok(response) => panic!(
