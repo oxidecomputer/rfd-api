@@ -131,11 +131,20 @@ impl<'a> Tree<'a> {
 fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
     match cmd {
         // RFD commands
-        CliCommand::GetRfd => Some("view"),
-        CliCommand::GetRfdMeta => Some("meta"),
-        CliCommand::GetRfds => Some("list"),
-        CliCommand::GetRfdAttr => Some("attr"),
+        CliCommand::ListRfds => Some("list"),
+        CliCommand::ViewRfd => Some("view"),
+        CliCommand::ViewRfdMeta => Some("meta"),
+        CliCommand::ViewRfdAttr => Some("attr"),
+        CliCommand::ViewRfdDiscussion => Some("discussion"),
+        CliCommand::ViewRfdPdf => Some("pdf"),
         CliCommand::SearchRfds => Some("search"),
+
+        CliCommand::ViewRfdRevision => Some("revision view"),
+        CliCommand::ViewRfdRevisionMeta => Some("revision meta"),
+        CliCommand::ViewRfdRevisionAttr => Some("revision attr"),
+        CliCommand::ViewRfdRevisionDiscussion => Some("revision discussion"),
+        CliCommand::ViewRfdRevisionPdf => Some("revision pdf"),
+
         CliCommand::ReserveRfd => Some("reserve"),
 
         CliCommand::SetRfdAttr => Some("edit attr"),
