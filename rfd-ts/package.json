@@ -1,0 +1,73 @@
+{
+  "name": "@oxide/rfd.ts",
+  "version": "0.1.0",
+  "description": "TypeScript client for the RFD API",
+  "engines": {
+    "node": ">=18"
+  },
+  "type": "module",
+  "exports": {
+    "./client": {
+      "import": "./dist/Api.js",
+      "require": "./dist/Api.cjs"
+    },
+    "./client-retry": {
+      "import": "./dist/retry.js",
+      "require": "./dist/retry.cjs"
+    },
+    "./validation": {
+      "import": "./dist/validate.js",
+      "require": "./dist/validate.cjs"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "client": [
+        "dist/Api.d.ts"
+      ],
+      "client-retry": [
+        "dist/retry.d.ts"
+      ],
+      "validation": [
+        "dist/validate.d.ts"
+      ]
+    }
+  },
+  "scripts": {
+    "build": "tsup --dts",
+    "prepublishOnly": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tsc": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oxidecomputer/rfd-api.git"
+  },
+  "keywords": [],
+  "author": "Oxide Computer Company",
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/oxidecomputer/rfd-api/issues"
+  },
+  "homepage": "https://github.com/oxidecomputer/rfd-api#readme",
+  "peerDependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.2",
+    "typescript": "^5.7.2"
+  },
+  "tsup": {
+    "clean": true,
+    "entry": [
+      "src/Api.ts",
+      "src/retry.ts",
+      "src/validate.ts"
+    ],
+    "splitting": false,
+    "format": [
+      "cjs",
+      "esm"
+    ]
+  }
+}
