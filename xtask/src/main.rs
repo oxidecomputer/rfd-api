@@ -5,7 +5,8 @@
 use std::{
     fs::{self, File},
     io::Write,
-    path::PathBuf, process::Command,
+    path::PathBuf,
+    process::Command,
 };
 
 use clap::{Parser, ValueEnum};
@@ -52,7 +53,13 @@ fn main() -> Result<(), String> {
 }
 
 fn bump_package_versions(place: &VersionPlace) -> Result<(), String> {
-    let packages = vec!["rfd-api", "rfd-cli", "rfd-processor", "rfd-redirect", "rfd-ts"];
+    let packages = vec![
+        "rfd-api",
+        "rfd-cli",
+        "rfd-processor",
+        "rfd-redirect",
+        "rfd-ts",
+    ];
 
     let version_pattern = Regex::new(r#"(?m)^version = "(.*)"$"#).unwrap();
 
