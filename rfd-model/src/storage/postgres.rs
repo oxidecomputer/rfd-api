@@ -72,7 +72,7 @@ impl RfdStore for PostgresStore {
                     id,
                     revision,
                     rfd_number,
-                    sha,
+                    commit,
                     public,
                     deleted,
                 } = filter;
@@ -94,8 +94,10 @@ impl RfdStore for PostgresStore {
                     predicates.push(Box::new(rfd::rfd_number.eq_any(rfd_number)));
                 }
 
-                if let Some(sha) = sha {
-                    predicates.push(Box::new(rfd_revision::sha.eq_any(sha)));
+                if let Some(commit) = commit {
+                    predicates.push(Box::new(
+                        rfd_revision::commit_sha.eq_any(commit.into_iter().map(|sha| sha.0)),
+                    ));
                 }
 
                 if let Some(public) = public {
@@ -212,7 +214,7 @@ impl RfdMetaStore for PostgresStore {
                     id,
                     revision,
                     rfd_number,
-                    sha,
+                    commit,
                     public,
                     deleted,
                 } = filter;
@@ -234,8 +236,10 @@ impl RfdMetaStore for PostgresStore {
                     predicates.push(Box::new(rfd::rfd_number.eq_any(rfd_number)));
                 }
 
-                if let Some(sha) = sha {
-                    predicates.push(Box::new(rfd_revision::sha.eq_any(sha)));
+                if let Some(commit) = commit {
+                    predicates.push(Box::new(
+                        rfd_revision::commit_sha.eq_any(commit.into_iter().map(|sha| sha.0)),
+                    ));
                 }
 
                 if let Some(public) = public {
@@ -309,7 +313,7 @@ impl RfdRevisionStore for PostgresStore {
                 let RfdRevisionFilter {
                     id,
                     rfd,
-                    sha,
+                    commit,
                     deleted,
                 } = filter;
 
@@ -326,8 +330,10 @@ impl RfdRevisionStore for PostgresStore {
                     ));
                 }
 
-                if let Some(sha) = sha {
-                    predicates.push(Box::new(rfd_revision::sha.eq_any(sha)));
+                if let Some(commit) = commit {
+                    predicates.push(Box::new(
+                        rfd_revision::commit_sha.eq_any(commit.into_iter().map(|sha| sha.0)),
+                    ));
                 }
 
                 if !deleted {
@@ -462,7 +468,7 @@ impl RfdRevisionMetaStore for PostgresStore {
                 let RfdRevisionFilter {
                     id,
                     rfd,
-                    sha,
+                    commit,
                     deleted,
                 } = filter;
 
@@ -479,8 +485,10 @@ impl RfdRevisionMetaStore for PostgresStore {
                     ));
                 }
 
-                if let Some(sha) = sha {
-                    predicates.push(Box::new(rfd_revision::sha.eq_any(sha)));
+                if let Some(commit) = commit {
+                    predicates.push(Box::new(
+                        rfd_revision::commit_sha.eq_any(commit.into_iter().map(|sha| sha.0)),
+                    ));
                 }
 
                 if !deleted {

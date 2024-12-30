@@ -12,8 +12,8 @@ use std::fmt::Debug;
 use v_model::storage::{ListPagination, StoreError};
 
 use crate::{
-    schema_ext::PdfSource, Job, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdId, RfdMeta,
-    RfdPdf, RfdPdfId, RfdRevision, RfdRevisionId, RfdRevisionMeta,
+    schema_ext::PdfSource, CommitSha, Job, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdId,
+    RfdMeta, RfdPdf, RfdPdfId, RfdRevision, RfdRevisionId, RfdRevisionMeta,
 };
 
 #[cfg(feature = "mock")]
@@ -50,7 +50,7 @@ pub struct RfdFilter {
     pub id: Option<Vec<TypedUuid<RfdId>>>,
     pub revision: Option<Vec<TypedUuid<RfdRevisionId>>>,
     pub rfd_number: Option<Vec<i32>>,
-    pub sha: Option<Vec<String>>,
+    pub commit: Option<Vec<CommitSha>>,
     pub public: Option<bool>,
     pub deleted: bool,
 }
@@ -71,8 +71,8 @@ impl RfdFilter {
         self
     }
 
-    pub fn sha(mut self, sha: Option<Vec<String>>) -> Self {
-        self.sha = sha;
+    pub fn commit(mut self, commit: Option<Vec<CommitSha>>) -> Self {
+        self.commit = commit;
         self
     }
 
@@ -128,7 +128,7 @@ pub trait RfdMetaStore {
 pub struct RfdRevisionFilter {
     pub id: Option<Vec<TypedUuid<RfdRevisionId>>>,
     pub rfd: Option<Vec<TypedUuid<RfdId>>>,
-    pub sha: Option<Vec<String>>,
+    pub commit: Option<Vec<CommitSha>>,
     pub deleted: bool,
 }
 
@@ -143,8 +143,8 @@ impl RfdRevisionFilter {
         self
     }
 
-    pub fn sha(mut self, sha: Option<Vec<String>>) -> Self {
-        self.sha = sha;
+    pub fn commit(mut self, commit: Option<Vec<CommitSha>>) -> Self {
+        self.commit = commit;
         self
     }
 

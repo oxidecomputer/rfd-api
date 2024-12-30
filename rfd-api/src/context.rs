@@ -330,13 +330,13 @@ impl RfdContext {
         &self,
         caller: &Caller<RfdPermission>,
         rfd_number: i32,
-        sha: Option<String>,
+        commit: Option<CommitSha>,
     ) -> ResourceResult<Rfd, StoreError> {
         let rfd = RfdStore::list(
             &*self.storage,
             vec![RfdFilter::default()
                 .rfd_number(Some(vec![rfd_number]))
-                .sha(sha.map(|sha| vec![sha]))],
+                .commit(commit.map(|commit| vec![commit]))],
             &ListPagination::latest(),
         )
         .await
@@ -362,9 +362,9 @@ impl RfdContext {
         &self,
         caller: &Caller<RfdPermission>,
         rfd_number: i32,
-        sha: Option<String>,
+        commit: Option<CommitSha>,
     ) -> ResourceResult<RfdWithContent, StoreError> {
-        let rfd = self.get_rfd_by_number(caller, rfd_number, sha).await?;
+        let rfd = self.get_rfd_by_number(caller, rfd_number, commit).await?;
         let pdfs = RfdPdfStore::list(
             &*self.storage,
             vec![RfdPdfFilter::default().rfd_revision(Some(vec![rfd.content.id]))],
@@ -403,7 +403,7 @@ impl RfdContext {
         &self,
         caller: &Caller<RfdPermission>,
         rfd_number: i32,
-        sha: Option<String>,
+        commit: Option<CommitSha>,
     ) -> ResourceResult<RfdWithoutContent, StoreError> {
         let rfd = self
             .list_rfds(
@@ -411,7 +411,7 @@ impl RfdContext {
                 Some(
                     RfdFilter::default()
                         .rfd_number(Some(vec![rfd_number]))
-                        .sha(sha.map(|sha| vec![sha])),
+                        .commit(commit.map(|commit| vec![commit])),
                 ),
             )
             .await?
@@ -425,9 +425,9 @@ impl RfdContext {
         &self,
         caller: &Caller<RfdPermission>,
         rfd_number: i32,
-        sha: Option<String>,
+        commit: Option<CommitSha>,
     ) -> ResourceResult<RfdRevision, StoreError> {
-        let rfd = self.get_rfd_by_number(caller, rfd_number, sha).await?;
+        let rfd = self.get_rfd_by_number(caller, rfd_number, commit).await?;
         Ok(rfd.content)
     }
 
