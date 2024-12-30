@@ -727,7 +727,7 @@ async fn set_rfd_attr_op(
 #[trace_request]
 #[endpoint {
     method = POST,
-    path = "/rfd/{number}/discuss",
+    path = "/rfd/{number}/state/discuss",
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn discuss_rfd(
@@ -754,7 +754,7 @@ pub async fn discuss_rfd(
 #[trace_request]
 #[endpoint {
     method = POST,
-    path = "/rfd/{number}/publish",
+    path = "/rfd/{number}/state/publish",
 }]
 #[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
 pub async fn publish_rfd(
