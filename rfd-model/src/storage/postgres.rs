@@ -2,74 +2,50 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use async_bb8_diesel::{AsyncRunQueryDsl, ConnectionError, ConnectionManager};
+use async_bb8_diesel::AsyncRunQueryDsl;
 use async_trait::async_trait;
-use bb8::Pool;
 use chrono::Utc;
 use diesel::{
     debug_query, insert_into,
-    pg::PgConnection,
+    pg::Pg,
     query_dsl::QueryDsl,
+    sql_types::Bool,
     update,
     upsert::{excluded, on_constraint},
-    ExpressionMethods,
+    BoolExpressionMethods, BoxableExpression, ExpressionMethods, SelectableHelper,
 };
 use newtype_uuid::{GenericUuid, TypedUuid};
-use std::time::Duration;
-use thiserror::Error;
 use uuid::Uuid;
+use v_model::storage::postgres::PostgresStore;
 
 use crate::{
     db::{JobModel, RfdModel, RfdPdfModel, RfdRevisionMetaModel, RfdRevisionModel},
     schema::{job, rfd, rfd_pdf, rfd_revision},
     schema_ext::Visibility,
     storage::StoreError,
-    Job, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdId, RfdPdf, RfdPdfId, RfdRevision,
-    RfdRevisionId, RfdRevisionMeta,
+    Job, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdId, RfdMeta, RfdPdf, RfdPdfId,
+    RfdRevision, RfdRevisionId, RfdRevisionMeta,
 };
 
 use super::{
-    JobFilter, JobStore, ListPagination, RfdFilter, RfdPdfFilter, RfdPdfStore, RfdRevisionFilter,
-    RfdRevisionMetaStore, RfdRevisionStore, RfdStore,
+    JobFilter, JobStore, ListPagination, RfdFilter, RfdMetaStore, RfdPdfFilter, RfdPdfStore,
+    RfdRevisionFilter, RfdRevisionMetaStore, RfdRevisionStore, RfdStore,
 };
-
-pub type DbPool = Pool<ConnectionManager<PgConnection>>;
-
-pub struct PostgresStore {
-    pool: DbPool,
-}
-
-#[derive(Debug, Error)]
-pub enum PostgresError {
-    #[error("Failed to connect to database")]
-    Connection(ConnectionError),
-}
-
-impl From<ConnectionError> for PostgresError {
-    fn from(error: ConnectionError) -> Self {
-        PostgresError::Connection(error)
-    }
-}
-
-impl PostgresStore {
-    pub async fn new(url: &str) -> Result<Self, PostgresError> {
-        let manager = ConnectionManager::<PgConnection>::new(url);
-
-        Ok(Self {
-            pool: Pool::builder()
-                .connection_timeout(Duration::from_secs(30))
-                .build(manager)
-                .await?,
-        })
-    }
-}
 
 #[async_trait]
 impl RfdStore for PostgresStore {
-    async fn get(&self, id: &TypedUuid<RfdId>, deleted: bool) -> Result<Option<Rfd>, StoreError> {
+    async fn get(
+        &self,
+        id: &TypedUuid<RfdId>,
+        revision: Option<TypedUuid<RfdRevisionId>>,
+        deleted: bool,
+    ) -> Result<Option<Rfd>, StoreError> {
         let rfd = RfdStore::list(
             self,
-            RfdFilter::default().id(Some(vec![*id])).deleted(deleted),
+            vec![RfdFilter::default()
+                .id(Some(vec![*id]))
+                .revision(revision.map(|rev| vec![rev]))
+                .deleted(deleted)],
             &ListPagination::default().limit(1),
         )
         .await?;
@@ -78,46 +54,81 @@ impl RfdStore for PostgresStore {
 
     async fn list(
         &self,
-        filter: RfdFilter,
+        filters: Vec<RfdFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<Rfd>, StoreError> {
-        let mut query = rfd::dsl::rfd.into_boxed();
+        let mut query = rfd::table
+            .inner_join(rfd_revision::table)
+            .distinct_on(rfd::id)
+            .into_boxed();
 
-        tracing::trace!(?filter, "Lookup RFDs");
+        tracing::trace!(?filters, "Lookup RFDs");
 
-        let RfdFilter {
-            id,
-            rfd_number,
-            public,
-            deleted,
-        } = filter;
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let RfdFilter {
+                    id,
+                    revision,
+                    rfd_number,
+                    commit,
+                    public,
+                    deleted,
+                } = filter;
 
-        if let Some(id) = id {
-            query =
-                query.filter(rfd::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)));
-        }
+                if let Some(id) = id {
+                    predicates.push(Box::new(
+                        rfd::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
 
-        if let Some(rfd_number) = rfd_number {
-            query = query.filter(rfd::rfd_number.eq_any(rfd_number));
-        }
+                if let Some(revision) = revision {
+                    predicates
+                        .push(Box::new(rfd_revision::id.eq_any(
+                            revision.into_iter().map(GenericUuid::into_untyped_uuid),
+                        )));
+                }
 
-        if let Some(public) = public {
-            query = query.filter(
-                rfd::visibility.eq(public
-                    .then(|| Visibility::Public)
-                    .unwrap_or(Visibility::Private)),
-            );
-        }
+                if let Some(rfd_number) = rfd_number {
+                    predicates.push(Box::new(rfd::rfd_number.eq_any(rfd_number)));
+                }
 
-        if !deleted {
-            query = query.filter(rfd::deleted_at.is_null());
+                if let Some(commit) = commit {
+                    predicates.push(Box::new(
+                        rfd_revision::commit_sha.eq_any(commit.into_iter().map(|sha| sha.0)),
+                    ));
+                }
+
+                if let Some(public) = public {
+                    predicates.push(Box::new(
+                        rfd::visibility.eq(public
+                            .then(|| Visibility::Public)
+                            .unwrap_or(Visibility::Private)),
+                    ));
+                }
+
+                if !deleted {
+                    predicates.push(Box::new(rfd::deleted_at.is_null()));
+                    predicates.push(Box::new(rfd_revision::deleted_at.is_null()));
+                }
+
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
         }
 
         let results = query
             .offset(pagination.offset)
             .limit(pagination.limit)
-            .order(rfd::rfd_number.desc())
-            .get_results_async::<RfdModel>(&*self.pool.get().await?)
+            .order((
+                rfd_revision::rfd_id.asc(),
+                rfd_revision::committed_at.desc(),
+            ))
+            .get_results_async::<(RfdModel, RfdRevisionModel)>(&*self.pool.get().await?)
             .await?;
 
         tracing::trace!(count = ?results.len(), "Found RFDs");
@@ -126,7 +137,7 @@ impl RfdStore for PostgresStore {
     }
 
     async fn upsert(&self, new_rfd: NewRfd) -> Result<Rfd, StoreError> {
-        let rfd: RfdModel = insert_into(rfd::dsl::rfd)
+        let _: RfdModel = insert_into(rfd::dsl::rfd)
             .values((
                 rfd::id.eq(new_rfd.id.into_untyped_uuid()),
                 rfd::rfd_number.eq(new_rfd.rfd_number.clone()),
@@ -144,7 +155,11 @@ impl RfdStore for PostgresStore {
             .get_result_async(&*self.pool.get().await?)
             .await?;
 
-        Ok(rfd.into())
+        // There is a race condition here than case a failure where a delete occurs between
+        // the upsert and the get
+        Ok(RfdStore::get(self, &new_rfd.id, None, false)
+            .await?
+            .unwrap())
     }
 
     async fn delete(&self, id: &TypedUuid<RfdId>) -> Result<Option<Rfd>, StoreError> {
@@ -154,7 +169,113 @@ impl RfdStore for PostgresStore {
             .execute_async(&*self.pool.get().await?)
             .await?;
 
-        RfdStore::get(self, id, true).await
+        RfdStore::get(self, id, None, true).await
+    }
+}
+
+#[async_trait]
+impl RfdMetaStore for PostgresStore {
+    async fn get(
+        &self,
+        id: TypedUuid<RfdId>,
+        revision: Option<TypedUuid<RfdRevisionId>>,
+        deleted: bool,
+    ) -> Result<Option<RfdMeta>, StoreError> {
+        let rfd = RfdMetaStore::list(
+            self,
+            vec![RfdFilter::default()
+                .id(Some(vec![id]))
+                .revision(revision.map(|rev| vec![rev]))
+                .deleted(deleted)],
+            &ListPagination::default().limit(1),
+        )
+        .await?;
+        Ok(rfd.into_iter().nth(0))
+    }
+
+    async fn list(
+        &self,
+        filters: Vec<RfdFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdMeta>, StoreError> {
+        let mut query = rfd::table
+            .inner_join(rfd_revision::table)
+            .distinct_on(rfd::id)
+            .select((RfdModel::as_select(), RfdRevisionMetaModel::as_select()))
+            .into_boxed();
+
+        tracing::trace!(?filters, "Lookup RFDs");
+
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let RfdFilter {
+                    id,
+                    revision,
+                    rfd_number,
+                    commit,
+                    public,
+                    deleted,
+                } = filter;
+
+                if let Some(id) = id {
+                    predicates.push(Box::new(
+                        rfd::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
+
+                if let Some(revision) = revision {
+                    predicates
+                        .push(Box::new(rfd_revision::id.eq_any(
+                            revision.into_iter().map(GenericUuid::into_untyped_uuid),
+                        )));
+                }
+
+                if let Some(rfd_number) = rfd_number {
+                    predicates.push(Box::new(rfd::rfd_number.eq_any(rfd_number)));
+                }
+
+                if let Some(commit) = commit {
+                    predicates.push(Box::new(
+                        rfd_revision::commit_sha.eq_any(commit.into_iter().map(|sha| sha.0)),
+                    ));
+                }
+
+                if let Some(public) = public {
+                    predicates.push(Box::new(
+                        rfd::visibility.eq(public
+                            .then(|| Visibility::Public)
+                            .unwrap_or(Visibility::Private)),
+                    ));
+                }
+
+                if !deleted {
+                    predicates.push(Box::new(rfd::deleted_at.is_null()));
+                    predicates.push(Box::new(rfd_revision::deleted_at.is_null()));
+                }
+
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
+        }
+
+        let results = query
+            .offset(pagination.offset)
+            .limit(pagination.limit)
+            .order((
+                rfd_revision::rfd_id.asc(),
+                rfd_revision::committed_at.desc(),
+            ))
+            .get_results_async::<(RfdModel, RfdRevisionMetaModel)>(&*self.pool.get().await?)
+            .await?;
+
+        tracing::trace!(count = ?results.len(), "Found RFDs");
+
+        Ok(results.into_iter().map(|rfd| rfd.into()).collect())
     }
 }
 
@@ -167,9 +288,9 @@ impl RfdRevisionStore for PostgresStore {
     ) -> Result<Option<RfdRevision>, StoreError> {
         let user = RfdRevisionStore::list(
             self,
-            RfdRevisionFilter::default()
+            vec![RfdRevisionFilter::default()
                 .id(Some(vec![*id]))
-                .deleted(deleted),
+                .deleted(deleted)],
             &ListPagination::default().limit(1),
         )
         .await?;
@@ -178,38 +299,53 @@ impl RfdRevisionStore for PostgresStore {
 
     async fn list(
         &self,
-        filter: RfdRevisionFilter,
+        filters: Vec<RfdRevisionFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdRevision>, StoreError> {
         let mut query = rfd_revision::dsl::rfd_revision.into_boxed();
 
-        tracing::trace!(?filter, "Lookup RFD revisions");
+        tracing::trace!(?filters, "Lookup RFD revisions");
 
-        let RfdRevisionFilter {
-            id,
-            rfd,
-            sha,
-            deleted,
-        } = filter;
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let RfdRevisionFilter {
+                    id,
+                    rfd,
+                    commit,
+                    deleted,
+                } = filter;
 
-        if let Some(id) = id {
-            query = query.filter(
-                rfd_revision::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
+                if let Some(id) = id {
+                    predicates.push(Box::new(
+                        rfd_revision::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
 
-        if let Some(rfd) = rfd {
-            query = query.filter(
-                rfd_revision::rfd_id.eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
+                if let Some(rfd) = rfd {
+                    predicates.push(Box::new(
+                        rfd_revision::rfd_id
+                            .eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
 
-        if let Some(sha) = sha {
-            query = query.filter(rfd_revision::sha.eq_any(sha));
-        }
+                if let Some(commit) = commit {
+                    predicates.push(Box::new(
+                        rfd_revision::commit_sha.eq_any(commit.into_iter().map(|sha| sha.0)),
+                    ));
+                }
 
-        if !deleted {
-            query = query.filter(rfd_revision::deleted_at.is_null());
+                if !deleted {
+                    predicates.push(Box::new(rfd_revision::deleted_at.is_null()));
+                }
+
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
         }
 
         let query = query
@@ -222,67 +358,6 @@ impl RfdRevisionStore for PostgresStore {
         let results = query
             .get_results_async::<RfdRevisionModel>(&*self.pool.get().await?)
             .await?;
-
-        Ok(results
-            .into_iter()
-            .map(|revision| revision.into())
-            .collect())
-    }
-
-    // TODO: Refactor into a group by arg in list. Diesel types here are a pain
-    async fn list_unique_rfd(
-        &self,
-        filter: RfdRevisionFilter,
-        pagination: &ListPagination,
-    ) -> Result<Vec<RfdRevision>, StoreError> {
-        let mut query = rfd_revision::dsl::rfd_revision
-            .distinct_on(rfd_revision::rfd_id)
-            .into_boxed();
-
-        tracing::trace!(rfd_ids = ?filter.rfd.as_ref().map(|list| list.len()), "Lookup unique RFD revisions");
-
-        let RfdRevisionFilter {
-            id,
-            rfd,
-            sha,
-            deleted,
-        } = filter;
-
-        if let Some(id) = id {
-            query = query.filter(
-                rfd_revision::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
-
-        if let Some(rfd) = rfd {
-            query = query.filter(
-                rfd_revision::rfd_id.eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
-
-        if let Some(sha) = sha {
-            query = query.filter(rfd_revision::sha.eq_any(sha));
-        }
-
-        if !deleted {
-            query = query.filter(rfd_revision::deleted_at.is_null());
-        }
-
-        let query = query
-            .offset(pagination.offset)
-            .limit(pagination.limit)
-            .order((
-                rfd_revision::rfd_id.asc(),
-                rfd_revision::committed_at.desc(),
-            ));
-
-        tracing::info!(query = ?debug_query(&query), "Run list unique rfds");
-
-        let results = query
-            .get_results_async::<RfdRevisionModel>(&*self.pool.get().await?)
-            .await?;
-
-        tracing::trace!(count = ?results.len(), "Found unique RFD revisions");
 
         Ok(results
             .into_iter()
@@ -351,9 +426,9 @@ impl RfdRevisionMetaStore for PostgresStore {
     ) -> Result<Option<RfdRevisionMeta>, StoreError> {
         let user = RfdRevisionMetaStore::list(
             self,
-            RfdRevisionFilter::default()
+            vec![RfdRevisionFilter::default()
                 .id(Some(vec![*id]))
-                .deleted(deleted),
+                .deleted(deleted)],
             &ListPagination::default().limit(1),
         )
         .await?;
@@ -362,7 +437,7 @@ impl RfdRevisionMetaStore for PostgresStore {
 
     async fn list(
         &self,
-        filter: RfdRevisionFilter,
+        filters: Vec<RfdRevisionFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdRevisionMeta>, StoreError> {
         let mut query = rfd_revision::dsl::rfd_revision
@@ -384,33 +459,48 @@ impl RfdRevisionMetaStore for PostgresStore {
             ))
             .into_boxed();
 
-        tracing::trace!(?filter, "Lookup RFD revision metadata");
+        tracing::trace!(?filters, "Lookup RFD revision metadata");
 
-        let RfdRevisionFilter {
-            id,
-            rfd,
-            sha,
-            deleted,
-        } = filter;
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let RfdRevisionFilter {
+                    id,
+                    rfd,
+                    commit,
+                    deleted,
+                } = filter;
 
-        if let Some(id) = id {
-            query = query.filter(
-                rfd_revision::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
+                if let Some(id) = id {
+                    predicates.push(Box::new(
+                        rfd_revision::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
 
-        if let Some(rfd) = rfd {
-            query = query.filter(
-                rfd_revision::rfd_id.eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
+                if let Some(rfd) = rfd {
+                    predicates.push(Box::new(
+                        rfd_revision::rfd_id
+                            .eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
 
-        if let Some(sha) = sha {
-            query = query.filter(rfd_revision::sha.eq_any(sha));
-        }
+                if let Some(commit) = commit {
+                    predicates.push(Box::new(
+                        rfd_revision::commit_sha.eq_any(commit.into_iter().map(|sha| sha.0)),
+                    ));
+                }
 
-        if !deleted {
-            query = query.filter(rfd_revision::deleted_at.is_null());
+                if !deleted {
+                    predicates.push(Box::new(rfd_revision::deleted_at.is_null()));
+                }
+
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
         }
 
         let query = query
@@ -431,83 +521,6 @@ impl RfdRevisionMetaStore for PostgresStore {
             .map(|revision| revision.into())
             .collect())
     }
-
-    // TODO: Refactor into a group by arg in list. Diesel types here are a pain
-    async fn list_unique_rfd(
-        &self,
-        filter: RfdRevisionFilter,
-        pagination: &ListPagination,
-    ) -> Result<Vec<RfdRevisionMeta>, StoreError> {
-        let mut query = rfd_revision::dsl::rfd_revision
-            .select((
-                rfd_revision::id,
-                rfd_revision::rfd_id,
-                rfd_revision::title,
-                rfd_revision::state,
-                rfd_revision::discussion,
-                rfd_revision::authors,
-                rfd_revision::content_format,
-                rfd_revision::sha,
-                rfd_revision::commit_sha,
-                rfd_revision::committed_at,
-                rfd_revision::created_at,
-                rfd_revision::updated_at,
-                rfd_revision::deleted_at,
-                rfd_revision::labels,
-            ))
-            .distinct_on(rfd_revision::rfd_id)
-            .into_boxed();
-
-        tracing::trace!(rfd_ids = ?filter.rfd.as_ref().map(|list| list.len()), "Lookup unique RFD revision metadata");
-
-        let RfdRevisionFilter {
-            id,
-            rfd,
-            sha,
-            deleted,
-        } = filter;
-
-        if let Some(id) = id {
-            query = query.filter(
-                rfd_revision::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
-
-        if let Some(rfd) = rfd {
-            query = query.filter(
-                rfd_revision::rfd_id.eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
-
-        if let Some(sha) = sha {
-            query = query.filter(rfd_revision::sha.eq_any(sha));
-        }
-
-        if !deleted {
-            query = query.filter(rfd_revision::deleted_at.is_null());
-        }
-
-        let query = query
-            .offset(pagination.offset)
-            .limit(pagination.limit)
-            .order((
-                rfd_revision::rfd_id.asc(),
-                rfd_revision::committed_at.desc(),
-            ));
-
-        tracing::info!(query = ?debug_query(&query), "Run list unique rfd metadata");
-
-        let results = query
-            .get_results_async::<RfdRevisionMetaModel>(&*self.pool.get().await?)
-            .await?;
-
-        tracing::trace!(count = ?results.len(), "Found unique RFD revision metadata");
-
-        Ok(results
-            .into_iter()
-            .map(|revision| revision.into())
-            .collect())
-    }
 }
 
 #[async_trait]
@@ -519,7 +532,7 @@ impl RfdPdfStore for PostgresStore {
     ) -> Result<Option<RfdPdf>, StoreError> {
         let user = RfdPdfStore::list(
             self,
-            RfdPdfFilter::default().id(Some(vec![*id])).deleted(deleted),
+            vec![RfdPdfFilter::default().id(Some(vec![*id])).deleted(deleted)],
             &ListPagination::default().limit(1),
         )
         .await?;
@@ -528,50 +541,63 @@ impl RfdPdfStore for PostgresStore {
 
     async fn list(
         &self,
-        filter: super::RfdPdfFilter,
+        filters: Vec<RfdPdfFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdPdf>, StoreError> {
         let mut query = rfd_pdf::dsl::rfd_pdf.into_boxed();
 
-        tracing::trace!(?filter, "Lookup RFD pdfs");
+        tracing::trace!(?filters, "Lookup RFD pdfs");
 
-        let RfdPdfFilter {
-            id,
-            rfd_revision,
-            source,
-            deleted,
-            rfd,
-            external_id,
-        } = filter;
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let RfdPdfFilter {
+                    id,
+                    rfd_revision,
+                    source,
+                    deleted,
+                    rfd,
+                    external_id,
+                } = filter;
 
-        if let Some(id) = id {
-            query = query
-                .filter(rfd_pdf::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)));
-        }
+                if let Some(id) = id {
+                    predicates.push(Box::new(
+                        rfd_pdf::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
 
-        if let Some(rfd_revision) = rfd_revision {
-            query = query.filter(
-                rfd_pdf::rfd_revision_id
-                    .eq_any(rfd_revision.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
+                if let Some(rfd_revision) = rfd_revision {
+                    predicates
+                        .push(Box::new(rfd_pdf::rfd_revision_id.eq_any(
+                            rfd_revision.into_iter().map(GenericUuid::into_untyped_uuid),
+                        )));
+                }
 
-        if let Some(source) = source {
-            query = query.filter(rfd_pdf::source.eq_any(source));
-        }
+                if let Some(source) = source {
+                    predicates.push(Box::new(rfd_pdf::source.eq_any(source)));
+                }
 
-        if let Some(rfd) = rfd {
-            query = query.filter(
-                rfd_pdf::rfd_id.eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
-            );
-        }
+                if let Some(rfd) = rfd {
+                    predicates.push(Box::new(
+                        rfd_pdf::rfd_id.eq_any(rfd.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
+                }
 
-        if let Some(external_id) = external_id {
-            query = query.filter(rfd_pdf::external_id.eq_any(external_id));
-        }
+                if let Some(external_id) = external_id {
+                    predicates.push(Box::new(rfd_pdf::external_id.eq_any(external_id)));
+                }
 
-        if !deleted {
-            query = query.filter(rfd_pdf::deleted_at.is_null());
+                if !deleted {
+                    predicates.push(Box::new(rfd_pdf::deleted_at.is_null()));
+                }
+
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
         }
 
         let results = query
@@ -621,7 +647,7 @@ impl JobStore for PostgresStore {
     async fn get(&self, id: i32) -> Result<Option<Job>, StoreError> {
         let user = JobStore::list(
             self,
-            JobFilter::default().id(Some(vec![id])),
+            vec![JobFilter::default().id(Some(vec![id]))],
             &ListPagination::default().limit(1),
         )
         .await?;
@@ -630,36 +656,47 @@ impl JobStore for PostgresStore {
 
     async fn list(
         &self,
-        filter: super::JobFilter,
+        filters: Vec<JobFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<Job>, StoreError> {
         let mut query = job::dsl::job.into_boxed();
+        let filter_predicates = filters
+            .into_iter()
+            .map(|filter| {
+                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
+                let JobFilter {
+                    id,
+                    sha,
+                    processed,
+                    started,
+                } = filter;
 
-        let JobFilter {
-            id,
-            sha,
-            processed,
-            started,
-        } = filter;
+                if let Some(id) = id {
+                    predicates.push(Box::new(job::id.eq_any(id)));
+                }
 
-        if let Some(id) = id {
-            query = query.filter(job::id.eq_any(id));
-        }
+                if let Some(sha) = sha {
+                    predicates.push(Box::new(job::sha.eq_any(sha)));
+                }
 
-        if let Some(sha) = sha {
-            query = query.filter(job::sha.eq_any(sha));
-        }
+                if let Some(processed) = processed {
+                    predicates.push(Box::new(job::processed.eq(processed)));
+                }
 
-        if let Some(processed) = processed {
-            query = query.filter(job::processed.eq(processed));
-        }
+                if let Some(started) = started {
+                    if started {
+                        predicates.push(Box::new(job::started_at.is_not_null()));
+                    } else {
+                        predicates.push(Box::new(job::started_at.is_null()));
+                    }
+                }
 
-        if let Some(started) = started {
-            if started {
-                query = query.filter(job::started_at.is_not_null());
-            } else {
-                query = query.filter(job::started_at.is_null());
-            }
+                predicates
+            })
+            .collect::<Vec<_>>();
+
+        if let Some(predicate) = flatten_predicates(filter_predicates) {
+            query = query.filter(predicate);
         }
 
         let results = query
@@ -713,4 +750,26 @@ impl JobStore for PostgresStore {
 
         JobStore::get(self, id).await
     }
+}
+
+fn flatten_predicates<T>(
+    predicates: Vec<Vec<Box<dyn BoxableExpression<T, Pg, SqlType = Bool>>>>,
+) -> Option<Box<dyn BoxableExpression<T, Pg, SqlType = Bool>>>
+where
+    T: 'static,
+{
+    let mut filter_predicates = vec![];
+
+    for p in predicates {
+        let flat = p
+            .into_iter()
+            .reduce(|combined, entry| Box::new(combined.and(entry)));
+        if let Some(flat) = flat {
+            filter_predicates.push(flat);
+        }
+    }
+
+    filter_predicates
+        .into_iter()
+        .reduce(|combined, entry| Box::new(combined.or(entry)))
 }

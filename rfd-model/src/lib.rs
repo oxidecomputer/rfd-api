@@ -63,11 +63,15 @@ impl TypedUuidKind for RfdId {
 }
 
 #[partial(NewRfd)]
+#[partial(RfdMeta)]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct Rfd {
     pub id: TypedUuid<RfdId>,
     pub rfd_number: i32,
     pub link: Option<String>,
+    #[partial(NewRfd(skip))]
+    #[partial(RfdMeta(retype = RfdRevisionMeta))]
+    pub content: RfdRevision,
     #[partial(NewRfd(skip))]
     pub created_at: DateTime<Utc>,
     #[partial(NewRfd(skip))]
@@ -77,16 +81,32 @@ pub struct Rfd {
     pub visibility: Visibility,
 }
 
-impl From<RfdModel> for Rfd {
-    fn from(value: RfdModel) -> Self {
+impl From<(RfdModel, RfdRevisionModel)> for Rfd {
+    fn from((rfd, revision): (RfdModel, RfdRevisionModel)) -> Self {
         Self {
-            id: TypedUuid::from_untyped_uuid(value.id),
-            rfd_number: value.rfd_number,
-            link: value.link,
-            created_at: value.created_at,
-            updated_at: value.updated_at,
-            deleted_at: value.deleted_at,
-            visibility: value.visibility,
+            id: TypedUuid::from_untyped_uuid(rfd.id),
+            rfd_number: rfd.rfd_number,
+            link: rfd.link,
+            content: revision.into(),
+            created_at: rfd.created_at,
+            updated_at: rfd.updated_at,
+            deleted_at: rfd.deleted_at,
+            visibility: rfd.visibility,
+        }
+    }
+}
+
+impl From<(RfdModel, RfdRevisionMetaModel)> for RfdMeta {
+    fn from((rfd, revision): (RfdModel, RfdRevisionMetaModel)) -> Self {
+        Self {
+            id: TypedUuid::from_untyped_uuid(rfd.id),
+            rfd_number: rfd.rfd_number,
+            link: rfd.link,
+            content: revision.into(),
+            created_at: rfd.created_at,
+            updated_at: rfd.updated_at,
+            deleted_at: rfd.deleted_at,
+            visibility: rfd.visibility,
         }
     }
 }

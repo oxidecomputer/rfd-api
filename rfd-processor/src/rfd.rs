@@ -56,7 +56,7 @@ impl PersistedRfd {
     {
         let existing_rfd = RfdStore::list(
             storage,
-            RfdFilter::default().rfd_number(Some(vec![number.into()])),
+            vec![RfdFilter::default().rfd_number(Some(vec![number.into()]))],
             &ListPagination::latest(),
         )
         .await?
@@ -66,7 +66,7 @@ impl PersistedRfd {
         if let Some(rfd) = existing_rfd {
             let most_recent_revision = RfdRevisionStore::list(
                 storage,
-                RfdRevisionFilter::default().rfd(Some(vec![rfd.id])),
+                vec![RfdRevisionFilter::default().rfd(Some(vec![rfd.id]))],
                 &ListPagination::latest(),
             )
             .await?
@@ -75,7 +75,7 @@ impl PersistedRfd {
 
             let most_recent_pdf = RfdPdfStore::list(
                 storage,
-                RfdPdfFilter::default().rfd(Some(vec![rfd.id])),
+                vec![RfdPdfFilter::default().rfd(Some(vec![rfd.id]))],
                 &ListPagination::latest(),
             )
             .await?
@@ -323,7 +323,7 @@ impl RemoteRfd {
 
         let (id, visibility) = RfdStore::list(
             storage,
-            RfdFilter::default().rfd_number(Some(vec![payload.number.into()])),
+            vec![RfdFilter::default().rfd_number(Some(vec![payload.number.into()]))],
             &ListPagination::latest(),
         )
         .await?
@@ -345,9 +345,9 @@ impl RemoteRfd {
 
         let id = RfdRevisionStore::list(
             storage,
-            RfdRevisionFilter::default()
+            vec![RfdRevisionFilter::default()
                 .rfd(Some(vec![rfd.id]))
-                .sha(Some(vec![payload.commit_sha.clone().into()])),
+                .commit(Some(vec![payload.commit_sha.clone()]))],
             &ListPagination::latest(),
         )
         .await?
@@ -387,7 +387,7 @@ impl RemoteRfd {
                 content: payload.content.raw().to_string(),
                 content_format: payload.content_format,
                 sha: payload.sha,
-                commit: payload.commit_sha.into(),
+                commit: payload.commit_sha,
                 committed_at: payload.commit_date,
             },
         )
@@ -395,7 +395,7 @@ impl RemoteRfd {
 
         let mut existing_pdf = RfdPdfStore::list(
             storage,
-            RfdPdfFilter::default().rfd(Some(vec![rfd.id])),
+            vec![RfdPdfFilter::default().rfd(Some(vec![rfd.id]))],
             &ListPagination::latest(),
         )
         .await?;
