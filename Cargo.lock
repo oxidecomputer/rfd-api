@@ -1829,7 +1829,7 @@ dependencies = [
  "log",
  "meilisearch-index-setting-macro",
  "pin-project-lite",
- "reqwest 0.12.11",
+ "reqwest 0.12.12",
  "serde",
  "serde_json",
  "thiserror 1.0.69",
@@ -2111,7 +2111,7 @@ dependencies = [
  "parse_link_header",
  "pem 1.1.1",
  "percent-encoding",
- "reqwest 0.12.11",
+ "reqwest 0.12.12",
  "reqwest-conditional-middleware",
  "reqwest-middleware",
  "reqwest-retry",
@@ -2457,7 +2457,7 @@ dependencies = [
  "bytes",
  "futures-core",
  "percent-encoding",
- "reqwest 0.12.11",
+ "reqwest 0.12.12",
  "serde",
  "serde_json",
  "serde_urlencoded",
@@ -2729,9 +2729,9 @@ dependencies = [
 
 [[package]]
 name = "reqwest"
-version = "0.12.11"
+version = "0.12.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fe060fe50f524be480214aba758c71f99f90ee8c83c5a36b5e9e1d568eb4eb3"
+checksum = "43e734407157c3c2034e0258f5e4473ddb361b1e85f95a66690d67264d7cd1da"
 dependencies = [
  "base64 0.22.1",
  "bytes",
@@ -2782,7 +2782,7 @@ checksum = "f67ad7fdf5c0a015763fcd164bee294b13fb7b6f89f1b55961d40f00c3e32d6b"
 dependencies = [
  "async-trait",
  "http 1.2.0",
- "reqwest 0.12.11",
+ "reqwest 0.12.12",
  "reqwest-middleware",
 ]
 
@@ -2795,7 +2795,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "http 1.2.0",
- "reqwest 0.12.11",
+ "reqwest 0.12.12",
  "serde",
  "thiserror 1.0.69",
  "tower-service",
@@ -2814,7 +2814,7 @@ dependencies = [
  "http 1.2.0",
  "hyper 1.5.2",
  "parking_lot 0.11.2",
- "reqwest 0.12.11",
+ "reqwest 0.12.12",
  "reqwest-middleware",
  "retry-policies",
  "thiserror 1.0.69",
@@ -2834,7 +2834,7 @@ dependencies = [
  "getrandom",
  "http 1.2.0",
  "matchit",
- "reqwest 0.12.11",
+ "reqwest 0.12.12",
  "reqwest-middleware",
  "tracing",
 ]
@@ -2878,7 +2878,7 @@ dependencies = [
  "rand",
  "rand_core",
  "regex",
- "reqwest 0.12.11",
+ "reqwest 0.12.12",
  "reqwest-middleware",
  "reqwest-retry",
  "reqwest-tracing",
@@ -2927,7 +2927,7 @@ dependencies = [
  "oauth2",
  "owo-colors",
  "progenitor-client",
- "reqwest 0.12.11",
+ "reqwest 0.12.12",
  "rfd-sdk",
  "schemars",
  "serde",
@@ -3019,7 +3019,7 @@ dependencies = [
  "octorust",
  "parse-rfd",
  "regex",
- "reqwest 0.12.11",
+ "reqwest 0.12.12",
  "reqwest-middleware",
  "reqwest-retry",
  "reqwest-tracing",
@@ -3045,7 +3045,7 @@ version = "0.1.0"
 dependencies = [
  "chrono",
  "progenitor-client",
- "reqwest 0.12.11",
+ "reqwest 0.12.12",
  "schemars",
  "serde",
  "serde_json",
@@ -4405,7 +4405,7 @@ dependencies = [
  "partial-struct",
  "rand",
  "rand_core",
- "reqwest 0.12.11",
+ "reqwest 0.12.12",
  "rsa",
  "schemars",
  "secrecy",
