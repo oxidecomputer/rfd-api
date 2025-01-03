@@ -32,7 +32,10 @@ use tap::TapFallible;
 use thiserror::Error;
 use tracing::instrument;
 use v_api::{
-    response::{resource_not_found, resource_restricted, ResourceResult, ToResourceResult},
+    response::{
+        resource_not_found, resource_restricted, ResourceResult, ToResourceResult,
+        ToResourceResultOpt,
+    },
     ApiContext, VContext,
 };
 use v_model::{
@@ -97,17 +100,17 @@ pub struct RfdWithRaw {
     pub rfd_number: i32,
     pub link: Option<String>,
     pub discussion: Option<String>,
-    pub title: String,
+    pub title: Option<String>,
     pub state: Option<String>,
     pub authors: Option<String>,
     pub labels: Option<String>,
     #[partial(RfdWithoutContent(skip))]
     #[partial(RfdWithPdf(retype = Vec<RfdPdf>))]
-    pub content: String,
-    pub format: ContentFormat,
-    pub sha: FileSha,
-    pub commit: CommitSha,
-    pub committed_at: DateTime<Utc>,
+    pub content: Option<String>,
+    pub format: Option<ContentFormat>,
+    pub sha: Option<FileSha>,
+    pub commit: Option<CommitSha>,
+    pub committed_at: Option<DateTime<Utc>>,
     pub visibility: Visibility,
 }
 
@@ -117,16 +120,37 @@ impl From<Rfd> for RfdWithRaw {
             id: value.id,
             rfd_number: value.rfd_number,
             link: value.link,
-            discussion: value.content.discussion,
-            title: value.content.title,
-            state: value.content.state,
-            authors: value.content.authors,
-            labels: value.content.labels,
-            content: value.content.content,
-            format: value.content.content_format,
-            sha: value.content.sha,
-            commit: value.content.commit.into(),
-            committed_at: value.content.committed_at,
+            discussion: value
+                .content
+                .as_ref()
+                .and_then(|content| content.discussion.clone()),
+            title: value.content.as_ref().map(|content| content.title.clone()),
+            state: value
+                .content
+                .as_ref()
+                .and_then(|content| content.state.clone()),
+            authors: value
+                .content
+                .as_ref()
+                .and_then(|content| content.authors.clone()),
+            labels: value
+                .content
+                .as_ref()
+                .and_then(|content| content.labels.clone()),
+            content: value
+                .content
+                .as_ref()
+                .map(|content| content.content.clone()),
+            format: value
+                .content
+                .as_ref()
+                .map(|content| content.content_format.clone()),
+            sha: value.content.as_ref().map(|content| content.sha.clone()),
+            commit: value.content.as_ref().map(|content| content.commit.clone()),
+            committed_at: value
+                .content
+                .as_ref()
+                .map(|content| content.committed_at.clone()),
             visibility: value.visibility,
         }
     }
@@ -138,15 +162,33 @@ impl From<RfdMeta> for RfdWithoutContent {
             id: value.id,
             rfd_number: value.rfd_number,
             link: value.link,
-            discussion: value.content.discussion,
-            title: value.content.title,
-            state: value.content.state,
-            authors: value.content.authors,
-            labels: value.content.labels,
-            format: value.content.content_format,
-            sha: value.content.sha,
-            commit: value.content.commit.into(),
-            committed_at: value.content.committed_at,
+            discussion: value
+                .content
+                .as_ref()
+                .and_then(|content| content.discussion.clone()),
+            title: value.content.as_ref().map(|content| content.title.clone()),
+            state: value
+                .content
+                .as_ref()
+                .and_then(|content| content.state.clone()),
+            authors: value
+                .content
+                .as_ref()
+                .and_then(|content| content.authors.clone()),
+            labels: value
+                .content
+                .as_ref()
+                .and_then(|content| content.labels.clone()),
+            format: value
+                .content
+                .as_ref()
+                .map(|content| content.content_format.clone()),
+            sha: value.content.as_ref().map(|content| content.sha.clone()),
+            commit: value.content.as_ref().map(|content| content.commit.clone()),
+            committed_at: value
+                .content
+                .as_ref()
+                .map(|content| content.committed_at.clone()),
             visibility: value.visibility,
         }
     }
@@ -158,16 +200,38 @@ impl From<RfdPdfs> for RfdWithPdf {
             id: value.id,
             rfd_number: value.rfd_number,
             link: value.link,
-            discussion: value.content.discussion,
-            title: value.content.title,
-            state: value.content.state,
-            authors: value.content.authors,
-            labels: value.content.labels,
-            content: value.content.content,
-            format: value.content.content_format,
-            sha: value.content.sha,
-            commit: value.content.commit.into(),
-            committed_at: value.content.committed_at,
+            discussion: value
+                .content
+                .as_ref()
+                .and_then(|content| content.discussion.clone()),
+            title: value.content.as_ref().map(|content| content.title.clone()),
+            state: value
+                .content
+                .as_ref()
+                .and_then(|content| content.state.clone()),
+            authors: value
+                .content
+                .as_ref()
+                .and_then(|content| content.authors.clone()),
+            labels: value
+                .content
+                .as_ref()
+                .and_then(|content| content.labels.clone()),
+            content: value
+                .content
+                .as_ref()
+                .map(|content| content.content.clone())
+                .unwrap_or_default(),
+            format: value
+                .content
+                .as_ref()
+                .map(|content| content.content_format.clone()),
+            sha: value.content.as_ref().map(|content| content.sha.clone()),
+            commit: value.content.as_ref().map(|content| content.commit.clone()),
+            committed_at: value
+                .content
+                .as_ref()
+                .map(|content| content.committed_at.clone()),
             visibility: value.visibility,
         }
     }
@@ -381,21 +445,7 @@ impl RfdContext {
 
         let mut rfd_list = rfds
             .into_iter()
-            .map(|rfd| RfdWithoutContent {
-                id: rfd.id,
-                rfd_number: rfd.rfd_number,
-                link: rfd.link,
-                discussion: rfd.content.discussion,
-                title: rfd.content.title,
-                state: rfd.content.state,
-                authors: rfd.content.authors,
-                labels: rfd.content.labels,
-                format: rfd.content.content_format,
-                sha: rfd.content.sha,
-                commit: rfd.content.commit.into(),
-                committed_at: rfd.content.committed_at,
-                visibility: rfd.visibility,
-            })
+            .map(|rfd| RfdWithoutContent::from(rfd))
             .collect::<Vec<_>>();
 
         // Finally sort the RFD list by RFD number
@@ -533,7 +583,7 @@ impl RfdContext {
         revision: Option<RfdRevisionIdentifier>,
     ) -> ResourceResult<RfdRevision, StoreError> {
         let rfd = self.get_rfd(caller, rfd_number, revision).await?;
-        Ok(rfd.content)
+        Ok(rfd.content).opt_to_resource_result()
     }
 
     async fn get_latest_rfd_revision(

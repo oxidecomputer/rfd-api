@@ -162,7 +162,7 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::GetApiUserToken => Some("sys user token get"),
         CliCommand::ListApiUserTokens => Some("sys user token list"),
         CliCommand::UpdateApiUser => Some("sys user update"),
-        CliCommand::GetSelf => Some("self"),
+        CliCommand::GetSelf => Some("sys user self"),
 
         // Set user email
         CliCommand::SetApiUserContactEmail => Some("sys user contact email set"),
@@ -418,7 +418,9 @@ impl ProgenitorCliConfig for Context {
                 .printer()
                 .unwrap()
                 .output_oauth_secret(reserialize(value)),
-            "Array_of_RfdMeta" => self.printer().unwrap().output_rfd_list(reserialize(value)),
+            "Array_of_RfdWithoutContent" => {
+                self.printer().unwrap().output_rfd_list(reserialize(value))
+            }
             "FullRfd" => self.printer().unwrap().output_rfd_full(reserialize(value)),
             "Rfd" => self.printer().unwrap().output_rfd(reserialize(value)),
             "SearchResults" => self

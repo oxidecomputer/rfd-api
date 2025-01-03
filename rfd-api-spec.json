@@ -1941,7 +1941,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RfdRevisionPdf"
+                  "$ref": "#/components/schemas/RfdWithPdf"
                 }
               }
             }
@@ -1976,7 +1976,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RfdWithContent"
+                  "$ref": "#/components/schemas/RfdWithRaw"
                 }
               }
             }
@@ -2212,7 +2212,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RfdRevisionPdf"
+                  "$ref": "#/components/schemas/RfdWithPdf"
                 }
               }
             }
@@ -2256,7 +2256,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RfdWithContent"
+                  "$ref": "#/components/schemas/RfdWithRaw"
                 }
               }
             }
@@ -3677,7 +3677,12 @@
         "type": "object",
         "properties": {
           "content": {
-            "$ref": "#/components/schemas/RfdRevision"
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RfdRevision"
+              }
+            ]
           },
           "created_at": {
             "type": "string",
@@ -3708,7 +3713,6 @@
           }
         },
         "required": [
-          "content",
           "created_at",
           "id",
           "rfd_number",
@@ -4407,80 +4411,6 @@
           "updated_at"
         ]
       },
-      "RfdRevisionPdf": {
-        "type": "object",
-        "properties": {
-          "authors": {
-            "nullable": true,
-            "type": "string"
-          },
-          "commit": {
-            "$ref": "#/components/schemas/CommitSha"
-          },
-          "committed_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "content": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/RfdPdf"
-            }
-          },
-          "content_format": {
-            "$ref": "#/components/schemas/ContentFormat"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "deleted_at": {
-            "nullable": true,
-            "type": "string",
-            "format": "date-time"
-          },
-          "discussion": {
-            "nullable": true,
-            "type": "string"
-          },
-          "id": {
-            "$ref": "#/components/schemas/TypedUuidForRfdRevisionId"
-          },
-          "labels": {
-            "nullable": true,
-            "type": "string"
-          },
-          "rfd_id": {
-            "$ref": "#/components/schemas/TypedUuidForRfdId"
-          },
-          "sha": {
-            "$ref": "#/components/schemas/FileSha"
-          },
-          "state": {
-            "nullable": true,
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "commit",
-          "committed_at",
-          "content",
-          "content_format",
-          "created_at",
-          "id",
-          "rfd_id",
-          "sha",
-          "title",
-          "updated_at"
-        ]
-      },
       "RfdState": {
         "type": "string",
         "enum": [
@@ -4537,7 +4467,7 @@
           "visibility"
         ]
       },
-      "RfdWithContent": {
+      "RfdWithPdf": {
         "type": "object",
         "properties": {
           "authors": {
@@ -4545,21 +4475,35 @@
             "type": "string"
           },
           "commit": {
-            "$ref": "#/components/schemas/CommitSha"
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CommitSha"
+              }
+            ]
           },
           "committed_at": {
+            "nullable": true,
             "type": "string",
             "format": "date-time"
           },
           "content": {
-            "type": "string"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RfdPdf"
+            }
           },
           "discussion": {
             "nullable": true,
             "type": "string"
           },
           "format": {
-            "$ref": "#/components/schemas/ContentFormat"
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentFormat"
+              }
+            ]
           },
           "id": {
             "$ref": "#/components/schemas/TypedUuidForRfdId"
@@ -4577,13 +4521,19 @@
             "format": "int32"
           },
           "sha": {
-            "$ref": "#/components/schemas/FileSha"
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FileSha"
+              }
+            ]
           },
           "state": {
             "nullable": true,
             "type": "string"
           },
           "title": {
+            "nullable": true,
             "type": "string"
           },
           "visibility": {
@@ -4591,14 +4541,86 @@
           }
         },
         "required": [
-          "commit",
-          "committed_at",
           "content",
-          "format",
           "id",
           "rfd_number",
-          "sha",
-          "title",
+          "visibility"
+        ]
+      },
+      "RfdWithRaw": {
+        "type": "object",
+        "properties": {
+          "authors": {
+            "nullable": true,
+            "type": "string"
+          },
+          "commit": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CommitSha"
+              }
+            ]
+          },
+          "committed_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "content": {
+            "nullable": true,
+            "type": "string"
+          },
+          "discussion": {
+            "nullable": true,
+            "type": "string"
+          },
+          "format": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentFormat"
+              }
+            ]
+          },
+          "id": {
+            "$ref": "#/components/schemas/TypedUuidForRfdId"
+          },
+          "labels": {
+            "nullable": true,
+            "type": "string"
+          },
+          "link": {
+            "nullable": true,
+            "type": "string"
+          },
+          "rfd_number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sha": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FileSha"
+              }
+            ]
+          },
+          "state": {
+            "nullable": true,
+            "type": "string"
+          },
+          "title": {
+            "nullable": true,
+            "type": "string"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
+          }
+        },
+        "required": [
+          "id",
+          "rfd_number",
           "visibility"
         ]
       },
@@ -4610,9 +4632,15 @@
             "type": "string"
           },
           "commit": {
-            "$ref": "#/components/schemas/CommitSha"
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CommitSha"
+              }
+            ]
           },
           "committed_at": {
+            "nullable": true,
             "type": "string",
             "format": "date-time"
           },
@@ -4621,7 +4649,12 @@
             "type": "string"
           },
           "format": {
-            "$ref": "#/components/schemas/ContentFormat"
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentFormat"
+              }
+            ]
           },
           "id": {
             "$ref": "#/components/schemas/TypedUuidForRfdId"
@@ -4639,13 +4672,19 @@
             "format": "int32"
           },
           "sha": {
-            "$ref": "#/components/schemas/FileSha"
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FileSha"
+              }
+            ]
           },
           "state": {
             "nullable": true,
             "type": "string"
           },
           "title": {
+            "nullable": true,
             "type": "string"
           },
           "visibility": {
@@ -4653,13 +4692,8 @@
           }
         },
         "required": [
-          "commit",
-          "committed_at",
-          "format",
           "id",
           "rfd_number",
-          "sha",
-          "title",
           "visibility"
         ]
       },

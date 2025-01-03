@@ -10,7 +10,7 @@ use uuid::Uuid;
 
 use crate::{
     schema::{job, rfd, rfd_pdf, rfd_revision},
-    schema_ext::{rfd_pdfs, ContentFormat, PdfSource, Visibility},
+    schema_ext::{rfd_meta_join, rfd_pdf_join, ContentFormat, PdfSource, Visibility},
 };
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable, Selectable)]
@@ -25,9 +25,62 @@ pub struct RfdModel {
     pub visibility: Visibility,
 }
 
+// #[derive(QueryableByName)]
+// #[diesel(table_name = rfd_join)]
+// pub struct RfdJoinRow {
+//     pub id: Uuid,
+//     pub rfd_number: i32,
+//     pub link: Option<String>,
+//     pub created_at: DateTime<Utc>,
+//     pub updated_at: DateTime<Utc>,
+//     pub deleted_at: Option<DateTime<Utc>>,
+//     pub visibility: Visibility,
+//     pub revision_id: Uuid,
+//     pub revision_rfd_id: Uuid,
+//     pub revision_title: String,
+//     pub revision_state: Option<String>,
+//     pub revision_discussion: Option<String>,
+//     pub revision_authors: Option<String>,
+//     pub revision_content: String,
+//     pub revision_content_format: ContentFormat,
+//     pub revision_sha: String,
+//     pub revision_commit_sha: String,
+//     pub revision_committed_at: DateTime<Utc>,
+//     pub revision_created_at: DateTime<Utc>,
+//     pub revision_updated_at: DateTime<Utc>,
+//     pub revision_deleted_at: Option<DateTime<Utc>>,
+//     pub revision_labels: Option<String>,
+// }
+
 #[derive(QueryableByName)]
-#[diesel(table_name = rfd_pdfs)]
-pub struct RfdPdfsRow {
+#[diesel(table_name = rfd_meta_join)]
+pub struct RfdMetaJoinRow {
+    pub id: Uuid,
+    pub rfd_number: i32,
+    pub link: Option<String>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
+    pub visibility: Visibility,
+    pub revision_id: Uuid,
+    pub revision_rfd_id: Uuid,
+    pub revision_title: String,
+    pub revision_state: Option<String>,
+    pub revision_discussion: Option<String>,
+    pub revision_authors: Option<String>,
+    pub revision_content_format: ContentFormat,
+    pub revision_sha: String,
+    pub revision_commit_sha: String,
+    pub revision_committed_at: DateTime<Utc>,
+    pub revision_created_at: DateTime<Utc>,
+    pub revision_updated_at: DateTime<Utc>,
+    pub revision_deleted_at: Option<DateTime<Utc>>,
+    pub revision_labels: Option<String>,
+}
+
+#[derive(QueryableByName)]
+#[diesel(table_name = rfd_pdf_join)]
+pub struct RfdPdfJoinRow {
     pub id: Uuid,
     pub rfd_number: i32,
     pub link: Option<String>,
@@ -84,8 +137,40 @@ pub struct RfdRevisionModel {
     pub labels: Option<String>,
 }
 
-impl From<RfdPdfsRow> for (RfdModel, RfdRevisionPdfModel) {
-    fn from(value: RfdPdfsRow) -> Self {
+impl From<RfdMetaJoinRow> for (RfdModel, RfdRevisionMetaModel) {
+    fn from(value: RfdMetaJoinRow) -> Self {
+        (
+            RfdModel {
+                id: value.id,
+                rfd_number: value.rfd_number,
+                link: value.link,
+                created_at: value.created_at,
+                updated_at: value.updated_at,
+                deleted_at: value.deleted_at,
+                visibility: value.visibility,
+            },
+            RfdRevisionMetaModel {
+                id: value.revision_id,
+                rfd_id: value.revision_rfd_id,
+                title: value.revision_title,
+                state: value.revision_state,
+                discussion: value.revision_discussion,
+                authors: value.revision_authors,
+                content_format: value.revision_content_format,
+                sha: value.revision_sha,
+                commit_sha: value.revision_commit_sha,
+                committed_at: value.revision_committed_at,
+                created_at: value.revision_created_at,
+                updated_at: value.revision_updated_at,
+                deleted_at: value.revision_deleted_at,
+                labels: value.revision_labels,
+            },
+        )
+    }
+}
+
+impl From<RfdPdfJoinRow> for (RfdModel, RfdRevisionPdfModel) {
+    fn from(value: RfdPdfJoinRow) -> Self {
         (
             RfdModel {
                 id: value.id,

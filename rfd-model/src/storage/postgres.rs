@@ -13,7 +13,7 @@ use diesel::{
     sql_types::Bool,
     update,
     upsert::{excluded, on_constraint},
-    BoolExpressionMethods, BoxableExpression, ExpressionMethods, SelectableHelper,
+    BoolExpressionMethods, BoxableExpression, ExpressionMethods, NullableExpressionMethods,
 };
 use newtype_uuid::{GenericUuid, TypedUuid};
 use std::collections::{btree_map::Entry, BTreeMap};
@@ -22,8 +22,8 @@ use v_model::storage::postgres::PostgresStore;
 
 use crate::{
     db::{
-        JobModel, RfdModel, RfdPdfModel, RfdPdfsRow, RfdRevisionMetaModel, RfdRevisionModel,
-        RfdRevisionPdfModel,
+        JobModel, RfdMetaJoinRow, RfdModel, RfdPdfJoinRow, RfdPdfModel, RfdRevisionMetaModel,
+        RfdRevisionModel, RfdRevisionPdfModel,
     },
     schema::{job, rfd, rfd_pdf, rfd_revision},
     schema_ext::Visibility,
@@ -64,7 +64,7 @@ impl RfdStore for PostgresStore {
         pagination: &ListPagination,
     ) -> Result<Vec<Rfd>, StoreError> {
         let mut query = rfd::table
-            .inner_join(rfd_revision::table)
+            .left_join(rfd_revision::table)
             .distinct_on(rfd::id)
             .into_boxed();
 
@@ -90,10 +90,11 @@ impl RfdStore for PostgresStore {
                 }
 
                 if let Some(revision) = revision {
-                    predicates
-                        .push(Box::new(rfd_revision::id.eq_any(
-                            revision.into_iter().map(GenericUuid::into_untyped_uuid),
-                        )));
+                    predicates.push(Box::new(
+                        rfd_revision::id
+                            .assume_not_null()
+                            .eq_any(revision.into_iter().map(GenericUuid::into_untyped_uuid)),
+                    ));
                 }
 
                 if let Some(rfd_number) = rfd_number {
@@ -102,7 +103,9 @@ impl RfdStore for PostgresStore {
 
                 if let Some(commit) = commit {
                     predicates.push(Box::new(
-                        rfd_revision::commit_sha.eq_any(commit.into_iter().map(|sha| sha.0)),
+                        rfd_revision::commit_sha
+                            .assume_not_null()
+                            .eq_any(commit.into_iter().map(|sha| sha.0)),
                     ));
                 }
 
@@ -116,7 +119,9 @@ impl RfdStore for PostgresStore {
 
                 if !deleted {
                     predicates.push(Box::new(rfd::deleted_at.is_null()));
-                    predicates.push(Box::new(rfd_revision::deleted_at.is_null()));
+                    predicates.push(Box::new(
+                        rfd_revision::deleted_at.assume_not_null().is_null(),
+                    ));
                 }
 
                 predicates
@@ -127,19 +132,26 @@ impl RfdStore for PostgresStore {
             query = query.filter(predicate);
         }
 
-        let results = query
+        query = query
             .offset(pagination.offset)
             .limit(pagination.limit)
-            .order((
-                rfd_revision::rfd_id.asc(),
-                rfd_revision::committed_at.desc(),
-            ))
-            .get_results_async::<(RfdModel, RfdRevisionModel)>(&*self.pool.get().await?)
+            .order((rfd::id.asc(), rfd_revision::committed_at.desc()));
+
+        tracing::trace!(query = ?debug_query(&query), "List RFDs query");
+
+        let results = query
+            .get_results_async::<(RfdModel, Option<RfdRevisionModel>)>(&*self.pool.get().await?)
             .await?;
 
         tracing::trace!(count = ?results.len(), "Found RFDs");
 
-        Ok(results.into_iter().map(|rfd| rfd.into()).collect())
+        Ok(results
+            .into_iter()
+            .map(|(rfd, revision)| match revision {
+                Some(revision) => (rfd, revision).into(),
+                None => rfd.into(),
+            })
+            .collect())
     }
 
     async fn upsert(&self, new_rfd: NewRfd) -> Result<Rfd, StoreError> {
@@ -204,86 +216,196 @@ impl RfdMetaStore for PostgresStore {
         filters: Vec<RfdFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdMeta>, StoreError> {
-        let mut query = rfd::table
-            .inner_join(rfd_revision::table)
-            .distinct_on(rfd::id)
-            .select((RfdModel::as_select(), RfdRevisionMetaModel::as_select()))
-            .into_boxed();
-
         tracing::trace!(?filters, "Lookup RFDs");
 
-        let filter_predicates = filters
-            .into_iter()
-            .map(|filter| {
-                let mut predicates: Vec<Box<dyn BoxableExpression<_, Pg, SqlType = Bool>>> = vec![];
-                let RfdFilter {
-                    id,
-                    revision,
-                    rfd_number,
-                    commit,
-                    public,
-                    deleted,
-                } = filter;
+        let mut clauses = vec![];
+        let mut bind_count = 1;
 
-                if let Some(id) = id {
-                    predicates.push(Box::new(
-                        rfd::id.eq_any(id.into_iter().map(GenericUuid::into_untyped_uuid)),
-                    ));
+        for filter in &filters {
+            let mut filter_clause = "1=1".to_string();
+
+            let RfdFilter {
+                id,
+                revision,
+                rfd_number,
+                commit,
+                public,
+                deleted,
+            } = filter;
+
+            if let Some(ids) = &id {
+                let id_binds = ids
+                    .iter()
+                    .enumerate()
+                    .map(|(i, _)| format!("${}", bind_count + i))
+                    .collect::<Vec<_>>();
+                bind_count = bind_count + id_binds.len();
+                filter_clause = filter_clause + &format!(" AND rfd.id IN ({})", id_binds.join(","));
+            }
+
+            if let Some(revisions) = &revision {
+                let revision_binds = revisions
+                    .iter()
+                    .enumerate()
+                    .map(|(i, _)| format!("${}", bind_count + i))
+                    .collect::<Vec<_>>();
+                bind_count = bind_count + revision_binds.len();
+                filter_clause = filter_clause
+                    + &format!(" AND rfd_revision.id IN ({})", revision_binds.join(","));
+            }
+
+            if let Some(rfd_numbers) = &rfd_number {
+                let rfd_number_binds = rfd_numbers
+                    .iter()
+                    .enumerate()
+                    .map(|(i, _)| format!("${}", bind_count + i))
+                    .collect::<Vec<_>>();
+                bind_count = bind_count + rfd_number_binds.len();
+                filter_clause = filter_clause
+                    + &format!(" AND rfd.rfd_number IN ({})", rfd_number_binds.join(","));
+            }
+
+            if let Some(commit_shas) = &commit {
+                let commit_sha_binds = commit_shas
+                    .iter()
+                    .enumerate()
+                    .map(|(i, _)| format!("${}", bind_count + i))
+                    .collect::<Vec<_>>();
+                bind_count = bind_count + commit_sha_binds.len();
+                filter_clause = filter_clause
+                    + &format!(
+                        " AND rfd_revision.commit_sha IN ({})",
+                        commit_sha_binds.join(",")
+                    );
+            }
+
+            if let Some(_) = &public {
+                bind_count = bind_count + 1;
+                filter_clause = filter_clause + " AND rfd.public = {}";
+            }
+
+            if !deleted {
+                filter_clause = filter_clause
+                    + " AND rfd.deleted_at IS NULL AND rfd_revision.deleted_at IS NULL";
+            }
+
+            clauses.push(format!("({})", filter_clause));
+        }
+
+        let where_clause = if clauses.len() > 0 {
+            format!("({})", clauses.join(" OR "))
+        } else {
+            format!("1=1")
+        };
+
+        let raw_query = format!(
+            r#"SELECT
+            rfd.id as id,
+            rfd.rfd_number as rfd_number,
+            rfd.link as link,
+            rfd.created_at as created_at,
+            rfd.updated_at as updated_at,
+            rfd.deleted_at as deleted_at,
+            rfd.visibility as visibility,
+            rfd_revision.id AS revision_id,
+            rfd_revision.rfd_id as revision_rfd_id,
+            rfd_revision.title as revision_title,
+            rfd_revision.state as revision_state,
+            rfd_revision.discussion as revision_discussion,
+            rfd_revision.authors as revision_authors,
+            rfd_revision.content_format as revision_content_format,
+            rfd_revision.sha as revision_sha,
+            rfd_revision.commit_sha as revision_commit_sha,
+            rfd_revision.committed_at as revision_committed_at,
+            rfd_revision.created_at as revision_created_at,
+            rfd_revision.updated_at as revision_updated_at,
+            rfd_revision.deleted_at as revision_deleted_at,
+            rfd_revision.labels as revision_labels
+        FROM
+            rfd
+        INNER JOIN
+            rfd_revision
+            ON rfd_revision.rfd_id = rfd.id
+        WHERE {} AND
+            rfd_revision.id = (
+                SELECT rfd_revision.id
+                FROM rfd_revision
+                WHERE rfd_revision.rfd_id = rfd.id
+                ORDER BY rfd_revision.committed_at DESC
+                LIMIT 1
+            )
+        ORDER BY
+            rfd_revision.rfd_id ASC,
+            rfd_revision.committed_at DESC
+        LIMIT ${} OFFSET ${}"#,
+            where_clause,
+            bind_count,
+            bind_count + 1,
+        );
+
+        let mut query = sql_query(raw_query).into_boxed::<Pg>();
+
+        for filter in &filters {
+            let RfdFilter {
+                id,
+                revision,
+                rfd_number,
+                commit,
+                public,
+                ..
+            } = filter;
+
+            if let Some(ids) = &id {
+                for id in ids {
+                    tracing::trace!(?id, "Binding id parameter");
+                    query = query.bind::<diesel::sql_types::Uuid, _>(id.into_untyped_uuid());
                 }
+            }
 
-                if let Some(revision) = revision {
-                    predicates
-                        .push(Box::new(rfd_revision::id.eq_any(
-                            revision.into_iter().map(GenericUuid::into_untyped_uuid),
-                        )));
+            if let Some(revisions) = &revision {
+                for revision in revisions {
+                    tracing::trace!(?revision, "Binding revision parameter");
+                    query = query.bind::<diesel::sql_types::Uuid, _>(revision.into_untyped_uuid());
                 }
+            }
 
-                if let Some(rfd_number) = rfd_number {
-                    predicates.push(Box::new(rfd::rfd_number.eq_any(rfd_number)));
+            if let Some(rfd_numbers) = &rfd_number {
+                for rfd_number in rfd_numbers {
+                    tracing::trace!(?rfd_number, "Binding rfd_number parameter");
+                    query = query.bind::<diesel::sql_types::Integer, _>(*rfd_number);
                 }
+            }
 
-                if let Some(commit) = commit {
-                    predicates.push(Box::new(
-                        rfd_revision::commit_sha.eq_any(commit.into_iter().map(|sha| sha.0)),
-                    ));
+            if let Some(commits) = &commit {
+                for commit in commits {
+                    tracing::trace!(?commit, "Binding commit parameter");
+                    query = query.bind::<diesel::sql_types::VarChar, _>(commit.to_string());
                 }
+            }
 
-                if let Some(public) = public {
-                    predicates.push(Box::new(
-                        rfd::visibility.eq(public
-                            .then(|| Visibility::Public)
-                            .unwrap_or(Visibility::Private)),
-                    ));
-                }
-
-                if !deleted {
-                    predicates.push(Box::new(rfd::deleted_at.is_null()));
-                    predicates.push(Box::new(rfd_revision::deleted_at.is_null()));
-                }
-
-                predicates
-            })
-            .collect::<Vec<_>>();
-
-        if let Some(predicate) = flatten_predicates(filter_predicates) {
-            query = query.filter(predicate);
+            if let Some(public) = &public {
+                tracing::trace!(?public, "Binding public parameter");
+                query = query.bind::<diesel::sql_types::Bool, _>(*public);
+            }
         }
 
         query = query
-            .offset(pagination.offset)
-            .limit(pagination.limit)
-            .order((
-                rfd_revision::rfd_id.asc(),
-                rfd_revision::committed_at.desc(),
-            ));
+            .bind::<diesel::sql_types::Integer, _>(pagination.limit as i32)
+            .bind::<diesel::sql_types::Integer, _>(pagination.offset as i32);
 
-        let results = query
-            .get_results_async::<(RfdModel, RfdRevisionMetaModel)>(&*self.pool.get().await?)
+        tracing::trace!(query = ?debug_query(&query), "List RFDs query");
+
+        let rows = query
+            .get_results_async::<RfdMetaJoinRow>(&*self.pool.get().await?)
             .await?;
+        let results = rows
+            .into_iter()
+            .map(|row| <(RfdModel, RfdRevisionMetaModel)>::from(row).into())
+            .collect::<Vec<_>>();
 
         tracing::trace!(count = ?results.len(), "Found RFDs");
 
-        Ok(results.into_iter().map(|rfd| rfd.into()).collect())
+        Ok(results)
     }
 }
 
@@ -358,7 +480,7 @@ impl RfdPdfsStore for PostgresStore {
                     .collect::<Vec<_>>();
                 bind_count = bind_count + rfd_number_binds.len();
                 filter_clause = filter_clause
-                    + &format!(" AND rfd.rfd_number.id IN ({})", rfd_number_binds.join(","));
+                    + &format!(" AND rfd.rfd_number IN ({})", rfd_number_binds.join(","));
             }
 
             if let Some(commit_shas) = &commit {
@@ -370,7 +492,7 @@ impl RfdPdfsStore for PostgresStore {
                 bind_count = bind_count + commit_sha_binds.len();
                 filter_clause = filter_clause
                     + &format!(
-                        " AND rfd_revision.commit_sha.id IN ({})",
+                        " AND rfd_revision.commit_sha IN ({})",
                         commit_sha_binds.join(",")
                     );
             }
@@ -384,43 +506,47 @@ impl RfdPdfsStore for PostgresStore {
                 filter_clause = filter_clause +" AND rfd.deleted_at IS NULL AND rfd_revision.deleted_at IS NULL AND rfd_pdf.deleted_at IS NULL";
             }
 
-            clauses.push(filter_clause);
+            clauses.push(format!("({})", filter_clause));
         }
 
-        let where_clause = clauses.join(" OR ");
+        let where_clause = if clauses.len() > 0 {
+            format!("({})", clauses.join(" OR "))
+        } else {
+            format!("1=1")
+        };
 
         let raw_query = format!(
             r#"SELECT
-            rfd.id,
-            rfd.rfd_number,
-            rfd.link,
-            rfd.created_at,
-            rfd.updated_at,
-            rfd.deleted_at,
-            rfd.visibility,
+            rfd.id as id,
+            rfd.rfd_number as rfd_number,
+            rfd.link as link,
+            rfd.created_at as created_at,
+            rfd.updated_at as updated_at,
+            rfd.deleted_at as deleted_at,
+            rfd.visibility as visibility,
             rfd_revision.id AS revision_id,
-            rfd_revision.rfd_id,
-            rfd_revision.title,
-            rfd_revision.state,
-            rfd_revision.discussion,
-            rfd_revision.authors,
-            rfd_pdf.id,
-            rfd_pdf.rfd_revision_id,
-            rfd_pdf.source,
-            rfd_pdf.link,
-            rfd_pdf.created_at,
-            rfd_pdf.updated_at,
-            rfd_pdf.deleted_at,
-            rfd_pdf.rfd_id,
-            rfd_pdf.external_id,
-            rfd_revision.content_format,
-            rfd_revision.sha,
-            rfd_revision.commit_sha,
-            rfd_revision.committed_at,
-            rfd_revision.created_at,
-            rfd_revision.updated_at,
-            rfd_revision.deleted_at,
-            rfd_revision.labels
+            rfd_revision.rfd_id as revision_rfd_id,
+            rfd_revision.title as revision_title,
+            rfd_revision.state as revision_state,
+            rfd_revision.discussion as revision_discussion,
+            rfd_revision.authors as revision_authors,
+            rfd_pdf.id as pdf_id,
+            rfd_pdf.rfd_revision_id as pdf_rfd_revision_id,
+            rfd_pdf.source as pfd_source,
+            rfd_pdf.link as pdf_link,
+            rfd_pdf.created_at as pdf_created_at,
+            rfd_pdf.updated_at as pdf_updated_at,
+            rfd_pdf.deleted_at as pdf_deleted_at,
+            rfd_pdf.rfd_id as pdf_rfd_id,
+            rfd_pdf.external_id as pdf_external_id,
+            rfd_revision.content_format as revision_content_format,
+            rfd_revision.sha as revision_sha,
+            rfd_revision.commit_sha as revision_commit_sha,
+            rfd_revision.committed_at as revision_committed_at,
+            rfd_revision.created_at as revision_created_at,
+            rfd_revision.updated_at as revision_updated_at,
+            rfd_revision.deleted_at as revision_deleted_at,
+            rfd_revision.labels as revision_labels
         FROM
             rfd
         INNER JOIN
@@ -496,8 +622,10 @@ impl RfdPdfsStore for PostgresStore {
             .bind::<diesel::sql_types::Integer, _>(pagination.limit as i32)
             .bind::<diesel::sql_types::Integer, _>(pagination.offset as i32);
 
+        tracing::trace!(query = ?debug_query(&query), "List RFDs query");
+
         let rows = query
-            .get_results_async::<RfdPdfsRow>(&*self.pool.get().await?)
+            .get_results_async::<RfdPdfJoinRow>(&*self.pool.get().await?)
             .await?;
         let results = rows
             .into_iter()
@@ -511,6 +639,8 @@ impl RfdPdfsStore for PostgresStore {
                             existing
                                 .get_mut()
                                 .content
+                                .as_mut()
+                                .unwrap()
                                 .content
                                 .push(revision_model.content.into());
                         }

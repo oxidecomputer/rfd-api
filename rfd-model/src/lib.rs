@@ -73,9 +73,9 @@ pub struct Rfd {
     pub rfd_number: i32,
     pub link: Option<String>,
     #[partial(NewRfd(skip))]
-    #[partial(RfdMeta(retype = RfdRevisionMeta))]
-    #[partial(RfdPdfs(retype = RfdRevisionPdf))]
-    pub content: RfdRevision,
+    #[partial(RfdMeta(retype = Option<RfdRevisionMeta>))]
+    #[partial(RfdPdfs(retype = Option<RfdRevisionPdf>))]
+    pub content: Option<RfdRevision>,
     #[partial(NewRfd(skip))]
     pub created_at: DateTime<Utc>,
     #[partial(NewRfd(skip))]
@@ -85,13 +85,28 @@ pub struct Rfd {
     pub visibility: Visibility,
 }
 
+impl From<RfdModel> for Rfd {
+    fn from(value: RfdModel) -> Self {
+        Self {
+            id: TypedUuid::from_untyped_uuid(value.id),
+            rfd_number: value.rfd_number,
+            link: value.link,
+            content: None,
+            created_at: value.created_at,
+            updated_at: value.updated_at,
+            deleted_at: value.deleted_at,
+            visibility: value.visibility,
+        }
+    }
+}
+
 impl From<(RfdModel, RfdRevisionModel)> for Rfd {
     fn from((rfd, revision): (RfdModel, RfdRevisionModel)) -> Self {
         Self {
             id: TypedUuid::from_untyped_uuid(rfd.id),
             rfd_number: rfd.rfd_number,
             link: rfd.link,
-            content: revision.into(),
+            content: Some(revision.into()),
             created_at: rfd.created_at,
             updated_at: rfd.updated_at,
             deleted_at: rfd.deleted_at,
@@ -106,7 +121,7 @@ impl From<(RfdModel, RfdRevisionMetaModel)> for RfdMeta {
             id: TypedUuid::from_untyped_uuid(rfd.id),
             rfd_number: rfd.rfd_number,
             link: rfd.link,
-            content: revision.into(),
+            content: Some(revision.into()),
             created_at: rfd.created_at,
             updated_at: rfd.updated_at,
             deleted_at: rfd.deleted_at,
@@ -121,7 +136,7 @@ impl From<(RfdModel, RfdRevisionPdfModel)> for RfdPdfs {
             id: TypedUuid::from_untyped_uuid(rfd.id),
             rfd_number: rfd.rfd_number,
             link: rfd.link,
-            content: revision.into(),
+            content: Some(revision.into()),
             created_at: rfd.created_at,
             updated_at: rfd.updated_at,
             deleted_at: rfd.deleted_at,

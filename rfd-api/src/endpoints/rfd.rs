@@ -19,7 +19,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use trace_request::trace_request;
 use tracing::instrument;
-use v_api::ApiContext;
+use v_api::{response::not_found, ApiContext};
 use v_model::permissions::Caller;
 
 use crate::{
@@ -407,9 +407,14 @@ async fn view_rfd_attr_op(
 ) -> Result<HttpResponseOk<RfdAttr>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
         let rfd = ctx.view_rfd(caller, rfd_number, None).await?;
-        let content = match rfd.format {
-            ContentFormat::Asciidoc => RfdContent::Asciidoc(RfdAsciidoc::new(rfd.content)),
-            ContentFormat::Markdown => RfdContent::Markdown(RfdMarkdown::new(rfd.content)),
+        let content = match (rfd.content, rfd.format) {
+            (Some(content), Some(ContentFormat::Asciidoc)) => {
+                RfdContent::Asciidoc(RfdAsciidoc::new(content))
+            }
+            (Some(content), Some(ContentFormat::Markdown)) => {
+                RfdContent::Markdown(RfdMarkdown::new(content))
+            }
+            _ => Err(not_found("RFD does not have any assigned revisions"))?,
         };
 
         extract_attr(&attr, &content).map(HttpResponseOk)
@@ -900,7 +905,7 @@ mod tests {
                     id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
                     rfd_number: 123,
                     link: None,
-                    content: RfdRevision {
+                    content: Some(RfdRevision {
                         id: TypedUuid::new_v4(),
                         rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
                         title: String::new(),
@@ -916,7 +921,7 @@ mod tests {
                         created_at: Utc::now(),
                         updated_at: Utc::now(),
                         deleted_at: None,
-                    },
+                    }),
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,
@@ -926,7 +931,7 @@ mod tests {
                     id: TypedUuid::from_untyped_uuid(public_rfd_id),
                     rfd_number: 456,
                     link: None,
-                    content: RfdRevision {
+                    content: Some(RfdRevision {
                         id: TypedUuid::new_v4(),
                         rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
                         title: String::new(),
@@ -942,7 +947,7 @@ mod tests {
                         created_at: Utc::now(),
                         updated_at: Utc::now(),
                         deleted_at: None,
-                    },
+                    }),
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,
@@ -952,7 +957,7 @@ mod tests {
                     id: TypedUuid::from_untyped_uuid(private_rfd_id_2),
                     rfd_number: 789,
                     link: None,
-                    content: RfdRevision {
+                    content: Some(RfdRevision {
                         id: TypedUuid::new_v4(),
                         rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
                         title: String::new(),
@@ -968,7 +973,7 @@ mod tests {
                         created_at: Utc::now(),
                         updated_at: Utc::now(),
                         deleted_at: None,
-                    },
+                    }),
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,
@@ -996,7 +1001,7 @@ mod tests {
                     id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
                     rfd_number: 123,
                     link: None,
-                    content: RfdRevisionMeta {
+                    content: Some(RfdRevisionMeta {
                         id: TypedUuid::new_v4(),
                         rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
                         title: String::new(),
@@ -1011,7 +1016,7 @@ mod tests {
                         created_at: Utc::now(),
                         updated_at: Utc::now(),
                         deleted_at: None,
-                    },
+                    }),
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,
@@ -1021,7 +1026,7 @@ mod tests {
                     id: TypedUuid::from_untyped_uuid(public_rfd_id),
                     rfd_number: 456,
                     link: None,
-                    content: RfdRevisionMeta {
+                    content: Some(RfdRevisionMeta {
                         id: TypedUuid::new_v4(),
                         rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
                         title: String::new(),
@@ -1036,7 +1041,7 @@ mod tests {
                         created_at: Utc::now(),
                         updated_at: Utc::now(),
                         deleted_at: None,
-                    },
+                    }),
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,
@@ -1046,7 +1051,7 @@ mod tests {
                     id: TypedUuid::from_untyped_uuid(private_rfd_id_2),
                     rfd_number: 789,
                     link: None,
-                    content: RfdRevisionMeta {
+                    content: Some(RfdRevisionMeta {
                         id: TypedUuid::new_v4(),
                         rfd_id: TypedUuid::from_untyped_uuid(private_rfd_id_1),
                         title: String::new(),
@@ -1061,7 +1066,7 @@ mod tests {
                         created_at: Utc::now(),
                         updated_at: Utc::now(),
                         deleted_at: None,
-                    },
+                    }),
                     created_at: Utc::now(),
                     updated_at: Utc::now(),
                     deleted_at: None,

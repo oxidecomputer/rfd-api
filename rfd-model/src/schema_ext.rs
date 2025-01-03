@@ -119,11 +119,70 @@ impl Display for Visibility {
     }
 }
 
+// diesel::table! {
+//     use diesel::sql_types::*;
+//     use crate::schema::sql_types::{RfdContentFormat, RfdVisibility};
+
+//     rfd_join (id) {
+//         id -> Uuid,
+//         rfd_number -> Integer,
+//         link -> Nullable<Varchar>,
+//         created_at -> Timestamptz,
+//         updated_at -> Timestamptz,
+//         deleted_at -> Nullable<Timestamptz>,
+//         visibility -> RfdVisibility,
+//         revision_id -> Uuid,
+//         revision_rfd_id -> Uuid,
+//         revision_title -> Varchar,
+//         revision_state -> Nullable<Varchar>,
+//         revision_discussion -> Nullable<Varchar>,
+//         revision_authors -> Nullable<Varchar>,
+//         revision_content -> Varchar,
+//         revision_content_format -> RfdContentFormat,
+//         revision_sha -> Varchar,
+//         revision_commit_sha -> Varchar,
+//         revision_committed_at -> Timestamptz,
+//         revision_created_at -> Timestamptz,
+//         revision_updated_at -> Timestamptz,
+//         revision_deleted_at -> Nullable<Timestamptz>,
+//         revision_labels -> Nullable<Varchar>,
+//     }
+// }
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use crate::schema::sql_types::{ RfdContentFormat, RfdVisibility};
+
+    rfd_meta_join (id) {
+        id -> Uuid,
+        rfd_number -> Integer,
+        link -> Nullable<Varchar>,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+        deleted_at -> Nullable<Timestamptz>,
+        visibility -> RfdVisibility,
+        revision_id -> Uuid,
+        revision_rfd_id -> Uuid,
+        revision_title -> Varchar,
+        revision_state -> Nullable<Varchar>,
+        revision_discussion -> Nullable<Varchar>,
+        revision_authors -> Nullable<Varchar>,
+        revision_content_format -> RfdContentFormat,
+        revision_sha -> Varchar,
+        revision_commit_sha -> Varchar,
+        revision_committed_at -> Timestamptz,
+        revision_created_at -> Timestamptz,
+        revision_updated_at -> Timestamptz,
+        revision_deleted_at -> Nullable<Timestamptz>,
+        revision_labels -> Nullable<Varchar>,
+    }
+}
+
 diesel::table! {
     use diesel::sql_types::*;
     use crate::schema::sql_types::{RfdPdfSource, RfdContentFormat, RfdVisibility};
 
-    rfd_pdfs (id) {
+    rfd_pdf_join (id) {
         id -> Uuid,
         rfd_number -> Integer,
         link -> Nullable<Varchar>,
