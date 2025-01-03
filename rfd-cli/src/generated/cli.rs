@@ -51,7 +51,6 @@ impl<T: CliConfig> Cli<T> {
             CliCommand::GetMappers => Self::cli_get_mappers(),
             CliCommand::CreateMapper => Self::cli_create_mapper(),
             CliCommand::DeleteMapper => Self::cli_delete_mapper(),
-            CliCommand::GetRfdMeta => Self::cli_get_rfd_meta(),
             CliCommand::ListOauthClients => Self::cli_list_oauth_clients(),
             CliCommand::CreateOauthClient => Self::cli_create_oauth_client(),
             CliCommand::GetOauthClient => Self::cli_get_oauth_client(),
@@ -63,13 +62,21 @@ impl<T: CliConfig> Cli<T> {
             }
             CliCommand::CreateOauthClientSecret => Self::cli_create_oauth_client_secret(),
             CliCommand::DeleteOauthClientSecret => Self::cli_delete_oauth_client_secret(),
-            CliCommand::GetRfds => Self::cli_get_rfds(),
+            CliCommand::ListRfds => Self::cli_list_rfds(),
             CliCommand::ReserveRfd => Self::cli_reserve_rfd(),
-            CliCommand::GetRfd => Self::cli_get_rfd(),
-            CliCommand::SetRfdDocument => Self::cli_set_rfd_document(),
-            CliCommand::GetRfdAttr => Self::cli_get_rfd_attr(),
+            CliCommand::ViewRfdMeta => Self::cli_view_rfd_meta(),
+            CliCommand::ViewRfdAttr => Self::cli_view_rfd_attr(),
             CliCommand::SetRfdAttr => Self::cli_set_rfd_attr(),
             CliCommand::SetRfdContent => Self::cli_set_rfd_content(),
+            CliCommand::ViewRfdDiscussion => Self::cli_view_rfd_discussion(),
+            CliCommand::ViewRfdPdf => Self::cli_view_rfd_pdf(),
+            CliCommand::ViewRfd => Self::cli_view_rfd(),
+            CliCommand::SetRfdDocument => Self::cli_set_rfd_document(),
+            CliCommand::ViewRfdRevisionMeta => Self::cli_view_rfd_revision_meta(),
+            CliCommand::ViewRfdRevisionAttr => Self::cli_view_rfd_revision_attr(),
+            CliCommand::ViewRfdRevisionDiscussion => Self::cli_view_rfd_revision_discussion(),
+            CliCommand::ViewRfdRevisionPdf => Self::cli_view_rfd_revision_pdf(),
+            CliCommand::ViewRfdRevision => Self::cli_view_rfd_revision(),
             CliCommand::DiscussRfd => Self::cli_discuss_rfd(),
             CliCommand::PublishRfd => Self::cli_publish_rfd(),
             CliCommand::UpdateRfdVisibility => Self::cli_update_rfd_visibility(),
@@ -928,18 +935,6 @@ impl<T: CliConfig> Cli<T> {
             .about("Delete a mapper")
     }
 
-    pub fn cli_get_rfd_meta() -> ::clap::Command {
-        ::clap::Command::new("")
-            .arg(
-                ::clap::Arg::new("number")
-                    .long("number")
-                    .value_parser(::clap::value_parser!(::std::string::String))
-                    .required(true)
-                    .help("The RFD number (examples: 1 or 123)"),
-            )
-            .about("Get the latest representation of a RFD")
-    }
-
     pub fn cli_list_oauth_clients() -> ::clap::Command {
         ::clap::Command::new("").about("List OAuth clients")
     }
@@ -1035,7 +1030,7 @@ impl<T: CliConfig> Cli<T> {
             .about("Delete an OAuth client secret")
     }
 
-    pub fn cli_get_rfds() -> ::clap::Command {
+    pub fn cli_list_rfds() -> ::clap::Command {
         ::clap::Command::new("").about("List all available RFDs")
     }
 
@@ -1072,7 +1067,7 @@ impl<T: CliConfig> Cli<T> {
             .about("Create a new RFD")
     }
 
-    pub fn cli_get_rfd() -> ::clap::Command {
+    pub fn cli_view_rfd_meta() -> ::clap::Command {
         ::clap::Command::new("")
             .arg(
                 ::clap::Arg::new("number")
@@ -1081,50 +1076,10 @@ impl<T: CliConfig> Cli<T> {
                     .required(true)
                     .help("The RFD number (examples: 1 or 123)"),
             )
-            .about("Get the latest representation of a RFD")
+            .about("Get the latest representation of an RFD's metadata")
     }
 
-    pub fn cli_set_rfd_document() -> ::clap::Command {
-        ::clap::Command::new("")
-            .arg(
-                ::clap::Arg::new("document")
-                    .long("document")
-                    .value_parser(::clap::value_parser!(::std::string::String))
-                    .required_unless_present("json-body")
-                    .help("Full Asciidoc document to store for this RFD"),
-            )
-            .arg(
-                ::clap::Arg::new("message")
-                    .long("message")
-                    .value_parser(::clap::value_parser!(::std::string::String))
-                    .required(false)
-                    .help("Optional Git commit message to send with this update (recommended)"),
-            )
-            .arg(
-                ::clap::Arg::new("number")
-                    .long("number")
-                    .value_parser(::clap::value_parser!(::std::string::String))
-                    .required(true)
-                    .help("The RFD number (examples: 1 or 123)"),
-            )
-            .arg(
-                ::clap::Arg::new("json-body")
-                    .long("json-body")
-                    .value_name("JSON-FILE")
-                    .required(false)
-                    .value_parser(::clap::value_parser!(std::path::PathBuf))
-                    .help("Path to a file that contains the full json body."),
-            )
-            .arg(
-                ::clap::Arg::new("json-body-template")
-                    .long("json-body-template")
-                    .action(::clap::ArgAction::SetTrue)
-                    .help("XXX"),
-            )
-            .about("Replace the full document of a RFD")
-    }
-
-    pub fn cli_get_rfd_attr() -> ::clap::Command {
+    pub fn cli_view_rfd_attr() -> ::clap::Command {
         ::clap::Command::new("")
             .arg(
                 ::clap::Arg::new("attr")
@@ -1137,15 +1092,17 @@ impl<T: CliConfig> Cli<T> {
                         ]),
                         |s| types::RfdAttrName::try_from(s).unwrap(),
                     ))
-                    .required(true),
+                    .required(true)
+                    .help("An attribute that can be defined in an RFD document"),
             )
             .arg(
                 ::clap::Arg::new("number")
                     .long("number")
                     .value_parser(::clap::value_parser!(::std::string::String))
-                    .required(true),
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
             )
-            .about("Get an attribute of a RFD")
+            .about("Get the an attribute of the latest revision of a RFD")
     }
 
     pub fn cli_set_rfd_attr() -> ::clap::Command {
@@ -1161,7 +1118,8 @@ impl<T: CliConfig> Cli<T> {
                         ]),
                         |s| types::RfdAttrName::try_from(s).unwrap(),
                     ))
-                    .required(true),
+                    .required(true)
+                    .help("An attribute that can be defined in an RFD document"),
             )
             .arg(
                 ::clap::Arg::new("message")
@@ -1174,7 +1132,8 @@ impl<T: CliConfig> Cli<T> {
                 ::clap::Arg::new("number")
                     .long("number")
                     .value_parser(::clap::value_parser!(::std::string::String))
-                    .required(true),
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
             )
             .arg(
                 ::clap::Arg::new("value")
@@ -1238,6 +1197,191 @@ impl<T: CliConfig> Cli<T> {
                     .help("XXX"),
             )
             .about("Replace the contents of a RFD")
+    }
+
+    pub fn cli_view_rfd_discussion() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
+            )
+            .about("Get the comments related to the latest revision of a RFD")
+    }
+
+    pub fn cli_view_rfd_pdf() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
+            )
+            .about("Get the PDF locations of the latest revision of a RFD")
+    }
+
+    pub fn cli_view_rfd() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
+            )
+            .about("Get the raw contents of the latest revision of a RFD")
+    }
+
+    pub fn cli_set_rfd_document() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("document")
+                    .long("document")
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required_unless_present("json-body")
+                    .help("Full Asciidoc document to store for this RFD"),
+            )
+            .arg(
+                ::clap::Arg::new("message")
+                    .long("message")
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required(false)
+                    .help("Optional Git commit message to send with this update (recommended)"),
+            )
+            .arg(
+                ::clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
+            )
+            .arg(
+                ::clap::Arg::new("json-body")
+                    .long("json-body")
+                    .value_name("JSON-FILE")
+                    .required(false)
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
+                    .help("Path to a file that contains the full json body."),
+            )
+            .arg(
+                ::clap::Arg::new("json-body-template")
+                    .long("json-body-template")
+                    .action(::clap::ArgAction::SetTrue)
+                    .help("XXX"),
+            )
+            .about("Replace the full document of a RFD")
+    }
+
+    pub fn cli_view_rfd_revision_meta() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
+            )
+            .arg(
+                ::clap::Arg::new("revision")
+                    .long("revision")
+                    .value_parser(::clap::value_parser!(types::TypedUuidForRfdRevisionId))
+                    .required(true)
+                    .help("The revision id of the RFD"),
+            )
+            .about("Get an RFD revision's metadata")
+    }
+
+    pub fn cli_view_rfd_revision_attr() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("attr")
+                    .long("attr")
+                    .value_parser(::clap::builder::TypedValueParser::map(
+                        ::clap::builder::PossibleValuesParser::new([
+                            types::RfdAttrName::Discussion.to_string(),
+                            types::RfdAttrName::Labels.to_string(),
+                            types::RfdAttrName::State.to_string(),
+                        ]),
+                        |s| types::RfdAttrName::try_from(s).unwrap(),
+                    ))
+                    .required(true)
+                    .help("An attribute that can be defined in an RFD document"),
+            )
+            .arg(
+                ::clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
+            )
+            .arg(
+                ::clap::Arg::new("revision")
+                    .long("revision")
+                    .value_parser(::clap::value_parser!(types::TypedUuidForRfdRevisionId))
+                    .required(true)
+                    .help("The revision id of the RFD"),
+            )
+            .about("Get the an attribute of a revision of a RFD")
+    }
+
+    pub fn cli_view_rfd_revision_discussion() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
+            )
+            .arg(
+                ::clap::Arg::new("revision")
+                    .long("revision")
+                    .value_parser(::clap::value_parser!(types::TypedUuidForRfdRevisionId))
+                    .required(true)
+                    .help("The revision id of the RFD"),
+            )
+            .about("Get the comments related to a revision of a RFD")
+    }
+
+    pub fn cli_view_rfd_revision_pdf() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
+            )
+            .arg(
+                ::clap::Arg::new("revision")
+                    .long("revision")
+                    .value_parser(::clap::value_parser!(types::TypedUuidForRfdRevisionId))
+                    .required(true)
+                    .help("The revision id of the RFD"),
+            )
+            .about("Get the PDF locations of a revision of a RFD")
+    }
+
+    pub fn cli_view_rfd_revision() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
+            )
+            .arg(
+                ::clap::Arg::new("revision")
+                    .long("revision")
+                    .value_parser(::clap::value_parser!(types::TypedUuidForRfdRevisionId))
+                    .required(true)
+                    .help("The revision id of the RFD"),
+            )
+            .about("Get the raw contents of a revision of a RFD")
     }
 
     pub fn cli_discuss_rfd() -> ::clap::Command {
@@ -1401,7 +1545,6 @@ impl<T: CliConfig> Cli<T> {
             CliCommand::GetMappers => self.execute_get_mappers(matches).await,
             CliCommand::CreateMapper => self.execute_create_mapper(matches).await,
             CliCommand::DeleteMapper => self.execute_delete_mapper(matches).await,
-            CliCommand::GetRfdMeta => self.execute_get_rfd_meta(matches).await,
             CliCommand::ListOauthClients => self.execute_list_oauth_clients(matches).await,
             CliCommand::CreateOauthClient => self.execute_create_oauth_client(matches).await,
             CliCommand::GetOauthClient => self.execute_get_oauth_client(matches).await,
@@ -1417,13 +1560,23 @@ impl<T: CliConfig> Cli<T> {
             CliCommand::DeleteOauthClientSecret => {
                 self.execute_delete_oauth_client_secret(matches).await
             }
-            CliCommand::GetRfds => self.execute_get_rfds(matches).await,
+            CliCommand::ListRfds => self.execute_list_rfds(matches).await,
             CliCommand::ReserveRfd => self.execute_reserve_rfd(matches).await,
-            CliCommand::GetRfd => self.execute_get_rfd(matches).await,
-            CliCommand::SetRfdDocument => self.execute_set_rfd_document(matches).await,
-            CliCommand::GetRfdAttr => self.execute_get_rfd_attr(matches).await,
+            CliCommand::ViewRfdMeta => self.execute_view_rfd_meta(matches).await,
+            CliCommand::ViewRfdAttr => self.execute_view_rfd_attr(matches).await,
             CliCommand::SetRfdAttr => self.execute_set_rfd_attr(matches).await,
             CliCommand::SetRfdContent => self.execute_set_rfd_content(matches).await,
+            CliCommand::ViewRfdDiscussion => self.execute_view_rfd_discussion(matches).await,
+            CliCommand::ViewRfdPdf => self.execute_view_rfd_pdf(matches).await,
+            CliCommand::ViewRfd => self.execute_view_rfd(matches).await,
+            CliCommand::SetRfdDocument => self.execute_set_rfd_document(matches).await,
+            CliCommand::ViewRfdRevisionMeta => self.execute_view_rfd_revision_meta(matches).await,
+            CliCommand::ViewRfdRevisionAttr => self.execute_view_rfd_revision_attr(matches).await,
+            CliCommand::ViewRfdRevisionDiscussion => {
+                self.execute_view_rfd_revision_discussion(matches).await
+            }
+            CliCommand::ViewRfdRevisionPdf => self.execute_view_rfd_revision_pdf(matches).await,
+            CliCommand::ViewRfdRevision => self.execute_view_rfd_revision(matches).await,
             CliCommand::DiscussRfd => self.execute_discuss_rfd(matches).await,
             CliCommand::PublishRfd => self.execute_publish_rfd(matches).await,
             CliCommand::UpdateRfdVisibility => self.execute_update_rfd_visibility(matches).await,
@@ -2491,26 +2644,6 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_get_rfd_meta(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
-        let mut request = self.client.get_rfd_meta();
-        if let Some(value) = matches.get_one::<::std::string::String>("number") {
-            request = request.number(value.clone());
-        }
-
-        self.config.execute_get_rfd_meta(matches, &mut request)?;
-        let result = request.send().await;
-        match result {
-            Ok(r) => {
-                self.config.success_item(&r);
-                Ok(())
-            }
-            Err(r) => {
-                self.config.error(&r);
-                Err(anyhow::Error::new(r))
-            }
-        }
-    }
-
     pub async fn execute_list_oauth_clients(
         &self,
         matches: &::clap::ArgMatches,
@@ -2692,9 +2825,9 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_get_rfds(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
-        let mut request = self.client.get_rfds();
-        self.config.execute_get_rfds(matches, &mut request)?;
+    pub async fn execute_list_rfds(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
+        let mut request = self.client.list_rfds();
+        self.config.execute_list_rfds(matches, &mut request)?;
         let result = request.send().await;
         match result {
             Ok(r) => {
@@ -2738,13 +2871,13 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_get_rfd(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
-        let mut request = self.client.get_rfd();
+    pub async fn execute_view_rfd_meta(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
+        let mut request = self.client.view_rfd_meta();
         if let Some(value) = matches.get_one::<::std::string::String>("number") {
             request = request.number(value.clone());
         }
 
-        self.config.execute_get_rfd(matches, &mut request)?;
+        self.config.execute_view_rfd_meta(matches, &mut request)?;
         let result = request.send().await;
         match result {
             Ok(r) => {
@@ -2758,46 +2891,8 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
-    pub async fn execute_set_rfd_document(
-        &self,
-        matches: &::clap::ArgMatches,
-    ) -> anyhow::Result<()> {
-        let mut request = self.client.set_rfd_document();
-        if let Some(value) = matches.get_one::<::std::string::String>("document") {
-            request = request.body_map(|body| body.document(value.clone()))
-        }
-
-        if let Some(value) = matches.get_one::<::std::string::String>("message") {
-            request = request.body_map(|body| body.message(value.clone()))
-        }
-
-        if let Some(value) = matches.get_one::<::std::string::String>("number") {
-            request = request.number(value.clone());
-        }
-
-        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
-            let body_txt = std::fs::read_to_string(value).unwrap();
-            let body_value = serde_json::from_str::<types::RfdUpdateBody>(&body_txt).unwrap();
-            request = request.body(body_value);
-        }
-
-        self.config
-            .execute_set_rfd_document(matches, &mut request)?;
-        let result = request.send().await;
-        match result {
-            Ok(r) => {
-                self.config.success_item(&r);
-                Ok(())
-            }
-            Err(r) => {
-                self.config.error(&r);
-                Err(anyhow::Error::new(r))
-            }
-        }
-    }
-
-    pub async fn execute_get_rfd_attr(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
-        let mut request = self.client.get_rfd_attr();
+    pub async fn execute_view_rfd_attr(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
+        let mut request = self.client.view_rfd_attr();
         if let Some(value) = matches.get_one::<types::RfdAttrName>("attr") {
             request = request.attr(value.clone());
         }
@@ -2806,7 +2901,7 @@ impl<T: CliConfig> Cli<T> {
             request = request.number(value.clone());
         }
 
-        self.config.execute_get_rfd_attr(matches, &mut request)?;
+        self.config.execute_view_rfd_attr(matches, &mut request)?;
         let result = request.send().await;
         match result {
             Ok(r) => {
@@ -2883,6 +2978,252 @@ impl<T: CliConfig> Cli<T> {
         }
 
         self.config.execute_set_rfd_content(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.success_item(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
+    pub async fn execute_view_rfd_discussion(
+        &self,
+        matches: &::clap::ArgMatches,
+    ) -> anyhow::Result<()> {
+        let mut request = self.client.view_rfd_discussion();
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
+            request = request.number(value.clone());
+        }
+
+        self.config
+            .execute_view_rfd_discussion(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.success_item(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
+    pub async fn execute_view_rfd_pdf(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
+        let mut request = self.client.view_rfd_pdf();
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
+            request = request.number(value.clone());
+        }
+
+        self.config.execute_view_rfd_pdf(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.success_item(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
+    pub async fn execute_view_rfd(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
+        let mut request = self.client.view_rfd();
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
+            request = request.number(value.clone());
+        }
+
+        self.config.execute_view_rfd(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.success_item(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
+    pub async fn execute_set_rfd_document(
+        &self,
+        matches: &::clap::ArgMatches,
+    ) -> anyhow::Result<()> {
+        let mut request = self.client.set_rfd_document();
+        if let Some(value) = matches.get_one::<::std::string::String>("document") {
+            request = request.body_map(|body| body.document(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<::std::string::String>("message") {
+            request = request.body_map(|body| body.message(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
+            request = request.number(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value = serde_json::from_str::<types::RfdUpdateBody>(&body_txt).unwrap();
+            request = request.body(body_value);
+        }
+
+        self.config
+            .execute_set_rfd_document(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.success_item(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
+    pub async fn execute_view_rfd_revision_meta(
+        &self,
+        matches: &::clap::ArgMatches,
+    ) -> anyhow::Result<()> {
+        let mut request = self.client.view_rfd_revision_meta();
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
+            request = request.number(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<types::TypedUuidForRfdRevisionId>("revision") {
+            request = request.revision(value.clone());
+        }
+
+        self.config
+            .execute_view_rfd_revision_meta(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.success_item(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
+    pub async fn execute_view_rfd_revision_attr(
+        &self,
+        matches: &::clap::ArgMatches,
+    ) -> anyhow::Result<()> {
+        let mut request = self.client.view_rfd_revision_attr();
+        if let Some(value) = matches.get_one::<types::RfdAttrName>("attr") {
+            request = request.attr(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
+            request = request.number(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<types::TypedUuidForRfdRevisionId>("revision") {
+            request = request.revision(value.clone());
+        }
+
+        self.config
+            .execute_view_rfd_revision_attr(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.success_item(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
+    pub async fn execute_view_rfd_revision_discussion(
+        &self,
+        matches: &::clap::ArgMatches,
+    ) -> anyhow::Result<()> {
+        let mut request = self.client.view_rfd_revision_discussion();
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
+            request = request.number(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<types::TypedUuidForRfdRevisionId>("revision") {
+            request = request.revision(value.clone());
+        }
+
+        self.config
+            .execute_view_rfd_revision_discussion(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.success_item(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
+    pub async fn execute_view_rfd_revision_pdf(
+        &self,
+        matches: &::clap::ArgMatches,
+    ) -> anyhow::Result<()> {
+        let mut request = self.client.view_rfd_revision_pdf();
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
+            request = request.number(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<types::TypedUuidForRfdRevisionId>("revision") {
+            request = request.revision(value.clone());
+        }
+
+        self.config
+            .execute_view_rfd_revision_pdf(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.success_item(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
+    pub async fn execute_view_rfd_revision(
+        &self,
+        matches: &::clap::ArgMatches,
+    ) -> anyhow::Result<()> {
+        let mut request = self.client.view_rfd_revision();
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
+            request = request.number(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<types::TypedUuidForRfdRevisionId>("revision") {
+            request = request.revision(value.clone());
+        }
+
+        self.config
+            .execute_view_rfd_revision(matches, &mut request)?;
         let result = request.send().await;
         match result {
             Ok(r) => {
@@ -3335,14 +3676,6 @@ pub trait CliConfig {
         Ok(())
     }
 
-    fn execute_get_rfd_meta(
-        &self,
-        matches: &::clap::ArgMatches,
-        request: &mut builder::GetRfdMeta,
-    ) -> anyhow::Result<()> {
-        Ok(())
-    }
-
     fn execute_list_oauth_clients(
         &self,
         matches: &::clap::ArgMatches,
@@ -3399,10 +3732,10 @@ pub trait CliConfig {
         Ok(())
     }
 
-    fn execute_get_rfds(
+    fn execute_list_rfds(
         &self,
         matches: &::clap::ArgMatches,
-        request: &mut builder::GetRfds,
+        request: &mut builder::ListRfds,
     ) -> anyhow::Result<()> {
         Ok(())
     }
@@ -3415,26 +3748,18 @@ pub trait CliConfig {
         Ok(())
     }
 
-    fn execute_get_rfd(
+    fn execute_view_rfd_meta(
         &self,
         matches: &::clap::ArgMatches,
-        request: &mut builder::GetRfd,
+        request: &mut builder::ViewRfdMeta,
     ) -> anyhow::Result<()> {
         Ok(())
     }
 
-    fn execute_set_rfd_document(
+    fn execute_view_rfd_attr(
         &self,
         matches: &::clap::ArgMatches,
-        request: &mut builder::SetRfdDocument,
-    ) -> anyhow::Result<()> {
-        Ok(())
-    }
-
-    fn execute_get_rfd_attr(
-        &self,
-        matches: &::clap::ArgMatches,
-        request: &mut builder::GetRfdAttr,
+        request: &mut builder::ViewRfdAttr,
     ) -> anyhow::Result<()> {
         Ok(())
     }
@@ -3451,6 +3776,78 @@ pub trait CliConfig {
         &self,
         matches: &::clap::ArgMatches,
         request: &mut builder::SetRfdContent,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn execute_view_rfd_discussion(
+        &self,
+        matches: &::clap::ArgMatches,
+        request: &mut builder::ViewRfdDiscussion,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn execute_view_rfd_pdf(
+        &self,
+        matches: &::clap::ArgMatches,
+        request: &mut builder::ViewRfdPdf,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn execute_view_rfd(
+        &self,
+        matches: &::clap::ArgMatches,
+        request: &mut builder::ViewRfd,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn execute_set_rfd_document(
+        &self,
+        matches: &::clap::ArgMatches,
+        request: &mut builder::SetRfdDocument,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn execute_view_rfd_revision_meta(
+        &self,
+        matches: &::clap::ArgMatches,
+        request: &mut builder::ViewRfdRevisionMeta,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn execute_view_rfd_revision_attr(
+        &self,
+        matches: &::clap::ArgMatches,
+        request: &mut builder::ViewRfdRevisionAttr,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn execute_view_rfd_revision_discussion(
+        &self,
+        matches: &::clap::ArgMatches,
+        request: &mut builder::ViewRfdRevisionDiscussion,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn execute_view_rfd_revision_pdf(
+        &self,
+        matches: &::clap::ArgMatches,
+        request: &mut builder::ViewRfdRevisionPdf,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn execute_view_rfd_revision(
+        &self,
+        matches: &::clap::ArgMatches,
+        request: &mut builder::ViewRfdRevision,
     ) -> anyhow::Result<()> {
         Ok(())
     }
@@ -3534,7 +3931,6 @@ pub enum CliCommand {
     GetMappers,
     CreateMapper,
     DeleteMapper,
-    GetRfdMeta,
     ListOauthClients,
     CreateOauthClient,
     GetOauthClient,
@@ -3542,13 +3938,21 @@ pub enum CliCommand {
     DeleteOauthClientRedirectUri,
     CreateOauthClientSecret,
     DeleteOauthClientSecret,
-    GetRfds,
+    ListRfds,
     ReserveRfd,
-    GetRfd,
-    SetRfdDocument,
-    GetRfdAttr,
+    ViewRfdMeta,
+    ViewRfdAttr,
     SetRfdAttr,
     SetRfdContent,
+    ViewRfdDiscussion,
+    ViewRfdPdf,
+    ViewRfd,
+    SetRfdDocument,
+    ViewRfdRevisionMeta,
+    ViewRfdRevisionAttr,
+    ViewRfdRevisionDiscussion,
+    ViewRfdRevisionPdf,
+    ViewRfdRevision,
     DiscussRfd,
     PublishRfd,
     UpdateRfdVisibility,
@@ -3595,7 +3999,6 @@ impl CliCommand {
             CliCommand::GetMappers,
             CliCommand::CreateMapper,
             CliCommand::DeleteMapper,
-            CliCommand::GetRfdMeta,
             CliCommand::ListOauthClients,
             CliCommand::CreateOauthClient,
             CliCommand::GetOauthClient,
@@ -3603,13 +4006,21 @@ impl CliCommand {
             CliCommand::DeleteOauthClientRedirectUri,
             CliCommand::CreateOauthClientSecret,
             CliCommand::DeleteOauthClientSecret,
-            CliCommand::GetRfds,
+            CliCommand::ListRfds,
             CliCommand::ReserveRfd,
-            CliCommand::GetRfd,
-            CliCommand::SetRfdDocument,
-            CliCommand::GetRfdAttr,
+            CliCommand::ViewRfdMeta,
+            CliCommand::ViewRfdAttr,
             CliCommand::SetRfdAttr,
             CliCommand::SetRfdContent,
+            CliCommand::ViewRfdDiscussion,
+            CliCommand::ViewRfdPdf,
+            CliCommand::ViewRfd,
+            CliCommand::SetRfdDocument,
+            CliCommand::ViewRfdRevisionMeta,
+            CliCommand::ViewRfdRevisionAttr,
+            CliCommand::ViewRfdRevisionDiscussion,
+            CliCommand::ViewRfdRevisionPdf,
+            CliCommand::ViewRfdRevision,
             CliCommand::DiscussRfd,
             CliCommand::PublishRfd,
             CliCommand::UpdateRfdVisibility,

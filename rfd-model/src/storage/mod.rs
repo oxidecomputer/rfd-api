@@ -13,7 +13,8 @@ use v_model::storage::{ListPagination, StoreError};
 
 use crate::{
     schema_ext::PdfSource, CommitSha, Job, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdId,
-    RfdMeta, RfdPdf, RfdPdfId, RfdRevision, RfdRevisionId, RfdRevisionMeta,
+    RfdMeta, RfdPdf, RfdPdfId, RfdPdfs, RfdRevision, RfdRevisionId, RfdRevisionMeta,
+    RfdRevisionPdf,
 };
 
 #[cfg(feature = "mock")]
@@ -26,6 +27,7 @@ pub trait RfdStorage:
     + RfdRevisionStore
     + RfdRevisionMetaStore
     + RfdPdfStore
+    + RfdPdfsStore
     + JobStore
     + Send
     + Sync
@@ -38,6 +40,7 @@ impl<T> RfdStorage for T where
         + RfdRevisionStore
         + RfdRevisionMetaStore
         + RfdPdfStore
+        + RfdPdfsStore
         + JobStore
         + Send
         + Sync
@@ -121,6 +124,22 @@ pub trait RfdMetaStore {
     ) -> Result<Vec<RfdMeta>, StoreError>;
 }
 
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait RfdPdfsStore {
+    async fn get(
+        &self,
+        id: TypedUuid<RfdId>,
+        revision: Option<TypedUuid<RfdRevisionId>>,
+        deleted: bool,
+    ) -> Result<Option<RfdPdfs>, StoreError>;
+    async fn list(
+        &self,
+        filters: Vec<RfdFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdPdfs>, StoreError>;
+}
+
 // TODO: Make the revision store generic over a revision type. We want to be able to have a metadata
 // only version of the revision model so that we do not need to always load content from the db
 
@@ -174,11 +193,6 @@ pub trait RfdRevisionStore {
         filters: Vec<RfdRevisionFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdRevision>, StoreError>;
-    // async fn list_unique_rfd(
-    //     &self,
-    //     filters: Vec<RfdRevisionFilter>,
-    //     pagination: &ListPagination,
-    // ) -> Result<Vec<RfdRevision>, StoreError>;
     async fn upsert(&self, new_revision: NewRfdRevision) -> Result<RfdRevision, StoreError>;
     async fn delete(
         &self,
@@ -199,11 +213,21 @@ pub trait RfdRevisionMetaStore {
         filters: Vec<RfdRevisionFilter>,
         pagination: &ListPagination,
     ) -> Result<Vec<RfdRevisionMeta>, StoreError>;
-    // async fn list_unique_rfd(
-    //     &self,
-    //     filter: RfdRevisionFilter,
-    //     pagination: &ListPagination,
-    // ) -> Result<Vec<RfdRevisionMeta>, StoreError>;
+}
+
+#[cfg_attr(feature = "mock", automock)]
+#[async_trait]
+pub trait RfdRevisionPdfStore {
+    async fn get(
+        &self,
+        id: &TypedUuid<RfdRevisionId>,
+        deleted: bool,
+    ) -> Result<Option<RfdRevisionPdf>, StoreError>;
+    async fn list(
+        &self,
+        filters: Vec<RfdRevisionFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdRevisionPdf>, StoreError>;
 }
 
 #[derive(Debug, Default)]

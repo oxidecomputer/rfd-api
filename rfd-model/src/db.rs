@@ -3,14 +3,14 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use chrono::{DateTime, Utc};
-use diesel::{Insertable, Queryable, Selectable};
+use diesel::{prelude::QueryableByName, Insertable, Queryable, Selectable};
 use partial_struct::partial;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
     schema::{job, rfd, rfd_pdf, rfd_revision},
-    schema_ext::{ContentFormat, PdfSource, Visibility},
+    schema_ext::{rfd_meta_join, rfd_pdf_join, ContentFormat, PdfSource, Visibility},
 };
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable, Selectable)]
@@ -25,8 +25,97 @@ pub struct RfdModel {
     pub visibility: Visibility,
 }
 
+// #[derive(QueryableByName)]
+// #[diesel(table_name = rfd_join)]
+// pub struct RfdJoinRow {
+//     pub id: Uuid,
+//     pub rfd_number: i32,
+//     pub link: Option<String>,
+//     pub created_at: DateTime<Utc>,
+//     pub updated_at: DateTime<Utc>,
+//     pub deleted_at: Option<DateTime<Utc>>,
+//     pub visibility: Visibility,
+//     pub revision_id: Uuid,
+//     pub revision_rfd_id: Uuid,
+//     pub revision_title: String,
+//     pub revision_state: Option<String>,
+//     pub revision_discussion: Option<String>,
+//     pub revision_authors: Option<String>,
+//     pub revision_content: String,
+//     pub revision_content_format: ContentFormat,
+//     pub revision_sha: String,
+//     pub revision_commit_sha: String,
+//     pub revision_committed_at: DateTime<Utc>,
+//     pub revision_created_at: DateTime<Utc>,
+//     pub revision_updated_at: DateTime<Utc>,
+//     pub revision_deleted_at: Option<DateTime<Utc>>,
+//     pub revision_labels: Option<String>,
+// }
+
+#[derive(QueryableByName)]
+#[diesel(table_name = rfd_meta_join)]
+pub struct RfdMetaJoinRow {
+    pub id: Uuid,
+    pub rfd_number: i32,
+    pub link: Option<String>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
+    pub visibility: Visibility,
+    pub revision_id: Uuid,
+    pub revision_rfd_id: Uuid,
+    pub revision_title: String,
+    pub revision_state: Option<String>,
+    pub revision_discussion: Option<String>,
+    pub revision_authors: Option<String>,
+    pub revision_content_format: ContentFormat,
+    pub revision_sha: String,
+    pub revision_commit_sha: String,
+    pub revision_committed_at: DateTime<Utc>,
+    pub revision_created_at: DateTime<Utc>,
+    pub revision_updated_at: DateTime<Utc>,
+    pub revision_deleted_at: Option<DateTime<Utc>>,
+    pub revision_labels: Option<String>,
+}
+
+#[derive(QueryableByName)]
+#[diesel(table_name = rfd_pdf_join)]
+pub struct RfdPdfJoinRow {
+    pub id: Uuid,
+    pub rfd_number: i32,
+    pub link: Option<String>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+    pub deleted_at: Option<DateTime<Utc>>,
+    pub visibility: Visibility,
+    pub revision_id: Uuid,
+    pub revision_rfd_id: Uuid,
+    pub revision_title: String,
+    pub revision_state: Option<String>,
+    pub revision_discussion: Option<String>,
+    pub revision_authors: Option<String>,
+    pub pdf_id: Uuid,
+    pub pdf_rfd_revision_id: Uuid,
+    pub pdf_source: PdfSource,
+    pub pdf_link: String,
+    pub pdf_created_at: DateTime<Utc>,
+    pub pdf_updated_at: DateTime<Utc>,
+    pub pdf_deleted_at: Option<DateTime<Utc>>,
+    pub pdf_rfd_id: Uuid,
+    pub pdf_external_id: String,
+    pub revision_content_format: ContentFormat,
+    pub revision_sha: String,
+    pub revision_commit_sha: String,
+    pub revision_committed_at: DateTime<Utc>,
+    pub revision_created_at: DateTime<Utc>,
+    pub revision_updated_at: DateTime<Utc>,
+    pub revision_deleted_at: Option<DateTime<Utc>>,
+    pub revision_labels: Option<String>,
+}
+
 #[partial(RfdRevisionMetaModel)]
-#[derive(Debug, Deserialize, Serialize, Queryable, Insertable, Selectable)]
+#[partial(RfdRevisionPdfModel)]
+#[derive(Debug, Deserialize, Serialize, Queryable, Selectable)]
 #[diesel(table_name = rfd_revision)]
 pub struct RfdRevisionModel {
     pub id: Uuid,
@@ -36,6 +125,7 @@ pub struct RfdRevisionModel {
     pub discussion: Option<String>,
     pub authors: Option<String>,
     #[partial(RfdRevisionMetaModel(skip))]
+    #[partial(RfdRevisionPdfModel(retype = RfdPdfModel))]
     pub content: String,
     pub content_format: ContentFormat,
     pub sha: String,
@@ -45,6 +135,81 @@ pub struct RfdRevisionModel {
     pub updated_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
     pub labels: Option<String>,
+}
+
+impl From<RfdMetaJoinRow> for (RfdModel, RfdRevisionMetaModel) {
+    fn from(value: RfdMetaJoinRow) -> Self {
+        (
+            RfdModel {
+                id: value.id,
+                rfd_number: value.rfd_number,
+                link: value.link,
+                created_at: value.created_at,
+                updated_at: value.updated_at,
+                deleted_at: value.deleted_at,
+                visibility: value.visibility,
+            },
+            RfdRevisionMetaModel {
+                id: value.revision_id,
+                rfd_id: value.revision_rfd_id,
+                title: value.revision_title,
+                state: value.revision_state,
+                discussion: value.revision_discussion,
+                authors: value.revision_authors,
+                content_format: value.revision_content_format,
+                sha: value.revision_sha,
+                commit_sha: value.revision_commit_sha,
+                committed_at: value.revision_committed_at,
+                created_at: value.revision_created_at,
+                updated_at: value.revision_updated_at,
+                deleted_at: value.revision_deleted_at,
+                labels: value.revision_labels,
+            },
+        )
+    }
+}
+
+impl From<RfdPdfJoinRow> for (RfdModel, RfdRevisionPdfModel) {
+    fn from(value: RfdPdfJoinRow) -> Self {
+        (
+            RfdModel {
+                id: value.id,
+                rfd_number: value.rfd_number,
+                link: value.link,
+                created_at: value.created_at,
+                updated_at: value.updated_at,
+                deleted_at: value.deleted_at,
+                visibility: value.visibility,
+            },
+            RfdRevisionPdfModel {
+                id: value.revision_id,
+                rfd_id: value.revision_rfd_id,
+                title: value.revision_title,
+                state: value.revision_state,
+                discussion: value.revision_discussion,
+                authors: value.revision_authors,
+                content: RfdPdfModel {
+                    id: value.pdf_id,
+                    rfd_revision_id: value.pdf_rfd_revision_id,
+                    source: value.pdf_source,
+                    link: value.pdf_link,
+                    created_at: value.pdf_created_at,
+                    updated_at: value.pdf_updated_at,
+                    deleted_at: value.pdf_deleted_at,
+                    rfd_id: value.pdf_rfd_id,
+                    external_id: value.pdf_external_id,
+                },
+                content_format: value.revision_content_format,
+                sha: value.revision_sha,
+                commit_sha: value.revision_commit_sha,
+                committed_at: value.revision_committed_at,
+                created_at: value.revision_created_at,
+                updated_at: value.revision_updated_at,
+                deleted_at: value.revision_deleted_at,
+                labels: value.revision_labels,
+            },
+        )
+    }
 }
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable)]

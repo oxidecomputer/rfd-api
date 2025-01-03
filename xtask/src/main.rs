@@ -6,6 +6,7 @@ use std::{
     fs::{self, File},
     io::Write,
     path::PathBuf,
+    process::Command,
 };
 
 use clap::{Parser, ValueEnum};
@@ -52,7 +53,13 @@ fn main() -> Result<(), String> {
 }
 
 fn bump_package_versions(place: &VersionPlace) -> Result<(), String> {
-    let packages = vec!["rfd-api", "rfd-cli", "rfd-processor", "rfd-redirect"];
+    let packages = vec![
+        "rfd-api",
+        "rfd-cli",
+        "rfd-processor",
+        "rfd-redirect",
+        "rfd-ts",
+    ];
 
     let version_pattern = Regex::new(r#"(?m)^version = "(.*)"$"#).unwrap();
 
@@ -196,6 +203,25 @@ fn generate(check: bool, verbose: bool) -> Result<(), String> {
         std::fs::write(out_path, contents).unwrap();
         println!("done.");
     }
+
+    // Typescript SDK
+    print!("generating typescript sdk ... ");
+    Command::new("npx")
+        .arg("@oxide/openapi-gen-ts@0.5.0")
+        .arg("rfd-api-spec.json")
+        .arg("rfd-ts/src")
+        .arg("--features")
+        .arg("zod")
+        .output()
+        .map_err(|err| err.to_string())?;
+    println!("done.");
+
+    print!("formatting typescript sdk ... ");
+    Command::new("dprint")
+        .arg("fmt")
+        .output()
+        .map_err(|err| err.to_string())?;
+    println!("done.");
 
     result
 }

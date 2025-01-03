@@ -30,8 +30,8 @@ pub trait CliOutput {
     fn output_oauth_redirect_uri(&self, value: types::OAuthClientRedirectUri) {}
     fn output_oauth_secret_initial(&self, value: types::InitialOAuthClientSecretResponse) {}
     fn output_oauth_secret(&self, value: types::OAuthClientSecret) {}
-    fn output_rfd_list(&self, value: Vec<types::RfdMeta>) {}
-    fn output_rfd_full(&self, value: types::FullRfd) {}
+    fn output_rfd_list(&self, value: Vec<types::RfdWithoutContent>) {}
+    fn output_rfd_full(&self, value: types::RfdWithContent) {}
     fn output_rfd(&self, value: types::Rfd) {}
     fn output_rfd_attr(&self, value: types::RfdAttr) {}
     fn output_search_results(&self, value: types::SearchResults) {}
@@ -140,14 +140,14 @@ impl CliOutput for Printer {
         }
     }
 
-    fn output_rfd_list(&self, value: Vec<types::RfdMeta>) {
+    fn output_rfd_list(&self, value: Vec<types::RfdWithoutContent>) {
         match self {
             Self::Json(printer) => printer.output_rfd_list(value),
             Self::Tab(printer) => printer.output_rfd_list(value),
         }
     }
 
-    fn output_rfd_full(&self, value: types::FullRfd) {
+    fn output_rfd_full(&self, value: types::RfdWithContent) {
         match self {
             Self::Json(printer) => printer.output_rfd_full(value),
             Self::Tab(printer) => printer.output_rfd_full(value),
