@@ -17,8 +17,9 @@ use rfd_data::{
 use rfd_github::{GitHubError, GitHubNewRfdNumber, GitHubRfdRepo};
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
-    storage::{JobStore, RfdFilter, RfdMetaStore, RfdPdfFilter, RfdPdfStore, RfdStorage, RfdStore},
-    CommitSha, FileSha, Job, NewJob, Rfd, RfdId, RfdMeta, RfdPdf, RfdRevision, RfdRevisionId,
+    storage::{JobStore, RfdFilter, RfdMetaStore, RfdPdfsStore, RfdStorage, RfdStore},
+    CommitSha, FileSha, Job, NewJob, Rfd, RfdId, RfdMeta, RfdPdf, RfdPdfs, RfdRevision,
+    RfdRevisionId,
 };
 use rsa::{
     pkcs1::{DecodeRsaPrivateKey, EncodeRsaPrivateKey},
@@ -89,8 +90,9 @@ pub enum UpdateRfdContentError {
 }
 
 #[partial(RfdWithoutContent)]
+#[partial(RfdWithPdf)]
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
-pub struct RfdWithContent {
+pub struct RfdWithRaw {
     pub id: TypedUuid<RfdId>,
     pub rfd_number: i32,
     pub link: Option<String>,
@@ -100,6 +102,7 @@ pub struct RfdWithContent {
     pub authors: Option<String>,
     pub labels: Option<String>,
     #[partial(RfdWithoutContent(skip))]
+    #[partial(RfdWithPdf(retype = Vec<RfdPdf>))]
     pub content: String,
     pub format: ContentFormat,
     pub sha: FileSha,
@@ -108,9 +111,9 @@ pub struct RfdWithContent {
     pub visibility: Visibility,
 }
 
-impl From<Rfd> for RfdWithContent {
+impl From<Rfd> for RfdWithRaw {
     fn from(value: Rfd) -> Self {
-        RfdWithContent {
+        Self {
             id: value.id,
             rfd_number: value.rfd_number,
             link: value.link,
@@ -131,7 +134,7 @@ impl From<Rfd> for RfdWithContent {
 
 impl From<RfdMeta> for RfdWithoutContent {
     fn from(value: RfdMeta) -> Self {
-        RfdWithoutContent {
+        Self {
             id: value.id,
             rfd_number: value.rfd_number,
             link: value.link,
@@ -140,6 +143,27 @@ impl From<RfdMeta> for RfdWithoutContent {
             state: value.content.state,
             authors: value.content.authors,
             labels: value.content.labels,
+            format: value.content.content_format,
+            sha: value.content.sha,
+            commit: value.content.commit.into(),
+            committed_at: value.content.committed_at,
+            visibility: value.visibility,
+        }
+    }
+}
+
+impl From<RfdPdfs> for RfdWithPdf {
+    fn from(value: RfdPdfs) -> Self {
+        Self {
+            id: value.id,
+            rfd_number: value.rfd_number,
+            link: value.link,
+            discussion: value.content.discussion,
+            title: value.content.title,
+            state: value.content.state,
+            authors: value.content.authors,
+            labels: value.content.labels,
+            content: value.content.content,
             format: value.content.content_format,
             sha: value.content.sha,
             commit: value.content.commit.into(),
@@ -447,12 +471,45 @@ impl RfdContext {
     }
 
     #[instrument(skip(self, caller))]
+    async fn get_rfd_pdf(
+        &self,
+        caller: &Caller<RfdPermission>,
+        rfd_number: i32,
+        revision: Option<RfdRevisionIdentifier>,
+    ) -> ResourceResult<RfdWithPdf, StoreError> {
+        let mut filter = RfdFilter::default().rfd_number(Some(vec![rfd_number]));
+        filter = match revision {
+            Some(RfdRevisionIdentifier::Commit(commit)) => filter.commit(Some(vec![commit])),
+            Some(RfdRevisionIdentifier::Id(revision)) => filter.revision(Some(vec![revision])),
+            None => filter,
+        };
+
+        let rfd = RfdPdfsStore::list(&*self.storage, vec![filter], &ListPagination::unlimited())
+            .await
+            .to_resource_result()?
+            .pop();
+
+        if let Some(rfd) = rfd {
+            if caller.can(&RfdPermission::GetRfdsAll)
+                || caller.can(&RfdPermission::GetRfd(rfd.rfd_number))
+                || rfd.visibility == Visibility::Public
+            {
+                Ok(rfd.into())
+            } else {
+                resource_not_found()
+            }
+        } else {
+            resource_not_found()
+        }
+    }
+
+    #[instrument(skip(self, caller))]
     pub async fn view_rfd(
         &self,
         caller: &Caller<RfdPermission>,
         rfd_number: i32,
         revision: Option<RfdRevisionIdentifier>,
-    ) -> ResourceResult<RfdWithContent, StoreError> {
+    ) -> ResourceResult<RfdWithRaw, StoreError> {
         let rfd = self.get_rfd(caller, rfd_number, revision).await?;
         Ok(rfd.into())
     }
@@ -493,19 +550,8 @@ impl RfdContext {
         caller: &Caller<RfdPermission>,
         rfd_number: i32,
         revision: Option<RfdRevisionIdentifier>,
-    ) -> ResourceResult<Vec<RfdPdf>, StoreError> {
-        let rfd = self.get_rfd_meta(caller, rfd_number, revision).await?;
-        let pdfs = RfdPdfStore::list(
-            &*self.storage,
-            vec![RfdPdfFilter::default()
-                .rfd(Some(vec![rfd.id]))
-                .rfd_revision(Some(vec![rfd.content.id]))],
-            &ListPagination::unlimited(),
-        )
-        .await
-        .to_resource_result()?;
-
-        Ok(pdfs)
+    ) -> ResourceResult<RfdWithPdf, StoreError> {
+        self.get_rfd_pdf(caller, rfd_number, revision).await
     }
 
     #[instrument(skip(self, caller, content))]

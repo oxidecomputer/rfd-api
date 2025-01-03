@@ -791,7 +791,7 @@ dependencies = [
 [[package]]
 name = "dropshot-authorization-header"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#52699f41d059548ccc27c15ffcf7eb52be033670"
+source = "git+https://github.com/oxidecomputer/v-api#a22f845fcc3c75b8caa3adf6f20eaf36207052a1"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -2249,7 +2249,7 @@ dependencies = [
 [[package]]
 name = "partial-struct"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/partial-struct#7a45b60d01b24a0a140be8de85b1f61eaa6208e3"
+source = "git+https://github.com/oxidecomputer/partial-struct#013155bb04b3baebe4ec0b2335cec3674a0b2064"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4384,7 +4384,7 @@ dependencies = [
 [[package]]
 name = "v-api"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#52699f41d059548ccc27c15ffcf7eb52be033670"
+source = "git+https://github.com/oxidecomputer/v-api#a22f845fcc3c75b8caa3adf6f20eaf36207052a1"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -4428,7 +4428,7 @@ dependencies = [
 [[package]]
 name = "v-api-installer"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#52699f41d059548ccc27c15ffcf7eb52be033670"
+source = "git+https://github.com/oxidecomputer/v-api#a22f845fcc3c75b8caa3adf6f20eaf36207052a1"
 dependencies = [
  "diesel",
  "diesel_migrations",
@@ -4437,7 +4437,7 @@ dependencies = [
 [[package]]
 name = "v-api-permission-derive"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#52699f41d059548ccc27c15ffcf7eb52be033670"
+source = "git+https://github.com/oxidecomputer/v-api#a22f845fcc3c75b8caa3adf6f20eaf36207052a1"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -4448,7 +4448,7 @@ dependencies = [
 [[package]]
 name = "v-model"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#52699f41d059548ccc27c15ffcf7eb52be033670"
+source = "git+https://github.com/oxidecomputer/v-api#a22f845fcc3c75b8caa3adf6f20eaf36207052a1"
 dependencies = [
  "async-bb8-diesel",
  "async-trait",
@@ -4669,7 +4669,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.48.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]

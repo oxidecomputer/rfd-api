@@ -1941,11 +1941,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Array_of_RfdPdf",
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RfdPdf"
-                  }
+                  "$ref": "#/components/schemas/RfdRevisionPdf"
                 }
               }
             }
@@ -2216,11 +2212,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Array_of_RfdPdf",
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/RfdPdf"
-                  }
+                  "$ref": "#/components/schemas/RfdRevisionPdf"
                 }
               }
             }
@@ -4360,6 +4352,80 @@
           },
           "content": {
             "type": "string"
+          },
+          "content_format": {
+            "$ref": "#/components/schemas/ContentFormat"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "discussion": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/TypedUuidForRfdRevisionId"
+          },
+          "labels": {
+            "nullable": true,
+            "type": "string"
+          },
+          "rfd_id": {
+            "$ref": "#/components/schemas/TypedUuidForRfdId"
+          },
+          "sha": {
+            "$ref": "#/components/schemas/FileSha"
+          },
+          "state": {
+            "nullable": true,
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "commit",
+          "committed_at",
+          "content",
+          "content_format",
+          "created_at",
+          "id",
+          "rfd_id",
+          "sha",
+          "title",
+          "updated_at"
+        ]
+      },
+      "RfdRevisionPdf": {
+        "type": "object",
+        "properties": {
+          "authors": {
+            "nullable": true,
+            "type": "string"
+          },
+          "commit": {
+            "$ref": "#/components/schemas/CommitSha"
+          },
+          "committed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RfdPdf"
+            }
           },
           "content_format": {
             "$ref": "#/components/schemas/ContentFormat"

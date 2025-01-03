@@ -13,7 +13,7 @@ use rfd_data::{
 };
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
-    Rfd, RfdPdf, RfdRevisionId,
+    Rfd, RfdRevisionId,
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -24,7 +24,7 @@ use v_model::permissions::Caller;
 
 use crate::{
     caller::CallerExt,
-    context::{RfdContext, RfdRevisionIdentifier, RfdWithContent, RfdWithoutContent},
+    context::{RfdContext, RfdRevisionIdentifier, RfdWithPdf, RfdWithRaw, RfdWithoutContent},
     permissions::RfdPermission,
     search::{MeiliSearchResult, SearchRequest},
     util::response::{client_error, internal_error, unauthorized},
@@ -124,7 +124,7 @@ pub async fn view_rfd_meta(
 pub async fn view_rfd(
     rqctx: RequestContext<RfdContext>,
     path: Path<RfdPathParams>,
-) -> Result<HttpResponseOk<RfdWithContent>, HttpError> {
+) -> Result<HttpResponseOk<RfdWithRaw>, HttpError> {
     let ctx = rqctx.context();
     let caller = ctx.v_ctx().get_caller(&rqctx).await?;
     let path = path.into_inner();
@@ -141,7 +141,7 @@ pub async fn view_rfd(
 pub async fn view_rfd_pdf(
     rqctx: RequestContext<RfdContext>,
     path: Path<RfdPathParams>,
-) -> Result<HttpResponseOk<Vec<RfdPdf>>, HttpError> {
+) -> Result<HttpResponseOk<RfdWithPdf>, HttpError> {
     let ctx = rqctx.context();
     let caller = ctx.v_ctx().get_caller(&rqctx).await?;
     let path = path.into_inner();
@@ -208,7 +208,7 @@ pub async fn view_rfd_revision_meta(
 pub async fn view_rfd_revision(
     rqctx: RequestContext<RfdContext>,
     path: Path<RfdRevisionPathParams>,
-) -> Result<HttpResponseOk<RfdWithContent>, HttpError> {
+) -> Result<HttpResponseOk<RfdWithRaw>, HttpError> {
     let ctx = rqctx.context();
     let caller = ctx.v_ctx().get_caller(&rqctx).await?;
     let path = path.into_inner();
@@ -225,7 +225,7 @@ pub async fn view_rfd_revision(
 pub async fn view_rfd_revision_pdf(
     rqctx: RequestContext<RfdContext>,
     path: Path<RfdRevisionPathParams>,
-) -> Result<HttpResponseOk<Vec<RfdPdf>>, HttpError> {
+) -> Result<HttpResponseOk<RfdWithPdf>, HttpError> {
     let ctx = rqctx.context();
     let caller = ctx.v_ctx().get_caller(&rqctx).await?;
     let path = path.into_inner();
@@ -365,7 +365,7 @@ async fn view_rfd_op(
     caller: &Caller<RfdPermission>,
     number: String,
     revision: Option<RfdRevisionIdentifier>,
-) -> Result<HttpResponseOk<RfdWithContent>, HttpError> {
+) -> Result<HttpResponseOk<RfdWithRaw>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
         Ok(HttpResponseOk(
             ctx.view_rfd(caller, rfd_number, revision).await?,
@@ -384,7 +384,7 @@ async fn view_rfd_pdf_op(
     caller: &Caller<RfdPermission>,
     number: String,
     revision: Option<RfdRevisionIdentifier>,
-) -> Result<HttpResponseOk<Vec<RfdPdf>>, HttpError> {
+) -> Result<HttpResponseOk<RfdWithPdf>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
         Ok(HttpResponseOk(
             ctx.view_rfd_pdfs(caller, rfd_number, revision).await?,
@@ -427,7 +427,7 @@ async fn view_rfd_discussion_op(
     caller: &Caller<RfdPermission>,
     number: String,
     revision: Option<RfdRevisionIdentifier>,
-) -> Result<HttpResponseOk<RfdWithContent>, HttpError> {
+) -> Result<HttpResponseOk<RfdWithRaw>, HttpError> {
     unimplemented!()
 }
 

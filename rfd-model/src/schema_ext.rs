@@ -118,3 +118,41 @@ impl Display for Visibility {
         }
     }
 }
+
+diesel::table! {
+    use diesel::sql_types::*;
+    use crate::schema::sql_types::{RfdPdfSource, RfdContentFormat, RfdVisibility};
+
+    rfd_pdfs (id) {
+        id -> Uuid,
+        rfd_number -> Integer,
+        link -> Nullable<Varchar>,
+        created_at -> Timestamptz,
+        updated_at -> Timestamptz,
+        deleted_at -> Nullable<Timestamptz>,
+        visibility -> RfdVisibility,
+        revision_id -> Uuid,
+        revision_rfd_id -> Uuid,
+        revision_title -> Varchar,
+        revision_state -> Nullable<Varchar>,
+        revision_discussion -> Nullable<Varchar>,
+        revision_authors -> Nullable<Varchar>,
+        pdf_id -> Uuid,
+        pdf_rfd_revision_id -> Uuid,
+        pdf_source -> RfdPdfSource,
+        pdf_link -> Varchar,
+        pdf_created_at -> Timestamptz,
+        pdf_updated_at -> Timestamptz,
+        pdf_deleted_at -> Nullable<Timestamptz>,
+        pdf_rfd_id -> Uuid,
+        pdf_external_id -> Varchar,
+        revision_content_format -> RfdContentFormat,
+        revision_sha -> Varchar,
+        revision_commit_sha -> Varchar,
+        revision_committed_at -> Timestamptz,
+        revision_created_at -> Timestamptz,
+        revision_updated_at -> Timestamptz,
+        revision_deleted_at -> Nullable<Timestamptz>,
+        revision_labels -> Nullable<Varchar>,
+    }
+}

@@ -8,21 +8,24 @@ use std::sync::Arc;
 use v_model::storage::StoreError;
 
 use crate::{
-    Job, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdId, RfdMeta, RfdPdf, RfdPdfId,
+    Job, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdId, RfdMeta, RfdPdf, RfdPdfId, RfdPdfs,
     RfdRevision, RfdRevisionId, RfdRevisionMeta,
 };
 
 use super::{
     JobFilter, JobStore, ListPagination, MockJobStore, MockRfdMetaStore, MockRfdPdfStore,
-    MockRfdRevisionMetaStore, MockRfdRevisionStore, MockRfdStore, RfdFilter, RfdMetaStore,
-    RfdPdfFilter, RfdPdfStore, RfdRevisionFilter, RfdRevisionMetaStore, RfdRevisionStore, RfdStore,
+    MockRfdPdfsStore, MockRfdRevisionMetaStore, MockRfdRevisionPdfStore, MockRfdRevisionStore,
+    MockRfdStore, RfdFilter, RfdMetaStore, RfdPdfFilter, RfdPdfStore, RfdPdfsStore,
+    RfdRevisionFilter, RfdRevisionMetaStore, RfdRevisionStore, RfdStore,
 };
 
 pub struct MockStorage {
     pub rfd_store: Option<Arc<MockRfdStore>>,
     pub rfd_meta_store: Option<Arc<MockRfdMetaStore>>,
+    pub rfd_pdfs_store: Option<Arc<MockRfdPdfsStore>>,
     pub rfd_revision_store: Option<Arc<MockRfdRevisionStore>>,
     pub rfd_revision_meta_store: Option<Arc<MockRfdRevisionMetaStore>>,
+    pub rfd_revision_pdf_store: Option<Arc<MockRfdRevisionPdfStore>>,
     pub rfd_pdf_store: Option<Arc<MockRfdPdfStore>>,
     pub job_store: Option<Arc<MockJobStore>>,
 }
@@ -32,8 +35,10 @@ impl MockStorage {
         Self {
             rfd_store: None,
             rfd_meta_store: None,
+            rfd_pdfs_store: None,
             rfd_revision_store: None,
             rfd_revision_meta_store: None,
+            rfd_revision_pdf_store: None,
             rfd_pdf_store: None,
             job_store: None,
         }
@@ -97,6 +102,34 @@ impl RfdMetaStore for MockStorage {
         pagination: &ListPagination,
     ) -> Result<Vec<RfdMeta>, StoreError> {
         self.rfd_meta_store
+            .as_ref()
+            .unwrap()
+            .list(filters, pagination)
+            .await
+    }
+}
+
+#[async_trait]
+impl RfdPdfsStore for MockStorage {
+    async fn get(
+        &self,
+        id: TypedUuid<RfdId>,
+        revision: Option<TypedUuid<RfdRevisionId>>,
+        deleted: bool,
+    ) -> Result<Option<RfdPdfs>, StoreError> {
+        self.rfd_pdfs_store
+            .as_ref()
+            .unwrap()
+            .get(id, revision, deleted)
+            .await
+    }
+
+    async fn list(
+        &self,
+        filters: Vec<RfdFilter>,
+        pagination: &ListPagination,
+    ) -> Result<Vec<RfdPdfs>, StoreError> {
+        self.rfd_pdfs_store
             .as_ref()
             .unwrap()
             .list(filters, pagination)

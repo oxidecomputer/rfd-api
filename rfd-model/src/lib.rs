@@ -3,7 +3,9 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use chrono::{DateTime, Utc};
-use db::{JobModel, RfdModel, RfdPdfModel, RfdRevisionMetaModel, RfdRevisionModel};
+use db::{
+    JobModel, RfdModel, RfdPdfModel, RfdRevisionMetaModel, RfdRevisionModel, RfdRevisionPdfModel,
+};
 use newtype_uuid::{GenericUuid, TypedUuid, TypedUuidKind, TypedUuidTag};
 use partial_struct::partial;
 use schema_ext::{ContentFormat, PdfSource, Visibility};
@@ -64,6 +66,7 @@ impl TypedUuidKind for RfdId {
 
 #[partial(NewRfd)]
 #[partial(RfdMeta)]
+#[partial(RfdPdfs)]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct Rfd {
     pub id: TypedUuid<RfdId>,
@@ -71,6 +74,7 @@ pub struct Rfd {
     pub link: Option<String>,
     #[partial(NewRfd(skip))]
     #[partial(RfdMeta(retype = RfdRevisionMeta))]
+    #[partial(RfdPdfs(retype = RfdRevisionPdf))]
     pub content: RfdRevision,
     #[partial(NewRfd(skip))]
     pub created_at: DateTime<Utc>,
@@ -111,6 +115,21 @@ impl From<(RfdModel, RfdRevisionMetaModel)> for RfdMeta {
     }
 }
 
+impl From<(RfdModel, RfdRevisionPdfModel)> for RfdPdfs {
+    fn from((rfd, revision): (RfdModel, RfdRevisionPdfModel)) -> Self {
+        Self {
+            id: TypedUuid::from_untyped_uuid(rfd.id),
+            rfd_number: rfd.rfd_number,
+            link: rfd.link,
+            content: revision.into(),
+            created_at: rfd.created_at,
+            updated_at: rfd.updated_at,
+            deleted_at: rfd.deleted_at,
+            visibility: rfd.visibility,
+        }
+    }
+}
+
 impl From<RfdMeta> for NewRfd {
     fn from(value: RfdMeta) -> Self {
         Self {
@@ -133,6 +152,7 @@ impl TypedUuidKind for RfdRevisionId {
 
 #[partial(NewRfdRevision)]
 #[partial(RfdRevisionMeta)]
+#[partial(RfdRevisionPdf)]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 pub struct RfdRevision {
     pub id: TypedUuid<RfdRevisionId>,
@@ -143,6 +163,7 @@ pub struct RfdRevision {
     pub authors: Option<String>,
     pub labels: Option<String>,
     #[partial(RfdRevisionMeta(skip))]
+    #[partial(RfdRevisionPdf(retype = Vec<RfdPdf>))]
     pub content: String,
     pub content_format: ContentFormat,
     pub sha: FileSha,
@@ -188,6 +209,28 @@ impl From<RfdRevisionMetaModel> for RfdRevisionMeta {
             discussion: value.discussion,
             authors: value.authors,
             labels: value.labels,
+            content_format: value.content_format,
+            sha: value.sha.into(),
+            commit: value.commit_sha.into(),
+            committed_at: value.committed_at,
+            created_at: value.created_at,
+            updated_at: value.updated_at,
+            deleted_at: value.deleted_at,
+        }
+    }
+}
+
+impl From<RfdRevisionPdfModel> for RfdRevisionPdf {
+    fn from(value: RfdRevisionPdfModel) -> Self {
+        Self {
+            id: TypedUuid::from_untyped_uuid(value.id),
+            rfd_id: TypedUuid::from_untyped_uuid(value.rfd_id),
+            title: value.title,
+            state: value.state,
+            discussion: value.discussion,
+            authors: value.authors,
+            labels: value.labels,
+            content: vec![value.content.into()],
             content_format: value.content_format,
             sha: value.sha.into(),
             commit: value.commit_sha.into(),
