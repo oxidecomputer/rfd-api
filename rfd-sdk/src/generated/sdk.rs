@@ -4523,6 +4523,139 @@ pub mod types {
         }
     }
 
+    /// RfdRevisionPdf
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "commit",
+    ///    "committed_at",
+    ///    "content",
+    ///    "content_format",
+    ///    "created_at",
+    ///    "id",
+    ///    "rfd_id",
+    ///    "sha",
+    ///    "title",
+    ///    "updated_at"
+    ///  ],
+    ///  "properties": {
+    ///    "authors": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "commit": {
+    ///      "$ref": "#/components/schemas/CommitSha"
+    ///    },
+    ///    "committed_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "content": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/RfdPdf"
+    ///      }
+
+    ///    },
+    ///    "content_format": {
+    ///      "$ref": "#/components/schemas/ContentFormat"
+    ///    },
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "discussion": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForRfdRevisionId"
+    ///    },
+    ///    "labels": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "rfd_id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForRfdId"
+    ///    },
+    ///    "sha": {
+    ///      "$ref": "#/components/schemas/FileSha"
+    ///    },
+    ///    "state": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "title": {
+    ///      "type": "string"
+    ///    },
+    ///    "updated_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct RfdRevisionPdf {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub authors: ::std::option::Option<::std::string::String>,
+        pub commit: CommitSha,
+        pub committed_at: chrono::DateTime<chrono::offset::Utc>,
+        pub content: ::std::vec::Vec<RfdPdf>,
+        pub content_format: ContentFormat,
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub deleted_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub discussion: ::std::option::Option<::std::string::String>,
+        pub id: TypedUuidForRfdRevisionId,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub labels: ::std::option::Option<::std::string::String>,
+        pub rfd_id: TypedUuidForRfdId,
+        pub sha: FileSha,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub state: ::std::option::Option<::std::string::String>,
+        pub title: ::std::string::String,
+        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
+    }
+
+    impl From<&RfdRevisionPdf> for RfdRevisionPdf {
+        fn from(value: &RfdRevisionPdf) -> Self {
+            value.clone()
+        }
+    }
+
+    impl RfdRevisionPdf {
+        pub fn builder() -> builder::RfdRevisionPdf {
+            Default::default()
+        }
+    }
+
     /// RfdState
     ///
     /// <details><summary>JSON schema</summary>
@@ -11210,6 +11343,267 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
+        pub struct RfdRevisionPdf {
+            authors: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            commit: ::std::result::Result<super::CommitSha, ::std::string::String>,
+            committed_at:
+                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            content: ::std::result::Result<::std::vec::Vec<super::RfdPdf>, ::std::string::String>,
+            content_format: ::std::result::Result<super::ContentFormat, ::std::string::String>,
+            created_at:
+                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            deleted_at: ::std::result::Result<
+                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::string::String,
+            >,
+            discussion: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            id: ::std::result::Result<super::TypedUuidForRfdRevisionId, ::std::string::String>,
+            labels: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            rfd_id: ::std::result::Result<super::TypedUuidForRfdId, ::std::string::String>,
+            sha: ::std::result::Result<super::FileSha, ::std::string::String>,
+            state: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            title: ::std::result::Result<::std::string::String, ::std::string::String>,
+            updated_at:
+                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+        }
+
+        impl Default for RfdRevisionPdf {
+            fn default() -> Self {
+                Self {
+                    authors: Ok(Default::default()),
+                    commit: Err("no value supplied for commit".to_string()),
+                    committed_at: Err("no value supplied for committed_at".to_string()),
+                    content: Err("no value supplied for content".to_string()),
+                    content_format: Err("no value supplied for content_format".to_string()),
+                    created_at: Err("no value supplied for created_at".to_string()),
+                    deleted_at: Ok(Default::default()),
+                    discussion: Ok(Default::default()),
+                    id: Err("no value supplied for id".to_string()),
+                    labels: Ok(Default::default()),
+                    rfd_id: Err("no value supplied for rfd_id".to_string()),
+                    sha: Err("no value supplied for sha".to_string()),
+                    state: Ok(Default::default()),
+                    title: Err("no value supplied for title".to_string()),
+                    updated_at: Err("no value supplied for updated_at".to_string()),
+                }
+            }
+        }
+
+        impl RfdRevisionPdf {
+            pub fn authors<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.authors = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for authors: {}", e));
+                self
+            }
+            pub fn commit<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::CommitSha>,
+                T::Error: std::fmt::Display,
+            {
+                self.commit = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for commit: {}", e));
+                self
+            }
+            pub fn committed_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.committed_at = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for committed_at: {}", e)
+                });
+                self
+            }
+            pub fn content<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::vec::Vec<super::RfdPdf>>,
+                T::Error: std::fmt::Display,
+            {
+                self.content = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for content: {}", e));
+                self
+            }
+            pub fn content_format<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::ContentFormat>,
+                T::Error: std::fmt::Display,
+            {
+                self.content_format = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for content_format: {}", e)
+                });
+                self
+            }
+            pub fn created_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.created_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                self
+            }
+            pub fn deleted_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<
+                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                >,
+                T::Error: std::fmt::Display,
+            {
+                self.deleted_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                self
+            }
+            pub fn discussion<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.discussion = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for discussion: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::TypedUuidForRfdRevisionId>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn labels<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.labels = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for labels: {}", e));
+                self
+            }
+            pub fn rfd_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::TypedUuidForRfdId>,
+                T::Error: std::fmt::Display,
+            {
+                self.rfd_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for rfd_id: {}", e));
+                self
+            }
+            pub fn sha<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::FileSha>,
+                T::Error: std::fmt::Display,
+            {
+                self.sha = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for sha: {}", e));
+                self
+            }
+            pub fn state<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.state = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for state: {}", e));
+                self
+            }
+            pub fn title<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::string::String>,
+                T::Error: std::fmt::Display,
+            {
+                self.title = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for title: {}", e));
+                self
+            }
+            pub fn updated_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.updated_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for updated_at: {}", e));
+                self
+            }
+        }
+
+        impl ::std::convert::TryFrom<RfdRevisionPdf> for super::RfdRevisionPdf {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: RfdRevisionPdf,
+            ) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    authors: value.authors?,
+                    commit: value.commit?,
+                    committed_at: value.committed_at?,
+                    content: value.content?,
+                    content_format: value.content_format?,
+                    created_at: value.created_at?,
+                    deleted_at: value.deleted_at?,
+                    discussion: value.discussion?,
+                    id: value.id?,
+                    labels: value.labels?,
+                    rfd_id: value.rfd_id?,
+                    sha: value.sha?,
+                    state: value.state?,
+                    title: value.title?,
+                    updated_at: value.updated_at?,
+                })
+            }
+        }
+
+        impl From<super::RfdRevisionPdf> for RfdRevisionPdf {
+            fn from(value: super::RfdRevisionPdf) -> Self {
+                Self {
+                    authors: Ok(value.authors),
+                    commit: Ok(value.commit),
+                    committed_at: Ok(value.committed_at),
+                    content: Ok(value.content),
+                    content_format: Ok(value.content_format),
+                    created_at: Ok(value.created_at),
+                    deleted_at: Ok(value.deleted_at),
+                    discussion: Ok(value.discussion),
+                    id: Ok(value.id),
+                    labels: Ok(value.labels),
+                    rfd_id: Ok(value.rfd_id),
+                    sha: Ok(value.sha),
+                    state: Ok(value.state),
+                    title: Ok(value.title),
+                    updated_at: Ok(value.updated_at),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
         pub struct RfdUpdateBody {
             document: ::std::result::Result<::std::string::String, ::std::string::String>,
             message: ::std::result::Result<
@@ -16979,7 +17373,7 @@ pub mod builder {
         /// Sends a `GET` request to `/rfd/{number}/pdf`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<::std::vec::Vec<types::RfdPdf>>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::RfdRevisionPdf>, Error<types::Error>> {
             let Self { client, number } = self;
             let number = number.map_err(Error::InvalidRequest)?;
             let url = format!(
@@ -17458,7 +17852,7 @@ pub mod builder {
         /// Sends a `GET` request to `/rfd/{number}/revision/{revision}/pdf`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<::std::vec::Vec<types::RfdPdf>>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::RfdRevisionPdf>, Error<types::Error>> {
             let Self {
                 client,
                 number,

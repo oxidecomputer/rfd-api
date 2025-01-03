@@ -459,6 +459,24 @@ export type RfdPdf = {
   'updatedAt': Date
 }
 
+export type RfdRevisionPdf = {
+  'authors'?: string
+  'commit': CommitSha
+  'committedAt': Date
+  'content': RfdPdf[]
+  'contentFormat': ContentFormat
+  'createdAt': Date
+  'deletedAt'?: Date
+  'discussion'?: string
+  'id': TypedUuidForRfdRevisionId
+  'labels'?: string
+  'rfdId': TypedUuidForRfdId
+  'sha': FileSha
+  'state'?: string
+  'title': string
+  'updatedAt': Date
+}
+
 export type RfdUpdateBody = {
   /** Full Asciidoc document to store for this RFD */
   'document': string
@@ -1382,7 +1400,7 @@ export class Api extends HttpClient {
     viewRfdPdf: ({
       path,
     }: { path: ViewRfdPdfPathParams }, params: FetchParams = {}) => {
-      return this.request<RfdPdf[]>({
+      return this.request<RfdRevisionPdf>({
         path: `/rfd/${path.number}/pdf`,
         method: 'GET',
         ...params,
@@ -1456,7 +1474,7 @@ export class Api extends HttpClient {
     viewRfdRevisionPdf: ({
       path,
     }: { path: ViewRfdRevisionPdfPathParams }, params: FetchParams = {}) => {
-      return this.request<RfdPdf[]>({
+      return this.request<RfdRevisionPdf>({
         path: `/rfd/${path.number}/revision/${path.revision}/pdf`,
         method: 'GET',
         ...params,

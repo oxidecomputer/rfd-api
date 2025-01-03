@@ -582,6 +582,27 @@ export const RfdPdf = z.preprocess(
   }),
 )
 
+export const RfdRevisionPdf = z.preprocess(
+  processResponseBody,
+  z.object({
+    'authors': z.string().optional(),
+    'commit': CommitSha,
+    'committedAt': z.coerce.date(),
+    'content': RfdPdf.array(),
+    'contentFormat': ContentFormat,
+    'createdAt': z.coerce.date(),
+    'deletedAt': z.coerce.date().optional(),
+    'discussion': z.string().optional(),
+    'id': TypedUuidForRfdRevisionId,
+    'labels': z.string().optional(),
+    'rfdId': TypedUuidForRfdId,
+    'sha': FileSha,
+    'state': z.string().optional(),
+    'title': z.string(),
+    'updatedAt': z.coerce.date(),
+  }),
+)
+
 export const RfdUpdateBody = z.preprocess(
   processResponseBody,
   z.object({ 'document': z.string(), 'message': z.string().optional() }),
