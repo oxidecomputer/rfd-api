@@ -8,7 +8,7 @@ use async_trait::async_trait;
 use base64::DecodeError;
 use octorust::Client;
 use rfd_data::{
-    content::{RfdAsciidoc, RfdContent, RfdDocument, RfdMarkdown},
+    content::{RfdAsciidoc, RfdContent, RfdContentError, RfdDocument, RfdMarkdown},
     RfdNumber,
 };
 use rfd_github::{GitHubError, GitHubRfdLocation};
@@ -27,13 +27,15 @@ use crate::{
 mod asciidoc;
 
 #[derive(Debug, Error)]
-pub enum RfdContentError {
+pub enum RenderableRfdError {
     #[error("Failed to decode content file {0}")]
     Decode(#[from] DecodeError),
     #[error("Failed communication with GitHub API {0}")]
     GitHub(#[from] GitHubError),
     #[error("Failed to convert content string {0}")]
     InvalidContent(#[from] Utf8Error),
+    #[error("Failed to parse Rfd contents")]
+    InvalidRfdContent(#[from] RfdContentError),
     #[error("General io failure {0}")]
     Io(#[from] io::Error),
     #[error("File io failure {0}")]
@@ -59,14 +61,16 @@ impl<'a> RenderableRfd<'a> {
     }
 
     /// Construct a new RfdContent wrapper that contains Asciidoc content
-    pub fn new_asciidoc<T>(content: T) -> Self
+    pub fn new_asciidoc<T>(content: T) -> Result<Self, RenderableRfdError>
     where
         T: Into<Cow<'a, str>>,
     {
-        Self {
-            content: RfdContent::Asciidoc(RfdAsciidoc::new(content.into())),
+        Ok(Self {
+            content: RfdContent::Asciidoc(
+                RfdAsciidoc::new(content.into()).map_err(RfdContentError::Asciidoc)?,
+            ),
             render_id: Uuid::new_v4(),
-        }
+        })
     }
 
     /// Construct a new RfdContent wrapper that contains Markdown content
@@ -91,8 +95,8 @@ impl<'a> RenderableRfd<'a> {
     /// Consume this wrapper and return the internal unparsed contents
     pub fn into_inner_content(self) -> String {
         match self.content {
-            RfdContent::Asciidoc(adoc) => adoc.content.into_owned(),
-            RfdContent::Markdown(md) => md.content.into_owned(),
+            RfdContent::Asciidoc(adoc) => adoc.raw().to_string(),
+            RfdContent::Markdown(md) => md.raw().to_string(),
         }
     }
 
@@ -130,7 +134,7 @@ impl<'a> RenderableRfd<'a> {
         client: &Client,
         number: &RfdNumber,
         location: &GitHubRfdLocation,
-    ) -> Result<(), RfdContentError> {
+    ) -> Result<(), RenderableRfdError> {
         let dir = number.repo_path();
         let storage_path = self.tmp_path()?;
 
@@ -154,7 +158,7 @@ impl<'a> RenderableRfd<'a> {
     }
 
     /// Create a tmp directory for rendering this RFD
-    fn tmp_path(&self) -> Result<PathBuf, RfdContentError> {
+    fn tmp_path(&self) -> Result<PathBuf, RenderableRfdError> {
         let mut path = env::temp_dir();
         path.push("rfd-render/");
         path.push(&self.render_id.to_string());
@@ -167,7 +171,7 @@ impl<'a> RenderableRfd<'a> {
 
     // Cleanup remaining images and local state that was used by asciidoctor
     #[instrument(skip(self), fields(storage_path = ?self.tmp_path()), err)]
-    fn cleanup_tmp_path(&self) -> Result<(), RfdContentError> {
+    fn cleanup_tmp_path(&self) -> Result<(), RenderableRfdError> {
         let storage_path = self.tmp_path()?;
 
         if storage_path.exists() && storage_path.is_dir() {
@@ -181,6 +185,8 @@ impl<'a> RenderableRfd<'a> {
 }
 
 impl<'a> RfdDocument for RenderableRfd<'a> {
+    type Error = RenderableRfdError;
+
     fn get_title(&self) -> Option<&str> {
         RfdDocument::get_title(&self.content)
     }
@@ -189,16 +195,18 @@ impl<'a> RfdDocument for RenderableRfd<'a> {
         RfdDocument::get_state(&self.content)
     }
 
-    fn update_state(&mut self, value: &str) {
-        RfdDocument::update_state(&mut self.content, value)
+    fn update_state(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
+        RfdDocument::update_state(&mut self.content, value)?;
+        Ok(self)
     }
 
     fn get_discussion(&self) -> Option<&str> {
         RfdDocument::get_discussion(&self.content)
     }
 
-    fn update_discussion(&mut self, value: &str) {
-        RfdDocument::update_discussion(&mut self.content, value)
+    fn update_discussion(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
+        RfdDocument::update_discussion(&mut self.content, value)?;
+        Ok(self)
     }
 
     fn get_authors(&self) -> Option<&str> {
@@ -209,8 +217,9 @@ impl<'a> RfdDocument for RenderableRfd<'a> {
         RfdDocument::get_labels(&self.content)
     }
 
-    fn update_labels(&mut self, value: &str) {
-        RfdDocument::update_labels(&mut self.content, value)
+    fn update_labels(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
+        RfdDocument::update_labels(&mut self.content, value)?;
+        Ok(self)
     }
 
     fn header(&self) -> Option<&str> {
@@ -221,13 +230,18 @@ impl<'a> RfdDocument for RenderableRfd<'a> {
         RfdDocument::body(&self.content)
     }
 
-    fn update_body(&mut self, value: &str) {
-        RfdDocument::update_body(&mut self.content, value)
+    fn update_body(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
+        RfdDocument::update_body(&mut self.content, value)?;
+        Ok(self)
     }
 
-    /// Get a reference to the internal unparsed contents
     fn raw(&self) -> &str {
         RfdDocument::raw(&self.content)
+    }
+
+    fn set_raw(&mut self, content: &str) -> Result<&mut Self, Self::Error> {
+        self.content.set_raw(content)?;
+        Ok(self)
     }
 }
 
@@ -257,7 +271,7 @@ pub enum RfdOutputError {
     #[error(transparent)]
     Command(#[from] JoinError),
     #[error("Failed to prepare content for output")]
-    ContentFailure(#[from] RfdContentError),
+    ContentFailure(#[from] RenderableRfdError),
     #[error(transparent)]
     File(#[from] FileIoError),
     #[error("Output format is not supported")]

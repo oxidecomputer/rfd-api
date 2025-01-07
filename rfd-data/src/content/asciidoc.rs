@@ -4,27 +4,89 @@
 
 use regex::Regex;
 use std::borrow::Cow;
+use thiserror::Error;
 
 use super::RfdDocument;
+
+static SUPPORTED_REFERENCES: [&str; 1] = ["authors"];
+
+#[derive(Debug, Error)]
+pub enum RfdAsciidocError {
+    #[error("Failed to parse author line")]
+    AuthorParse,
+    #[error("Failed to resolve reference for {attribute}")]
+    ReferenceResolver {
+        attribute: String,
+        error: regex::Error,
+    },
+}
 
 /// The text data of an Asciidoc RFD
 #[derive(Debug, Clone)]
 pub struct RfdAsciidoc<'a> {
-    pub content: Cow<'a, str>,
+    content: Cow<'a, str>,
+    resolved: String,
 }
 
 impl<'a> RfdAsciidoc<'a> {
-    pub fn new<T>(content: T) -> Self
+    pub fn new<T>(content: T) -> Result<Self, RfdAsciidocError>
     where
         T: Into<Cow<'a, str>>,
     {
-        Self {
-            content: content.into(),
+        let content = content.into();
+        let mut resolved = Self::resolve_references(&content)?;
+        Self::apply_author_line_attributes(&mut resolved)?;
+
+        Ok(Self { content, resolved })
+    }
+
+    fn resolve_references(content: &str) -> Result<String, RfdAsciidocError> {
+        let mut resolved = content.to_string();
+
+        for attribute in SUPPORTED_REFERENCES {
+            let pattern =
+                Regex::new(&format!(r#"(?<b>[^\\]?)(\{{{}\}})"#, attribute)).map_err(|err| {
+                    RfdAsciidocError::ReferenceResolver {
+                        attribute: attribute.to_string(),
+                        error: err,
+                    }
+                })?;
+            let captures = pattern.captures(&resolved);
+
+            if let Some(captures) = captures {
+                let prefix = captures.get(1).map(|c| c.as_str()).unwrap_or_default();
+                resolved = pattern
+                    .replace_all(
+                        &resolved,
+                        format!(
+                            "{}{}",
+                            prefix,
+                            Self::attr(attribute, &resolved).unwrap_or_default()
+                        ),
+                    )
+                    .to_string();
+            }
+        }
+
+        Ok(resolved)
+    }
+
+    fn apply_author_line_attributes(content: &mut String) -> Result<(), RfdAsciidocError> {
+        if let Some(author_line) = Self::author_line(content) {
+            let authors = RfdAuthors::parse(author_line).ok_or(RfdAsciidocError::AuthorParse);
+            let authors = authors?;
+            if authors.0.len() > 0 {
+                *content = Self::set_attr(content, "authors", &authors.into_attr());
+            }
+
+            Ok(())
+        } else {
+            Ok(())
         }
     }
 
-    fn attr(&self, attr: &str) -> Option<&str> {
-        self.attr_pattern(attr).find(&self.content).map(|value| {
+    fn attr<'b>(attr: &str, content: &'b str) -> Option<&'b str> {
+        Self::attr_pattern(attr).find(content).map(|value| {
             value
                 .as_str()
                 .trim_start_matches(&format!(":{}:", attr))
@@ -32,55 +94,82 @@ impl<'a> RfdAsciidoc<'a> {
         })
     }
 
-    fn set_attr(&mut self, attr: &str, value: &str) {
-        let pattern = self.attr_pattern(attr);
+    fn set_attr(content: &str, attr: &str, value: &str) -> String {
+        let pattern = Self::attr_pattern(attr);
 
-        if let Some(found) = pattern.find(&self.content) {
-            self.content = self
-                .content
+        if let Some(found) = pattern.find(content) {
+            content
                 .replacen(found.as_str(), &format!(":{}: {}\n", attr, value), 1)
                 .into()
         } else {
-            let title = self.title_line();
+            let title = Self::title_line(content);
 
             if let Some(title) = title {
                 let new_attr = format!(":{}: {}\n", attr, value);
-                let header = self.header();
-                let body = self.body();
+                let header = Self::header(content);
+                let body = Self::body(content);
 
-                self.content = (header.unwrap_or_default().to_string()
+                (header.unwrap_or_default().to_string()
                     + "\n"
                     + &new_attr
                     + "\n\n"
                     + title
                     + body.unwrap_or_default())
                 .into()
+            } else {
+                content.to_string()
             }
         }
     }
 
-    fn attr_pattern(&self, attr: &str) -> Regex {
+    fn attr_pattern(attr: &str) -> Regex {
         Regex::new(&format!(r"(?m)^:{}:(.*)$\n", attr)).unwrap()
     }
 
-    fn title_line(&self) -> Option<&str> {
-        let title = self.title_pattern().find(&self.content);
+    fn title_line(content: &str) -> Option<&str> {
+        let title = Self::title_pattern().find(content);
         title.map(|m| m.as_str())
     }
 
-    fn title_pattern(&self) -> Regex {
+    fn title_pattern() -> Regex {
         // This pattern also include markdown title handling fallbacks to handle malformed
         // documents
-        Regex::new(r"(?m)^[=#].*$[\n\r]+").unwrap()
+        Regex::new(r"(?m)^[=# ]+(?:RFD ?)?(?:\d+:? )?(.*)\n").unwrap()
+    }
+
+    fn author_line(content: &str) -> Option<&str> {
+        Self::body(&content).and_then(|body| {
+            // After splitting the document at the title, the very first line (asuming it is non-empty)
+            // is considered the author line
+            body.split_inclusive('\n').nth(0).and_then(|line| {
+                if line.is_empty() || line == "\n" {
+                    None
+                } else {
+                    Some(line)
+                }
+            })
+        })
+    }
+
+    fn header(content: &str) -> Option<&str> {
+        Self::title_pattern()
+            .splitn(content, 2)
+            .nth(0)
+            .map(|s| s.trim_end())
+    }
+
+    fn body(content: &str) -> Option<&str> {
+        Self::title_pattern().splitn(content, 2).nth(1)
     }
 }
 
 impl<'a> RfdDocument for RfdAsciidoc<'a> {
+    type Error = RfdAsciidocError;
+
     fn get_title(&self) -> Option<&str> {
-        let title_pattern = Regex::new(r"(?m)^[=# ]+(?:RFD ?)?(?:\d+:? )?(.*)$").unwrap();
         let fallback_title_pattern = Regex::new(r"(?m)^= (.*)$").unwrap();
 
-        if let Some(caps) = title_pattern.captures(&self.content) {
+        if let Some(caps) = Self::title_pattern().captures(&self.content) {
             Some(caps.get(1).unwrap().as_str().trim())
         } else if let Some(caps) = fallback_title_pattern.captures(&self.content) {
             Some(caps.get(1).unwrap().as_str().trim())
@@ -90,15 +179,15 @@ impl<'a> RfdDocument for RfdAsciidoc<'a> {
     }
 
     fn get_state(&self) -> Option<&str> {
-        self.attr("state")
+        Self::attr("state", &self.resolved)
     }
 
-    fn update_state(&mut self, value: &str) {
-        self.set_attr("state", value.trim())
+    fn update_state(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
+        self.set_raw(&Self::set_attr(&self.content, "state", value.trim()))
     }
 
     fn get_discussion(&self) -> Option<&str> {
-        let link = self.attr("discussion")?;
+        let link = Self::attr("discussion", &self.resolved)?;
         if link.starts_with("http") {
             Some(link)
         } else {
@@ -106,74 +195,254 @@ impl<'a> RfdDocument for RfdAsciidoc<'a> {
         }
     }
 
-    fn update_discussion(&mut self, value: &str) {
-        self.set_attr("discussion", value.trim())
+    fn update_discussion(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
+        self.set_raw(&Self::set_attr(&self.content, "discussion", value.trim()))
     }
 
     fn get_authors(&self) -> Option<&str> {
-        // If an authors attribute is defined anywhere in the document, then it is the first choice
-        // for the authors value
-        if let Some(attr) = self.attr("authors") {
-            Some(attr)
-        } else {
-            self.body().and_then(|body| {
-                body.lines().nth(0).and_then(|first_line| {
-                    // If {authors} is found, instead search the header for an authors attribute
-                    if first_line == "{authors}" {
-                        self.attr("authors")
-                    } else {
-                        // Given that we are in a fallback case we need to be slightly picky on what
-                        // lines we allow. We require that the line at least include a *@*.* word to
-                        // try and filter out lines that are not actually author lines
-                        let author_fallback_pattern =
-                            Regex::new(r"^.*?([\S]+@[\S]+.[\S]+).*?$").unwrap();
-                        let fallback_matches = author_fallback_pattern.is_match(first_line);
+        Self::attr("authors", &self.resolved)
+        // // If an authors attribute is defined anywhere in the document, then it is the first choice
+        // // for the authors value
+        // if let Some(attr) = Self::attr("authors", &self.resolved) {
+        //     Some(attr)
+        // } else {
+        //     self.body().and_then(|body| {
+        //         body.lines().nth(0).and_then(|first_line| {
+        //             // If {authors} is found, instead search the header for an authors attribute
+        //             if first_line == "{authors}" {
+        //                 Self::attr("authors", &self.resolved)
+        //             } else {
+        //                 // Given that we are in a fallback case we need to be slightly picky on what
+        //                 // lines we allow. We require that the line at least include a *@*.* word to
+        //                 // try and filter out lines that are not actually author lines
+        //                 let author_fallback_pattern =
+        //                     Regex::new(r"^.*?([\S]+@[\S]+.[\S]+).*?$").unwrap();
+        //                 let fallback_matches = author_fallback_pattern.is_match(first_line);
 
-                        if fallback_matches {
-                            Some(first_line)
-                        } else {
-                            // If none of our attempts have found an author, we drop back to the
-                            // attribute lookup. Eventually all of this logic should be removed and only
-                            // the attribute version should be supported
-                            self.attr("authors")
-                        }
-                    }
-                })
-            })
-        }
+        //                 if fallback_matches {
+        //                     Some(first_line)
+        //                 } else {
+        //                     // If none of our attempts have found an author, we drop back to the
+        //                     // attribute lookup. Eventually all of this logic should be removed and only
+        //                     // the attribute version should be supported
+        //                     Self::attr("authors", &self.resolved)
+        //                 }
+        //             }
+        //         })
+        //     })
+        // }
     }
 
     fn get_labels(&self) -> Option<&str> {
-        self.attr("labels")
+        Self::attr("labels", &self.resolved)
     }
 
-    fn update_labels(&mut self, value: &str) {
-        self.set_attr("labels", value)
+    fn update_labels(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
+        self.set_raw(&Self::set_attr(&self.content, "labels", value.trim()))
     }
 
     fn header(&self) -> Option<&str> {
-        self.title_pattern()
-            .splitn(&self.content, 2)
-            .nth(0)
-            .map(|s| s.trim_end())
+        RfdAsciidoc::header(&self.content)
     }
 
     fn body(&self) -> Option<&str> {
-        self.title_pattern().splitn(&self.content, 2).nth(1)
+        RfdAsciidoc::body(&self.content)
     }
 
-    fn update_body(&mut self, value: &str) {
-        self.content = Cow::Owned(format!(
-            "{}\n\n{}{}",
+    fn update_body(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
+        self.set_raw(&format!(
+            "{}\n\n{}{}\n{}",
             self.header().unwrap_or_default(),
-            self.title_line().unwrap_or_default(),
+            Self::title_line(&self.content).unwrap_or_default(),
+            Self::author_line(&self.content).unwrap_or_default(),
             value
-        ));
+        ))
     }
 
-    /// Get a reference to the internal unparsed contents
     fn raw(&self) -> &str {
         &self.content
+    }
+
+    fn set_raw(&mut self, content: &str) -> Result<&mut Self, Self::Error> {
+        let mut resolved = Self::resolve_references(content)?;
+        Self::apply_author_line_attributes(&mut resolved)?;
+        self.resolved = resolved;
+        self.content = Cow::Owned(content.to_string());
+        Ok(self)
+    }
+}
+
+#[derive(Debug)]
+struct RfdAuthors(Vec<RfdAuthor>);
+
+#[derive(Debug)]
+struct RfdAuthor {
+    first_name: String,
+    last_name: Option<String>,
+    middle_name: Option<String>,
+    email: Option<String>,
+}
+
+impl RfdAuthors {
+    fn parse(line: &str) -> Option<Self> {
+        // Author parsing is defined by the Asciidoc documentation https://docs.asciidoctor.org/asciidoc/latest/document/author-information/#multiple-author-attributes
+
+        // Ensure that the line has a single newline at its end. Otherwise it is considered invalid
+        if line.chars().filter(|c| c == &'\n').count() > 1 {
+            return None;
+        }
+
+        // Start by splitting the line in the supported separators. We diverge here from the
+        // documentation for backwards compatibility, but only a single separator can be used
+        let authors = if let Some(separator) = [';', ','].iter().find(|s| line.contains(**s)) {
+            // We are in the multiple author case. Iterate over each case. All authors must be
+            // valid to return and authors line
+            let authors = line
+                .trim()
+                .split(*separator)
+                .map(|part| RfdAuthor::parse(part.trim()))
+                .collect::<Vec<_>>();
+
+            if authors
+                .iter()
+                .any(|author| author.is_none() || author.as_ref().unwrap().is_empty())
+            {
+                None
+            } else {
+                Some(
+                    authors
+                        .into_iter()
+                        .map(|author| author.unwrap())
+                        .collect::<Vec<_>>(),
+                )
+            }
+        } else {
+            // The single or no author case. Continue attempting to parse
+            let author = RfdAuthor::parse(line.trim())?;
+            if author.is_empty() {
+                None
+            } else {
+                Some(vec![author])
+            }
+        }?;
+
+        Some(Self(authors))
+    }
+
+    fn into_attr(self) -> String {
+        self.0
+            .into_iter()
+            .map(RfdAuthor::into_attr)
+            .collect::<Vec<_>>()
+            .join("; ")
+    }
+}
+
+impl RfdAuthor {
+    fn parse(source: &str) -> Option<Self> {
+        // Split on the first occurence of < which denotes the start of an email or url
+        let parts = source.split('<').collect::<Vec<_>>();
+        match parts.len() {
+            1 => {
+                // Without the presence of a < we are in the name only branch. Split the name
+                // on spaces
+                let (first, middle, last) = Self::parse_name(parts.get(0).unwrap().trim());
+
+                Some(Self {
+                    first_name: first.unwrap_or_default(),
+                    last_name: last,
+                    middle_name: middle,
+                    email: None,
+                })
+            }
+            2 => {
+                // A single < indicates that this author has an email or url associated
+                let (first, middle, last) = Self::parse_name(parts.get(0).unwrap().trim());
+                let email =
+                    Self::parse_email(&format!("<{}", parts.get(1).unwrap().trim()).trim())?;
+
+                Some(Self {
+                    first_name: first.unwrap_or_default(),
+                    last_name: last,
+                    middle_name: middle,
+                    email: Some(email),
+                })
+            }
+            n => {
+                tracing::info!(
+                    count = n,
+                    "Invalid author line contained more than a single <"
+                );
+                None
+            }
+        }
+    }
+
+    fn parse_name(part: &str) -> (Option<String>, Option<String>, Option<String>) {
+        let name_parts = part.split(' ').collect::<Vec<_>>();
+        match name_parts.len() {
+            2 => {
+                // Firstname Lastname
+                (
+                    Some(name_parts.get(0).unwrap().to_string()),
+                    None,
+                    Some(name_parts.get(1).unwrap().to_string()),
+                )
+            }
+            3 => {
+                // Firstname Middlename Lastname
+                (
+                    Some(name_parts.get(0).unwrap().to_string()),
+                    Some(name_parts.get(1).unwrap().to_string()),
+                    Some(name_parts.get(2).unwrap().to_string()),
+                )
+            }
+            _ => {
+                // Anything else assigns only to Firstname
+                (Some(name_parts.join(" ")), None, None)
+            }
+        }
+    }
+
+    fn parse_email(part: &str) -> Option<String> {
+        // An email must start with a < and end with a >
+        if part.starts_with('<') && part.ends_with('>') {
+            // Asciidoc does not specify what an email or URL should look like
+            // TODO: Should we do parsing / validation here?
+            Some(
+                part.trim_start_matches('<')
+                    .trim_end_matches('>')
+                    .to_string(),
+            )
+        } else {
+            None
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.first_name.is_empty()
+            && self.middle_name.is_none()
+            && self.last_name.is_none()
+            && self.email.is_none()
+    }
+
+    fn into_attr(self) -> String {
+        let Self {
+            first_name,
+            middle_name,
+            last_name,
+            email,
+        } = self;
+        [
+            Some(first_name),
+            middle_name,
+            last_name,
+            email.map(|email| format!("<{}>", email)),
+        ]
+        .into_iter()
+        .filter_map(|p| p)
+        .collect::<Vec<_>>()
+        .join(" ")
     }
 }
 
@@ -181,37 +450,122 @@ impl<'a> RfdDocument for RfdAsciidoc<'a> {
 mod tests {
     use super::*;
 
+    // RFD Author tests
+
+    #[test]
+    fn test_single_author() {
+        let line = "firstname";
+        let authors = RfdAuthors::parse(line).unwrap();
+        assert_eq!(authors.0.get(0).unwrap().first_name, "firstname");
+        assert_eq!(authors.0.get(0).unwrap().middle_name, None);
+        assert_eq!(authors.0.get(0).unwrap().last_name, None);
+        assert_eq!(authors.0.get(0).unwrap().email, None);
+        let line = "firstname <email@company.com>";
+        let authors = RfdAuthors::parse(line).unwrap();
+        assert_eq!(authors.0.get(0).unwrap().first_name, "firstname");
+        assert_eq!(authors.0.get(0).unwrap().middle_name, None);
+        assert_eq!(authors.0.get(0).unwrap().last_name, None);
+        assert_eq!(
+            authors.0.get(0).unwrap().email.as_deref(),
+            Some("email@company.com")
+        );
+
+        let line = "firstname lastname";
+        let authors = RfdAuthors::parse(line).unwrap();
+        assert_eq!(authors.0.get(0).unwrap().first_name, "firstname");
+        assert_eq!(authors.0.get(0).unwrap().middle_name, None);
+        assert_eq!(
+            authors.0.get(0).unwrap().last_name.as_deref(),
+            Some("lastname")
+        );
+        assert_eq!(authors.0.get(0).unwrap().email, None);
+        let line = "firstname lastname <email@company.com>";
+        let authors = RfdAuthors::parse(line).unwrap();
+        assert_eq!(authors.0.get(0).unwrap().first_name, "firstname");
+        assert_eq!(authors.0.get(0).unwrap().middle_name, None);
+        assert_eq!(
+            authors.0.get(0).unwrap().last_name.as_deref(),
+            Some("lastname")
+        );
+        assert_eq!(
+            authors.0.get(0).unwrap().email.as_deref(),
+            Some("email@company.com")
+        );
+
+        let line = "firstname middlename lastname";
+        let authors = RfdAuthors::parse(line).unwrap();
+        assert_eq!(authors.0.get(0).unwrap().first_name, "firstname");
+        assert_eq!(
+            authors.0.get(0).unwrap().middle_name.as_deref(),
+            Some("middlename")
+        );
+        assert_eq!(
+            authors.0.get(0).unwrap().last_name.as_deref(),
+            Some("lastname")
+        );
+        assert_eq!(authors.0.get(0).unwrap().email, None);
+        let line = "firstname middlename lastname <email@company.com>";
+        let authors = RfdAuthors::parse(line).unwrap();
+        assert_eq!(authors.0.get(0).unwrap().first_name, "firstname");
+        assert_eq!(
+            authors.0.get(0).unwrap().middle_name.as_deref(),
+            Some("middlename")
+        );
+        assert_eq!(
+            authors.0.get(0).unwrap().last_name.as_deref(),
+            Some("lastname")
+        );
+        assert_eq!(
+            authors.0.get(0).unwrap().email.as_deref(),
+            Some("email@company.com")
+        );
+    }
+
+    // Reference resolution tests
+
+    #[test]
+    fn test_resolves_internally() {
+        let content = r#":authors: firstname <email@company>
+= sdfgsdfgsdfg
+{authors}
+dsfsdf
+sdf"#;
+        let rfd = RfdAsciidoc::new(content).unwrap();
+        assert!(rfd.content.to_string() != rfd.resolved);
+        assert!(!rfd.resolved.contains("{authors}"));
+    }
+
     // Read authors tests
 
     #[test]
-    fn test_get_asciidoc_fallback_authors() {
+    fn test_get_asciidoc_authors_from_authors_line() {
         let content = r#"sdfsdf
 = sdfgsdfgsdfg
 things <things@company>, firstname <email@company>
 dsfsdf
 sdf
 authors: nope"#;
-        let rfd = RfdAsciidoc::new(content);
+        let rfd = RfdAsciidoc::new(content).unwrap();
         let authors = rfd.get_authors().unwrap();
-        let expected = r#"things <things@company>, firstname <email@company>"#.to_string();
+        let expected = r#"things <things@company>; firstname <email@company>"#.to_string();
         assert_eq!(expected, authors);
     }
 
     #[test]
-    fn test_get_asciidoc_attribute_authors() {
+    fn test_get_asciidoc_authors_via_reference() {
         let content = r#":authors: firstname <email@company>
 = sdfgsdfgsdfg
 {authors}
 dsfsdf
 sdf"#;
-        let rfd = RfdAsciidoc::new(content);
+        let rfd = RfdAsciidoc::new(content).unwrap();
         let authors = rfd.get_authors().unwrap();
         let expected = r#"firstname <email@company>"#.to_string();
         assert_eq!(expected, authors);
     }
 
     #[test]
-    fn test_get_asciidoc_attribute_authors_without_marker() {
+    fn test_get_asciidoc_attribute_authors_without_reference() {
         let content = r#":showtitle:
 :toc: left
 :numbered:
@@ -224,7 +578,7 @@ sdf"#;
 
 dsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdf
 "#;
-        let rfd = RfdAsciidoc::new(content);
+        let rfd = RfdAsciidoc::new(content).unwrap();
         let authors = rfd.get_authors().unwrap();
         let expected = r#"firstname <email@company>"#.to_string();
         assert_eq!(expected, authors);
@@ -242,14 +596,14 @@ dsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdf
 ## External References
 * https://company.com[link to company] - An external reference
 "#;
-        let rfd = RfdAsciidoc::new(content);
+        let rfd = RfdAsciidoc::new(content).unwrap();
         let authors = rfd.get_authors().unwrap();
-        let expected = r#"Author One <one@company>, Author Two <two@company>"#.to_string();
+        let expected = r#"Author One <one@company>; Author Two <two@company>"#.to_string();
         assert_eq!(expected, authors);
     }
 
     #[test]
-    fn test_get_asciidoc_attribute_authors_under_title() {
+    fn test_get_asciidoc_attribute_authors_under_title_parses_nonsensically() {
         let content = r#"
 = RFD 363 Minibar
 :authors: Author One <one@company>, Author Two <two@company>
@@ -264,9 +618,27 @@ dsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdf
 == Introduction
 "#;
 
-        let rfd = RfdAsciidoc::new(content);
+        let rfd = RfdAsciidoc::new(content).unwrap();
         let authors = rfd.get_authors().unwrap();
-        let expected = r#"Author One <one@company>, Author Two <two@company>"#.to_string();
+        let expected =
+            r#":authors: Author One <one@company>; Author Two <two@company>"#.to_string();
+        assert_eq!(expected, authors);
+    }
+
+    #[test]
+    fn test_get_asciidoc_authors_from_author_line_with_later_attribute() {
+        let content = r#"
+= RFD 363 Minibar
+Author One <one@company>, Author Two <two@company>
+
+== Introduction
+
+:authors: Author One <one@company>
+"#;
+
+        let rfd = RfdAsciidoc::new(content).unwrap();
+        let authors = rfd.get_authors().unwrap();
+        let expected = r#"Author One <one@company>; Author Two <two@company>"#.to_string();
         assert_eq!(expected, authors);
     }
 
@@ -280,7 +652,7 @@ dsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdf
 dsfsdf
 sdf
 :state: nope"#;
-        let rfd = RfdAsciidoc::new(content);
+        let rfd = RfdAsciidoc::new(content).unwrap();
         let state = rfd.get_state().unwrap();
         let expected = "prediscussion".to_string();
         assert_eq!(expected, state);
@@ -296,7 +668,7 @@ sdf
 dsfsdf
 sdf
 :discussion: nope"#;
-        let rfd = RfdAsciidoc::new(content);
+        let rfd = RfdAsciidoc::new(content).unwrap();
         let discussion = rfd.get_discussion().unwrap();
         let expected = "https://github.com/org/repo/pulls/1".to_string();
         assert_eq!(expected, discussion);
@@ -310,11 +682,10 @@ sdf
 dsfsdf
 sdf
 :discussion: nope"#;
-        let mut rfd = RfdAsciidoc::new(content);
-        println!("Before\n{}", rfd.raw());
-        rfd.set_attr("xrefstyle", "short");
-        println!("After\n{}", rfd.raw());
-        assert_eq!(Some("short"), rfd.attr("xrefstyle"))
+        let mut rfd = RfdAsciidoc::new(content).unwrap();
+        rfd.set_raw(&RfdAsciidoc::set_attr(rfd.raw(), "xrefstyle", "short"))
+            .unwrap();
+        assert_eq!(Some("short"), RfdAsciidoc::attr("xrefstyle", &rfd.content))
     }
 
     // Update discussion link tests
@@ -331,8 +702,8 @@ dsfsdf
 sdf
 :discussion: nope"#;
 
-        let mut rfd = RfdAsciidoc::new(content);
-        rfd.update_discussion(link);
+        let mut rfd = RfdAsciidoc::new(content).unwrap();
+        rfd.update_discussion(link).unwrap();
         let expected = r#"sdfsdf
 = sdfgsd
 discussion: fgsdfg
@@ -355,8 +726,8 @@ dsfsdf
 sdf
 :discussion: nope"#;
 
-        let mut rfd = RfdAsciidoc::new(content);
-        rfd.update_discussion(link);
+        let mut rfd = RfdAsciidoc::new(content).unwrap();
+        rfd.update_discussion(link).unwrap();
         let expected = r#"sdfsdf
 = sdfgsd
 discussion: fgsdfg
@@ -379,8 +750,8 @@ state: fgsdfg
 dsfsdf
 sdf
 :state: nope"#;
-        let mut rfd = RfdAsciidoc::new(content);
-        rfd.update_state(state);
+        let mut rfd = RfdAsciidoc::new(content).unwrap();
+        rfd.update_state(state).unwrap();
         let expected = r#"sdfsdf
 = sdfgsd
 state: fgsdfg
@@ -401,8 +772,8 @@ state: fgsdfg
 dsfsdf
 sdf
 :state: nope"#;
-        let mut rfd = RfdAsciidoc::new(content);
-        rfd.update_state(state);
+        let mut rfd = RfdAsciidoc::new(content).unwrap();
+        rfd.update_state(state).unwrap();
         let expected = r#"sdfsdf
 = sdfgsd
 state: fgsdfg
@@ -424,7 +795,7 @@ dsfsdf
 = RFD 53 Bye
 sdf
 :title: nope"#;
-        let rfd = RfdAsciidoc::new(content);
+        let rfd = RfdAsciidoc::new(content).unwrap();
         let expected = "Identity and Access Management (IAM)".to_string();
         assert_eq!(expected, rfd.get_title().unwrap());
     }
@@ -439,7 +810,7 @@ sdf
 dsfsdf
 sdf
 :title: nope"#;
-        let rfd = RfdAsciidoc::new(content);
+        let rfd = RfdAsciidoc::new(content).unwrap();
         let expected = "Identity and Access Management (IAM)".to_string();
         assert_eq!(expected, rfd.get_title().unwrap());
     }
@@ -453,7 +824,7 @@ sdf
 dsfsdf
 sdf
 :title: nope"#;
-        let rfd = RfdAsciidoc::new(content);
+        let rfd = RfdAsciidoc::new(content).unwrap();
         let expected = "Identity and Access Management (IAM)".to_string();
         assert_eq!(expected, rfd.get_title().unwrap());
     }
@@ -476,7 +847,7 @@ sdf
 {authors}
 "#;
 
-        let rfd = RfdAsciidoc::new(Cow::Borrowed(content));
+        let rfd = RfdAsciidoc::new(Cow::Borrowed(content)).unwrap();
         let expected = "This should be the title";
 
         assert_eq!(expected, rfd.get_title().unwrap());
@@ -497,13 +868,13 @@ sdf
 = RFD 123 Place
 FirstName LastName <fname@company.org>
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc et dignissim nisi. Donec ut libero in 
-dolor tempor aliquam quis quis nisl. Proin sit amet nunc in orci suscipit placerat. Mauris 
-pellentesque fringilla lacus id gravida. Donec in velit luctus, elementum mauris eu, pellentesque 
-massa. In lectus orci, vehicula at aliquet nec, elementum eu nisi. Vivamus viverra imperdiet 
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nunc et dignissim nisi. Donec ut libero in
+dolor tempor aliquam quis quis nisl. Proin sit amet nunc in orci suscipit placerat. Mauris
+pellentesque fringilla lacus id gravida. Donec in velit luctus, elementum mauris eu, pellentesque
+massa. In lectus orci, vehicula at aliquet nec, elementum eu nisi. Vivamus viverra imperdiet
 malesuada.
 
-. Suspendisse blandit sem ligula, ac luctus metus condimentum non. Fusce enim purus, tincidunt ut 
+. Suspendisse blandit sem ligula, ac luctus metus condimentum non. Fusce enim purus, tincidunt ut
 tortor eget, sollicitudin vestibulum sem. Proin eu velit orci.
 
 . Proin eu finibus velit. Morbi eget blandit neque.
@@ -516,7 +887,7 @@ graph TD;
     C-->D;
 ```
 
-. Maecenas molestie, quam nec lacinia porta, lectus turpis molestie quam, at fringilla neque ipsum 
+. Maecenas molestie, quam nec lacinia porta, lectus turpis molestie quam, at fringilla neque ipsum
 in velit.
 
 . Donec elementum luctus mauris.
@@ -525,7 +896,7 @@ in velit.
 
     #[test]
     fn test_get_asciidoc_labels() {
-        let rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content()));
+        let rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content())).unwrap();
         let labels = rfd.get_labels().unwrap();
         let expected = "label1, label2".to_string();
         assert_eq!(expected, labels);
@@ -537,14 +908,14 @@ in velit.
         = RFD 43 Identity and Access Management (IAM)
         No labels here
         "#;
-        let rfd = RfdAsciidoc::new(content);
+        let rfd = RfdAsciidoc::new(content).unwrap();
         assert!(rfd.get_labels().is_none());
     }
 
     #[test]
     fn test_update_asciidoc_labels() {
-        let mut rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content()));
-        rfd.update_labels("newlabel1, newlabel2");
+        let mut rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content())).unwrap();
+        rfd.update_labels("newlabel1, newlabel2").unwrap();
         let labels = rfd.get_labels().unwrap();
         let expected = "newlabel1, newlabel2".to_string();
         assert_eq!(expected, labels);
@@ -565,9 +936,11 @@ in velit.
 :labels: label1, label2
 
 = RFD 123 Place
+FirstName LastName <fname@company.org>
+
 This is the new body"#;
-        let mut rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content()));
-        rfd.update_body(&new_content);
+        let mut rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content())).unwrap();
+        rfd.update_body(&new_content).unwrap();
         assert_eq!(expected, rfd.raw());
     }
 }

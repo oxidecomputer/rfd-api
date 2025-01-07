@@ -11,3 +11,4 @@ rfd-model = { path = "../rfd-model" }
 schemars = { workspace = true }
 serde = { workspace = true }
 thiserror = { workspace = true }
+tracing = { workspace = true }

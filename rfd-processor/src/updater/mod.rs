@@ -258,7 +258,10 @@ impl<'a> RfdUpdater<'a> {
                 .location
                 .upsert(
                     &new.number,
-                    new.content().raw().as_bytes(),
+                    new.content()
+                        .map_err(|err| RfdUpdaterError::RfdUpdate(RfdError::Asciidoc(err)))?
+                        .raw()
+                        .as_bytes(),
                     "RFD processor update",
                 )
                 .await
