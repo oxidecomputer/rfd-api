@@ -299,6 +299,8 @@ impl RfdAuthors {
             // valid to return and authors line
             let authors = line
                 .trim()
+                // Trim trailing semicolons
+                .trim_end_matches(';')
                 .split(*separator)
                 .map(|part| RfdAuthor::parse(part.trim()))
                 .collect::<Vec<_>>();
@@ -505,6 +507,25 @@ mod tests {
         );
         assert_eq!(authors.0.get(0).unwrap().email, None);
         let line = "firstname middlename lastname <email@company.com>";
+        let authors = RfdAuthors::parse(line).unwrap();
+        assert_eq!(authors.0.get(0).unwrap().first_name, "firstname");
+        assert_eq!(
+            authors.0.get(0).unwrap().middle_name.as_deref(),
+            Some("middlename")
+        );
+        assert_eq!(
+            authors.0.get(0).unwrap().last_name.as_deref(),
+            Some("lastname")
+        );
+        assert_eq!(
+            authors.0.get(0).unwrap().email.as_deref(),
+            Some("email@company.com")
+        );
+    }
+
+    #[test]
+    fn test_author_trailing_semicolon() {
+        let line = "firstname middlename lastname <email@company.com>;";
         let authors = RfdAuthors::parse(line).unwrap();
         assert_eq!(authors.0.get(0).unwrap().first_name, "firstname");
         assert_eq!(

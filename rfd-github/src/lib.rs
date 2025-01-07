@@ -288,10 +288,6 @@ impl GitHubRfdRepo {
                         "Add RFD to update batch"
                     );
 
-                    if number != 1 {
-                        continue;
-                    }
-
                     let update = GitHubRfdUpdate {
                         number: number.into(),
                         location: self.location(
@@ -327,10 +323,6 @@ impl GitHubRfdRepo {
             // Skip the default brach
             if branch.name == self.default_branch {
                 tracing::trace!("Skip default branch during branch iteration");
-                continue;
-            }
-
-            if branch.name != "skip-all" {
                 continue;
             }
 
