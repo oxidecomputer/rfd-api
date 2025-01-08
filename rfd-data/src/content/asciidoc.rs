@@ -35,7 +35,7 @@ impl<'a> RfdAsciidoc<'a> {
     {
         let content = content.into();
         let mut resolved = Self::resolve_references(&content)?;
-        Self::apply_author_line_attributes(&mut resolved)?;
+        Self::apply_author_line_attributes(&mut resolved);
 
         Ok(Self { content, resolved })
     }
@@ -71,17 +71,13 @@ impl<'a> RfdAsciidoc<'a> {
         Ok(resolved)
     }
 
-    fn apply_author_line_attributes(content: &mut String) -> Result<(), RfdAsciidocError> {
+    fn apply_author_line_attributes(content: &mut String) {
         if let Some(author_line) = Self::author_line(content) {
-            let authors = RfdAuthors::parse(author_line).ok_or(RfdAsciidocError::AuthorParse);
-            let authors = authors?;
-            if authors.0.len() > 0 {
-                *content = Self::set_attr(content, "authors", &authors.into_attr());
+            if let Some(authors) = RfdAuthors::parse(author_line) {
+                if authors.0.len() > 0 {
+                    *content = Self::set_attr(content, "authors", &authors.into_attr());
+                }
             }
-
-            Ok(())
-        } else {
-            Ok(())
         }
     }
 
@@ -265,7 +261,7 @@ impl<'a> RfdDocument for RfdAsciidoc<'a> {
 
     fn set_raw(&mut self, content: &str) -> Result<&mut Self, Self::Error> {
         let mut resolved = Self::resolve_references(content)?;
-        Self::apply_author_line_attributes(&mut resolved)?;
+        Self::apply_author_line_attributes(&mut resolved);
         self.resolved = resolved;
         self.content = Cow::Owned(content.to_string());
         Ok(self)
@@ -299,25 +295,24 @@ impl RfdAuthors {
             // valid to return and authors line
             let authors = line
                 .trim()
-                // Trim trailing semicolons
+                // Similar to the separators we trim a trailing comma and semicolon for
+                // backwords compatability
                 .trim_end_matches(';')
+                .trim_end_matches(',')
                 .split(*separator)
                 .map(|part| RfdAuthor::parse(part.trim()))
                 .collect::<Vec<_>>();
 
-            if authors
-                .iter()
-                .any(|author| author.is_none() || author.as_ref().unwrap().is_empty())
-            {
-                None
-            } else {
-                Some(
-                    authors
-                        .into_iter()
-                        .map(|author| author.unwrap())
-                        .collect::<Vec<_>>(),
-                )
-            }
+            Some(authors
+                .into_iter()
+                .filter_map(|author| {
+                    if author.is_some() && !author.as_ref().unwrap().is_empty() {
+                        author
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>())
         } else {
             // The single or no author case. Continue attempting to parse
             let author = RfdAuthor::parse(line.trim())?;
