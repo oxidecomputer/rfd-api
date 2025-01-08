@@ -303,16 +303,18 @@ impl RfdAuthors {
                 .map(|part| RfdAuthor::parse(part.trim()))
                 .collect::<Vec<_>>();
 
-            Some(authors
-                .into_iter()
-                .filter_map(|author| {
-                    if author.is_some() && !author.as_ref().unwrap().is_empty() {
-                        author
-                    } else {
-                        None
-                    }
-                })
-                .collect::<Vec<_>>())
+            Some(
+                authors
+                    .into_iter()
+                    .filter_map(|author| {
+                        if author.is_some() && !author.as_ref().unwrap().is_empty() {
+                            author
+                        } else {
+                            None
+                        }
+                    })
+                    .collect::<Vec<_>>(),
+            )
         } else {
             // The single or no author case. Continue attempting to parse
             let author = RfdAuthor::parse(line.trim())?;
@@ -535,6 +537,15 @@ mod tests {
             authors.0.get(0).unwrap().email.as_deref(),
             Some("email@company.com")
         );
+    }
+
+    #[test]
+    fn test_author_excess_names_assigned_to_fname() {
+        let line = r#"First2 M2 Last2 \"#;
+
+        let authors = RfdAuthors::parse(line).unwrap();
+        let expected = r#"First2 M2 Last2 \"#.to_string();
+        assert_eq!(expected, authors.0.get(0).unwrap().first_name);
     }
 
     // Reference resolution tests
