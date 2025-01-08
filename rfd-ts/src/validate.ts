@@ -535,7 +535,7 @@ export const Visibility = z.preprocess(processResponseBody, z.enum(['public', 'p
 export const Rfd = z.preprocess(
   processResponseBody,
   z.object({
-    'content': RfdRevision,
+    'content': RfdRevision.optional(),
     'createdAt': z.coerce.date(),
     'deletedAt': z.coerce.date().optional(),
     'id': TypedUuidForRfdId,
@@ -582,27 +582,6 @@ export const RfdPdf = z.preprocess(
   }),
 )
 
-export const RfdRevisionPdf = z.preprocess(
-  processResponseBody,
-  z.object({
-    'authors': z.string().optional(),
-    'commit': CommitSha,
-    'committedAt': z.coerce.date(),
-    'content': RfdPdf.array(),
-    'contentFormat': ContentFormat,
-    'createdAt': z.coerce.date(),
-    'deletedAt': z.coerce.date().optional(),
-    'discussion': z.string().optional(),
-    'id': TypedUuidForRfdRevisionId,
-    'labels': z.string().optional(),
-    'rfdId': TypedUuidForRfdId,
-    'sha': FileSha,
-    'state': z.string().optional(),
-    'title': z.string(),
-    'updatedAt': z.coerce.date(),
-  }),
-)
-
 export const RfdUpdateBody = z.preprocess(
   processResponseBody,
   z.object({ 'document': z.string(), 'message': z.string().optional() }),
@@ -615,22 +594,42 @@ export const RfdUpdateContentBody = z.preprocess(
 
 export const RfdVisibility = z.preprocess(processResponseBody, z.object({ 'visibility': Visibility }))
 
-export const RfdWithContent = z.preprocess(
+export const RfdWithPdf = z.preprocess(
   processResponseBody,
   z.object({
     'authors': z.string().optional(),
-    'commit': CommitSha,
-    'committedAt': z.coerce.date(),
-    'content': z.string(),
+    'commit': CommitSha.optional(),
+    'committedAt': z.coerce.date().optional(),
+    'content': RfdPdf.array(),
     'discussion': z.string().optional(),
-    'format': ContentFormat,
+    'format': ContentFormat.optional(),
     'id': TypedUuidForRfdId,
     'labels': z.string().optional(),
     'link': z.string().optional(),
     'rfdNumber': z.number().min(-2147483647).max(2147483647),
-    'sha': FileSha,
+    'sha': FileSha.optional(),
     'state': z.string().optional(),
-    'title': z.string(),
+    'title': z.string().optional(),
+    'visibility': Visibility,
+  }),
+)
+
+export const RfdWithRaw = z.preprocess(
+  processResponseBody,
+  z.object({
+    'authors': z.string().optional(),
+    'commit': CommitSha.optional(),
+    'committedAt': z.coerce.date().optional(),
+    'content': z.string().optional(),
+    'discussion': z.string().optional(),
+    'format': ContentFormat.optional(),
+    'id': TypedUuidForRfdId,
+    'labels': z.string().optional(),
+    'link': z.string().optional(),
+    'rfdNumber': z.number().min(-2147483647).max(2147483647),
+    'sha': FileSha.optional(),
+    'state': z.string().optional(),
+    'title': z.string().optional(),
     'visibility': Visibility,
   }),
 )
@@ -639,17 +638,17 @@ export const RfdWithoutContent = z.preprocess(
   processResponseBody,
   z.object({
     'authors': z.string().optional(),
-    'commit': CommitSha,
-    'committedAt': z.coerce.date(),
+    'commit': CommitSha.optional(),
+    'committedAt': z.coerce.date().optional(),
     'discussion': z.string().optional(),
-    'format': ContentFormat,
+    'format': ContentFormat.optional(),
     'id': TypedUuidForRfdId,
     'labels': z.string().optional(),
     'link': z.string().optional(),
     'rfdNumber': z.number().min(-2147483647).max(2147483647),
-    'sha': FileSha,
+    'sha': FileSha.optional(),
     'state': z.string().optional(),
-    'title': z.string(),
+    'title': z.string().optional(),
     'visibility': Visibility,
   }),
 )

@@ -421,8 +421,7 @@ impl ProgenitorCliConfig for Context {
             "Array_of_RfdWithoutContent" => {
                 self.printer().unwrap().output_rfd_list(reserialize(value))
             }
-            "FullRfd" => self.printer().unwrap().output_rfd_full(reserialize(value)),
-            "Rfd" => self.printer().unwrap().output_rfd(reserialize(value)),
+            "RfdWithRaw" => self.printer().unwrap().output_rfd_full(reserialize(value)),
             "SearchResults" => self
                 .printer()
                 .unwrap()

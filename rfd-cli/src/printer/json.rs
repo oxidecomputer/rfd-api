@@ -71,7 +71,7 @@ impl CliOutput for RfdJsonPrinter {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 
-    fn output_rfd_full(&self, value: types::RfdWithContent) {
+    fn output_rfd_full(&self, value: types::RfdWithRaw) {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 

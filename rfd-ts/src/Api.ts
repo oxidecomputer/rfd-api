@@ -415,7 +415,7 @@ export type Visibility =
   | 'private'
 
 export type Rfd = {
-  'content': RfdRevision
+  'content'?: RfdRevision
   'createdAt': Date
   'deletedAt'?: Date
   'id': TypedUuidForRfdId
@@ -459,24 +459,6 @@ export type RfdPdf = {
   'updatedAt': Date
 }
 
-export type RfdRevisionPdf = {
-  'authors'?: string
-  'commit': CommitSha
-  'committedAt': Date
-  'content': RfdPdf[]
-  'contentFormat': ContentFormat
-  'createdAt': Date
-  'deletedAt'?: Date
-  'discussion'?: string
-  'id': TypedUuidForRfdRevisionId
-  'labels'?: string
-  'rfdId': TypedUuidForRfdId
-  'sha': FileSha
-  'state'?: string
-  'title': string
-  'updatedAt': Date
-}
-
 export type RfdUpdateBody = {
   /** Full Asciidoc document to store for this RFD */
   'document': string
@@ -493,36 +475,53 @@ export type RfdUpdateContentBody = {
 
 export type RfdVisibility = { 'visibility': Visibility }
 
-export type RfdWithContent = {
+export type RfdWithPdf = {
   'authors'?: string
-  'commit': CommitSha
-  'committedAt': Date
-  'content': string
+  'commit'?: CommitSha
+  'committedAt'?: Date
+  'content': RfdPdf[]
   'discussion'?: string
-  'format': ContentFormat
+  'format'?: ContentFormat
   'id': TypedUuidForRfdId
   'labels'?: string
   'link'?: string
   'rfdNumber': number
-  'sha': FileSha
+  'sha'?: FileSha
   'state'?: string
-  'title': string
+  'title'?: string
+  'visibility': Visibility
+}
+
+export type RfdWithRaw = {
+  'authors'?: string
+  'commit'?: CommitSha
+  'committedAt'?: Date
+  'content'?: string
+  'discussion'?: string
+  'format'?: ContentFormat
+  'id': TypedUuidForRfdId
+  'labels'?: string
+  'link'?: string
+  'rfdNumber': number
+  'sha'?: FileSha
+  'state'?: string
+  'title'?: string
   'visibility': Visibility
 }
 
 export type RfdWithoutContent = {
   'authors'?: string
-  'commit': CommitSha
-  'committedAt': Date
+  'commit'?: CommitSha
+  'committedAt'?: Date
   'discussion'?: string
-  'format': ContentFormat
+  'format'?: ContentFormat
   'id': TypedUuidForRfdId
   'labels'?: string
   'link'?: string
   'rfdNumber': number
-  'sha': FileSha
+  'sha'?: FileSha
   'state'?: string
-  'title': string
+  'title'?: string
   'visibility': Visibility
 }
 
@@ -1400,7 +1399,7 @@ export class Api extends HttpClient {
     viewRfdPdf: ({
       path,
     }: { path: ViewRfdPdfPathParams }, params: FetchParams = {}) => {
-      return this.request<RfdRevisionPdf>({
+      return this.request<RfdWithPdf>({
         path: `/rfd/${path.number}/pdf`,
         method: 'GET',
         ...params,
@@ -1412,7 +1411,7 @@ export class Api extends HttpClient {
     viewRfd: ({
       path,
     }: { path: ViewRfdPathParams }, params: FetchParams = {}) => {
-      return this.request<RfdWithContent>({
+      return this.request<RfdWithRaw>({
         path: `/rfd/${path.number}/raw`,
         method: 'GET',
         ...params,
@@ -1474,7 +1473,7 @@ export class Api extends HttpClient {
     viewRfdRevisionPdf: ({
       path,
     }: { path: ViewRfdRevisionPdfPathParams }, params: FetchParams = {}) => {
-      return this.request<RfdRevisionPdf>({
+      return this.request<RfdWithPdf>({
         path: `/rfd/${path.number}/revision/${path.revision}/pdf`,
         method: 'GET',
         ...params,
@@ -1486,7 +1485,7 @@ export class Api extends HttpClient {
     viewRfdRevision: ({
       path,
     }: { path: ViewRfdRevisionPathParams }, params: FetchParams = {}) => {
-      return this.request<RfdWithContent>({
+      return this.request<RfdWithRaw>({
         path: `/rfd/${path.number}/revision/${path.revision}/raw`,
         method: 'GET',
         ...params,
