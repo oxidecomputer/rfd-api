@@ -130,7 +130,7 @@ impl<'a> RfdAsciidoc<'a> {
     fn title_pattern() -> Regex {
         // This pattern also include markdown title handling fallbacks to handle malformed
         // documents
-        Regex::new(r"(?m)^[=# ]+(?:RFD ?)?(?:\d+:? )?(.*)\n").unwrap()
+        Regex::new(r"(?m)^[=#][ ]+(?:RFD ?)?(?:\d+:? )?(.*)\n").unwrap()
     }
 
     fn author_line(content: &str) -> Option<&str> {
