@@ -20,7 +20,7 @@ use octorust::{
 };
 use regex::Regex;
 use rfd_data::{
-    content::{RfdAsciidoc, RfdContent, RfdMarkdown},
+    content::{RfdAsciidoc, RfdAsciidocError, RfdContent, RfdMarkdown},
     RfdNumber,
 };
 use rfd_model::{CommitSha, FileSha};
@@ -41,6 +41,8 @@ pub enum GitHubError {
     FailedToDecodeData(#[from] DecodeError),
     #[error("Could not find a committer for a commit")]
     FailedToFindCommitter,
+    #[error("Failed to parse RFD contents")]
+    InvalidContent(#[from] RfdAsciidocError),
     #[error("Failed to parse decoded contents")]
     InvalidData(#[from] Utf8Error),
     #[error("Failed to parse date")]
@@ -494,7 +496,7 @@ impl GitHubRfdLocation {
         let content = if is_markdown {
             RfdContent::Markdown(RfdMarkdown::new(Cow::Owned(parsed)))
         } else {
-            RfdContent::Asciidoc(RfdAsciidoc::new(Cow::Owned(parsed)))
+            RfdContent::Asciidoc(RfdAsciidoc::new(Cow::Owned(parsed))?)
         };
 
         // The html_url for the README.* file will look something like:

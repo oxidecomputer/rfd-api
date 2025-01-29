@@ -1314,182 +1314,6 @@ pub mod types {
         }
     }
 
-    /// FullRfd
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "commit",
-    ///    "committed_at",
-    ///    "content",
-    ///    "format",
-    ///    "id",
-    ///    "pdfs",
-    ///    "rfd_number",
-    ///    "sha",
-    ///    "title",
-    ///    "visibility"
-    ///  ],
-    ///  "properties": {
-    ///    "authors": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "commit": {
-    ///      "$ref": "#/components/schemas/CommitSha"
-    ///    },
-    ///    "committed_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "content": {
-    ///      "type": "string"
-    ///    },
-    ///    "discussion": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "format": {
-    ///      "$ref": "#/components/schemas/ContentFormat"
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForRfdId"
-    ///    },
-    ///    "labels": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "link": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "pdfs": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "$ref": "#/components/schemas/FullRfdPdfEntry"
-    ///      }
-
-    ///    },
-    ///    "rfd_number": {
-    ///      "type": "integer",
-    ///      "format": "int32"
-    ///    },
-    ///    "sha": {
-    ///      "$ref": "#/components/schemas/FileSha"
-    ///    },
-    ///    "state": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "title": {
-    ///      "type": "string"
-    ///    },
-    ///    "visibility": {
-    ///      "$ref": "#/components/schemas/Visibility"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(
-        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
-    )]
-    pub struct FullRfd {
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub authors: ::std::option::Option<::std::string::String>,
-        pub commit: CommitSha,
-        pub committed_at: chrono::DateTime<chrono::offset::Utc>,
-        pub content: ::std::string::String,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub discussion: ::std::option::Option<::std::string::String>,
-        pub format: ContentFormat,
-        pub id: TypedUuidForRfdId,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub labels: ::std::option::Option<::std::string::String>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub link: ::std::option::Option<::std::string::String>,
-        pub pdfs: ::std::vec::Vec<FullRfdPdfEntry>,
-        pub rfd_number: i32,
-        pub sha: FileSha,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub state: ::std::option::Option<::std::string::String>,
-        pub title: ::std::string::String,
-        pub visibility: Visibility,
-    }
-
-    impl From<&FullRfd> for FullRfd {
-        fn from(value: &FullRfd) -> Self {
-            value.clone()
-        }
-    }
-
-    impl FullRfd {
-        pub fn builder() -> builder::FullRfd {
-            Default::default()
-        }
-    }
-
-    /// FullRfdPdfEntry
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "link",
-    ///    "source"
-    ///  ],
-    ///  "properties": {
-    ///    "link": {
-    ///      "type": "string"
-    ///    },
-    ///    "source": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(
-        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
-    )]
-    pub struct FullRfdPdfEntry {
-        pub link: ::std::string::String,
-        pub source: ::std::string::String,
-    }
-
-    impl From<&FullRfdPdfEntry> for FullRfdPdfEntry {
-        fn from(value: &FullRfdPdfEntry) -> Self {
-            value.clone()
-        }
-    }
-
-    impl FullRfdPdfEntry {
-        pub fn builder() -> builder::FullRfdPdfEntry {
-            Default::default()
-        }
-    }
-
     /// GetUserResponseForRfdPermission
     ///
     /// <details><summary>JSON schema</summary>
@@ -3287,6 +3111,92 @@ pub mod types {
         }
     }
 
+    /// PdfSource
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "enum": [
+    ///    "github",
+    ///    "google"
+    ///  ]
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    pub enum PdfSource {
+        #[serde(rename = "github")]
+        Github,
+        #[serde(rename = "google")]
+        Google,
+    }
+
+    impl From<&PdfSource> for PdfSource {
+        fn from(value: &PdfSource) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ::std::fmt::Display for PdfSource {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Github => write!(f, "github"),
+                Self::Google => write!(f, "google"),
+            }
+        }
+    }
+
+    impl std::str::FromStr for PdfSource {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "github" => Ok(Self::Github),
+                "google" => Ok(Self::Google),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for PdfSource {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&::std::string::String> for PdfSource {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<::std::string::String> for PdfSource {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
     /// PermissionsForRfdPermission
     ///
     /// <details><summary>JSON schema</summary>
@@ -3439,6 +3349,22 @@ pub mod types {
     ///    "visibility"
     ///  ],
     ///  "properties": {
+    ///    "content": {
+    ///      "oneOf": [
+    ///        {
+    ///          "type": "null"
+    ///        },
+    ///        {
+    ///          "allOf": [
+    ///            {
+    ///              "$ref": "#/components/schemas/RfdRevision"
+    ///            }
+
+    ///          ]
+    ///        }
+
+    ///      ]
+    ///    },
     ///    "created_at": {
     ///      "type": "string",
     ///      "format": "date-time"
@@ -3481,6 +3407,8 @@ pub mod types {
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct Rfd {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub content: ::std::option::Option<RfdRevision>,
         pub created_at: chrono::DateTime<chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub deleted_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
@@ -3725,7 +3653,7 @@ pub mod types {
         }
     }
 
-    /// RfdMeta
+    /// RfdPdf
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -3733,71 +3661,48 @@ pub mod types {
     /// {
     ///  "type": "object",
     ///  "required": [
-    ///    "commit",
-    ///    "committed_at",
-    ///    "format",
+    ///    "created_at",
+    ///    "external_id",
     ///    "id",
-    ///    "rfd_number",
-    ///    "sha",
-    ///    "title",
-    ///    "visibility"
+    ///    "link",
+    ///    "rfd_id",
+    ///    "rfd_revision_id",
+    ///    "source",
+    ///    "updated_at"
     ///  ],
     ///  "properties": {
-    ///    "authors": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "commit": {
-    ///      "$ref": "#/components/schemas/CommitSha"
-    ///    },
-    ///    "committed_at": {
+    ///    "created_at": {
     ///      "type": "string",
     ///      "format": "date-time"
     ///    },
-    ///    "discussion": {
+    ///    "deleted_at": {
     ///      "type": [
     ///        "string",
     ///        "null"
-    ///      ]
+    ///      ],
+    ///      "format": "date-time"
     ///    },
-    ///    "format": {
-    ///      "$ref": "#/components/schemas/ContentFormat"
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForRfdId"
-    ///    },
-    ///    "labels": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "link": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "rfd_number": {
-    ///      "type": "integer",
-    ///      "format": "int32"
-    ///    },
-    ///    "sha": {
-    ///      "$ref": "#/components/schemas/FileSha"
-    ///    },
-    ///    "state": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "title": {
+    ///    "external_id": {
     ///      "type": "string"
     ///    },
-    ///    "visibility": {
-    ///      "$ref": "#/components/schemas/Visibility"
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForRfdPdfId"
+    ///    },
+    ///    "link": {
+    ///      "type": "string"
+    ///    },
+    ///    "rfd_id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForRfdId"
+    ///    },
+    ///    "rfd_revision_id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForRfdRevisionId"
+    ///    },
+    ///    "source": {
+    ///      "$ref": "#/components/schemas/PdfSource"
+    ///    },
+    ///    "updated_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
     ///    }
 
     ///  }
@@ -3809,35 +3714,27 @@ pub mod types {
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
-    pub struct RfdMeta {
+    pub struct RfdPdf {
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub authors: ::std::option::Option<::std::string::String>,
-        pub commit: CommitSha,
-        pub committed_at: chrono::DateTime<chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub discussion: ::std::option::Option<::std::string::String>,
-        pub format: ContentFormat,
-        pub id: TypedUuidForRfdId,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub labels: ::std::option::Option<::std::string::String>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub link: ::std::option::Option<::std::string::String>,
-        pub rfd_number: i32,
-        pub sha: FileSha,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub state: ::std::option::Option<::std::string::String>,
-        pub title: ::std::string::String,
-        pub visibility: Visibility,
+        pub deleted_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub external_id: ::std::string::String,
+        pub id: TypedUuidForRfdPdfId,
+        pub link: ::std::string::String,
+        pub rfd_id: TypedUuidForRfdId,
+        pub rfd_revision_id: TypedUuidForRfdRevisionId,
+        pub source: PdfSource,
+        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
     }
 
-    impl From<&RfdMeta> for RfdMeta {
-        fn from(value: &RfdMeta) -> Self {
+    impl From<&RfdPdf> for RfdPdf {
+        fn from(value: &RfdPdf) -> Self {
             value.clone()
         }
     }
 
-    impl RfdMeta {
-        pub fn builder() -> builder::RfdMeta {
+    impl RfdPdf {
+        pub fn builder() -> builder::RfdPdf {
             Default::default()
         }
     }
@@ -4510,6 +4407,135 @@ pub mod types {
         }
     }
 
+    /// RfdRevision
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "commit",
+    ///    "committed_at",
+    ///    "content",
+    ///    "content_format",
+    ///    "created_at",
+    ///    "id",
+    ///    "rfd_id",
+    ///    "sha",
+    ///    "title",
+    ///    "updated_at"
+    ///  ],
+    ///  "properties": {
+    ///    "authors": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "commit": {
+    ///      "$ref": "#/components/schemas/CommitSha"
+    ///    },
+    ///    "committed_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "content": {
+    ///      "type": "string"
+    ///    },
+    ///    "content_format": {
+    ///      "$ref": "#/components/schemas/ContentFormat"
+    ///    },
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "deleted_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "discussion": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForRfdRevisionId"
+    ///    },
+    ///    "labels": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "rfd_id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForRfdId"
+    ///    },
+    ///    "sha": {
+    ///      "$ref": "#/components/schemas/FileSha"
+    ///    },
+    ///    "state": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "title": {
+    ///      "type": "string"
+    ///    },
+    ///    "updated_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct RfdRevision {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub authors: ::std::option::Option<::std::string::String>,
+        pub commit: CommitSha,
+        pub committed_at: chrono::DateTime<chrono::offset::Utc>,
+        pub content: ::std::string::String,
+        pub content_format: ContentFormat,
+        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub deleted_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub discussion: ::std::option::Option<::std::string::String>,
+        pub id: TypedUuidForRfdRevisionId,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub labels: ::std::option::Option<::std::string::String>,
+        pub rfd_id: TypedUuidForRfdId,
+        pub sha: FileSha,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub state: ::std::option::Option<::std::string::String>,
+        pub title: ::std::string::String,
+        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
+    }
+
+    impl From<&RfdRevision> for RfdRevision {
+        fn from(value: &RfdRevision) -> Self {
+            value.clone()
+        }
+    }
+
+    impl RfdRevision {
+        pub fn builder() -> builder::RfdRevision {
+            Default::default()
+        }
+    }
+
     /// RfdState
     ///
     /// <details><summary>JSON schema</summary>
@@ -4758,6 +4784,509 @@ pub mod types {
 
     impl RfdVisibility {
         pub fn builder() -> builder::RfdVisibility {
+            Default::default()
+        }
+    }
+
+    /// RfdWithPdf
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "content",
+    ///    "id",
+    ///    "rfd_number",
+    ///    "visibility"
+    ///  ],
+    ///  "properties": {
+    ///    "authors": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "commit": {
+    ///      "oneOf": [
+    ///        {
+    ///          "type": "null"
+    ///        },
+    ///        {
+    ///          "allOf": [
+    ///            {
+    ///              "$ref": "#/components/schemas/CommitSha"
+    ///            }
+
+    ///          ]
+    ///        }
+
+    ///      ]
+    ///    },
+    ///    "committed_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "content": {
+    ///      "type": "array",
+    ///      "items": {
+    ///        "$ref": "#/components/schemas/RfdPdf"
+    ///      }
+
+    ///    },
+    ///    "discussion": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "format": {
+    ///      "oneOf": [
+    ///        {
+    ///          "type": "null"
+    ///        },
+    ///        {
+    ///          "allOf": [
+    ///            {
+    ///              "$ref": "#/components/schemas/ContentFormat"
+    ///            }
+
+    ///          ]
+    ///        }
+
+    ///      ]
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForRfdId"
+    ///    },
+    ///    "labels": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "link": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "rfd_number": {
+    ///      "type": "integer",
+    ///      "format": "int32"
+    ///    },
+    ///    "sha": {
+    ///      "oneOf": [
+    ///        {
+    ///          "type": "null"
+    ///        },
+    ///        {
+    ///          "allOf": [
+    ///            {
+    ///              "$ref": "#/components/schemas/FileSha"
+    ///            }
+
+    ///          ]
+    ///        }
+
+    ///      ]
+    ///    },
+    ///    "state": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "title": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "visibility": {
+    ///      "$ref": "#/components/schemas/Visibility"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct RfdWithPdf {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub authors: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub commit: ::std::option::Option<CommitSha>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub committed_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub content: ::std::vec::Vec<RfdPdf>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub discussion: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub format: ::std::option::Option<ContentFormat>,
+        pub id: TypedUuidForRfdId,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub labels: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub link: ::std::option::Option<::std::string::String>,
+        pub rfd_number: i32,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub sha: ::std::option::Option<FileSha>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub state: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub title: ::std::option::Option<::std::string::String>,
+        pub visibility: Visibility,
+    }
+
+    impl From<&RfdWithPdf> for RfdWithPdf {
+        fn from(value: &RfdWithPdf) -> Self {
+            value.clone()
+        }
+    }
+
+    impl RfdWithPdf {
+        pub fn builder() -> builder::RfdWithPdf {
+            Default::default()
+        }
+    }
+
+    /// RfdWithRaw
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "id",
+    ///    "rfd_number",
+    ///    "visibility"
+    ///  ],
+    ///  "properties": {
+    ///    "authors": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "commit": {
+    ///      "oneOf": [
+    ///        {
+    ///          "type": "null"
+    ///        },
+    ///        {
+    ///          "allOf": [
+    ///            {
+    ///              "$ref": "#/components/schemas/CommitSha"
+    ///            }
+
+    ///          ]
+    ///        }
+
+    ///      ]
+    ///    },
+    ///    "committed_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "content": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "discussion": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "format": {
+    ///      "oneOf": [
+    ///        {
+    ///          "type": "null"
+    ///        },
+    ///        {
+    ///          "allOf": [
+    ///            {
+    ///              "$ref": "#/components/schemas/ContentFormat"
+    ///            }
+
+    ///          ]
+    ///        }
+
+    ///      ]
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForRfdId"
+    ///    },
+    ///    "labels": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "link": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "rfd_number": {
+    ///      "type": "integer",
+    ///      "format": "int32"
+    ///    },
+    ///    "sha": {
+    ///      "oneOf": [
+    ///        {
+    ///          "type": "null"
+    ///        },
+    ///        {
+    ///          "allOf": [
+    ///            {
+    ///              "$ref": "#/components/schemas/FileSha"
+    ///            }
+
+    ///          ]
+    ///        }
+
+    ///      ]
+    ///    },
+    ///    "state": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "title": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "visibility": {
+    ///      "$ref": "#/components/schemas/Visibility"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct RfdWithRaw {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub authors: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub commit: ::std::option::Option<CommitSha>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub committed_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub content: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub discussion: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub format: ::std::option::Option<ContentFormat>,
+        pub id: TypedUuidForRfdId,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub labels: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub link: ::std::option::Option<::std::string::String>,
+        pub rfd_number: i32,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub sha: ::std::option::Option<FileSha>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub state: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub title: ::std::option::Option<::std::string::String>,
+        pub visibility: Visibility,
+    }
+
+    impl From<&RfdWithRaw> for RfdWithRaw {
+        fn from(value: &RfdWithRaw) -> Self {
+            value.clone()
+        }
+    }
+
+    impl RfdWithRaw {
+        pub fn builder() -> builder::RfdWithRaw {
+            Default::default()
+        }
+    }
+
+    /// RfdWithoutContent
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "id",
+    ///    "rfd_number",
+    ///    "visibility"
+    ///  ],
+    ///  "properties": {
+    ///    "authors": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "commit": {
+    ///      "oneOf": [
+    ///        {
+    ///          "type": "null"
+    ///        },
+    ///        {
+    ///          "allOf": [
+    ///            {
+    ///              "$ref": "#/components/schemas/CommitSha"
+    ///            }
+
+    ///          ]
+    ///        }
+
+    ///      ]
+    ///    },
+    ///    "committed_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "discussion": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "format": {
+    ///      "oneOf": [
+    ///        {
+    ///          "type": "null"
+    ///        },
+    ///        {
+    ///          "allOf": [
+    ///            {
+    ///              "$ref": "#/components/schemas/ContentFormat"
+    ///            }
+
+    ///          ]
+    ///        }
+
+    ///      ]
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForRfdId"
+    ///    },
+    ///    "labels": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "link": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "rfd_number": {
+    ///      "type": "integer",
+    ///      "format": "int32"
+    ///    },
+    ///    "sha": {
+    ///      "oneOf": [
+    ///        {
+    ///          "type": "null"
+    ///        },
+    ///        {
+    ///          "allOf": [
+    ///            {
+    ///              "$ref": "#/components/schemas/FileSha"
+    ///            }
+
+    ///          ]
+    ///        }
+
+    ///      ]
+    ///    },
+    ///    "state": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "title": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "visibility": {
+    ///      "$ref": "#/components/schemas/Visibility"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct RfdWithoutContent {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub authors: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub commit: ::std::option::Option<CommitSha>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub committed_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub discussion: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub format: ::std::option::Option<ContentFormat>,
+        pub id: TypedUuidForRfdId,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub labels: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub link: ::std::option::Option<::std::string::String>,
+        pub rfd_number: i32,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub sha: ::std::option::Option<FileSha>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub state: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub title: ::std::option::Option<::std::string::String>,
+        pub visibility: Visibility,
+    }
+
+    impl From<&RfdWithoutContent> for RfdWithoutContent {
+        fn from(value: &RfdWithoutContent) -> Self {
+            value.clone()
+        }
+    }
+
+    impl RfdWithoutContent {
+        pub fn builder() -> builder::RfdWithoutContent {
             Default::default()
         }
     }
@@ -5825,6 +6354,156 @@ pub mod types {
     }
 
     impl ::std::fmt::Display for TypedUuidForRfdId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    /// TypedUuidForRfdPdfId
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "format": "uuid"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct TypedUuidForRfdPdfId(pub uuid::Uuid);
+    impl ::std::ops::Deref for TypedUuidForRfdPdfId {
+        type Target = uuid::Uuid;
+        fn deref(&self) -> &uuid::Uuid {
+            &self.0
+        }
+    }
+
+    impl From<TypedUuidForRfdPdfId> for uuid::Uuid {
+        fn from(value: TypedUuidForRfdPdfId) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&TypedUuidForRfdPdfId> for TypedUuidForRfdPdfId {
+        fn from(value: &TypedUuidForRfdPdfId) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<uuid::Uuid> for TypedUuidForRfdPdfId {
+        fn from(value: uuid::Uuid) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for TypedUuidForRfdPdfId {
+        type Err = <uuid::Uuid as ::std::str::FromStr>::Err;
+        fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
+            Ok(Self(value.parse()?))
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for TypedUuidForRfdPdfId {
+        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+        fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for TypedUuidForRfdPdfId {
+        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+        fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for TypedUuidForRfdPdfId {
+        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+        fn try_from(value: String) -> ::std::result::Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl ::std::fmt::Display for TypedUuidForRfdPdfId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    /// TypedUuidForRfdRevisionId
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "format": "uuid"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct TypedUuidForRfdRevisionId(pub uuid::Uuid);
+    impl ::std::ops::Deref for TypedUuidForRfdRevisionId {
+        type Target = uuid::Uuid;
+        fn deref(&self) -> &uuid::Uuid {
+            &self.0
+        }
+    }
+
+    impl From<TypedUuidForRfdRevisionId> for uuid::Uuid {
+        fn from(value: TypedUuidForRfdRevisionId) -> Self {
+            value.0
+        }
+    }
+
+    impl From<&TypedUuidForRfdRevisionId> for TypedUuidForRfdRevisionId {
+        fn from(value: &TypedUuidForRfdRevisionId) -> Self {
+            value.clone()
+        }
+    }
+
+    impl From<uuid::Uuid> for TypedUuidForRfdRevisionId {
+        fn from(value: uuid::Uuid) -> Self {
+            Self(value)
+        }
+    }
+
+    impl std::str::FromStr for TypedUuidForRfdRevisionId {
+        type Err = <uuid::Uuid as ::std::str::FromStr>::Err;
+        fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
+            Ok(Self(value.parse()?))
+        }
+    }
+
+    impl std::convert::TryFrom<&str> for TypedUuidForRfdRevisionId {
+        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+        fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<&String> for TypedUuidForRfdRevisionId {
+        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+        fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl std::convert::TryFrom<String> for TypedUuidForRfdRevisionId {
+        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+        fn try_from(value: String) -> ::std::result::Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl ::std::fmt::Display for TypedUuidForRfdRevisionId {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             self.0.fmt(f)
         }
@@ -7562,325 +8241,6 @@ pub mod types {
                     object_id: Ok(value.object_id),
                     rfd_number: Ok(value.rfd_number),
                     url: Ok(value.url),
-                }
-            }
-        }
-
-        #[derive(Clone, Debug)]
-        pub struct FullRfd {
-            authors: ::std::result::Result<
-                ::std::option::Option<::std::string::String>,
-                ::std::string::String,
-            >,
-            commit: ::std::result::Result<super::CommitSha, ::std::string::String>,
-            committed_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
-            content: ::std::result::Result<::std::string::String, ::std::string::String>,
-            discussion: ::std::result::Result<
-                ::std::option::Option<::std::string::String>,
-                ::std::string::String,
-            >,
-            format: ::std::result::Result<super::ContentFormat, ::std::string::String>,
-            id: ::std::result::Result<super::TypedUuidForRfdId, ::std::string::String>,
-            labels: ::std::result::Result<
-                ::std::option::Option<::std::string::String>,
-                ::std::string::String,
-            >,
-            link: ::std::result::Result<
-                ::std::option::Option<::std::string::String>,
-                ::std::string::String,
-            >,
-            pdfs: ::std::result::Result<
-                ::std::vec::Vec<super::FullRfdPdfEntry>,
-                ::std::string::String,
-            >,
-            rfd_number: ::std::result::Result<i32, ::std::string::String>,
-            sha: ::std::result::Result<super::FileSha, ::std::string::String>,
-            state: ::std::result::Result<
-                ::std::option::Option<::std::string::String>,
-                ::std::string::String,
-            >,
-            title: ::std::result::Result<::std::string::String, ::std::string::String>,
-            visibility: ::std::result::Result<super::Visibility, ::std::string::String>,
-        }
-
-        impl Default for FullRfd {
-            fn default() -> Self {
-                Self {
-                    authors: Ok(Default::default()),
-                    commit: Err("no value supplied for commit".to_string()),
-                    committed_at: Err("no value supplied for committed_at".to_string()),
-                    content: Err("no value supplied for content".to_string()),
-                    discussion: Ok(Default::default()),
-                    format: Err("no value supplied for format".to_string()),
-                    id: Err("no value supplied for id".to_string()),
-                    labels: Ok(Default::default()),
-                    link: Ok(Default::default()),
-                    pdfs: Err("no value supplied for pdfs".to_string()),
-                    rfd_number: Err("no value supplied for rfd_number".to_string()),
-                    sha: Err("no value supplied for sha".to_string()),
-                    state: Ok(Default::default()),
-                    title: Err("no value supplied for title".to_string()),
-                    visibility: Err("no value supplied for visibility".to_string()),
-                }
-            }
-        }
-
-        impl FullRfd {
-            pub fn authors<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
-            {
-                self.authors = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for authors: {}", e));
-                self
-            }
-            pub fn commit<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<super::CommitSha>,
-                T::Error: std::fmt::Display,
-            {
-                self.commit = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for commit: {}", e));
-                self
-            }
-            pub fn committed_at<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
-            {
-                self.committed_at = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for committed_at: {}", e)
-                });
-                self
-            }
-            pub fn content<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
-            {
-                self.content = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for content: {}", e));
-                self
-            }
-            pub fn discussion<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
-            {
-                self.discussion = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for discussion: {}", e));
-                self
-            }
-            pub fn format<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<super::ContentFormat>,
-                T::Error: std::fmt::Display,
-            {
-                self.format = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for format: {}", e));
-                self
-            }
-            pub fn id<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<super::TypedUuidForRfdId>,
-                T::Error: std::fmt::Display,
-            {
-                self.id = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
-                self
-            }
-            pub fn labels<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
-            {
-                self.labels = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for labels: {}", e));
-                self
-            }
-            pub fn link<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
-            {
-                self.link = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for link: {}", e));
-                self
-            }
-            pub fn pdfs<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<::std::vec::Vec<super::FullRfdPdfEntry>>,
-                T::Error: std::fmt::Display,
-            {
-                self.pdfs = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for pdfs: {}", e));
-                self
-            }
-            pub fn rfd_number<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<i32>,
-                T::Error: std::fmt::Display,
-            {
-                self.rfd_number = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for rfd_number: {}", e));
-                self
-            }
-            pub fn sha<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<super::FileSha>,
-                T::Error: std::fmt::Display,
-            {
-                self.sha = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for sha: {}", e));
-                self
-            }
-            pub fn state<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
-            {
-                self.state = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for state: {}", e));
-                self
-            }
-            pub fn title<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
-            {
-                self.title = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for title: {}", e));
-                self
-            }
-            pub fn visibility<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<super::Visibility>,
-                T::Error: std::fmt::Display,
-            {
-                self.visibility = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for visibility: {}", e));
-                self
-            }
-        }
-
-        impl ::std::convert::TryFrom<FullRfd> for super::FullRfd {
-            type Error = super::error::ConversionError;
-            fn try_from(
-                value: FullRfd,
-            ) -> ::std::result::Result<Self, super::error::ConversionError> {
-                Ok(Self {
-                    authors: value.authors?,
-                    commit: value.commit?,
-                    committed_at: value.committed_at?,
-                    content: value.content?,
-                    discussion: value.discussion?,
-                    format: value.format?,
-                    id: value.id?,
-                    labels: value.labels?,
-                    link: value.link?,
-                    pdfs: value.pdfs?,
-                    rfd_number: value.rfd_number?,
-                    sha: value.sha?,
-                    state: value.state?,
-                    title: value.title?,
-                    visibility: value.visibility?,
-                })
-            }
-        }
-
-        impl From<super::FullRfd> for FullRfd {
-            fn from(value: super::FullRfd) -> Self {
-                Self {
-                    authors: Ok(value.authors),
-                    commit: Ok(value.commit),
-                    committed_at: Ok(value.committed_at),
-                    content: Ok(value.content),
-                    discussion: Ok(value.discussion),
-                    format: Ok(value.format),
-                    id: Ok(value.id),
-                    labels: Ok(value.labels),
-                    link: Ok(value.link),
-                    pdfs: Ok(value.pdfs),
-                    rfd_number: Ok(value.rfd_number),
-                    sha: Ok(value.sha),
-                    state: Ok(value.state),
-                    title: Ok(value.title),
-                    visibility: Ok(value.visibility),
-                }
-            }
-        }
-
-        #[derive(Clone, Debug)]
-        pub struct FullRfdPdfEntry {
-            link: ::std::result::Result<::std::string::String, ::std::string::String>,
-            source: ::std::result::Result<::std::string::String, ::std::string::String>,
-        }
-
-        impl Default for FullRfdPdfEntry {
-            fn default() -> Self {
-                Self {
-                    link: Err("no value supplied for link".to_string()),
-                    source: Err("no value supplied for source".to_string()),
-                }
-            }
-        }
-
-        impl FullRfdPdfEntry {
-            pub fn link<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
-            {
-                self.link = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for link: {}", e));
-                self
-            }
-            pub fn source<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
-            {
-                self.source = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for source: {}", e));
-                self
-            }
-        }
-
-        impl ::std::convert::TryFrom<FullRfdPdfEntry> for super::FullRfdPdfEntry {
-            type Error = super::error::ConversionError;
-            fn try_from(
-                value: FullRfdPdfEntry,
-            ) -> ::std::result::Result<Self, super::error::ConversionError> {
-                Ok(Self {
-                    link: value.link?,
-                    source: value.source?,
-                })
-            }
-        }
-
-        impl From<super::FullRfdPdfEntry> for FullRfdPdfEntry {
-            fn from(value: super::FullRfdPdfEntry) -> Self {
-                Self {
-                    link: Ok(value.link),
-                    source: Ok(value.source),
                 }
             }
         }
@@ -10489,6 +10849,10 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct Rfd {
+            content: ::std::result::Result<
+                ::std::option::Option<super::RfdRevision>,
+                ::std::string::String,
+            >,
             created_at:
                 ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
             deleted_at: ::std::result::Result<
@@ -10509,6 +10873,7 @@ pub mod types {
         impl Default for Rfd {
             fn default() -> Self {
                 Self {
+                    content: Ok(Default::default()),
                     created_at: Err("no value supplied for created_at".to_string()),
                     deleted_at: Ok(Default::default()),
                     id: Err("no value supplied for id".to_string()),
@@ -10521,6 +10886,16 @@ pub mod types {
         }
 
         impl Rfd {
+            pub fn content<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<super::RfdRevision>>,
+                T::Error: std::fmt::Display,
+            {
+                self.content = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for content: {}", e));
+                self
+            }
             pub fn created_at<T>(mut self, value: T) -> Self
             where
                 T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
@@ -10599,6 +10974,7 @@ pub mod types {
             type Error = super::error::ConversionError;
             fn try_from(value: Rfd) -> ::std::result::Result<Self, super::error::ConversionError> {
                 Ok(Self {
+                    content: value.content?,
                     created_at: value.created_at?,
                     deleted_at: value.deleted_at?,
                     id: value.id?,
@@ -10613,6 +10989,7 @@ pub mod types {
         impl From<super::Rfd> for Rfd {
             fn from(value: super::Rfd) -> Self {
                 Self {
+                    content: Ok(value.content),
                     created_at: Ok(value.created_at),
                     deleted_at: Ok(value.deleted_at),
                     id: Ok(value.id),
@@ -10687,7 +11064,172 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
-        pub struct RfdMeta {
+        pub struct RfdPdf {
+            created_at:
+                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            deleted_at: ::std::result::Result<
+                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::string::String,
+            >,
+            external_id: ::std::result::Result<::std::string::String, ::std::string::String>,
+            id: ::std::result::Result<super::TypedUuidForRfdPdfId, ::std::string::String>,
+            link: ::std::result::Result<::std::string::String, ::std::string::String>,
+            rfd_id: ::std::result::Result<super::TypedUuidForRfdId, ::std::string::String>,
+            rfd_revision_id:
+                ::std::result::Result<super::TypedUuidForRfdRevisionId, ::std::string::String>,
+            source: ::std::result::Result<super::PdfSource, ::std::string::String>,
+            updated_at:
+                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+        }
+
+        impl Default for RfdPdf {
+            fn default() -> Self {
+                Self {
+                    created_at: Err("no value supplied for created_at".to_string()),
+                    deleted_at: Ok(Default::default()),
+                    external_id: Err("no value supplied for external_id".to_string()),
+                    id: Err("no value supplied for id".to_string()),
+                    link: Err("no value supplied for link".to_string()),
+                    rfd_id: Err("no value supplied for rfd_id".to_string()),
+                    rfd_revision_id: Err("no value supplied for rfd_revision_id".to_string()),
+                    source: Err("no value supplied for source".to_string()),
+                    updated_at: Err("no value supplied for updated_at".to_string()),
+                }
+            }
+        }
+
+        impl RfdPdf {
+            pub fn created_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.created_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                self
+            }
+            pub fn deleted_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<
+                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                >,
+                T::Error: std::fmt::Display,
+            {
+                self.deleted_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                self
+            }
+            pub fn external_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::string::String>,
+                T::Error: std::fmt::Display,
+            {
+                self.external_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for external_id: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::TypedUuidForRfdPdfId>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn link<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::string::String>,
+                T::Error: std::fmt::Display,
+            {
+                self.link = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for link: {}", e));
+                self
+            }
+            pub fn rfd_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::TypedUuidForRfdId>,
+                T::Error: std::fmt::Display,
+            {
+                self.rfd_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for rfd_id: {}", e));
+                self
+            }
+            pub fn rfd_revision_id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::TypedUuidForRfdRevisionId>,
+                T::Error: std::fmt::Display,
+            {
+                self.rfd_revision_id = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for rfd_revision_id: {}", e)
+                });
+                self
+            }
+            pub fn source<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::PdfSource>,
+                T::Error: std::fmt::Display,
+            {
+                self.source = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for source: {}", e));
+                self
+            }
+            pub fn updated_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.updated_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for updated_at: {}", e));
+                self
+            }
+        }
+
+        impl ::std::convert::TryFrom<RfdPdf> for super::RfdPdf {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: RfdPdf,
+            ) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    created_at: value.created_at?,
+                    deleted_at: value.deleted_at?,
+                    external_id: value.external_id?,
+                    id: value.id?,
+                    link: value.link?,
+                    rfd_id: value.rfd_id?,
+                    rfd_revision_id: value.rfd_revision_id?,
+                    source: value.source?,
+                    updated_at: value.updated_at?,
+                })
+            }
+        }
+
+        impl From<super::RfdPdf> for RfdPdf {
+            fn from(value: super::RfdPdf) -> Self {
+                Self {
+                    created_at: Ok(value.created_at),
+                    deleted_at: Ok(value.deleted_at),
+                    external_id: Ok(value.external_id),
+                    id: Ok(value.id),
+                    link: Ok(value.link),
+                    rfd_id: Ok(value.rfd_id),
+                    rfd_revision_id: Ok(value.rfd_revision_id),
+                    source: Ok(value.source),
+                    updated_at: Ok(value.updated_at),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct RfdRevision {
             authors: ::std::result::Result<
                 ::std::option::Option<::std::string::String>,
                 ::std::string::String,
@@ -10695,51 +11237,57 @@ pub mod types {
             commit: ::std::result::Result<super::CommitSha, ::std::string::String>,
             committed_at:
                 ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            content: ::std::result::Result<::std::string::String, ::std::string::String>,
+            content_format: ::std::result::Result<super::ContentFormat, ::std::string::String>,
+            created_at:
+                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            deleted_at: ::std::result::Result<
+                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::string::String,
+            >,
             discussion: ::std::result::Result<
                 ::std::option::Option<::std::string::String>,
                 ::std::string::String,
             >,
-            format: ::std::result::Result<super::ContentFormat, ::std::string::String>,
-            id: ::std::result::Result<super::TypedUuidForRfdId, ::std::string::String>,
+            id: ::std::result::Result<super::TypedUuidForRfdRevisionId, ::std::string::String>,
             labels: ::std::result::Result<
                 ::std::option::Option<::std::string::String>,
                 ::std::string::String,
             >,
-            link: ::std::result::Result<
-                ::std::option::Option<::std::string::String>,
-                ::std::string::String,
-            >,
-            rfd_number: ::std::result::Result<i32, ::std::string::String>,
+            rfd_id: ::std::result::Result<super::TypedUuidForRfdId, ::std::string::String>,
             sha: ::std::result::Result<super::FileSha, ::std::string::String>,
             state: ::std::result::Result<
                 ::std::option::Option<::std::string::String>,
                 ::std::string::String,
             >,
             title: ::std::result::Result<::std::string::String, ::std::string::String>,
-            visibility: ::std::result::Result<super::Visibility, ::std::string::String>,
+            updated_at:
+                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
         }
 
-        impl Default for RfdMeta {
+        impl Default for RfdRevision {
             fn default() -> Self {
                 Self {
                     authors: Ok(Default::default()),
                     commit: Err("no value supplied for commit".to_string()),
                     committed_at: Err("no value supplied for committed_at".to_string()),
+                    content: Err("no value supplied for content".to_string()),
+                    content_format: Err("no value supplied for content_format".to_string()),
+                    created_at: Err("no value supplied for created_at".to_string()),
+                    deleted_at: Ok(Default::default()),
                     discussion: Ok(Default::default()),
-                    format: Err("no value supplied for format".to_string()),
                     id: Err("no value supplied for id".to_string()),
                     labels: Ok(Default::default()),
-                    link: Ok(Default::default()),
-                    rfd_number: Err("no value supplied for rfd_number".to_string()),
+                    rfd_id: Err("no value supplied for rfd_id".to_string()),
                     sha: Err("no value supplied for sha".to_string()),
                     state: Ok(Default::default()),
                     title: Err("no value supplied for title".to_string()),
-                    visibility: Err("no value supplied for visibility".to_string()),
+                    updated_at: Err("no value supplied for updated_at".to_string()),
                 }
             }
         }
 
-        impl RfdMeta {
+        impl RfdRevision {
             pub fn authors<T>(mut self, value: T) -> Self
             where
                 T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
@@ -10770,6 +11318,48 @@ pub mod types {
                 });
                 self
             }
+            pub fn content<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::string::String>,
+                T::Error: std::fmt::Display,
+            {
+                self.content = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for content: {}", e));
+                self
+            }
+            pub fn content_format<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::ContentFormat>,
+                T::Error: std::fmt::Display,
+            {
+                self.content_format = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for content_format: {}", e)
+                });
+                self
+            }
+            pub fn created_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
+                T::Error: std::fmt::Display,
+            {
+                self.created_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                self
+            }
+            pub fn deleted_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<
+                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                >,
+                T::Error: std::fmt::Display,
+            {
+                self.deleted_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                self
+            }
             pub fn discussion<T>(mut self, value: T) -> Self
             where
                 T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
@@ -10780,19 +11370,9 @@ pub mod types {
                     .map_err(|e| format!("error converting supplied value for discussion: {}", e));
                 self
             }
-            pub fn format<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<super::ContentFormat>,
-                T::Error: std::fmt::Display,
-            {
-                self.format = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for format: {}", e));
-                self
-            }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForRfdId>,
+                T: std::convert::TryInto<super::TypedUuidForRfdRevisionId>,
                 T::Error: std::fmt::Display,
             {
                 self.id = value
@@ -10810,24 +11390,14 @@ pub mod types {
                     .map_err(|e| format!("error converting supplied value for labels: {}", e));
                 self
             }
-            pub fn link<T>(mut self, value: T) -> Self
+            pub fn rfd_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T: std::convert::TryInto<super::TypedUuidForRfdId>,
                 T::Error: std::fmt::Display,
             {
-                self.link = value
+                self.rfd_id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for link: {}", e));
-                self
-            }
-            pub fn rfd_number<T>(mut self, value: T) -> Self
-            where
-                T: std::convert::TryInto<i32>,
-                T::Error: std::fmt::Display,
-            {
-                self.rfd_number = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for rfd_number: {}", e));
+                    .map_err(|e| format!("error converting supplied value for rfd_id: {}", e));
                 self
             }
             pub fn sha<T>(mut self, value: T) -> Self
@@ -10860,57 +11430,61 @@ pub mod types {
                     .map_err(|e| format!("error converting supplied value for title: {}", e));
                 self
             }
-            pub fn visibility<T>(mut self, value: T) -> Self
+            pub fn updated_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::Visibility>,
+                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
                 T::Error: std::fmt::Display,
             {
-                self.visibility = value
+                self.updated_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for visibility: {}", e));
+                    .map_err(|e| format!("error converting supplied value for updated_at: {}", e));
                 self
             }
         }
 
-        impl ::std::convert::TryFrom<RfdMeta> for super::RfdMeta {
+        impl ::std::convert::TryFrom<RfdRevision> for super::RfdRevision {
             type Error = super::error::ConversionError;
             fn try_from(
-                value: RfdMeta,
+                value: RfdRevision,
             ) -> ::std::result::Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     authors: value.authors?,
                     commit: value.commit?,
                     committed_at: value.committed_at?,
+                    content: value.content?,
+                    content_format: value.content_format?,
+                    created_at: value.created_at?,
+                    deleted_at: value.deleted_at?,
                     discussion: value.discussion?,
-                    format: value.format?,
                     id: value.id?,
                     labels: value.labels?,
-                    link: value.link?,
-                    rfd_number: value.rfd_number?,
+                    rfd_id: value.rfd_id?,
                     sha: value.sha?,
                     state: value.state?,
                     title: value.title?,
-                    visibility: value.visibility?,
+                    updated_at: value.updated_at?,
                 })
             }
         }
 
-        impl From<super::RfdMeta> for RfdMeta {
-            fn from(value: super::RfdMeta) -> Self {
+        impl From<super::RfdRevision> for RfdRevision {
+            fn from(value: super::RfdRevision) -> Self {
                 Self {
                     authors: Ok(value.authors),
                     commit: Ok(value.commit),
                     committed_at: Ok(value.committed_at),
+                    content: Ok(value.content),
+                    content_format: Ok(value.content_format),
+                    created_at: Ok(value.created_at),
+                    deleted_at: Ok(value.deleted_at),
                     discussion: Ok(value.discussion),
-                    format: Ok(value.format),
                     id: Ok(value.id),
                     labels: Ok(value.labels),
-                    link: Ok(value.link),
-                    rfd_number: Ok(value.rfd_number),
+                    rfd_id: Ok(value.rfd_id),
                     sha: Ok(value.sha),
                     state: Ok(value.state),
                     title: Ok(value.title),
-                    visibility: Ok(value.visibility),
+                    updated_at: Ok(value.updated_at),
                 }
             }
         }
@@ -11079,6 +11653,766 @@ pub mod types {
         impl From<super::RfdVisibility> for RfdVisibility {
             fn from(value: super::RfdVisibility) -> Self {
                 Self {
+                    visibility: Ok(value.visibility),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct RfdWithPdf {
+            authors: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            commit: ::std::result::Result<
+                ::std::option::Option<super::CommitSha>,
+                ::std::string::String,
+            >,
+            committed_at: ::std::result::Result<
+                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::string::String,
+            >,
+            content: ::std::result::Result<::std::vec::Vec<super::RfdPdf>, ::std::string::String>,
+            discussion: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            format: ::std::result::Result<
+                ::std::option::Option<super::ContentFormat>,
+                ::std::string::String,
+            >,
+            id: ::std::result::Result<super::TypedUuidForRfdId, ::std::string::String>,
+            labels: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            link: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            rfd_number: ::std::result::Result<i32, ::std::string::String>,
+            sha:
+                ::std::result::Result<::std::option::Option<super::FileSha>, ::std::string::String>,
+            state: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            title: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            visibility: ::std::result::Result<super::Visibility, ::std::string::String>,
+        }
+
+        impl Default for RfdWithPdf {
+            fn default() -> Self {
+                Self {
+                    authors: Ok(Default::default()),
+                    commit: Ok(Default::default()),
+                    committed_at: Ok(Default::default()),
+                    content: Err("no value supplied for content".to_string()),
+                    discussion: Ok(Default::default()),
+                    format: Ok(Default::default()),
+                    id: Err("no value supplied for id".to_string()),
+                    labels: Ok(Default::default()),
+                    link: Ok(Default::default()),
+                    rfd_number: Err("no value supplied for rfd_number".to_string()),
+                    sha: Ok(Default::default()),
+                    state: Ok(Default::default()),
+                    title: Ok(Default::default()),
+                    visibility: Err("no value supplied for visibility".to_string()),
+                }
+            }
+        }
+
+        impl RfdWithPdf {
+            pub fn authors<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.authors = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for authors: {}", e));
+                self
+            }
+            pub fn commit<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<super::CommitSha>>,
+                T::Error: std::fmt::Display,
+            {
+                self.commit = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for commit: {}", e));
+                self
+            }
+            pub fn committed_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<
+                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                >,
+                T::Error: std::fmt::Display,
+            {
+                self.committed_at = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for committed_at: {}", e)
+                });
+                self
+            }
+            pub fn content<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::vec::Vec<super::RfdPdf>>,
+                T::Error: std::fmt::Display,
+            {
+                self.content = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for content: {}", e));
+                self
+            }
+            pub fn discussion<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.discussion = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for discussion: {}", e));
+                self
+            }
+            pub fn format<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<super::ContentFormat>>,
+                T::Error: std::fmt::Display,
+            {
+                self.format = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for format: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::TypedUuidForRfdId>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn labels<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.labels = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for labels: {}", e));
+                self
+            }
+            pub fn link<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.link = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for link: {}", e));
+                self
+            }
+            pub fn rfd_number<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<i32>,
+                T::Error: std::fmt::Display,
+            {
+                self.rfd_number = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for rfd_number: {}", e));
+                self
+            }
+            pub fn sha<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<super::FileSha>>,
+                T::Error: std::fmt::Display,
+            {
+                self.sha = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for sha: {}", e));
+                self
+            }
+            pub fn state<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.state = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for state: {}", e));
+                self
+            }
+            pub fn title<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.title = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for title: {}", e));
+                self
+            }
+            pub fn visibility<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::Visibility>,
+                T::Error: std::fmt::Display,
+            {
+                self.visibility = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for visibility: {}", e));
+                self
+            }
+        }
+
+        impl ::std::convert::TryFrom<RfdWithPdf> for super::RfdWithPdf {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: RfdWithPdf,
+            ) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    authors: value.authors?,
+                    commit: value.commit?,
+                    committed_at: value.committed_at?,
+                    content: value.content?,
+                    discussion: value.discussion?,
+                    format: value.format?,
+                    id: value.id?,
+                    labels: value.labels?,
+                    link: value.link?,
+                    rfd_number: value.rfd_number?,
+                    sha: value.sha?,
+                    state: value.state?,
+                    title: value.title?,
+                    visibility: value.visibility?,
+                })
+            }
+        }
+
+        impl From<super::RfdWithPdf> for RfdWithPdf {
+            fn from(value: super::RfdWithPdf) -> Self {
+                Self {
+                    authors: Ok(value.authors),
+                    commit: Ok(value.commit),
+                    committed_at: Ok(value.committed_at),
+                    content: Ok(value.content),
+                    discussion: Ok(value.discussion),
+                    format: Ok(value.format),
+                    id: Ok(value.id),
+                    labels: Ok(value.labels),
+                    link: Ok(value.link),
+                    rfd_number: Ok(value.rfd_number),
+                    sha: Ok(value.sha),
+                    state: Ok(value.state),
+                    title: Ok(value.title),
+                    visibility: Ok(value.visibility),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct RfdWithRaw {
+            authors: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            commit: ::std::result::Result<
+                ::std::option::Option<super::CommitSha>,
+                ::std::string::String,
+            >,
+            committed_at: ::std::result::Result<
+                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::string::String,
+            >,
+            content: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            discussion: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            format: ::std::result::Result<
+                ::std::option::Option<super::ContentFormat>,
+                ::std::string::String,
+            >,
+            id: ::std::result::Result<super::TypedUuidForRfdId, ::std::string::String>,
+            labels: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            link: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            rfd_number: ::std::result::Result<i32, ::std::string::String>,
+            sha:
+                ::std::result::Result<::std::option::Option<super::FileSha>, ::std::string::String>,
+            state: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            title: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            visibility: ::std::result::Result<super::Visibility, ::std::string::String>,
+        }
+
+        impl Default for RfdWithRaw {
+            fn default() -> Self {
+                Self {
+                    authors: Ok(Default::default()),
+                    commit: Ok(Default::default()),
+                    committed_at: Ok(Default::default()),
+                    content: Ok(Default::default()),
+                    discussion: Ok(Default::default()),
+                    format: Ok(Default::default()),
+                    id: Err("no value supplied for id".to_string()),
+                    labels: Ok(Default::default()),
+                    link: Ok(Default::default()),
+                    rfd_number: Err("no value supplied for rfd_number".to_string()),
+                    sha: Ok(Default::default()),
+                    state: Ok(Default::default()),
+                    title: Ok(Default::default()),
+                    visibility: Err("no value supplied for visibility".to_string()),
+                }
+            }
+        }
+
+        impl RfdWithRaw {
+            pub fn authors<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.authors = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for authors: {}", e));
+                self
+            }
+            pub fn commit<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<super::CommitSha>>,
+                T::Error: std::fmt::Display,
+            {
+                self.commit = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for commit: {}", e));
+                self
+            }
+            pub fn committed_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<
+                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                >,
+                T::Error: std::fmt::Display,
+            {
+                self.committed_at = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for committed_at: {}", e)
+                });
+                self
+            }
+            pub fn content<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.content = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for content: {}", e));
+                self
+            }
+            pub fn discussion<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.discussion = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for discussion: {}", e));
+                self
+            }
+            pub fn format<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<super::ContentFormat>>,
+                T::Error: std::fmt::Display,
+            {
+                self.format = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for format: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::TypedUuidForRfdId>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn labels<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.labels = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for labels: {}", e));
+                self
+            }
+            pub fn link<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.link = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for link: {}", e));
+                self
+            }
+            pub fn rfd_number<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<i32>,
+                T::Error: std::fmt::Display,
+            {
+                self.rfd_number = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for rfd_number: {}", e));
+                self
+            }
+            pub fn sha<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<super::FileSha>>,
+                T::Error: std::fmt::Display,
+            {
+                self.sha = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for sha: {}", e));
+                self
+            }
+            pub fn state<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.state = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for state: {}", e));
+                self
+            }
+            pub fn title<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.title = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for title: {}", e));
+                self
+            }
+            pub fn visibility<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::Visibility>,
+                T::Error: std::fmt::Display,
+            {
+                self.visibility = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for visibility: {}", e));
+                self
+            }
+        }
+
+        impl ::std::convert::TryFrom<RfdWithRaw> for super::RfdWithRaw {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: RfdWithRaw,
+            ) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    authors: value.authors?,
+                    commit: value.commit?,
+                    committed_at: value.committed_at?,
+                    content: value.content?,
+                    discussion: value.discussion?,
+                    format: value.format?,
+                    id: value.id?,
+                    labels: value.labels?,
+                    link: value.link?,
+                    rfd_number: value.rfd_number?,
+                    sha: value.sha?,
+                    state: value.state?,
+                    title: value.title?,
+                    visibility: value.visibility?,
+                })
+            }
+        }
+
+        impl From<super::RfdWithRaw> for RfdWithRaw {
+            fn from(value: super::RfdWithRaw) -> Self {
+                Self {
+                    authors: Ok(value.authors),
+                    commit: Ok(value.commit),
+                    committed_at: Ok(value.committed_at),
+                    content: Ok(value.content),
+                    discussion: Ok(value.discussion),
+                    format: Ok(value.format),
+                    id: Ok(value.id),
+                    labels: Ok(value.labels),
+                    link: Ok(value.link),
+                    rfd_number: Ok(value.rfd_number),
+                    sha: Ok(value.sha),
+                    state: Ok(value.state),
+                    title: Ok(value.title),
+                    visibility: Ok(value.visibility),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct RfdWithoutContent {
+            authors: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            commit: ::std::result::Result<
+                ::std::option::Option<super::CommitSha>,
+                ::std::string::String,
+            >,
+            committed_at: ::std::result::Result<
+                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::string::String,
+            >,
+            discussion: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            format: ::std::result::Result<
+                ::std::option::Option<super::ContentFormat>,
+                ::std::string::String,
+            >,
+            id: ::std::result::Result<super::TypedUuidForRfdId, ::std::string::String>,
+            labels: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            link: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            rfd_number: ::std::result::Result<i32, ::std::string::String>,
+            sha:
+                ::std::result::Result<::std::option::Option<super::FileSha>, ::std::string::String>,
+            state: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            title: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            visibility: ::std::result::Result<super::Visibility, ::std::string::String>,
+        }
+
+        impl Default for RfdWithoutContent {
+            fn default() -> Self {
+                Self {
+                    authors: Ok(Default::default()),
+                    commit: Ok(Default::default()),
+                    committed_at: Ok(Default::default()),
+                    discussion: Ok(Default::default()),
+                    format: Ok(Default::default()),
+                    id: Err("no value supplied for id".to_string()),
+                    labels: Ok(Default::default()),
+                    link: Ok(Default::default()),
+                    rfd_number: Err("no value supplied for rfd_number".to_string()),
+                    sha: Ok(Default::default()),
+                    state: Ok(Default::default()),
+                    title: Ok(Default::default()),
+                    visibility: Err("no value supplied for visibility".to_string()),
+                }
+            }
+        }
+
+        impl RfdWithoutContent {
+            pub fn authors<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.authors = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for authors: {}", e));
+                self
+            }
+            pub fn commit<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<super::CommitSha>>,
+                T::Error: std::fmt::Display,
+            {
+                self.commit = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for commit: {}", e));
+                self
+            }
+            pub fn committed_at<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<
+                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                >,
+                T::Error: std::fmt::Display,
+            {
+                self.committed_at = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for committed_at: {}", e)
+                });
+                self
+            }
+            pub fn discussion<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.discussion = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for discussion: {}", e));
+                self
+            }
+            pub fn format<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<super::ContentFormat>>,
+                T::Error: std::fmt::Display,
+            {
+                self.format = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for format: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::TypedUuidForRfdId>,
+                T::Error: std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn labels<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.labels = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for labels: {}", e));
+                self
+            }
+            pub fn link<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.link = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for link: {}", e));
+                self
+            }
+            pub fn rfd_number<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<i32>,
+                T::Error: std::fmt::Display,
+            {
+                self.rfd_number = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for rfd_number: {}", e));
+                self
+            }
+            pub fn sha<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<super::FileSha>>,
+                T::Error: std::fmt::Display,
+            {
+                self.sha = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for sha: {}", e));
+                self
+            }
+            pub fn state<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.state = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for state: {}", e));
+                self
+            }
+            pub fn title<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: std::fmt::Display,
+            {
+                self.title = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for title: {}", e));
+                self
+            }
+            pub fn visibility<T>(mut self, value: T) -> Self
+            where
+                T: std::convert::TryInto<super::Visibility>,
+                T::Error: std::fmt::Display,
+            {
+                self.visibility = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for visibility: {}", e));
+                self
+            }
+        }
+
+        impl ::std::convert::TryFrom<RfdWithoutContent> for super::RfdWithoutContent {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: RfdWithoutContent,
+            ) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    authors: value.authors?,
+                    commit: value.commit?,
+                    committed_at: value.committed_at?,
+                    discussion: value.discussion?,
+                    format: value.format?,
+                    id: value.id?,
+                    labels: value.labels?,
+                    link: value.link?,
+                    rfd_number: value.rfd_number?,
+                    sha: value.sha?,
+                    state: value.state?,
+                    title: value.title?,
+                    visibility: value.visibility?,
+                })
+            }
+        }
+
+        impl From<super::RfdWithoutContent> for RfdWithoutContent {
+            fn from(value: super::RfdWithoutContent) -> Self {
+                Self {
+                    authors: Ok(value.authors),
+                    commit: Ok(value.commit),
+                    committed_at: Ok(value.committed_at),
+                    discussion: Ok(value.discussion),
+                    format: Ok(value.format),
+                    id: Ok(value.id),
+                    labels: Ok(value.labels),
+                    link: Ok(value.link),
+                    rfd_number: Ok(value.rfd_number),
+                    sha: Ok(value.sha),
+                    state: Ok(value.state),
+                    title: Ok(value.title),
                     visibility: Ok(value.visibility),
                 }
             }
@@ -11908,22 +13242,6 @@ impl Client {
         builder::DeleteMapper::new(self)
     }
 
-    /// Get the latest representation of a RFD
-    ///
-    /// Sends a `GET` request to `/meta/rfd/{number}`
-    ///
-    /// Arguments:
-    /// - `number`: The RFD number (examples: 1 or 123)
-    /// ```ignore
-    /// let response = client.get_rfd_meta()
-    ///    .number(number)
-    ///    .send()
-    ///    .await;
-    /// ```
-    pub fn get_rfd_meta(&self) -> builder::GetRfdMeta {
-        builder::GetRfdMeta::new(self)
-    }
-
     /// List OAuth clients
     ///
     /// Sends a `GET` request to `/oauth/client`
@@ -12030,12 +13348,12 @@ impl Client {
     /// Sends a `GET` request to `/rfd`
     ///
     /// ```ignore
-    /// let response = client.get_rfds()
+    /// let response = client.list_rfds()
     ///    .send()
     ///    .await;
     /// ```
-    pub fn get_rfds(&self) -> builder::GetRfds {
-        builder::GetRfds::new(self)
+    pub fn list_rfds(&self) -> builder::ListRfds {
+        builder::ListRfds::new(self)
     }
 
     /// Create a new RFD
@@ -12052,59 +13370,48 @@ impl Client {
         builder::ReserveRfd::new(self)
     }
 
-    /// Get the latest representation of a RFD
+    /// Get the latest representation of an RFD's metadata
     ///
     /// Sends a `GET` request to `/rfd/{number}`
     ///
     /// Arguments:
     /// - `number`: The RFD number (examples: 1 or 123)
     /// ```ignore
-    /// let response = client.get_rfd()
+    /// let response = client.view_rfd_meta()
     ///    .number(number)
     ///    .send()
     ///    .await;
     /// ```
-    pub fn get_rfd(&self) -> builder::GetRfd {
-        builder::GetRfd::new(self)
+    pub fn view_rfd_meta(&self) -> builder::ViewRfdMeta {
+        builder::ViewRfdMeta::new(self)
     }
 
-    /// Replace the full document of a RFD
-    ///
-    /// Sends a `POST` request to `/rfd/{number}`
-    ///
-    /// Arguments:
-    /// - `number`: The RFD number (examples: 1 or 123)
-    /// - `body`
-    /// ```ignore
-    /// let response = client.set_rfd_document()
-    ///    .number(number)
-    ///    .body(body)
-    ///    .send()
-    ///    .await;
-    /// ```
-    pub fn set_rfd_document(&self) -> builder::SetRfdDocument {
-        builder::SetRfdDocument::new(self)
-    }
-
-    /// Get an attribute of a RFD
+    /// Get the an attribute of the latest revision of a RFD
     ///
     /// Sends a `GET` request to `/rfd/{number}/attr/{attr}`
     ///
+    /// Arguments:
+    /// - `number`: The RFD number (examples: 1 or 123)
+    /// - `attr`: An attribute that can be defined in an RFD document
     /// ```ignore
-    /// let response = client.get_rfd_attr()
+    /// let response = client.view_rfd_attr()
     ///    .number(number)
     ///    .attr(attr)
     ///    .send()
     ///    .await;
     /// ```
-    pub fn get_rfd_attr(&self) -> builder::GetRfdAttr {
-        builder::GetRfdAttr::new(self)
+    pub fn view_rfd_attr(&self) -> builder::ViewRfdAttr {
+        builder::ViewRfdAttr::new(self)
     }
 
     /// Set an attribute of a RFD
     ///
     /// Sends a `POST` request to `/rfd/{number}/attr/{attr}`
     ///
+    /// Arguments:
+    /// - `number`: The RFD number (examples: 1 or 123)
+    /// - `attr`: An attribute that can be defined in an RFD document
+    /// - `body`
     /// ```ignore
     /// let response = client.set_rfd_attr()
     ///    .number(number)
@@ -12135,9 +13442,167 @@ impl Client {
         builder::SetRfdContent::new(self)
     }
 
+    /// Get the comments related to the latest revision of a RFD
+    ///
+    /// Sends a `GET` request to `/rfd/{number}/discussion`
+    ///
+    /// Arguments:
+    /// - `number`: The RFD number (examples: 1 or 123)
+    /// ```ignore
+    /// let response = client.view_rfd_discussion()
+    ///    .number(number)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn view_rfd_discussion(&self) -> builder::ViewRfdDiscussion {
+        builder::ViewRfdDiscussion::new(self)
+    }
+
+    /// Get the PDF locations of the latest revision of a RFD
+    ///
+    /// Sends a `GET` request to `/rfd/{number}/pdf`
+    ///
+    /// Arguments:
+    /// - `number`: The RFD number (examples: 1 or 123)
+    /// ```ignore
+    /// let response = client.view_rfd_pdf()
+    ///    .number(number)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn view_rfd_pdf(&self) -> builder::ViewRfdPdf {
+        builder::ViewRfdPdf::new(self)
+    }
+
+    /// Get the raw contents of the latest revision of a RFD
+    ///
+    /// Sends a `GET` request to `/rfd/{number}/raw`
+    ///
+    /// Arguments:
+    /// - `number`: The RFD number (examples: 1 or 123)
+    /// ```ignore
+    /// let response = client.view_rfd()
+    ///    .number(number)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn view_rfd(&self) -> builder::ViewRfd {
+        builder::ViewRfd::new(self)
+    }
+
+    /// Replace the full document of a RFD
+    ///
+    /// Sends a `POST` request to `/rfd/{number}/raw`
+    ///
+    /// Arguments:
+    /// - `number`: The RFD number (examples: 1 or 123)
+    /// - `body`
+    /// ```ignore
+    /// let response = client.set_rfd_document()
+    ///    .number(number)
+    ///    .body(body)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn set_rfd_document(&self) -> builder::SetRfdDocument {
+        builder::SetRfdDocument::new(self)
+    }
+
+    /// Get an RFD revision's metadata
+    ///
+    /// Sends a `GET` request to `/rfd/{number}/revision/{revision}`
+    ///
+    /// Arguments:
+    /// - `number`: The RFD number (examples: 1 or 123)
+    /// - `revision`: The revision id of the RFD
+    /// ```ignore
+    /// let response = client.view_rfd_revision_meta()
+    ///    .number(number)
+    ///    .revision(revision)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn view_rfd_revision_meta(&self) -> builder::ViewRfdRevisionMeta {
+        builder::ViewRfdRevisionMeta::new(self)
+    }
+
+    /// Get the an attribute of a revision of a RFD
+    ///
+    /// Sends a `GET` request to `/rfd/{number}/revision/{revision}/attr/{attr}`
+    ///
+    /// Arguments:
+    /// - `number`: The RFD number (examples: 1 or 123)
+    /// - `revision`: The revision id of the RFD
+    /// - `attr`: An attribute that can be defined in an RFD document
+    /// ```ignore
+    /// let response = client.view_rfd_revision_attr()
+    ///    .number(number)
+    ///    .revision(revision)
+    ///    .attr(attr)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn view_rfd_revision_attr(&self) -> builder::ViewRfdRevisionAttr {
+        builder::ViewRfdRevisionAttr::new(self)
+    }
+
+    /// Get the comments related to a revision of a RFD
+    ///
+    /// Sends a `GET` request to `/rfd/{number}/revision/{revision}/discussion`
+    ///
+    /// Arguments:
+    /// - `number`: The RFD number (examples: 1 or 123)
+    /// - `revision`: The revision id of the RFD
+    /// ```ignore
+    /// let response = client.view_rfd_revision_discussion()
+    ///    .number(number)
+    ///    .revision(revision)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn view_rfd_revision_discussion(&self) -> builder::ViewRfdRevisionDiscussion {
+        builder::ViewRfdRevisionDiscussion::new(self)
+    }
+
+    /// Get the PDF locations of a revision of a RFD
+    ///
+    /// Sends a `GET` request to `/rfd/{number}/revision/{revision}/pdf`
+    ///
+    /// Arguments:
+    /// - `number`: The RFD number (examples: 1 or 123)
+    /// - `revision`: The revision id of the RFD
+    /// ```ignore
+    /// let response = client.view_rfd_revision_pdf()
+    ///    .number(number)
+    ///    .revision(revision)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn view_rfd_revision_pdf(&self) -> builder::ViewRfdRevisionPdf {
+        builder::ViewRfdRevisionPdf::new(self)
+    }
+
+    /// Get the raw contents of a revision of a RFD
+    ///
+    /// Sends a `GET` request to `/rfd/{number}/revision/{revision}/raw`
+    ///
+    /// Arguments:
+    /// - `number`: The RFD number (examples: 1 or 123)
+    /// - `revision`: The revision id of the RFD
+    /// ```ignore
+    /// let response = client.view_rfd_revision()
+    ///    .number(number)
+    ///    .revision(revision)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn view_rfd_revision(&self) -> builder::ViewRfdRevision {
+        builder::ViewRfdRevision::new(self)
+    }
+
     /// Open a RFD for discussion
     ///
-    /// Sends a `POST` request to `/rfd/{number}/discuss`
+    /// Sends a `POST` request to `/rfd/{number}/state/discuss`
     ///
     /// Arguments:
     /// - `number`: The RFD number (examples: 1 or 123)
@@ -12153,7 +13618,7 @@ impl Client {
 
     /// Publish a RFD
     ///
-    /// Sends a `POST` request to `/rfd/{number}/publish`
+    /// Sends a `POST` request to `/rfd/{number}/state/publish`
     ///
     /// Arguments:
     /// - `number`: The RFD number (examples: 1 or 123)
@@ -15068,66 +16533,6 @@ pub mod builder {
         }
     }
 
-    /// Builder for [`Client::get_rfd_meta`]
-    ///
-    /// [`Client::get_rfd_meta`]: super::Client::get_rfd_meta
-    #[derive(Debug, Clone)]
-    pub struct GetRfdMeta<'a> {
-        client: &'a super::Client,
-        number: Result<::std::string::String, String>,
-    }
-
-    impl<'a> GetRfdMeta<'a> {
-        pub fn new(client: &'a super::Client) -> Self {
-            Self {
-                client: client,
-                number: Err("number was not initialized".to_string()),
-            }
-        }
-
-        pub fn number<V>(mut self, value: V) -> Self
-        where
-            V: std::convert::TryInto<::std::string::String>,
-        {
-            self.number = value.try_into().map_err(|_| {
-                "conversion to `:: std :: string :: String` for number failed".to_string()
-            });
-            self
-        }
-
-        /// Sends a `GET` request to `/meta/rfd/{number}`
-        pub async fn send(self) -> Result<ResponseValue<types::RfdMeta>, Error<types::Error>> {
-            let Self { client, number } = self;
-            let number = number.map_err(Error::InvalidRequest)?;
-            let url = format!(
-                "{}/meta/rfd/{}",
-                client.baseurl,
-                encode_path(&number.to_string()),
-            );
-            #[allow(unused_mut)]
-            let mut request = client
-                .client
-                .get(url)
-                .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
-                )
-                .build()?;
-            let result = client.client.execute(request).await;
-            let response = result?;
-            match response.status().as_u16() {
-                200u16 => ResponseValue::from_response(response).await,
-                400u16..=499u16 => Err(Error::ErrorResponse(
-                    ResponseValue::from_response(response).await?,
-                )),
-                500u16..=599u16 => Err(Error::ErrorResponse(
-                    ResponseValue::from_response(response).await?,
-                )),
-                _ => Err(Error::UnexpectedResponse(response)),
-            }
-        }
-    }
-
     /// Builder for [`Client::list_oauth_clients`]
     ///
     /// [`Client::list_oauth_clients`]: super::Client::list_oauth_clients
@@ -15598,15 +17003,15 @@ pub mod builder {
         }
     }
 
-    /// Builder for [`Client::get_rfds`]
+    /// Builder for [`Client::list_rfds`]
     ///
-    /// [`Client::get_rfds`]: super::Client::get_rfds
+    /// [`Client::list_rfds`]: super::Client::list_rfds
     #[derive(Debug, Clone)]
-    pub struct GetRfds<'a> {
+    pub struct ListRfds<'a> {
         client: &'a super::Client,
     }
 
-    impl<'a> GetRfds<'a> {
+    impl<'a> ListRfds<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self { client: client }
         }
@@ -15614,7 +17019,8 @@ pub mod builder {
         /// Sends a `GET` request to `/rfd`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<::std::vec::Vec<types::RfdMeta>>, Error<types::Error>> {
+        ) -> Result<ResponseValue<::std::vec::Vec<types::RfdWithoutContent>>, Error<types::Error>>
+        {
             let Self { client } = self;
             let url = format!("{}/rfd", client.baseurl,);
             #[allow(unused_mut)]
@@ -15712,16 +17118,16 @@ pub mod builder {
         }
     }
 
-    /// Builder for [`Client::get_rfd`]
+    /// Builder for [`Client::view_rfd_meta`]
     ///
-    /// [`Client::get_rfd`]: super::Client::get_rfd
+    /// [`Client::view_rfd_meta`]: super::Client::view_rfd_meta
     #[derive(Debug, Clone)]
-    pub struct GetRfd<'a> {
+    pub struct ViewRfdMeta<'a> {
         client: &'a super::Client,
         number: Result<::std::string::String, String>,
     }
 
-    impl<'a> GetRfd<'a> {
+    impl<'a> ViewRfdMeta<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
@@ -15740,7 +17146,9 @@ pub mod builder {
         }
 
         /// Sends a `GET` request to `/rfd/{number}`
-        pub async fn send(self) -> Result<ResponseValue<types::FullRfd>, Error<types::Error>> {
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::RfdWithoutContent>, Error<types::Error>> {
             let Self { client, number } = self;
             let number = number.map_err(Error::InvalidRequest)?;
             let url = format!(
@@ -15772,107 +17180,17 @@ pub mod builder {
         }
     }
 
-    /// Builder for [`Client::set_rfd_document`]
+    /// Builder for [`Client::view_rfd_attr`]
     ///
-    /// [`Client::set_rfd_document`]: super::Client::set_rfd_document
+    /// [`Client::view_rfd_attr`]: super::Client::view_rfd_attr
     #[derive(Debug, Clone)]
-    pub struct SetRfdDocument<'a> {
-        client: &'a super::Client,
-        number: Result<::std::string::String, String>,
-        body: Result<types::builder::RfdUpdateBody, String>,
-    }
-
-    impl<'a> SetRfdDocument<'a> {
-        pub fn new(client: &'a super::Client) -> Self {
-            Self {
-                client: client,
-                number: Err("number was not initialized".to_string()),
-                body: Ok(types::builder::RfdUpdateBody::default()),
-            }
-        }
-
-        pub fn number<V>(mut self, value: V) -> Self
-        where
-            V: std::convert::TryInto<::std::string::String>,
-        {
-            self.number = value.try_into().map_err(|_| {
-                "conversion to `:: std :: string :: String` for number failed".to_string()
-            });
-            self
-        }
-
-        pub fn body<V>(mut self, value: V) -> Self
-        where
-            V: std::convert::TryInto<types::RfdUpdateBody>,
-            <V as std::convert::TryInto<types::RfdUpdateBody>>::Error: std::fmt::Display,
-        {
-            self.body = value
-                .try_into()
-                .map(From::from)
-                .map_err(|s| format!("conversion to `RfdUpdateBody` for body failed: {}", s));
-            self
-        }
-
-        pub fn body_map<F>(mut self, f: F) -> Self
-        where
-            F: std::ops::FnOnce(types::builder::RfdUpdateBody) -> types::builder::RfdUpdateBody,
-        {
-            self.body = self.body.map(f);
-            self
-        }
-
-        /// Sends a `POST` request to `/rfd/{number}`
-        pub async fn send(self) -> Result<ResponseValue<()>, Error<types::Error>> {
-            let Self {
-                client,
-                number,
-                body,
-            } = self;
-            let number = number.map_err(Error::InvalidRequest)?;
-            let body = body
-                .and_then(|v| types::RfdUpdateBody::try_from(v).map_err(|e| e.to_string()))
-                .map_err(Error::InvalidRequest)?;
-            let url = format!(
-                "{}/rfd/{}",
-                client.baseurl,
-                encode_path(&number.to_string()),
-            );
-            #[allow(unused_mut)]
-            let mut request = client
-                .client
-                .post(url)
-                .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
-                )
-                .json(&body)
-                .build()?;
-            let result = client.client.execute(request).await;
-            let response = result?;
-            match response.status().as_u16() {
-                202u16 => ResponseValue::from_response(response).await,
-                400u16..=499u16 => Err(Error::ErrorResponse(
-                    ResponseValue::from_response(response).await?,
-                )),
-                500u16..=599u16 => Err(Error::ErrorResponse(
-                    ResponseValue::from_response(response).await?,
-                )),
-                _ => Err(Error::UnexpectedResponse(response)),
-            }
-        }
-    }
-
-    /// Builder for [`Client::get_rfd_attr`]
-    ///
-    /// [`Client::get_rfd_attr`]: super::Client::get_rfd_attr
-    #[derive(Debug, Clone)]
-    pub struct GetRfdAttr<'a> {
+    pub struct ViewRfdAttr<'a> {
         client: &'a super::Client,
         number: Result<::std::string::String, String>,
         attr: Result<types::RfdAttrName, String>,
     }
 
-    impl<'a> GetRfdAttr<'a> {
+    impl<'a> ViewRfdAttr<'a> {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
@@ -16139,6 +17457,685 @@ pub mod builder {
         }
     }
 
+    /// Builder for [`Client::view_rfd_discussion`]
+    ///
+    /// [`Client::view_rfd_discussion`]: super::Client::view_rfd_discussion
+    #[derive(Debug, Clone)]
+    pub struct ViewRfdDiscussion<'a> {
+        client: &'a super::Client,
+        number: Result<::std::string::String, String>,
+    }
+
+    impl<'a> ViewRfdDiscussion<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                number: Err("number was not initialized".to_string()),
+            }
+        }
+
+        pub fn number<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<::std::string::String>,
+        {
+            self.number = value.try_into().map_err(|_| {
+                "conversion to `:: std :: string :: String` for number failed".to_string()
+            });
+            self
+        }
+
+        /// Sends a `GET` request to `/rfd/{number}/discussion`
+        pub async fn send(self) -> Result<ResponseValue<()>, Error<types::Error>> {
+            let Self { client, number } = self;
+            let number = number.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/rfd/{}/discussion",
+                client.baseurl,
+                encode_path(&number.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::view_rfd_pdf`]
+    ///
+    /// [`Client::view_rfd_pdf`]: super::Client::view_rfd_pdf
+    #[derive(Debug, Clone)]
+    pub struct ViewRfdPdf<'a> {
+        client: &'a super::Client,
+        number: Result<::std::string::String, String>,
+    }
+
+    impl<'a> ViewRfdPdf<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                number: Err("number was not initialized".to_string()),
+            }
+        }
+
+        pub fn number<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<::std::string::String>,
+        {
+            self.number = value.try_into().map_err(|_| {
+                "conversion to `:: std :: string :: String` for number failed".to_string()
+            });
+            self
+        }
+
+        /// Sends a `GET` request to `/rfd/{number}/pdf`
+        pub async fn send(self) -> Result<ResponseValue<types::RfdWithPdf>, Error<types::Error>> {
+            let Self { client, number } = self;
+            let number = number.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/rfd/{}/pdf",
+                client.baseurl,
+                encode_path(&number.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::view_rfd`]
+    ///
+    /// [`Client::view_rfd`]: super::Client::view_rfd
+    #[derive(Debug, Clone)]
+    pub struct ViewRfd<'a> {
+        client: &'a super::Client,
+        number: Result<::std::string::String, String>,
+    }
+
+    impl<'a> ViewRfd<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                number: Err("number was not initialized".to_string()),
+            }
+        }
+
+        pub fn number<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<::std::string::String>,
+        {
+            self.number = value.try_into().map_err(|_| {
+                "conversion to `:: std :: string :: String` for number failed".to_string()
+            });
+            self
+        }
+
+        /// Sends a `GET` request to `/rfd/{number}/raw`
+        pub async fn send(self) -> Result<ResponseValue<types::RfdWithRaw>, Error<types::Error>> {
+            let Self { client, number } = self;
+            let number = number.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/rfd/{}/raw",
+                client.baseurl,
+                encode_path(&number.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::set_rfd_document`]
+    ///
+    /// [`Client::set_rfd_document`]: super::Client::set_rfd_document
+    #[derive(Debug, Clone)]
+    pub struct SetRfdDocument<'a> {
+        client: &'a super::Client,
+        number: Result<::std::string::String, String>,
+        body: Result<types::builder::RfdUpdateBody, String>,
+    }
+
+    impl<'a> SetRfdDocument<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                number: Err("number was not initialized".to_string()),
+                body: Ok(types::builder::RfdUpdateBody::default()),
+            }
+        }
+
+        pub fn number<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<::std::string::String>,
+        {
+            self.number = value.try_into().map_err(|_| {
+                "conversion to `:: std :: string :: String` for number failed".to_string()
+            });
+            self
+        }
+
+        pub fn body<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::RfdUpdateBody>,
+            <V as std::convert::TryInto<types::RfdUpdateBody>>::Error: std::fmt::Display,
+        {
+            self.body = value
+                .try_into()
+                .map(From::from)
+                .map_err(|s| format!("conversion to `RfdUpdateBody` for body failed: {}", s));
+            self
+        }
+
+        pub fn body_map<F>(mut self, f: F) -> Self
+        where
+            F: std::ops::FnOnce(types::builder::RfdUpdateBody) -> types::builder::RfdUpdateBody,
+        {
+            self.body = self.body.map(f);
+            self
+        }
+
+        /// Sends a `POST` request to `/rfd/{number}/raw`
+        pub async fn send(self) -> Result<ResponseValue<()>, Error<types::Error>> {
+            let Self {
+                client,
+                number,
+                body,
+            } = self;
+            let number = number.map_err(Error::InvalidRequest)?;
+            let body = body
+                .and_then(|v| types::RfdUpdateBody::try_from(v).map_err(|e| e.to_string()))
+                .map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/rfd/{}/raw",
+                client.baseurl,
+                encode_path(&number.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .post(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .json(&body)
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                202u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::view_rfd_revision_meta`]
+    ///
+    /// [`Client::view_rfd_revision_meta`]: super::Client::view_rfd_revision_meta
+    #[derive(Debug, Clone)]
+    pub struct ViewRfdRevisionMeta<'a> {
+        client: &'a super::Client,
+        number: Result<::std::string::String, String>,
+        revision: Result<types::TypedUuidForRfdRevisionId, String>,
+    }
+
+    impl<'a> ViewRfdRevisionMeta<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                number: Err("number was not initialized".to_string()),
+                revision: Err("revision was not initialized".to_string()),
+            }
+        }
+
+        pub fn number<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<::std::string::String>,
+        {
+            self.number = value.try_into().map_err(|_| {
+                "conversion to `:: std :: string :: String` for number failed".to_string()
+            });
+            self
+        }
+
+        pub fn revision<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::TypedUuidForRfdRevisionId>,
+        {
+            self.revision = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForRfdRevisionId` for revision failed".to_string()
+            });
+            self
+        }
+
+        /// Sends a `GET` request to `/rfd/{number}/revision/{revision}`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::RfdWithoutContent>, Error<types::Error>> {
+            let Self {
+                client,
+                number,
+                revision,
+            } = self;
+            let number = number.map_err(Error::InvalidRequest)?;
+            let revision = revision.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/rfd/{}/revision/{}",
+                client.baseurl,
+                encode_path(&number.to_string()),
+                encode_path(&revision.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::view_rfd_revision_attr`]
+    ///
+    /// [`Client::view_rfd_revision_attr`]: super::Client::view_rfd_revision_attr
+    #[derive(Debug, Clone)]
+    pub struct ViewRfdRevisionAttr<'a> {
+        client: &'a super::Client,
+        number: Result<::std::string::String, String>,
+        revision: Result<types::TypedUuidForRfdRevisionId, String>,
+        attr: Result<types::RfdAttrName, String>,
+    }
+
+    impl<'a> ViewRfdRevisionAttr<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                number: Err("number was not initialized".to_string()),
+                revision: Err("revision was not initialized".to_string()),
+                attr: Err("attr was not initialized".to_string()),
+            }
+        }
+
+        pub fn number<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<::std::string::String>,
+        {
+            self.number = value.try_into().map_err(|_| {
+                "conversion to `:: std :: string :: String` for number failed".to_string()
+            });
+            self
+        }
+
+        pub fn revision<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::TypedUuidForRfdRevisionId>,
+        {
+            self.revision = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForRfdRevisionId` for revision failed".to_string()
+            });
+            self
+        }
+
+        pub fn attr<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::RfdAttrName>,
+        {
+            self.attr = value
+                .try_into()
+                .map_err(|_| "conversion to `RfdAttrName` for attr failed".to_string());
+            self
+        }
+
+        /// Sends a `GET` request to
+        /// `/rfd/{number}/revision/{revision}/attr/{attr}`
+        pub async fn send(self) -> Result<ResponseValue<types::RfdAttr>, Error<types::Error>> {
+            let Self {
+                client,
+                number,
+                revision,
+                attr,
+            } = self;
+            let number = number.map_err(Error::InvalidRequest)?;
+            let revision = revision.map_err(Error::InvalidRequest)?;
+            let attr = attr.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/rfd/{}/revision/{}/attr/{}",
+                client.baseurl,
+                encode_path(&number.to_string()),
+                encode_path(&revision.to_string()),
+                encode_path(&attr.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::view_rfd_revision_discussion`]
+    ///
+    /// [`Client::view_rfd_revision_discussion`]: super::Client::view_rfd_revision_discussion
+    #[derive(Debug, Clone)]
+    pub struct ViewRfdRevisionDiscussion<'a> {
+        client: &'a super::Client,
+        number: Result<::std::string::String, String>,
+        revision: Result<types::TypedUuidForRfdRevisionId, String>,
+    }
+
+    impl<'a> ViewRfdRevisionDiscussion<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                number: Err("number was not initialized".to_string()),
+                revision: Err("revision was not initialized".to_string()),
+            }
+        }
+
+        pub fn number<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<::std::string::String>,
+        {
+            self.number = value.try_into().map_err(|_| {
+                "conversion to `:: std :: string :: String` for number failed".to_string()
+            });
+            self
+        }
+
+        pub fn revision<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::TypedUuidForRfdRevisionId>,
+        {
+            self.revision = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForRfdRevisionId` for revision failed".to_string()
+            });
+            self
+        }
+
+        /// Sends a `GET` request to
+        /// `/rfd/{number}/revision/{revision}/discussion`
+        pub async fn send(self) -> Result<ResponseValue<()>, Error<types::Error>> {
+            let Self {
+                client,
+                number,
+                revision,
+            } = self;
+            let number = number.map_err(Error::InvalidRequest)?;
+            let revision = revision.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/rfd/{}/revision/{}/discussion",
+                client.baseurl,
+                encode_path(&number.to_string()),
+                encode_path(&revision.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::view_rfd_revision_pdf`]
+    ///
+    /// [`Client::view_rfd_revision_pdf`]: super::Client::view_rfd_revision_pdf
+    #[derive(Debug, Clone)]
+    pub struct ViewRfdRevisionPdf<'a> {
+        client: &'a super::Client,
+        number: Result<::std::string::String, String>,
+        revision: Result<types::TypedUuidForRfdRevisionId, String>,
+    }
+
+    impl<'a> ViewRfdRevisionPdf<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                number: Err("number was not initialized".to_string()),
+                revision: Err("revision was not initialized".to_string()),
+            }
+        }
+
+        pub fn number<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<::std::string::String>,
+        {
+            self.number = value.try_into().map_err(|_| {
+                "conversion to `:: std :: string :: String` for number failed".to_string()
+            });
+            self
+        }
+
+        pub fn revision<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::TypedUuidForRfdRevisionId>,
+        {
+            self.revision = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForRfdRevisionId` for revision failed".to_string()
+            });
+            self
+        }
+
+        /// Sends a `GET` request to `/rfd/{number}/revision/{revision}/pdf`
+        pub async fn send(self) -> Result<ResponseValue<types::RfdWithPdf>, Error<types::Error>> {
+            let Self {
+                client,
+                number,
+                revision,
+            } = self;
+            let number = number.map_err(Error::InvalidRequest)?;
+            let revision = revision.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/rfd/{}/revision/{}/pdf",
+                client.baseurl,
+                encode_path(&number.to_string()),
+                encode_path(&revision.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::view_rfd_revision`]
+    ///
+    /// [`Client::view_rfd_revision`]: super::Client::view_rfd_revision
+    #[derive(Debug, Clone)]
+    pub struct ViewRfdRevision<'a> {
+        client: &'a super::Client,
+        number: Result<::std::string::String, String>,
+        revision: Result<types::TypedUuidForRfdRevisionId, String>,
+    }
+
+    impl<'a> ViewRfdRevision<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                number: Err("number was not initialized".to_string()),
+                revision: Err("revision was not initialized".to_string()),
+            }
+        }
+
+        pub fn number<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<::std::string::String>,
+        {
+            self.number = value.try_into().map_err(|_| {
+                "conversion to `:: std :: string :: String` for number failed".to_string()
+            });
+            self
+        }
+
+        pub fn revision<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::TypedUuidForRfdRevisionId>,
+        {
+            self.revision = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForRfdRevisionId` for revision failed".to_string()
+            });
+            self
+        }
+
+        /// Sends a `GET` request to `/rfd/{number}/revision/{revision}/raw`
+        pub async fn send(self) -> Result<ResponseValue<types::RfdWithRaw>, Error<types::Error>> {
+            let Self {
+                client,
+                number,
+                revision,
+            } = self;
+            let number = number.map_err(Error::InvalidRequest)?;
+            let revision = revision.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/rfd/{}/revision/{}/raw",
+                client.baseurl,
+                encode_path(&number.to_string()),
+                encode_path(&revision.to_string()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .get(url)
+                .header(
+                    reqwest::header::ACCEPT,
+                    reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
     /// Builder for [`Client::discuss_rfd`]
     ///
     /// [`Client::discuss_rfd`]: super::Client::discuss_rfd
@@ -16166,12 +18163,12 @@ pub mod builder {
             self
         }
 
-        /// Sends a `POST` request to `/rfd/{number}/discuss`
+        /// Sends a `POST` request to `/rfd/{number}/state/discuss`
         pub async fn send(self) -> Result<ResponseValue<types::RfdAttr>, Error<types::Error>> {
             let Self { client, number } = self;
             let number = number.map_err(Error::InvalidRequest)?;
             let url = format!(
-                "{}/rfd/{}/discuss",
+                "{}/rfd/{}/state/discuss",
                 client.baseurl,
                 encode_path(&number.to_string()),
             );
@@ -16226,12 +18223,12 @@ pub mod builder {
             self
         }
 
-        /// Sends a `POST` request to `/rfd/{number}/publish`
+        /// Sends a `POST` request to `/rfd/{number}/state/publish`
         pub async fn send(self) -> Result<ResponseValue<types::RfdAttr>, Error<types::Error>> {
             let Self { client, number } = self;
             let number = number.map_err(Error::InvalidRequest)?;
             let url = format!(
-                "{}/rfd/{}/publish",
+                "{}/rfd/{}/state/publish",
                 client.baseurl,
                 encode_path(&number.to_string()),
             );

@@ -1,5 +1,8 @@
 /target
 
+node_modules
+dist
+
 config.toml
 mappers.toml
 !.cargo/config.toml

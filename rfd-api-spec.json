@@ -1395,41 +1395,6 @@
         }
       }
     },
-    "/meta/rfd/{number}": {
-      "get": {
-        "summary": "Get the latest representation of a RFD",
-        "operationId": "get_rfd_meta",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "number",
-            "description": "The RFD number (examples: 1 or 123)",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "successful operation",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RfdMeta"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/Error"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/Error"
-          }
-        }
-      }
-    },
     "/oauth/client": {
       "get": {
         "summary": "List OAuth clients",
@@ -1679,17 +1644,17 @@
     "/rfd": {
       "get": {
         "summary": "List all available RFDs",
-        "operationId": "get_rfds",
+        "operationId": "list_rfds",
         "responses": {
           "200": {
             "description": "successful operation",
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Array_of_RfdMeta",
+                  "title": "Array_of_RfdWithoutContent",
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/RfdMeta"
+                    "$ref": "#/components/schemas/RfdWithoutContent"
                   }
                 }
               }
@@ -1738,8 +1703,8 @@
     },
     "/rfd/{number}": {
       "get": {
-        "summary": "Get the latest representation of a RFD",
-        "operationId": "get_rfd",
+        "summary": "Get the latest representation of an RFD's metadata",
+        "operationId": "view_rfd_meta",
         "parameters": [
           {
             "in": "path",
@@ -1757,54 +1722,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/FullRfd"
-                }
-              }
-            }
-          },
-          "4XX": {
-            "$ref": "#/components/responses/Error"
-          },
-          "5XX": {
-            "$ref": "#/components/responses/Error"
-          }
-        }
-      },
-      "post": {
-        "summary": "Replace the full document of a RFD",
-        "operationId": "set_rfd_document",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "number",
-            "description": "The RFD number (examples: 1 or 123)",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RfdUpdateBody"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "202": {
-            "description": "successfully enqueued operation",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "title": "Null",
-                  "type": "string",
-                  "enum": [
-                    null
-                  ]
+                  "$ref": "#/components/schemas/RfdWithoutContent"
                 }
               }
             }
@@ -1820,12 +1738,13 @@
     },
     "/rfd/{number}/attr/{attr}": {
       "get": {
-        "summary": "Get an attribute of a RFD",
-        "operationId": "get_rfd_attr",
+        "summary": "Get the an attribute of the latest revision of a RFD",
+        "operationId": "view_rfd_attr",
         "parameters": [
           {
             "in": "path",
             "name": "attr",
+            "description": "An attribute that can be defined in an RFD document",
             "required": true,
             "schema": {
               "$ref": "#/components/schemas/RfdAttrName"
@@ -1834,6 +1753,7 @@
           {
             "in": "path",
             "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
             "required": true,
             "schema": {
               "type": "string"
@@ -1866,6 +1786,7 @@
           {
             "in": "path",
             "name": "attr",
+            "description": "An attribute that can be defined in an RFD document",
             "required": true,
             "schema": {
               "$ref": "#/components/schemas/RfdAttrName"
@@ -1874,6 +1795,7 @@
           {
             "in": "path",
             "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
             "required": true,
             "schema": {
               "type": "string"
@@ -1959,7 +1881,396 @@
         }
       }
     },
-    "/rfd/{number}/discuss": {
+    "/rfd/{number}/discussion": {
+      "get": {
+        "summary": "Get the comments related to the latest revision of a RFD",
+        "operationId": "view_rfd_discussion",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Null",
+                  "type": "string",
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/rfd/{number}/pdf": {
+      "get": {
+        "summary": "Get the PDF locations of the latest revision of a RFD",
+        "operationId": "view_rfd_pdf",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RfdWithPdf"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/rfd/{number}/raw": {
+      "get": {
+        "summary": "Get the raw contents of the latest revision of a RFD",
+        "operationId": "view_rfd",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RfdWithRaw"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "post": {
+        "summary": "Replace the full document of a RFD",
+        "operationId": "set_rfd_document",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RfdUpdateBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "successfully enqueued operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Null",
+                  "type": "string",
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/rfd/{number}/revision/{revision}": {
+      "get": {
+        "summary": "Get an RFD revision's metadata",
+        "operationId": "view_rfd_revision_meta",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision",
+            "description": "The revision id of the RFD",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TypedUuidForRfdRevisionId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RfdWithoutContent"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/rfd/{number}/revision/{revision}/attr/{attr}": {
+      "get": {
+        "summary": "Get the an attribute of a revision of a RFD",
+        "operationId": "view_rfd_revision_attr",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attr",
+            "description": "An attribute that can be defined in an RFD document",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/RfdAttrName"
+            }
+          },
+          {
+            "in": "path",
+            "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision",
+            "description": "The revision id of the RFD",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TypedUuidForRfdRevisionId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RfdAttr"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/rfd/{number}/revision/{revision}/discussion": {
+      "get": {
+        "summary": "Get the comments related to a revision of a RFD",
+        "operationId": "view_rfd_revision_discussion",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision",
+            "description": "The revision id of the RFD",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TypedUuidForRfdRevisionId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Null",
+                  "type": "string",
+                  "enum": [
+                    null
+                  ]
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/rfd/{number}/revision/{revision}/pdf": {
+      "get": {
+        "summary": "Get the PDF locations of a revision of a RFD",
+        "operationId": "view_rfd_revision_pdf",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision",
+            "description": "The revision id of the RFD",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TypedUuidForRfdRevisionId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RfdWithPdf"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/rfd/{number}/revision/{revision}/raw": {
+      "get": {
+        "summary": "Get the raw contents of a revision of a RFD",
+        "operationId": "view_rfd_revision",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision",
+            "description": "The revision id of the RFD",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TypedUuidForRfdRevisionId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RfdWithRaw"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/rfd/{number}/state/discuss": {
       "post": {
         "summary": "Open a RFD for discussion",
         "operationId": "discuss_rfd",
@@ -1994,7 +2305,7 @@
         }
       }
     },
-    "/rfd/{number}/publish": {
+    "/rfd/{number}/state/publish": {
       "post": {
         "summary": "Publish a RFD",
         "operationId": "publish_rfd",
@@ -2609,93 +2920,6 @@
           "hierarchy_radio",
           "object_id",
           "rfd_number"
-        ]
-      },
-      "FullRfd": {
-        "type": "object",
-        "properties": {
-          "authors": {
-            "nullable": true,
-            "type": "string"
-          },
-          "commit": {
-            "$ref": "#/components/schemas/CommitSha"
-          },
-          "committed_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "content": {
-            "type": "string"
-          },
-          "discussion": {
-            "nullable": true,
-            "type": "string"
-          },
-          "format": {
-            "$ref": "#/components/schemas/ContentFormat"
-          },
-          "id": {
-            "$ref": "#/components/schemas/TypedUuidForRfdId"
-          },
-          "labels": {
-            "nullable": true,
-            "type": "string"
-          },
-          "link": {
-            "nullable": true,
-            "type": "string"
-          },
-          "pdfs": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/FullRfdPdfEntry"
-            }
-          },
-          "rfd_number": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "sha": {
-            "$ref": "#/components/schemas/FileSha"
-          },
-          "state": {
-            "nullable": true,
-            "type": "string"
-          },
-          "title": {
-            "type": "string"
-          },
-          "visibility": {
-            "$ref": "#/components/schemas/Visibility"
-          }
-        },
-        "required": [
-          "commit",
-          "committed_at",
-          "content",
-          "format",
-          "id",
-          "pdfs",
-          "rfd_number",
-          "sha",
-          "title",
-          "visibility"
-        ]
-      },
-      "FullRfdPdfEntry": {
-        "type": "object",
-        "properties": {
-          "link": {
-            "type": "string"
-          },
-          "source": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "link",
-          "source"
         ]
       },
       "GetUserResponse_for_RfdPermission": {
@@ -3407,6 +3631,13 @@
           "jwks_uri"
         ]
       },
+      "PdfSource": {
+        "type": "string",
+        "enum": [
+          "github",
+          "google"
+        ]
+      },
       "Permissions_for_RfdPermission": {
         "type": "array",
         "items": {
@@ -3445,6 +3676,14 @@
       "Rfd": {
         "type": "object",
         "properties": {
+          "content": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RfdRevision"
+              }
+            ]
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -3538,65 +3777,50 @@
           "value"
         ]
       },
-      "RfdMeta": {
+      "RfdPdf": {
         "type": "object",
         "properties": {
-          "authors": {
-            "nullable": true,
-            "type": "string"
-          },
-          "commit": {
-            "$ref": "#/components/schemas/CommitSha"
-          },
-          "committed_at": {
+          "created_at": {
             "type": "string",
             "format": "date-time"
           },
-          "discussion": {
+          "deleted_at": {
             "nullable": true,
-            "type": "string"
+            "type": "string",
+            "format": "date-time"
           },
-          "format": {
-            "$ref": "#/components/schemas/ContentFormat"
+          "external_id": {
+            "type": "string"
           },
           "id": {
-            "$ref": "#/components/schemas/TypedUuidForRfdId"
-          },
-          "labels": {
-            "nullable": true,
-            "type": "string"
+            "$ref": "#/components/schemas/TypedUuidForRfdPdfId"
           },
           "link": {
-            "nullable": true,
             "type": "string"
           },
-          "rfd_number": {
-            "type": "integer",
-            "format": "int32"
+          "rfd_id": {
+            "$ref": "#/components/schemas/TypedUuidForRfdId"
           },
-          "sha": {
-            "$ref": "#/components/schemas/FileSha"
+          "rfd_revision_id": {
+            "$ref": "#/components/schemas/TypedUuidForRfdRevisionId"
           },
-          "state": {
-            "nullable": true,
-            "type": "string"
+          "source": {
+            "$ref": "#/components/schemas/PdfSource"
           },
-          "title": {
-            "type": "string"
-          },
-          "visibility": {
-            "$ref": "#/components/schemas/Visibility"
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
-          "commit",
-          "committed_at",
-          "format",
+          "created_at",
+          "external_id",
           "id",
-          "rfd_number",
-          "sha",
-          "title",
-          "visibility"
+          "link",
+          "rfd_id",
+          "rfd_revision_id",
+          "source",
+          "updated_at"
         ]
       },
       "RfdPermission": {
@@ -4116,6 +4340,77 @@
           }
         ]
       },
+      "RfdRevision": {
+        "type": "object",
+        "properties": {
+          "authors": {
+            "nullable": true,
+            "type": "string"
+          },
+          "commit": {
+            "$ref": "#/components/schemas/CommitSha"
+          },
+          "committed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "content": {
+            "type": "string"
+          },
+          "content_format": {
+            "$ref": "#/components/schemas/ContentFormat"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "deleted_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "discussion": {
+            "nullable": true,
+            "type": "string"
+          },
+          "id": {
+            "$ref": "#/components/schemas/TypedUuidForRfdRevisionId"
+          },
+          "labels": {
+            "nullable": true,
+            "type": "string"
+          },
+          "rfd_id": {
+            "$ref": "#/components/schemas/TypedUuidForRfdId"
+          },
+          "sha": {
+            "$ref": "#/components/schemas/FileSha"
+          },
+          "state": {
+            "nullable": true,
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "commit",
+          "committed_at",
+          "content",
+          "content_format",
+          "created_at",
+          "id",
+          "rfd_id",
+          "sha",
+          "title",
+          "updated_at"
+        ]
+      },
       "RfdState": {
         "type": "string",
         "enum": [
@@ -4169,6 +4464,236 @@
           }
         },
         "required": [
+          "visibility"
+        ]
+      },
+      "RfdWithPdf": {
+        "type": "object",
+        "properties": {
+          "authors": {
+            "nullable": true,
+            "type": "string"
+          },
+          "commit": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CommitSha"
+              }
+            ]
+          },
+          "committed_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RfdPdf"
+            }
+          },
+          "discussion": {
+            "nullable": true,
+            "type": "string"
+          },
+          "format": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentFormat"
+              }
+            ]
+          },
+          "id": {
+            "$ref": "#/components/schemas/TypedUuidForRfdId"
+          },
+          "labels": {
+            "nullable": true,
+            "type": "string"
+          },
+          "link": {
+            "nullable": true,
+            "type": "string"
+          },
+          "rfd_number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sha": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FileSha"
+              }
+            ]
+          },
+          "state": {
+            "nullable": true,
+            "type": "string"
+          },
+          "title": {
+            "nullable": true,
+            "type": "string"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
+          }
+        },
+        "required": [
+          "content",
+          "id",
+          "rfd_number",
+          "visibility"
+        ]
+      },
+      "RfdWithRaw": {
+        "type": "object",
+        "properties": {
+          "authors": {
+            "nullable": true,
+            "type": "string"
+          },
+          "commit": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CommitSha"
+              }
+            ]
+          },
+          "committed_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "content": {
+            "nullable": true,
+            "type": "string"
+          },
+          "discussion": {
+            "nullable": true,
+            "type": "string"
+          },
+          "format": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentFormat"
+              }
+            ]
+          },
+          "id": {
+            "$ref": "#/components/schemas/TypedUuidForRfdId"
+          },
+          "labels": {
+            "nullable": true,
+            "type": "string"
+          },
+          "link": {
+            "nullable": true,
+            "type": "string"
+          },
+          "rfd_number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sha": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FileSha"
+              }
+            ]
+          },
+          "state": {
+            "nullable": true,
+            "type": "string"
+          },
+          "title": {
+            "nullable": true,
+            "type": "string"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
+          }
+        },
+        "required": [
+          "id",
+          "rfd_number",
+          "visibility"
+        ]
+      },
+      "RfdWithoutContent": {
+        "type": "object",
+        "properties": {
+          "authors": {
+            "nullable": true,
+            "type": "string"
+          },
+          "commit": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CommitSha"
+              }
+            ]
+          },
+          "committed_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "discussion": {
+            "nullable": true,
+            "type": "string"
+          },
+          "format": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentFormat"
+              }
+            ]
+          },
+          "id": {
+            "$ref": "#/components/schemas/TypedUuidForRfdId"
+          },
+          "labels": {
+            "nullable": true,
+            "type": "string"
+          },
+          "link": {
+            "nullable": true,
+            "type": "string"
+          },
+          "rfd_number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sha": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FileSha"
+              }
+            ]
+          },
+          "state": {
+            "nullable": true,
+            "type": "string"
+          },
+          "title": {
+            "nullable": true,
+            "type": "string"
+          },
+          "visibility": {
+            "$ref": "#/components/schemas/Visibility"
+          }
+        },
+        "required": [
+          "id",
+          "rfd_number",
           "visibility"
         ]
       },
@@ -4303,6 +4828,14 @@
         "format": "uuid"
       },
       "TypedUuidForRfdId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "TypedUuidForRfdPdfId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "TypedUuidForRfdRevisionId": {
         "type": "string",
         "format": "uuid"
       },

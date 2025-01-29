@@ -3,12 +3,12 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use async_trait::async_trait;
-use rfd_data::content::RfdAsciidoc;
+use rfd_data::content::{RfdAsciidoc, RfdDocument};
 use std::{path::PathBuf, process::Command};
 
 use crate::util::write_file;
 
-use super::{RenderedPdf, RfdContentError, RfdOutputError, RfdRenderedFormat};
+use super::{RenderableRfdError, RenderedPdf, RfdOutputError, RfdRenderedFormat};
 
 #[async_trait]
 impl<'a> RfdRenderedFormat<RfdAsciidoc<'a>> for RenderedPdf {
@@ -16,7 +16,7 @@ impl<'a> RfdRenderedFormat<RfdAsciidoc<'a>> for RenderedPdf {
         let file_path = content_dir.join("contents.adoc");
 
         // Write the contents to a temporary file.
-        write_file(&file_path, content.content.as_bytes()).await?;
+        write_file(&file_path, content.raw().as_bytes()).await?;
         tracing::info!("Wrote file to temp dir");
 
         let mut command = Command::new("asciidoctor-pdf");
@@ -52,7 +52,7 @@ impl<'a> RfdRenderedFormat<RfdAsciidoc<'a>> for RenderedPdf {
         if cmd_output.status.success() {
             Ok(cmd_output.stdout.into())
         } else {
-            Err(RfdContentError::ParserFailed(String::from_utf8(
+            Err(RenderableRfdError::ParserFailed(String::from_utf8(
                 cmd_output.stderr,
             )))?
         }

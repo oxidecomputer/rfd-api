@@ -7,10 +7,10 @@ use owo_colors::{OwoColorize, Style};
 use progenitor_client::ResponseValue;
 use rfd_sdk::types::{
     self, AccessGroupForRfdPermission, ApiKeyResponseForRfdPermission, ApiUserForRfdPermission,
-    Error, FullRfd, FullRfdPdfEntry, InitialApiKeyResponseForRfdPermission,
-    InitialOAuthClientSecretResponse, Mapper, OAuthClient, OAuthClientRedirectUri,
-    OAuthClientSecret, PermissionsForRfdPermission, ReserveRfdResponse, RfdAttr, RfdMeta,
-    SearchResultHit, SearchResults, Visibility,
+    Error, InitialApiKeyResponseForRfdPermission, InitialOAuthClientSecretResponse, Mapper,
+    OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, PermissionsForRfdPermission,
+    ReserveRfdResponse, RfdAttr, RfdWithRaw, RfdWithoutContent, SearchResultHit, SearchResults,
+    Visibility,
 };
 use std::{collections::HashMap, fmt::Display, fs::File, io::Write, process::Command};
 use tabwriter::TabWriter;
@@ -121,11 +121,11 @@ impl CliOutput for RfdTabPrinter {
         self.print_cli_output(&value, None);
     }
 
-    fn output_rfd_list(&self, value: Vec<types::RfdMeta>) {
+    fn output_rfd_list(&self, value: Vec<types::RfdWithoutContent>) {
         self.print_cli_output(&value, Some("rfds".to_string()));
     }
 
-    fn output_rfd_full(&self, value: types::FullRfd) {
+    fn output_rfd_full(&self, value: types::RfdWithRaw) {
         self.print_cli_output(&value, None);
     }
 
@@ -387,11 +387,16 @@ impl TabDisplay for InitialOAuthClientSecretResponse {
     }
 }
 
-impl TabDisplay for RfdMeta {
+impl TabDisplay for RfdWithoutContent {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "id", &self.id);
         printer.print_field(tw, level, "rfd_number", &self.rfd_number);
-        printer.print_field(tw, level, "title", &self.title);
+        printer.print_field(
+            tw,
+            level,
+            "title",
+            &self.title.as_ref().map(|s| s.as_str()).unwrap_or(""),
+        );
         printer.print_field(
             tw,
             level,
@@ -431,17 +436,40 @@ impl TabDisplay for RfdMeta {
             "discussion",
             &self.discussion.as_ref().map(|s| s.as_str()).unwrap_or(""),
         );
-        printer.print_field(tw, level, "sha", &self.sha.as_str());
-        printer.print_field(tw, level, "commit", &self.commit.as_str());
-        printer.print_field(tw, level, "committed_at", &self.committed_at);
+        printer.print_field(
+            tw,
+            level,
+            "sha",
+            &self.sha.as_ref().map(|s| s.as_str()).unwrap_or(""),
+        );
+        printer.print_field(
+            tw,
+            level,
+            "commit",
+            &self.commit.as_ref().map(|s| s.as_str()).unwrap_or(""),
+        );
+        printer.print_field(
+            tw,
+            level,
+            "committed_at",
+            &self
+                .committed_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
     }
 }
 
-impl TabDisplay for FullRfd {
+impl TabDisplay for RfdWithRaw {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "id", &self.id);
         printer.print_field(tw, level, "rfd_number", &self.rfd_number);
-        printer.print_field(tw, level, "title", &self.title);
+        printer.print_field(
+            tw,
+            level,
+            "title",
+            &self.title.as_ref().map(|s| s.as_str()).unwrap_or(""),
+        );
         printer.print_field(
             tw,
             level,
@@ -481,20 +509,31 @@ impl TabDisplay for FullRfd {
             "discussion",
             &self.discussion.as_ref().map(|s| s.as_str()).unwrap_or(""),
         );
-        printer.print_field(tw, level, "pdfs", &"");
-        self.pdfs.display(tw, level + 1, printer);
-        printer.print_field(tw, level, "sha", &self.sha.as_str());
-        printer.print_field(tw, level, "commit", &self.commit.as_str());
-        printer.print_field(tw, level, "committed_at", &self.committed_at);
+        printer.print_field(
+            tw,
+            level,
+            "sha",
+            &self.sha.as_ref().map(|s| s.as_str()).unwrap_or(""),
+        );
+        printer.print_field(
+            tw,
+            level,
+            "commit",
+            &self.commit.as_ref().map(|s| s.as_str()).unwrap_or(""),
+        );
+        printer.print_field(
+            tw,
+            level,
+            "committed_at",
+            &self
+                .committed_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
         writeln!(tw, "");
-        writeln!(tw, "{}", self.content);
-    }
-}
-
-impl TabDisplay for FullRfdPdfEntry {
-    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
-        printer.print_field(tw, level, "link", &self.link);
-        printer.print_field(tw, level, "source", &self.source);
+        if let Some(content) = &self.content {
+            writeln!(tw, "{}", content);
+        }
     }
 }
 

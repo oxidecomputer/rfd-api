@@ -7,12 +7,22 @@ mod markdown;
 mod template;
 
 pub use asciidoc::RfdAsciidoc;
+pub use asciidoc::RfdAsciidocError;
 pub use markdown::RfdMarkdown;
 pub use template::{RenderableRfdTemplate, RfdTemplate, TemplateError};
 
 use rfd_model::{schema_ext::ContentFormat, RfdRevision};
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+pub enum RfdContentError {
+    #[error("Failed to parse Asciidoc content")]
+    Asciidoc(#[from] RfdAsciidocError),
+}
 
 pub trait RfdDocument {
+    type Error;
+
     /// Extract the title from the internal content
     fn get_title<'a>(&'a self) -> Option<&'a str>;
 
@@ -20,13 +30,13 @@ pub trait RfdDocument {
     fn get_state(&self) -> Option<&str>;
 
     // Update the state value stored within the document or add it if it does not exist
-    fn update_state(&mut self, value: &str);
+    fn update_state(&mut self, value: &str) -> Result<&mut Self, Self::Error>;
 
     /// Get the discussion link stored within the document
     fn get_discussion(&self) -> Option<&str>;
 
     // Update the discussion link stored within the document or add it if it does not exist
-    fn update_discussion(&mut self, value: &str);
+    fn update_discussion(&mut self, value: &str) -> Result<&mut Self, Self::Error>;
 
     /// Get the authors line stored within the document. The returned string may contain multiple
     /// names
@@ -36,7 +46,7 @@ pub trait RfdDocument {
     fn get_labels(&self) -> Option<&str>;
 
     // Update the labels stored within the document or add them if they do not exist
-    fn update_labels(&mut self, value: &str);
+    fn update_labels(&mut self, value: &str) -> Result<&mut Self, Self::Error>;
 
     // Get a reference to the contents of the RFD header
     fn header(&self) -> Option<&str>;
@@ -45,10 +55,13 @@ pub trait RfdDocument {
     fn body(&self) -> Option<&str>;
 
     /// Get a reference to the contents of the RFD body
-    fn update_body(&mut self, value: &str);
+    fn update_body(&mut self, value: &str) -> Result<&mut Self, Self::Error>;
 
     /// Get a reference to the internal unparsed contents
     fn raw(&self) -> &str;
+
+    /// Set the internal unparsed contents. This may incur a reparsing of the contents
+    fn set_raw(&mut self, content: &str) -> Result<&mut Self, Self::Error>;
 }
 
 #[derive(Debug, Clone)]
@@ -67,6 +80,8 @@ impl<'a> RfdContent<'a> {
 }
 
 impl<'a> RfdDocument for RfdContent<'a> {
+    type Error = RfdContentError;
+
     fn get_title(&self) -> Option<&str> {
         match self {
             Self::Asciidoc(inner) => inner.get_title(),
@@ -81,11 +96,17 @@ impl<'a> RfdDocument for RfdContent<'a> {
         }
     }
 
-    fn update_state(&mut self, value: &str) {
+    fn update_state(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
         match self {
-            Self::Asciidoc(inner) => inner.update_state(value),
-            Self::Markdown(inner) => inner.update_state(value),
-        }
+            Self::Asciidoc(inner) => {
+                inner.update_state(value)?;
+            }
+            Self::Markdown(inner) => {
+                // Markdown returns an empty error so we can ignore it
+                let _ = inner.update_state(value);
+            }
+        };
+        Ok(self)
     }
 
     fn get_discussion(&self) -> Option<&str> {
@@ -95,11 +116,17 @@ impl<'a> RfdDocument for RfdContent<'a> {
         }
     }
 
-    fn update_discussion(&mut self, value: &str) {
+    fn update_discussion(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
         match self {
-            Self::Asciidoc(inner) => inner.update_discussion(value),
-            Self::Markdown(inner) => inner.update_discussion(value),
-        }
+            Self::Asciidoc(inner) => {
+                inner.update_discussion(value)?;
+            }
+            Self::Markdown(inner) => {
+                // Markdown returns an empty error so we can ignore it
+                let _ = inner.update_discussion(value);
+            }
+        };
+        Ok(self)
     }
 
     fn get_authors(&self) -> Option<&str> {
@@ -116,11 +143,17 @@ impl<'a> RfdDocument for RfdContent<'a> {
         }
     }
 
-    fn update_labels(&mut self, value: &str) {
+    fn update_labels(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
         match self {
-            Self::Asciidoc(inner) => inner.update_labels(value),
-            Self::Markdown(inner) => inner.update_labels(value),
-        }
+            Self::Asciidoc(inner) => {
+                inner.update_labels(value)?;
+            }
+            Self::Markdown(inner) => {
+                // Markdown returns an empty error so we can ignore it
+                let _ = inner.update_labels(value);
+            }
+        };
+        Ok(self)
     }
 
     fn header(&self) -> Option<&str> {
@@ -137,11 +170,17 @@ impl<'a> RfdDocument for RfdContent<'a> {
         }
     }
 
-    fn update_body(&mut self, value: &str) {
+    fn update_body(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
         match self {
-            Self::Asciidoc(inner) => inner.update_body(value),
-            Self::Markdown(inner) => inner.update_body(value),
-        }
+            Self::Asciidoc(inner) => {
+                inner.update_body(value)?;
+            }
+            Self::Markdown(inner) => {
+                // Markdown returns an empty error so we can ignore it
+                let _ = inner.update_body(value);
+            }
+        };
+        Ok(self)
     }
 
     fn raw(&self) -> &str {
@@ -150,13 +189,27 @@ impl<'a> RfdDocument for RfdContent<'a> {
             Self::Markdown(inner) => inner.raw(),
         }
     }
+
+    fn set_raw(&mut self, content: &str) -> Result<&mut Self, Self::Error> {
+        match self {
+            Self::Asciidoc(inner) => {
+                inner.set_raw(content)?;
+            }
+            Self::Markdown(inner) => {
+                // Markdown returns an empty error so we can ignore it
+                let _ = inner.set_raw(content);
+            }
+        };
+        Ok(self)
+    }
 }
 
-impl<'a> From<RfdRevision> for RfdContent<'a> {
-    fn from(value: RfdRevision) -> Self {
-        match value.content_format {
-            ContentFormat::Asciidoc => RfdContent::Asciidoc(RfdAsciidoc::new(value.content)),
+impl<'a> TryFrom<RfdRevision> for RfdContent<'a> {
+    type Error = RfdContentError;
+    fn try_from(value: RfdRevision) -> Result<Self, RfdContentError> {
+        Ok(match value.content_format {
+            ContentFormat::Asciidoc => RfdContent::Asciidoc(RfdAsciidoc::new(value.content)?),
             ContentFormat::Markdown => RfdContent::Markdown(RfdMarkdown::new(value.content)),
-        }
+        })
     }
 }

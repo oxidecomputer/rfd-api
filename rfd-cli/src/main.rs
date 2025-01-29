@@ -131,11 +131,20 @@ impl<'a> Tree<'a> {
 fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
     match cmd {
         // RFD commands
-        CliCommand::GetRfd => Some("view"),
-        CliCommand::GetRfdMeta => Some("meta"),
-        CliCommand::GetRfds => Some("list"),
-        CliCommand::GetRfdAttr => Some("attr"),
+        CliCommand::ListRfds => Some("list"),
+        CliCommand::ViewRfd => Some("view"),
+        CliCommand::ViewRfdMeta => Some("meta"),
+        CliCommand::ViewRfdAttr => Some("attr"),
+        CliCommand::ViewRfdDiscussion => Some("discussion"),
+        CliCommand::ViewRfdPdf => Some("pdf"),
         CliCommand::SearchRfds => Some("search"),
+
+        CliCommand::ViewRfdRevision => Some("revision view"),
+        CliCommand::ViewRfdRevisionMeta => Some("revision meta"),
+        CliCommand::ViewRfdRevisionAttr => Some("revision attr"),
+        CliCommand::ViewRfdRevisionDiscussion => Some("revision discussion"),
+        CliCommand::ViewRfdRevisionPdf => Some("revision pdf"),
+
         CliCommand::ReserveRfd => Some("reserve"),
 
         CliCommand::SetRfdAttr => Some("edit attr"),
@@ -153,7 +162,7 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::GetApiUserToken => Some("sys user token get"),
         CliCommand::ListApiUserTokens => Some("sys user token list"),
         CliCommand::UpdateApiUser => Some("sys user update"),
-        CliCommand::GetSelf => Some("self"),
+        CliCommand::GetSelf => Some("sys user self"),
 
         // Set user email
         CliCommand::SetApiUserContactEmail => Some("sys user contact email set"),
@@ -409,9 +418,10 @@ impl ProgenitorCliConfig for Context {
                 .printer()
                 .unwrap()
                 .output_oauth_secret(reserialize(value)),
-            "Array_of_RfdMeta" => self.printer().unwrap().output_rfd_list(reserialize(value)),
-            "FullRfd" => self.printer().unwrap().output_rfd_full(reserialize(value)),
-            "Rfd" => self.printer().unwrap().output_rfd(reserialize(value)),
+            "Array_of_RfdWithoutContent" => {
+                self.printer().unwrap().output_rfd_list(reserialize(value))
+            }
+            "RfdWithRaw" => self.printer().unwrap().output_rfd_full(reserialize(value)),
             "SearchResults" => self
                 .printer()
                 .unwrap()

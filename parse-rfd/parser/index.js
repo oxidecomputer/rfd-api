@@ -2,48 +2,48 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-let Asciidoctor = require("@asciidoctor/core");
-let convert = require("html-to-text").convert;
+let Asciidoctor = require('@asciidoctor/core')
+let convert = require('html-to-text').convert
 
-const asciidoc = Asciidoctor();
+const asciidoc = Asciidoctor()
 
 const parse = (content) => {
-  const doc = asciidoc.load(content);
+  const doc = asciidoc.load(content)
 
   const sections = doc
     .getSections()
     .map((section) => formatSection(section, content))
-    .reduce((acc, prev) => [...acc, ...prev], []);
+    .reduce((acc, prev) => [...acc, ...prev], [])
 
   const title = doc.getTitle()
 
   return {
-    title: (title || "")
-      .replace("RFD", "")
-      .replace("# ", "")
-      .replace("= ", "")
+    title: (title || '')
+      .replace('RFD', '')
+      .replace('# ', '')
+      .replace('= ', '')
       .trim()
       .split(' ')
       .slice(1)
       .join(' '),
-    sections
-  };
-};
+    sections,
+  }
+}
 
 const formatSection = (section, content) => {
-  const formattedSections = [];
+  const formattedSections = []
   for (const s of section.getSections()) {
-    formattedSections.push(...formatSection(s, content));
+    formattedSections.push(...formatSection(s, content))
   }
-  const parentSections = [];
-  let level = section.getLevel() - 1;
-  let currSection = section.getParent();
+  const parentSections = []
+  let level = section.getLevel() - 1
+  let currSection = section.getParent()
 
   while (level-- && currSection) {
     if (typeof currSection.getName === 'function') {
-      parentSections.push(currSection.getName());
+      parentSections.push(currSection.getName())
     }
-    currSection = currSection.getParent();
+    currSection = currSection.getParent()
   }
 
   return [
@@ -53,15 +53,15 @@ const formatSection = (section, content) => {
       content: convert(
         section
           .getBlocks()
-          .filter((block) => block.context !== "section")
+          .filter((block) => block.context !== 'section')
           .map((block) => block.convert())
-          .join("")
+          .join(''),
       ),
-      parents: parentSections
+      parents: parentSections,
     },
     ...formattedSections,
-  ];
-};
+  ]
+}
 
-let content = require("fs").readFileSync(0, 'utf-8');
+let content = require('fs').readFileSync(0, 'utf-8')
 console.log(JSON.stringify(parse(content)))

@@ -11,14 +11,15 @@ use octorust::{
 };
 use partial_struct::partial;
 use rfd_data::{
-    content::{RfdContent, RfdDocument, RfdTemplate, TemplateError},
+    content::{RfdContent, RfdContentError, RfdDocument, RfdTemplate, TemplateError},
     RfdNumber,
 };
 use rfd_github::{GitHubError, GitHubNewRfdNumber, GitHubRfdRepo};
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
-    storage::{JobStore, RfdFilter, RfdMetaStore, RfdPdfFilter, RfdPdfStore, RfdStorage, RfdStore},
-    CommitSha, FileSha, Job, NewJob, Rfd, RfdId, RfdRevision,
+    storage::{JobStore, RfdFilter, RfdMetaStore, RfdPdfsStore, RfdStorage, RfdStore},
+    CommitSha, FileSha, Job, NewJob, Rfd, RfdId, RfdMeta, RfdPdf, RfdPdfs, RfdRevision,
+    RfdRevisionId,
 };
 use rsa::{
     pkcs1::{DecodeRsaPrivateKey, EncodeRsaPrivateKey},
@@ -32,7 +33,8 @@ use thiserror::Error;
 use tracing::instrument;
 use v_api::{
     response::{
-        resource_not_found, resource_restricted, ResourceError, ResourceResult, ToResourceResult,
+        resource_not_found, resource_restricted, ResourceResult, ToResourceResult,
+        ToResourceResultOpt,
     },
     ApiContext, VContext,
 };
@@ -82,6 +84,8 @@ pub enum UpdateRfdContentError {
     GitHub(#[from] GitHubError),
     #[error("Internal GitHub state does not currently allow for update. This commit appears as the head commit on multiple branches.")]
     InternalState,
+    #[error("Unable to parse RFD contents")]
+    InvalidContent(#[from] RfdContentError),
     #[error("Failed to construct new RFD template")]
     InvalidTemplate(#[from] TemplateError),
     #[error("Unable to perform action. Unable to find the default branch on GitHub.")]
@@ -91,31 +95,172 @@ pub enum UpdateRfdContentError {
 }
 
 #[partial(RfdWithoutContent)]
+#[partial(RfdWithPdf)]
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
-pub struct RfdWithContent {
+pub struct RfdWithRaw {
     pub id: TypedUuid<RfdId>,
     pub rfd_number: i32,
     pub link: Option<String>,
     pub discussion: Option<String>,
-    pub title: String,
+    pub title: Option<String>,
     pub state: Option<String>,
     pub authors: Option<String>,
     pub labels: Option<String>,
     #[partial(RfdWithoutContent(skip))]
-    pub content: String,
-    pub format: ContentFormat,
-    pub sha: FileSha,
-    pub commit: CommitSha,
-    pub committed_at: DateTime<Utc>,
-    #[partial(RfdWithoutContent(skip))]
-    pub pdfs: Vec<PdfEntry>,
+    #[partial(RfdWithPdf(retype = Vec<RfdPdf>))]
+    pub content: Option<String>,
+    pub format: Option<ContentFormat>,
+    pub sha: Option<FileSha>,
+    pub commit: Option<CommitSha>,
+    pub committed_at: Option<DateTime<Utc>>,
     pub visibility: Visibility,
+}
+
+impl From<Rfd> for RfdWithRaw {
+    fn from(value: Rfd) -> Self {
+        Self {
+            id: value.id,
+            rfd_number: value.rfd_number,
+            link: value.link,
+            discussion: value
+                .content
+                .as_ref()
+                .and_then(|content| content.discussion.clone()),
+            title: value.content.as_ref().map(|content| content.title.clone()),
+            state: value
+                .content
+                .as_ref()
+                .and_then(|content| content.state.clone()),
+            authors: value
+                .content
+                .as_ref()
+                .and_then(|content| content.authors.clone()),
+            labels: value
+                .content
+                .as_ref()
+                .and_then(|content| content.labels.clone()),
+            content: value
+                .content
+                .as_ref()
+                .map(|content| content.content.clone()),
+            format: value
+                .content
+                .as_ref()
+                .map(|content| content.content_format.clone()),
+            sha: value.content.as_ref().map(|content| content.sha.clone()),
+            commit: value.content.as_ref().map(|content| content.commit.clone()),
+            committed_at: value
+                .content
+                .as_ref()
+                .map(|content| content.committed_at.clone()),
+            visibility: value.visibility,
+        }
+    }
+}
+
+impl From<RfdMeta> for RfdWithoutContent {
+    fn from(value: RfdMeta) -> Self {
+        Self {
+            id: value.id,
+            rfd_number: value.rfd_number,
+            link: value.link,
+            discussion: value
+                .content
+                .as_ref()
+                .and_then(|content| content.discussion.clone()),
+            title: value.content.as_ref().map(|content| content.title.clone()),
+            state: value
+                .content
+                .as_ref()
+                .and_then(|content| content.state.clone()),
+            authors: value
+                .content
+                .as_ref()
+                .and_then(|content| content.authors.clone()),
+            labels: value
+                .content
+                .as_ref()
+                .and_then(|content| content.labels.clone()),
+            format: value
+                .content
+                .as_ref()
+                .map(|content| content.content_format.clone()),
+            sha: value.content.as_ref().map(|content| content.sha.clone()),
+            commit: value.content.as_ref().map(|content| content.commit.clone()),
+            committed_at: value
+                .content
+                .as_ref()
+                .map(|content| content.committed_at.clone()),
+            visibility: value.visibility,
+        }
+    }
+}
+
+impl From<RfdPdfs> for RfdWithPdf {
+    fn from(value: RfdPdfs) -> Self {
+        Self {
+            id: value.id,
+            rfd_number: value.rfd_number,
+            link: value.link,
+            discussion: value
+                .content
+                .as_ref()
+                .and_then(|content| content.discussion.clone()),
+            title: value.content.as_ref().map(|content| content.title.clone()),
+            state: value
+                .content
+                .as_ref()
+                .and_then(|content| content.state.clone()),
+            authors: value
+                .content
+                .as_ref()
+                .and_then(|content| content.authors.clone()),
+            labels: value
+                .content
+                .as_ref()
+                .and_then(|content| content.labels.clone()),
+            content: value
+                .content
+                .as_ref()
+                .map(|content| content.content.clone())
+                .unwrap_or_default(),
+            format: value
+                .content
+                .as_ref()
+                .map(|content| content.content_format.clone()),
+            sha: value.content.as_ref().map(|content| content.sha.clone()),
+            commit: value.content.as_ref().map(|content| content.commit.clone()),
+            committed_at: value
+                .content
+                .as_ref()
+                .map(|content| content.committed_at.clone()),
+            visibility: value.visibility,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
 pub struct PdfEntry {
     pub source: String,
     pub link: String,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
+pub enum RfdRevisionIdentifier {
+    Commit(CommitSha),
+    Id(TypedUuid<RfdRevisionId>),
+}
+
+impl From<CommitSha> for RfdRevisionIdentifier {
+    fn from(value: CommitSha) -> Self {
+        Self::Commit(value)
+    }
+}
+
+impl From<TypedUuid<RfdRevisionId>> for RfdRevisionIdentifier {
+    fn from(value: TypedUuid<RfdRevisionId>) -> Self {
+        Self::Id(value)
+    }
 }
 
 impl RfdContext {
@@ -302,21 +447,7 @@ impl RfdContext {
 
         let mut rfd_list = rfds
             .into_iter()
-            .map(|rfd| RfdWithoutContent {
-                id: rfd.id,
-                rfd_number: rfd.rfd_number,
-                link: rfd.link,
-                discussion: rfd.content.discussion,
-                title: rfd.content.title,
-                state: rfd.content.state,
-                authors: rfd.content.authors,
-                labels: rfd.content.labels,
-                format: rfd.content.content_format,
-                sha: rfd.content.sha,
-                commit: rfd.content.commit.into(),
-                committed_at: rfd.content.committed_at,
-                visibility: rfd.visibility,
-            })
+            .map(|rfd| RfdWithoutContent::from(rfd))
             .collect::<Vec<_>>();
 
         // Finally sort the RFD list by RFD number
@@ -326,22 +457,23 @@ impl RfdContext {
     }
 
     #[instrument(skip(self, caller))]
-    async fn get_rfd_by_number(
+    async fn get_rfd(
         &self,
         caller: &Caller<RfdPermission>,
         rfd_number: i32,
-        commit: Option<CommitSha>,
+        revision: Option<RfdRevisionIdentifier>,
     ) -> ResourceResult<Rfd, StoreError> {
-        let rfd = RfdStore::list(
-            &*self.storage,
-            vec![RfdFilter::default()
-                .rfd_number(Some(vec![rfd_number]))
-                .commit(commit.map(|commit| vec![commit]))],
-            &ListPagination::latest(),
-        )
-        .await
-        .to_resource_result()?
-        .pop();
+        let mut filter = RfdFilter::default().rfd_number(Some(vec![rfd_number]));
+        filter = match revision {
+            Some(RfdRevisionIdentifier::Commit(commit)) => filter.commit(Some(vec![commit])),
+            Some(RfdRevisionIdentifier::Id(revision)) => filter.revision(Some(vec![revision])),
+            None => filter,
+        };
+
+        let rfd = RfdStore::list(&*self.storage, vec![filter], &ListPagination::latest())
+            .await
+            .to_resource_result()?
+            .pop();
 
         if let Some(rfd) = rfd {
             if caller.can(&RfdPermission::GetRfdsAll)
@@ -358,44 +490,80 @@ impl RfdContext {
     }
 
     #[instrument(skip(self, caller))]
+    async fn get_rfd_meta(
+        &self,
+        caller: &Caller<RfdPermission>,
+        rfd_number: i32,
+        revision: Option<RfdRevisionIdentifier>,
+    ) -> ResourceResult<RfdMeta, StoreError> {
+        let mut filter = RfdFilter::default().rfd_number(Some(vec![rfd_number]));
+        filter = match revision {
+            Some(RfdRevisionIdentifier::Commit(commit)) => filter.commit(Some(vec![commit])),
+            Some(RfdRevisionIdentifier::Id(revision)) => filter.revision(Some(vec![revision])),
+            None => filter,
+        };
+
+        let rfd = RfdMetaStore::list(&*self.storage, vec![filter], &ListPagination::latest())
+            .await
+            .to_resource_result()?
+            .pop();
+
+        if let Some(rfd) = rfd {
+            if caller.can(&RfdPermission::GetRfdsAll)
+                || caller.can(&RfdPermission::GetRfd(rfd.rfd_number))
+                || rfd.visibility == Visibility::Public
+            {
+                Ok(rfd)
+            } else {
+                resource_not_found()
+            }
+        } else {
+            resource_not_found()
+        }
+    }
+
+    #[instrument(skip(self, caller))]
+    async fn get_rfd_pdf(
+        &self,
+        caller: &Caller<RfdPermission>,
+        rfd_number: i32,
+        revision: Option<RfdRevisionIdentifier>,
+    ) -> ResourceResult<RfdWithPdf, StoreError> {
+        let mut filter = RfdFilter::default().rfd_number(Some(vec![rfd_number]));
+        filter = match revision {
+            Some(RfdRevisionIdentifier::Commit(commit)) => filter.commit(Some(vec![commit])),
+            Some(RfdRevisionIdentifier::Id(revision)) => filter.revision(Some(vec![revision])),
+            None => filter,
+        };
+
+        let rfd = RfdPdfsStore::list(&*self.storage, vec![filter], &ListPagination::unlimited())
+            .await
+            .to_resource_result()?
+            .pop();
+
+        if let Some(rfd) = rfd {
+            if caller.can(&RfdPermission::GetRfdsAll)
+                || caller.can(&RfdPermission::GetRfd(rfd.rfd_number))
+                || rfd.visibility == Visibility::Public
+            {
+                Ok(rfd.into())
+            } else {
+                resource_not_found()
+            }
+        } else {
+            resource_not_found()
+        }
+    }
+
+    #[instrument(skip(self, caller))]
     pub async fn view_rfd(
         &self,
         caller: &Caller<RfdPermission>,
         rfd_number: i32,
-        commit: Option<CommitSha>,
-    ) -> ResourceResult<RfdWithContent, StoreError> {
-        let rfd = self.get_rfd_by_number(caller, rfd_number, commit).await?;
-        let pdfs = RfdPdfStore::list(
-            &*self.storage,
-            vec![RfdPdfFilter::default().rfd_revision(Some(vec![rfd.content.id]))],
-            &ListPagination::default(),
-        )
-        .await
-        .to_resource_result()?;
-
-        Ok(RfdWithContent {
-            id: rfd.id,
-            rfd_number: rfd.rfd_number,
-            link: rfd.link,
-            discussion: rfd.content.discussion,
-            title: rfd.content.title,
-            state: rfd.content.state,
-            authors: rfd.content.authors,
-            labels: rfd.content.labels,
-            content: rfd.content.content,
-            format: rfd.content.content_format,
-            sha: rfd.content.sha,
-            commit: rfd.content.commit.into(),
-            committed_at: rfd.content.committed_at,
-            pdfs: pdfs
-                .into_iter()
-                .map(|pdf| PdfEntry {
-                    source: pdf.source.to_string(),
-                    link: pdf.link,
-                })
-                .collect(),
-            visibility: rfd.visibility,
-        })
+        revision: Option<RfdRevisionIdentifier>,
+    ) -> ResourceResult<RfdWithRaw, StoreError> {
+        let rfd = self.get_rfd(caller, rfd_number, revision).await?;
+        Ok(rfd.into())
     }
 
     #[instrument(skip(self, caller))]
@@ -403,21 +571,10 @@ impl RfdContext {
         &self,
         caller: &Caller<RfdPermission>,
         rfd_number: i32,
-        commit: Option<CommitSha>,
+        revision: Option<RfdRevisionIdentifier>,
     ) -> ResourceResult<RfdWithoutContent, StoreError> {
-        let rfd = self
-            .list_rfds(
-                caller,
-                Some(
-                    RfdFilter::default()
-                        .rfd_number(Some(vec![rfd_number]))
-                        .commit(commit.map(|commit| vec![commit])),
-                ),
-            )
-            .await?
-            .pop();
-
-        rfd.ok_or(ResourceError::DoesNotExist)
+        let rfd = self.get_rfd_meta(caller, rfd_number, revision).await?;
+        Ok(rfd.into())
     }
 
     #[instrument(skip(self, caller))]
@@ -425,10 +582,10 @@ impl RfdContext {
         &self,
         caller: &Caller<RfdPermission>,
         rfd_number: i32,
-        commit: Option<CommitSha>,
+        revision: Option<RfdRevisionIdentifier>,
     ) -> ResourceResult<RfdRevision, StoreError> {
-        let rfd = self.get_rfd_by_number(caller, rfd_number, commit).await?;
-        Ok(rfd.content)
+        let rfd = self.get_rfd(caller, rfd_number, revision).await?;
+        Ok(rfd.content).opt_to_resource_result()
     }
 
     async fn get_latest_rfd_revision(
@@ -437,6 +594,16 @@ impl RfdContext {
         rfd_number: i32,
     ) -> ResourceResult<RfdRevision, StoreError> {
         self.view_rfd_revision(caller, rfd_number, None).await
+    }
+
+    #[instrument(skip(self, caller))]
+    pub async fn view_rfd_pdfs(
+        &self,
+        caller: &Caller<RfdPermission>,
+        rfd_number: i32,
+        revision: Option<RfdRevisionIdentifier>,
+    ) -> ResourceResult<RfdWithPdf, StoreError> {
+        self.get_rfd_pdf(caller, rfd_number, revision).await
     }
 
     #[instrument(skip(self, caller, content))]
@@ -458,8 +625,14 @@ impl RfdContext {
                 .map_err(|err| err.inner_into())?;
 
             let sha = latest_revision.commit.clone();
-            let mut updated_content: RfdContent = latest_revision.into();
-            updated_content.update_body(content);
+            let mut updated_content: RfdContent = latest_revision
+                .try_into()
+                .map_err(UpdateRfdContentError::InvalidContent)
+                .to_resource_result()?;
+            updated_content
+                .update_body(content)
+                .map_err(UpdateRfdContentError::InvalidContent)
+                .to_resource_result()?;
 
             self.commit_rfd_document(
                 caller,
@@ -631,22 +804,11 @@ impl RfdContext {
             &RfdPermission::ManageRfdVisibility(rfd_number),
             &RfdPermission::ManageRfdsVisibilityAll,
         ]) {
-            let mut rfds = RfdStore::list(
-                &*self.storage,
-                vec![RfdFilter::default().rfd_number(Some(vec![rfd_number]))],
-                &ListPagination::default().limit(1),
-            )
-            .await
-            .to_resource_result()?;
-
-            if let Some(mut rfd) = rfds.pop() {
-                rfd.visibility = visibility;
-                RfdStore::upsert(&*self.storage, rfd.into())
-                    .await
-                    .to_resource_result()
-            } else {
-                resource_not_found()
-            }
+            let mut rfd = self.get_rfd_meta(caller, rfd_number, None).await?;
+            rfd.visibility = visibility;
+            RfdStore::upsert(&*self.storage, rfd.into())
+                .await
+                .to_resource_result()
         } else {
             resource_restricted()
         }
