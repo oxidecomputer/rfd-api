@@ -84,7 +84,7 @@ tracing-appender = "0.2.3"
 tracing-slog = { git = "https://github.com/oxidecomputer/tracing-slog", default-features = false }
 tracing-subscriber = "0.3.19"
 uuid = { version = "1.11.0", features = ["serde"] }
-valuable = "0.1.0"
+valuable = "0.1.1"
 v-api = { git = "https://github.com/oxidecomputer/v-api" }
 v-api-installer = { git = "https://github.com/oxidecomputer/v-api" }
 v-model = { git = "https://github.com/oxidecomputer/v-api" }
