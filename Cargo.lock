@@ -580,9 +580,9 @@ dependencies = [
 
 [[package]]
 name = "diesel"
-version = "2.2.6"
+version = "2.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ccf1bedf64cdb9643204a36dd15b19a6ce8e7aa7f7b105868e9f1fad5ffa7d12"
+checksum = "04001f23ba8843dc315804fa324000376084dfb1c30794ff68dd279e6e5696d5"
 dependencies = [
  "bitflags 2.8.0",
  "byteorder",
@@ -792,7 +792,7 @@ dependencies = [
 [[package]]
 name = "dropshot-authorization-header"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#4e7201751f415f252a59ef77cf1713a0956d7a52"
+source = "git+https://github.com/oxidecomputer/v-api#befcb02d7d431a96937d566fe2329d4188b41456"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -4423,7 +4423,7 @@ dependencies = [
 [[package]]
 name = "v-api"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#4e7201751f415f252a59ef77cf1713a0956d7a52"
+source = "git+https://github.com/oxidecomputer/v-api#befcb02d7d431a96937d566fe2329d4188b41456"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -4467,7 +4467,7 @@ dependencies = [
 [[package]]
 name = "v-api-installer"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#4e7201751f415f252a59ef77cf1713a0956d7a52"
+source = "git+https://github.com/oxidecomputer/v-api#befcb02d7d431a96937d566fe2329d4188b41456"
 dependencies = [
  "diesel",
  "diesel_migrations",
@@ -4476,7 +4476,7 @@ dependencies = [
 [[package]]
 name = "v-api-permission-derive"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#4e7201751f415f252a59ef77cf1713a0956d7a52"
+source = "git+https://github.com/oxidecomputer/v-api#befcb02d7d431a96937d566fe2329d4188b41456"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -4487,7 +4487,7 @@ dependencies = [
 [[package]]
 name = "v-model"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#4e7201751f415f252a59ef77cf1713a0956d7a52"
+source = "git+https://github.com/oxidecomputer/v-api#befcb02d7d431a96937d566fe2329d4188b41456"
 dependencies = [
  "async-bb8-diesel",
  "async-trait",
