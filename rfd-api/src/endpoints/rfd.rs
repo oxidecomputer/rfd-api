@@ -479,6 +479,8 @@ async fn search_rfds_op(
             Some(filter)
         };
 
+        tracing::debug!(?search_request, "Submitting search request to backend");
+
         // Pass the search request off to the meilisearch backend
         let results = ctx
             .search
