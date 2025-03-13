@@ -5,6 +5,7 @@
 use async_trait::async_trait;
 use newtype_uuid::TypedUuid;
 use octorust::types::{LabelsData, PullRequestData, PullRequestSimple};
+use process_includes::ProcessIncludes;
 use rfd_data::content::RfdDocument;
 use rfd_github::{GitHubError, GitHubRfdUpdate};
 use rfd_model::RfdId;
@@ -31,6 +32,7 @@ mod copy_images_to_storage;
 mod create_pull_request;
 mod ensure_default_state;
 mod ensure_pr_state;
+mod process_includes;
 mod update_discussion_url;
 mod update_pdfs;
 mod update_pull_request;
@@ -86,6 +88,7 @@ impl TryFrom<&str> for BoxedAction {
             "CreatePullRequest" => Ok(Box::new(CreatePullRequest)),
             "UpdatePullRequest" => Ok(Box::new(UpdatePullRequest)),
             "UpdateDiscussionUrl" => Ok(Box::new(UpdateDiscussionUrl)),
+            "ProcessIncludes" => Ok(Box::new(ProcessIncludes)),
             "EnsureRfdWithPullRequestIsInValidState" => {
                 Ok(Box::new(EnsureRfdWithPullRequestIsInValidState))
             }

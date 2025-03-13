@@ -157,6 +157,39 @@ impl<'a> RfdAsciidoc<'a> {
     fn body(content: &str) -> Option<&str> {
         Self::title_pattern().splitn(content, 2).nth(1)
     }
+
+    fn include_pattern() -> Regex {
+        Regex::new(r"(?m)^include::(.*)\[\]$").unwrap()
+    }
+
+    pub fn includes(&'a self) -> Vec<AsciidocInclude<'a>> {
+        Self::include_pattern()
+            .captures_iter(&self.resolved)
+            .map(|capture| {
+                let extracted = capture.extract::<1>();
+                AsciidocInclude {
+                    file: extracted.1[0],
+                    replacement: extracted.0,
+                }
+            })
+            .collect::<Vec<_>>()
+    }
+}
+
+#[derive(Debug, PartialEq)]
+pub struct AsciidocInclude<'a> {
+    file: &'a str,
+    replacement: &'a str,
+}
+
+impl<'a> AsciidocInclude<'a> {
+    pub fn name(&self) -> &str {
+        self.file
+    }
+
+    pub fn perform_replacement(&self, body: &str, new_content: &str) -> String {
+        body.replace(self.replacement, new_content)
+    }
 }
 
 impl<'a> RfdDocument for RfdAsciidoc<'a> {
@@ -197,36 +230,6 @@ impl<'a> RfdDocument for RfdAsciidoc<'a> {
 
     fn get_authors(&self) -> Option<&str> {
         Self::attr("authors", &self.resolved)
-        // // If an authors attribute is defined anywhere in the document, then it is the first choice
-        // // for the authors value
-        // if let Some(attr) = Self::attr("authors", &self.resolved) {
-        //     Some(attr)
-        // } else {
-        //     self.body().and_then(|body| {
-        //         body.lines().nth(0).and_then(|first_line| {
-        //             // If {authors} is found, instead search the header for an authors attribute
-        //             if first_line == "{authors}" {
-        //                 Self::attr("authors", &self.resolved)
-        //             } else {
-        //                 // Given that we are in a fallback case we need to be slightly picky on what
-        //                 // lines we allow. We require that the line at least include a *@*.* word to
-        //                 // try and filter out lines that are not actually author lines
-        //                 let author_fallback_pattern =
-        //                     Regex::new(r"^.*?([\S]+@[\S]+.[\S]+).*?$").unwrap();
-        //                 let fallback_matches = author_fallback_pattern.is_match(first_line);
-
-        //                 if fallback_matches {
-        //                     Some(first_line)
-        //                 } else {
-        //                     // If none of our attempts have found an author, we drop back to the
-        //                     // attribute lookup. Eventually all of this logic should be removed and only
-        //                     // the attribute version should be supported
-        //                     Self::attr("authors", &self.resolved)
-        //                 }
-        //             }
-        //         })
-        //     })
-        // }
     }
 
     fn get_labels(&self) -> Option<&str> {
@@ -969,5 +972,103 @@ This is the new body"#;
         let mut rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content())).unwrap();
         rfd.update_body(&new_content).unwrap();
         assert_eq!(expected, rfd.raw());
+    }
+
+    #[test]
+    fn test_find_includes() {
+        let contents = r#":reproducible:
+:showtitle:
+:toc: left
+:numbered:
+:icons: font
+:state: prediscussion
+:revremark: State: {state}
+:docdatetime: 2019-01-04 19:26:06 UTC
+:localdatetime: 2019-01-04 19:26:06 UTC
+:labels: label1, label2
+
+= RFD 123 Place
+FirstName LastName <fname@company.org>
+
+include::sub_doc1.adoc[]
+This is the new body
+
+include::sub_doc2.adoc[]"#;
+        let rfd = RfdAsciidoc::new(Cow::Borrowed(contents)).unwrap();
+        let includes = rfd.includes();
+
+        let expected = vec![
+            AsciidocInclude {
+                file: "sub_doc1.adoc",
+                replacement: "include::sub_doc1.adoc[]",
+            },
+            AsciidocInclude {
+                file: "sub_doc2.adoc",
+                replacement: "include::sub_doc2.adoc[]",
+            },
+        ];
+        assert_eq!(expected, includes);
+    }
+
+    #[test]
+    fn test_replace_include() {
+        let original = r#":reproducible:
+:showtitle:
+:toc: left
+:numbered:
+:icons: font
+:state: prediscussion
+:revremark: State: {state}
+:docdatetime: 2019-01-04 19:26:06 UTC
+:localdatetime: 2019-01-04 19:26:06 UTC
+:labels: label1, label2
+
+= RFD 123 Place
+FirstName LastName <fname@company.org>
+
+include::sub_doc1.adoc[]
+This is the new body
+
+include::sub_doc1.adoc[]
+
+include::sub_doc2.adoc[]"#;
+        let include = AsciidocInclude {
+            file: "sub_doc1.adoc",
+            replacement: "include::sub_doc1.adoc[]",
+        };
+
+        let replacement_content = "Line 1
+Line 2
+Line 3";
+
+        let expected = r#":reproducible:
+:showtitle:
+:toc: left
+:numbered:
+:icons: font
+:state: prediscussion
+:revremark: State: {state}
+:docdatetime: 2019-01-04 19:26:06 UTC
+:localdatetime: 2019-01-04 19:26:06 UTC
+:labels: label1, label2
+
+= RFD 123 Place
+FirstName LastName <fname@company.org>
+
+Line 1
+Line 2
+Line 3
+This is the new body
+
+Line 1
+Line 2
+Line 3
+
+include::sub_doc2.adoc[]"#;
+
+        assert_eq!(
+            expected,
+            include.perform_replacement(original, replacement_content)
+        );
     }
 }
