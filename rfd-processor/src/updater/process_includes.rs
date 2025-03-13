@@ -43,10 +43,13 @@ impl RfdUpdateAction for ProcessIncludes {
                 let mut raw = adoc.raw().to_string();
                 let includes = adoc.includes();
                 for include in includes {
-                    if let Some(document) = documents
-                        .iter()
-                        .find(|document| document.name == include.name())
-                    {
+                    if let Some(document) = documents.iter().find(|document| {
+                        document
+                            .path
+                            .trim_start_matches('/')
+                            .trim_start_matches(&ctx.github.repository.path)
+                            == include.name()
+                    }) {
                         if let Some(content) = document.to_text() {
                             raw = include.perform_replacement(&raw, &content);
                         } else {
