@@ -48,7 +48,7 @@ pub enum RenderableRfdError {
 
 #[derive(Debug, Clone)]
 pub struct RenderableRfd<'a> {
-    content: RfdContent<'a>,
+    pub content: RfdContent<'a>,
     render_id: Uuid,
 }
 
@@ -110,7 +110,8 @@ impl<'a> RenderableRfd<'a> {
     ) -> Result<RfdPdf, RfdOutputError> {
         match &self.content {
             RfdContent::Asciidoc(adoc) => {
-                self.download_images(client, number, branch).await?;
+                self.download_supporting_documents(client, number, branch)
+                    .await?;
 
                 let pdf = RenderedPdf::render(adoc, self.tmp_path()?).await?;
 
@@ -127,9 +128,9 @@ impl<'a> RenderableRfd<'a> {
     }
 
     /// Downloads images that are stored on the provided GitHub branch for the given RFD number.
-    /// These are stored locally so in a tmp directory for use by asciidoctor
+    /// These are stored locally in a tmp directory for use by asciidoctor
     #[instrument(skip(self, client), fields(storage_path = ?self.tmp_path()))]
-    async fn download_images(
+    async fn download_supporting_documents(
         &self,
         client: &Client,
         number: &RfdNumber,
@@ -138,20 +139,22 @@ impl<'a> RenderableRfd<'a> {
         let dir = number.repo_path();
         let storage_path = self.tmp_path()?;
 
-        let images = location.get_images(client, number).await?;
+        let documents = location
+            .download_supporting_documents(client, number)
+            .await?;
 
-        for image in images {
-            let image_path = storage_path.join(
-                image
+        for document in documents {
+            let document_path = storage_path.join(
+                document
                     .path
                     .replace(dir.trim_start_matches('/'), "")
                     .trim_start_matches('/'),
             );
 
-            let path = PathBuf::from(image_path);
-            write_file(&path, &decode_base64(&image.content)?).await?;
+            let path = PathBuf::from(document_path);
+            write_file(&path, &decode_base64(&document.content)?).await?;
 
-            tracing::info!(?path, "Wrote embedded image",);
+            tracing::info!(?path, "Wrote supporting document",);
         }
 
         Ok(())

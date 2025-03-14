@@ -54,6 +54,7 @@ impl ReposExt for Repos {
 pub trait ContentFileExt {
     fn is_empty(&self) -> bool;
     fn decode(&self) -> Result<Vec<u8>, DecodeError>;
+    fn to_text(&self) -> Option<String>;
 }
 
 impl ContentFileExt for ContentFile {
@@ -65,6 +66,12 @@ impl ContentFileExt for ContentFile {
         BASE64_STANDARD
             .decode(self.content.replace('\n', ""))
             .map(|data| data.trim().to_vec())
+    }
+
+    fn to_text(&self) -> Option<String> {
+        self.decode()
+            .ok()
+            .and_then(|content| String::from_utf8(content).ok())
     }
 }
 

@@ -29,7 +29,7 @@ impl RfdUpdateAction for CopyImagesToStorage {
 
         let images = update
             .location
-            .get_images(&ctx.github.client, &update.number)
+            .download_supporting_documents(&ctx.github.client, &update.number)
             .await
             .map_err(|err| RfdUpdateActionErr::Continue(Box::new(err)))?;
 

@@ -541,18 +541,25 @@ impl GitHubRfdLocation {
         })
     }
 
-    /// Get a list of images that are store in this branch
-    pub async fn get_images(
+    /// Download the supporting documents that are within this RFD location
+    pub async fn download_supporting_documents(
         &self,
         client: &Client,
         rfd_number: &RfdNumber,
     ) -> Result<Vec<octorust::types::ContentFile>, GitHubError> {
         let dir = rfd_number.repo_path();
-        Self::get_images_internal(client, &self.owner, &self.repo, &self.commit, dir).await
+        Self::download_supporting_documents_internal(
+            client,
+            &self.owner,
+            &self.repo,
+            &self.commit,
+            dir,
+        )
+        .await
     }
 
     #[instrument(skip(client, dir))]
-    fn get_images_internal<'a>(
+    fn download_supporting_documents_internal<'a>(
         client: &'a Client,
         owner: &'a String,
         repo: &'a String,
@@ -575,13 +582,15 @@ impl GitHubRfdLocation {
                 tracing::info!(file.path, file.type_, "Processing git entry");
 
                 if file.type_ == "dir" {
-                    let images =
-                        Self::get_images_internal(client, owner, repo, ref_, file.path).await?;
+                    let images = Self::download_supporting_documents_internal(
+                        client, owner, repo, ref_, file.path,
+                    )
+                    .await?;
 
                     for image in images {
                         files.push(image)
                     }
-                } else if is_image(&file.name) {
+                } else {
                     let file = client
                         .repos()
                         .get_content_blob(owner, repo, ref_.0.as_str(), &file.path)
