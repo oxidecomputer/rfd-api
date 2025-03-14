@@ -127,6 +127,8 @@ impl PersistedRfd {
     pub fn set_content(&mut self, format: ContentFormat, content: &str) {
         self.revision.content = content.to_string();
         self.revision.content_format = format;
+
+        *self.needs_update.lock().unwrap() = true;
     }
 
     pub fn update_discussion(&mut self, new_discussion_url: impl ToString) -> Result<(), RfdError> {

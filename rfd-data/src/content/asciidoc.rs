@@ -188,6 +188,7 @@ impl<'a> AsciidocInclude<'a> {
     }
 
     pub fn perform_replacement(&self, body: &str, new_content: &str) -> String {
+        tracing::trace!(self.replacement, "Replacing include");
         body.replace(self.replacement, new_content)
     }
 }

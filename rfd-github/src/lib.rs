@@ -590,7 +590,7 @@ impl GitHubRfdLocation {
                     for image in images {
                         files.push(image)
                     }
-                } else if is_image(&file.name) {
+                } else {
                     let file = client
                         .repos()
                         .get_content_blob(owner, repo, ref_.0.as_str(), &file.path)
