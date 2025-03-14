@@ -30,14 +30,6 @@ impl RfdUpdateAction for ProcessIncludes {
         tracing::info!("Processing inculdes");
         let RfdUpdateActionContext { ctx, update, .. } = ctx;
 
-        let documents = update
-            .location
-            .download_supporting_documents(&ctx.github.client, &update.number)
-            .await
-            .map_err(|err| RfdUpdateActionErr::Continue(Box::new(err)))?;
-
-        tracing::trace!(?documents, "Retrieved supporting documents from GitHub");
-
         let content = new
             .content()
             .map_err(|err| RfdUpdateActionErr::Continue(Box::new(err)))?;
@@ -45,28 +37,41 @@ impl RfdUpdateAction for ProcessIncludes {
             RfdContent::Asciidoc(adoc) => {
                 let mut raw = adoc.raw().to_string();
                 let includes = adoc.includes();
-                for include in includes {
-                    tracing::info!(?include, "Handle include");
 
-                    if let Some(document) = documents.iter().find(|document| {
-                        let trimmed_path = document
-                            .path
-                            .trim_start_matches(&ctx.github.repository.path)
-                            .trim_start_matches('/')
-                            .trim_start_matches(&update.number.as_number_string())
-                            .trim_start_matches('/');
+                // Ensure that we only do the work of downloading supporting documents if there
+                // are include macros to process
+                if includes.len() > 0 {
+                    let documents = update
+                        .location
+                        .download_supporting_documents(&ctx.github.client, &update.number)
+                        .await
+                        .map_err(|err| RfdUpdateActionErr::Continue(Box::new(err)))?;
 
-                        tracing::debug!(path = ?document.path, ?trimmed_path, name = include.name(), "Test include name against path");
-                        trimmed_path == include.name()
-                    }) {
-                        if let Some(content) = document.to_text() {
-                            tracing::info!(name = include.name(), file = document.name, "Found include match. Replacing contents");
-                            raw = include.perform_replacement(&raw, &content);
-                        } else {
-                            tracing::warn!(?include, "Non UTF-8 files can not be included")
+                    tracing::trace!(?documents, "Retrieved supporting documents from GitHub");
+                    for include in includes {
+                        tracing::info!(?include, "Handle include");
+
+                        if let Some(document) = documents.iter().find(|document| {
+                            let trimmed_path = document
+                                .path
+                                .trim_start_matches(&ctx.github.repository.path)
+                                .trim_start_matches('/')
+                                .trim_start_matches(&update.number.as_number_string())
+                                .trim_start_matches('/');
+
+                            tracing::debug!(path = ?document.path, ?trimmed_path, name = include.name(), "Test include name against path");
+                            trimmed_path == include.name()
+                        }) {
+                            if let Some(content) = document.to_text() {
+                                tracing::info!(name = include.name(), file = document.name, "Found include match. Replacing contents");
+                                raw = include.perform_replacement(&raw, &content);
+                            } else {
+                                tracing::warn!(?include, "Non UTF-8 files can not be included")
+                            }
                         }
                     }
                 }
+
                 (ContentFormat::Asciidoc, raw)
             }
             RfdContent::Markdown(_) => (ContentFormat::Markdown, content.raw().to_string()),
