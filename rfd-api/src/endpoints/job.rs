@@ -1,4 +1,6 @@
-// Read Endpoints
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use dropshot::{endpoint, ClientErrorStatusCode, HttpError, HttpResponseOk, Query, RequestContext};
 use rfd_model::{storage::JobFilter, Job};
@@ -10,6 +12,8 @@ use v_api::{response::client_error, ApiContext};
 use v_model::permissions::Caller;
 
 use crate::{context::RfdContext, permissions::RfdPermission};
+
+// Read Endpoints
 
 #[derive(Debug, Deserialize, JsonSchema)]
 struct ListJobsQuery {
