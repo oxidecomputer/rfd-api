@@ -91,6 +91,10 @@ impl CliOutput for RfdJsonPrinter {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 
+    fn output_job_list(&self, value: Vec<types::Job>) {
+        println!("{}", serde_json::to_string(&value).unwrap())
+    }
+
     fn output_error<T>(&self, value: &progenitor_client::Error<T>)
     where
         T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,

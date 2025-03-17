@@ -1176,6 +1176,7 @@ impl JobStore for PostgresStore {
                 let JobFilter {
                     id,
                     sha,
+                    rfd,
                     processed,
                     started,
                 } = filter;
@@ -1186,6 +1187,10 @@ impl JobStore for PostgresStore {
 
                 if let Some(sha) = sha {
                     predicates.push(Box::new(job::sha.eq_any(sha)));
+                }
+
+                if let Some(rfd) = rfd {
+                    predicates.push(Box::new(job::rfd.eq_any(rfd)));
                 }
 
                 if let Some(processed) = processed {

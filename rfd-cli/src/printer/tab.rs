@@ -7,7 +7,7 @@ use owo_colors::{OwoColorize, Style};
 use progenitor_client::ResponseValue;
 use rfd_sdk::types::{
     self, AccessGroupForRfdPermission, ApiKeyResponseForRfdPermission, ApiUserForRfdPermission,
-    Error, InitialApiKeyResponseForRfdPermission, InitialOAuthClientSecretResponse, Mapper,
+    Error, InitialApiKeyResponseForRfdPermission, InitialOAuthClientSecretResponse, Job, Mapper,
     OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, PermissionsForRfdPermission,
     ReserveRfdResponse, RfdAttr, RfdWithRaw, RfdWithoutContent, SearchResultHit, SearchResults,
     Visibility,
@@ -143,6 +143,10 @@ impl CliOutput for RfdTabPrinter {
 
     fn output_reserved_rfd(&self, value: types::ReserveRfdResponse) {
         self.print_cli_output(&value, None);
+    }
+
+    fn output_job_list(&self, value: Vec<types::Job>) {
+        self.print_cli_output(&value, Some("jobs".to_string()));
     }
 
     fn output_error<T>(&self, value: &progenitor_client::Error<T>)
@@ -606,6 +610,39 @@ impl TabDisplay for SearchResultHit {
 impl TabDisplay for ReserveRfdResponse {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "number", &self.number);
+    }
+}
+
+impl TabDisplay for Job {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &self.id);
+        printer.print_field(tw, level, "owner", &self.owner);
+        printer.print_field(tw, level, "repository", &self.repository);
+        printer.print_field(tw, level, "branch", &self.branch);
+        printer.print_field(tw, level, "sha", &self.sha);
+        printer.print_field(tw, level, "rfd", &self.rfd);
+        printer.print_field(
+            tw,
+            level,
+            "webhook_delivery_id",
+            &self
+                .webhook_delivery_id
+                .as_ref()
+                .map(|id| id.0.to_string())
+                .unwrap_or_default(),
+        );
+        printer.print_field(tw, level, "committed_at", &self.committed_at);
+        printer.print_field(tw, level, "processed", &self.processed);
+        printer.print_field(tw, level, "created_at", &self.created_at);
+        printer.print_field(
+            tw,
+            level,
+            "started_at",
+            &self
+                .started_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
     }
 }
 

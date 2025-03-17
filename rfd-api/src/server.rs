@@ -15,6 +15,7 @@ use v_api::{inject_endpoints, v_system_endpoints};
 use crate::{
     context::RfdContext,
     endpoints::{
+        job::list_jobs,
         rfd::{
             discuss_rfd, list_rfds, publish_rfd, reserve_rfd, search_rfds, set_rfd_attr,
             set_rfd_content, set_rfd_document, update_rfd_visibility, view_rfd, view_rfd_attr,
@@ -116,6 +117,9 @@ pub fn server(
     api.register(publish_rfd)
         .expect("Failed to register endpoint");
     api.register(update_rfd_visibility)
+        .expect("Failed to register endpoint");
+
+    api.register(list_jobs)
         .expect("Failed to register endpoint");
 
     // Webhooks

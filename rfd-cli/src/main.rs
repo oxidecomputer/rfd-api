@@ -154,6 +154,9 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::PublishRfd => Some("edit publish"),
         CliCommand::DiscussRfd => Some("edit discuss"),
 
+        // Job commands
+        CliCommand::ListJobs => Some("job list"),
+
         // User commands
         CliCommand::CreateApiUser => Some("sys user create"),
         CliCommand::CreateApiUserToken => Some("sys user token create"),
@@ -431,6 +434,7 @@ impl ProgenitorCliConfig for Context {
                 .printer()
                 .unwrap()
                 .output_reserved_rfd(reserialize(value)),
+            "Array_of_Job" => self.printer().unwrap().output_job_list(reserialize(value)),
             other => eprintln!(
                 "Unhandled response type: {}. Please report this as a bug.",
                 other

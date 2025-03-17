@@ -34,6 +34,7 @@ impl<T: CliConfig> Cli<T> {
             CliCommand::CreateGroup => Self::cli_create_group(),
             CliCommand::UpdateGroup => Self::cli_update_group(),
             CliCommand::DeleteGroup => Self::cli_delete_group(),
+            CliCommand::ListJobs => Self::cli_list_jobs(),
             CliCommand::MagicLinkExchange => Self::cli_magic_link_exchange(),
             CliCommand::MagicLinkSend => Self::cli_magic_link_send(),
             CliCommand::AuthzCodeRedirect => Self::cli_authz_code_redirect(),
@@ -274,7 +275,9 @@ impl<T: CliConfig> Cli<T> {
             .arg(
                 ::clap::Arg::new("expires-at")
                     .long("expires-at")
-                    .value_parser(::clap::value_parser!(chrono::DateTime<chrono::offset::Utc>))
+                    .value_parser(::clap::value_parser!(
+                        ::chrono::DateTime<::chrono::offset::Utc>
+                    ))
                     .required_unless_present("json-body"),
             )
             .arg(
@@ -458,6 +461,17 @@ impl<T: CliConfig> Cli<T> {
                     .required(true),
             )
             .about("Delete a group")
+    }
+
+    pub fn cli_list_jobs() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("rfd")
+                    .long("rfd")
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required(true),
+            )
+            .about("List all jobs for a RFD")
     }
 
     pub fn cli_magic_link_exchange() -> ::clap::Command {
@@ -746,7 +760,9 @@ impl<T: CliConfig> Cli<T> {
             .arg(
                 ::clap::Arg::new("expires-at")
                     .long("expires-at")
-                    .value_parser(::clap::value_parser!(chrono::DateTime<chrono::offset::Utc>))
+                    .value_parser(::clap::value_parser!(
+                        ::chrono::DateTime<::chrono::offset::Utc>
+                    ))
                     .required(false),
             )
             .arg(
@@ -1520,6 +1536,7 @@ impl<T: CliConfig> Cli<T> {
             CliCommand::CreateGroup => self.execute_create_group(matches).await,
             CliCommand::UpdateGroup => self.execute_update_group(matches).await,
             CliCommand::DeleteGroup => self.execute_delete_group(matches).await,
+            CliCommand::ListJobs => self.execute_list_jobs(matches).await,
             CliCommand::MagicLinkExchange => self.execute_magic_link_exchange(matches).await,
             CliCommand::MagicLinkSend => self.execute_magic_link_send(matches).await,
             CliCommand::AuthzCodeRedirect => self.execute_authz_code_redirect(matches).await,
@@ -1856,7 +1873,8 @@ impl<T: CliConfig> Cli<T> {
         matches: &::clap::ArgMatches,
     ) -> anyhow::Result<()> {
         let mut request = self.client.create_api_user_token();
-        if let Some(value) = matches.get_one::<chrono::DateTime<chrono::offset::Utc>>("expires-at")
+        if let Some(value) =
+            matches.get_one::<::chrono::DateTime<::chrono::offset::Utc>>("expires-at")
         {
             request = request.body_map(|body| body.expires_at(value.clone()))
         }
@@ -2088,6 +2106,26 @@ impl<T: CliConfig> Cli<T> {
         }
 
         self.config.execute_delete_group(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.success_item(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
+    pub async fn execute_list_jobs(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
+        let mut request = self.client.list_jobs();
+        if let Some(value) = matches.get_one::<::std::string::String>("rfd") {
+            request = request.rfd(value.clone());
+        }
+
+        self.config.execute_list_jobs(matches, &mut request)?;
         let result = request.send().await;
         match result {
             Ok(r) => {
@@ -2364,7 +2402,8 @@ impl<T: CliConfig> Cli<T> {
             request = request.body_map(|body| body.device_code(value.clone()))
         }
 
-        if let Some(value) = matches.get_one::<chrono::DateTime<chrono::offset::Utc>>("expires-at")
+        if let Some(value) =
+            matches.get_one::<::chrono::DateTime<::chrono::offset::Utc>>("expires-at")
         {
             request = request.body_map(|body| body.expires_at(value.clone()))
         }
@@ -3540,6 +3579,14 @@ pub trait CliConfig {
         Ok(())
     }
 
+    fn execute_list_jobs(
+        &self,
+        matches: &::clap::ArgMatches,
+        request: &mut builder::ListJobs,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     fn execute_magic_link_exchange(
         &self,
         matches: &::clap::ArgMatches,
@@ -3914,6 +3961,7 @@ pub enum CliCommand {
     CreateGroup,
     UpdateGroup,
     DeleteGroup,
+    ListJobs,
     MagicLinkExchange,
     MagicLinkSend,
     AuthzCodeRedirect,
@@ -3982,6 +4030,7 @@ impl CliCommand {
             CliCommand::CreateGroup,
             CliCommand::UpdateGroup,
             CliCommand::DeleteGroup,
+            CliCommand::ListJobs,
             CliCommand::MagicLinkExchange,
             CliCommand::MagicLinkSend,
             CliCommand::AuthzCodeRedirect,

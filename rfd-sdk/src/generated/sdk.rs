@@ -4,14 +4,12 @@
 use progenitor_client::{encode_path, RequestBuilderExt};
 #[allow(unused_imports)]
 pub use progenitor_client::{ByteStream, Error, ResponseValue};
-#[allow(unused_imports)]
-use reqwest::header::{HeaderMap, HeaderValue};
 /// Types used as operation parameters and responses.
 #[allow(clippy::all)]
 pub mod types {
     /// Error types.
     pub mod error {
-        /// Error from a TryFrom or FromStr implementation.
+        /// Error from a `TryFrom` or `FromStr` implementation.
         pub struct ConversionError(::std::borrow::Cow<'static, str>);
         impl ::std::error::Error for ConversionError {}
 
@@ -40,7 +38,7 @@ pub mod types {
         }
     }
 
-    /// AccessGroupForRfdPermission
+    /// `AccessGroupForRfdPermission`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -90,16 +88,16 @@ pub mod types {
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct AccessGroupForRfdPermission {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub deleted_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub id: TypedUuidForAccessGroupId,
         pub name: ::std::string::String,
         pub permissions: PermissionsForRfdPermission,
-        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
+        pub updated_at: ::chrono::DateTime<::chrono::offset::Utc>,
     }
 
-    impl From<&AccessGroupForRfdPermission> for AccessGroupForRfdPermission {
+    impl ::std::convert::From<&AccessGroupForRfdPermission> for AccessGroupForRfdPermission {
         fn from(value: &AccessGroupForRfdPermission) -> Self {
             value.clone()
         }
@@ -111,7 +109,7 @@ pub mod types {
         }
     }
 
-    /// AccessGroupUpdateParamsForRfdPermission
+    /// `AccessGroupUpdateParamsForRfdPermission`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -144,7 +142,9 @@ pub mod types {
         pub permissions: PermissionsForRfdPermission,
     }
 
-    impl From<&AccessGroupUpdateParamsForRfdPermission> for AccessGroupUpdateParamsForRfdPermission {
+    impl ::std::convert::From<&AccessGroupUpdateParamsForRfdPermission>
+        for AccessGroupUpdateParamsForRfdPermission
+    {
         fn from(value: &AccessGroupUpdateParamsForRfdPermission) -> Self {
             value.clone()
         }
@@ -156,7 +156,7 @@ pub mod types {
         }
     }
 
-    /// AccessTokenExchangeRequest
+    /// `AccessTokenExchangeRequest`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -194,11 +194,11 @@ pub mod types {
     pub struct AccessTokenExchangeRequest {
         pub device_code: ::std::string::String,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub expires_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub expires_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub grant_type: ::std::string::String,
     }
 
-    impl From<&AccessTokenExchangeRequest> for AccessTokenExchangeRequest {
+    impl ::std::convert::From<&AccessTokenExchangeRequest> for AccessTokenExchangeRequest {
         fn from(value: &AccessTokenExchangeRequest) -> Self {
             value.clone()
         }
@@ -210,7 +210,7 @@ pub mod types {
         }
     }
 
-    /// AddGroupBody
+    /// `AddGroupBody`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -238,7 +238,7 @@ pub mod types {
         pub group_id: TypedUuidForAccessGroupId,
     }
 
-    impl From<&AddGroupBody> for AddGroupBody {
+    impl ::std::convert::From<&AddGroupBody> for AddGroupBody {
         fn from(value: &AddGroupBody) -> Self {
             value.clone()
         }
@@ -250,7 +250,7 @@ pub mod types {
         }
     }
 
-    /// AddMagicLinkRedirectBody
+    /// `AddMagicLinkRedirectBody`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -278,7 +278,7 @@ pub mod types {
         pub redirect_uri: ::std::string::String,
     }
 
-    impl From<&AddMagicLinkRedirectBody> for AddMagicLinkRedirectBody {
+    impl ::std::convert::From<&AddMagicLinkRedirectBody> for AddMagicLinkRedirectBody {
         fn from(value: &AddMagicLinkRedirectBody) -> Self {
             value.clone()
         }
@@ -290,7 +290,7 @@ pub mod types {
         }
     }
 
-    /// AddOAuthClientRedirectBody
+    /// `AddOAuthClientRedirectBody`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -318,7 +318,7 @@ pub mod types {
         pub redirect_uri: ::std::string::String,
     }
 
-    impl From<&AddOAuthClientRedirectBody> for AddOAuthClientRedirectBody {
+    impl ::std::convert::From<&AddOAuthClientRedirectBody> for AddOAuthClientRedirectBody {
         fn from(value: &AddOAuthClientRedirectBody) -> Self {
             value.clone()
         }
@@ -330,7 +330,7 @@ pub mod types {
         }
     }
 
-    /// ApiKeyCreateParamsForRfdPermission
+    /// `ApiKeyCreateParamsForRfdPermission`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -373,12 +373,14 @@ pub mod types {
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct ApiKeyCreateParamsForRfdPermission {
-        pub expires_at: chrono::DateTime<chrono::offset::Utc>,
+        pub expires_at: ::chrono::DateTime<::chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub permissions: ::std::option::Option<PermissionsForRfdPermission>,
     }
 
-    impl From<&ApiKeyCreateParamsForRfdPermission> for ApiKeyCreateParamsForRfdPermission {
+    impl ::std::convert::From<&ApiKeyCreateParamsForRfdPermission>
+        for ApiKeyCreateParamsForRfdPermission
+    {
         fn from(value: &ApiKeyCreateParamsForRfdPermission) -> Self {
             value.clone()
         }
@@ -390,7 +392,7 @@ pub mod types {
         }
     }
 
-    /// ApiKeyResponseForRfdPermission
+    /// `ApiKeyResponseForRfdPermission`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -437,13 +439,13 @@ pub mod types {
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct ApiKeyResponseForRfdPermission {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         pub id: TypedUuidForApiKeyId,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub permissions: ::std::option::Option<PermissionsForRfdPermission>,
     }
 
-    impl From<&ApiKeyResponseForRfdPermission> for ApiKeyResponseForRfdPermission {
+    impl ::std::convert::From<&ApiKeyResponseForRfdPermission> for ApiKeyResponseForRfdPermission {
         fn from(value: &ApiKeyResponseForRfdPermission) -> Self {
             value.clone()
         }
@@ -455,7 +457,7 @@ pub mod types {
         }
     }
 
-    /// ApiUserContactEmail
+    /// `ApiUserContactEmail`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -505,16 +507,16 @@ pub mod types {
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct ApiUserContactEmail {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub deleted_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub email: ::std::string::String,
         pub id: TypedUuidForUserProviderId,
-        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
+        pub updated_at: ::chrono::DateTime<::chrono::offset::Utc>,
         pub user_id: TypedUuidForUserId,
     }
 
-    impl From<&ApiUserContactEmail> for ApiUserContactEmail {
+    impl ::std::convert::From<&ApiUserContactEmail> for ApiUserContactEmail {
         fn from(value: &ApiUserContactEmail) -> Self {
             value.clone()
         }
@@ -526,7 +528,7 @@ pub mod types {
         }
     }
 
-    /// ApiUserEmailUpdateParams
+    /// `ApiUserEmailUpdateParams`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -554,7 +556,7 @@ pub mod types {
         pub email: ::std::string::String,
     }
 
-    impl From<&ApiUserEmailUpdateParams> for ApiUserEmailUpdateParams {
+    impl ::std::convert::From<&ApiUserEmailUpdateParams> for ApiUserEmailUpdateParams {
         fn from(value: &ApiUserEmailUpdateParams) -> Self {
             value.clone()
         }
@@ -566,7 +568,7 @@ pub mod types {
         }
     }
 
-    /// ApiUserForRfdPermission
+    /// `ApiUserForRfdPermission`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -620,16 +622,16 @@ pub mod types {
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct ApiUserForRfdPermission {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub deleted_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub groups: Vec<TypedUuidForAccessGroupId>,
         pub id: TypedUuidForUserId,
         pub permissions: PermissionsForRfdPermission,
-        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
+        pub updated_at: ::chrono::DateTime<::chrono::offset::Utc>,
     }
 
-    impl From<&ApiUserForRfdPermission> for ApiUserForRfdPermission {
+    impl ::std::convert::From<&ApiUserForRfdPermission> for ApiUserForRfdPermission {
         fn from(value: &ApiUserForRfdPermission) -> Self {
             value.clone()
         }
@@ -641,7 +643,7 @@ pub mod types {
         }
     }
 
-    /// ApiUserLinkRequestPayload
+    /// `ApiUserLinkRequestPayload`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -669,7 +671,7 @@ pub mod types {
         pub user_id: TypedUuidForUserId,
     }
 
-    impl From<&ApiUserLinkRequestPayload> for ApiUserLinkRequestPayload {
+    impl ::std::convert::From<&ApiUserLinkRequestPayload> for ApiUserLinkRequestPayload {
         fn from(value: &ApiUserLinkRequestPayload) -> Self {
             value.clone()
         }
@@ -681,7 +683,7 @@ pub mod types {
         }
     }
 
-    /// ApiUserLinkRequestResponse
+    /// `ApiUserLinkRequestResponse`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -709,7 +711,7 @@ pub mod types {
         pub token: SecretString,
     }
 
-    impl From<&ApiUserLinkRequestResponse> for ApiUserLinkRequestResponse {
+    impl ::std::convert::From<&ApiUserLinkRequestResponse> for ApiUserLinkRequestResponse {
         fn from(value: &ApiUserLinkRequestResponse) -> Self {
             value.clone()
         }
@@ -721,7 +723,7 @@ pub mod types {
         }
     }
 
-    /// ApiUserProvider
+    /// `ApiUserProvider`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -791,19 +793,19 @@ pub mod types {
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct ApiUserProvider {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub deleted_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub display_names: ::std::vec::Vec<::std::string::String>,
         pub emails: ::std::vec::Vec<::std::string::String>,
         pub id: TypedUuidForUserProviderId,
         pub provider: ::std::string::String,
         pub provider_id: ::std::string::String,
-        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
+        pub updated_at: ::chrono::DateTime<::chrono::offset::Utc>,
         pub user_id: TypedUuidForUserId,
     }
 
-    impl From<&ApiUserProvider> for ApiUserProvider {
+    impl ::std::convert::From<&ApiUserProvider> for ApiUserProvider {
         fn from(value: &ApiUserProvider) -> Self {
             value.clone()
         }
@@ -815,7 +817,7 @@ pub mod types {
         }
     }
 
-    /// ApiUserProviderLinkPayload
+    /// `ApiUserProviderLinkPayload`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -843,7 +845,7 @@ pub mod types {
         pub token: ::std::string::String,
     }
 
-    impl From<&ApiUserProviderLinkPayload> for ApiUserProviderLinkPayload {
+    impl ::std::convert::From<&ApiUserProviderLinkPayload> for ApiUserProviderLinkPayload {
         fn from(value: &ApiUserProviderLinkPayload) -> Self {
             value.clone()
         }
@@ -855,7 +857,7 @@ pub mod types {
         }
     }
 
-    /// ApiUserUpdateParamsForRfdPermission
+    /// `ApiUserUpdateParamsForRfdPermission`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -892,7 +894,9 @@ pub mod types {
         pub permissions: PermissionsForRfdPermission,
     }
 
-    impl From<&ApiUserUpdateParamsForRfdPermission> for ApiUserUpdateParamsForRfdPermission {
+    impl ::std::convert::From<&ApiUserUpdateParamsForRfdPermission>
+        for ApiUserUpdateParamsForRfdPermission
+    {
         fn from(value: &ApiUserUpdateParamsForRfdPermission) -> Self {
             value.clone()
         }
@@ -904,7 +908,7 @@ pub mod types {
         }
     }
 
-    /// CommitSha
+    /// `CommitSha`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -927,6 +931,7 @@ pub mod types {
         PartialOrd,
         schemars :: JsonSchema,
     )]
+    #[serde(transparent)]
     pub struct CommitSha(pub ::std::string::String);
     impl ::std::ops::Deref for CommitSha {
         type Target = ::std::string::String;
@@ -935,19 +940,19 @@ pub mod types {
         }
     }
 
-    impl From<CommitSha> for ::std::string::String {
+    impl ::std::convert::From<CommitSha> for ::std::string::String {
         fn from(value: CommitSha) -> Self {
             value.0
         }
     }
 
-    impl From<&CommitSha> for CommitSha {
+    impl ::std::convert::From<&CommitSha> for CommitSha {
         fn from(value: &CommitSha) -> Self {
             value.clone()
         }
     }
 
-    impl From<::std::string::String> for CommitSha {
+    impl ::std::convert::From<::std::string::String> for CommitSha {
         fn from(value: ::std::string::String) -> Self {
             Self(value)
         }
@@ -966,7 +971,7 @@ pub mod types {
         }
     }
 
-    /// ContentFormat
+    /// `ContentFormat`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -1001,7 +1006,7 @@ pub mod types {
         Markdown,
     }
 
-    impl From<&ContentFormat> for ContentFormat {
+    impl ::std::convert::From<&Self> for ContentFormat {
         fn from(value: &ContentFormat) -> Self {
             value.clone()
         }
@@ -1016,7 +1021,7 @@ pub mod types {
         }
     }
 
-    impl std::str::FromStr for ContentFormat {
+    impl ::std::str::FromStr for ContentFormat {
         type Err = self::error::ConversionError;
         fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
             match value {
@@ -1027,14 +1032,14 @@ pub mod types {
         }
     }
 
-    impl std::convert::TryFrom<&str> for ContentFormat {
+    impl ::std::convert::TryFrom<&str> for ContentFormat {
         type Error = self::error::ConversionError;
         fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&::std::string::String> for ContentFormat {
+    impl ::std::convert::TryFrom<&::std::string::String> for ContentFormat {
         type Error = self::error::ConversionError;
         fn try_from(
             value: &::std::string::String,
@@ -1043,7 +1048,7 @@ pub mod types {
         }
     }
 
-    impl std::convert::TryFrom<::std::string::String> for ContentFormat {
+    impl ::std::convert::TryFrom<::std::string::String> for ContentFormat {
         type Error = self::error::ConversionError;
         fn try_from(
             value: ::std::string::String,
@@ -1052,7 +1057,7 @@ pub mod types {
         }
     }
 
-    /// CreateMapper
+    /// `CreateMapper`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -1092,7 +1097,7 @@ pub mod types {
         pub rule: ::serde_json::Value,
     }
 
-    impl From<&CreateMapper> for CreateMapper {
+    impl ::std::convert::From<&CreateMapper> for CreateMapper {
         fn from(value: &CreateMapper) -> Self {
             value.clone()
         }
@@ -1143,7 +1148,7 @@ pub mod types {
         pub request_id: ::std::string::String,
     }
 
-    impl From<&Error> for Error {
+    impl ::std::convert::From<&Error> for Error {
         fn from(value: &Error) -> Self {
             value.clone()
         }
@@ -1155,7 +1160,7 @@ pub mod types {
         }
     }
 
-    /// FileSha
+    /// `FileSha`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -1178,6 +1183,7 @@ pub mod types {
         PartialOrd,
         schemars :: JsonSchema,
     )]
+    #[serde(transparent)]
     pub struct FileSha(pub ::std::string::String);
     impl ::std::ops::Deref for FileSha {
         type Target = ::std::string::String;
@@ -1186,19 +1192,19 @@ pub mod types {
         }
     }
 
-    impl From<FileSha> for ::std::string::String {
+    impl ::std::convert::From<FileSha> for ::std::string::String {
         fn from(value: FileSha) -> Self {
             value.0
         }
     }
 
-    impl From<&FileSha> for FileSha {
+    impl ::std::convert::From<&FileSha> for FileSha {
         fn from(value: &FileSha) -> Self {
             value.clone()
         }
     }
 
-    impl From<::std::string::String> for FileSha {
+    impl ::std::convert::From<::std::string::String> for FileSha {
         fn from(value: ::std::string::String) -> Self {
             Self(value)
         }
@@ -1217,7 +1223,7 @@ pub mod types {
         }
     }
 
-    /// FormattedSearchResultHit
+    /// `FormattedSearchResultHit`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -1302,7 +1308,7 @@ pub mod types {
         pub url: ::std::option::Option<::std::string::String>,
     }
 
-    impl From<&FormattedSearchResultHit> for FormattedSearchResultHit {
+    impl ::std::convert::From<&FormattedSearchResultHit> for FormattedSearchResultHit {
         fn from(value: &FormattedSearchResultHit) -> Self {
             value.clone()
         }
@@ -1314,7 +1320,7 @@ pub mod types {
         }
     }
 
-    /// GetUserResponseForRfdPermission
+    /// `GetUserResponseForRfdPermission`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -1351,7 +1357,7 @@ pub mod types {
         pub providers: ::std::vec::Vec<ApiUserProvider>,
     }
 
-    impl From<&GetUserResponseForRfdPermission> for GetUserResponseForRfdPermission {
+    impl ::std::convert::From<&GetUserResponseForRfdPermission> for GetUserResponseForRfdPermission {
         fn from(value: &GetUserResponseForRfdPermission) -> Self {
             value.clone()
         }
@@ -1363,7 +1369,7 @@ pub mod types {
         }
     }
 
-    /// GitHubCommit
+    /// `GitHubCommit`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -1421,10 +1427,10 @@ pub mod types {
         pub id: ::std::string::String,
         pub modified: ::std::vec::Vec<::std::string::String>,
         pub removed: ::std::vec::Vec<::std::string::String>,
-        pub timestamp: chrono::DateTime<chrono::offset::Utc>,
+        pub timestamp: ::chrono::DateTime<::chrono::offset::Utc>,
     }
 
-    impl From<&GitHubCommit> for GitHubCommit {
+    impl ::std::convert::From<&GitHubCommit> for GitHubCommit {
         fn from(value: &GitHubCommit) -> Self {
             value.clone()
         }
@@ -1436,7 +1442,7 @@ pub mod types {
         }
     }
 
-    /// GitHubCommitPayload
+    /// `GitHubCommitPayload`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -1507,7 +1513,7 @@ pub mod types {
         pub sender: GitHubSender,
     }
 
-    impl From<&GitHubCommitPayload> for GitHubCommitPayload {
+    impl ::std::convert::From<&GitHubCommitPayload> for GitHubCommitPayload {
         fn from(value: &GitHubCommitPayload) -> Self {
             value.clone()
         }
@@ -1519,7 +1525,7 @@ pub mod types {
         }
     }
 
-    /// GitHubInstallation
+    /// `GitHubInstallation`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -1554,7 +1560,7 @@ pub mod types {
         pub node_id: ::std::string::String,
     }
 
-    impl From<&GitHubInstallation> for GitHubInstallation {
+    impl ::std::convert::From<&GitHubInstallation> for GitHubInstallation {
         fn from(value: &GitHubInstallation) -> Self {
             value.clone()
         }
@@ -1566,7 +1572,7 @@ pub mod types {
         }
     }
 
-    /// GitHubRepository
+    /// `GitHubRepository`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -1616,7 +1622,7 @@ pub mod types {
         pub owner: GitHubRepositoryOwner,
     }
 
-    impl From<&GitHubRepository> for GitHubRepository {
+    impl ::std::convert::From<&GitHubRepository> for GitHubRepository {
         fn from(value: &GitHubRepository) -> Self {
             value.clone()
         }
@@ -1628,7 +1634,7 @@ pub mod types {
         }
     }
 
-    /// GitHubRepositoryOwner
+    /// `GitHubRepositoryOwner`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -1656,7 +1662,7 @@ pub mod types {
         pub login: ::std::string::String,
     }
 
-    impl From<&GitHubRepositoryOwner> for GitHubRepositoryOwner {
+    impl ::std::convert::From<&GitHubRepositoryOwner> for GitHubRepositoryOwner {
         fn from(value: &GitHubRepositoryOwner) -> Self {
             value.clone()
         }
@@ -1668,7 +1674,7 @@ pub mod types {
         }
     }
 
-    /// GitHubSender
+    /// `GitHubSender`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -1714,7 +1720,7 @@ pub mod types {
         pub type_: ::std::string::String,
     }
 
-    impl From<&GitHubSender> for GitHubSender {
+    impl ::std::convert::From<&GitHubSender> for GitHubSender {
         fn from(value: &GitHubSender) -> Self {
             value.clone()
         }
@@ -1726,7 +1732,7 @@ pub mod types {
         }
     }
 
-    /// InitialApiKeyResponseForRfdPermission
+    /// `InitialApiKeyResponseForRfdPermission`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -1777,14 +1783,16 @@ pub mod types {
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct InitialApiKeyResponseForRfdPermission {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         pub id: TypedUuidForApiKeyId,
         pub key: SecretString,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub permissions: ::std::option::Option<PermissionsForRfdPermission>,
     }
 
-    impl From<&InitialApiKeyResponseForRfdPermission> for InitialApiKeyResponseForRfdPermission {
+    impl ::std::convert::From<&InitialApiKeyResponseForRfdPermission>
+        for InitialApiKeyResponseForRfdPermission
+    {
         fn from(value: &InitialApiKeyResponseForRfdPermission) -> Self {
             value.clone()
         }
@@ -1796,7 +1804,7 @@ pub mod types {
         }
     }
 
-    /// InitialMagicLinkSecretResponse
+    /// `InitialMagicLinkSecretResponse`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -1830,12 +1838,12 @@ pub mod types {
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct InitialMagicLinkSecretResponse {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         pub id: TypedUuidForMagicLinkSecretId,
         pub key: SecretString,
     }
 
-    impl From<&InitialMagicLinkSecretResponse> for InitialMagicLinkSecretResponse {
+    impl ::std::convert::From<&InitialMagicLinkSecretResponse> for InitialMagicLinkSecretResponse {
         fn from(value: &InitialMagicLinkSecretResponse) -> Self {
             value.clone()
         }
@@ -1847,7 +1855,7 @@ pub mod types {
         }
     }
 
-    /// InitialOAuthClientSecretResponse
+    /// `InitialOAuthClientSecretResponse`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -1881,12 +1889,12 @@ pub mod types {
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct InitialOAuthClientSecretResponse {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         pub id: TypedUuidForOAuthSecretId,
         pub key: SecretString,
     }
 
-    impl From<&InitialOAuthClientSecretResponse> for InitialOAuthClientSecretResponse {
+    impl ::std::convert::From<&InitialOAuthClientSecretResponse> for InitialOAuthClientSecretResponse {
         fn from(value: &InitialOAuthClientSecretResponse) -> Self {
             value.clone()
         }
@@ -1898,7 +1906,119 @@ pub mod types {
         }
     }
 
-    /// Jwk
+    /// `Job`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "branch",
+    ///    "committed_at",
+    ///    "created_at",
+    ///    "id",
+    ///    "owner",
+    ///    "processed",
+    ///    "repository",
+    ///    "rfd",
+    ///    "sha"
+    ///  ],
+    ///  "properties": {
+    ///    "branch": {
+    ///      "type": "string"
+    ///    },
+    ///    "committed_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "created_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "type": "integer",
+    ///      "format": "int32"
+    ///    },
+    ///    "owner": {
+    ///      "type": "string"
+    ///    },
+    ///    "processed": {
+    ///      "type": "boolean"
+    ///    },
+    ///    "repository": {
+    ///      "type": "string"
+    ///    },
+    ///    "rfd": {
+    ///      "type": "integer",
+    ///      "format": "int32"
+    ///    },
+    ///    "sha": {
+    ///      "$ref": "#/components/schemas/CommitSha"
+    ///    },
+    ///    "started_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
+    ///    "webhook_delivery_id": {
+    ///      "oneOf": [
+    ///        {
+    ///          "type": "null"
+    ///        },
+    ///        {
+    ///          "allOf": [
+    ///            {
+    ///              "$ref":
+    /// "#/components/schemas/TypedUuidForWebhookDeliveryId"
+    ///            }
+
+    ///          ]
+    ///        }
+
+    ///      ]
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct Job {
+        pub branch: ::std::string::String,
+        pub committed_at: ::chrono::DateTime<::chrono::offset::Utc>,
+        pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
+        pub id: i32,
+        pub owner: ::std::string::String,
+        pub processed: bool,
+        pub repository: ::std::string::String,
+        pub rfd: i32,
+        pub sha: CommitSha,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub started_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub webhook_delivery_id: ::std::option::Option<TypedUuidForWebhookDeliveryId>,
+    }
+
+    impl ::std::convert::From<&Job> for Job {
+        fn from(value: &Job) -> Self {
+            value.clone()
+        }
+    }
+
+    impl Job {
+        pub fn builder() -> builder::Job {
+            Default::default()
+        }
+    }
+
+    /// `Jwk`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -1947,7 +2067,7 @@ pub mod types {
         pub use_: ::std::string::String,
     }
 
-    impl From<&Jwk> for Jwk {
+    impl ::std::convert::From<&Jwk> for Jwk {
         fn from(value: &Jwk) -> Self {
             value.clone()
         }
@@ -1959,7 +2079,7 @@ pub mod types {
         }
     }
 
-    /// Jwks
+    /// `Jwks`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -1991,7 +2111,7 @@ pub mod types {
         pub keys: ::std::vec::Vec<Jwk>,
     }
 
-    impl From<&Jwks> for Jwks {
+    impl ::std::convert::From<&Jwks> for Jwks {
         fn from(value: &Jwks) -> Self {
             value.clone()
         }
@@ -2003,7 +2123,7 @@ pub mod types {
         }
     }
 
-    /// MagicLink
+    /// `MagicLink`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -2056,15 +2176,15 @@ pub mod types {
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct MagicLink {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub deleted_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub id: TypedUuidForMagicLinkId,
         pub redirect_uris: ::std::vec::Vec<MagicLinkRedirectUri>,
         pub secrets: ::std::vec::Vec<MagicLinkSecret>,
     }
 
-    impl From<&MagicLink> for MagicLink {
+    impl ::std::convert::From<&MagicLink> for MagicLink {
         fn from(value: &MagicLink) -> Self {
             value.clone()
         }
@@ -2076,7 +2196,7 @@ pub mod types {
         }
     }
 
-    /// MagicLinkExchangeRequest
+    /// `MagicLinkExchangeRequest`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -2114,7 +2234,7 @@ pub mod types {
         pub secret: ::std::string::String,
     }
 
-    impl From<&MagicLinkExchangeRequest> for MagicLinkExchangeRequest {
+    impl ::std::convert::From<&MagicLinkExchangeRequest> for MagicLinkExchangeRequest {
         fn from(value: &MagicLinkExchangeRequest) -> Self {
             value.clone()
         }
@@ -2126,7 +2246,7 @@ pub mod types {
         }
     }
 
-    /// MagicLinkExchangeResponse
+    /// `MagicLinkExchangeResponse`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -2165,7 +2285,7 @@ pub mod types {
         pub token_type: ::std::string::String,
     }
 
-    impl From<&MagicLinkExchangeResponse> for MagicLinkExchangeResponse {
+    impl ::std::convert::From<&MagicLinkExchangeResponse> for MagicLinkExchangeResponse {
         fn from(value: &MagicLinkExchangeResponse) -> Self {
             value.clone()
         }
@@ -2177,7 +2297,7 @@ pub mod types {
         }
     }
 
-    /// MagicLinkMedium
+    /// `MagicLinkMedium`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -2209,7 +2329,7 @@ pub mod types {
         Email,
     }
 
-    impl From<&MagicLinkMedium> for MagicLinkMedium {
+    impl ::std::convert::From<&Self> for MagicLinkMedium {
         fn from(value: &MagicLinkMedium) -> Self {
             value.clone()
         }
@@ -2223,7 +2343,7 @@ pub mod types {
         }
     }
 
-    impl std::str::FromStr for MagicLinkMedium {
+    impl ::std::str::FromStr for MagicLinkMedium {
         type Err = self::error::ConversionError;
         fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
             match value {
@@ -2233,14 +2353,14 @@ pub mod types {
         }
     }
 
-    impl std::convert::TryFrom<&str> for MagicLinkMedium {
+    impl ::std::convert::TryFrom<&str> for MagicLinkMedium {
         type Error = self::error::ConversionError;
         fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&::std::string::String> for MagicLinkMedium {
+    impl ::std::convert::TryFrom<&::std::string::String> for MagicLinkMedium {
         type Error = self::error::ConversionError;
         fn try_from(
             value: &::std::string::String,
@@ -2249,7 +2369,7 @@ pub mod types {
         }
     }
 
-    impl std::convert::TryFrom<::std::string::String> for MagicLinkMedium {
+    impl ::std::convert::TryFrom<::std::string::String> for MagicLinkMedium {
         type Error = self::error::ConversionError;
         fn try_from(
             value: ::std::string::String,
@@ -2258,7 +2378,7 @@ pub mod types {
         }
     }
 
-    /// MagicLinkRedirectUri
+    /// `MagicLinkRedirectUri`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -2303,15 +2423,15 @@ pub mod types {
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct MagicLinkRedirectUri {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub deleted_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub id: TypedUuidForMagicLinkRedirectUriId,
         pub magic_link_client_id: TypedUuidForMagicLinkId,
         pub redirect_uri: ::std::string::String,
     }
 
-    impl From<&MagicLinkRedirectUri> for MagicLinkRedirectUri {
+    impl ::std::convert::From<&MagicLinkRedirectUri> for MagicLinkRedirectUri {
         fn from(value: &MagicLinkRedirectUri) -> Self {
             value.clone()
         }
@@ -2323,7 +2443,7 @@ pub mod types {
         }
     }
 
-    /// MagicLinkSecret
+    /// `MagicLinkSecret`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -2368,15 +2488,15 @@ pub mod types {
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct MagicLinkSecret {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub deleted_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub id: TypedUuidForMagicLinkSecretId,
         pub magic_link_client_id: TypedUuidForMagicLinkId,
         pub secret_signature: ::std::string::String,
     }
 
-    impl From<&MagicLinkSecret> for MagicLinkSecret {
+    impl ::std::convert::From<&MagicLinkSecret> for MagicLinkSecret {
         fn from(value: &MagicLinkSecret) -> Self {
             value.clone()
         }
@@ -2388,7 +2508,7 @@ pub mod types {
         }
     }
 
-    /// MagicLinkSendRequest
+    /// `MagicLinkSendRequest`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -2446,7 +2566,7 @@ pub mod types {
         pub secret: ::std::string::String,
     }
 
-    impl From<&MagicLinkSendRequest> for MagicLinkSendRequest {
+    impl ::std::convert::From<&MagicLinkSendRequest> for MagicLinkSendRequest {
         fn from(value: &MagicLinkSendRequest) -> Self {
             value.clone()
         }
@@ -2458,7 +2578,7 @@ pub mod types {
         }
     }
 
-    /// MagicLinkSendResponse
+    /// `MagicLinkSendResponse`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -2486,7 +2606,7 @@ pub mod types {
         pub attempt_id: TypedUuidForMagicLinkAttemptId,
     }
 
-    impl From<&MagicLinkSendResponse> for MagicLinkSendResponse {
+    impl ::std::convert::From<&MagicLinkSendResponse> for MagicLinkSendResponse {
         fn from(value: &MagicLinkSendResponse) -> Self {
             value.clone()
         }
@@ -2498,7 +2618,7 @@ pub mod types {
         }
     }
 
-    /// Mapper
+    /// `Mapper`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -2569,20 +2689,20 @@ pub mod types {
     pub struct Mapper {
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub activations: ::std::option::Option<i32>,
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub deleted_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub depleted_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub depleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub id: TypedUuidForMapperId,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub max_activations: ::std::option::Option<i32>,
         pub name: ::std::string::String,
         pub rule: ::serde_json::Value,
-        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
+        pub updated_at: ::chrono::DateTime<::chrono::offset::Utc>,
     }
 
-    impl From<&Mapper> for Mapper {
+    impl ::std::convert::From<&Mapper> for Mapper {
         fn from(value: &Mapper) -> Self {
             value.clone()
         }
@@ -2594,7 +2714,7 @@ pub mod types {
         }
     }
 
-    /// OAuthAuthzCodeExchangeBody
+    /// `OAuthAuthzCodeExchangeBody`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -2650,7 +2770,7 @@ pub mod types {
         pub redirect_uri: ::std::string::String,
     }
 
-    impl From<&OAuthAuthzCodeExchangeBody> for OAuthAuthzCodeExchangeBody {
+    impl ::std::convert::From<&OAuthAuthzCodeExchangeBody> for OAuthAuthzCodeExchangeBody {
         fn from(value: &OAuthAuthzCodeExchangeBody) -> Self {
             value.clone()
         }
@@ -2662,7 +2782,7 @@ pub mod types {
         }
     }
 
-    /// OAuthAuthzCodeExchangeResponse
+    /// `OAuthAuthzCodeExchangeResponse`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -2701,7 +2821,7 @@ pub mod types {
         pub token_type: ::std::string::String,
     }
 
-    impl From<&OAuthAuthzCodeExchangeResponse> for OAuthAuthzCodeExchangeResponse {
+    impl ::std::convert::From<&OAuthAuthzCodeExchangeResponse> for OAuthAuthzCodeExchangeResponse {
         fn from(value: &OAuthAuthzCodeExchangeResponse) -> Self {
             value.clone()
         }
@@ -2713,7 +2833,7 @@ pub mod types {
         }
     }
 
-    /// OAuthClient
+    /// `OAuthClient`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -2766,15 +2886,15 @@ pub mod types {
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct OAuthClient {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub deleted_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub id: TypedUuidForOAuthClientId,
         pub redirect_uris: ::std::vec::Vec<OAuthClientRedirectUri>,
         pub secrets: ::std::vec::Vec<OAuthClientSecret>,
     }
 
-    impl From<&OAuthClient> for OAuthClient {
+    impl ::std::convert::From<&OAuthClient> for OAuthClient {
         fn from(value: &OAuthClient) -> Self {
             value.clone()
         }
@@ -2786,7 +2906,7 @@ pub mod types {
         }
     }
 
-    /// OAuthClientRedirectUri
+    /// `OAuthClientRedirectUri`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -2831,15 +2951,15 @@ pub mod types {
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct OAuthClientRedirectUri {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub deleted_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub id: TypedUuidForOAuthRedirectUriId,
         pub oauth_client_id: TypedUuidForOAuthClientId,
         pub redirect_uri: ::std::string::String,
     }
 
-    impl From<&OAuthClientRedirectUri> for OAuthClientRedirectUri {
+    impl ::std::convert::From<&OAuthClientRedirectUri> for OAuthClientRedirectUri {
         fn from(value: &OAuthClientRedirectUri) -> Self {
             value.clone()
         }
@@ -2851,7 +2971,7 @@ pub mod types {
         }
     }
 
-    /// OAuthClientSecret
+    /// `OAuthClientSecret`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -2896,15 +3016,15 @@ pub mod types {
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct OAuthClientSecret {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub deleted_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub id: TypedUuidForOAuthSecretId,
         pub oauth_client_id: TypedUuidForOAuthClientId,
         pub secret_signature: ::std::string::String,
     }
 
-    impl From<&OAuthClientSecret> for OAuthClientSecret {
+    impl ::std::convert::From<&OAuthClientSecret> for OAuthClientSecret {
         fn from(value: &OAuthClientSecret) -> Self {
             value.clone()
         }
@@ -2916,7 +3036,7 @@ pub mod types {
         }
     }
 
-    /// OAuthProviderInfo
+    /// `OAuthProviderInfo`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -2973,7 +3093,7 @@ pub mod types {
         pub token_endpoint: ::std::string::String,
     }
 
-    impl From<&OAuthProviderInfo> for OAuthProviderInfo {
+    impl ::std::convert::From<&OAuthProviderInfo> for OAuthProviderInfo {
         fn from(value: &OAuthProviderInfo) -> Self {
             value.clone()
         }
@@ -2985,7 +3105,7 @@ pub mod types {
         }
     }
 
-    /// OAuthProviderName
+    /// `OAuthProviderName`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -3020,7 +3140,7 @@ pub mod types {
         Google,
     }
 
-    impl From<&OAuthProviderName> for OAuthProviderName {
+    impl ::std::convert::From<&Self> for OAuthProviderName {
         fn from(value: &OAuthProviderName) -> Self {
             value.clone()
         }
@@ -3035,7 +3155,7 @@ pub mod types {
         }
     }
 
-    impl std::str::FromStr for OAuthProviderName {
+    impl ::std::str::FromStr for OAuthProviderName {
         type Err = self::error::ConversionError;
         fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
             match value {
@@ -3046,14 +3166,14 @@ pub mod types {
         }
     }
 
-    impl std::convert::TryFrom<&str> for OAuthProviderName {
+    impl ::std::convert::TryFrom<&str> for OAuthProviderName {
         type Error = self::error::ConversionError;
         fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&::std::string::String> for OAuthProviderName {
+    impl ::std::convert::TryFrom<&::std::string::String> for OAuthProviderName {
         type Error = self::error::ConversionError;
         fn try_from(
             value: &::std::string::String,
@@ -3062,7 +3182,7 @@ pub mod types {
         }
     }
 
-    impl std::convert::TryFrom<::std::string::String> for OAuthProviderName {
+    impl ::std::convert::TryFrom<::std::string::String> for OAuthProviderName {
         type Error = self::error::ConversionError;
         fn try_from(
             value: ::std::string::String,
@@ -3071,7 +3191,7 @@ pub mod types {
         }
     }
 
-    /// OpenIdConfiguration
+    /// `OpenIdConfiguration`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -3099,7 +3219,7 @@ pub mod types {
         pub jwks_uri: ::std::string::String,
     }
 
-    impl From<&OpenIdConfiguration> for OpenIdConfiguration {
+    impl ::std::convert::From<&OpenIdConfiguration> for OpenIdConfiguration {
         fn from(value: &OpenIdConfiguration) -> Self {
             value.clone()
         }
@@ -3111,7 +3231,7 @@ pub mod types {
         }
     }
 
-    /// PdfSource
+    /// `PdfSource`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -3146,7 +3266,7 @@ pub mod types {
         Google,
     }
 
-    impl From<&PdfSource> for PdfSource {
+    impl ::std::convert::From<&Self> for PdfSource {
         fn from(value: &PdfSource) -> Self {
             value.clone()
         }
@@ -3161,7 +3281,7 @@ pub mod types {
         }
     }
 
-    impl std::str::FromStr for PdfSource {
+    impl ::std::str::FromStr for PdfSource {
         type Err = self::error::ConversionError;
         fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
             match value {
@@ -3172,14 +3292,14 @@ pub mod types {
         }
     }
 
-    impl std::convert::TryFrom<&str> for PdfSource {
+    impl ::std::convert::TryFrom<&str> for PdfSource {
         type Error = self::error::ConversionError;
         fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&::std::string::String> for PdfSource {
+    impl ::std::convert::TryFrom<&::std::string::String> for PdfSource {
         type Error = self::error::ConversionError;
         fn try_from(
             value: &::std::string::String,
@@ -3188,7 +3308,7 @@ pub mod types {
         }
     }
 
-    impl std::convert::TryFrom<::std::string::String> for PdfSource {
+    impl ::std::convert::TryFrom<::std::string::String> for PdfSource {
         type Error = self::error::ConversionError;
         fn try_from(
             value: ::std::string::String,
@@ -3197,7 +3317,7 @@ pub mod types {
         }
     }
 
-    /// PermissionsForRfdPermission
+    /// `PermissionsForRfdPermission`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -3215,6 +3335,7 @@ pub mod types {
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
+    #[serde(transparent)]
     pub struct PermissionsForRfdPermission(pub ::std::vec::Vec<RfdPermission>);
     impl ::std::ops::Deref for PermissionsForRfdPermission {
         type Target = ::std::vec::Vec<RfdPermission>;
@@ -3223,25 +3344,25 @@ pub mod types {
         }
     }
 
-    impl From<PermissionsForRfdPermission> for ::std::vec::Vec<RfdPermission> {
+    impl ::std::convert::From<PermissionsForRfdPermission> for ::std::vec::Vec<RfdPermission> {
         fn from(value: PermissionsForRfdPermission) -> Self {
             value.0
         }
     }
 
-    impl From<&PermissionsForRfdPermission> for PermissionsForRfdPermission {
+    impl ::std::convert::From<&PermissionsForRfdPermission> for PermissionsForRfdPermission {
         fn from(value: &PermissionsForRfdPermission) -> Self {
             value.clone()
         }
     }
 
-    impl From<::std::vec::Vec<RfdPermission>> for PermissionsForRfdPermission {
+    impl ::std::convert::From<::std::vec::Vec<RfdPermission>> for PermissionsForRfdPermission {
         fn from(value: ::std::vec::Vec<RfdPermission>) -> Self {
             Self(value)
         }
     }
 
-    /// ReserveRfdBody
+    /// `ReserveRfdBody`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -3281,7 +3402,7 @@ pub mod types {
         pub title: ::std::string::String,
     }
 
-    impl From<&ReserveRfdBody> for ReserveRfdBody {
+    impl ::std::convert::From<&ReserveRfdBody> for ReserveRfdBody {
         fn from(value: &ReserveRfdBody) -> Self {
             value.clone()
         }
@@ -3293,7 +3414,7 @@ pub mod types {
         }
     }
 
-    /// ReserveRfdResponse
+    /// `ReserveRfdResponse`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -3322,7 +3443,7 @@ pub mod types {
         pub number: i32,
     }
 
-    impl From<&ReserveRfdResponse> for ReserveRfdResponse {
+    impl ::std::convert::From<&ReserveRfdResponse> for ReserveRfdResponse {
         fn from(value: &ReserveRfdResponse) -> Self {
             value.clone()
         }
@@ -3334,7 +3455,7 @@ pub mod types {
         }
     }
 
-    /// Rfd
+    /// `Rfd`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -3409,18 +3530,18 @@ pub mod types {
     pub struct Rfd {
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub content: ::std::option::Option<RfdRevision>,
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub deleted_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub id: TypedUuidForRfdId,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub link: ::std::option::Option<::std::string::String>,
         pub rfd_number: i32,
-        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
+        pub updated_at: ::chrono::DateTime<::chrono::offset::Utc>,
         pub visibility: Visibility,
     }
 
-    impl From<&Rfd> for Rfd {
+    impl ::std::convert::From<&Rfd> for Rfd {
         fn from(value: &Rfd) -> Self {
             value.clone()
         }
@@ -3432,7 +3553,7 @@ pub mod types {
         }
     }
 
-    /// RfdAttr
+    /// `RfdAttr`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -3496,19 +3617,19 @@ pub mod types {
         State(RfdState),
     }
 
-    impl From<&RfdAttr> for RfdAttr {
+    impl ::std::convert::From<&Self> for RfdAttr {
         fn from(value: &RfdAttr) -> Self {
             value.clone()
         }
     }
 
-    impl From<RfdState> for RfdAttr {
+    impl ::std::convert::From<RfdState> for RfdAttr {
         fn from(value: RfdState) -> Self {
             Self::State(value)
         }
     }
 
-    /// RfdAttrName
+    /// `RfdAttrName`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -3546,7 +3667,7 @@ pub mod types {
         State,
     }
 
-    impl From<&RfdAttrName> for RfdAttrName {
+    impl ::std::convert::From<&Self> for RfdAttrName {
         fn from(value: &RfdAttrName) -> Self {
             value.clone()
         }
@@ -3562,7 +3683,7 @@ pub mod types {
         }
     }
 
-    impl std::str::FromStr for RfdAttrName {
+    impl ::std::str::FromStr for RfdAttrName {
         type Err = self::error::ConversionError;
         fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
             match value {
@@ -3574,14 +3695,14 @@ pub mod types {
         }
     }
 
-    impl std::convert::TryFrom<&str> for RfdAttrName {
+    impl ::std::convert::TryFrom<&str> for RfdAttrName {
         type Error = self::error::ConversionError;
         fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&::std::string::String> for RfdAttrName {
+    impl ::std::convert::TryFrom<&::std::string::String> for RfdAttrName {
         type Error = self::error::ConversionError;
         fn try_from(
             value: &::std::string::String,
@@ -3590,7 +3711,7 @@ pub mod types {
         }
     }
 
-    impl std::convert::TryFrom<::std::string::String> for RfdAttrName {
+    impl ::std::convert::TryFrom<::std::string::String> for RfdAttrName {
         type Error = self::error::ConversionError;
         fn try_from(
             value: ::std::string::String,
@@ -3599,7 +3720,7 @@ pub mod types {
         }
     }
 
-    /// RfdAttrValue
+    /// `RfdAttrValue`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -3641,7 +3762,7 @@ pub mod types {
         pub value: ::std::string::String,
     }
 
-    impl From<&RfdAttrValue> for RfdAttrValue {
+    impl ::std::convert::From<&RfdAttrValue> for RfdAttrValue {
         fn from(value: &RfdAttrValue) -> Self {
             value.clone()
         }
@@ -3653,7 +3774,7 @@ pub mod types {
         }
     }
 
-    /// RfdPdf
+    /// `RfdPdf`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -3715,19 +3836,19 @@ pub mod types {
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct RfdPdf {
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub deleted_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub external_id: ::std::string::String,
         pub id: TypedUuidForRfdPdfId,
         pub link: ::std::string::String,
         pub rfd_id: TypedUuidForRfdId,
         pub rfd_revision_id: TypedUuidForRfdRevisionId,
         pub source: PdfSource,
-        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
+        pub updated_at: ::chrono::DateTime<::chrono::offset::Utc>,
     }
 
-    impl From<&RfdPdf> for RfdPdf {
+    impl ::std::convert::From<&RfdPdf> for RfdPdf {
         fn from(value: &RfdPdf) -> Self {
             value.clone()
         }
@@ -3739,7 +3860,7 @@ pub mod types {
         }
     }
 
-    /// RfdPermission
+    /// `RfdPermission`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -4383,31 +4504,31 @@ pub mod types {
         Unsupported(::serde_json::Value),
     }
 
-    impl From<&RfdPermission> for RfdPermission {
+    impl ::std::convert::From<&Self> for RfdPermission {
         fn from(value: &RfdPermission) -> Self {
             value.clone()
         }
     }
 
-    impl From<TypedUuidForMapperId> for RfdPermission {
+    impl ::std::convert::From<TypedUuidForMapperId> for RfdPermission {
         fn from(value: TypedUuidForMapperId) -> Self {
             Self::ManageMapper(value)
         }
     }
 
-    impl From<Vec<TypedUuidForMapperId>> for RfdPermission {
+    impl ::std::convert::From<Vec<TypedUuidForMapperId>> for RfdPermission {
         fn from(value: Vec<TypedUuidForMapperId>) -> Self {
             Self::ManageMappers(value)
         }
     }
 
-    impl From<::serde_json::Value> for RfdPermission {
+    impl ::std::convert::From<::serde_json::Value> for RfdPermission {
         fn from(value: ::serde_json::Value) -> Self {
             Self::Unsupported(value)
         }
     }
 
-    /// RfdRevision
+    /// `RfdRevision`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -4505,12 +4626,12 @@ pub mod types {
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub authors: ::std::option::Option<::std::string::String>,
         pub commit: CommitSha,
-        pub committed_at: chrono::DateTime<chrono::offset::Utc>,
+        pub committed_at: ::chrono::DateTime<::chrono::offset::Utc>,
         pub content: ::std::string::String,
         pub content_format: ContentFormat,
-        pub created_at: chrono::DateTime<chrono::offset::Utc>,
+        pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub deleted_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub discussion: ::std::option::Option<::std::string::String>,
         pub id: TypedUuidForRfdRevisionId,
@@ -4521,10 +4642,10 @@ pub mod types {
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub state: ::std::option::Option<::std::string::String>,
         pub title: ::std::string::String,
-        pub updated_at: chrono::DateTime<chrono::offset::Utc>,
+        pub updated_at: ::chrono::DateTime<::chrono::offset::Utc>,
     }
 
-    impl From<&RfdRevision> for RfdRevision {
+    impl ::std::convert::From<&RfdRevision> for RfdRevision {
         fn from(value: &RfdRevision) -> Self {
             value.clone()
         }
@@ -4536,7 +4657,7 @@ pub mod types {
         }
     }
 
-    /// RfdState
+    /// `RfdState`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -4583,7 +4704,7 @@ pub mod types {
         Published,
     }
 
-    impl From<&RfdState> for RfdState {
+    impl ::std::convert::From<&Self> for RfdState {
         fn from(value: &RfdState) -> Self {
             value.clone()
         }
@@ -4602,7 +4723,7 @@ pub mod types {
         }
     }
 
-    impl std::str::FromStr for RfdState {
+    impl ::std::str::FromStr for RfdState {
         type Err = self::error::ConversionError;
         fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
             match value {
@@ -4617,14 +4738,14 @@ pub mod types {
         }
     }
 
-    impl std::convert::TryFrom<&str> for RfdState {
+    impl ::std::convert::TryFrom<&str> for RfdState {
         type Error = self::error::ConversionError;
         fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&::std::string::String> for RfdState {
+    impl ::std::convert::TryFrom<&::std::string::String> for RfdState {
         type Error = self::error::ConversionError;
         fn try_from(
             value: &::std::string::String,
@@ -4633,7 +4754,7 @@ pub mod types {
         }
     }
 
-    impl std::convert::TryFrom<::std::string::String> for RfdState {
+    impl ::std::convert::TryFrom<::std::string::String> for RfdState {
         type Error = self::error::ConversionError;
         fn try_from(
             value: ::std::string::String,
@@ -4642,7 +4763,7 @@ pub mod types {
         }
     }
 
-    /// RfdUpdateBody
+    /// `RfdUpdateBody`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -4683,7 +4804,7 @@ pub mod types {
         pub message: ::std::option::Option<::std::string::String>,
     }
 
-    impl From<&RfdUpdateBody> for RfdUpdateBody {
+    impl ::std::convert::From<&RfdUpdateBody> for RfdUpdateBody {
         fn from(value: &RfdUpdateBody) -> Self {
             value.clone()
         }
@@ -4695,7 +4816,7 @@ pub mod types {
         }
     }
 
-    /// RfdUpdateContentBody
+    /// `RfdUpdateContentBody`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -4736,7 +4857,7 @@ pub mod types {
         pub message: ::std::option::Option<::std::string::String>,
     }
 
-    impl From<&RfdUpdateContentBody> for RfdUpdateContentBody {
+    impl ::std::convert::From<&RfdUpdateContentBody> for RfdUpdateContentBody {
         fn from(value: &RfdUpdateContentBody) -> Self {
             value.clone()
         }
@@ -4748,7 +4869,7 @@ pub mod types {
         }
     }
 
-    /// RfdVisibility
+    /// `RfdVisibility`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -4776,7 +4897,7 @@ pub mod types {
         pub visibility: Visibility,
     }
 
-    impl From<&RfdVisibility> for RfdVisibility {
+    impl ::std::convert::From<&RfdVisibility> for RfdVisibility {
         fn from(value: &RfdVisibility) -> Self {
             value.clone()
         }
@@ -4788,7 +4909,7 @@ pub mod types {
         }
     }
 
-    /// RfdWithPdf
+    /// `RfdWithPdf`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -4926,7 +5047,7 @@ pub mod types {
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub commit: ::std::option::Option<CommitSha>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub committed_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub committed_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub content: ::std::vec::Vec<RfdPdf>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub discussion: ::std::option::Option<::std::string::String>,
@@ -4947,7 +5068,7 @@ pub mod types {
         pub visibility: Visibility,
     }
 
-    impl From<&RfdWithPdf> for RfdWithPdf {
+    impl ::std::convert::From<&RfdWithPdf> for RfdWithPdf {
         fn from(value: &RfdWithPdf) -> Self {
             value.clone()
         }
@@ -4959,7 +5080,7 @@ pub mod types {
         }
     }
 
-    /// RfdWithRaw
+    /// `RfdWithRaw`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -5095,7 +5216,7 @@ pub mod types {
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub commit: ::std::option::Option<CommitSha>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub committed_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub committed_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub content: ::std::option::Option<::std::string::String>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
@@ -5117,7 +5238,7 @@ pub mod types {
         pub visibility: Visibility,
     }
 
-    impl From<&RfdWithRaw> for RfdWithRaw {
+    impl ::std::convert::From<&RfdWithRaw> for RfdWithRaw {
         fn from(value: &RfdWithRaw) -> Self {
             value.clone()
         }
@@ -5129,7 +5250,7 @@ pub mod types {
         }
     }
 
-    /// RfdWithoutContent
+    /// `RfdWithoutContent`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -5259,7 +5380,7 @@ pub mod types {
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub commit: ::std::option::Option<CommitSha>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub committed_at: ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+        pub committed_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub discussion: ::std::option::Option<::std::string::String>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
@@ -5279,7 +5400,7 @@ pub mod types {
         pub visibility: Visibility,
     }
 
-    impl From<&RfdWithoutContent> for RfdWithoutContent {
+    impl ::std::convert::From<&RfdWithoutContent> for RfdWithoutContent {
         fn from(value: &RfdWithoutContent) -> Self {
             value.clone()
         }
@@ -5291,7 +5412,7 @@ pub mod types {
         }
     }
 
-    /// SearchResultHit
+    /// `SearchResultHit`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -5391,7 +5512,7 @@ pub mod types {
         pub url: ::std::option::Option<::std::string::String>,
     }
 
-    impl From<&SearchResultHit> for SearchResultHit {
+    impl ::std::convert::From<&SearchResultHit> for SearchResultHit {
         fn from(value: &SearchResultHit) -> Self {
             value.clone()
         }
@@ -5403,7 +5524,7 @@ pub mod types {
         }
     }
 
-    /// SearchResults
+    /// `SearchResults`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -5460,7 +5581,7 @@ pub mod types {
         pub query: ::std::string::String,
     }
 
-    impl From<&SearchResults> for SearchResults {
+    impl ::std::convert::From<&SearchResults> for SearchResults {
         fn from(value: &SearchResults) -> Self {
             value.clone()
         }
@@ -5472,7 +5593,7 @@ pub mod types {
         }
     }
 
-    /// SecretString
+    /// `SecretString`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -5495,6 +5616,7 @@ pub mod types {
         PartialOrd,
         schemars :: JsonSchema,
     )]
+    #[serde(transparent)]
     pub struct SecretString(pub ::std::string::String);
     impl ::std::ops::Deref for SecretString {
         type Target = ::std::string::String;
@@ -5503,19 +5625,19 @@ pub mod types {
         }
     }
 
-    impl From<SecretString> for ::std::string::String {
+    impl ::std::convert::From<SecretString> for ::std::string::String {
         fn from(value: SecretString) -> Self {
             value.0
         }
     }
 
-    impl From<&SecretString> for SecretString {
+    impl ::std::convert::From<&SecretString> for SecretString {
         fn from(value: &SecretString) -> Self {
             value.clone()
         }
     }
 
-    impl From<::std::string::String> for SecretString {
+    impl ::std::convert::From<::std::string::String> for SecretString {
         fn from(value: ::std::string::String) -> Self {
             Self(value)
         }
@@ -5534,7 +5656,7 @@ pub mod types {
         }
     }
 
-    /// TypedUuidForAccessGroupId
+    /// `TypedUuidForAccessGroupId`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -5549,55 +5671,56 @@ pub mod types {
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
-    pub struct TypedUuidForAccessGroupId(pub uuid::Uuid);
+    #[serde(transparent)]
+    pub struct TypedUuidForAccessGroupId(pub ::uuid::Uuid);
     impl ::std::ops::Deref for TypedUuidForAccessGroupId {
-        type Target = uuid::Uuid;
-        fn deref(&self) -> &uuid::Uuid {
+        type Target = ::uuid::Uuid;
+        fn deref(&self) -> &::uuid::Uuid {
             &self.0
         }
     }
 
-    impl From<TypedUuidForAccessGroupId> for uuid::Uuid {
+    impl ::std::convert::From<TypedUuidForAccessGroupId> for ::uuid::Uuid {
         fn from(value: TypedUuidForAccessGroupId) -> Self {
             value.0
         }
     }
 
-    impl From<&TypedUuidForAccessGroupId> for TypedUuidForAccessGroupId {
+    impl ::std::convert::From<&TypedUuidForAccessGroupId> for TypedUuidForAccessGroupId {
         fn from(value: &TypedUuidForAccessGroupId) -> Self {
             value.clone()
         }
     }
 
-    impl From<uuid::Uuid> for TypedUuidForAccessGroupId {
-        fn from(value: uuid::Uuid) -> Self {
+    impl ::std::convert::From<::uuid::Uuid> for TypedUuidForAccessGroupId {
+        fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
         }
     }
 
-    impl std::str::FromStr for TypedUuidForAccessGroupId {
-        type Err = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::str::FromStr for TypedUuidForAccessGroupId {
+        type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
             Ok(Self(value.parse()?))
         }
     }
 
-    impl std::convert::TryFrom<&str> for TypedUuidForAccessGroupId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&str> for TypedUuidForAccessGroupId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&String> for TypedUuidForAccessGroupId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&String> for TypedUuidForAccessGroupId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<String> for TypedUuidForAccessGroupId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<String> for TypedUuidForAccessGroupId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
@@ -5609,7 +5732,7 @@ pub mod types {
         }
     }
 
-    /// TypedUuidForApiKeyId
+    /// `TypedUuidForApiKeyId`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -5624,55 +5747,56 @@ pub mod types {
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
-    pub struct TypedUuidForApiKeyId(pub uuid::Uuid);
+    #[serde(transparent)]
+    pub struct TypedUuidForApiKeyId(pub ::uuid::Uuid);
     impl ::std::ops::Deref for TypedUuidForApiKeyId {
-        type Target = uuid::Uuid;
-        fn deref(&self) -> &uuid::Uuid {
+        type Target = ::uuid::Uuid;
+        fn deref(&self) -> &::uuid::Uuid {
             &self.0
         }
     }
 
-    impl From<TypedUuidForApiKeyId> for uuid::Uuid {
+    impl ::std::convert::From<TypedUuidForApiKeyId> for ::uuid::Uuid {
         fn from(value: TypedUuidForApiKeyId) -> Self {
             value.0
         }
     }
 
-    impl From<&TypedUuidForApiKeyId> for TypedUuidForApiKeyId {
+    impl ::std::convert::From<&TypedUuidForApiKeyId> for TypedUuidForApiKeyId {
         fn from(value: &TypedUuidForApiKeyId) -> Self {
             value.clone()
         }
     }
 
-    impl From<uuid::Uuid> for TypedUuidForApiKeyId {
-        fn from(value: uuid::Uuid) -> Self {
+    impl ::std::convert::From<::uuid::Uuid> for TypedUuidForApiKeyId {
+        fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
         }
     }
 
-    impl std::str::FromStr for TypedUuidForApiKeyId {
-        type Err = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::str::FromStr for TypedUuidForApiKeyId {
+        type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
             Ok(Self(value.parse()?))
         }
     }
 
-    impl std::convert::TryFrom<&str> for TypedUuidForApiKeyId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&str> for TypedUuidForApiKeyId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&String> for TypedUuidForApiKeyId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&String> for TypedUuidForApiKeyId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<String> for TypedUuidForApiKeyId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<String> for TypedUuidForApiKeyId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
@@ -5684,7 +5808,7 @@ pub mod types {
         }
     }
 
-    /// TypedUuidForMagicLinkAttemptId
+    /// `TypedUuidForMagicLinkAttemptId`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -5699,55 +5823,56 @@ pub mod types {
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
-    pub struct TypedUuidForMagicLinkAttemptId(pub uuid::Uuid);
+    #[serde(transparent)]
+    pub struct TypedUuidForMagicLinkAttemptId(pub ::uuid::Uuid);
     impl ::std::ops::Deref for TypedUuidForMagicLinkAttemptId {
-        type Target = uuid::Uuid;
-        fn deref(&self) -> &uuid::Uuid {
+        type Target = ::uuid::Uuid;
+        fn deref(&self) -> &::uuid::Uuid {
             &self.0
         }
     }
 
-    impl From<TypedUuidForMagicLinkAttemptId> for uuid::Uuid {
+    impl ::std::convert::From<TypedUuidForMagicLinkAttemptId> for ::uuid::Uuid {
         fn from(value: TypedUuidForMagicLinkAttemptId) -> Self {
             value.0
         }
     }
 
-    impl From<&TypedUuidForMagicLinkAttemptId> for TypedUuidForMagicLinkAttemptId {
+    impl ::std::convert::From<&TypedUuidForMagicLinkAttemptId> for TypedUuidForMagicLinkAttemptId {
         fn from(value: &TypedUuidForMagicLinkAttemptId) -> Self {
             value.clone()
         }
     }
 
-    impl From<uuid::Uuid> for TypedUuidForMagicLinkAttemptId {
-        fn from(value: uuid::Uuid) -> Self {
+    impl ::std::convert::From<::uuid::Uuid> for TypedUuidForMagicLinkAttemptId {
+        fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
         }
     }
 
-    impl std::str::FromStr for TypedUuidForMagicLinkAttemptId {
-        type Err = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::str::FromStr for TypedUuidForMagicLinkAttemptId {
+        type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
             Ok(Self(value.parse()?))
         }
     }
 
-    impl std::convert::TryFrom<&str> for TypedUuidForMagicLinkAttemptId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&str> for TypedUuidForMagicLinkAttemptId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&String> for TypedUuidForMagicLinkAttemptId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&String> for TypedUuidForMagicLinkAttemptId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<String> for TypedUuidForMagicLinkAttemptId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<String> for TypedUuidForMagicLinkAttemptId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
@@ -5759,7 +5884,7 @@ pub mod types {
         }
     }
 
-    /// TypedUuidForMagicLinkId
+    /// `TypedUuidForMagicLinkId`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -5774,55 +5899,56 @@ pub mod types {
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
-    pub struct TypedUuidForMagicLinkId(pub uuid::Uuid);
+    #[serde(transparent)]
+    pub struct TypedUuidForMagicLinkId(pub ::uuid::Uuid);
     impl ::std::ops::Deref for TypedUuidForMagicLinkId {
-        type Target = uuid::Uuid;
-        fn deref(&self) -> &uuid::Uuid {
+        type Target = ::uuid::Uuid;
+        fn deref(&self) -> &::uuid::Uuid {
             &self.0
         }
     }
 
-    impl From<TypedUuidForMagicLinkId> for uuid::Uuid {
+    impl ::std::convert::From<TypedUuidForMagicLinkId> for ::uuid::Uuid {
         fn from(value: TypedUuidForMagicLinkId) -> Self {
             value.0
         }
     }
 
-    impl From<&TypedUuidForMagicLinkId> for TypedUuidForMagicLinkId {
+    impl ::std::convert::From<&TypedUuidForMagicLinkId> for TypedUuidForMagicLinkId {
         fn from(value: &TypedUuidForMagicLinkId) -> Self {
             value.clone()
         }
     }
 
-    impl From<uuid::Uuid> for TypedUuidForMagicLinkId {
-        fn from(value: uuid::Uuid) -> Self {
+    impl ::std::convert::From<::uuid::Uuid> for TypedUuidForMagicLinkId {
+        fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
         }
     }
 
-    impl std::str::FromStr for TypedUuidForMagicLinkId {
-        type Err = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::str::FromStr for TypedUuidForMagicLinkId {
+        type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
             Ok(Self(value.parse()?))
         }
     }
 
-    impl std::convert::TryFrom<&str> for TypedUuidForMagicLinkId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&str> for TypedUuidForMagicLinkId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&String> for TypedUuidForMagicLinkId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&String> for TypedUuidForMagicLinkId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<String> for TypedUuidForMagicLinkId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<String> for TypedUuidForMagicLinkId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
@@ -5834,7 +5960,7 @@ pub mod types {
         }
     }
 
-    /// TypedUuidForMagicLinkRedirectUriId
+    /// `TypedUuidForMagicLinkRedirectUriId`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -5849,55 +5975,58 @@ pub mod types {
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
-    pub struct TypedUuidForMagicLinkRedirectUriId(pub uuid::Uuid);
+    #[serde(transparent)]
+    pub struct TypedUuidForMagicLinkRedirectUriId(pub ::uuid::Uuid);
     impl ::std::ops::Deref for TypedUuidForMagicLinkRedirectUriId {
-        type Target = uuid::Uuid;
-        fn deref(&self) -> &uuid::Uuid {
+        type Target = ::uuid::Uuid;
+        fn deref(&self) -> &::uuid::Uuid {
             &self.0
         }
     }
 
-    impl From<TypedUuidForMagicLinkRedirectUriId> for uuid::Uuid {
+    impl ::std::convert::From<TypedUuidForMagicLinkRedirectUriId> for ::uuid::Uuid {
         fn from(value: TypedUuidForMagicLinkRedirectUriId) -> Self {
             value.0
         }
     }
 
-    impl From<&TypedUuidForMagicLinkRedirectUriId> for TypedUuidForMagicLinkRedirectUriId {
+    impl ::std::convert::From<&TypedUuidForMagicLinkRedirectUriId>
+        for TypedUuidForMagicLinkRedirectUriId
+    {
         fn from(value: &TypedUuidForMagicLinkRedirectUriId) -> Self {
             value.clone()
         }
     }
 
-    impl From<uuid::Uuid> for TypedUuidForMagicLinkRedirectUriId {
-        fn from(value: uuid::Uuid) -> Self {
+    impl ::std::convert::From<::uuid::Uuid> for TypedUuidForMagicLinkRedirectUriId {
+        fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
         }
     }
 
-    impl std::str::FromStr for TypedUuidForMagicLinkRedirectUriId {
-        type Err = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::str::FromStr for TypedUuidForMagicLinkRedirectUriId {
+        type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
             Ok(Self(value.parse()?))
         }
     }
 
-    impl std::convert::TryFrom<&str> for TypedUuidForMagicLinkRedirectUriId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&str> for TypedUuidForMagicLinkRedirectUriId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&String> for TypedUuidForMagicLinkRedirectUriId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&String> for TypedUuidForMagicLinkRedirectUriId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<String> for TypedUuidForMagicLinkRedirectUriId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<String> for TypedUuidForMagicLinkRedirectUriId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
@@ -5909,7 +6038,7 @@ pub mod types {
         }
     }
 
-    /// TypedUuidForMagicLinkSecretId
+    /// `TypedUuidForMagicLinkSecretId`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -5924,55 +6053,56 @@ pub mod types {
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
-    pub struct TypedUuidForMagicLinkSecretId(pub uuid::Uuid);
+    #[serde(transparent)]
+    pub struct TypedUuidForMagicLinkSecretId(pub ::uuid::Uuid);
     impl ::std::ops::Deref for TypedUuidForMagicLinkSecretId {
-        type Target = uuid::Uuid;
-        fn deref(&self) -> &uuid::Uuid {
+        type Target = ::uuid::Uuid;
+        fn deref(&self) -> &::uuid::Uuid {
             &self.0
         }
     }
 
-    impl From<TypedUuidForMagicLinkSecretId> for uuid::Uuid {
+    impl ::std::convert::From<TypedUuidForMagicLinkSecretId> for ::uuid::Uuid {
         fn from(value: TypedUuidForMagicLinkSecretId) -> Self {
             value.0
         }
     }
 
-    impl From<&TypedUuidForMagicLinkSecretId> for TypedUuidForMagicLinkSecretId {
+    impl ::std::convert::From<&TypedUuidForMagicLinkSecretId> for TypedUuidForMagicLinkSecretId {
         fn from(value: &TypedUuidForMagicLinkSecretId) -> Self {
             value.clone()
         }
     }
 
-    impl From<uuid::Uuid> for TypedUuidForMagicLinkSecretId {
-        fn from(value: uuid::Uuid) -> Self {
+    impl ::std::convert::From<::uuid::Uuid> for TypedUuidForMagicLinkSecretId {
+        fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
         }
     }
 
-    impl std::str::FromStr for TypedUuidForMagicLinkSecretId {
-        type Err = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::str::FromStr for TypedUuidForMagicLinkSecretId {
+        type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
             Ok(Self(value.parse()?))
         }
     }
 
-    impl std::convert::TryFrom<&str> for TypedUuidForMagicLinkSecretId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&str> for TypedUuidForMagicLinkSecretId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&String> for TypedUuidForMagicLinkSecretId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&String> for TypedUuidForMagicLinkSecretId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<String> for TypedUuidForMagicLinkSecretId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<String> for TypedUuidForMagicLinkSecretId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
@@ -5984,7 +6114,7 @@ pub mod types {
         }
     }
 
-    /// TypedUuidForMapperId
+    /// `TypedUuidForMapperId`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -5999,55 +6129,56 @@ pub mod types {
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
-    pub struct TypedUuidForMapperId(pub uuid::Uuid);
+    #[serde(transparent)]
+    pub struct TypedUuidForMapperId(pub ::uuid::Uuid);
     impl ::std::ops::Deref for TypedUuidForMapperId {
-        type Target = uuid::Uuid;
-        fn deref(&self) -> &uuid::Uuid {
+        type Target = ::uuid::Uuid;
+        fn deref(&self) -> &::uuid::Uuid {
             &self.0
         }
     }
 
-    impl From<TypedUuidForMapperId> for uuid::Uuid {
+    impl ::std::convert::From<TypedUuidForMapperId> for ::uuid::Uuid {
         fn from(value: TypedUuidForMapperId) -> Self {
             value.0
         }
     }
 
-    impl From<&TypedUuidForMapperId> for TypedUuidForMapperId {
+    impl ::std::convert::From<&TypedUuidForMapperId> for TypedUuidForMapperId {
         fn from(value: &TypedUuidForMapperId) -> Self {
             value.clone()
         }
     }
 
-    impl From<uuid::Uuid> for TypedUuidForMapperId {
-        fn from(value: uuid::Uuid) -> Self {
+    impl ::std::convert::From<::uuid::Uuid> for TypedUuidForMapperId {
+        fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
         }
     }
 
-    impl std::str::FromStr for TypedUuidForMapperId {
-        type Err = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::str::FromStr for TypedUuidForMapperId {
+        type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
             Ok(Self(value.parse()?))
         }
     }
 
-    impl std::convert::TryFrom<&str> for TypedUuidForMapperId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&str> for TypedUuidForMapperId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&String> for TypedUuidForMapperId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&String> for TypedUuidForMapperId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<String> for TypedUuidForMapperId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<String> for TypedUuidForMapperId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
@@ -6059,7 +6190,7 @@ pub mod types {
         }
     }
 
-    /// TypedUuidForOAuthClientId
+    /// `TypedUuidForOAuthClientId`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -6074,55 +6205,56 @@ pub mod types {
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
-    pub struct TypedUuidForOAuthClientId(pub uuid::Uuid);
+    #[serde(transparent)]
+    pub struct TypedUuidForOAuthClientId(pub ::uuid::Uuid);
     impl ::std::ops::Deref for TypedUuidForOAuthClientId {
-        type Target = uuid::Uuid;
-        fn deref(&self) -> &uuid::Uuid {
+        type Target = ::uuid::Uuid;
+        fn deref(&self) -> &::uuid::Uuid {
             &self.0
         }
     }
 
-    impl From<TypedUuidForOAuthClientId> for uuid::Uuid {
+    impl ::std::convert::From<TypedUuidForOAuthClientId> for ::uuid::Uuid {
         fn from(value: TypedUuidForOAuthClientId) -> Self {
             value.0
         }
     }
 
-    impl From<&TypedUuidForOAuthClientId> for TypedUuidForOAuthClientId {
+    impl ::std::convert::From<&TypedUuidForOAuthClientId> for TypedUuidForOAuthClientId {
         fn from(value: &TypedUuidForOAuthClientId) -> Self {
             value.clone()
         }
     }
 
-    impl From<uuid::Uuid> for TypedUuidForOAuthClientId {
-        fn from(value: uuid::Uuid) -> Self {
+    impl ::std::convert::From<::uuid::Uuid> for TypedUuidForOAuthClientId {
+        fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
         }
     }
 
-    impl std::str::FromStr for TypedUuidForOAuthClientId {
-        type Err = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::str::FromStr for TypedUuidForOAuthClientId {
+        type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
             Ok(Self(value.parse()?))
         }
     }
 
-    impl std::convert::TryFrom<&str> for TypedUuidForOAuthClientId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&str> for TypedUuidForOAuthClientId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&String> for TypedUuidForOAuthClientId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&String> for TypedUuidForOAuthClientId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<String> for TypedUuidForOAuthClientId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<String> for TypedUuidForOAuthClientId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
@@ -6134,7 +6266,7 @@ pub mod types {
         }
     }
 
-    /// TypedUuidForOAuthRedirectUriId
+    /// `TypedUuidForOAuthRedirectUriId`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -6149,55 +6281,56 @@ pub mod types {
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
-    pub struct TypedUuidForOAuthRedirectUriId(pub uuid::Uuid);
+    #[serde(transparent)]
+    pub struct TypedUuidForOAuthRedirectUriId(pub ::uuid::Uuid);
     impl ::std::ops::Deref for TypedUuidForOAuthRedirectUriId {
-        type Target = uuid::Uuid;
-        fn deref(&self) -> &uuid::Uuid {
+        type Target = ::uuid::Uuid;
+        fn deref(&self) -> &::uuid::Uuid {
             &self.0
         }
     }
 
-    impl From<TypedUuidForOAuthRedirectUriId> for uuid::Uuid {
+    impl ::std::convert::From<TypedUuidForOAuthRedirectUriId> for ::uuid::Uuid {
         fn from(value: TypedUuidForOAuthRedirectUriId) -> Self {
             value.0
         }
     }
 
-    impl From<&TypedUuidForOAuthRedirectUriId> for TypedUuidForOAuthRedirectUriId {
+    impl ::std::convert::From<&TypedUuidForOAuthRedirectUriId> for TypedUuidForOAuthRedirectUriId {
         fn from(value: &TypedUuidForOAuthRedirectUriId) -> Self {
             value.clone()
         }
     }
 
-    impl From<uuid::Uuid> for TypedUuidForOAuthRedirectUriId {
-        fn from(value: uuid::Uuid) -> Self {
+    impl ::std::convert::From<::uuid::Uuid> for TypedUuidForOAuthRedirectUriId {
+        fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
         }
     }
 
-    impl std::str::FromStr for TypedUuidForOAuthRedirectUriId {
-        type Err = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::str::FromStr for TypedUuidForOAuthRedirectUriId {
+        type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
             Ok(Self(value.parse()?))
         }
     }
 
-    impl std::convert::TryFrom<&str> for TypedUuidForOAuthRedirectUriId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&str> for TypedUuidForOAuthRedirectUriId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&String> for TypedUuidForOAuthRedirectUriId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&String> for TypedUuidForOAuthRedirectUriId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<String> for TypedUuidForOAuthRedirectUriId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<String> for TypedUuidForOAuthRedirectUriId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
@@ -6209,7 +6342,7 @@ pub mod types {
         }
     }
 
-    /// TypedUuidForOAuthSecretId
+    /// `TypedUuidForOAuthSecretId`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -6224,55 +6357,56 @@ pub mod types {
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
-    pub struct TypedUuidForOAuthSecretId(pub uuid::Uuid);
+    #[serde(transparent)]
+    pub struct TypedUuidForOAuthSecretId(pub ::uuid::Uuid);
     impl ::std::ops::Deref for TypedUuidForOAuthSecretId {
-        type Target = uuid::Uuid;
-        fn deref(&self) -> &uuid::Uuid {
+        type Target = ::uuid::Uuid;
+        fn deref(&self) -> &::uuid::Uuid {
             &self.0
         }
     }
 
-    impl From<TypedUuidForOAuthSecretId> for uuid::Uuid {
+    impl ::std::convert::From<TypedUuidForOAuthSecretId> for ::uuid::Uuid {
         fn from(value: TypedUuidForOAuthSecretId) -> Self {
             value.0
         }
     }
 
-    impl From<&TypedUuidForOAuthSecretId> for TypedUuidForOAuthSecretId {
+    impl ::std::convert::From<&TypedUuidForOAuthSecretId> for TypedUuidForOAuthSecretId {
         fn from(value: &TypedUuidForOAuthSecretId) -> Self {
             value.clone()
         }
     }
 
-    impl From<uuid::Uuid> for TypedUuidForOAuthSecretId {
-        fn from(value: uuid::Uuid) -> Self {
+    impl ::std::convert::From<::uuid::Uuid> for TypedUuidForOAuthSecretId {
+        fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
         }
     }
 
-    impl std::str::FromStr for TypedUuidForOAuthSecretId {
-        type Err = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::str::FromStr for TypedUuidForOAuthSecretId {
+        type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
             Ok(Self(value.parse()?))
         }
     }
 
-    impl std::convert::TryFrom<&str> for TypedUuidForOAuthSecretId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&str> for TypedUuidForOAuthSecretId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&String> for TypedUuidForOAuthSecretId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&String> for TypedUuidForOAuthSecretId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<String> for TypedUuidForOAuthSecretId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<String> for TypedUuidForOAuthSecretId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
@@ -6284,7 +6418,7 @@ pub mod types {
         }
     }
 
-    /// TypedUuidForRfdId
+    /// `TypedUuidForRfdId`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -6299,55 +6433,56 @@ pub mod types {
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
-    pub struct TypedUuidForRfdId(pub uuid::Uuid);
+    #[serde(transparent)]
+    pub struct TypedUuidForRfdId(pub ::uuid::Uuid);
     impl ::std::ops::Deref for TypedUuidForRfdId {
-        type Target = uuid::Uuid;
-        fn deref(&self) -> &uuid::Uuid {
+        type Target = ::uuid::Uuid;
+        fn deref(&self) -> &::uuid::Uuid {
             &self.0
         }
     }
 
-    impl From<TypedUuidForRfdId> for uuid::Uuid {
+    impl ::std::convert::From<TypedUuidForRfdId> for ::uuid::Uuid {
         fn from(value: TypedUuidForRfdId) -> Self {
             value.0
         }
     }
 
-    impl From<&TypedUuidForRfdId> for TypedUuidForRfdId {
+    impl ::std::convert::From<&TypedUuidForRfdId> for TypedUuidForRfdId {
         fn from(value: &TypedUuidForRfdId) -> Self {
             value.clone()
         }
     }
 
-    impl From<uuid::Uuid> for TypedUuidForRfdId {
-        fn from(value: uuid::Uuid) -> Self {
+    impl ::std::convert::From<::uuid::Uuid> for TypedUuidForRfdId {
+        fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
         }
     }
 
-    impl std::str::FromStr for TypedUuidForRfdId {
-        type Err = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::str::FromStr for TypedUuidForRfdId {
+        type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
             Ok(Self(value.parse()?))
         }
     }
 
-    impl std::convert::TryFrom<&str> for TypedUuidForRfdId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&str> for TypedUuidForRfdId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&String> for TypedUuidForRfdId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&String> for TypedUuidForRfdId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<String> for TypedUuidForRfdId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<String> for TypedUuidForRfdId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
@@ -6359,7 +6494,7 @@ pub mod types {
         }
     }
 
-    /// TypedUuidForRfdPdfId
+    /// `TypedUuidForRfdPdfId`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -6374,55 +6509,56 @@ pub mod types {
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
-    pub struct TypedUuidForRfdPdfId(pub uuid::Uuid);
+    #[serde(transparent)]
+    pub struct TypedUuidForRfdPdfId(pub ::uuid::Uuid);
     impl ::std::ops::Deref for TypedUuidForRfdPdfId {
-        type Target = uuid::Uuid;
-        fn deref(&self) -> &uuid::Uuid {
+        type Target = ::uuid::Uuid;
+        fn deref(&self) -> &::uuid::Uuid {
             &self.0
         }
     }
 
-    impl From<TypedUuidForRfdPdfId> for uuid::Uuid {
+    impl ::std::convert::From<TypedUuidForRfdPdfId> for ::uuid::Uuid {
         fn from(value: TypedUuidForRfdPdfId) -> Self {
             value.0
         }
     }
 
-    impl From<&TypedUuidForRfdPdfId> for TypedUuidForRfdPdfId {
+    impl ::std::convert::From<&TypedUuidForRfdPdfId> for TypedUuidForRfdPdfId {
         fn from(value: &TypedUuidForRfdPdfId) -> Self {
             value.clone()
         }
     }
 
-    impl From<uuid::Uuid> for TypedUuidForRfdPdfId {
-        fn from(value: uuid::Uuid) -> Self {
+    impl ::std::convert::From<::uuid::Uuid> for TypedUuidForRfdPdfId {
+        fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
         }
     }
 
-    impl std::str::FromStr for TypedUuidForRfdPdfId {
-        type Err = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::str::FromStr for TypedUuidForRfdPdfId {
+        type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
             Ok(Self(value.parse()?))
         }
     }
 
-    impl std::convert::TryFrom<&str> for TypedUuidForRfdPdfId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&str> for TypedUuidForRfdPdfId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&String> for TypedUuidForRfdPdfId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&String> for TypedUuidForRfdPdfId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<String> for TypedUuidForRfdPdfId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<String> for TypedUuidForRfdPdfId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
@@ -6434,7 +6570,7 @@ pub mod types {
         }
     }
 
-    /// TypedUuidForRfdRevisionId
+    /// `TypedUuidForRfdRevisionId`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -6449,55 +6585,56 @@ pub mod types {
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
-    pub struct TypedUuidForRfdRevisionId(pub uuid::Uuid);
+    #[serde(transparent)]
+    pub struct TypedUuidForRfdRevisionId(pub ::uuid::Uuid);
     impl ::std::ops::Deref for TypedUuidForRfdRevisionId {
-        type Target = uuid::Uuid;
-        fn deref(&self) -> &uuid::Uuid {
+        type Target = ::uuid::Uuid;
+        fn deref(&self) -> &::uuid::Uuid {
             &self.0
         }
     }
 
-    impl From<TypedUuidForRfdRevisionId> for uuid::Uuid {
+    impl ::std::convert::From<TypedUuidForRfdRevisionId> for ::uuid::Uuid {
         fn from(value: TypedUuidForRfdRevisionId) -> Self {
             value.0
         }
     }
 
-    impl From<&TypedUuidForRfdRevisionId> for TypedUuidForRfdRevisionId {
+    impl ::std::convert::From<&TypedUuidForRfdRevisionId> for TypedUuidForRfdRevisionId {
         fn from(value: &TypedUuidForRfdRevisionId) -> Self {
             value.clone()
         }
     }
 
-    impl From<uuid::Uuid> for TypedUuidForRfdRevisionId {
-        fn from(value: uuid::Uuid) -> Self {
+    impl ::std::convert::From<::uuid::Uuid> for TypedUuidForRfdRevisionId {
+        fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
         }
     }
 
-    impl std::str::FromStr for TypedUuidForRfdRevisionId {
-        type Err = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::str::FromStr for TypedUuidForRfdRevisionId {
+        type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
             Ok(Self(value.parse()?))
         }
     }
 
-    impl std::convert::TryFrom<&str> for TypedUuidForRfdRevisionId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&str> for TypedUuidForRfdRevisionId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&String> for TypedUuidForRfdRevisionId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&String> for TypedUuidForRfdRevisionId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<String> for TypedUuidForRfdRevisionId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<String> for TypedUuidForRfdRevisionId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
@@ -6509,7 +6646,7 @@ pub mod types {
         }
     }
 
-    /// TypedUuidForUserId
+    /// `TypedUuidForUserId`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -6524,55 +6661,56 @@ pub mod types {
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
-    pub struct TypedUuidForUserId(pub uuid::Uuid);
+    #[serde(transparent)]
+    pub struct TypedUuidForUserId(pub ::uuid::Uuid);
     impl ::std::ops::Deref for TypedUuidForUserId {
-        type Target = uuid::Uuid;
-        fn deref(&self) -> &uuid::Uuid {
+        type Target = ::uuid::Uuid;
+        fn deref(&self) -> &::uuid::Uuid {
             &self.0
         }
     }
 
-    impl From<TypedUuidForUserId> for uuid::Uuid {
+    impl ::std::convert::From<TypedUuidForUserId> for ::uuid::Uuid {
         fn from(value: TypedUuidForUserId) -> Self {
             value.0
         }
     }
 
-    impl From<&TypedUuidForUserId> for TypedUuidForUserId {
+    impl ::std::convert::From<&TypedUuidForUserId> for TypedUuidForUserId {
         fn from(value: &TypedUuidForUserId) -> Self {
             value.clone()
         }
     }
 
-    impl From<uuid::Uuid> for TypedUuidForUserId {
-        fn from(value: uuid::Uuid) -> Self {
+    impl ::std::convert::From<::uuid::Uuid> for TypedUuidForUserId {
+        fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
         }
     }
 
-    impl std::str::FromStr for TypedUuidForUserId {
-        type Err = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::str::FromStr for TypedUuidForUserId {
+        type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
             Ok(Self(value.parse()?))
         }
     }
 
-    impl std::convert::TryFrom<&str> for TypedUuidForUserId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&str> for TypedUuidForUserId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&String> for TypedUuidForUserId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&String> for TypedUuidForUserId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<String> for TypedUuidForUserId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<String> for TypedUuidForUserId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
@@ -6584,7 +6722,7 @@ pub mod types {
         }
     }
 
-    /// TypedUuidForUserProviderId
+    /// `TypedUuidForUserProviderId`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -6599,55 +6737,56 @@ pub mod types {
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
-    pub struct TypedUuidForUserProviderId(pub uuid::Uuid);
+    #[serde(transparent)]
+    pub struct TypedUuidForUserProviderId(pub ::uuid::Uuid);
     impl ::std::ops::Deref for TypedUuidForUserProviderId {
-        type Target = uuid::Uuid;
-        fn deref(&self) -> &uuid::Uuid {
+        type Target = ::uuid::Uuid;
+        fn deref(&self) -> &::uuid::Uuid {
             &self.0
         }
     }
 
-    impl From<TypedUuidForUserProviderId> for uuid::Uuid {
+    impl ::std::convert::From<TypedUuidForUserProviderId> for ::uuid::Uuid {
         fn from(value: TypedUuidForUserProviderId) -> Self {
             value.0
         }
     }
 
-    impl From<&TypedUuidForUserProviderId> for TypedUuidForUserProviderId {
+    impl ::std::convert::From<&TypedUuidForUserProviderId> for TypedUuidForUserProviderId {
         fn from(value: &TypedUuidForUserProviderId) -> Self {
             value.clone()
         }
     }
 
-    impl From<uuid::Uuid> for TypedUuidForUserProviderId {
-        fn from(value: uuid::Uuid) -> Self {
+    impl ::std::convert::From<::uuid::Uuid> for TypedUuidForUserProviderId {
+        fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
         }
     }
 
-    impl std::str::FromStr for TypedUuidForUserProviderId {
-        type Err = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::str::FromStr for TypedUuidForUserProviderId {
+        type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
             Ok(Self(value.parse()?))
         }
     }
 
-    impl std::convert::TryFrom<&str> for TypedUuidForUserProviderId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&str> for TypedUuidForUserProviderId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&String> for TypedUuidForUserProviderId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<&String> for TypedUuidForUserProviderId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<String> for TypedUuidForUserProviderId {
-        type Error = <uuid::Uuid as ::std::str::FromStr>::Err;
+    impl ::std::convert::TryFrom<String> for TypedUuidForUserProviderId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
@@ -6659,7 +6798,83 @@ pub mod types {
         }
     }
 
-    /// Visibility
+    /// `TypedUuidForWebhookDeliveryId`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "string",
+    ///  "format": "uuid"
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    #[serde(transparent)]
+    pub struct TypedUuidForWebhookDeliveryId(pub ::uuid::Uuid);
+    impl ::std::ops::Deref for TypedUuidForWebhookDeliveryId {
+        type Target = ::uuid::Uuid;
+        fn deref(&self) -> &::uuid::Uuid {
+            &self.0
+        }
+    }
+
+    impl ::std::convert::From<TypedUuidForWebhookDeliveryId> for ::uuid::Uuid {
+        fn from(value: TypedUuidForWebhookDeliveryId) -> Self {
+            value.0
+        }
+    }
+
+    impl ::std::convert::From<&TypedUuidForWebhookDeliveryId> for TypedUuidForWebhookDeliveryId {
+        fn from(value: &TypedUuidForWebhookDeliveryId) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ::std::convert::From<::uuid::Uuid> for TypedUuidForWebhookDeliveryId {
+        fn from(value: ::uuid::Uuid) -> Self {
+            Self(value)
+        }
+    }
+
+    impl ::std::str::FromStr for TypedUuidForWebhookDeliveryId {
+        type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
+        fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
+            Ok(Self(value.parse()?))
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for TypedUuidForWebhookDeliveryId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
+        fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&String> for TypedUuidForWebhookDeliveryId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
+        fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<String> for TypedUuidForWebhookDeliveryId {
+        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
+        fn try_from(value: String) -> ::std::result::Result<Self, Self::Error> {
+            value.parse()
+        }
+    }
+
+    impl ::std::fmt::Display for TypedUuidForWebhookDeliveryId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    /// `Visibility`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -6694,7 +6909,7 @@ pub mod types {
         Private,
     }
 
-    impl From<&Visibility> for Visibility {
+    impl ::std::convert::From<&Self> for Visibility {
         fn from(value: &Visibility) -> Self {
             value.clone()
         }
@@ -6709,7 +6924,7 @@ pub mod types {
         }
     }
 
-    impl std::str::FromStr for Visibility {
+    impl ::std::str::FromStr for Visibility {
         type Err = self::error::ConversionError;
         fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
             match value {
@@ -6720,14 +6935,14 @@ pub mod types {
         }
     }
 
-    impl std::convert::TryFrom<&str> for Visibility {
+    impl ::std::convert::TryFrom<&str> for Visibility {
         type Error = self::error::ConversionError;
         fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
             value.parse()
         }
     }
 
-    impl std::convert::TryFrom<&::std::string::String> for Visibility {
+    impl ::std::convert::TryFrom<&::std::string::String> for Visibility {
         type Error = self::error::ConversionError;
         fn try_from(
             value: &::std::string::String,
@@ -6736,7 +6951,7 @@ pub mod types {
         }
     }
 
-    impl std::convert::TryFrom<::std::string::String> for Visibility {
+    impl ::std::convert::TryFrom<::std::string::String> for Visibility {
         type Error = self::error::ConversionError;
         fn try_from(
             value: ::std::string::String,
@@ -6749,21 +6964,25 @@ pub mod types {
     pub mod builder {
         #[derive(Clone, Debug)]
         pub struct AccessGroupForRfdPermission {
-            created_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            created_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             deleted_at: ::std::result::Result<
-                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
             id: ::std::result::Result<super::TypedUuidForAccessGroupId, ::std::string::String>,
             name: ::std::result::Result<::std::string::String, ::std::string::String>,
             permissions:
                 ::std::result::Result<super::PermissionsForRfdPermission, ::std::string::String>,
-            updated_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            updated_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
         }
 
-        impl Default for AccessGroupForRfdPermission {
+        impl ::std::default::Default for AccessGroupForRfdPermission {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -6779,8 +6998,8 @@ pub mod types {
         impl AccessGroupForRfdPermission {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.created_at = value
                     .try_into()
@@ -6789,10 +7008,10 @@ pub mod types {
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<
-                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 >,
-                T::Error: std::fmt::Display,
+                T::Error: ::std::fmt::Display,
             {
                 self.deleted_at = value
                     .try_into()
@@ -6801,8 +7020,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForAccessGroupId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForAccessGroupId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -6811,8 +7030,8 @@ pub mod types {
             }
             pub fn name<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.name = value
                     .try_into()
@@ -6821,8 +7040,8 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::PermissionsForRfdPermission>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::PermissionsForRfdPermission>,
+                T::Error: ::std::fmt::Display,
             {
                 self.permissions = value
                     .try_into()
@@ -6831,8 +7050,8 @@ pub mod types {
             }
             pub fn updated_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.updated_at = value
                     .try_into()
@@ -6857,7 +7076,7 @@ pub mod types {
             }
         }
 
-        impl From<super::AccessGroupForRfdPermission> for AccessGroupForRfdPermission {
+        impl ::std::convert::From<super::AccessGroupForRfdPermission> for AccessGroupForRfdPermission {
             fn from(value: super::AccessGroupForRfdPermission) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
@@ -6877,7 +7096,7 @@ pub mod types {
                 ::std::result::Result<super::PermissionsForRfdPermission, ::std::string::String>,
         }
 
-        impl Default for AccessGroupUpdateParamsForRfdPermission {
+        impl ::std::default::Default for AccessGroupUpdateParamsForRfdPermission {
             fn default() -> Self {
                 Self {
                     name: Err("no value supplied for name".to_string()),
@@ -6889,8 +7108,8 @@ pub mod types {
         impl AccessGroupUpdateParamsForRfdPermission {
             pub fn name<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.name = value
                     .try_into()
@@ -6899,8 +7118,8 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::PermissionsForRfdPermission>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::PermissionsForRfdPermission>,
+                T::Error: ::std::fmt::Display,
             {
                 self.permissions = value
                     .try_into()
@@ -6923,7 +7142,7 @@ pub mod types {
             }
         }
 
-        impl From<super::AccessGroupUpdateParamsForRfdPermission>
+        impl ::std::convert::From<super::AccessGroupUpdateParamsForRfdPermission>
             for AccessGroupUpdateParamsForRfdPermission
         {
             fn from(value: super::AccessGroupUpdateParamsForRfdPermission) -> Self {
@@ -6938,13 +7157,13 @@ pub mod types {
         pub struct AccessTokenExchangeRequest {
             device_code: ::std::result::Result<::std::string::String, ::std::string::String>,
             expires_at: ::std::result::Result<
-                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
             grant_type: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for AccessTokenExchangeRequest {
+        impl ::std::default::Default for AccessTokenExchangeRequest {
             fn default() -> Self {
                 Self {
                     device_code: Err("no value supplied for device_code".to_string()),
@@ -6957,8 +7176,8 @@ pub mod types {
         impl AccessTokenExchangeRequest {
             pub fn device_code<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.device_code = value
                     .try_into()
@@ -6967,10 +7186,10 @@ pub mod types {
             }
             pub fn expires_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<
-                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 >,
-                T::Error: std::fmt::Display,
+                T::Error: ::std::fmt::Display,
             {
                 self.expires_at = value
                     .try_into()
@@ -6979,8 +7198,8 @@ pub mod types {
             }
             pub fn grant_type<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.grant_type = value
                     .try_into()
@@ -7002,7 +7221,7 @@ pub mod types {
             }
         }
 
-        impl From<super::AccessTokenExchangeRequest> for AccessTokenExchangeRequest {
+        impl ::std::convert::From<super::AccessTokenExchangeRequest> for AccessTokenExchangeRequest {
             fn from(value: super::AccessTokenExchangeRequest) -> Self {
                 Self {
                     device_code: Ok(value.device_code),
@@ -7018,7 +7237,7 @@ pub mod types {
                 ::std::result::Result<super::TypedUuidForAccessGroupId, ::std::string::String>,
         }
 
-        impl Default for AddGroupBody {
+        impl ::std::default::Default for AddGroupBody {
             fn default() -> Self {
                 Self {
                     group_id: Err("no value supplied for group_id".to_string()),
@@ -7029,8 +7248,8 @@ pub mod types {
         impl AddGroupBody {
             pub fn group_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForAccessGroupId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForAccessGroupId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.group_id = value
                     .try_into()
@@ -7050,7 +7269,7 @@ pub mod types {
             }
         }
 
-        impl From<super::AddGroupBody> for AddGroupBody {
+        impl ::std::convert::From<super::AddGroupBody> for AddGroupBody {
             fn from(value: super::AddGroupBody) -> Self {
                 Self {
                     group_id: Ok(value.group_id),
@@ -7063,7 +7282,7 @@ pub mod types {
             redirect_uri: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for AddMagicLinkRedirectBody {
+        impl ::std::default::Default for AddMagicLinkRedirectBody {
             fn default() -> Self {
                 Self {
                     redirect_uri: Err("no value supplied for redirect_uri".to_string()),
@@ -7074,8 +7293,8 @@ pub mod types {
         impl AddMagicLinkRedirectBody {
             pub fn redirect_uri<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.redirect_uri = value.try_into().map_err(|e| {
                     format!("error converting supplied value for redirect_uri: {}", e)
@@ -7095,7 +7314,7 @@ pub mod types {
             }
         }
 
-        impl From<super::AddMagicLinkRedirectBody> for AddMagicLinkRedirectBody {
+        impl ::std::convert::From<super::AddMagicLinkRedirectBody> for AddMagicLinkRedirectBody {
             fn from(value: super::AddMagicLinkRedirectBody) -> Self {
                 Self {
                     redirect_uri: Ok(value.redirect_uri),
@@ -7108,7 +7327,7 @@ pub mod types {
             redirect_uri: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for AddOAuthClientRedirectBody {
+        impl ::std::default::Default for AddOAuthClientRedirectBody {
             fn default() -> Self {
                 Self {
                     redirect_uri: Err("no value supplied for redirect_uri".to_string()),
@@ -7119,8 +7338,8 @@ pub mod types {
         impl AddOAuthClientRedirectBody {
             pub fn redirect_uri<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.redirect_uri = value.try_into().map_err(|e| {
                     format!("error converting supplied value for redirect_uri: {}", e)
@@ -7140,7 +7359,7 @@ pub mod types {
             }
         }
 
-        impl From<super::AddOAuthClientRedirectBody> for AddOAuthClientRedirectBody {
+        impl ::std::convert::From<super::AddOAuthClientRedirectBody> for AddOAuthClientRedirectBody {
             fn from(value: super::AddOAuthClientRedirectBody) -> Self {
                 Self {
                     redirect_uri: Ok(value.redirect_uri),
@@ -7150,15 +7369,17 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct ApiKeyCreateParamsForRfdPermission {
-            expires_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            expires_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             permissions: ::std::result::Result<
                 ::std::option::Option<super::PermissionsForRfdPermission>,
                 ::std::string::String,
             >,
         }
 
-        impl Default for ApiKeyCreateParamsForRfdPermission {
+        impl ::std::default::Default for ApiKeyCreateParamsForRfdPermission {
             fn default() -> Self {
                 Self {
                     expires_at: Err("no value supplied for expires_at".to_string()),
@@ -7170,8 +7391,8 @@ pub mod types {
         impl ApiKeyCreateParamsForRfdPermission {
             pub fn expires_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.expires_at = value
                     .try_into()
@@ -7180,8 +7401,10 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<super::PermissionsForRfdPermission>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<super::PermissionsForRfdPermission>,
+                >,
+                T::Error: ::std::fmt::Display,
             {
                 self.permissions = value
                     .try_into()
@@ -7204,7 +7427,9 @@ pub mod types {
             }
         }
 
-        impl From<super::ApiKeyCreateParamsForRfdPermission> for ApiKeyCreateParamsForRfdPermission {
+        impl ::std::convert::From<super::ApiKeyCreateParamsForRfdPermission>
+            for ApiKeyCreateParamsForRfdPermission
+        {
             fn from(value: super::ApiKeyCreateParamsForRfdPermission) -> Self {
                 Self {
                     expires_at: Ok(value.expires_at),
@@ -7215,8 +7440,10 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct ApiKeyResponseForRfdPermission {
-            created_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            created_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             id: ::std::result::Result<super::TypedUuidForApiKeyId, ::std::string::String>,
             permissions: ::std::result::Result<
                 ::std::option::Option<super::PermissionsForRfdPermission>,
@@ -7224,7 +7451,7 @@ pub mod types {
             >,
         }
 
-        impl Default for ApiKeyResponseForRfdPermission {
+        impl ::std::default::Default for ApiKeyResponseForRfdPermission {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -7237,8 +7464,8 @@ pub mod types {
         impl ApiKeyResponseForRfdPermission {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.created_at = value
                     .try_into()
@@ -7247,8 +7474,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForApiKeyId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForApiKeyId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -7257,8 +7484,10 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<super::PermissionsForRfdPermission>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<super::PermissionsForRfdPermission>,
+                >,
+                T::Error: ::std::fmt::Display,
             {
                 self.permissions = value
                     .try_into()
@@ -7282,7 +7511,9 @@ pub mod types {
             }
         }
 
-        impl From<super::ApiKeyResponseForRfdPermission> for ApiKeyResponseForRfdPermission {
+        impl ::std::convert::From<super::ApiKeyResponseForRfdPermission>
+            for ApiKeyResponseForRfdPermission
+        {
             fn from(value: super::ApiKeyResponseForRfdPermission) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
@@ -7294,20 +7525,24 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct ApiUserContactEmail {
-            created_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            created_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             deleted_at: ::std::result::Result<
-                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
             email: ::std::result::Result<::std::string::String, ::std::string::String>,
             id: ::std::result::Result<super::TypedUuidForUserProviderId, ::std::string::String>,
-            updated_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            updated_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             user_id: ::std::result::Result<super::TypedUuidForUserId, ::std::string::String>,
         }
 
-        impl Default for ApiUserContactEmail {
+        impl ::std::default::Default for ApiUserContactEmail {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -7323,8 +7558,8 @@ pub mod types {
         impl ApiUserContactEmail {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.created_at = value
                     .try_into()
@@ -7333,10 +7568,10 @@ pub mod types {
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<
-                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 >,
-                T::Error: std::fmt::Display,
+                T::Error: ::std::fmt::Display,
             {
                 self.deleted_at = value
                     .try_into()
@@ -7345,8 +7580,8 @@ pub mod types {
             }
             pub fn email<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.email = value
                     .try_into()
@@ -7355,8 +7590,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForUserProviderId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForUserProviderId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -7365,8 +7600,8 @@ pub mod types {
             }
             pub fn updated_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.updated_at = value
                     .try_into()
@@ -7375,8 +7610,8 @@ pub mod types {
             }
             pub fn user_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForUserId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForUserId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.user_id = value
                     .try_into()
@@ -7401,7 +7636,7 @@ pub mod types {
             }
         }
 
-        impl From<super::ApiUserContactEmail> for ApiUserContactEmail {
+        impl ::std::convert::From<super::ApiUserContactEmail> for ApiUserContactEmail {
             fn from(value: super::ApiUserContactEmail) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
@@ -7419,7 +7654,7 @@ pub mod types {
             email: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for ApiUserEmailUpdateParams {
+        impl ::std::default::Default for ApiUserEmailUpdateParams {
             fn default() -> Self {
                 Self {
                     email: Err("no value supplied for email".to_string()),
@@ -7430,8 +7665,8 @@ pub mod types {
         impl ApiUserEmailUpdateParams {
             pub fn email<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.email = value
                     .try_into()
@@ -7451,7 +7686,7 @@ pub mod types {
             }
         }
 
-        impl From<super::ApiUserEmailUpdateParams> for ApiUserEmailUpdateParams {
+        impl ::std::convert::From<super::ApiUserEmailUpdateParams> for ApiUserEmailUpdateParams {
             fn from(value: super::ApiUserEmailUpdateParams) -> Self {
                 Self {
                     email: Ok(value.email),
@@ -7461,10 +7696,12 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct ApiUserForRfdPermission {
-            created_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            created_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             deleted_at: ::std::result::Result<
-                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
             groups:
@@ -7472,11 +7709,13 @@ pub mod types {
             id: ::std::result::Result<super::TypedUuidForUserId, ::std::string::String>,
             permissions:
                 ::std::result::Result<super::PermissionsForRfdPermission, ::std::string::String>,
-            updated_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            updated_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
         }
 
-        impl Default for ApiUserForRfdPermission {
+        impl ::std::default::Default for ApiUserForRfdPermission {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -7492,8 +7731,8 @@ pub mod types {
         impl ApiUserForRfdPermission {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.created_at = value
                     .try_into()
@@ -7502,10 +7741,10 @@ pub mod types {
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<
-                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 >,
-                T::Error: std::fmt::Display,
+                T::Error: ::std::fmt::Display,
             {
                 self.deleted_at = value
                     .try_into()
@@ -7514,8 +7753,8 @@ pub mod types {
             }
             pub fn groups<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<Vec<super::TypedUuidForAccessGroupId>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<Vec<super::TypedUuidForAccessGroupId>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.groups = value
                     .try_into()
@@ -7524,8 +7763,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForUserId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForUserId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -7534,8 +7773,8 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::PermissionsForRfdPermission>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::PermissionsForRfdPermission>,
+                T::Error: ::std::fmt::Display,
             {
                 self.permissions = value
                     .try_into()
@@ -7544,8 +7783,8 @@ pub mod types {
             }
             pub fn updated_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.updated_at = value
                     .try_into()
@@ -7570,7 +7809,7 @@ pub mod types {
             }
         }
 
-        impl From<super::ApiUserForRfdPermission> for ApiUserForRfdPermission {
+        impl ::std::convert::From<super::ApiUserForRfdPermission> for ApiUserForRfdPermission {
             fn from(value: super::ApiUserForRfdPermission) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
@@ -7588,7 +7827,7 @@ pub mod types {
             user_id: ::std::result::Result<super::TypedUuidForUserId, ::std::string::String>,
         }
 
-        impl Default for ApiUserLinkRequestPayload {
+        impl ::std::default::Default for ApiUserLinkRequestPayload {
             fn default() -> Self {
                 Self {
                     user_id: Err("no value supplied for user_id".to_string()),
@@ -7599,8 +7838,8 @@ pub mod types {
         impl ApiUserLinkRequestPayload {
             pub fn user_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForUserId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForUserId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.user_id = value
                     .try_into()
@@ -7620,7 +7859,7 @@ pub mod types {
             }
         }
 
-        impl From<super::ApiUserLinkRequestPayload> for ApiUserLinkRequestPayload {
+        impl ::std::convert::From<super::ApiUserLinkRequestPayload> for ApiUserLinkRequestPayload {
             fn from(value: super::ApiUserLinkRequestPayload) -> Self {
                 Self {
                     user_id: Ok(value.user_id),
@@ -7633,7 +7872,7 @@ pub mod types {
             token: ::std::result::Result<super::SecretString, ::std::string::String>,
         }
 
-        impl Default for ApiUserLinkRequestResponse {
+        impl ::std::default::Default for ApiUserLinkRequestResponse {
             fn default() -> Self {
                 Self {
                     token: Err("no value supplied for token".to_string()),
@@ -7644,8 +7883,8 @@ pub mod types {
         impl ApiUserLinkRequestResponse {
             pub fn token<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::SecretString>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::SecretString>,
+                T::Error: ::std::fmt::Display,
             {
                 self.token = value
                     .try_into()
@@ -7665,7 +7904,7 @@ pub mod types {
             }
         }
 
-        impl From<super::ApiUserLinkRequestResponse> for ApiUserLinkRequestResponse {
+        impl ::std::convert::From<super::ApiUserLinkRequestResponse> for ApiUserLinkRequestResponse {
             fn from(value: super::ApiUserLinkRequestResponse) -> Self {
                 Self {
                     token: Ok(value.token),
@@ -7675,10 +7914,12 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct ApiUserProvider {
-            created_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            created_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             deleted_at: ::std::result::Result<
-                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
             display_names: ::std::result::Result<
@@ -7692,12 +7933,14 @@ pub mod types {
             id: ::std::result::Result<super::TypedUuidForUserProviderId, ::std::string::String>,
             provider: ::std::result::Result<::std::string::String, ::std::string::String>,
             provider_id: ::std::result::Result<::std::string::String, ::std::string::String>,
-            updated_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            updated_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             user_id: ::std::result::Result<super::TypedUuidForUserId, ::std::string::String>,
         }
 
-        impl Default for ApiUserProvider {
+        impl ::std::default::Default for ApiUserProvider {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -7716,8 +7959,8 @@ pub mod types {
         impl ApiUserProvider {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.created_at = value
                     .try_into()
@@ -7726,10 +7969,10 @@ pub mod types {
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<
-                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 >,
-                T::Error: std::fmt::Display,
+                T::Error: ::std::fmt::Display,
             {
                 self.deleted_at = value
                     .try_into()
@@ -7738,8 +7981,8 @@ pub mod types {
             }
             pub fn display_names<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::vec::Vec<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::vec::Vec<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.display_names = value.try_into().map_err(|e| {
                     format!("error converting supplied value for display_names: {}", e)
@@ -7748,8 +7991,8 @@ pub mod types {
             }
             pub fn emails<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::vec::Vec<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::vec::Vec<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.emails = value
                     .try_into()
@@ -7758,8 +8001,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForUserProviderId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForUserProviderId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -7768,8 +8011,8 @@ pub mod types {
             }
             pub fn provider<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.provider = value
                     .try_into()
@@ -7778,8 +8021,8 @@ pub mod types {
             }
             pub fn provider_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.provider_id = value
                     .try_into()
@@ -7788,8 +8031,8 @@ pub mod types {
             }
             pub fn updated_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.updated_at = value
                     .try_into()
@@ -7798,8 +8041,8 @@ pub mod types {
             }
             pub fn user_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForUserId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForUserId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.user_id = value
                     .try_into()
@@ -7827,7 +8070,7 @@ pub mod types {
             }
         }
 
-        impl From<super::ApiUserProvider> for ApiUserProvider {
+        impl ::std::convert::From<super::ApiUserProvider> for ApiUserProvider {
             fn from(value: super::ApiUserProvider) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
@@ -7848,7 +8091,7 @@ pub mod types {
             token: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for ApiUserProviderLinkPayload {
+        impl ::std::default::Default for ApiUserProviderLinkPayload {
             fn default() -> Self {
                 Self {
                     token: Err("no value supplied for token".to_string()),
@@ -7859,8 +8102,8 @@ pub mod types {
         impl ApiUserProviderLinkPayload {
             pub fn token<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.token = value
                     .try_into()
@@ -7880,7 +8123,7 @@ pub mod types {
             }
         }
 
-        impl From<super::ApiUserProviderLinkPayload> for ApiUserProviderLinkPayload {
+        impl ::std::convert::From<super::ApiUserProviderLinkPayload> for ApiUserProviderLinkPayload {
             fn from(value: super::ApiUserProviderLinkPayload) -> Self {
                 Self {
                     token: Ok(value.token),
@@ -7896,7 +8139,7 @@ pub mod types {
                 ::std::result::Result<super::PermissionsForRfdPermission, ::std::string::String>,
         }
 
-        impl Default for ApiUserUpdateParamsForRfdPermission {
+        impl ::std::default::Default for ApiUserUpdateParamsForRfdPermission {
             fn default() -> Self {
                 Self {
                     group_ids: Err("no value supplied for group_ids".to_string()),
@@ -7908,8 +8151,8 @@ pub mod types {
         impl ApiUserUpdateParamsForRfdPermission {
             pub fn group_ids<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<Vec<super::TypedUuidForAccessGroupId>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<Vec<super::TypedUuidForAccessGroupId>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.group_ids = value
                     .try_into()
@@ -7918,8 +8161,8 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::PermissionsForRfdPermission>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::PermissionsForRfdPermission>,
+                T::Error: ::std::fmt::Display,
             {
                 self.permissions = value
                     .try_into()
@@ -7942,7 +8185,9 @@ pub mod types {
             }
         }
 
-        impl From<super::ApiUserUpdateParamsForRfdPermission> for ApiUserUpdateParamsForRfdPermission {
+        impl ::std::convert::From<super::ApiUserUpdateParamsForRfdPermission>
+            for ApiUserUpdateParamsForRfdPermission
+        {
             fn from(value: super::ApiUserUpdateParamsForRfdPermission) -> Self {
                 Self {
                     group_ids: Ok(value.group_ids),
@@ -7959,7 +8204,7 @@ pub mod types {
             rule: ::std::result::Result<::serde_json::Value, ::std::string::String>,
         }
 
-        impl Default for CreateMapper {
+        impl ::std::default::Default for CreateMapper {
             fn default() -> Self {
                 Self {
                     max_activations: Ok(Default::default()),
@@ -7972,8 +8217,8 @@ pub mod types {
         impl CreateMapper {
             pub fn max_activations<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<i32>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<i32>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.max_activations = value.try_into().map_err(|e| {
                     format!("error converting supplied value for max_activations: {}", e)
@@ -7982,8 +8227,8 @@ pub mod types {
             }
             pub fn name<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.name = value
                     .try_into()
@@ -7992,8 +8237,8 @@ pub mod types {
             }
             pub fn rule<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::serde_json::Value>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::serde_json::Value>,
+                T::Error: ::std::fmt::Display,
             {
                 self.rule = value
                     .try_into()
@@ -8015,7 +8260,7 @@ pub mod types {
             }
         }
 
-        impl From<super::CreateMapper> for CreateMapper {
+        impl ::std::convert::From<super::CreateMapper> for CreateMapper {
             fn from(value: super::CreateMapper) -> Self {
                 Self {
                     max_activations: Ok(value.max_activations),
@@ -8035,7 +8280,7 @@ pub mod types {
             request_id: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for Error {
+        impl ::std::default::Default for Error {
             fn default() -> Self {
                 Self {
                     error_code: Ok(Default::default()),
@@ -8048,8 +8293,8 @@ pub mod types {
         impl Error {
             pub fn error_code<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.error_code = value
                     .try_into()
@@ -8058,8 +8303,8 @@ pub mod types {
             }
             pub fn message<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.message = value
                     .try_into()
@@ -8068,8 +8313,8 @@ pub mod types {
             }
             pub fn request_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.request_id = value
                     .try_into()
@@ -8091,7 +8336,7 @@ pub mod types {
             }
         }
 
-        impl From<super::Error> for Error {
+        impl ::std::convert::From<super::Error> for Error {
             fn from(value: super::Error) -> Self {
                 Self {
                     error_code: Ok(value.error_code),
@@ -8127,7 +8372,7 @@ pub mod types {
             >,
         }
 
-        impl Default for FormattedSearchResultHit {
+        impl ::std::default::Default for FormattedSearchResultHit {
             fn default() -> Self {
                 Self {
                     anchor: Ok(Default::default()),
@@ -8144,8 +8389,8 @@ pub mod types {
         impl FormattedSearchResultHit {
             pub fn anchor<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.anchor = value
                     .try_into()
@@ -8154,8 +8399,8 @@ pub mod types {
             }
             pub fn content<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.content = value
                     .try_into()
@@ -8164,8 +8409,8 @@ pub mod types {
             }
             pub fn hierarchy<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<[::std::option::Option<::std::string::String>; 6usize]>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<[::std::option::Option<::std::string::String>; 6usize]>,
+                T::Error: ::std::fmt::Display,
             {
                 self.hierarchy = value
                     .try_into()
@@ -8174,8 +8419,8 @@ pub mod types {
             }
             pub fn hierarchy_radio<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<[::std::option::Option<::std::string::String>; 6usize]>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<[::std::option::Option<::std::string::String>; 6usize]>,
+                T::Error: ::std::fmt::Display,
             {
                 self.hierarchy_radio = value.try_into().map_err(|e| {
                     format!("error converting supplied value for hierarchy_radio: {}", e)
@@ -8184,8 +8429,8 @@ pub mod types {
             }
             pub fn object_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.object_id = value
                     .try_into()
@@ -8194,8 +8439,8 @@ pub mod types {
             }
             pub fn rfd_number<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<u64>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<u64>,
+                T::Error: ::std::fmt::Display,
             {
                 self.rfd_number = value
                     .try_into()
@@ -8204,8 +8449,8 @@ pub mod types {
             }
             pub fn url<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.url = value
                     .try_into()
@@ -8231,7 +8476,7 @@ pub mod types {
             }
         }
 
-        impl From<super::FormattedSearchResultHit> for FormattedSearchResultHit {
+        impl ::std::convert::From<super::FormattedSearchResultHit> for FormattedSearchResultHit {
             fn from(value: super::FormattedSearchResultHit) -> Self {
                 Self {
                     anchor: Ok(value.anchor),
@@ -8254,7 +8499,7 @@ pub mod types {
             >,
         }
 
-        impl Default for GetUserResponseForRfdPermission {
+        impl ::std::default::Default for GetUserResponseForRfdPermission {
             fn default() -> Self {
                 Self {
                     info: Err("no value supplied for info".to_string()),
@@ -8266,8 +8511,8 @@ pub mod types {
         impl GetUserResponseForRfdPermission {
             pub fn info<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::ApiUserForRfdPermission>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::ApiUserForRfdPermission>,
+                T::Error: ::std::fmt::Display,
             {
                 self.info = value
                     .try_into()
@@ -8276,8 +8521,8 @@ pub mod types {
             }
             pub fn providers<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::vec::Vec<super::ApiUserProvider>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::vec::Vec<super::ApiUserProvider>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.providers = value
                     .try_into()
@@ -8300,7 +8545,9 @@ pub mod types {
             }
         }
 
-        impl From<super::GetUserResponseForRfdPermission> for GetUserResponseForRfdPermission {
+        impl ::std::convert::From<super::GetUserResponseForRfdPermission>
+            for GetUserResponseForRfdPermission
+        {
             fn from(value: super::GetUserResponseForRfdPermission) -> Self {
                 Self {
                     info: Ok(value.info),
@@ -8324,11 +8571,13 @@ pub mod types {
                 ::std::vec::Vec<::std::string::String>,
                 ::std::string::String,
             >,
-            timestamp:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            timestamp: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
         }
 
-        impl Default for GitHubCommit {
+        impl ::std::default::Default for GitHubCommit {
             fn default() -> Self {
                 Self {
                     added: Err("no value supplied for added".to_string()),
@@ -8343,8 +8592,8 @@ pub mod types {
         impl GitHubCommit {
             pub fn added<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::vec::Vec<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::vec::Vec<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.added = value
                     .try_into()
@@ -8353,8 +8602,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -8363,8 +8612,8 @@ pub mod types {
             }
             pub fn modified<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::vec::Vec<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::vec::Vec<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.modified = value
                     .try_into()
@@ -8373,8 +8622,8 @@ pub mod types {
             }
             pub fn removed<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::vec::Vec<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::vec::Vec<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.removed = value
                     .try_into()
@@ -8383,8 +8632,8 @@ pub mod types {
             }
             pub fn timestamp<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.timestamp = value
                     .try_into()
@@ -8408,7 +8657,7 @@ pub mod types {
             }
         }
 
-        impl From<super::GitHubCommit> for GitHubCommit {
+        impl ::std::convert::From<super::GitHubCommit> for GitHubCommit {
             fn from(value: super::GitHubCommit) -> Self {
                 Self {
                     added: Ok(value.added),
@@ -8434,7 +8683,7 @@ pub mod types {
             sender: ::std::result::Result<super::GitHubSender, ::std::string::String>,
         }
 
-        impl Default for GitHubCommitPayload {
+        impl ::std::default::Default for GitHubCommitPayload {
             fn default() -> Self {
                 Self {
                     commits: Err("no value supplied for commits".to_string()),
@@ -8450,8 +8699,8 @@ pub mod types {
         impl GitHubCommitPayload {
             pub fn commits<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::vec::Vec<super::GitHubCommit>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::vec::Vec<super::GitHubCommit>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.commits = value
                     .try_into()
@@ -8460,8 +8709,8 @@ pub mod types {
             }
             pub fn head_commit<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<super::GitHubCommit>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<super::GitHubCommit>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.head_commit = value
                     .try_into()
@@ -8470,8 +8719,8 @@ pub mod types {
             }
             pub fn installation<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::GitHubInstallation>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::GitHubInstallation>,
+                T::Error: ::std::fmt::Display,
             {
                 self.installation = value.try_into().map_err(|e| {
                     format!("error converting supplied value for installation: {}", e)
@@ -8480,8 +8729,8 @@ pub mod types {
             }
             pub fn ref_<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.ref_ = value
                     .try_into()
@@ -8490,8 +8739,8 @@ pub mod types {
             }
             pub fn repository<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::GitHubRepository>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::GitHubRepository>,
+                T::Error: ::std::fmt::Display,
             {
                 self.repository = value
                     .try_into()
@@ -8500,8 +8749,8 @@ pub mod types {
             }
             pub fn sender<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::GitHubSender>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::GitHubSender>,
+                T::Error: ::std::fmt::Display,
             {
                 self.sender = value
                     .try_into()
@@ -8526,7 +8775,7 @@ pub mod types {
             }
         }
 
-        impl From<super::GitHubCommitPayload> for GitHubCommitPayload {
+        impl ::std::convert::From<super::GitHubCommitPayload> for GitHubCommitPayload {
             fn from(value: super::GitHubCommitPayload) -> Self {
                 Self {
                     commits: Ok(value.commits),
@@ -8545,7 +8794,7 @@ pub mod types {
             node_id: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for GitHubInstallation {
+        impl ::std::default::Default for GitHubInstallation {
             fn default() -> Self {
                 Self {
                     id: Err("no value supplied for id".to_string()),
@@ -8557,8 +8806,8 @@ pub mod types {
         impl GitHubInstallation {
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<u64>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<u64>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -8567,8 +8816,8 @@ pub mod types {
             }
             pub fn node_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.node_id = value
                     .try_into()
@@ -8589,7 +8838,7 @@ pub mod types {
             }
         }
 
-        impl From<super::GitHubInstallation> for GitHubInstallation {
+        impl ::std::convert::From<super::GitHubInstallation> for GitHubInstallation {
             fn from(value: super::GitHubInstallation) -> Self {
                 Self {
                     id: Ok(value.id),
@@ -8607,7 +8856,7 @@ pub mod types {
             owner: ::std::result::Result<super::GitHubRepositoryOwner, ::std::string::String>,
         }
 
-        impl Default for GitHubRepository {
+        impl ::std::default::Default for GitHubRepository {
             fn default() -> Self {
                 Self {
                     default_branch: Err("no value supplied for default_branch".to_string()),
@@ -8622,8 +8871,8 @@ pub mod types {
         impl GitHubRepository {
             pub fn default_branch<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.default_branch = value.try_into().map_err(|e| {
                     format!("error converting supplied value for default_branch: {}", e)
@@ -8632,8 +8881,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<u64>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<u64>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -8642,8 +8891,8 @@ pub mod types {
             }
             pub fn name<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.name = value
                     .try_into()
@@ -8652,8 +8901,8 @@ pub mod types {
             }
             pub fn node_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.node_id = value
                     .try_into()
@@ -8662,8 +8911,8 @@ pub mod types {
             }
             pub fn owner<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::GitHubRepositoryOwner>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::GitHubRepositoryOwner>,
+                T::Error: ::std::fmt::Display,
             {
                 self.owner = value
                     .try_into()
@@ -8687,7 +8936,7 @@ pub mod types {
             }
         }
 
-        impl From<super::GitHubRepository> for GitHubRepository {
+        impl ::std::convert::From<super::GitHubRepository> for GitHubRepository {
             fn from(value: super::GitHubRepository) -> Self {
                 Self {
                     default_branch: Ok(value.default_branch),
@@ -8704,7 +8953,7 @@ pub mod types {
             login: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for GitHubRepositoryOwner {
+        impl ::std::default::Default for GitHubRepositoryOwner {
             fn default() -> Self {
                 Self {
                     login: Err("no value supplied for login".to_string()),
@@ -8715,8 +8964,8 @@ pub mod types {
         impl GitHubRepositoryOwner {
             pub fn login<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.login = value
                     .try_into()
@@ -8736,7 +8985,7 @@ pub mod types {
             }
         }
 
-        impl From<super::GitHubRepositoryOwner> for GitHubRepositoryOwner {
+        impl ::std::convert::From<super::GitHubRepositoryOwner> for GitHubRepositoryOwner {
             fn from(value: super::GitHubRepositoryOwner) -> Self {
                 Self {
                     login: Ok(value.login),
@@ -8752,7 +9001,7 @@ pub mod types {
             type_: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for GitHubSender {
+        impl ::std::default::Default for GitHubSender {
             fn default() -> Self {
                 Self {
                     id: Err("no value supplied for id".to_string()),
@@ -8766,8 +9015,8 @@ pub mod types {
         impl GitHubSender {
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<u64>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<u64>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -8776,8 +9025,8 @@ pub mod types {
             }
             pub fn login<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.login = value
                     .try_into()
@@ -8786,8 +9035,8 @@ pub mod types {
             }
             pub fn node_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.node_id = value
                     .try_into()
@@ -8796,8 +9045,8 @@ pub mod types {
             }
             pub fn type_<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.type_ = value
                     .try_into()
@@ -8820,7 +9069,7 @@ pub mod types {
             }
         }
 
-        impl From<super::GitHubSender> for GitHubSender {
+        impl ::std::convert::From<super::GitHubSender> for GitHubSender {
             fn from(value: super::GitHubSender) -> Self {
                 Self {
                     id: Ok(value.id),
@@ -8833,8 +9082,10 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct InitialApiKeyResponseForRfdPermission {
-            created_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            created_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             id: ::std::result::Result<super::TypedUuidForApiKeyId, ::std::string::String>,
             key: ::std::result::Result<super::SecretString, ::std::string::String>,
             permissions: ::std::result::Result<
@@ -8843,7 +9094,7 @@ pub mod types {
             >,
         }
 
-        impl Default for InitialApiKeyResponseForRfdPermission {
+        impl ::std::default::Default for InitialApiKeyResponseForRfdPermission {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -8857,8 +9108,8 @@ pub mod types {
         impl InitialApiKeyResponseForRfdPermission {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.created_at = value
                     .try_into()
@@ -8867,8 +9118,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForApiKeyId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForApiKeyId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -8877,8 +9128,8 @@ pub mod types {
             }
             pub fn key<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::SecretString>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::SecretString>,
+                T::Error: ::std::fmt::Display,
             {
                 self.key = value
                     .try_into()
@@ -8887,8 +9138,10 @@ pub mod types {
             }
             pub fn permissions<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<super::PermissionsForRfdPermission>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<super::PermissionsForRfdPermission>,
+                >,
+                T::Error: ::std::fmt::Display,
             {
                 self.permissions = value
                     .try_into()
@@ -8913,7 +9166,9 @@ pub mod types {
             }
         }
 
-        impl From<super::InitialApiKeyResponseForRfdPermission> for InitialApiKeyResponseForRfdPermission {
+        impl ::std::convert::From<super::InitialApiKeyResponseForRfdPermission>
+            for InitialApiKeyResponseForRfdPermission
+        {
             fn from(value: super::InitialApiKeyResponseForRfdPermission) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
@@ -8926,13 +9181,15 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct InitialMagicLinkSecretResponse {
-            created_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            created_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             id: ::std::result::Result<super::TypedUuidForMagicLinkSecretId, ::std::string::String>,
             key: ::std::result::Result<super::SecretString, ::std::string::String>,
         }
 
-        impl Default for InitialMagicLinkSecretResponse {
+        impl ::std::default::Default for InitialMagicLinkSecretResponse {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -8945,8 +9202,8 @@ pub mod types {
         impl InitialMagicLinkSecretResponse {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.created_at = value
                     .try_into()
@@ -8955,8 +9212,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForMagicLinkSecretId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForMagicLinkSecretId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -8965,8 +9222,8 @@ pub mod types {
             }
             pub fn key<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::SecretString>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::SecretString>,
+                T::Error: ::std::fmt::Display,
             {
                 self.key = value
                     .try_into()
@@ -8990,7 +9247,9 @@ pub mod types {
             }
         }
 
-        impl From<super::InitialMagicLinkSecretResponse> for InitialMagicLinkSecretResponse {
+        impl ::std::convert::From<super::InitialMagicLinkSecretResponse>
+            for InitialMagicLinkSecretResponse
+        {
             fn from(value: super::InitialMagicLinkSecretResponse) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
@@ -9002,13 +9261,15 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct InitialOAuthClientSecretResponse {
-            created_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            created_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             id: ::std::result::Result<super::TypedUuidForOAuthSecretId, ::std::string::String>,
             key: ::std::result::Result<super::SecretString, ::std::string::String>,
         }
 
-        impl Default for InitialOAuthClientSecretResponse {
+        impl ::std::default::Default for InitialOAuthClientSecretResponse {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -9021,8 +9282,8 @@ pub mod types {
         impl InitialOAuthClientSecretResponse {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.created_at = value
                     .try_into()
@@ -9031,8 +9292,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForOAuthSecretId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForOAuthSecretId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -9041,8 +9302,8 @@ pub mod types {
             }
             pub fn key<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::SecretString>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::SecretString>,
+                T::Error: ::std::fmt::Display,
             {
                 self.key = value
                     .try_into()
@@ -9066,12 +9327,216 @@ pub mod types {
             }
         }
 
-        impl From<super::InitialOAuthClientSecretResponse> for InitialOAuthClientSecretResponse {
+        impl ::std::convert::From<super::InitialOAuthClientSecretResponse>
+            for InitialOAuthClientSecretResponse
+        {
             fn from(value: super::InitialOAuthClientSecretResponse) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
                     id: Ok(value.id),
                     key: Ok(value.key),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct Job {
+            branch: ::std::result::Result<::std::string::String, ::std::string::String>,
+            committed_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
+            created_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
+            id: ::std::result::Result<i32, ::std::string::String>,
+            owner: ::std::result::Result<::std::string::String, ::std::string::String>,
+            processed: ::std::result::Result<bool, ::std::string::String>,
+            repository: ::std::result::Result<::std::string::String, ::std::string::String>,
+            rfd: ::std::result::Result<i32, ::std::string::String>,
+            sha: ::std::result::Result<super::CommitSha, ::std::string::String>,
+            started_at: ::std::result::Result<
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+                ::std::string::String,
+            >,
+            webhook_delivery_id: ::std::result::Result<
+                ::std::option::Option<super::TypedUuidForWebhookDeliveryId>,
+                ::std::string::String,
+            >,
+        }
+
+        impl ::std::default::Default for Job {
+            fn default() -> Self {
+                Self {
+                    branch: Err("no value supplied for branch".to_string()),
+                    committed_at: Err("no value supplied for committed_at".to_string()),
+                    created_at: Err("no value supplied for created_at".to_string()),
+                    id: Err("no value supplied for id".to_string()),
+                    owner: Err("no value supplied for owner".to_string()),
+                    processed: Err("no value supplied for processed".to_string()),
+                    repository: Err("no value supplied for repository".to_string()),
+                    rfd: Err("no value supplied for rfd".to_string()),
+                    sha: Err("no value supplied for sha".to_string()),
+                    started_at: Ok(Default::default()),
+                    webhook_delivery_id: Ok(Default::default()),
+                }
+            }
+        }
+
+        impl Job {
+            pub fn branch<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.branch = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for branch: {}", e));
+                self
+            }
+            pub fn committed_at<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.committed_at = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for committed_at: {}", e)
+                });
+                self
+            }
+            pub fn created_at<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.created_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<i32>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn owner<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.owner = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for owner: {}", e));
+                self
+            }
+            pub fn processed<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<bool>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.processed = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for processed: {}", e));
+                self
+            }
+            pub fn repository<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.repository = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for repository: {}", e));
+                self
+            }
+            pub fn rfd<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<i32>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.rfd = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for rfd: {}", e));
+                self
+            }
+            pub fn sha<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::CommitSha>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.sha = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for sha: {}", e));
+                self
+            }
+            pub fn started_at<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+                >,
+                T::Error: ::std::fmt::Display,
+            {
+                self.started_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for started_at: {}", e));
+                self
+            }
+            pub fn webhook_delivery_id<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<super::TypedUuidForWebhookDeliveryId>,
+                >,
+                T::Error: ::std::fmt::Display,
+            {
+                self.webhook_delivery_id = value.try_into().map_err(|e| {
+                    format!(
+                        "error converting supplied value for webhook_delivery_id: {}",
+                        e
+                    )
+                });
+                self
+            }
+        }
+
+        impl ::std::convert::TryFrom<Job> for super::Job {
+            type Error = super::error::ConversionError;
+            fn try_from(value: Job) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    branch: value.branch?,
+                    committed_at: value.committed_at?,
+                    created_at: value.created_at?,
+                    id: value.id?,
+                    owner: value.owner?,
+                    processed: value.processed?,
+                    repository: value.repository?,
+                    rfd: value.rfd?,
+                    sha: value.sha?,
+                    started_at: value.started_at?,
+                    webhook_delivery_id: value.webhook_delivery_id?,
+                })
+            }
+        }
+
+        impl ::std::convert::From<super::Job> for Job {
+            fn from(value: super::Job) -> Self {
+                Self {
+                    branch: Ok(value.branch),
+                    committed_at: Ok(value.committed_at),
+                    created_at: Ok(value.created_at),
+                    id: Ok(value.id),
+                    owner: Ok(value.owner),
+                    processed: Ok(value.processed),
+                    repository: Ok(value.repository),
+                    rfd: Ok(value.rfd),
+                    sha: Ok(value.sha),
+                    started_at: Ok(value.started_at),
+                    webhook_delivery_id: Ok(value.webhook_delivery_id),
                 }
             }
         }
@@ -9085,7 +9550,7 @@ pub mod types {
             use_: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for Jwk {
+        impl ::std::default::Default for Jwk {
             fn default() -> Self {
                 Self {
                     e: Err("no value supplied for e".to_string()),
@@ -9100,8 +9565,8 @@ pub mod types {
         impl Jwk {
             pub fn e<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.e = value
                     .try_into()
@@ -9110,8 +9575,8 @@ pub mod types {
             }
             pub fn kid<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.kid = value
                     .try_into()
@@ -9120,8 +9585,8 @@ pub mod types {
             }
             pub fn kty<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.kty = value
                     .try_into()
@@ -9130,8 +9595,8 @@ pub mod types {
             }
             pub fn n<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.n = value
                     .try_into()
@@ -9140,8 +9605,8 @@ pub mod types {
             }
             pub fn use_<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.use_ = value
                     .try_into()
@@ -9163,7 +9628,7 @@ pub mod types {
             }
         }
 
-        impl From<super::Jwk> for Jwk {
+        impl ::std::convert::From<super::Jwk> for Jwk {
             fn from(value: super::Jwk) -> Self {
                 Self {
                     e: Ok(value.e),
@@ -9180,7 +9645,7 @@ pub mod types {
             keys: ::std::result::Result<::std::vec::Vec<super::Jwk>, ::std::string::String>,
         }
 
-        impl Default for Jwks {
+        impl ::std::default::Default for Jwks {
             fn default() -> Self {
                 Self {
                     keys: Err("no value supplied for keys".to_string()),
@@ -9191,8 +9656,8 @@ pub mod types {
         impl Jwks {
             pub fn keys<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::vec::Vec<super::Jwk>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::vec::Vec<super::Jwk>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.keys = value
                     .try_into()
@@ -9208,7 +9673,7 @@ pub mod types {
             }
         }
 
-        impl From<super::Jwks> for Jwks {
+        impl ::std::convert::From<super::Jwks> for Jwks {
             fn from(value: super::Jwks) -> Self {
                 Self {
                     keys: Ok(value.keys),
@@ -9218,10 +9683,12 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct MagicLink {
-            created_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            created_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             deleted_at: ::std::result::Result<
-                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
             id: ::std::result::Result<super::TypedUuidForMagicLinkId, ::std::string::String>,
@@ -9235,7 +9702,7 @@ pub mod types {
             >,
         }
 
-        impl Default for MagicLink {
+        impl ::std::default::Default for MagicLink {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -9250,8 +9717,8 @@ pub mod types {
         impl MagicLink {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.created_at = value
                     .try_into()
@@ -9260,10 +9727,10 @@ pub mod types {
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<
-                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 >,
-                T::Error: std::fmt::Display,
+                T::Error: ::std::fmt::Display,
             {
                 self.deleted_at = value
                     .try_into()
@@ -9272,8 +9739,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForMagicLinkId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForMagicLinkId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -9282,8 +9749,8 @@ pub mod types {
             }
             pub fn redirect_uris<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::vec::Vec<super::MagicLinkRedirectUri>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::vec::Vec<super::MagicLinkRedirectUri>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.redirect_uris = value.try_into().map_err(|e| {
                     format!("error converting supplied value for redirect_uris: {}", e)
@@ -9292,8 +9759,8 @@ pub mod types {
             }
             pub fn secrets<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::vec::Vec<super::MagicLinkSecret>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::vec::Vec<super::MagicLinkSecret>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.secrets = value
                     .try_into()
@@ -9317,7 +9784,7 @@ pub mod types {
             }
         }
 
-        impl From<super::MagicLink> for MagicLink {
+        impl ::std::convert::From<super::MagicLink> for MagicLink {
             fn from(value: super::MagicLink) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
@@ -9337,7 +9804,7 @@ pub mod types {
             secret: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for MagicLinkExchangeRequest {
+        impl ::std::default::Default for MagicLinkExchangeRequest {
             fn default() -> Self {
                 Self {
                     attempt_id: Err("no value supplied for attempt_id".to_string()),
@@ -9350,8 +9817,8 @@ pub mod types {
         impl MagicLinkExchangeRequest {
             pub fn attempt_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForMagicLinkAttemptId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForMagicLinkAttemptId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.attempt_id = value
                     .try_into()
@@ -9360,8 +9827,8 @@ pub mod types {
             }
             pub fn recipient<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.recipient = value
                     .try_into()
@@ -9370,8 +9837,8 @@ pub mod types {
             }
             pub fn secret<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.secret = value
                     .try_into()
@@ -9393,7 +9860,7 @@ pub mod types {
             }
         }
 
-        impl From<super::MagicLinkExchangeRequest> for MagicLinkExchangeRequest {
+        impl ::std::convert::From<super::MagicLinkExchangeRequest> for MagicLinkExchangeRequest {
             fn from(value: super::MagicLinkExchangeRequest) -> Self {
                 Self {
                     attempt_id: Ok(value.attempt_id),
@@ -9410,7 +9877,7 @@ pub mod types {
             token_type: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for MagicLinkExchangeResponse {
+        impl ::std::default::Default for MagicLinkExchangeResponse {
             fn default() -> Self {
                 Self {
                     access_token: Err("no value supplied for access_token".to_string()),
@@ -9423,8 +9890,8 @@ pub mod types {
         impl MagicLinkExchangeResponse {
             pub fn access_token<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.access_token = value.try_into().map_err(|e| {
                     format!("error converting supplied value for access_token: {}", e)
@@ -9433,8 +9900,8 @@ pub mod types {
             }
             pub fn expires_in<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<i64>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<i64>,
+                T::Error: ::std::fmt::Display,
             {
                 self.expires_in = value
                     .try_into()
@@ -9443,8 +9910,8 @@ pub mod types {
             }
             pub fn token_type<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.token_type = value
                     .try_into()
@@ -9466,7 +9933,7 @@ pub mod types {
             }
         }
 
-        impl From<super::MagicLinkExchangeResponse> for MagicLinkExchangeResponse {
+        impl ::std::convert::From<super::MagicLinkExchangeResponse> for MagicLinkExchangeResponse {
             fn from(value: super::MagicLinkExchangeResponse) -> Self {
                 Self {
                     access_token: Ok(value.access_token),
@@ -9478,10 +9945,12 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct MagicLinkRedirectUri {
-            created_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            created_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             deleted_at: ::std::result::Result<
-                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
             id: ::std::result::Result<
@@ -9493,7 +9962,7 @@ pub mod types {
             redirect_uri: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for MagicLinkRedirectUri {
+        impl ::std::default::Default for MagicLinkRedirectUri {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -9510,8 +9979,8 @@ pub mod types {
         impl MagicLinkRedirectUri {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.created_at = value
                     .try_into()
@@ -9520,10 +9989,10 @@ pub mod types {
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<
-                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 >,
-                T::Error: std::fmt::Display,
+                T::Error: ::std::fmt::Display,
             {
                 self.deleted_at = value
                     .try_into()
@@ -9532,8 +10001,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForMagicLinkRedirectUriId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForMagicLinkRedirectUriId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -9542,8 +10011,8 @@ pub mod types {
             }
             pub fn magic_link_client_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForMagicLinkId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForMagicLinkId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.magic_link_client_id = value.try_into().map_err(|e| {
                     format!(
@@ -9555,8 +10024,8 @@ pub mod types {
             }
             pub fn redirect_uri<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.redirect_uri = value.try_into().map_err(|e| {
                     format!("error converting supplied value for redirect_uri: {}", e)
@@ -9580,7 +10049,7 @@ pub mod types {
             }
         }
 
-        impl From<super::MagicLinkRedirectUri> for MagicLinkRedirectUri {
+        impl ::std::convert::From<super::MagicLinkRedirectUri> for MagicLinkRedirectUri {
             fn from(value: super::MagicLinkRedirectUri) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
@@ -9594,10 +10063,12 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct MagicLinkSecret {
-            created_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            created_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             deleted_at: ::std::result::Result<
-                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
             id: ::std::result::Result<super::TypedUuidForMagicLinkSecretId, ::std::string::String>,
@@ -9606,7 +10077,7 @@ pub mod types {
             secret_signature: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for MagicLinkSecret {
+        impl ::std::default::Default for MagicLinkSecret {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -9623,8 +10094,8 @@ pub mod types {
         impl MagicLinkSecret {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.created_at = value
                     .try_into()
@@ -9633,10 +10104,10 @@ pub mod types {
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<
-                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 >,
-                T::Error: std::fmt::Display,
+                T::Error: ::std::fmt::Display,
             {
                 self.deleted_at = value
                     .try_into()
@@ -9645,8 +10116,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForMagicLinkSecretId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForMagicLinkSecretId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -9655,8 +10126,8 @@ pub mod types {
             }
             pub fn magic_link_client_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForMagicLinkId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForMagicLinkId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.magic_link_client_id = value.try_into().map_err(|e| {
                     format!(
@@ -9668,8 +10139,8 @@ pub mod types {
             }
             pub fn secret_signature<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.secret_signature = value.try_into().map_err(|e| {
                     format!(
@@ -9696,7 +10167,7 @@ pub mod types {
             }
         }
 
-        impl From<super::MagicLinkSecret> for MagicLinkSecret {
+        impl ::std::convert::From<super::MagicLinkSecret> for MagicLinkSecret {
             fn from(value: super::MagicLinkSecret) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
@@ -9721,7 +10192,7 @@ pub mod types {
             secret: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for MagicLinkSendRequest {
+        impl ::std::default::Default for MagicLinkSendRequest {
             fn default() -> Self {
                 Self {
                     expires_in: Err("no value supplied for expires_in".to_string()),
@@ -9737,8 +10208,8 @@ pub mod types {
         impl MagicLinkSendRequest {
             pub fn expires_in<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<i64>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<i64>,
+                T::Error: ::std::fmt::Display,
             {
                 self.expires_in = value
                     .try_into()
@@ -9747,8 +10218,8 @@ pub mod types {
             }
             pub fn medium<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::MagicLinkMedium>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::MagicLinkMedium>,
+                T::Error: ::std::fmt::Display,
             {
                 self.medium = value
                     .try_into()
@@ -9757,8 +10228,8 @@ pub mod types {
             }
             pub fn recipient<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.recipient = value
                     .try_into()
@@ -9767,8 +10238,8 @@ pub mod types {
             }
             pub fn redirect_uri<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.redirect_uri = value.try_into().map_err(|e| {
                     format!("error converting supplied value for redirect_uri: {}", e)
@@ -9777,8 +10248,8 @@ pub mod types {
             }
             pub fn scope<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.scope = value
                     .try_into()
@@ -9787,8 +10258,8 @@ pub mod types {
             }
             pub fn secret<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.secret = value
                     .try_into()
@@ -9813,7 +10284,7 @@ pub mod types {
             }
         }
 
-        impl From<super::MagicLinkSendRequest> for MagicLinkSendRequest {
+        impl ::std::convert::From<super::MagicLinkSendRequest> for MagicLinkSendRequest {
             fn from(value: super::MagicLinkSendRequest) -> Self {
                 Self {
                     expires_in: Ok(value.expires_in),
@@ -9832,7 +10303,7 @@ pub mod types {
                 ::std::result::Result<super::TypedUuidForMagicLinkAttemptId, ::std::string::String>,
         }
 
-        impl Default for MagicLinkSendResponse {
+        impl ::std::default::Default for MagicLinkSendResponse {
             fn default() -> Self {
                 Self {
                     attempt_id: Err("no value supplied for attempt_id".to_string()),
@@ -9843,8 +10314,8 @@ pub mod types {
         impl MagicLinkSendResponse {
             pub fn attempt_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForMagicLinkAttemptId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForMagicLinkAttemptId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.attempt_id = value
                     .try_into()
@@ -9864,7 +10335,7 @@ pub mod types {
             }
         }
 
-        impl From<super::MagicLinkSendResponse> for MagicLinkSendResponse {
+        impl ::std::convert::From<super::MagicLinkSendResponse> for MagicLinkSendResponse {
             fn from(value: super::MagicLinkSendResponse) -> Self {
                 Self {
                     attempt_id: Ok(value.attempt_id),
@@ -9875,14 +10346,16 @@ pub mod types {
         #[derive(Clone, Debug)]
         pub struct Mapper {
             activations: ::std::result::Result<::std::option::Option<i32>, ::std::string::String>,
-            created_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            created_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             deleted_at: ::std::result::Result<
-                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
             depleted_at: ::std::result::Result<
-                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
             id: ::std::result::Result<super::TypedUuidForMapperId, ::std::string::String>,
@@ -9890,11 +10363,13 @@ pub mod types {
                 ::std::result::Result<::std::option::Option<i32>, ::std::string::String>,
             name: ::std::result::Result<::std::string::String, ::std::string::String>,
             rule: ::std::result::Result<::serde_json::Value, ::std::string::String>,
-            updated_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            updated_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
         }
 
-        impl Default for Mapper {
+        impl ::std::default::Default for Mapper {
             fn default() -> Self {
                 Self {
                     activations: Ok(Default::default()),
@@ -9913,8 +10388,8 @@ pub mod types {
         impl Mapper {
             pub fn activations<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<i32>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<i32>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.activations = value
                     .try_into()
@@ -9923,8 +10398,8 @@ pub mod types {
             }
             pub fn created_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.created_at = value
                     .try_into()
@@ -9933,10 +10408,10 @@ pub mod types {
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<
-                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 >,
-                T::Error: std::fmt::Display,
+                T::Error: ::std::fmt::Display,
             {
                 self.deleted_at = value
                     .try_into()
@@ -9945,10 +10420,10 @@ pub mod types {
             }
             pub fn depleted_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<
-                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 >,
-                T::Error: std::fmt::Display,
+                T::Error: ::std::fmt::Display,
             {
                 self.depleted_at = value
                     .try_into()
@@ -9957,8 +10432,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForMapperId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForMapperId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -9967,8 +10442,8 @@ pub mod types {
             }
             pub fn max_activations<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<i32>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<i32>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.max_activations = value.try_into().map_err(|e| {
                     format!("error converting supplied value for max_activations: {}", e)
@@ -9977,8 +10452,8 @@ pub mod types {
             }
             pub fn name<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.name = value
                     .try_into()
@@ -9987,8 +10462,8 @@ pub mod types {
             }
             pub fn rule<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::serde_json::Value>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::serde_json::Value>,
+                T::Error: ::std::fmt::Display,
             {
                 self.rule = value
                     .try_into()
@@ -9997,8 +10472,8 @@ pub mod types {
             }
             pub fn updated_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.updated_at = value
                     .try_into()
@@ -10026,7 +10501,7 @@ pub mod types {
             }
         }
 
-        impl From<super::Mapper> for Mapper {
+        impl ::std::convert::From<super::Mapper> for Mapper {
             fn from(value: super::Mapper) -> Self {
                 Self {
                     activations: Ok(value.activations),
@@ -10056,7 +10531,7 @@ pub mod types {
             redirect_uri: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for OAuthAuthzCodeExchangeBody {
+        impl ::std::default::Default for OAuthAuthzCodeExchangeBody {
             fn default() -> Self {
                 Self {
                     client_id: Err("no value supplied for client_id".to_string()),
@@ -10072,8 +10547,8 @@ pub mod types {
         impl OAuthAuthzCodeExchangeBody {
             pub fn client_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForOAuthClientId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForOAuthClientId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.client_id = value
                     .try_into()
@@ -10082,8 +10557,8 @@ pub mod types {
             }
             pub fn client_secret<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::SecretString>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::SecretString>,
+                T::Error: ::std::fmt::Display,
             {
                 self.client_secret = value.try_into().map_err(|e| {
                     format!("error converting supplied value for client_secret: {}", e)
@@ -10092,8 +10567,8 @@ pub mod types {
             }
             pub fn code<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.code = value
                     .try_into()
@@ -10102,8 +10577,8 @@ pub mod types {
             }
             pub fn grant_type<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.grant_type = value
                     .try_into()
@@ -10112,8 +10587,8 @@ pub mod types {
             }
             pub fn pkce_verifier<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.pkce_verifier = value.try_into().map_err(|e| {
                     format!("error converting supplied value for pkce_verifier: {}", e)
@@ -10122,8 +10597,8 @@ pub mod types {
             }
             pub fn redirect_uri<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.redirect_uri = value.try_into().map_err(|e| {
                     format!("error converting supplied value for redirect_uri: {}", e)
@@ -10148,7 +10623,7 @@ pub mod types {
             }
         }
 
-        impl From<super::OAuthAuthzCodeExchangeBody> for OAuthAuthzCodeExchangeBody {
+        impl ::std::convert::From<super::OAuthAuthzCodeExchangeBody> for OAuthAuthzCodeExchangeBody {
             fn from(value: super::OAuthAuthzCodeExchangeBody) -> Self {
                 Self {
                     client_id: Ok(value.client_id),
@@ -10168,7 +10643,7 @@ pub mod types {
             token_type: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for OAuthAuthzCodeExchangeResponse {
+        impl ::std::default::Default for OAuthAuthzCodeExchangeResponse {
             fn default() -> Self {
                 Self {
                     access_token: Err("no value supplied for access_token".to_string()),
@@ -10181,8 +10656,8 @@ pub mod types {
         impl OAuthAuthzCodeExchangeResponse {
             pub fn access_token<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.access_token = value.try_into().map_err(|e| {
                     format!("error converting supplied value for access_token: {}", e)
@@ -10191,8 +10666,8 @@ pub mod types {
             }
             pub fn expires_in<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<i64>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<i64>,
+                T::Error: ::std::fmt::Display,
             {
                 self.expires_in = value
                     .try_into()
@@ -10201,8 +10676,8 @@ pub mod types {
             }
             pub fn token_type<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.token_type = value
                     .try_into()
@@ -10226,7 +10701,9 @@ pub mod types {
             }
         }
 
-        impl From<super::OAuthAuthzCodeExchangeResponse> for OAuthAuthzCodeExchangeResponse {
+        impl ::std::convert::From<super::OAuthAuthzCodeExchangeResponse>
+            for OAuthAuthzCodeExchangeResponse
+        {
             fn from(value: super::OAuthAuthzCodeExchangeResponse) -> Self {
                 Self {
                     access_token: Ok(value.access_token),
@@ -10238,10 +10715,12 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct OAuthClient {
-            created_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            created_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             deleted_at: ::std::result::Result<
-                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
             id: ::std::result::Result<super::TypedUuidForOAuthClientId, ::std::string::String>,
@@ -10255,7 +10734,7 @@ pub mod types {
             >,
         }
 
-        impl Default for OAuthClient {
+        impl ::std::default::Default for OAuthClient {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -10270,8 +10749,8 @@ pub mod types {
         impl OAuthClient {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.created_at = value
                     .try_into()
@@ -10280,10 +10759,10 @@ pub mod types {
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<
-                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 >,
-                T::Error: std::fmt::Display,
+                T::Error: ::std::fmt::Display,
             {
                 self.deleted_at = value
                     .try_into()
@@ -10292,8 +10771,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForOAuthClientId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForOAuthClientId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -10302,8 +10781,8 @@ pub mod types {
             }
             pub fn redirect_uris<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::vec::Vec<super::OAuthClientRedirectUri>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::vec::Vec<super::OAuthClientRedirectUri>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.redirect_uris = value.try_into().map_err(|e| {
                     format!("error converting supplied value for redirect_uris: {}", e)
@@ -10312,8 +10791,8 @@ pub mod types {
             }
             pub fn secrets<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::vec::Vec<super::OAuthClientSecret>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::vec::Vec<super::OAuthClientSecret>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.secrets = value
                     .try_into()
@@ -10337,7 +10816,7 @@ pub mod types {
             }
         }
 
-        impl From<super::OAuthClient> for OAuthClient {
+        impl ::std::convert::From<super::OAuthClient> for OAuthClient {
             fn from(value: super::OAuthClient) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
@@ -10351,10 +10830,12 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct OAuthClientRedirectUri {
-            created_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            created_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             deleted_at: ::std::result::Result<
-                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
             id: ::std::result::Result<super::TypedUuidForOAuthRedirectUriId, ::std::string::String>,
@@ -10363,7 +10844,7 @@ pub mod types {
             redirect_uri: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for OAuthClientRedirectUri {
+        impl ::std::default::Default for OAuthClientRedirectUri {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -10378,8 +10859,8 @@ pub mod types {
         impl OAuthClientRedirectUri {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.created_at = value
                     .try_into()
@@ -10388,10 +10869,10 @@ pub mod types {
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<
-                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 >,
-                T::Error: std::fmt::Display,
+                T::Error: ::std::fmt::Display,
             {
                 self.deleted_at = value
                     .try_into()
@@ -10400,8 +10881,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForOAuthRedirectUriId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForOAuthRedirectUriId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -10410,8 +10891,8 @@ pub mod types {
             }
             pub fn oauth_client_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForOAuthClientId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForOAuthClientId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.oauth_client_id = value.try_into().map_err(|e| {
                     format!("error converting supplied value for oauth_client_id: {}", e)
@@ -10420,8 +10901,8 @@ pub mod types {
             }
             pub fn redirect_uri<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.redirect_uri = value.try_into().map_err(|e| {
                     format!("error converting supplied value for redirect_uri: {}", e)
@@ -10445,7 +10926,7 @@ pub mod types {
             }
         }
 
-        impl From<super::OAuthClientRedirectUri> for OAuthClientRedirectUri {
+        impl ::std::convert::From<super::OAuthClientRedirectUri> for OAuthClientRedirectUri {
             fn from(value: super::OAuthClientRedirectUri) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
@@ -10459,10 +10940,12 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct OAuthClientSecret {
-            created_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            created_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             deleted_at: ::std::result::Result<
-                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
             id: ::std::result::Result<super::TypedUuidForOAuthSecretId, ::std::string::String>,
@@ -10471,7 +10954,7 @@ pub mod types {
             secret_signature: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for OAuthClientSecret {
+        impl ::std::default::Default for OAuthClientSecret {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -10486,8 +10969,8 @@ pub mod types {
         impl OAuthClientSecret {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.created_at = value
                     .try_into()
@@ -10496,10 +10979,10 @@ pub mod types {
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<
-                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 >,
-                T::Error: std::fmt::Display,
+                T::Error: ::std::fmt::Display,
             {
                 self.deleted_at = value
                     .try_into()
@@ -10508,8 +10991,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForOAuthSecretId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForOAuthSecretId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -10518,8 +11001,8 @@ pub mod types {
             }
             pub fn oauth_client_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForOAuthClientId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForOAuthClientId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.oauth_client_id = value.try_into().map_err(|e| {
                     format!("error converting supplied value for oauth_client_id: {}", e)
@@ -10528,8 +11011,8 @@ pub mod types {
             }
             pub fn secret_signature<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.secret_signature = value.try_into().map_err(|e| {
                     format!(
@@ -10556,7 +11039,7 @@ pub mod types {
             }
         }
 
-        impl From<super::OAuthClientSecret> for OAuthClientSecret {
+        impl ::std::convert::From<super::OAuthClientSecret> for OAuthClientSecret {
             fn from(value: super::OAuthClientSecret) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
@@ -10582,7 +11065,7 @@ pub mod types {
             token_endpoint: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for OAuthProviderInfo {
+        impl ::std::default::Default for OAuthProviderInfo {
             fn default() -> Self {
                 Self {
                     auth_url_endpoint: Err("no value supplied for auth_url_endpoint".to_string()),
@@ -10600,8 +11083,8 @@ pub mod types {
         impl OAuthProviderInfo {
             pub fn auth_url_endpoint<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.auth_url_endpoint = value.try_into().map_err(|e| {
                     format!(
@@ -10613,8 +11096,8 @@ pub mod types {
             }
             pub fn client_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.client_id = value
                     .try_into()
@@ -10623,8 +11106,8 @@ pub mod types {
             }
             pub fn device_code_endpoint<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.device_code_endpoint = value.try_into().map_err(|e| {
                     format!(
@@ -10636,8 +11119,8 @@ pub mod types {
             }
             pub fn provider<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::OAuthProviderName>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::OAuthProviderName>,
+                T::Error: ::std::fmt::Display,
             {
                 self.provider = value
                     .try_into()
@@ -10646,8 +11129,8 @@ pub mod types {
             }
             pub fn scopes<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::vec::Vec<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::vec::Vec<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.scopes = value
                     .try_into()
@@ -10656,8 +11139,8 @@ pub mod types {
             }
             pub fn token_endpoint<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.token_endpoint = value.try_into().map_err(|e| {
                     format!("error converting supplied value for token_endpoint: {}", e)
@@ -10682,7 +11165,7 @@ pub mod types {
             }
         }
 
-        impl From<super::OAuthProviderInfo> for OAuthProviderInfo {
+        impl ::std::convert::From<super::OAuthProviderInfo> for OAuthProviderInfo {
             fn from(value: super::OAuthProviderInfo) -> Self {
                 Self {
                     auth_url_endpoint: Ok(value.auth_url_endpoint),
@@ -10700,7 +11183,7 @@ pub mod types {
             jwks_uri: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for OpenIdConfiguration {
+        impl ::std::default::Default for OpenIdConfiguration {
             fn default() -> Self {
                 Self {
                     jwks_uri: Err("no value supplied for jwks_uri".to_string()),
@@ -10711,8 +11194,8 @@ pub mod types {
         impl OpenIdConfiguration {
             pub fn jwks_uri<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.jwks_uri = value
                     .try_into()
@@ -10732,7 +11215,7 @@ pub mod types {
             }
         }
 
-        impl From<super::OpenIdConfiguration> for OpenIdConfiguration {
+        impl ::std::convert::From<super::OpenIdConfiguration> for OpenIdConfiguration {
             fn from(value: super::OpenIdConfiguration) -> Self {
                 Self {
                     jwks_uri: Ok(value.jwks_uri),
@@ -10749,7 +11232,7 @@ pub mod types {
             title: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for ReserveRfdBody {
+        impl ::std::default::Default for ReserveRfdBody {
             fn default() -> Self {
                 Self {
                     content: Ok(Default::default()),
@@ -10761,8 +11244,8 @@ pub mod types {
         impl ReserveRfdBody {
             pub fn content<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.content = value
                     .try_into()
@@ -10771,8 +11254,8 @@ pub mod types {
             }
             pub fn title<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.title = value
                     .try_into()
@@ -10793,7 +11276,7 @@ pub mod types {
             }
         }
 
-        impl From<super::ReserveRfdBody> for ReserveRfdBody {
+        impl ::std::convert::From<super::ReserveRfdBody> for ReserveRfdBody {
             fn from(value: super::ReserveRfdBody) -> Self {
                 Self {
                     content: Ok(value.content),
@@ -10807,7 +11290,7 @@ pub mod types {
             number: ::std::result::Result<i32, ::std::string::String>,
         }
 
-        impl Default for ReserveRfdResponse {
+        impl ::std::default::Default for ReserveRfdResponse {
             fn default() -> Self {
                 Self {
                     number: Err("no value supplied for number".to_string()),
@@ -10818,8 +11301,8 @@ pub mod types {
         impl ReserveRfdResponse {
             pub fn number<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<i32>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<i32>,
+                T::Error: ::std::fmt::Display,
             {
                 self.number = value
                     .try_into()
@@ -10839,7 +11322,7 @@ pub mod types {
             }
         }
 
-        impl From<super::ReserveRfdResponse> for ReserveRfdResponse {
+        impl ::std::convert::From<super::ReserveRfdResponse> for ReserveRfdResponse {
             fn from(value: super::ReserveRfdResponse) -> Self {
                 Self {
                     number: Ok(value.number),
@@ -10853,10 +11336,12 @@ pub mod types {
                 ::std::option::Option<super::RfdRevision>,
                 ::std::string::String,
             >,
-            created_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            created_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             deleted_at: ::std::result::Result<
-                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
             id: ::std::result::Result<super::TypedUuidForRfdId, ::std::string::String>,
@@ -10865,12 +11350,14 @@ pub mod types {
                 ::std::string::String,
             >,
             rfd_number: ::std::result::Result<i32, ::std::string::String>,
-            updated_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            updated_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             visibility: ::std::result::Result<super::Visibility, ::std::string::String>,
         }
 
-        impl Default for Rfd {
+        impl ::std::default::Default for Rfd {
             fn default() -> Self {
                 Self {
                     content: Ok(Default::default()),
@@ -10888,8 +11375,8 @@ pub mod types {
         impl Rfd {
             pub fn content<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<super::RfdRevision>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<super::RfdRevision>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.content = value
                     .try_into()
@@ -10898,8 +11385,8 @@ pub mod types {
             }
             pub fn created_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.created_at = value
                     .try_into()
@@ -10908,10 +11395,10 @@ pub mod types {
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<
-                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 >,
-                T::Error: std::fmt::Display,
+                T::Error: ::std::fmt::Display,
             {
                 self.deleted_at = value
                     .try_into()
@@ -10920,8 +11407,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForRfdId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForRfdId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -10930,8 +11417,8 @@ pub mod types {
             }
             pub fn link<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.link = value
                     .try_into()
@@ -10940,8 +11427,8 @@ pub mod types {
             }
             pub fn rfd_number<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<i32>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<i32>,
+                T::Error: ::std::fmt::Display,
             {
                 self.rfd_number = value
                     .try_into()
@@ -10950,8 +11437,8 @@ pub mod types {
             }
             pub fn updated_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.updated_at = value
                     .try_into()
@@ -10960,8 +11447,8 @@ pub mod types {
             }
             pub fn visibility<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::Visibility>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::Visibility>,
+                T::Error: ::std::fmt::Display,
             {
                 self.visibility = value
                     .try_into()
@@ -10986,7 +11473,7 @@ pub mod types {
             }
         }
 
-        impl From<super::Rfd> for Rfd {
+        impl ::std::convert::From<super::Rfd> for Rfd {
             fn from(value: super::Rfd) -> Self {
                 Self {
                     content: Ok(value.content),
@@ -11010,7 +11497,7 @@ pub mod types {
             value: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for RfdAttrValue {
+        impl ::std::default::Default for RfdAttrValue {
             fn default() -> Self {
                 Self {
                     message: Ok(Default::default()),
@@ -11022,8 +11509,8 @@ pub mod types {
         impl RfdAttrValue {
             pub fn message<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.message = value
                     .try_into()
@@ -11032,8 +11519,8 @@ pub mod types {
             }
             pub fn value<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.value = value
                     .try_into()
@@ -11054,7 +11541,7 @@ pub mod types {
             }
         }
 
-        impl From<super::RfdAttrValue> for RfdAttrValue {
+        impl ::std::convert::From<super::RfdAttrValue> for RfdAttrValue {
             fn from(value: super::RfdAttrValue) -> Self {
                 Self {
                     message: Ok(value.message),
@@ -11065,10 +11552,12 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct RfdPdf {
-            created_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            created_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             deleted_at: ::std::result::Result<
-                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
             external_id: ::std::result::Result<::std::string::String, ::std::string::String>,
@@ -11078,11 +11567,13 @@ pub mod types {
             rfd_revision_id:
                 ::std::result::Result<super::TypedUuidForRfdRevisionId, ::std::string::String>,
             source: ::std::result::Result<super::PdfSource, ::std::string::String>,
-            updated_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            updated_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
         }
 
-        impl Default for RfdPdf {
+        impl ::std::default::Default for RfdPdf {
             fn default() -> Self {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
@@ -11101,8 +11592,8 @@ pub mod types {
         impl RfdPdf {
             pub fn created_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.created_at = value
                     .try_into()
@@ -11111,10 +11602,10 @@ pub mod types {
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<
-                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 >,
-                T::Error: std::fmt::Display,
+                T::Error: ::std::fmt::Display,
             {
                 self.deleted_at = value
                     .try_into()
@@ -11123,8 +11614,8 @@ pub mod types {
             }
             pub fn external_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.external_id = value
                     .try_into()
@@ -11133,8 +11624,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForRfdPdfId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForRfdPdfId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -11143,8 +11634,8 @@ pub mod types {
             }
             pub fn link<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.link = value
                     .try_into()
@@ -11153,8 +11644,8 @@ pub mod types {
             }
             pub fn rfd_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForRfdId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForRfdId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.rfd_id = value
                     .try_into()
@@ -11163,8 +11654,8 @@ pub mod types {
             }
             pub fn rfd_revision_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForRfdRevisionId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForRfdRevisionId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.rfd_revision_id = value.try_into().map_err(|e| {
                     format!("error converting supplied value for rfd_revision_id: {}", e)
@@ -11173,8 +11664,8 @@ pub mod types {
             }
             pub fn source<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::PdfSource>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::PdfSource>,
+                T::Error: ::std::fmt::Display,
             {
                 self.source = value
                     .try_into()
@@ -11183,8 +11674,8 @@ pub mod types {
             }
             pub fn updated_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.updated_at = value
                     .try_into()
@@ -11212,7 +11703,7 @@ pub mod types {
             }
         }
 
-        impl From<super::RfdPdf> for RfdPdf {
+        impl ::std::convert::From<super::RfdPdf> for RfdPdf {
             fn from(value: super::RfdPdf) -> Self {
                 Self {
                     created_at: Ok(value.created_at),
@@ -11235,14 +11726,18 @@ pub mod types {
                 ::std::string::String,
             >,
             commit: ::std::result::Result<super::CommitSha, ::std::string::String>,
-            committed_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            committed_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             content: ::std::result::Result<::std::string::String, ::std::string::String>,
             content_format: ::std::result::Result<super::ContentFormat, ::std::string::String>,
-            created_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            created_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
             deleted_at: ::std::result::Result<
-                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
             discussion: ::std::result::Result<
@@ -11261,11 +11756,13 @@ pub mod types {
                 ::std::string::String,
             >,
             title: ::std::result::Result<::std::string::String, ::std::string::String>,
-            updated_at:
-                ::std::result::Result<chrono::DateTime<chrono::offset::Utc>, ::std::string::String>,
+            updated_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
         }
 
-        impl Default for RfdRevision {
+        impl ::std::default::Default for RfdRevision {
             fn default() -> Self {
                 Self {
                     authors: Ok(Default::default()),
@@ -11290,8 +11787,8 @@ pub mod types {
         impl RfdRevision {
             pub fn authors<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.authors = value
                     .try_into()
@@ -11300,8 +11797,8 @@ pub mod types {
             }
             pub fn commit<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::CommitSha>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::CommitSha>,
+                T::Error: ::std::fmt::Display,
             {
                 self.commit = value
                     .try_into()
@@ -11310,8 +11807,8 @@ pub mod types {
             }
             pub fn committed_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.committed_at = value.try_into().map_err(|e| {
                     format!("error converting supplied value for committed_at: {}", e)
@@ -11320,8 +11817,8 @@ pub mod types {
             }
             pub fn content<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.content = value
                     .try_into()
@@ -11330,8 +11827,8 @@ pub mod types {
             }
             pub fn content_format<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::ContentFormat>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::ContentFormat>,
+                T::Error: ::std::fmt::Display,
             {
                 self.content_format = value.try_into().map_err(|e| {
                     format!("error converting supplied value for content_format: {}", e)
@@ -11340,8 +11837,8 @@ pub mod types {
             }
             pub fn created_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.created_at = value
                     .try_into()
@@ -11350,10 +11847,10 @@ pub mod types {
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<
-                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 >,
-                T::Error: std::fmt::Display,
+                T::Error: ::std::fmt::Display,
             {
                 self.deleted_at = value
                     .try_into()
@@ -11362,8 +11859,8 @@ pub mod types {
             }
             pub fn discussion<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.discussion = value
                     .try_into()
@@ -11372,8 +11869,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForRfdRevisionId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForRfdRevisionId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -11382,8 +11879,8 @@ pub mod types {
             }
             pub fn labels<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.labels = value
                     .try_into()
@@ -11392,8 +11889,8 @@ pub mod types {
             }
             pub fn rfd_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForRfdId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForRfdId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.rfd_id = value
                     .try_into()
@@ -11402,8 +11899,8 @@ pub mod types {
             }
             pub fn sha<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::FileSha>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::FileSha>,
+                T::Error: ::std::fmt::Display,
             {
                 self.sha = value
                     .try_into()
@@ -11412,8 +11909,8 @@ pub mod types {
             }
             pub fn state<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.state = value
                     .try_into()
@@ -11422,8 +11919,8 @@ pub mod types {
             }
             pub fn title<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.title = value
                     .try_into()
@@ -11432,8 +11929,8 @@ pub mod types {
             }
             pub fn updated_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<chrono::DateTime<chrono::offset::Utc>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.updated_at = value
                     .try_into()
@@ -11467,7 +11964,7 @@ pub mod types {
             }
         }
 
-        impl From<super::RfdRevision> for RfdRevision {
+        impl ::std::convert::From<super::RfdRevision> for RfdRevision {
             fn from(value: super::RfdRevision) -> Self {
                 Self {
                     authors: Ok(value.authors),
@@ -11498,7 +11995,7 @@ pub mod types {
             >,
         }
 
-        impl Default for RfdUpdateBody {
+        impl ::std::default::Default for RfdUpdateBody {
             fn default() -> Self {
                 Self {
                     document: Err("no value supplied for document".to_string()),
@@ -11510,8 +12007,8 @@ pub mod types {
         impl RfdUpdateBody {
             pub fn document<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.document = value
                     .try_into()
@@ -11520,8 +12017,8 @@ pub mod types {
             }
             pub fn message<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.message = value
                     .try_into()
@@ -11542,7 +12039,7 @@ pub mod types {
             }
         }
 
-        impl From<super::RfdUpdateBody> for RfdUpdateBody {
+        impl ::std::convert::From<super::RfdUpdateBody> for RfdUpdateBody {
             fn from(value: super::RfdUpdateBody) -> Self {
                 Self {
                     document: Ok(value.document),
@@ -11560,7 +12057,7 @@ pub mod types {
             >,
         }
 
-        impl Default for RfdUpdateContentBody {
+        impl ::std::default::Default for RfdUpdateContentBody {
             fn default() -> Self {
                 Self {
                     content: Err("no value supplied for content".to_string()),
@@ -11572,8 +12069,8 @@ pub mod types {
         impl RfdUpdateContentBody {
             pub fn content<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.content = value
                     .try_into()
@@ -11582,8 +12079,8 @@ pub mod types {
             }
             pub fn message<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.message = value
                     .try_into()
@@ -11604,7 +12101,7 @@ pub mod types {
             }
         }
 
-        impl From<super::RfdUpdateContentBody> for RfdUpdateContentBody {
+        impl ::std::convert::From<super::RfdUpdateContentBody> for RfdUpdateContentBody {
             fn from(value: super::RfdUpdateContentBody) -> Self {
                 Self {
                     content: Ok(value.content),
@@ -11618,7 +12115,7 @@ pub mod types {
             visibility: ::std::result::Result<super::Visibility, ::std::string::String>,
         }
 
-        impl Default for RfdVisibility {
+        impl ::std::default::Default for RfdVisibility {
             fn default() -> Self {
                 Self {
                     visibility: Err("no value supplied for visibility".to_string()),
@@ -11629,8 +12126,8 @@ pub mod types {
         impl RfdVisibility {
             pub fn visibility<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::Visibility>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::Visibility>,
+                T::Error: ::std::fmt::Display,
             {
                 self.visibility = value
                     .try_into()
@@ -11650,7 +12147,7 @@ pub mod types {
             }
         }
 
-        impl From<super::RfdVisibility> for RfdVisibility {
+        impl ::std::convert::From<super::RfdVisibility> for RfdVisibility {
             fn from(value: super::RfdVisibility) -> Self {
                 Self {
                     visibility: Ok(value.visibility),
@@ -11669,7 +12166,7 @@ pub mod types {
                 ::std::string::String,
             >,
             committed_at: ::std::result::Result<
-                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
             content: ::std::result::Result<::std::vec::Vec<super::RfdPdf>, ::std::string::String>,
@@ -11704,7 +12201,7 @@ pub mod types {
             visibility: ::std::result::Result<super::Visibility, ::std::string::String>,
         }
 
-        impl Default for RfdWithPdf {
+        impl ::std::default::Default for RfdWithPdf {
             fn default() -> Self {
                 Self {
                     authors: Ok(Default::default()),
@@ -11728,8 +12225,8 @@ pub mod types {
         impl RfdWithPdf {
             pub fn authors<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.authors = value
                     .try_into()
@@ -11738,8 +12235,8 @@ pub mod types {
             }
             pub fn commit<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<super::CommitSha>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<super::CommitSha>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.commit = value
                     .try_into()
@@ -11748,10 +12245,10 @@ pub mod types {
             }
             pub fn committed_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<
-                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 >,
-                T::Error: std::fmt::Display,
+                T::Error: ::std::fmt::Display,
             {
                 self.committed_at = value.try_into().map_err(|e| {
                     format!("error converting supplied value for committed_at: {}", e)
@@ -11760,8 +12257,8 @@ pub mod types {
             }
             pub fn content<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::vec::Vec<super::RfdPdf>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::vec::Vec<super::RfdPdf>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.content = value
                     .try_into()
@@ -11770,8 +12267,8 @@ pub mod types {
             }
             pub fn discussion<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.discussion = value
                     .try_into()
@@ -11780,8 +12277,8 @@ pub mod types {
             }
             pub fn format<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<super::ContentFormat>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<super::ContentFormat>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.format = value
                     .try_into()
@@ -11790,8 +12287,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForRfdId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForRfdId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -11800,8 +12297,8 @@ pub mod types {
             }
             pub fn labels<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.labels = value
                     .try_into()
@@ -11810,8 +12307,8 @@ pub mod types {
             }
             pub fn link<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.link = value
                     .try_into()
@@ -11820,8 +12317,8 @@ pub mod types {
             }
             pub fn rfd_number<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<i32>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<i32>,
+                T::Error: ::std::fmt::Display,
             {
                 self.rfd_number = value
                     .try_into()
@@ -11830,8 +12327,8 @@ pub mod types {
             }
             pub fn sha<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<super::FileSha>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<super::FileSha>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.sha = value
                     .try_into()
@@ -11840,8 +12337,8 @@ pub mod types {
             }
             pub fn state<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.state = value
                     .try_into()
@@ -11850,8 +12347,8 @@ pub mod types {
             }
             pub fn title<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.title = value
                     .try_into()
@@ -11860,8 +12357,8 @@ pub mod types {
             }
             pub fn visibility<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::Visibility>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::Visibility>,
+                T::Error: ::std::fmt::Display,
             {
                 self.visibility = value
                     .try_into()
@@ -11894,7 +12391,7 @@ pub mod types {
             }
         }
 
-        impl From<super::RfdWithPdf> for RfdWithPdf {
+        impl ::std::convert::From<super::RfdWithPdf> for RfdWithPdf {
             fn from(value: super::RfdWithPdf) -> Self {
                 Self {
                     authors: Ok(value.authors),
@@ -11926,7 +12423,7 @@ pub mod types {
                 ::std::string::String,
             >,
             committed_at: ::std::result::Result<
-                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
             content: ::std::result::Result<
@@ -11964,7 +12461,7 @@ pub mod types {
             visibility: ::std::result::Result<super::Visibility, ::std::string::String>,
         }
 
-        impl Default for RfdWithRaw {
+        impl ::std::default::Default for RfdWithRaw {
             fn default() -> Self {
                 Self {
                     authors: Ok(Default::default()),
@@ -11988,8 +12485,8 @@ pub mod types {
         impl RfdWithRaw {
             pub fn authors<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.authors = value
                     .try_into()
@@ -11998,8 +12495,8 @@ pub mod types {
             }
             pub fn commit<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<super::CommitSha>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<super::CommitSha>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.commit = value
                     .try_into()
@@ -12008,10 +12505,10 @@ pub mod types {
             }
             pub fn committed_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<
-                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 >,
-                T::Error: std::fmt::Display,
+                T::Error: ::std::fmt::Display,
             {
                 self.committed_at = value.try_into().map_err(|e| {
                     format!("error converting supplied value for committed_at: {}", e)
@@ -12020,8 +12517,8 @@ pub mod types {
             }
             pub fn content<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.content = value
                     .try_into()
@@ -12030,8 +12527,8 @@ pub mod types {
             }
             pub fn discussion<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.discussion = value
                     .try_into()
@@ -12040,8 +12537,8 @@ pub mod types {
             }
             pub fn format<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<super::ContentFormat>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<super::ContentFormat>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.format = value
                     .try_into()
@@ -12050,8 +12547,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForRfdId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForRfdId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -12060,8 +12557,8 @@ pub mod types {
             }
             pub fn labels<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.labels = value
                     .try_into()
@@ -12070,8 +12567,8 @@ pub mod types {
             }
             pub fn link<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.link = value
                     .try_into()
@@ -12080,8 +12577,8 @@ pub mod types {
             }
             pub fn rfd_number<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<i32>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<i32>,
+                T::Error: ::std::fmt::Display,
             {
                 self.rfd_number = value
                     .try_into()
@@ -12090,8 +12587,8 @@ pub mod types {
             }
             pub fn sha<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<super::FileSha>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<super::FileSha>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.sha = value
                     .try_into()
@@ -12100,8 +12597,8 @@ pub mod types {
             }
             pub fn state<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.state = value
                     .try_into()
@@ -12110,8 +12607,8 @@ pub mod types {
             }
             pub fn title<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.title = value
                     .try_into()
@@ -12120,8 +12617,8 @@ pub mod types {
             }
             pub fn visibility<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::Visibility>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::Visibility>,
+                T::Error: ::std::fmt::Display,
             {
                 self.visibility = value
                     .try_into()
@@ -12154,7 +12651,7 @@ pub mod types {
             }
         }
 
-        impl From<super::RfdWithRaw> for RfdWithRaw {
+        impl ::std::convert::From<super::RfdWithRaw> for RfdWithRaw {
             fn from(value: super::RfdWithRaw) -> Self {
                 Self {
                     authors: Ok(value.authors),
@@ -12186,7 +12683,7 @@ pub mod types {
                 ::std::string::String,
             >,
             committed_at: ::std::result::Result<
-                ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
             discussion: ::std::result::Result<
@@ -12220,7 +12717,7 @@ pub mod types {
             visibility: ::std::result::Result<super::Visibility, ::std::string::String>,
         }
 
-        impl Default for RfdWithoutContent {
+        impl ::std::default::Default for RfdWithoutContent {
             fn default() -> Self {
                 Self {
                     authors: Ok(Default::default()),
@@ -12243,8 +12740,8 @@ pub mod types {
         impl RfdWithoutContent {
             pub fn authors<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.authors = value
                     .try_into()
@@ -12253,8 +12750,8 @@ pub mod types {
             }
             pub fn commit<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<super::CommitSha>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<super::CommitSha>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.commit = value
                     .try_into()
@@ -12263,10 +12760,10 @@ pub mod types {
             }
             pub fn committed_at<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<
-                    ::std::option::Option<chrono::DateTime<chrono::offset::Utc>>,
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 >,
-                T::Error: std::fmt::Display,
+                T::Error: ::std::fmt::Display,
             {
                 self.committed_at = value.try_into().map_err(|e| {
                     format!("error converting supplied value for committed_at: {}", e)
@@ -12275,8 +12772,8 @@ pub mod types {
             }
             pub fn discussion<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.discussion = value
                     .try_into()
@@ -12285,8 +12782,8 @@ pub mod types {
             }
             pub fn format<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<super::ContentFormat>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<super::ContentFormat>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.format = value
                     .try_into()
@@ -12295,8 +12792,8 @@ pub mod types {
             }
             pub fn id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::TypedUuidForRfdId>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::TypedUuidForRfdId>,
+                T::Error: ::std::fmt::Display,
             {
                 self.id = value
                     .try_into()
@@ -12305,8 +12802,8 @@ pub mod types {
             }
             pub fn labels<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.labels = value
                     .try_into()
@@ -12315,8 +12812,8 @@ pub mod types {
             }
             pub fn link<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.link = value
                     .try_into()
@@ -12325,8 +12822,8 @@ pub mod types {
             }
             pub fn rfd_number<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<i32>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<i32>,
+                T::Error: ::std::fmt::Display,
             {
                 self.rfd_number = value
                     .try_into()
@@ -12335,8 +12832,8 @@ pub mod types {
             }
             pub fn sha<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<super::FileSha>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<super::FileSha>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.sha = value
                     .try_into()
@@ -12345,8 +12842,8 @@ pub mod types {
             }
             pub fn state<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.state = value
                     .try_into()
@@ -12355,8 +12852,8 @@ pub mod types {
             }
             pub fn title<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.title = value
                     .try_into()
@@ -12365,8 +12862,8 @@ pub mod types {
             }
             pub fn visibility<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<super::Visibility>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<super::Visibility>,
+                T::Error: ::std::fmt::Display,
             {
                 self.visibility = value
                     .try_into()
@@ -12398,7 +12895,7 @@ pub mod types {
             }
         }
 
-        impl From<super::RfdWithoutContent> for RfdWithoutContent {
+        impl ::std::convert::From<super::RfdWithoutContent> for RfdWithoutContent {
             fn from(value: super::RfdWithoutContent) -> Self {
                 Self {
                     authors: Ok(value.authors),
@@ -12445,7 +12942,7 @@ pub mod types {
             >,
         }
 
-        impl Default for SearchResultHit {
+        impl ::std::default::Default for SearchResultHit {
             fn default() -> Self {
                 Self {
                     anchor: Ok(Default::default()),
@@ -12463,8 +12960,8 @@ pub mod types {
         impl SearchResultHit {
             pub fn anchor<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.anchor = value
                     .try_into()
@@ -12473,8 +12970,8 @@ pub mod types {
             }
             pub fn content<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.content = value
                     .try_into()
@@ -12483,8 +12980,8 @@ pub mod types {
             }
             pub fn formatted<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<super::FormattedSearchResultHit>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<super::FormattedSearchResultHit>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.formatted = value
                     .try_into()
@@ -12493,8 +12990,8 @@ pub mod types {
             }
             pub fn hierarchy<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<[::std::option::Option<::std::string::String>; 6usize]>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<[::std::option::Option<::std::string::String>; 6usize]>,
+                T::Error: ::std::fmt::Display,
             {
                 self.hierarchy = value
                     .try_into()
@@ -12503,8 +13000,8 @@ pub mod types {
             }
             pub fn hierarchy_radio<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<[::std::option::Option<::std::string::String>; 6usize]>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<[::std::option::Option<::std::string::String>; 6usize]>,
+                T::Error: ::std::fmt::Display,
             {
                 self.hierarchy_radio = value.try_into().map_err(|e| {
                     format!("error converting supplied value for hierarchy_radio: {}", e)
@@ -12513,8 +13010,8 @@ pub mod types {
             }
             pub fn object_id<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.object_id = value
                     .try_into()
@@ -12523,8 +13020,8 @@ pub mod types {
             }
             pub fn rfd_number<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<u64>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<u64>,
+                T::Error: ::std::fmt::Display,
             {
                 self.rfd_number = value
                     .try_into()
@@ -12533,8 +13030,8 @@ pub mod types {
             }
             pub fn url<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.url = value
                     .try_into()
@@ -12561,7 +13058,7 @@ pub mod types {
             }
         }
 
-        impl From<super::SearchResultHit> for SearchResultHit {
+        impl ::std::convert::From<super::SearchResultHit> for SearchResultHit {
             fn from(value: super::SearchResultHit) -> Self {
                 Self {
                     anchor: Ok(value.anchor),
@@ -12587,7 +13084,7 @@ pub mod types {
             query: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl Default for SearchResults {
+        impl ::std::default::Default for SearchResults {
             fn default() -> Self {
                 Self {
                     hits: Err("no value supplied for hits".to_string()),
@@ -12601,8 +13098,8 @@ pub mod types {
         impl SearchResults {
             pub fn hits<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::vec::Vec<super::SearchResultHit>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::vec::Vec<super::SearchResultHit>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.hits = value
                     .try_into()
@@ -12611,8 +13108,8 @@ pub mod types {
             }
             pub fn limit<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<u32>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<u32>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.limit = value
                     .try_into()
@@ -12621,8 +13118,8 @@ pub mod types {
             }
             pub fn offset<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::option::Option<u32>>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::option::Option<u32>>,
+                T::Error: ::std::fmt::Display,
             {
                 self.offset = value
                     .try_into()
@@ -12631,8 +13128,8 @@ pub mod types {
             }
             pub fn query<T>(mut self, value: T) -> Self
             where
-                T: std::convert::TryInto<::std::string::String>,
-                T::Error: std::fmt::Display,
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
             {
                 self.query = value
                     .try_into()
@@ -12655,7 +13152,7 @@ pub mod types {
             }
         }
 
-        impl From<super::SearchResults> for SearchResults {
+        impl ::std::convert::From<super::SearchResults> for SearchResults {
             fn from(value: super::SearchResults) -> Self {
                 Self {
                     hits: Ok(value.hits),
@@ -12985,6 +13482,20 @@ impl Client {
     /// ```
     pub fn delete_group(&self) -> builder::DeleteGroup {
         builder::DeleteGroup::new(self)
+    }
+
+    /// List all jobs for a RFD
+    ///
+    /// Sends a `GET` request to `/job`
+    ///
+    /// ```ignore
+    /// let response = client.list_jobs()
+    ///    .rfd(rfd)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn list_jobs(&self) -> builder::ListJobs {
+        builder::ListJobs::new(self)
     }
 
     /// Exchange a magic link access code for an access token
@@ -13707,9 +14218,7 @@ impl ClientHiddenExt for Client {
 pub mod builder {
     use super::types;
     #[allow(unused_imports)]
-    use super::{
-        encode_path, ByteStream, Error, HeaderMap, HeaderValue, RequestBuilderExt, ResponseValue,
-    };
+    use super::{encode_path, ByteStream, Error, RequestBuilderExt, ResponseValue};
     /// Builder for [`Client::jwks_json`]
     ///
     /// [`Client::jwks_json`]: super::Client::jwks_json
@@ -13732,8 +14241,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -13775,8 +14284,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -13807,7 +14316,7 @@ pub mod builder {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
-                body: Ok(types::builder::ApiUserUpdateParamsForRfdPermission::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -13853,8 +14362,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -13917,8 +14426,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -13951,7 +14460,7 @@ pub mod builder {
             Self {
                 client: client,
                 user_id: Err("user_id was not initialized".to_string()),
-                body: Ok(types::builder::ApiUserUpdateParamsForRfdPermission::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -14016,8 +14525,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -14051,7 +14560,7 @@ pub mod builder {
             Self {
                 client: client,
                 user_id: Err("user_id was not initialized".to_string()),
-                body: Ok(types::builder::ApiUserEmailUpdateParams::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -14114,8 +14623,8 @@ pub mod builder {
                 .client
                 .put(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -14149,7 +14658,7 @@ pub mod builder {
             Self {
                 client: client,
                 user_id: Err("user_id was not initialized".to_string()),
-                body: Ok(types::builder::AddGroupBody::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -14206,8 +14715,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -14287,8 +14796,8 @@ pub mod builder {
                 .client
                 .delete(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -14321,7 +14830,7 @@ pub mod builder {
             Self {
                 client: client,
                 user_id: Err("user_id was not initialized".to_string()),
-                body: Ok(types::builder::ApiUserProviderLinkPayload::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -14383,8 +14892,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -14449,8 +14958,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -14483,7 +14992,7 @@ pub mod builder {
             Self {
                 client: client,
                 user_id: Err("user_id was not initialized".to_string()),
-                body: Ok(types::builder::ApiKeyCreateParamsForRfdPermission::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -14549,8 +15058,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -14631,8 +15140,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -14712,8 +15221,8 @@ pub mod builder {
                 .client
                 .delete(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -14746,7 +15255,7 @@ pub mod builder {
             Self {
                 client: client,
                 provider_id: Err("provider_id was not initialized".to_string()),
-                body: Ok(types::builder::ApiUserLinkRequestPayload::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -14811,8 +15320,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -14844,7 +15353,7 @@ pub mod builder {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
-                body: Ok(types::builder::GitHubCommitPayload::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -14882,8 +15391,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -14929,8 +15438,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -14961,7 +15470,7 @@ pub mod builder {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
-                body: Ok(types::builder::AccessGroupUpdateParamsForRfdPermission::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -15009,8 +15518,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -15044,7 +15553,7 @@ pub mod builder {
             Self {
                 client: client,
                 group_id: Err("group_id was not initialized".to_string()),
-                body: Ok(types::builder::AccessGroupUpdateParamsForRfdPermission::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -15111,8 +15620,8 @@ pub mod builder {
                 .client
                 .put(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -15175,9 +15684,68 @@ pub mod builder {
                 .client
                 .delete(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::list_jobs`]
+    ///
+    /// [`Client::list_jobs`]: super::Client::list_jobs
+    #[derive(Debug, Clone)]
+    pub struct ListJobs<'a> {
+        client: &'a super::Client,
+        rfd: Result<::std::string::String, String>,
+    }
+
+    impl<'a> ListJobs<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                rfd: Err("rfd was not initialized".to_string()),
+            }
+        }
+
+        pub fn rfd<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<::std::string::String>,
+        {
+            self.rfd = value.try_into().map_err(|_| {
+                "conversion to `:: std :: string :: String` for rfd failed".to_string()
+            });
+            self
+        }
+
+        /// Sends a `GET` request to `/job`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<::std::vec::Vec<types::Job>>, Error<types::Error>> {
+            let Self { client, rfd } = self;
+            let rfd = rfd.map_err(Error::InvalidRequest)?;
+            let url = format!("{}/job", client.baseurl,);
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .get(url)
+                .header(
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .query(&progenitor_client::QueryParam::new("rfd", &rfd))
                 .build()?;
             let result = client.client.execute(request).await;
             let response = result?;
@@ -15209,7 +15777,7 @@ pub mod builder {
             Self {
                 client: client,
                 channel: Err("channel was not initialized".to_string()),
-                body: Ok(types::builder::MagicLinkExchangeRequest::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -15272,8 +15840,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -15307,7 +15875,7 @@ pub mod builder {
             Self {
                 client: client,
                 channel: Err("channel was not initialized".to_string()),
-                body: Ok(types::builder::MagicLinkSendRequest::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -15368,8 +15936,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -15497,16 +16065,22 @@ pub mod builder {
                 client.baseurl,
                 encode_path(&provider.to_string()),
             );
-            let mut query = Vec::with_capacity(5usize);
-            query.push(("client_id", client_id.to_string()));
-            query.push(("redirect_uri", redirect_uri.to_string()));
-            query.push(("response_type", response_type.to_string()));
-            if let Some(v) = &scope {
-                query.push(("scope", v.to_string()));
-            }
-            query.push(("state", state.to_string()));
             #[allow(unused_mut)]
-            let mut request = client.client.get(url).query(&query).build()?;
+            let mut request = client
+                .client
+                .get(url)
+                .query(&progenitor_client::QueryParam::new("client_id", &client_id))
+                .query(&progenitor_client::QueryParam::new(
+                    "redirect_uri",
+                    &redirect_uri,
+                ))
+                .query(&progenitor_client::QueryParam::new(
+                    "response_type",
+                    &response_type,
+                ))
+                .query(&progenitor_client::QueryParam::new("scope", &scope))
+                .query(&progenitor_client::QueryParam::new("state", &state))
+                .build()?;
             let result = client.client.execute(request).await;
             let response = result?;
             match response.status().as_u16() {
@@ -15597,18 +16171,14 @@ pub mod builder {
                 client.baseurl,
                 encode_path(&provider.to_string()),
             );
-            let mut query = Vec::with_capacity(3usize);
-            if let Some(v) = &code {
-                query.push(("code", v.to_string()));
-            }
-            if let Some(v) = &error {
-                query.push(("error", v.to_string()));
-            }
-            if let Some(v) = &state {
-                query.push(("state", v.to_string()));
-            }
             #[allow(unused_mut)]
-            let mut request = client.client.get(url).query(&query).build()?;
+            let mut request = client
+                .client
+                .get(url)
+                .query(&progenitor_client::QueryParam::new("code", &code))
+                .query(&progenitor_client::QueryParam::new("error", &error))
+                .query(&progenitor_client::QueryParam::new("state", &state))
+                .build()?;
             let result = client.client.execute(request).await;
             let response = result?;
             match response.status().as_u16() {
@@ -15639,7 +16209,7 @@ pub mod builder {
             Self {
                 client: client,
                 provider: Err("provider was not initialized".to_string()),
-                body: Ok(types::builder::OAuthAuthzCodeExchangeBody::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -15704,8 +16274,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .form_urlencoded(&body)?
                 .build()?;
@@ -15767,8 +16337,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -15801,7 +16371,7 @@ pub mod builder {
             Self {
                 client: client,
                 provider: Err("provider was not initialized".to_string()),
-                body: Ok(types::builder::AccessTokenExchangeRequest::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -15893,8 +16463,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -15934,8 +16504,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -15994,8 +16564,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -16028,7 +16598,7 @@ pub mod builder {
             Self {
                 client: client,
                 client_id: Err("client_id was not initialized".to_string()),
-                body: Ok(types::builder::AddMagicLinkRedirectBody::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -16091,8 +16661,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -16174,8 +16744,8 @@ pub mod builder {
                 .client
                 .delete(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -16237,8 +16807,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -16318,8 +16888,8 @@ pub mod builder {
                 .client
                 .delete(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -16375,19 +16945,18 @@ pub mod builder {
             } = self;
             let include_depleted = include_depleted.map_err(Error::InvalidRequest)?;
             let url = format!("{}/mapper", client.baseurl,);
-            let mut query = Vec::with_capacity(1usize);
-            if let Some(v) = &include_depleted {
-                query.push(("include_depleted", v.to_string()));
-            }
             #[allow(unused_mut)]
             let mut request = client
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
-                .query(&query)
+                .query(&progenitor_client::QueryParam::new(
+                    "include_depleted",
+                    &include_depleted,
+                ))
                 .build()?;
             let result = client.client.execute(request).await;
             let response = result?;
@@ -16417,7 +16986,7 @@ pub mod builder {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
-                body: Ok(types::builder::CreateMapper::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -16453,8 +17022,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -16514,8 +17083,8 @@ pub mod builder {
                 .client
                 .delete(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -16558,8 +17127,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -16599,8 +17168,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -16659,8 +17228,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -16693,7 +17262,7 @@ pub mod builder {
             Self {
                 client: client,
                 client_id: Err("client_id was not initialized".to_string()),
-                body: Ok(types::builder::AddOAuthClientRedirectBody::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -16757,8 +17326,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -16840,8 +17409,8 @@ pub mod builder {
                 .client
                 .delete(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -16903,8 +17472,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -16984,8 +17553,8 @@ pub mod builder {
                 .client
                 .delete(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -17028,8 +17597,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -17060,7 +17629,7 @@ pub mod builder {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
-                body: Ok(types::builder::ReserveRfdBody::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -17098,8 +17667,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -17161,8 +17730,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -17239,8 +17808,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -17275,7 +17844,7 @@ pub mod builder {
                 client: client,
                 number: Err("number was not initialized".to_string()),
                 attr: Err("attr was not initialized".to_string()),
-                body: Ok(types::builder::RfdAttrValue::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -17343,8 +17912,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -17378,7 +17947,7 @@ pub mod builder {
             Self {
                 client: client,
                 number: Err("number was not initialized".to_string()),
-                body: Ok(types::builder::RfdUpdateContentBody::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -17437,8 +18006,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -17498,8 +18067,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -17558,8 +18127,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -17618,8 +18187,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -17652,7 +18221,7 @@ pub mod builder {
             Self {
                 client: client,
                 number: Err("number was not initialized".to_string()),
-                body: Ok(types::builder::RfdUpdateBody::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -17707,8 +18276,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -17788,8 +18357,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -17882,8 +18451,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -17961,8 +18530,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -18039,8 +18608,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -18117,8 +18686,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -18177,8 +18746,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -18237,8 +18806,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;
@@ -18271,7 +18840,7 @@ pub mod builder {
             Self {
                 client: client,
                 number: Err("number was not initialized".to_string()),
-                body: Ok(types::builder::RfdVisibility::default()),
+                body: Ok(::std::default::Default::default()),
             }
         }
 
@@ -18326,8 +18895,8 @@ pub mod builder {
                 .client
                 .post(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .json(&body)
                 .build()?;
@@ -18458,32 +19027,29 @@ pub mod builder {
             let offset = offset.map_err(Error::InvalidRequest)?;
             let q = q.map_err(Error::InvalidRequest)?;
             let url = format!("{}/rfd-search", client.baseurl,);
-            let mut query = Vec::with_capacity(6usize);
-            if let Some(v) = &attributes_to_crop {
-                query.push(("attributes_to_crop", v.to_string()));
-            }
-            if let Some(v) = &highlight_post_tag {
-                query.push(("highlight_post_tag", v.to_string()));
-            }
-            if let Some(v) = &highlight_pre_tag {
-                query.push(("highlight_pre_tag", v.to_string()));
-            }
-            if let Some(v) = &limit {
-                query.push(("limit", v.to_string()));
-            }
-            if let Some(v) = &offset {
-                query.push(("offset", v.to_string()));
-            }
-            query.push(("q", q.to_string()));
             #[allow(unused_mut)]
             let mut request = client
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
-                .query(&query)
+                .query(&progenitor_client::QueryParam::new(
+                    "attributes_to_crop",
+                    &attributes_to_crop,
+                ))
+                .query(&progenitor_client::QueryParam::new(
+                    "highlight_post_tag",
+                    &highlight_post_tag,
+                ))
+                .query(&progenitor_client::QueryParam::new(
+                    "highlight_pre_tag",
+                    &highlight_pre_tag,
+                ))
+                .query(&progenitor_client::QueryParam::new("limit", &limit))
+                .query(&progenitor_client::QueryParam::new("offset", &offset))
+                .query(&progenitor_client::QueryParam::new("q", &q))
                 .build()?;
             let result = client.client.execute(request).await;
             let response = result?;
@@ -18525,8 +19091,8 @@ pub mod builder {
                 .client
                 .get(url)
                 .header(
-                    reqwest::header::ACCEPT,
-                    reqwest::header::HeaderValue::from_static("application/json"),
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .build()?;
             let result = client.client.execute(request).await;

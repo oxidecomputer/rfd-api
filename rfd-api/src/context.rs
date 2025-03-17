@@ -17,7 +17,7 @@ use rfd_data::{
 use rfd_github::{GitHubError, GitHubNewRfdNumber, GitHubRfdRepo};
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
-    storage::{JobStore, RfdFilter, RfdMetaStore, RfdPdfsStore, RfdStorage, RfdStore},
+    storage::{JobFilter, JobStore, RfdFilter, RfdMetaStore, RfdPdfsStore, RfdStorage, RfdStore},
     CommitSha, FileSha, Job, NewJob, Rfd, RfdId, RfdMeta, RfdPdf, RfdPdfs, RfdRevision,
     RfdRevisionId,
 };
@@ -812,6 +812,32 @@ impl RfdContext {
         } else {
             resource_restricted()
         }
+    }
+
+    // Job Operations
+    pub async fn list_jobs(
+        &self,
+        caller: &Caller<RfdPermission>,
+        filter: Option<JobFilter>,
+    ) -> ResourceResult<Vec<Job>, StoreError> {
+        let mut jobs = JobStore::list(
+            &*self.storage,
+            filter.map(|filter| vec![filter]).unwrap_or_default(),
+            &ListPagination::default().limit(UNLIMITED),
+        )
+        .await
+        .tap_err(|err| tracing::error!(?err, "Failed to lookup jobs"))
+        .to_resource_result()?;
+
+        // Filter the list of jobs down to only those that the caller is allowed to access
+        jobs.retain_mut(|job| {
+            caller.can(&RfdPermission::GetRfdsAll) || caller.can(&RfdPermission::GetRfd(job.rfd))
+        });
+
+        // Finally sort the jobs list by create time
+        jobs.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+
+        Ok(jobs)
     }
 
     // Webhook Operations

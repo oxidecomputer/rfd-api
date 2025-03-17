@@ -715,6 +715,44 @@
         }
       }
     },
+    "/job": {
+      "get": {
+        "summary": "List all jobs for a RFD",
+        "operationId": "list_jobs",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "rfd",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Array_of_Job",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Job"
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
     "/login/magic/{channel}/exchange": {
       "post": {
         "summary": "Exchange a magic link access code for an access token",
@@ -3165,6 +3203,66 @@
           "key"
         ]
       },
+      "Job": {
+        "type": "object",
+        "properties": {
+          "branch": {
+            "type": "string"
+          },
+          "committed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "processed": {
+            "type": "boolean"
+          },
+          "repository": {
+            "type": "string"
+          },
+          "rfd": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sha": {
+            "$ref": "#/components/schemas/CommitSha"
+          },
+          "started_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
+          "webhook_delivery_id": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TypedUuidForWebhookDeliveryId"
+              }
+            ]
+          }
+        },
+        "required": [
+          "branch",
+          "committed_at",
+          "created_at",
+          "id",
+          "owner",
+          "processed",
+          "repository",
+          "rfd",
+          "sha"
+        ]
+      },
       "Jwk": {
         "type": "object",
         "properties": {
@@ -4844,6 +4942,10 @@
         "format": "uuid"
       },
       "TypedUuidForUserProviderId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "TypedUuidForWebhookDeliveryId": {
         "type": "string",
         "format": "uuid"
       },

@@ -258,6 +258,22 @@ export type InitialOAuthClientSecretResponse = {
   'key': SecretString
 }
 
+export type TypedUuidForWebhookDeliveryId = string
+
+export type Job = {
+  'branch': string
+  'committedAt': Date
+  'createdAt': Date
+  'id': number
+  'owner': string
+  'processed': boolean
+  'repository': string
+  'rfd': number
+  'sha': CommitSha
+  'startedAt'?: Date
+  'webhookDeliveryId'?: TypedUuidForWebhookDeliveryId
+}
+
 export type Jwk = { 'e': string; 'kid': string; 'kty': string; 'n': string; 'use': string }
 
 export type Jwks = { 'keys': Jwk[] }
@@ -596,6 +612,10 @@ export interface UpdateGroupPathParams {
 
 export interface DeleteGroupPathParams {
   groupId: TypedUuidForAccessGroupId
+}
+
+export interface ListJobsQueryParams {
+  rfd: string
 }
 
 export interface MagicLinkExchangePathParams {
@@ -1006,6 +1026,19 @@ export class Api extends HttpClient {
       return this.request<AccessGroup_for_RfdPermission>({
         path: `/group/${path.groupId}`,
         method: 'DELETE',
+        ...params,
+      })
+    },
+    /**
+     * List all jobs for a RFD
+     */
+    listJobs: ({
+      query,
+    }: { query: ListJobsQueryParams }, params: FetchParams = {}) => {
+      return this.request<Job[]>({
+        path: `/job`,
+        method: 'GET',
+        query,
         ...params,
       })
     },

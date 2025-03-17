@@ -36,6 +36,7 @@ pub trait CliOutput {
     fn output_rfd_attr(&self, value: types::RfdAttr) {}
     fn output_search_results(&self, value: types::SearchResults) {}
     fn output_reserved_rfd(&self, value: types::ReserveRfdResponse) {}
+    fn output_job_list(&self, value: Vec<types::Job>) {}
     fn output_error<T>(&self, value: &progenitor_client::Error<T>)
     where
         T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug;
@@ -179,6 +180,13 @@ impl CliOutput for Printer {
         match self {
             Self::Json(printer) => printer.output_reserved_rfd(value),
             Self::Tab(printer) => printer.output_reserved_rfd(value),
+        }
+    }
+
+    fn output_job_list(&self, value: Vec<types::Job>) {
+        match self {
+            Self::Json(printer) => printer.output_job_list(value),
+            Self::Tab(printer) => printer.output_job_list(value),
         }
     }
 

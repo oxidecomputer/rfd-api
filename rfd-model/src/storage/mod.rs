@@ -293,6 +293,7 @@ pub trait RfdPdfStore {
 pub struct JobFilter {
     pub id: Option<Vec<i32>>,
     pub sha: Option<Vec<String>>,
+    pub rfd: Option<Vec<i32>>,
     pub processed: Option<bool>,
     pub started: Option<bool>,
 }
@@ -305,6 +306,11 @@ impl JobFilter {
 
     pub fn sha(mut self, sha: Option<Vec<String>>) -> Self {
         self.sha = sha;
+        self
+    }
+
+    pub fn rfd(mut self, rfd: Option<Vec<i32>>) -> Self {
+        self.rfd = rfd;
         self
     }
 

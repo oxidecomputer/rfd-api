@@ -337,6 +337,25 @@ export const InitialOAuthClientSecretResponse = z.preprocess(
   z.object({ 'createdAt': z.coerce.date(), 'id': TypedUuidForOAuthSecretId, 'key': SecretString }),
 )
 
+export const TypedUuidForWebhookDeliveryId = z.preprocess(processResponseBody, z.string().uuid())
+
+export const Job = z.preprocess(
+  processResponseBody,
+  z.object({
+    'branch': z.string(),
+    'committedAt': z.coerce.date(),
+    'createdAt': z.coerce.date(),
+    'id': z.number().min(-2147483647).max(2147483647),
+    'owner': z.string(),
+    'processed': SafeBoolean,
+    'repository': z.string(),
+    'rfd': z.number().min(-2147483647).max(2147483647),
+    'sha': CommitSha,
+    'startedAt': z.coerce.date().optional(),
+    'webhookDeliveryId': TypedUuidForWebhookDeliveryId.optional(),
+  }),
+)
+
 export const Jwk = z.preprocess(
   processResponseBody,
   z.object({ 'e': z.string(), 'kid': z.string(), 'kty': z.string(), 'n': z.string(), 'use': z.string() }),
@@ -857,6 +876,16 @@ export const DeleteGroupParams = z.preprocess(
       groupId: TypedUuidForAccessGroupId,
     }),
     query: z.object({}),
+  }),
+)
+
+export const ListJobsParams = z.preprocess(
+  processResponseBody,
+  z.object({
+    path: z.object({}),
+    query: z.object({
+      rfd: z.string(),
+    }),
   }),
 )
 
