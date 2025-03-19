@@ -2981,6 +2981,7 @@ dependencies = [
  "schemars",
  "serde",
  "serde_json",
+ "tap",
  "thiserror 2.0.12",
  "tokio",
  "tracing",
