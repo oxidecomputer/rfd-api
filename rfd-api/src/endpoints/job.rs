@@ -9,15 +9,19 @@ use serde::Deserialize;
 use trace_request::trace_request;
 use tracing::instrument;
 use v_api::{response::client_error, ApiContext};
-use v_model::permissions::Caller;
+use v_model::{permissions::Caller, storage::ListPagination};
 
 use crate::{context::RfdContext, permissions::RfdPermission};
+
+use super::UNLIMITED;
 
 // Read Endpoints
 
 #[derive(Debug, Deserialize, JsonSchema)]
 struct ListJobsQuery {
     rfd: String,
+    limit: Option<i64>,
+    offset: Option<i64>,
 }
 
 /// List all jobs for a RFD
@@ -50,6 +54,9 @@ async fn list_jobs_op(
             .list_jobs(
                 caller,
                 Some(JobFilter::default().rfd(Some(vec![rfd_number]))),
+                &ListPagination::default()
+                    .limit(query.limit.unwrap_or(UNLIMITED))
+                    .offset(query.offset.unwrap_or(0)),
             )
             .await?;
         Ok(HttpResponseOk(jobs))

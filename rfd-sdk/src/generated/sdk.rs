@@ -13490,6 +13490,8 @@ impl Client {
     ///
     /// ```ignore
     /// let response = client.list_jobs()
+    ///    .limit(limit)
+    ///    .offset(offset)
     ///    .rfd(rfd)
     ///    .send()
     ///    .await;
@@ -15709,6 +15711,8 @@ pub mod builder {
     #[derive(Debug, Clone)]
     pub struct ListJobs<'a> {
         client: &'a super::Client,
+        limit: Result<Option<i64>, String>,
+        offset: Result<Option<i64>, String>,
         rfd: Result<::std::string::String, String>,
     }
 
@@ -15716,8 +15720,32 @@ pub mod builder {
         pub fn new(client: &'a super::Client) -> Self {
             Self {
                 client: client,
+                limit: Ok(None),
+                offset: Ok(None),
                 rfd: Err("rfd was not initialized".to_string()),
             }
+        }
+
+        pub fn limit<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<i64>,
+        {
+            self.limit = value
+                .try_into()
+                .map(Some)
+                .map_err(|_| "conversion to `i64` for limit failed".to_string());
+            self
+        }
+
+        pub fn offset<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<i64>,
+        {
+            self.offset = value
+                .try_into()
+                .map(Some)
+                .map_err(|_| "conversion to `i64` for offset failed".to_string());
+            self
         }
 
         pub fn rfd<V>(mut self, value: V) -> Self
@@ -15734,7 +15762,14 @@ pub mod builder {
         pub async fn send(
             self,
         ) -> Result<ResponseValue<::std::vec::Vec<types::Job>>, Error<types::Error>> {
-            let Self { client, rfd } = self;
+            let Self {
+                client,
+                limit,
+                offset,
+                rfd,
+            } = self;
+            let limit = limit.map_err(Error::InvalidRequest)?;
+            let offset = offset.map_err(Error::InvalidRequest)?;
             let rfd = rfd.map_err(Error::InvalidRequest)?;
             let url = format!("{}/job", client.baseurl,);
             #[allow(unused_mut)]
@@ -15745,6 +15780,8 @@ pub mod builder {
                     ::reqwest::header::ACCEPT,
                     ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
+                .query(&progenitor_client::QueryParam::new("limit", &limit))
+                .query(&progenitor_client::QueryParam::new("offset", &offset))
                 .query(&progenitor_client::QueryParam::new("rfd", &rfd))
                 .build()?;
             let result = client.client.execute(request).await;

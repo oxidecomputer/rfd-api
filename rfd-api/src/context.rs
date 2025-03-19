@@ -819,11 +819,12 @@ impl RfdContext {
         &self,
         caller: &Caller<RfdPermission>,
         filter: Option<JobFilter>,
+        pagination: &ListPagination,
     ) -> ResourceResult<Vec<Job>, StoreError> {
         let mut jobs = JobStore::list(
             &*self.storage,
             filter.map(|filter| vec![filter]).unwrap_or_default(),
-            &ListPagination::default().limit(UNLIMITED),
+            pagination,
         )
         .await
         .tap_err(|err| tracing::error!(?err, "Failed to lookup jobs"))

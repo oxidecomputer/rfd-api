@@ -884,6 +884,8 @@ export const ListJobsParams = z.preprocess(
   z.object({
     path: z.object({}),
     query: z.object({
+      limit: z.number().optional(),
+      offset: z.number().optional(),
       rfd: z.string(),
     }),
   }),

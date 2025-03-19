@@ -722,6 +722,24 @@
         "parameters": [
           {
             "in": "query",
+            "name": "limit",
+            "schema": {
+              "nullable": true,
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "nullable": true,
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "query",
             "name": "rfd",
             "required": true,
             "schema": {

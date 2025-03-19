@@ -615,6 +615,8 @@ export interface DeleteGroupPathParams {
 }
 
 export interface ListJobsQueryParams {
+  limit?: number
+  offset?: number
   rfd: string
 }
 

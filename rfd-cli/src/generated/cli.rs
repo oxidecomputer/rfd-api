@@ -466,6 +466,18 @@ impl<T: CliConfig> Cli<T> {
     pub fn cli_list_jobs() -> ::clap::Command {
         ::clap::Command::new("")
             .arg(
+                ::clap::Arg::new("limit")
+                    .long("limit")
+                    .value_parser(::clap::value_parser!(i64))
+                    .required(false),
+            )
+            .arg(
+                ::clap::Arg::new("offset")
+                    .long("offset")
+                    .value_parser(::clap::value_parser!(i64))
+                    .required(false),
+            )
+            .arg(
                 ::clap::Arg::new("rfd")
                     .long("rfd")
                     .value_parser(::clap::value_parser!(::std::string::String))
@@ -2121,6 +2133,14 @@ impl<T: CliConfig> Cli<T> {
 
     pub async fn execute_list_jobs(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
         let mut request = self.client.list_jobs();
+        if let Some(value) = matches.get_one::<i64>("limit") {
+            request = request.limit(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<i64>("offset") {
+            request = request.offset(value.clone());
+        }
+
         if let Some(value) = matches.get_one::<::std::string::String>("rfd") {
             request = request.rfd(value.clone());
         }
