@@ -780,7 +780,7 @@ dependencies = [
 [[package]]
 name = "dropshot-authorization-header"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#4cf9aaae826477061dac96eb4a78d25210e73207"
+source = "git+https://github.com/oxidecomputer/v-api#b5848ef7f440e1dc655f359a7e17f70530262cdc"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -1401,9 +1401,9 @@ dependencies = [
 
 [[package]]
 name = "hyper-util"
-version = "0.1.10"
+version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "df2dcfbe0677734ab2f3ffa7fa7bfd4706bfdc1ef393f2ee30184aed67e631b4"
+checksum = "497bbc33a26fdd4af9ed9c70d63f61cf56a938375fbb32df34db9b1cd6d643f2"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -1411,6 +1411,7 @@ dependencies = [
  "http 1.3.1",
  "http-body 1.0.1",
  "hyper 1.6.0",
+ "libc",
  "pin-project-lite",
  "socket2",
  "tokio",
@@ -2424,7 +2425,7 @@ dependencies = [
 [[package]]
 name = "progenitor"
 version = "0.9.1"
-source = "git+https://github.com/oxidecomputer/progenitor#87923917125f68fa14592fedb7b3a00d32d66e93"
+source = "git+https://github.com/oxidecomputer/progenitor#b22ebc2a97f566712d21ae435419978f13c64769"
 dependencies = [
  "progenitor-client",
  "progenitor-impl",
@@ -2434,7 +2435,7 @@ dependencies = [
 [[package]]
 name = "progenitor-client"
 version = "0.9.1"
-source = "git+https://github.com/oxidecomputer/progenitor#87923917125f68fa14592fedb7b3a00d32d66e93"
+source = "git+https://github.com/oxidecomputer/progenitor#b22ebc2a97f566712d21ae435419978f13c64769"
 dependencies = [
  "bytes",
  "futures-core",
@@ -2448,7 +2449,7 @@ dependencies = [
 [[package]]
 name = "progenitor-impl"
 version = "0.9.1"
-source = "git+https://github.com/oxidecomputer/progenitor#87923917125f68fa14592fedb7b3a00d32d66e93"
+source = "git+https://github.com/oxidecomputer/progenitor#b22ebc2a97f566712d21ae435419978f13c64769"
 dependencies = [
  "heck",
  "http 1.3.1",
@@ -2469,7 +2470,7 @@ dependencies = [
 [[package]]
 name = "progenitor-macro"
 version = "0.9.1"
-source = "git+https://github.com/oxidecomputer/progenitor#87923917125f68fa14592fedb7b3a00d32d66e93"
+source = "git+https://github.com/oxidecomputer/progenitor#b22ebc2a97f566712d21ae435419978f13c64769"
 dependencies = [
  "openapiv3",
  "proc-macro2",
@@ -3179,9 +3180,9 @@ dependencies = [
 
 [[package]]
 name = "rustix"
-version = "1.0.3"
+version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e56a18552996ac8d29ecc3b190b4fdbb2d91ca4ec396de7bbffaf43f3d637e96"
+checksum = "d97817398dd4bb2e6da002002db259209759911da105da92bec29ccb12cf58bf"
 dependencies = [
  "bitflags 2.9.0",
  "errno",
@@ -4273,7 +4274,7 @@ checksum = "1dccffe3ce07af9386bfd29e80c0ab1a8205a2fc34e4bcd40364df902cfa8f3f"
 [[package]]
 name = "typify"
 version = "0.3.0"
-source = "git+https://github.com/oxidecomputer/typify#4bffebfaa538108cd041e677f2fdca159eee2119"
+source = "git+https://github.com/oxidecomputer/typify#630fc450a2f6127dd9b6d82efaf8f1eb020dc365"
 dependencies = [
  "typify-impl",
  "typify-macro",
@@ -4282,7 +4283,7 @@ dependencies = [
 [[package]]
 name = "typify-impl"
 version = "0.3.0"
-source = "git+https://github.com/oxidecomputer/typify#4bffebfaa538108cd041e677f2fdca159eee2119"
+source = "git+https://github.com/oxidecomputer/typify#630fc450a2f6127dd9b6d82efaf8f1eb020dc365"
 dependencies = [
  "heck",
  "log",
@@ -4301,7 +4302,7 @@ dependencies = [
 [[package]]
 name = "typify-macro"
 version = "0.3.0"
-source = "git+https://github.com/oxidecomputer/typify#4bffebfaa538108cd041e677f2fdca159eee2119"
+source = "git+https://github.com/oxidecomputer/typify#630fc450a2f6127dd9b6d82efaf8f1eb020dc365"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4401,7 +4402,7 @@ dependencies = [
 [[package]]
 name = "v-api"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#4cf9aaae826477061dac96eb4a78d25210e73207"
+source = "git+https://github.com/oxidecomputer/v-api#b5848ef7f440e1dc655f359a7e17f70530262cdc"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -4445,7 +4446,7 @@ dependencies = [
 [[package]]
 name = "v-api-installer"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#4cf9aaae826477061dac96eb4a78d25210e73207"
+source = "git+https://github.com/oxidecomputer/v-api#b5848ef7f440e1dc655f359a7e17f70530262cdc"
 dependencies = [
  "diesel",
  "diesel_migrations",
@@ -4454,7 +4455,7 @@ dependencies = [
 [[package]]
 name = "v-api-permission-derive"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#4cf9aaae826477061dac96eb4a78d25210e73207"
+source = "git+https://github.com/oxidecomputer/v-api#b5848ef7f440e1dc655f359a7e17f70530262cdc"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -4465,7 +4466,7 @@ dependencies = [
 [[package]]
 name = "v-model"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#4cf9aaae826477061dac96eb4a78d25210e73207"
+source = "git+https://github.com/oxidecomputer/v-api#b5848ef7f440e1dc655f359a7e17f70530262cdc"
 dependencies = [
  "async-bb8-diesel",
  "async-trait",
