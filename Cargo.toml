@@ -46,7 +46,7 @@ mime_guess = "2.0.5"
 mockall = "0.13.1"
 newline-converter = "0.3.0"
 newtype-uuid = { version = "1.2.1", features = ["schemars08", "serde", "v4"] }
-oauth2 = { version = "4.4.2", default-features = false, features = ["rustls-tls"] }
+oauth2 = { version = "5.0.0", default-features = false, features = ["rustls-tls"] }
 octorust = "0.10.0"
 owo-colors = "4.2.0"
 partial-struct = { git = "https://github.com/oxidecomputer/partial-struct" }
