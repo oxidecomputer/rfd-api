@@ -555,7 +555,7 @@ impl RfdPdfsStore for PostgresStore {
             rfd_revision.authors as revision_authors,
             rfd_pdf.id as pdf_id,
             rfd_pdf.rfd_revision_id as pdf_rfd_revision_id,
-            rfd_pdf.source as pfd_source,
+            rfd_pdf.source as pdf_source,
             rfd_pdf.link as pdf_link,
             rfd_pdf.created_at as pdf_created_at,
             rfd_pdf.updated_at as pdf_updated_at,
