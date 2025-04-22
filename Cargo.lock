@@ -552,9 +552,9 @@ dependencies = [
 
 [[package]]
 name = "diesel"
-version = "2.2.8"
+version = "2.2.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "470eb10efc8646313634c99bb1593f402a6434cbd86e266770c6e39219adb86a"
+checksum = "34d3950690ba3a6910126162b47e775e203006d4242a15de912bec6c0a695153"
 dependencies = [
  "bitflags 2.9.0",
  "byteorder",
@@ -764,7 +764,7 @@ dependencies = [
 [[package]]
 name = "dropshot-authorization-header"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#123164173649ebd68cf7d80b840d9c9cde5edb7f"
+source = "git+https://github.com/oxidecomputer/v-api#e1980ffb7c841d378dc2a656ff4ff953631cd88b"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -1977,7 +1977,7 @@ version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "51e219e79014df21a225b1860a479e2dcd7cbd9130f4defd4bd0e191ea31d67d"
 dependencies = [
- "base64 0.22.1",
+ "base64 0.21.7",
  "chrono",
  "getrandom 0.2.15",
  "http 1.3.1",
@@ -4199,7 +4199,7 @@ dependencies = [
 [[package]]
 name = "v-api"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#123164173649ebd68cf7d80b840d9c9cde5edb7f"
+source = "git+https://github.com/oxidecomputer/v-api#e1980ffb7c841d378dc2a656ff4ff953631cd88b"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -4243,7 +4243,7 @@ dependencies = [
 [[package]]
 name = "v-api-installer"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#123164173649ebd68cf7d80b840d9c9cde5edb7f"
+source = "git+https://github.com/oxidecomputer/v-api#e1980ffb7c841d378dc2a656ff4ff953631cd88b"
 dependencies = [
  "diesel",
  "diesel_migrations",
@@ -4252,7 +4252,7 @@ dependencies = [
 [[package]]
 name = "v-api-permission-derive"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#123164173649ebd68cf7d80b840d9c9cde5edb7f"
+source = "git+https://github.com/oxidecomputer/v-api#e1980ffb7c841d378dc2a656ff4ff953631cd88b"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -4263,7 +4263,7 @@ dependencies = [
 [[package]]
 name = "v-model"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#123164173649ebd68cf7d80b840d9c9cde5edb7f"
+source = "git+https://github.com/oxidecomputer/v-api#e1980ffb7c841d378dc2a656ff4ff953631cd88b"
 dependencies = [
  "async-bb8-diesel",
  "async-trait",
