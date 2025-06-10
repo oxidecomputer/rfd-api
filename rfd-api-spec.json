@@ -57,6 +57,32 @@
       }
     },
     "/api-user": {
+      "get": {
+        "summary": "List details for users",
+        "operationId": "list_api_users",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Array_of_GetUserResponse_for_RfdPermission",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GetUserResponse_for_RfdPermission"
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
       "post": {
         "summary": "Create a new user",
         "operationId": "create_api_user",
@@ -3555,10 +3581,20 @@
         "type": "object",
         "properties": {
           "client_id": {
-            "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
+              }
+            ]
           },
           "client_secret": {
-            "$ref": "#/components/schemas/SecretString"
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SecretString"
+              }
+            ]
           },
           "code": {
             "type": "string"
@@ -3575,8 +3611,6 @@
           }
         },
         "required": [
-          "client_id",
-          "client_secret",
           "code",
           "grant_type",
           "redirect_uri"

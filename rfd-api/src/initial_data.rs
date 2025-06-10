@@ -125,11 +125,8 @@ fn handle_unique_violation_error(
     err: ResourceError<StoreError>,
 ) -> Result<(), ResourceError<StoreError>> {
     match err {
-        ResourceError::InternalError(StoreError::Db(DieselError::DatabaseError(
-            DatabaseErrorKind::UniqueViolation,
-            info,
-        ))) => {
-            tracing::info!(?info, "Record already exists. Skipping.");
+        ResourceError::Conflict => {
+            tracing::info!("Record already exists. Skipping.");
             Ok(())
         }
         err => {
