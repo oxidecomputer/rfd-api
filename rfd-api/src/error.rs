@@ -7,7 +7,7 @@ use octorust::ClientError as OctorustError;
 use reqwest::Error as ReqwestError;
 use rfd_github::GitHubError;
 use thiserror::Error;
-use v_api::response::{forbidden, internal_error, not_found, ResourceError};
+use v_api::response::{conflict, forbidden, internal_error, not_found, ResourceError};
 use v_model::storage::StoreError;
 
 #[derive(Debug, Error)]
@@ -28,6 +28,8 @@ pub enum AppError {
 
 #[derive(Debug, Error)]
 pub enum ApiError {
+    #[error("Conflict with an existing resource")]
+    Conflict,
     #[error("Caller does not have the required permissions")]
     Forbidden,
     #[error("Resource could not be found")]
@@ -39,6 +41,7 @@ pub enum ApiError {
 impl From<ApiError> for HttpError {
     fn from(error: ApiError) -> Self {
         match error {
+            ApiError::Conflict => conflict(),
             ApiError::Forbidden => forbidden(),
             ApiError::NotFound => not_found(""),
             ApiError::Storage(_) => internal_error("Internal storage failed"),
@@ -49,6 +52,7 @@ impl From<ApiError> for HttpError {
 impl From<ResourceError<StoreError>> for ApiError {
     fn from(value: ResourceError<StoreError>) -> Self {
         match value {
+            ResourceError::Conflict => ApiError::Conflict,
             ResourceError::DoesNotExist => ApiError::NotFound,
             ResourceError::InternalError(err) => ApiError::Storage(err),
             ResourceError::Restricted => ApiError::Forbidden,

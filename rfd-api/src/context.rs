@@ -33,8 +33,8 @@ use thiserror::Error;
 use tracing::instrument;
 use v_api::{
     response::{
-        resource_not_found, resource_restricted, ResourceResult, ToResourceResult,
-        ToResourceResultOpt,
+        resource_not_found, resource_restricted, OptionalResource, ResourceError,
+        ResourceErrorInner, ResourceResult,
     },
     ApiContext, VContext,
 };
@@ -364,7 +364,7 @@ impl RfdContext {
                 .next_rfd_number()
                 .await
                 .map_err(UpdateRfdContentError::GitHub)
-                .to_resource_result()?;
+                .map_err(ResourceError::InternalError)?;
 
             let content = match content {
                 Some(content) => self
@@ -383,7 +383,7 @@ impl RfdContext {
             }
             .build()
             .map_err(UpdateRfdContentError::InvalidTemplate)
-            .to_resource_result()?;
+            .map_err(ResourceError::InternalError)?;
 
             tracing::info!(?next_rfd_number, ?commit, "Creating new RFD branch");
 
@@ -392,7 +392,7 @@ impl RfdContext {
                 .create_branch(&next_rfd_number, &commit)
                 .await
                 .map_err(UpdateRfdContentError::GitHub)
-                .to_resource_result()?;
+                .map_err(ResourceError::InternalError)?;
 
             tracing::info!(
                 ?next_rfd_number,
@@ -435,8 +435,7 @@ impl RfdContext {
             &ListPagination::default().limit(UNLIMITED),
         )
         .await
-        .tap_err(|err| tracing::error!(?err, "Failed to lookup RFDs"))
-        .to_resource_result()?;
+        .tap_err(|err| tracing::error!(?err, "Failed to lookup RFDs"))?;
 
         // Filter the list of RFDs down to only those that the caller is allowed to access
         rfds.retain_mut(|rfd| {
@@ -471,8 +470,7 @@ impl RfdContext {
         };
 
         let rfd = RfdStore::list(&*self.storage, vec![filter], &ListPagination::latest())
-            .await
-            .to_resource_result()?
+            .await?
             .pop();
 
         if let Some(rfd) = rfd {
@@ -504,8 +502,7 @@ impl RfdContext {
         };
 
         let rfd = RfdMetaStore::list(&*self.storage, vec![filter], &ListPagination::latest())
-            .await
-            .to_resource_result()?
+            .await?
             .pop();
 
         if let Some(rfd) = rfd {
@@ -537,8 +534,7 @@ impl RfdContext {
         };
 
         let rfd = RfdPdfsStore::list(&*self.storage, vec![filter], &ListPagination::unlimited())
-            .await
-            .to_resource_result()?
+            .await?
             .pop();
 
         if let Some(rfd) = rfd {
@@ -585,7 +581,7 @@ impl RfdContext {
         revision: Option<RfdRevisionIdentifier>,
     ) -> ResourceResult<RfdRevision, StoreError> {
         let rfd = self.get_rfd(caller, rfd_number, revision).await?;
-        Ok(rfd.content).opt_to_resource_result()
+        Ok::<_, StoreError>(rfd.content).optional()
     }
 
     async fn get_latest_rfd_revision(
@@ -622,17 +618,17 @@ impl RfdContext {
             let latest_revision = self
                 .get_latest_rfd_revision(caller, rfd_number)
                 .await
-                .map_err(|err| err.inner_into())?;
+                .inner_err_into()?;
 
             let sha = latest_revision.commit.clone();
             let mut updated_content: RfdContent = latest_revision
                 .try_into()
                 .map_err(UpdateRfdContentError::InvalidContent)
-                .to_resource_result()?;
+                .map_err(ResourceError::InternalError)?;
             updated_content
                 .update_body(content)
                 .map_err(UpdateRfdContentError::InvalidContent)
-                .to_resource_result()?;
+                .map_err(ResourceError::InternalError)?;
 
             self.commit_rfd_document(
                 caller,
@@ -664,7 +660,7 @@ impl RfdContext {
             let latest_revision = self
                 .get_latest_rfd_revision(caller, rfd_number)
                 .await
-                .map_err(|err| err.inner_into())?;
+                .inner_err_into()?;
             let sha = latest_revision.commit;
 
             tracing::info!(?sha, "Found commit to update from");
@@ -700,7 +696,7 @@ impl RfdContext {
             .locations_for_commit(head.clone())
             .await
             .map_err(UpdateRfdContentError::GitHub)
-            .to_resource_result()?
+            .map_err(ResourceError::InternalError)?
             .into_iter()
             .filter(|location| {
                 branch_name
@@ -717,7 +713,7 @@ impl RfdContext {
             .user
             .list_api_user_provider(caller, filter, &ListPagination::default())
             .await
-            .map_err(|err| err.inner_into())?;
+            .inner_err_into()?;
 
         // Prefer a GitHub identity provider, but we will use Google if we can not find one
         providers.sort_by(|a, b| {
@@ -761,7 +757,7 @@ impl RfdContext {
                     .upsert(&rfd_number, document.as_bytes(), &message)
                     .await
                     .map_err(UpdateRfdContentError::GitHub)
-                    .to_resource_result()?;
+                    .map_err(ResourceError::InternalError)?;
 
                 // If we committed a change, immediately register a job as well. This may conflict with
                 // a job already added by a webhook, this is fine and we can ignore the error
@@ -786,7 +782,7 @@ impl RfdContext {
 
                 Ok(commit)
             }
-            _ => Err(UpdateRfdContentError::InternalState).to_resource_result(),
+            _ => Err(UpdateRfdContentError::InternalState).map_err(ResourceError::InternalError),
         }
     }
 
@@ -806,9 +802,7 @@ impl RfdContext {
         ]) {
             let mut rfd = self.get_rfd_meta(caller, rfd_number, None).await?;
             rfd.visibility = visibility;
-            RfdStore::upsert(&*self.storage, rfd.into())
-                .await
-                .to_resource_result()
+            Ok(RfdStore::upsert(&*self.storage, rfd.into()).await?)
         } else {
             resource_restricted()
         }
@@ -827,8 +821,7 @@ impl RfdContext {
             pagination,
         )
         .await
-        .tap_err(|err| tracing::error!(?err, "Failed to lookup jobs"))
-        .to_resource_result()?;
+        .tap_err(|err| tracing::error!(?err, "Failed to lookup jobs"))?;
 
         // Filter the list of jobs down to only those that the caller is allowed to access
         jobs.retain_mut(|job| {
