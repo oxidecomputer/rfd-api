@@ -162,6 +162,7 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::CreateApiUserToken => Some("sys user token create"),
         CliCommand::DeleteApiUserToken => Some("sys user token delete"),
         CliCommand::GetApiUser => Some("sys user get"),
+        CliCommand::ListApiUsers => Some("sys user list"),
         CliCommand::GetApiUserToken => Some("sys user token get"),
         CliCommand::ListApiUserTokens => Some("sys user token list"),
         CliCommand::UpdateApiUser => Some("sys user update"),

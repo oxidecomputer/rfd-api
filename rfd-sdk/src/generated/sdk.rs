@@ -2722,18 +2722,42 @@ pub mod types {
     /// {
     ///  "type": "object",
     ///  "required": [
-    ///    "client_id",
-    ///    "client_secret",
     ///    "code",
     ///    "grant_type",
     ///    "redirect_uri"
     ///  ],
     ///  "properties": {
     ///    "client_id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
+    ///      "oneOf": [
+    ///        {
+    ///          "type": "null"
+    ///        },
+    ///        {
+    ///          "allOf": [
+    ///            {
+    ///              "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
+    ///            }
+
+    ///          ]
+    ///        }
+
+    ///      ]
     ///    },
     ///    "client_secret": {
-    ///      "$ref": "#/components/schemas/SecretString"
+    ///      "oneOf": [
+    ///        {
+    ///          "type": "null"
+    ///        },
+    ///        {
+    ///          "allOf": [
+    ///            {
+    ///              "$ref": "#/components/schemas/SecretString"
+    ///            }
+
+    ///          ]
+    ///        }
+
+    ///      ]
     ///    },
     ///    "code": {
     ///      "type": "string"
@@ -2761,8 +2785,10 @@ pub mod types {
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct OAuthAuthzCodeExchangeBody {
-        pub client_id: TypedUuidForOAuthClientId,
-        pub client_secret: SecretString,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub client_id: ::std::option::Option<TypedUuidForOAuthClientId>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub client_secret: ::std::option::Option<SecretString>,
         pub code: ::std::string::String,
         pub grant_type: ::std::string::String,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
@@ -10519,9 +10545,14 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct OAuthAuthzCodeExchangeBody {
-            client_id:
-                ::std::result::Result<super::TypedUuidForOAuthClientId, ::std::string::String>,
-            client_secret: ::std::result::Result<super::SecretString, ::std::string::String>,
+            client_id: ::std::result::Result<
+                ::std::option::Option<super::TypedUuidForOAuthClientId>,
+                ::std::string::String,
+            >,
+            client_secret: ::std::result::Result<
+                ::std::option::Option<super::SecretString>,
+                ::std::string::String,
+            >,
             code: ::std::result::Result<::std::string::String, ::std::string::String>,
             grant_type: ::std::result::Result<::std::string::String, ::std::string::String>,
             pkce_verifier: ::std::result::Result<
@@ -10534,8 +10565,8 @@ pub mod types {
         impl ::std::default::Default for OAuthAuthzCodeExchangeBody {
             fn default() -> Self {
                 Self {
-                    client_id: Err("no value supplied for client_id".to_string()),
-                    client_secret: Err("no value supplied for client_secret".to_string()),
+                    client_id: Ok(Default::default()),
+                    client_secret: Ok(Default::default()),
                     code: Err("no value supplied for code".to_string()),
                     grant_type: Err("no value supplied for grant_type".to_string()),
                     pkce_verifier: Ok(Default::default()),
@@ -10547,7 +10578,7 @@ pub mod types {
         impl OAuthAuthzCodeExchangeBody {
             pub fn client_id<T>(mut self, value: T) -> Self
             where
-                T: ::std::convert::TryInto<super::TypedUuidForOAuthClientId>,
+                T: ::std::convert::TryInto<::std::option::Option<super::TypedUuidForOAuthClientId>>,
                 T::Error: ::std::fmt::Display,
             {
                 self.client_id = value
@@ -10557,7 +10588,7 @@ pub mod types {
             }
             pub fn client_secret<T>(mut self, value: T) -> Self
             where
-                T: ::std::convert::TryInto<super::SecretString>,
+                T: ::std::convert::TryInto<::std::option::Option<super::SecretString>>,
                 T::Error: ::std::fmt::Display,
             {
                 self.client_secret = value.try_into().map_err(|e| {
@@ -13250,6 +13281,19 @@ impl Client {
         builder::OpenidConfiguration::new(self)
     }
 
+    /// List details for users
+    ///
+    /// Sends a `GET` request to `/api-user`
+    ///
+    /// ```ignore
+    /// let response = client.list_api_users()
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn list_api_users(&self) -> builder::ListApiUsers {
+        builder::ListApiUsers::new(self)
+    }
+
     /// Create a new user
     ///
     /// Sends a `POST` request to `/api-user`
@@ -14281,6 +14325,52 @@ pub mod builder {
         ) -> Result<ResponseValue<types::OpenIdConfiguration>, Error<types::Error>> {
             let Self { client } = self;
             let url = format!("{}/.well-known/openid-configuration", client.baseurl,);
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .get(url)
+                .header(
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .build()?;
+            let result = client.client.execute(request).await;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::list_api_users`]
+    ///
+    /// [`Client::list_api_users`]: super::Client::list_api_users
+    #[derive(Debug, Clone)]
+    pub struct ListApiUsers<'a> {
+        client: &'a super::Client,
+    }
+
+    impl<'a> ListApiUsers<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self { client: client }
+        }
+
+        /// Sends a `GET` request to `/api-user`
+        pub async fn send(
+            self,
+        ) -> Result<
+            ResponseValue<::std::vec::Vec<types::GetUserResponseForRfdPermission>>,
+            Error<types::Error>,
+        > {
+            let Self { client } = self;
+            let url = format!("{}/api-user", client.baseurl,);
             #[allow(unused_mut)]
             let mut request = client
                 .client

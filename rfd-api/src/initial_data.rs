@@ -3,7 +3,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use config::{Config, ConfigError, Environment, File};
-use diesel::result::{DatabaseErrorKind, Error as DieselError};
 use newtype_uuid::TypedUuid;
 use serde::Deserialize;
 use thiserror::Error;

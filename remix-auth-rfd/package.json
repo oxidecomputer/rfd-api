@@ -1,0 +1,54 @@
+{
+  "name": "@oxide/remix-auth-rfd",
+  "version": "0.1.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    "import": "./dist/index.js",
+    "require": "./dist/index.cjs"
+  },
+  "scripts": {
+    "build": "tsup --dts",
+    "prepublishOnly": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tsc": "tsc"
+  },
+  "keywords": [
+    "remix",
+    "remix-auth",
+    "auth",
+    "authentication",
+    "strategy"
+  ],
+  "author": "Oxide Computer Company",
+  "license": "MPL-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oxidecomputer/rfd-api.git"
+  },
+  "peerDependencies": {
+    "@remix-run/server-runtime": "^1.0.0 || ^2.0.0",
+    "remix-auth": "^4.0.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.2",
+    "typescript": "^5.7.2"
+  },
+  "tsup": {
+    "clean": true,
+    "entry": [
+      "src/index.ts"
+    ],
+    "format": [
+      "cjs",
+      "esm"
+    ]
+  },
+  "dependencies": {
+    "@oxide/rfd.ts": "^0.2.0",
+    "remix-auth-oauth2": "^3.0.0"
+  }
+}

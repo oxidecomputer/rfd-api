@@ -340,8 +340,8 @@ export type Mapper = {
 }
 
 export type OAuthAuthzCodeExchangeBody = {
-  'clientId': TypedUuidForOAuthClientId
-  'clientSecret': SecretString
+  'clientId'?: TypedUuidForOAuthClientId
+  'clientSecret'?: SecretString
   'code': string
   'grantType': string
   'pkceVerifier'?: string
@@ -808,6 +808,16 @@ export class Api extends HttpClient {
     openidConfiguration: (_: EmptyObj, params: FetchParams = {}) => {
       return this.request<OpenIdConfiguration>({
         path: `/.well-known/openid-configuration`,
+        method: 'GET',
+        ...params,
+      })
+    },
+    /**
+     * List details for users
+     */
+    listApiUsers: (_: EmptyObj, params: FetchParams = {}) => {
+      return this.request<GetUserResponse_for_RfdPermission[]>({
+        path: `/api-user`,
         method: 'GET',
         ...params,
       })

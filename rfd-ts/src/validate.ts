@@ -447,8 +447,8 @@ export const Mapper = z.preprocess(
 export const OAuthAuthzCodeExchangeBody = z.preprocess(
   processResponseBody,
   z.object({
-    'clientId': TypedUuidForOAuthClientId,
-    'clientSecret': SecretString,
+    'clientId': TypedUuidForOAuthClientId.optional(),
+    'clientSecret': SecretString.optional(),
     'code': z.string(),
     'grantType': z.string(),
     'pkceVerifier': z.string().optional(),
@@ -707,6 +707,14 @@ export const JwksJsonParams = z.preprocess(
 )
 
 export const OpenidConfigurationParams = z.preprocess(
+  processResponseBody,
+  z.object({
+    path: z.object({}),
+    query: z.object({}),
+  }),
+)
+
+export const ListApiUsersParams = z.preprocess(
   processResponseBody,
   z.object({
     path: z.object({}),

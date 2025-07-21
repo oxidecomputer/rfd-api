@@ -17,6 +17,7 @@ impl<T: CliConfig> Cli<T> {
         match cmd {
             CliCommand::JwksJson => Self::cli_jwks_json(),
             CliCommand::OpenidConfiguration => Self::cli_openid_configuration(),
+            CliCommand::ListApiUsers => Self::cli_list_api_users(),
             CliCommand::CreateApiUser => Self::cli_create_api_user(),
             CliCommand::GetApiUser => Self::cli_get_api_user(),
             CliCommand::UpdateApiUser => Self::cli_update_api_user(),
@@ -92,6 +93,10 @@ impl<T: CliConfig> Cli<T> {
 
     pub fn cli_openid_configuration() -> ::clap::Command {
         ::clap::Command::new("")
+    }
+
+    pub fn cli_list_api_users() -> ::clap::Command {
+        ::clap::Command::new("").about("List details for users")
     }
 
     pub fn cli_create_api_user() -> ::clap::Command {
@@ -683,13 +688,13 @@ impl<T: CliConfig> Cli<T> {
                 ::clap::Arg::new("client-id")
                     .long("client-id")
                     .value_parser(::clap::value_parser!(types::TypedUuidForOAuthClientId))
-                    .required_unless_present("json-body"),
+                    .required(false),
             )
             .arg(
                 ::clap::Arg::new("client-secret")
                     .long("client-secret")
                     .value_parser(::clap::value_parser!(types::SecretString))
-                    .required_unless_present("json-body"),
+                    .required(false),
             )
             .arg(
                 ::clap::Arg::new("code")
@@ -1527,6 +1532,7 @@ impl<T: CliConfig> Cli<T> {
         match cmd {
             CliCommand::JwksJson => self.execute_jwks_json(matches).await,
             CliCommand::OpenidConfiguration => self.execute_openid_configuration(matches).await,
+            CliCommand::ListApiUsers => self.execute_list_api_users(matches).await,
             CliCommand::CreateApiUser => self.execute_create_api_user(matches).await,
             CliCommand::GetApiUser => self.execute_get_api_user(matches).await,
             CliCommand::UpdateApiUser => self.execute_update_api_user(matches).await,
@@ -1637,6 +1643,22 @@ impl<T: CliConfig> Cli<T> {
         let mut request = self.client.openid_configuration();
         self.config
             .execute_openid_configuration(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.success_item(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
+    pub async fn execute_list_api_users(&self, matches: &::clap::ArgMatches) -> anyhow::Result<()> {
+        let mut request = self.client.list_api_users();
+        self.config.execute_list_api_users(matches, &mut request)?;
         let result = request.send().await;
         match result {
             Ok(r) => {
@@ -3463,6 +3485,14 @@ pub trait CliConfig {
         Ok(())
     }
 
+    fn execute_list_api_users(
+        &self,
+        matches: &::clap::ArgMatches,
+        request: &mut builder::ListApiUsers,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     fn execute_create_api_user(
         &self,
         matches: &::clap::ArgMatches,
@@ -3964,6 +3994,7 @@ pub trait CliConfig {
 pub enum CliCommand {
     JwksJson,
     OpenidConfiguration,
+    ListApiUsers,
     CreateApiUser,
     GetApiUser,
     UpdateApiUser,
@@ -4033,6 +4064,7 @@ impl CliCommand {
         vec![
             CliCommand::JwksJson,
             CliCommand::OpenidConfiguration,
+            CliCommand::ListApiUsers,
             CliCommand::CreateApiUser,
             CliCommand::GetApiUser,
             CliCommand::UpdateApiUser,

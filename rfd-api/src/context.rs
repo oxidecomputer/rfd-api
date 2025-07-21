@@ -611,10 +611,13 @@ impl RfdContext {
         message: Option<&str>,
         branch_name: Option<&str>,
     ) -> ResourceResult<Option<CommitSha>, UpdateRfdContentError> {
-        if caller.any(&[
-            &RfdPermission::UpdateRfd(rfd_number),
-            &RfdPermission::UpdateRfdsAll,
-        ]) {
+        if caller.any(
+            [
+                RfdPermission::UpdateRfd(rfd_number),
+                RfdPermission::UpdateRfdsAll,
+            ]
+            .iter(),
+        ) {
             let latest_revision = self
                 .get_latest_rfd_revision(caller, rfd_number)
                 .await
@@ -653,10 +656,13 @@ impl RfdContext {
         message: Option<&str>,
         branch_name: Option<&str>,
     ) -> ResourceResult<Option<CommitSha>, UpdateRfdContentError> {
-        if caller.any(&[
-            &RfdPermission::UpdateRfd(rfd_number),
-            &RfdPermission::UpdateRfdsAll,
-        ]) {
+        if caller.any(
+            [
+                RfdPermission::UpdateRfd(rfd_number),
+                RfdPermission::UpdateRfdsAll,
+            ]
+            .iter(),
+        ) {
             let latest_revision = self
                 .get_latest_rfd_revision(caller, rfd_number)
                 .await
@@ -793,13 +799,15 @@ impl RfdContext {
         rfd_number: i32,
         visibility: Visibility,
     ) -> ResourceResult<Rfd, StoreError> {
-        if caller.any(&[
-            &RfdPermission::GetRfd(rfd_number),
-            &RfdPermission::GetRfdsAll,
-        ]) && caller.any(&[
-            &RfdPermission::ManageRfdVisibility(rfd_number),
-            &RfdPermission::ManageRfdsVisibilityAll,
-        ]) {
+        if caller.any([RfdPermission::GetRfd(rfd_number), RfdPermission::GetRfdsAll].iter())
+            && caller.any(
+                [
+                    RfdPermission::ManageRfdVisibility(rfd_number),
+                    RfdPermission::ManageRfdsVisibilityAll,
+                ]
+                .iter(),
+            )
+        {
             let mut rfd = self.get_rfd_meta(caller, rfd_number, None).await?;
             rfd.visibility = visibility;
             Ok(RfdStore::upsert(&*self.storage, rfd.into()).await?)
@@ -882,7 +890,7 @@ pub(crate) mod test_mocks {
         let mut kid = [0; 24];
         rng.fill_bytes(&mut kid);
 
-        let key = AsymmetricKey::Local {
+        let signer = AsymmetricKey::LocalSigner {
             kid: hex::encode(kid),
             private: String::from_utf8(
                 priv_key
@@ -892,6 +900,9 @@ pub(crate) mod test_mocks {
                     .to_vec(),
             )
             .unwrap(),
+        };
+        let verifier = AsymmetricKey::LocalVerifier {
+            kid: hex::encode(kid),
             public: pub_key.to_public_key_pem(LineEnding::LF).unwrap(),
         };
 
@@ -901,7 +912,7 @@ pub(crate) mod test_mocks {
             JwtConfig {
                 default_expiration: 0,
             },
-            vec![key],
+            vec![signer, verifier],
         )
         .await
         .unwrap();

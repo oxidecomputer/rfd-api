@@ -1,6 +1,6 @@
 [package]
 name = "rfd-api"
-version = "0.8.0"
+version = "0.11.0"
 edition = "2021"
 repository = "https://github.com/oxidecomputer/rfd-api"
 
