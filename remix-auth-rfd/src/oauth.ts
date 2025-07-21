@@ -13,7 +13,7 @@ import { Strategy } from 'remix-auth/strategy'
 import { RfdApiProvider, RfdScope } from '.'
 import { client, handleApiResponse } from './util'
 
-export type TurnstileOAuthStrategyOptions = {
+export type RfdOAuthStrategyOptions = {
   host: string
   clientId: string
   clientSecret: string
@@ -29,12 +29,12 @@ export type ExpiringUser = {
   expiresAt: Date
 }
 
-export type TurnstileVerifyCallback<T> = Strategy.VerifyFunction<T, OAuth2Strategy.VerifyOptions>
+export type RfdVerifyCallback<T> = Strategy.VerifyFunction<T, OAuth2Strategy.VerifyOptions>
 
-export class TurnstileOAuthStrategy<User extends ExpiringUser> extends OAuth2Strategy<
+export class RfdOAuthStrategy<User extends ExpiringUser> extends OAuth2Strategy<
   User
 > {
-  public name = `turnstile`
+  public name = `rfd`
   protected readonly userInfoUrl
   protected readonly host
 
@@ -46,8 +46,8 @@ export class TurnstileOAuthStrategy<User extends ExpiringUser> extends OAuth2Str
       redirectURI,
       remoteProvider,
       scopes,
-    }: TurnstileOAuthStrategyOptions,
-    verify: TurnstileVerifyCallback<User>,
+    }: RfdOAuthStrategyOptions,
+    verify: RfdVerifyCallback<User>,
   ) {
     super(
       {

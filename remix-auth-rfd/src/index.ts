@@ -19,7 +19,7 @@ export type RfdScope =
   | 'rfd:discussion:r'
   | 'search'
 
-export type RfdApiProvider = 'email' | 'google'
+export type RfdApiProvider = 'email' | 'google' | 'github'
 
 export type RfdAccessToken = {
   iss: string

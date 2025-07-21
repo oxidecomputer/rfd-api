@@ -18,7 +18,7 @@ export class InvalidMethod extends Error {}
 export class MissingRequiredField extends Error {}
 export class RemoteError extends Error {}
 
-export type TurnstileMagicLinkStrategyOptions = {
+export type RfdMagicLinkStrategyOptions = {
   storage: SessionStorage
   host: string
   clientSecret: string
@@ -32,21 +32,21 @@ export type TurnstileMagicLinkStrategyOptions = {
   scope?: RfdScope[]
 }
 
-export type TurnstileMagicLinkVerifyParams = {
+export type RfdMagicLinkVerifyParams = {
   attemptId: string
   email: string
   user: GetUserResponse_for_RfdPermission
   token: string
 }
 
-export class TurnstileMagicLinkStrategy<User> extends Strategy<User, TurnstileMagicLinkVerifyParams> {
+export class RfdMagicLinkStrategy<User> extends Strategy<User, RfdMagicLinkVerifyParams> {
   public name = 'rfd-magic-link'
 
   // Session based storage to use for storing the client side authentication materials
   // for tracking the authentication flow
   private readonly storage: SessionStorage
 
-  // Turnstile server to perform authentication against
+  // Rfd server to perform authentication against
   private readonly host: string
 
   // Client secret that will be used to exchange magic link codes for user information
@@ -73,11 +73,11 @@ export class TurnstileMagicLinkStrategy<User> extends Strategy<User, TurnstileMa
   private readonly sessionAttemptKey: string = 'auth:v-ml:attempt'
   private readonly sessionEmailKey: string = 'auth:v-ml:email'
 
-  protected verify: Strategy.VerifyFunction<User, TurnstileMagicLinkVerifyParams>
+  protected verify: Strategy.VerifyFunction<User, RfdMagicLinkVerifyParams>
 
   constructor(
-    options: TurnstileMagicLinkStrategyOptions,
-    verify: Strategy.VerifyFunction<User, TurnstileMagicLinkVerifyParams>,
+    options: RfdMagicLinkStrategyOptions,
+    verify: Strategy.VerifyFunction<User, RfdMagicLinkVerifyParams>,
   ) {
     super(verify)
     this.verify = verify
@@ -151,7 +151,7 @@ export class TurnstileMagicLinkStrategy<User> extends Strategy<User, TurnstileMa
       session.set(this.sessionAttemptKey, attemptId)
       session.set(this.sessionEmailKey, email)
     } catch (err) {
-      console.error('Turnstile server failed to send magic link email', err)
+      console.error('RFD server failed to send magic link email', err)
       throw new RemoteError('Failed to send magic link email')
     }
 

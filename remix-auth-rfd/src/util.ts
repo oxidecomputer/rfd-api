@@ -1,5 +1,5 @@
-import Api, { ApiResult } from '@oxide/turnstile.ts/client'
-import { ApiWithRetry } from '@oxide/turnstile.ts/client-retry'
+import Api, { ApiResult } from '@oxide/rfd.ts/client'
+import { ApiWithRetry } from '@oxide/rfd.ts/client-retry'
 
 const retryOnReset = () => {
   const limit = 1
@@ -22,10 +22,10 @@ export function handleApiResponse<T>(response: ApiResult<T>): T {
   if (response.type === 'success') {
     return response.data
   } else if (response.type === 'client_error') {
-    console.error('Failed attempting to send request to turnstile server', response)
+    console.error('Failed attempting to send request to RFD server', response)
     throw response.error as Error
   } else {
-    console.error('Failed attempting to send request to turnstile server', response)
+    console.error('Failed attempting to send request to RFD server', response)
     throw new Error(response.data.message)
   }
 }
