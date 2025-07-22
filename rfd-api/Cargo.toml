@@ -26,6 +26,7 @@ http = { workspace = true }
 hyper = { workspace = true }
 jsonwebtoken = { workspace = true }
 meilisearch-sdk = { workspace = true }
+minijinja = { workspace = true }
 newtype-uuid = { workspace = true }
 oauth2 = { workspace = true }
 octorust = { workspace = true, features = ["httpcache"] }
@@ -37,6 +38,7 @@ reqwest = { workspace = true }
 reqwest-middleware = { workspace = true }
 reqwest-retry = { workspace = true }
 reqwest-tracing = { workspace = true }
+resend-rs = { workspace = true }
 ring = { workspace = true }
 rfd-data = { path = "../rfd-data" }
 rfd-github = { path = "../rfd-github" }
@@ -45,6 +47,7 @@ rsa = { workspace = true, features = ["sha2"] }
 schemars = { workspace = true, features = ["chrono"] }
 secrecy = { workspace = true, features = ["serde"] }
 semver = { workspace = true }
+sendgrid = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 serde_urlencoded = { workspace = true }

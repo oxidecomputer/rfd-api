@@ -7,8 +7,9 @@ use owo_colors::{OwoColorize, Style};
 use progenitor_client::ResponseValue;
 use rfd_sdk::types::{
     self, AccessGroupForRfdPermission, ApiKeyResponseForRfdPermission, ApiUserForRfdPermission,
-    Error, InitialApiKeyResponseForRfdPermission, InitialOAuthClientSecretResponse, Job, Mapper,
-    OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, PermissionsForRfdPermission,
+    Error, InitialApiKeyResponseForRfdPermission, InitialMagicLinkSecretResponse,
+    InitialOAuthClientSecretResponse, Job, MagicLink, MagicLinkRedirectUri, MagicLinkSecret,
+    Mapper, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, PermissionsForRfdPermission,
     ReserveRfdResponse, RfdAttr, RfdWithRaw, RfdWithoutContent, SearchResultHit, SearchResults,
     Visibility,
 };
@@ -147,6 +148,22 @@ impl CliOutput for RfdTabPrinter {
 
     fn output_job_list(&self, value: Vec<types::Job>) {
         self.print_cli_output(&value, Some("jobs".to_string()));
+    }
+
+    fn output_magic_link_client_list(&self, value: Vec<types::MagicLink>) {
+        self.print_cli_output(&value, Some("clients".to_string()));
+    }
+    fn output_magic_link_client(&self, value: types::MagicLink) {
+        self.print_cli_output(&value, None);
+    }
+    fn output_magic_link_redirect_uri(&self, value: types::MagicLinkRedirectUri) {
+        self.print_cli_output(&value, None);
+    }
+    fn output_magic_link_secret_initial(&self, value: types::InitialMagicLinkSecretResponse) {
+        self.print_cli_output(&value, None);
+    }
+    fn output_magic_link_secret(&self, value: types::MagicLinkSecret) {
+        self.print_cli_output(&value, None);
     }
 
     fn output_error<T>(&self, value: &progenitor_client::Error<T>)
@@ -643,6 +660,80 @@ impl TabDisplay for Job {
                 .map(|d| d.to_string())
                 .unwrap_or_else(|| "--".to_string()),
         );
+    }
+}
+
+impl TabDisplay for MagicLink {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &*self.id);
+        printer.print_field(tw, level, "secrets", &"");
+        self.secrets.display(tw, level + 1, printer);
+        printer.print_field(tw, level, "redirect_uris", &"");
+        self.redirect_uris.display(tw, level + 1, printer);
+        printer.print_field(tw, level, "created_at", &self.created_at);
+        printer.print_field(
+            tw,
+            level,
+            "deleted_at",
+            &self
+                .deleted_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
+    }
+}
+
+impl TabDisplay for MagicLinkRedirectUri {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &*self.id);
+        printer.print_field(
+            tw,
+            level,
+            "magic_link_client_id",
+            &*self.magic_link_client_id,
+        );
+        printer.print_field(tw, level, "redirect_uri", &self.redirect_uri);
+        printer.print_field(tw, level, "created_at", &self.created_at);
+        printer.print_field(
+            tw,
+            level,
+            "deleted_at",
+            &self
+                .deleted_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
+    }
+}
+
+impl TabDisplay for MagicLinkSecret {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &*self.id);
+        printer.print_field(
+            tw,
+            level,
+            "magic_link_client_id",
+            &*self.magic_link_client_id,
+        );
+        printer.print_field(tw, level, "secret_signature", &self.secret_signature);
+        printer.print_field(tw, level, "created_at", &self.created_at);
+        printer.print_field(
+            tw,
+            level,
+            "deleted_at",
+            &self
+                .deleted_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
+    }
+}
+
+impl TabDisplay for InitialMagicLinkSecretResponse {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &*self.id);
+        printer.print_field(tw, level, "key", &self.key.0);
+        printer.print_field(tw, level, "created_at", &self.created_at);
     }
 }
 

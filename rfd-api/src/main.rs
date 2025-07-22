@@ -3,6 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use context::RfdContext;
+use minijinja::Environment;
 use server::{server, ServerConfig};
 use std::{
     net::{SocketAddr, SocketAddrV4},
@@ -15,13 +16,14 @@ use v_api::{
     endpoints::login::oauth::{
         github::GitHubOAuthProvider, google::GoogleOAuthProvider, OAuthProviderName,
     },
-    ApiContext, VContext,
+    ApiContext, MagicLinkTarget, VContext,
 };
-use v_model::storage::postgres::PostgresStore as VApiPostgresStore;
+use v_model::{schema_ext::MagicLinkMedium, storage::postgres::PostgresStore as VApiPostgresStore};
 
 use crate::{
-    config::{AppConfig, ServerLogFormat},
+    config::{AppConfig, EmailService, ServerLogFormat},
     initial_data::InitialData,
+    magic_link::{MagicLinkMessageBuilder, ResendMagicLink, SendgridMagicLink},
 };
 
 mod caller;
@@ -30,6 +32,7 @@ mod context;
 mod endpoints;
 mod error;
 mod initial_data;
+mod magic_link;
 mod permissions;
 use permissions::RfdPermission;
 mod search;
@@ -111,6 +114,47 @@ async fn main() -> anyhow::Result<()> {
         );
 
         tracing::info!("Added Google OAuth provider");
+    }
+
+    // Install magic link support
+    for template in config.magic_link.templates {
+        let mut email_message_env = Environment::new();
+
+        email_message_env.add_template_owned("text", template.text)?;
+        if let Some(subject) = template.subject {
+            email_message_env.add_template_owned("subject", subject)?;
+        }
+        if let Some(html) = template.html {
+            email_message_env.add_template_owned("html", html)?;
+        }
+        let target = MagicLinkTarget {
+            medium: MagicLinkMedium::Email,
+            channel: template.channel,
+        };
+
+        v_ctx.magic_link.set_message_builder(
+            target.clone(),
+            MagicLinkMessageBuilder {
+                env: email_message_env,
+            },
+        );
+
+        if let Some(service) = &config.magic_link.email_service {
+            match service {
+                EmailService::Resend { key } => {
+                    v_ctx.magic_link.set_messenger(
+                        target,
+                        ResendMagicLink::new(key.to_string(), template.from),
+                    );
+                }
+                EmailService::Sendgid { key } => {
+                    v_ctx.magic_link.set_messenger(
+                        target,
+                        SendgridMagicLink::new(key.to_string(), template.from),
+                    );
+                }
+            }
+        }
     }
 
     // Configure permissions for the default unauthenticated user

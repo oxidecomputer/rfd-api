@@ -107,7 +107,7 @@ export class RfdMagicLinkStrategy<User> extends Strategy<User, RfdMagicLinkVerif
   private async handleSendRequest(
     request: Request,
   ): Promise<User> {
-    const session = await sessionStorage.getSession(
+    const session = await this.storage.getSession(
       request.headers.get('Cookie'),
     )
 
@@ -155,8 +155,8 @@ export class RfdMagicLinkStrategy<User> extends Strategy<User, RfdMagicLinkVerif
       throw new RemoteError('Failed to send magic link email')
     }
 
-    const cookies = await sessionStorage.commitSession(session)
-    throw redirect(this.returnPath, {
+    const cookies = await this.storage.commitSession(session)
+    throw redirect(this.pendingPath, {
       headers: {
         'Set-Cookie': cookies,
       },
@@ -166,7 +166,7 @@ export class RfdMagicLinkStrategy<User> extends Strategy<User, RfdMagicLinkVerif
   private async handleReturnRequest(
     request: Request,
   ): Promise<User> {
-    const session = await sessionStorage.getSession(
+    const session = await this.storage.getSession(
       request.headers.get('Cookie'),
     )
 

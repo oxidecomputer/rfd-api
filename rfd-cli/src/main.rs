@@ -436,6 +436,27 @@ impl ProgenitorCliConfig for Context {
                 .unwrap()
                 .output_reserved_rfd(reserialize(value)),
             "Array_of_Job" => self.printer().unwrap().output_job_list(reserialize(value)),
+
+            "Array_of_MagicLink" => self
+                .printer()
+                .unwrap()
+                .output_magic_link_client_list(reserialize(value)),
+            "MagicLink" => self
+                .printer()
+                .unwrap()
+                .output_magic_link_client(reserialize(value)),
+            "MagicLinkRedirectUri" => self
+                .printer()
+                .unwrap()
+                .output_magic_link_redirect_uri(reserialize(value)),
+            "InitialMagicLinkSecretResponse" => self
+                .printer()
+                .unwrap()
+                .output_magic_link_secret_initial(reserialize(value)),
+            "MagicLinkSecret" => self
+                .printer()
+                .unwrap()
+                .output_magic_link_secret(reserialize(value)),
             other => eprintln!(
                 "Unhandled response type: {}. Please report this as a bug.",
                 other

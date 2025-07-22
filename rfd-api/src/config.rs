@@ -12,6 +12,7 @@ use serde::{
 };
 use thiserror::Error;
 use v_api::config::{AsymmetricKey, AuthnProviders, JwtConfig};
+use v_model::schema_ext::MagicLinkMedium;
 
 use crate::server::SpecConfig;
 
@@ -33,6 +34,7 @@ pub struct AppConfig {
     pub jwt: JwtConfig,
     pub spec: Option<SpecConfig>,
     pub authn: AuthnProviders,
+    pub magic_link: MagicLinkConfig,
     pub search: SearchConfig,
     pub content: ContentConfig,
     pub services: ServicesConfig,
@@ -111,6 +113,29 @@ pub enum GitHubAuthConfig {
     User {
         token: String,
     },
+}
+
+#[derive(Debug, Deserialize)]
+pub struct MagicLinkConfig {
+    pub templates: Vec<MagicLinkTemplate>,
+    pub email_service: Option<EmailService>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct MagicLinkTemplate {
+    pub medium: MagicLinkMedium,
+    pub channel: String,
+    pub from: String,
+    pub subject: Option<String>,
+    pub text: String,
+    pub html: Option<String>,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum EmailService {
+    Resend { key: String },
+    Sendgid { key: String },
 }
 
 impl AppConfig {

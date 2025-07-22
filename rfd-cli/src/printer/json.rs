@@ -95,6 +95,26 @@ impl CliOutput for RfdJsonPrinter {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 
+    fn output_magic_link_client_list(&self, value: Vec<types::MagicLink>) {
+        println!("{}", serde_json::to_string(&value).unwrap())
+    }
+
+    fn output_magic_link_client(&self, value: types::MagicLink) {
+        println!("{}", serde_json::to_string(&value).unwrap())
+    }
+
+    fn output_magic_link_redirect_uri(&self, value: types::MagicLinkRedirectUri) {
+        println!("{}", serde_json::to_string(&value).unwrap())
+    }
+
+    fn output_magic_link_secret_initial(&self, value: types::InitialMagicLinkSecretResponse) {
+        println!("{}", serde_json::to_string(&value).unwrap())
+    }
+
+    fn output_magic_link_secret(&self, value: types::MagicLinkSecret) {
+        println!("{}", serde_json::to_string(&value).unwrap())
+    }
+
     fn output_error<T>(&self, value: &progenitor_client::Error<T>)
     where
         T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
