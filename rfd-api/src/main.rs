@@ -23,7 +23,7 @@ use v_model::{schema_ext::MagicLinkMedium, storage::postgres::PostgresStore as V
 use crate::{
     config::{AppConfig, EmailService, ServerLogFormat},
     initial_data::InitialData,
-    magic_link::{MagicLinkMessageBuilder, ResendMagicLink, SendgridMagicLink},
+    magic_link::{MagicLinkMessageBuilder, ResendMagicLink},
 };
 
 mod caller;
@@ -145,12 +145,6 @@ async fn main() -> anyhow::Result<()> {
                     v_ctx.magic_link.set_messenger(
                         target,
                         ResendMagicLink::new(key.to_string(), template.from),
-                    );
-                }
-                EmailService::Sendgid { key } => {
-                    v_ctx.magic_link.set_messenger(
-                        target,
-                        SendgridMagicLink::new(key.to_string(), template.from),
                     );
                 }
             }

@@ -47,7 +47,6 @@ rsa = { workspace = true, features = ["sha2"] }
 schemars = { workspace = true, features = ["chrono"] }
 secrecy = { workspace = true, features = ["serde"] }
 semver = { workspace = true }
-sendgrid = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 serde_urlencoded = { workspace = true }

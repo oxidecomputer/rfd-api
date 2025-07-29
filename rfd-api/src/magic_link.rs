@@ -6,7 +6,6 @@ use async_trait::async_trait;
 use minijinja::{context, Environment};
 use reqwest::Url;
 use resend_rs::{types::CreateEmailBaseOptions, Resend};
-use sendgrid::v3::{Content, Email, Personalization, Sender};
 use v_api::{
     messenger::{Message, Messenger, MessengerError},
     MagicLinkMessage,
@@ -50,47 +49,6 @@ impl MagicLinkMessage for MagicLinkMessageBuilder {
         } else {
             None
         }
-    }
-}
-
-pub struct SendgridMagicLink {
-    client: Sender,
-    from: String,
-}
-
-impl SendgridMagicLink {
-    pub fn new(key: String, from: String) -> Self {
-        Self {
-            client: Sender::new(key, None),
-            from,
-        }
-    }
-}
-
-#[async_trait]
-impl Messenger for SendgridMagicLink {
-    async fn send(&self, message: Message) -> Result<(), MessengerError> {
-        let mut email = sendgrid::v3::Message::new(Email::new(&message.recipient))
-            .set_from(Email::new(&self.from))
-            .add_personalization(Personalization::new(Email::new(&message.recipient)));
-
-        if let Some(subject) = &message.subject {
-            email = email.set_subject(subject);
-        }
-
-        email = email.add_content(
-            Content::new()
-                .set_content_type("text/plain")
-                .set_value(&message.text),
-        );
-
-        if let Some(html) = &message.html {
-            email = email.add_content(Content::new().set_content_type("text/html").set_value(html));
-        }
-
-        self.client.send(&email).await?;
-
-        Ok(())
     }
 }
 

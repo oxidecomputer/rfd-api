@@ -135,7 +135,6 @@ pub struct MagicLinkTemplate {
 #[serde(rename_all = "lowercase")]
 pub enum EmailService {
     Resend { key: String },
-    Sendgid { key: String },
 }
 
 impl AppConfig {
