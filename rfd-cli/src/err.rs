@@ -59,11 +59,8 @@ pub fn format_api_err(ctx: &Context, client_err: ProgenitorClientError<ApiError>
         ProgenitorClientError::InvalidUpgrade(inner) => {
             err = err.context("Invalid upgrade").context(inner)
         }
-        ProgenitorClientError::PreHookError(inner) => {
-            err = err.context("Prehook call failed").context(inner)
-        }
-        ProgenitorClientError::PostHookError(inner) => {
-            err = err.context("Posthook call failed").context(inner)
+        ProgenitorClientError::Custom(inner) => {
+            err = err.context("Internl progenitor error").context(inner)
         }
     }
 
