@@ -10,8 +10,6 @@ use crate::Context;
 
 #[derive(Debug, Parser)]
 pub struct AccessShortcut {
-    /// Group to modify permissions of
-    pub group: String,
     #[clap(subcommand)]
     pub access: AccessShortcuts,
 }
@@ -38,18 +36,18 @@ pub enum RfdAccessShortcuts {
 
 #[derive(Debug, Parser)]
 pub struct AddRfdAccessShortcut {
-    /// RFD to grant access to
-    pub number: i32,
     /// Group name or id to grant access to
     pub group: String,
+    /// RFD to grant access to
+    pub number: i32,
 }
 
 #[derive(Debug, Parser)]
 pub struct RemoveRfdAccessShortcut {
-    /// RFD to revoke access to
-    pub number: i32,
     /// Group name or id to revoke access to
     pub group: String,
+    /// RFD to revoke access to
+    pub number: i32,
 }
 
 impl AddRfdAccessShortcut {
@@ -65,6 +63,7 @@ impl AddRfdAccessShortcut {
             group.permissions.0.push(RfdPermission::GetRfd(self.number));
             let response = client
                 .update_group()
+                .group_id(group.id)
                 .body_map(|body| body.name(group.name).permissions(group.permissions))
                 .send()
                 .await?
@@ -100,6 +99,7 @@ impl RemoveRfdAccessShortcut {
 
             let response = client
                 .update_group()
+                .group_id(group.id)
                 .body_map(|body| body.name(group.name).permissions(group.permissions))
                 .send()
                 .await?
