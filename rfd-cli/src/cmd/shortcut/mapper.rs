@@ -12,6 +12,19 @@ use uuid::Uuid;
 use crate::{printer::CliOutput, Context};
 
 #[derive(Debug, Parser)]
+pub struct MapperShortcut {
+    #[clap(subcommand)]
+    pub mapper: MapperShortcuts,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum MapperShortcuts {
+    Email(EmailMapper),
+    #[command(name = "github")]
+    GitHub(GitHubMapper),
+}
+
+#[derive(Debug, Parser)]
 /// Add a new one-time mapping for for a GitHub user
 pub struct GitHubMapper {
     /// The GitHub username of the user to create a mapping rule for

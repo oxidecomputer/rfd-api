@@ -5,10 +5,17 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 
-use crate::Context;
+use crate::{
+    cmd::shortcut::{
+        access::{AccessShortcut, AccessShortcuts, RfdAccessShortcut, RfdAccessShortcuts},
+        mapper::{MapperShortcut, MapperShortcuts},
+    },
+    Context,
+};
 
 use self::mapper::{EmailMapper, GitHubMapper};
 
+mod access;
 mod mapper;
 
 #[derive(Debug, Parser)]
@@ -21,16 +28,29 @@ pub struct ShortcutCmd {
 
 #[derive(Debug, Subcommand)]
 pub enum Shortcut {
-    EmailMapper(EmailMapper),
-    #[command(name = "github-mapper")]
-    GitHubMapper(GitHubMapper),
+    /// Grant and revoke access to resources for groups
+    Access(AccessShortcut),
+    /// Create new mappers
+    Mapper(MapperShortcut),
 }
 
 impl ShortcutCmd {
     pub async fn run(&self, ctx: &mut Context) -> Result<()> {
         match &self.shortcut {
-            Shortcut::EmailMapper(cmd) => cmd.run(ctx).await?,
-            Shortcut::GitHubMapper(cmd) => cmd.run(ctx).await?,
+            Shortcut::Access(shortcut) => match &shortcut.access {
+                AccessShortcuts::Rfd(method) => match &method.rfd {
+                    RfdAccessShortcuts::Add(cmd) => {
+                        cmd.run(ctx).await?;
+                    }
+                    RfdAccessShortcuts::Remove(cmd) => {
+                        cmd.run(ctx).await?;
+                    }
+                },
+            },
+            Shortcut::Mapper(shortcut) => match &shortcut.mapper {
+                MapperShortcuts::Email(cmd) => cmd.run(ctx).await?,
+                MapperShortcuts::GitHub(cmd) => cmd.run(ctx).await?,
+            },
         }
 
         Ok(())
