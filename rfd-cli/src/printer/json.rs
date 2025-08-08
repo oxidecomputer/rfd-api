@@ -15,6 +15,10 @@ impl CliOutput for RfdJsonPrinter {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 
+    fn output_api_user_list(&self, value: Vec<types::GetUserResponseForRfdPermission>) {
+        println!("{}", serde_json::to_string(&value).unwrap())
+    }
+
     fn output_user(&self, value: types::GetUserResponseForRfdPermission) {
         println!("{}", serde_json::to_string(&value).unwrap())
     }

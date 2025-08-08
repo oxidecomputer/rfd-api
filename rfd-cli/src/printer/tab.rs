@@ -6,12 +6,7 @@ use itertools::{EitherOrBoth, Itertools};
 use owo_colors::{OwoColorize, Style};
 use progenitor_client::ResponseValue;
 use rfd_sdk::types::{
-    self, AccessGroupForRfdPermission, ApiKeyResponseForRfdPermission, ApiUserForRfdPermission,
-    Error, InitialApiKeyResponseForRfdPermission, InitialMagicLinkSecretResponse,
-    InitialOAuthClientSecretResponse, Job, MagicLink, MagicLinkRedirectUri, MagicLinkSecret,
-    Mapper, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, PermissionsForRfdPermission,
-    ReserveRfdResponse, RfdAttr, RfdWithRaw, RfdWithoutContent, SearchResultHit, SearchResults,
-    Visibility,
+    self, GetUserResponseForRfdPermission, AccessGroupForRfdPermission, ApiKeyResponseForRfdPermission, ApiUserForRfdPermission, Error, InitialApiKeyResponseForRfdPermission, InitialMagicLinkSecretResponse, InitialOAuthClientSecretResponse, Job, MagicLink, MagicLinkRedirectUri, MagicLinkSecret, Mapper, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, PermissionsForRfdPermission, ReserveRfdResponse, RfdAttr, RfdWithRaw, RfdWithoutContent, SearchResultHit, SearchResults, Visibility
 };
 use std::{collections::HashMap, fmt::Display, fs::File, io::Write, process::Command};
 use tabwriter::TabWriter;
@@ -44,34 +39,13 @@ impl CliOutput for RfdTabPrinter {
     fn output_api_user(&self, value: types::ApiUserForRfdPermission) {
         self.print_cli_output(&value, None);
     }
+    
+    fn output_api_user_list(&self, value: Vec<types::GetUserResponseForRfdPermission>) {
+        self.print_cli_output(&value, Some("users".to_string()));
+    }
 
     fn output_user(&self, value: types::GetUserResponseForRfdPermission) {
-        let mut tw = TabWriter::new(vec![]).ansi(true);
-
-        value.info.display(&mut tw, 0, self);
-
-        self.print_field(&mut tw, 0, "providers", &"");
-        for provider in value.providers {
-            self.print_field(&mut tw, 1, "id", &provider.id);
-            self.print_field(&mut tw, 1, "provider", &provider.provider);
-            self.print_field(&mut tw, 1, "provider_id", &provider.provider_id);
-            self.print_list(&mut tw, 1, "emails", &provider.emails);
-            self.print_list(&mut tw, 1, "display_names", &provider.display_names);
-            self.print_field(&mut tw, 1, "created_at", &provider.created_at);
-            self.print_field(&mut tw, 1, "updated_at", &provider.updated_at);
-            self.print_field(
-                &mut tw,
-                1,
-                "deleted_at",
-                &value
-                    .info
-                    .deleted_at
-                    .map(|d| d.to_string())
-                    .unwrap_or_else(|| "--".to_string()),
-            );
-        }
-
-        output_writer(tw);
+        self.print_cli_output(&value, None);
     }
 
     fn output_api_key_list(&self, value: Vec<types::ApiKeyResponseForRfdPermission>) {
@@ -221,6 +195,33 @@ impl TabDisplay for ApiUserForRfdPermission {
                 .map(|d| d.to_string())
                 .unwrap_or_else(|| "--".to_string()),
         );
+    }
+}
+
+impl TabDisplay for GetUserResponseForRfdPermission {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        self.info.display(tw, level, printer);
+
+        printer.print_field(tw, level, "providers", &"");
+        for provider in &self.providers {
+            printer.print_field(tw, level + 1, "id", &provider.id);
+            printer.print_field(tw, level + 1, "provider", &provider.provider);
+            printer.print_field(tw, level + 1, "provider_id", &provider.provider_id);
+            printer.print_list(tw, level + 1, "emails", &provider.emails);
+            printer.print_list(tw, level + 1, "display_names", &provider.display_names);
+            printer.print_field(tw, level + 1, "created_at", &provider.created_at);
+            printer.print_field(tw, level + 1, "updated_at", &provider.updated_at);
+            printer.print_field(
+                tw,
+                level + 1,
+                "deleted_at",
+                &self
+                    .info
+                    .deleted_at
+                    .map(|d| d.to_string())
+                    .unwrap_or_else(|| "--".to_string()),
+            );
+        }
     }
 }
 
