@@ -379,7 +379,7 @@ impl ProgenitorCliConfig for Context {
             "Array_of_GetUserResponseForRfdPermission" => {
                 self.printer().unwrap().output_api_user_list(reserialize(value))
             }
-            "GetUserResponse" => self.printer().unwrap().output_user(reserialize(value)),
+            "GetUserResponseForRfdPermission" => self.printer().unwrap().output_user(reserialize(value)),
             "Array_of_ApiKeyResponseForRfdPermission" => self
                 .printer()
                 .unwrap()
