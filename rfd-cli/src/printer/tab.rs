@@ -49,7 +49,7 @@ impl CliOutput for RfdTabPrinter {
     }
 
     fn output_api_key_list(&self, value: Vec<types::ApiKeyResponseForRfdPermission>) {
-        self.print_cli_output(&value, Some("providers".to_string()));
+        self.print_cli_output(&value, Some("tokens".to_string()));
     }
 
     fn output_api_key_initial(&self, value: types::InitialApiKeyResponseForRfdPermission) {
