@@ -6,7 +6,12 @@ use itertools::{EitherOrBoth, Itertools};
 use owo_colors::{OwoColorize, Style};
 use progenitor_client::ResponseValue;
 use rfd_sdk::types::{
-    self, GetUserResponseForRfdPermission, AccessGroupForRfdPermission, ApiKeyResponseForRfdPermission, ApiUserForRfdPermission, Error, InitialApiKeyResponseForRfdPermission, InitialMagicLinkSecretResponse, InitialOAuthClientSecretResponse, Job, MagicLink, MagicLinkRedirectUri, MagicLinkSecret, Mapper, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret, PermissionsForRfdPermission, ReserveRfdResponse, RfdAttr, RfdWithRaw, RfdWithoutContent, SearchResultHit, SearchResults, Visibility
+    self, AccessGroupForRfdPermission, ApiKeyResponseForRfdPermission, ApiUserForRfdPermission,
+    Error, GetUserResponseForRfdPermission, InitialApiKeyResponseForRfdPermission,
+    InitialMagicLinkSecretResponse, InitialOAuthClientSecretResponse, Job, MagicLink,
+    MagicLinkRedirectUri, MagicLinkSecret, Mapper, OAuthClient, OAuthClientRedirectUri,
+    OAuthClientSecret, PermissionsForRfdPermission, ReserveRfdResponse, RfdAttr, RfdWithRaw,
+    RfdWithoutContent, SearchResultHit, SearchResults, Visibility,
 };
 use std::{collections::HashMap, fmt::Display, fs::File, io::Write, process::Command};
 use tabwriter::TabWriter;
@@ -39,7 +44,7 @@ impl CliOutput for RfdTabPrinter {
     fn output_api_user(&self, value: types::ApiUserForRfdPermission) {
         self.print_cli_output(&value, None);
     }
-    
+
     fn output_api_user_list(&self, value: Vec<types::GetUserResponseForRfdPermission>) {
         self.print_cli_output(&value, Some("users".to_string()));
     }
