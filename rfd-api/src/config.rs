@@ -6,21 +6,11 @@ use std::{collections::HashMap, path::PathBuf};
 
 use config::{Config, ConfigError, Environment, File};
 use rfd_data::content::RfdTemplate;
-use serde::{
-    de::{self, Visitor},
-    Deserialize, Deserializer,
-};
-use thiserror::Error;
+use serde::Deserialize;
 use v_api::config::{AsymmetricKey, AuthnProviders, JwtConfig};
 use v_model::schema_ext::MagicLinkMedium;
 
 use crate::server::SpecConfig;
-
-#[derive(Debug, Error)]
-pub enum AppConfigError {
-    #[error("Encountered invalid log format.")]
-    InvalidLogFormatVariant,
-}
 
 #[derive(Debug, Deserialize)]
 pub struct AppConfig {
@@ -40,40 +30,11 @@ pub struct AppConfig {
     pub services: ServicesConfig,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "kebab-case")]
 pub enum ServerLogFormat {
     Json,
     Pretty,
-}
-
-impl<'de> Deserialize<'de> for ServerLogFormat {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
-        struct ExternalId;
-
-        impl<'de> Visitor<'de> for ExternalId {
-            type Value = ServerLogFormat;
-
-            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
-                formatter.write_str("string")
-            }
-
-            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
-            where
-                E: de::Error,
-            {
-                match value {
-                    "json" => Ok(Self::Value::Json),
-                    "pretty" => Ok(Self::Value::Pretty),
-                    _ => Err(de::Error::custom(AppConfigError::InvalidLogFormatVariant)),
-                }
-            }
-        }
-
-        deserializer.deserialize_any(ExternalId)
-    }
 }
 
 #[derive(Debug, Default, Deserialize)]
