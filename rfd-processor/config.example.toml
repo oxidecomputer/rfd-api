@@ -1,3 +1,6 @@
+# Allowed values: json, pretty
+log_format = "json"
+
 # Controls if the processor should run
 processor_enabled = true
 

@@ -91,4 +91,9 @@ diesel::joinable!(rfd_pdf -> rfd (rfd_id));
 diesel::joinable!(rfd_pdf -> rfd_revision (rfd_revision_id));
 diesel::joinable!(rfd_revision -> rfd (rfd_id));
 
-diesel::allow_tables_to_appear_in_same_query!(job, rfd, rfd_pdf, rfd_revision,);
+diesel::allow_tables_to_appear_in_same_query!(
+    job,
+    rfd,
+    rfd_pdf,
+    rfd_revision,
+);

@@ -31,6 +31,8 @@ mod util;
 #[derive(Debug, Deserialize)]
 pub struct AppConfig {
     pub log_directory: Option<String>,
+    #[serde(default)]
+    pub log_format: LogFormat,
     pub processor_enabled: bool,
     pub processor_batch_size: i64,
     pub processor_interval: u64,
@@ -47,6 +49,15 @@ pub struct AppConfig {
     pub pdf_storage: Option<PdfStorageConfig>,
     #[serde(default)]
     pub search_storage: Vec<SearchConfig>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum LogFormat {
+    Pretty,
+    // The default value is used to avoid breaking old configuration files.
+    #[default]
+    Json,
 }
 
 #[derive(Debug, Error)]
@@ -133,13 +144,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         NonBlocking::new(std::io::stdout())
     };
 
-    let _subscriber = tracing_subscriber::fmt()
+    let subscriber = tracing_subscriber::fmt()
         .with_file(false)
         .with_line_number(false)
         .with_env_filter(EnvFilter::from_default_env())
-        .with_writer(writer)
-        .json()
-        .init();
+        .with_writer(writer);
+
+    match config.log_format {
+        LogFormat::Pretty => subscriber.pretty().init(),
+        LogFormat::Json => subscriber.json().init(),
+    }
 
     let ctx = Arc::new(Context::new(Database::new(&config.database_url).await, &config).await?);
 

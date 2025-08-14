@@ -39,17 +39,33 @@ emitted at:
 ### Installation
 
 Once all of the dependencies have been installed, database migrations will need to be run to prepare
-the database tables. These can be run using the [`diesel` cli ](https://diesel.rs/guides/getting-started).
+the database tables. These can be run using the `rfd-installer` tool:
 
-To run them:
+```sh
+cd rfd-model
+V_ONLY=1 DATABASE_URL=<database-url> cargo run -p rfd-installer
+DATABASE_URL=<database-url> diesel migration run
+```
+
+Replace `<database-url>` with the url to the Postgres instance that the API and processor will be
+configured to run against.
+
+### Running database migrations
+
+After the initial migration described above, any future database migration can
+be executed with the following commands:
 
 ```sh
 cd rfd-model
 DATABASE_URL=<database-url> diesel migration run
 ```
 
-Replace `<database-url>` with the url to the Postgres instance that the API and processor will be
-configured to run against.
+> [!NOTE]
+>
+> If the generated `schema.rs` includes additional tables in its diff, it means
+> v-api added more tables of its own. You should exclude them in
+> `rfd-model/diesel.toml` and re-run migrations. The extraneous tables should
+> then disappear from `schema.rs`.
 
 ### Configuration
 

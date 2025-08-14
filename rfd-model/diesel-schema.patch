@@ -1,0 +1,15 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at https://mozilla.org/MPL/2.0/.
+diff --git a/src/schema.rs b/src/schema.rs
+index 8eb4b49..cbc1526 100644
+--- a/src/schema.rs
++++ b/src/schema.rs
+@@ -1,4 +1,6 @@
+-// @generated automatically by Diesel CLI.
++// This Source Code Form is subject to the terms of the Mozilla Public
++// License, v. 2.0. If a copy of the MPL was not distributed with this
++// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+
+ pub mod sql_types {
+     #[derive(diesel::sql_types::SqlType)]
