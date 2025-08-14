@@ -24,6 +24,3 @@ except_tables = [
     "oauth_client_redirect_uri",
     "oauth_client_secret",
 ]
-
-[migrations_directory]
-dir = "migrations"
