@@ -175,6 +175,7 @@ diesel::table! {
         revision_updated_at -> Timestamptz,
         revision_deleted_at -> Nullable<Timestamptz>,
         revision_labels -> Nullable<Varchar>,
+        revision_major_change -> Bool,
     }
 }
 
@@ -213,5 +214,6 @@ diesel::table! {
         revision_updated_at -> Timestamptz,
         revision_deleted_at -> Nullable<Timestamptz>,
         revision_labels -> Nullable<Varchar>,
+        revision_major_change -> Bool,
     }
 }

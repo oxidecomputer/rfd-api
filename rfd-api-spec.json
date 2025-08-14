@@ -4530,6 +4530,9 @@
             "nullable": true,
             "type": "string"
           },
+          "major_change": {
+            "type": "boolean"
+          },
           "rfd_id": {
             "$ref": "#/components/schemas/TypedUuidForRfdId"
           },
@@ -4555,6 +4558,7 @@
           "content_format",
           "created_at",
           "id",
+          "major_change",
           "rfd_id",
           "sha",
           "title",

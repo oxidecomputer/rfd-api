@@ -340,7 +340,8 @@ impl RfdMetaStore for PostgresStore {
             rfd_revision.created_at as revision_created_at,
             rfd_revision.updated_at as revision_updated_at,
             rfd_revision.deleted_at as revision_deleted_at,
-            rfd_revision.labels as revision_labels
+            rfd_revision.labels as revision_labels,
+            rfd_revision.major_change as revision_major_change
         FROM
             rfd
         INNER JOIN
@@ -569,7 +570,8 @@ impl RfdPdfsStore for PostgresStore {
             rfd_revision.created_at as revision_created_at,
             rfd_revision.updated_at as revision_updated_at,
             rfd_revision.deleted_at as revision_deleted_at,
-            rfd_revision.labels as revision_labels
+            rfd_revision.labels as revision_labels,
+            rfd_revision.major_change as revision_major_change
         FROM
             rfd
         INNER JOIN
@@ -789,6 +791,7 @@ impl RfdRevisionStore for PostgresStore {
                     rfd_revision::sha.eq(String::from(new_revision.sha)),
                     rfd_revision::commit_sha.eq(String::from(new_revision.commit)),
                     rfd_revision::committed_at.eq(new_revision.committed_at.clone()),
+                    rfd_revision::major_change.eq(new_revision.major_change),
                 ))
                 .on_conflict(rfd_revision::id)
                 .do_update()
@@ -802,6 +805,7 @@ impl RfdRevisionStore for PostgresStore {
                     rfd_revision::content.eq(excluded(rfd_revision::content)),
                     rfd_revision::content_format.eq(excluded(rfd_revision::content_format)),
                     rfd_revision::sha.eq(excluded(rfd_revision::sha)),
+                    rfd_revision::major_change.eq(excluded(rfd_revision::major_change)),
                     rfd_revision::commit_sha.eq(rfd_revision::commit_sha),
                     rfd_revision::committed_at.eq(excluded(rfd_revision::committed_at)),
                     rfd_revision::updated_at.eq(Utc::now()),
@@ -870,6 +874,7 @@ impl RfdRevisionMetaStore for PostgresStore {
                 rfd_revision::updated_at,
                 rfd_revision::deleted_at,
                 rfd_revision::labels,
+                rfd_revision::major_change,
             ))
             .into_boxed();
 
@@ -991,6 +996,7 @@ impl RfdRevisionPdfStore for PostgresStore {
                 rfd_revision::updated_at,
                 rfd_revision::deleted_at,
                 rfd_revision::labels,
+                rfd_revision::major_change,
             ))
             .into_boxed();
 

@@ -76,6 +76,7 @@ pub struct RfdMetaJoinRow {
     pub revision_updated_at: DateTime<Utc>,
     pub revision_deleted_at: Option<DateTime<Utc>>,
     pub revision_labels: Option<String>,
+    pub revision_major_change: bool,
 }
 
 #[derive(QueryableByName)]
@@ -111,6 +112,7 @@ pub struct RfdPdfJoinRow {
     pub revision_updated_at: DateTime<Utc>,
     pub revision_deleted_at: Option<DateTime<Utc>>,
     pub revision_labels: Option<String>,
+    pub revision_major_change: bool,
 }
 
 #[partial(RfdRevisionMetaModel)]
@@ -135,6 +137,7 @@ pub struct RfdRevisionModel {
     pub updated_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
     pub labels: Option<String>,
+    pub major_change: bool,
 }
 
 impl From<RfdMetaJoinRow> for (RfdModel, RfdRevisionMetaModel) {
@@ -164,6 +167,7 @@ impl From<RfdMetaJoinRow> for (RfdModel, RfdRevisionMetaModel) {
                 updated_at: value.revision_updated_at,
                 deleted_at: value.revision_deleted_at,
                 labels: value.revision_labels,
+                major_change: value.revision_major_change,
             },
         )
     }
@@ -207,6 +211,7 @@ impl From<RfdPdfJoinRow> for (RfdModel, RfdRevisionPdfModel) {
                 updated_at: value.revision_updated_at,
                 deleted_at: value.revision_deleted_at,
                 labels: value.revision_labels,
+                major_change: value.revision_major_change,
             },
         )
     }

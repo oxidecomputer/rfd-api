@@ -398,6 +398,7 @@ impl RemoteRfd {
                 sha: payload.sha,
                 commit: payload.commit_sha,
                 committed_at: payload.commit_date,
+                major_change: false,
             },
         )
         .await?;
