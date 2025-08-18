@@ -3846,6 +3846,11 @@
           "id": {
             "$ref": "#/components/schemas/TypedUuidForRfdId"
           },
+          "latest_major_change_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
           "link": {
             "nullable": true,
             "type": "string"
@@ -4666,6 +4671,11 @@
             "nullable": true,
             "type": "string"
           },
+          "latest_major_change_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
           "link": {
             "nullable": true,
             "type": "string"
@@ -4744,6 +4754,11 @@
             "nullable": true,
             "type": "string"
           },
+          "latest_major_change_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
           "link": {
             "nullable": true,
             "type": "string"
@@ -4816,6 +4831,11 @@
           "labels": {
             "nullable": true,
             "type": "string"
+          },
+          "latest_major_change_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
           },
           "link": {
             "nullable": true,

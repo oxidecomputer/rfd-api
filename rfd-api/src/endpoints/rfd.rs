@@ -950,6 +950,7 @@ mod tests {
                     updated_at: Utc::now(),
                     deleted_at: None,
                     visibility: rfd_model::schema_ext::Visibility::Private,
+                    latest_major_change_at: Some(Utc::now()),
                 },
                 Rfd {
                     id: TypedUuid::from_untyped_uuid(public_rfd_id),
@@ -977,6 +978,7 @@ mod tests {
                     updated_at: Utc::now(),
                     deleted_at: None,
                     visibility: rfd_model::schema_ext::Visibility::Public,
+                    latest_major_change_at: Some(Utc::now()),
                 },
                 Rfd {
                     id: TypedUuid::from_untyped_uuid(private_rfd_id_2),
@@ -1004,6 +1006,7 @@ mod tests {
                     updated_at: Utc::now(),
                     deleted_at: None,
                     visibility: rfd_model::schema_ext::Visibility::Private,
+                    latest_major_change_at: Some(Utc::now()),
                 },
             ];
 
@@ -1048,6 +1051,7 @@ mod tests {
                     updated_at: Utc::now(),
                     deleted_at: None,
                     visibility: rfd_model::schema_ext::Visibility::Private,
+                    latest_major_change_at: Some(Utc::now()),
                 },
                 RfdMeta {
                     id: TypedUuid::from_untyped_uuid(public_rfd_id),
@@ -1074,6 +1078,7 @@ mod tests {
                     updated_at: Utc::now(),
                     deleted_at: None,
                     visibility: rfd_model::schema_ext::Visibility::Public,
+                    latest_major_change_at: Some(Utc::now()),
                 },
                 RfdMeta {
                     id: TypedUuid::from_untyped_uuid(private_rfd_id_2),
@@ -1100,6 +1105,7 @@ mod tests {
                     updated_at: Utc::now(),
                     deleted_at: None,
                     visibility: rfd_model::schema_ext::Visibility::Private,
+                    latest_major_change_at: Some(Utc::now()),
                 },
             ];
 

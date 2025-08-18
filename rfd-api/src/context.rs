@@ -113,6 +113,7 @@ pub struct RfdWithRaw {
     pub sha: Option<FileSha>,
     pub commit: Option<CommitSha>,
     pub committed_at: Option<DateTime<Utc>>,
+    pub latest_major_change_at: Option<DateTime<Utc>>,
     pub visibility: Visibility,
 }
 
@@ -153,6 +154,7 @@ impl From<Rfd> for RfdWithRaw {
                 .content
                 .as_ref()
                 .map(|content| content.committed_at.clone()),
+            latest_major_change_at: value.latest_major_change_at.clone(),
             visibility: value.visibility,
         }
     }
@@ -191,6 +193,7 @@ impl From<RfdMeta> for RfdWithoutContent {
                 .content
                 .as_ref()
                 .map(|content| content.committed_at.clone()),
+            latest_major_change_at: value.latest_major_change_at.clone(),
             visibility: value.visibility,
         }
     }
@@ -234,6 +237,7 @@ impl From<RfdPdfs> for RfdWithPdf {
                 .content
                 .as_ref()
                 .map(|content| content.committed_at.clone()),
+            latest_major_change_at: value.latest_major_change_at.clone(),
             visibility: value.visibility,
         }
     }
