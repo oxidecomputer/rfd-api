@@ -15,6 +15,7 @@ use std::fmt::Display;
 use thiserror::Error;
 
 pub mod db;
+#[rustfmt::skip]
 pub mod schema;
 pub mod schema_ext;
 pub mod storage;

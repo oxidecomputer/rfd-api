@@ -3,6 +3,24 @@
 
 [print_schema]
 file = "src/schema.rs"
+patch_file = "diesel-schema.patch"
 
-[migrations_directory]
-dir = "migrations"
+[print_schema.filter]
+except_tables = [
+    "access_groups",
+    "api_key",
+    "api_user",
+    "api_user_access_token",
+    "api_user_contact_email",
+    "api_user_provider",
+    "link_request",
+    "login_attempt",
+    "magic_link_attempt",
+    "magic_link_client",
+    "magic_link_client_redirect_uri",
+    "magic_link_client_secret",
+    "mapper",
+    "oauth_client",
+    "oauth_client_redirect_uri",
+    "oauth_client_secret",
+]
