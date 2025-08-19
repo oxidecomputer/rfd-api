@@ -323,7 +323,11 @@ impl RemoteRfd {
         })
     }
 
-    pub async fn upsert<S>(self, storage: &S) -> Result<PersistedRfd, RemoteRfdError>
+    pub async fn upsert<S>(
+        self,
+        storage: &S,
+        major_change: bool,
+    ) -> Result<PersistedRfd, RemoteRfdError>
     where
         S: RfdStore + RfdRevisionStore + RfdPdfStore,
     {
@@ -398,6 +402,7 @@ impl RemoteRfd {
                 sha: payload.sha,
                 commit: payload.commit_sha,
                 committed_at: payload.commit_date,
+                major_change,
             },
         )
         .await?;

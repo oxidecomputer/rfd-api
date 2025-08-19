@@ -7,7 +7,7 @@
       "url": "https://oxide.computer",
       "email": "augustus@oxidecomputer.com"
     },
-    "version": "0.12.0"
+    "version": "0.12.1"
   },
   "paths": {
     "/.well-known/jwks.json": {
@@ -3846,6 +3846,11 @@
           "id": {
             "$ref": "#/components/schemas/TypedUuidForRfdId"
           },
+          "latest_major_change_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
           "link": {
             "nullable": true,
             "type": "string"
@@ -4530,6 +4535,9 @@
             "nullable": true,
             "type": "string"
           },
+          "major_change": {
+            "type": "boolean"
+          },
           "rfd_id": {
             "$ref": "#/components/schemas/TypedUuidForRfdId"
           },
@@ -4555,6 +4563,7 @@
           "content_format",
           "created_at",
           "id",
+          "major_change",
           "rfd_id",
           "sha",
           "title",
@@ -4662,6 +4671,11 @@
             "nullable": true,
             "type": "string"
           },
+          "latest_major_change_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
           "link": {
             "nullable": true,
             "type": "string"
@@ -4740,6 +4754,11 @@
             "nullable": true,
             "type": "string"
           },
+          "latest_major_change_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
+          },
           "link": {
             "nullable": true,
             "type": "string"
@@ -4812,6 +4831,11 @@
           "labels": {
             "nullable": true,
             "type": "string"
+          },
+          "latest_major_change_at": {
+            "nullable": true,
+            "type": "string",
+            "format": "date-time"
           },
           "link": {
             "nullable": true,

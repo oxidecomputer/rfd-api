@@ -419,6 +419,7 @@ export type RfdRevision = {
   'discussion'?: string
   'id': TypedUuidForRfdRevisionId
   'labels'?: string
+  'majorChange': boolean
   'rfdId': TypedUuidForRfdId
   'sha': FileSha
   'state'?: string
@@ -435,6 +436,7 @@ export type Rfd = {
   'createdAt': Date
   'deletedAt'?: Date
   'id': TypedUuidForRfdId
+  'latestMajorChangeAt'?: Date
   'link'?: string
   'rfdNumber': number
   'updatedAt': Date
@@ -500,6 +502,7 @@ export type RfdWithPdf = {
   'format'?: ContentFormat
   'id': TypedUuidForRfdId
   'labels'?: string
+  'latestMajorChangeAt'?: Date
   'link'?: string
   'rfdNumber': number
   'sha'?: FileSha
@@ -517,6 +520,7 @@ export type RfdWithRaw = {
   'format'?: ContentFormat
   'id': TypedUuidForRfdId
   'labels'?: string
+  'latestMajorChangeAt'?: Date
   'link'?: string
   'rfdNumber': number
   'sha'?: FileSha
@@ -533,6 +537,7 @@ export type RfdWithoutContent = {
   'format'?: ContentFormat
   'id': TypedUuidForRfdId
   'labels'?: string
+  'latestMajorChangeAt'?: Date
   'link'?: string
   'rfdNumber': number
   'sha'?: FileSha

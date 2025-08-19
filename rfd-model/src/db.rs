@@ -76,6 +76,8 @@ pub struct RfdMetaJoinRow {
     pub revision_updated_at: DateTime<Utc>,
     pub revision_deleted_at: Option<DateTime<Utc>>,
     pub revision_labels: Option<String>,
+    pub revision_major_change: bool,
+    pub latest_major_change_at: Option<DateTime<Utc>>,
 }
 
 #[derive(QueryableByName)]
@@ -111,6 +113,8 @@ pub struct RfdPdfJoinRow {
     pub revision_updated_at: DateTime<Utc>,
     pub revision_deleted_at: Option<DateTime<Utc>>,
     pub revision_labels: Option<String>,
+    pub revision_major_change: bool,
+    pub latest_major_change_at: Option<DateTime<Utc>>,
 }
 
 #[partial(RfdRevisionMetaModel)]
@@ -135,9 +139,10 @@ pub struct RfdRevisionModel {
     pub updated_at: DateTime<Utc>,
     pub deleted_at: Option<DateTime<Utc>>,
     pub labels: Option<String>,
+    pub major_change: bool,
 }
 
-impl From<RfdMetaJoinRow> for (RfdModel, RfdRevisionMetaModel) {
+impl From<RfdMetaJoinRow> for (RfdModel, RfdLatestMajorChange, RfdRevisionMetaModel) {
     fn from(value: RfdMetaJoinRow) -> Self {
         (
             RfdModel {
@@ -148,6 +153,9 @@ impl From<RfdMetaJoinRow> for (RfdModel, RfdRevisionMetaModel) {
                 updated_at: value.updated_at,
                 deleted_at: value.deleted_at,
                 visibility: value.visibility,
+            },
+            RfdLatestMajorChange {
+                committed_at: value.latest_major_change_at,
             },
             RfdRevisionMetaModel {
                 id: value.revision_id,
@@ -164,12 +172,13 @@ impl From<RfdMetaJoinRow> for (RfdModel, RfdRevisionMetaModel) {
                 updated_at: value.revision_updated_at,
                 deleted_at: value.revision_deleted_at,
                 labels: value.revision_labels,
+                major_change: value.revision_major_change,
             },
         )
     }
 }
 
-impl From<RfdPdfJoinRow> for (RfdModel, RfdRevisionPdfModel) {
+impl From<RfdPdfJoinRow> for (RfdModel, RfdLatestMajorChange, RfdRevisionPdfModel) {
     fn from(value: RfdPdfJoinRow) -> Self {
         (
             RfdModel {
@@ -180,6 +189,9 @@ impl From<RfdPdfJoinRow> for (RfdModel, RfdRevisionPdfModel) {
                 updated_at: value.updated_at,
                 deleted_at: value.deleted_at,
                 visibility: value.visibility,
+            },
+            RfdLatestMajorChange {
+                committed_at: value.latest_major_change_at,
             },
             RfdRevisionPdfModel {
                 id: value.revision_id,
@@ -207,6 +219,7 @@ impl From<RfdPdfJoinRow> for (RfdModel, RfdRevisionPdfModel) {
                 updated_at: value.revision_updated_at,
                 deleted_at: value.revision_deleted_at,
                 labels: value.revision_labels,
+                major_change: value.revision_major_change,
             },
         )
     }
@@ -240,4 +253,9 @@ pub struct JobModel {
     pub processed: bool,
     pub created_at: DateTime<Utc>,
     pub started_at: Option<DateTime<Utc>>,
+}
+
+#[derive(Debug)]
+pub(crate) struct RfdLatestMajorChange {
+    pub(crate) committed_at: Option<DateTime<Utc>>,
 }

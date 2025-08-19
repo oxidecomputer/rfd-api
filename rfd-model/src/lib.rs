@@ -4,7 +4,8 @@
 
 use chrono::{DateTime, Utc};
 use db::{
-    JobModel, RfdModel, RfdPdfModel, RfdRevisionMetaModel, RfdRevisionModel, RfdRevisionPdfModel,
+    JobModel, RfdLatestMajorChange, RfdModel, RfdPdfModel, RfdRevisionMetaModel, RfdRevisionModel,
+    RfdRevisionPdfModel,
 };
 use newtype_uuid::{GenericUuid, TypedUuid, TypedUuidKind, TypedUuidTag};
 use partial_struct::partial;
@@ -83,6 +84,8 @@ pub struct Rfd {
     pub updated_at: DateTime<Utc>,
     #[partial(NewRfd(skip))]
     pub deleted_at: Option<DateTime<Utc>>,
+    #[partial(NewRfd(skip))]
+    pub latest_major_change_at: Option<DateTime<Utc>>,
     pub visibility: Visibility,
 }
 
@@ -97,12 +100,15 @@ impl From<RfdModel> for Rfd {
             updated_at: value.updated_at,
             deleted_at: value.deleted_at,
             visibility: value.visibility,
+            latest_major_change_at: None,
         }
     }
 }
 
-impl From<(RfdModel, RfdRevisionModel)> for Rfd {
-    fn from((rfd, revision): (RfdModel, RfdRevisionModel)) -> Self {
+impl From<(RfdModel, RfdLatestMajorChange, RfdRevisionModel)> for Rfd {
+    fn from(
+        (rfd, latest_major_change, revision): (RfdModel, RfdLatestMajorChange, RfdRevisionModel),
+    ) -> Self {
         Self {
             id: TypedUuid::from_untyped_uuid(rfd.id),
             rfd_number: rfd.rfd_number,
@@ -112,12 +118,19 @@ impl From<(RfdModel, RfdRevisionModel)> for Rfd {
             updated_at: rfd.updated_at,
             deleted_at: rfd.deleted_at,
             visibility: rfd.visibility,
+            latest_major_change_at: latest_major_change.committed_at,
         }
     }
 }
 
-impl From<(RfdModel, RfdRevisionMetaModel)> for RfdMeta {
-    fn from((rfd, revision): (RfdModel, RfdRevisionMetaModel)) -> Self {
+impl From<(RfdModel, RfdLatestMajorChange, RfdRevisionMetaModel)> for RfdMeta {
+    fn from(
+        (rfd, latest_major_change, revision): (
+            RfdModel,
+            RfdLatestMajorChange,
+            RfdRevisionMetaModel,
+        ),
+    ) -> Self {
         Self {
             id: TypedUuid::from_untyped_uuid(rfd.id),
             rfd_number: rfd.rfd_number,
@@ -127,12 +140,15 @@ impl From<(RfdModel, RfdRevisionMetaModel)> for RfdMeta {
             updated_at: rfd.updated_at,
             deleted_at: rfd.deleted_at,
             visibility: rfd.visibility,
+            latest_major_change_at: latest_major_change.committed_at,
         }
     }
 }
 
-impl From<(RfdModel, RfdRevisionPdfModel)> for RfdPdfs {
-    fn from((rfd, revision): (RfdModel, RfdRevisionPdfModel)) -> Self {
+impl From<(RfdModel, RfdLatestMajorChange, RfdRevisionPdfModel)> for RfdPdfs {
+    fn from(
+        (rfd, latest_major_change, revision): (RfdModel, RfdLatestMajorChange, RfdRevisionPdfModel),
+    ) -> Self {
         Self {
             id: TypedUuid::from_untyped_uuid(rfd.id),
             rfd_number: rfd.rfd_number,
@@ -142,6 +158,7 @@ impl From<(RfdModel, RfdRevisionPdfModel)> for RfdPdfs {
             updated_at: rfd.updated_at,
             deleted_at: rfd.deleted_at,
             visibility: rfd.visibility,
+            latest_major_change_at: latest_major_change.committed_at,
         }
     }
 }
@@ -184,6 +201,7 @@ pub struct RfdRevision {
     pub content_format: ContentFormat,
     pub sha: FileSha,
     pub commit: CommitSha,
+    pub major_change: bool,
     pub committed_at: DateTime<Utc>,
     #[partial(NewRfdRevision(skip))]
     pub created_at: DateTime<Utc>,
@@ -208,6 +226,7 @@ impl From<RfdRevisionModel> for RfdRevision {
             sha: value.sha.into(),
             commit: value.commit_sha.into(),
             committed_at: value.committed_at,
+            major_change: value.major_change,
             created_at: value.created_at,
             updated_at: value.updated_at,
             deleted_at: value.deleted_at,
@@ -229,6 +248,7 @@ impl From<RfdRevisionMetaModel> for RfdRevisionMeta {
             sha: value.sha.into(),
             commit: value.commit_sha.into(),
             committed_at: value.committed_at,
+            major_change: value.major_change,
             created_at: value.created_at,
             updated_at: value.updated_at,
             deleted_at: value.deleted_at,
@@ -251,6 +271,7 @@ impl From<RfdRevisionPdfModel> for RfdRevisionPdf {
             sha: value.sha.into(),
             commit: value.commit_sha.into(),
             committed_at: value.committed_at,
+            major_change: value.major_change,
             created_at: value.created_at,
             updated_at: value.updated_at,
             deleted_at: value.deleted_at,

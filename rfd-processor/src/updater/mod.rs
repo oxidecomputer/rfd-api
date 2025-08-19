@@ -6,7 +6,7 @@ use async_trait::async_trait;
 use newtype_uuid::TypedUuid;
 use octorust::types::{LabelsData, PullRequestData, PullRequestSimple};
 use process_includes::ProcessIncludes;
-use rfd_data::content::RfdDocument;
+use rfd_data::content::{RfdContent, RfdDocument};
 use rfd_github::{GitHubError, GitHubRfdUpdate};
 use rfd_model::RfdId;
 use serde::Deserialize;
@@ -16,6 +16,7 @@ use tracing::instrument;
 use v_model::storage::StoreError;
 
 use crate::{
+    content::RenderableRfdError,
     context::Context,
     rfd::{FetchRemoteRfdError, PersistedRfd, RemoteRfd, RemoteRfdError, RfdError},
 };
@@ -58,6 +59,8 @@ pub enum RfdUpdaterError {
     RfdUpdate(RfdError),
     #[error("Newly persisted RFD has an internal id that does match the expected existing id")]
     RfdIdMismatch((TypedUuid<RfdId>, TypedUuid<RfdId>)),
+    #[error("Failed to retrieve the content of the previous revision (to detect if this is a major change)")]
+    ContentOfExistingRfd(#[source] RenderableRfdError),
 }
 
 trait Validate {
@@ -167,14 +170,33 @@ impl<'a> RfdUpdater<'a> {
             .await
             .map_err(|err| RfdUpdaterError::ExistingLookup(err))?;
 
-        if let Some(existing) = &existing {
+        let major_change = if let Some(existing) = &existing {
             tracing::info!(id = ?existing.rfd.id, number = ?update.number, "Found previous revision for RFD");
+
+            // Note that we can only compare this revision with the existing one if the existing
+            // one represents a different commit. It could happen that a commit is processed twice:
+            // if that were to happen, the difference between the existing and new revision would
+            // be nothing, mistaking the revision as a minor change.
+            if existing.revision.commit == remote.commit {
+                existing.revision.major_change
+            } else {
+                is_major_change(
+                    &existing
+                        .content()
+                        .map_err(RfdUpdaterError::ContentOfExistingRfd)?
+                        .content,
+                    &remote.readme.content,
+                )
+            }
         } else {
             tracing::info!(number = ?update.number, "No previous revisions found for RFD");
-        }
+
+            // The first revision should always be a major change.
+            true
+        };
 
         // Update the RFD in the database.
-        let mut persisted = remote.upsert(&ctx.db.storage).await?;
+        let mut persisted = remote.upsert(&ctx.db.storage, major_change).await?;
 
         tracing::info!(id = ?persisted.rfd.id, number = ?persisted.rfd.rfd_number, "Upserted RFD in to the database");
 
@@ -356,4 +378,8 @@ impl From<Vec<RfdUpdateActionResponse>> for RfdUpdateActionResponse {
 pub enum RfdUpdateActionErr {
     Continue(Box<dyn std::error::Error + Send>),
     Stop(Box<dyn std::error::Error + Send>),
+}
+
+fn is_major_change(old: &RfdContent, new: &RfdContent) -> bool {
+    old.body() != new.body() || old.get_state() != new.get_state()
 }

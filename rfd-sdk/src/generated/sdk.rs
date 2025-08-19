@@ -3526,6 +3526,13 @@ pub mod types {
     ///    "id": {
     ///      "$ref": "#/components/schemas/TypedUuidForRfdId"
     ///    },
+    ///    "latest_major_change_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
     ///    "link": {
     ///      "type": [
     ///        "string",
@@ -3560,6 +3567,9 @@ pub mod types {
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub id: TypedUuidForRfdId,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub latest_major_change_at:
+            ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub link: ::std::option::Option<::std::string::String>,
         pub rfd_number: i32,
@@ -4568,6 +4578,7 @@ pub mod types {
     ///    "content_format",
     ///    "created_at",
     ///    "id",
+    ///    "major_change",
     ///    "rfd_id",
     ///    "sha",
     ///    "title",
@@ -4619,6 +4630,9 @@ pub mod types {
     ///        "null"
     ///      ]
     ///    },
+    ///    "major_change": {
+    ///      "type": "boolean"
+    ///    },
     ///    "rfd_id": {
     ///      "$ref": "#/components/schemas/TypedUuidForRfdId"
     ///    },
@@ -4663,6 +4677,7 @@ pub mod types {
         pub id: TypedUuidForRfdRevisionId,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub labels: ::std::option::Option<::std::string::String>,
+        pub major_change: bool,
         pub rfd_id: TypedUuidForRfdId,
         pub sha: FileSha,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
@@ -5016,6 +5031,13 @@ pub mod types {
     ///        "null"
     ///      ]
     ///    },
+    ///    "latest_major_change_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
     ///    "link": {
     ///      "type": [
     ///        "string",
@@ -5082,6 +5104,9 @@ pub mod types {
         pub id: TypedUuidForRfdId,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub labels: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub latest_major_change_at:
+            ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub link: ::std::option::Option<::std::string::String>,
         pub rfd_number: i32,
@@ -5185,6 +5210,13 @@ pub mod types {
     ///        "null"
     ///      ]
     ///    },
+    ///    "latest_major_change_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
     ///    "link": {
     ///      "type": [
     ///        "string",
@@ -5252,6 +5284,9 @@ pub mod types {
         pub id: TypedUuidForRfdId,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub labels: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub latest_major_change_at:
+            ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub link: ::std::option::Option<::std::string::String>,
         pub rfd_number: i32,
@@ -5349,6 +5384,13 @@ pub mod types {
     ///        "null"
     ///      ]
     ///    },
+    ///    "latest_major_change_at": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ],
+    ///      "format": "date-time"
+    ///    },
     ///    "link": {
     ///      "type": [
     ///        "string",
@@ -5414,6 +5456,9 @@ pub mod types {
         pub id: TypedUuidForRfdId,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub labels: ::std::option::Option<::std::string::String>,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub latest_major_change_at:
+            ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub link: ::std::option::Option<::std::string::String>,
         pub rfd_number: i32,
@@ -11376,6 +11421,10 @@ pub mod types {
                 ::std::string::String,
             >,
             id: ::std::result::Result<super::TypedUuidForRfdId, ::std::string::String>,
+            latest_major_change_at: ::std::result::Result<
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+                ::std::string::String,
+            >,
             link: ::std::result::Result<
                 ::std::option::Option<::std::string::String>,
                 ::std::string::String,
@@ -11395,6 +11444,7 @@ pub mod types {
                     created_at: Err("no value supplied for created_at".to_string()),
                     deleted_at: Ok(Default::default()),
                     id: Err("no value supplied for id".to_string()),
+                    latest_major_change_at: Ok(Default::default()),
                     link: Ok(Default::default()),
                     rfd_number: Err("no value supplied for rfd_number".to_string()),
                     updated_at: Err("no value supplied for updated_at".to_string()),
@@ -11444,6 +11494,21 @@ pub mod types {
                 self.id = value
                     .try_into()
                     .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn latest_major_change_at<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+                >,
+                T::Error: ::std::fmt::Display,
+            {
+                self.latest_major_change_at = value.try_into().map_err(|e| {
+                    format!(
+                        "error converting supplied value for latest_major_change_at: {}",
+                        e
+                    )
+                });
                 self
             }
             pub fn link<T>(mut self, value: T) -> Self
@@ -11496,6 +11561,7 @@ pub mod types {
                     created_at: value.created_at?,
                     deleted_at: value.deleted_at?,
                     id: value.id?,
+                    latest_major_change_at: value.latest_major_change_at?,
                     link: value.link?,
                     rfd_number: value.rfd_number?,
                     updated_at: value.updated_at?,
@@ -11511,6 +11577,7 @@ pub mod types {
                     created_at: Ok(value.created_at),
                     deleted_at: Ok(value.deleted_at),
                     id: Ok(value.id),
+                    latest_major_change_at: Ok(value.latest_major_change_at),
                     link: Ok(value.link),
                     rfd_number: Ok(value.rfd_number),
                     updated_at: Ok(value.updated_at),
@@ -11780,6 +11847,7 @@ pub mod types {
                 ::std::option::Option<::std::string::String>,
                 ::std::string::String,
             >,
+            major_change: ::std::result::Result<bool, ::std::string::String>,
             rfd_id: ::std::result::Result<super::TypedUuidForRfdId, ::std::string::String>,
             sha: ::std::result::Result<super::FileSha, ::std::string::String>,
             state: ::std::result::Result<
@@ -11806,6 +11874,7 @@ pub mod types {
                     discussion: Ok(Default::default()),
                     id: Err("no value supplied for id".to_string()),
                     labels: Ok(Default::default()),
+                    major_change: Err("no value supplied for major_change".to_string()),
                     rfd_id: Err("no value supplied for rfd_id".to_string()),
                     sha: Err("no value supplied for sha".to_string()),
                     state: Ok(Default::default()),
@@ -11918,6 +11987,16 @@ pub mod types {
                     .map_err(|e| format!("error converting supplied value for labels: {}", e));
                 self
             }
+            pub fn major_change<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<bool>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.major_change = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for major_change: {}", e)
+                });
+                self
+            }
             pub fn rfd_id<T>(mut self, value: T) -> Self
             where
                 T: ::std::convert::TryInto<super::TypedUuidForRfdId>,
@@ -11986,6 +12065,7 @@ pub mod types {
                     discussion: value.discussion?,
                     id: value.id?,
                     labels: value.labels?,
+                    major_change: value.major_change?,
                     rfd_id: value.rfd_id?,
                     sha: value.sha?,
                     state: value.state?,
@@ -12008,6 +12088,7 @@ pub mod types {
                     discussion: Ok(value.discussion),
                     id: Ok(value.id),
                     labels: Ok(value.labels),
+                    major_change: Ok(value.major_change),
                     rfd_id: Ok(value.rfd_id),
                     sha: Ok(value.sha),
                     state: Ok(value.state),
@@ -12214,6 +12295,10 @@ pub mod types {
                 ::std::option::Option<::std::string::String>,
                 ::std::string::String,
             >,
+            latest_major_change_at: ::std::result::Result<
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+                ::std::string::String,
+            >,
             link: ::std::result::Result<
                 ::std::option::Option<::std::string::String>,
                 ::std::string::String,
@@ -12243,6 +12328,7 @@ pub mod types {
                     format: Ok(Default::default()),
                     id: Err("no value supplied for id".to_string()),
                     labels: Ok(Default::default()),
+                    latest_major_change_at: Ok(Default::default()),
                     link: Ok(Default::default()),
                     rfd_number: Err("no value supplied for rfd_number".to_string()),
                     sha: Ok(Default::default()),
@@ -12336,6 +12422,21 @@ pub mod types {
                     .map_err(|e| format!("error converting supplied value for labels: {}", e));
                 self
             }
+            pub fn latest_major_change_at<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+                >,
+                T::Error: ::std::fmt::Display,
+            {
+                self.latest_major_change_at = value.try_into().map_err(|e| {
+                    format!(
+                        "error converting supplied value for latest_major_change_at: {}",
+                        e
+                    )
+                });
+                self
+            }
             pub fn link<T>(mut self, value: T) -> Self
             where
                 T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
@@ -12412,6 +12513,7 @@ pub mod types {
                     format: value.format?,
                     id: value.id?,
                     labels: value.labels?,
+                    latest_major_change_at: value.latest_major_change_at?,
                     link: value.link?,
                     rfd_number: value.rfd_number?,
                     sha: value.sha?,
@@ -12433,6 +12535,7 @@ pub mod types {
                     format: Ok(value.format),
                     id: Ok(value.id),
                     labels: Ok(value.labels),
+                    latest_major_change_at: Ok(value.latest_major_change_at),
                     link: Ok(value.link),
                     rfd_number: Ok(value.rfd_number),
                     sha: Ok(value.sha),
@@ -12474,6 +12577,10 @@ pub mod types {
                 ::std::option::Option<::std::string::String>,
                 ::std::string::String,
             >,
+            latest_major_change_at: ::std::result::Result<
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+                ::std::string::String,
+            >,
             link: ::std::result::Result<
                 ::std::option::Option<::std::string::String>,
                 ::std::string::String,
@@ -12503,6 +12610,7 @@ pub mod types {
                     format: Ok(Default::default()),
                     id: Err("no value supplied for id".to_string()),
                     labels: Ok(Default::default()),
+                    latest_major_change_at: Ok(Default::default()),
                     link: Ok(Default::default()),
                     rfd_number: Err("no value supplied for rfd_number".to_string()),
                     sha: Ok(Default::default()),
@@ -12596,6 +12704,21 @@ pub mod types {
                     .map_err(|e| format!("error converting supplied value for labels: {}", e));
                 self
             }
+            pub fn latest_major_change_at<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+                >,
+                T::Error: ::std::fmt::Display,
+            {
+                self.latest_major_change_at = value.try_into().map_err(|e| {
+                    format!(
+                        "error converting supplied value for latest_major_change_at: {}",
+                        e
+                    )
+                });
+                self
+            }
             pub fn link<T>(mut self, value: T) -> Self
             where
                 T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
@@ -12672,6 +12795,7 @@ pub mod types {
                     format: value.format?,
                     id: value.id?,
                     labels: value.labels?,
+                    latest_major_change_at: value.latest_major_change_at?,
                     link: value.link?,
                     rfd_number: value.rfd_number?,
                     sha: value.sha?,
@@ -12693,6 +12817,7 @@ pub mod types {
                     format: Ok(value.format),
                     id: Ok(value.id),
                     labels: Ok(value.labels),
+                    latest_major_change_at: Ok(value.latest_major_change_at),
                     link: Ok(value.link),
                     rfd_number: Ok(value.rfd_number),
                     sha: Ok(value.sha),
@@ -12730,6 +12855,10 @@ pub mod types {
                 ::std::option::Option<::std::string::String>,
                 ::std::string::String,
             >,
+            latest_major_change_at: ::std::result::Result<
+                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+                ::std::string::String,
+            >,
             link: ::std::result::Result<
                 ::std::option::Option<::std::string::String>,
                 ::std::string::String,
@@ -12758,6 +12887,7 @@ pub mod types {
                     format: Ok(Default::default()),
                     id: Err("no value supplied for id".to_string()),
                     labels: Ok(Default::default()),
+                    latest_major_change_at: Ok(Default::default()),
                     link: Ok(Default::default()),
                     rfd_number: Err("no value supplied for rfd_number".to_string()),
                     sha: Ok(Default::default()),
@@ -12841,6 +12971,21 @@ pub mod types {
                     .map_err(|e| format!("error converting supplied value for labels: {}", e));
                 self
             }
+            pub fn latest_major_change_at<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<
+                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
+                >,
+                T::Error: ::std::fmt::Display,
+            {
+                self.latest_major_change_at = value.try_into().map_err(|e| {
+                    format!(
+                        "error converting supplied value for latest_major_change_at: {}",
+                        e
+                    )
+                });
+                self
+            }
             pub fn link<T>(mut self, value: T) -> Self
             where
                 T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
@@ -12916,6 +13061,7 @@ pub mod types {
                     format: value.format?,
                     id: value.id?,
                     labels: value.labels?,
+                    latest_major_change_at: value.latest_major_change_at?,
                     link: value.link?,
                     rfd_number: value.rfd_number?,
                     sha: value.sha?,
@@ -12936,6 +13082,7 @@ pub mod types {
                     format: Ok(value.format),
                     id: Ok(value.id),
                     labels: Ok(value.labels),
+                    latest_major_change_at: Ok(value.latest_major_change_at),
                     link: Ok(value.link),
                     rfd_number: Ok(value.rfd_number),
                     sha: Ok(value.sha),
@@ -13201,7 +13348,7 @@ pub mod types {
 ///
 /// Programmatic access to RFDs
 ///
-/// Version: 0.12.0
+/// Version: 0.12.1
 pub struct Client {
     pub(crate) baseurl: String,
     pub(crate) client: reqwest::Client,
@@ -13242,7 +13389,7 @@ impl Client {
 
 impl ClientInfo<()> for Client {
     fn api_version() -> &'static str {
-        "0.12.0"
+        "0.12.1"
     }
 
     fn baseurl(&self) -> &str {

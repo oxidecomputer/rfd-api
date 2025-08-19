@@ -4,9 +4,11 @@
 
 use async_bb8_diesel::AsyncRunQueryDsl;
 use async_trait::async_trait;
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use diesel::{
-    debug_query, insert_into,
+    debug_query,
+    dsl::max,
+    insert_into,
     pg::Pg,
     query_dsl::QueryDsl,
     sql_query,
@@ -16,7 +18,7 @@ use diesel::{
     BoolExpressionMethods, BoxableExpression, ExpressionMethods, NullableExpressionMethods,
 };
 use newtype_uuid::{GenericUuid, TypedUuid};
-use std::collections::{btree_map::Entry, BTreeMap};
+use std::collections::{btree_map::Entry, BTreeMap, HashMap};
 use tap::TapFallible;
 use tracing::instrument;
 use uuid::Uuid;
@@ -24,8 +26,8 @@ use v_model::storage::postgres::PostgresStore;
 
 use crate::{
     db::{
-        JobModel, RfdMetaJoinRow, RfdModel, RfdPdfJoinRow, RfdPdfModel, RfdRevisionMetaModel,
-        RfdRevisionModel, RfdRevisionPdfModel,
+        JobModel, RfdLatestMajorChange, RfdMetaJoinRow, RfdModel, RfdPdfJoinRow, RfdPdfModel,
+        RfdRevisionMetaModel, RfdRevisionModel, RfdRevisionPdfModel,
     },
     schema::{job, rfd, rfd_pdf, rfd_revision},
     schema_ext::Visibility,
@@ -155,10 +157,38 @@ impl RfdStore for PostgresStore {
         tracing::trace!(count = ?results.len(), "Found RFDs");
         tracing::trace!("Done list rfd query");
 
+        // I found it quite hard to get the time of the last major change of an RFD in a single
+        // query **using Diesel**. This is the only reason why we are doing a separate query.
+        tracing::trace!("Retrieving latest major changes");
+        let rfd_ids = results
+            .iter()
+            .map(|(rfd, _)| rfd.id.clone())
+            .collect::<Vec<_>>();
+        let latest_major_changes = rfd_revision::table
+            .group_by(rfd_revision::rfd_id)
+            .select((rfd_revision::rfd_id, max(rfd_revision::committed_at)))
+            .filter(rfd_revision::rfd_id.eq_any(rfd_ids))
+            .filter(rfd_revision::major_change.eq(true))
+            .get_results_async::<(Uuid, Option<DateTime<Utc>>)>(
+                &*self.pool.get().await.tap_err(|err| {
+                    tracing::error!(?err, "Failed to acquire database connection")
+                })?,
+            )
+            .await?
+            .into_iter()
+            .filter_map(|(id, committed_at)| committed_at.map(|c| (id, c)))
+            .collect::<HashMap<_, _>>();
+        tracing::trace!(count = ?latest_major_changes.len(), "Found latest major changes");
+
         Ok(results
             .into_iter()
             .map(|(rfd, revision)| match revision {
-                Some(revision) => (rfd, revision).into(),
+                Some(revision) => {
+                    let latest_major_change = RfdLatestMajorChange {
+                        committed_at: latest_major_changes.get(&rfd.id).cloned(),
+                    };
+                    (rfd, latest_major_change, revision).into()
+                }
                 None => rfd.into(),
             })
             .collect())
@@ -340,12 +370,23 @@ impl RfdMetaStore for PostgresStore {
             rfd_revision.created_at as revision_created_at,
             rfd_revision.updated_at as revision_updated_at,
             rfd_revision.deleted_at as revision_deleted_at,
-            rfd_revision.labels as revision_labels
+            rfd_revision.labels as revision_labels,
+            rfd_revision.major_change as revision_major_change,
+            latest_major_revision.committed_at as latest_major_change_at
         FROM
             rfd
         INNER JOIN
             rfd_revision
             ON rfd_revision.rfd_id = rfd.id
+        LEFT JOIN
+            rfd_revision as latest_major_revision
+            ON latest_major_revision.id = (
+                SELECT rfd_revision.id
+                FROM rfd_revision
+                WHERE rfd_revision.rfd_id = rfd.id AND rfd_revision.major_change = TRUE
+                ORDER BY rfd_revision.committed_at DESC
+                LIMIT 1
+            )
         WHERE {} AND
             rfd_revision.id = (
                 SELECT rfd_revision.id
@@ -423,7 +464,7 @@ impl RfdMetaStore for PostgresStore {
                 .await?;
         let results = rows
             .into_iter()
-            .map(|row| <(RfdModel, RfdRevisionMetaModel)>::from(row).into())
+            .map(|row| <(RfdModel, RfdLatestMajorChange, RfdRevisionMetaModel)>::from(row).into())
             .collect::<Vec<_>>();
 
         tracing::trace!(count = ?results.len(), "Found RFDs");
@@ -569,7 +610,9 @@ impl RfdPdfsStore for PostgresStore {
             rfd_revision.created_at as revision_created_at,
             rfd_revision.updated_at as revision_updated_at,
             rfd_revision.deleted_at as revision_deleted_at,
-            rfd_revision.labels as revision_labels
+            rfd_revision.labels as revision_labels,
+            rfd_revision.major_change as revision_major_change,
+            latest_major_revision.committed_at as latest_major_change_at
         FROM
             rfd
         INNER JOIN
@@ -578,6 +621,15 @@ impl RfdPdfsStore for PostgresStore {
         INNER JOIN
             rfd_pdf
             ON rfd_revision.id = rfd_pdf.rfd_revision_id
+        LEFT JOIN
+            rfd_revision as latest_major_revision
+            ON latest_major_revision.id = (
+                SELECT rfd_revision.id
+                FROM rfd_revision
+                WHERE rfd_revision.rfd_id = rfd.id AND rfd_revision.major_change = TRUE
+                ORDER BY rfd_revision.committed_at DESC
+                LIMIT 1
+            )
         WHERE {} AND
             rfd_revision.id = (
                 SELECT rfd_revision.id
@@ -655,10 +707,10 @@ impl RfdPdfsStore for PostgresStore {
                 .await?;
         let results = rows
             .into_iter()
-            .map(|row| <(RfdModel, RfdRevisionPdfModel)>::from(row))
+            .map(|row| <(RfdModel, RfdLatestMajorChange, RfdRevisionPdfModel)>::from(row))
             .fold(
                 BTreeMap::<TypedUuid<RfdId>, RfdPdfs>::default(),
-                |mut map, (rfd_model, revision_model)| {
+                |mut map, (rfd_model, latest_major_change, revision_model)| {
                     let entry = map.entry(TypedUuid::from_untyped_uuid(rfd_model.id));
                     match entry {
                         Entry::Occupied(mut existing) => {
@@ -671,7 +723,7 @@ impl RfdPdfsStore for PostgresStore {
                                 .push(revision_model.content.into());
                         }
                         Entry::Vacant(empty) => {
-                            empty.insert((rfd_model, revision_model).into());
+                            empty.insert((rfd_model, latest_major_change, revision_model).into());
                         }
                     };
                     map
@@ -789,6 +841,7 @@ impl RfdRevisionStore for PostgresStore {
                     rfd_revision::sha.eq(String::from(new_revision.sha)),
                     rfd_revision::commit_sha.eq(String::from(new_revision.commit)),
                     rfd_revision::committed_at.eq(new_revision.committed_at.clone()),
+                    rfd_revision::major_change.eq(new_revision.major_change),
                 ))
                 .on_conflict(rfd_revision::id)
                 .do_update()
@@ -802,6 +855,7 @@ impl RfdRevisionStore for PostgresStore {
                     rfd_revision::content.eq(excluded(rfd_revision::content)),
                     rfd_revision::content_format.eq(excluded(rfd_revision::content_format)),
                     rfd_revision::sha.eq(excluded(rfd_revision::sha)),
+                    rfd_revision::major_change.eq(excluded(rfd_revision::major_change)),
                     rfd_revision::commit_sha.eq(rfd_revision::commit_sha),
                     rfd_revision::committed_at.eq(excluded(rfd_revision::committed_at)),
                     rfd_revision::updated_at.eq(Utc::now()),
@@ -870,6 +924,7 @@ impl RfdRevisionMetaStore for PostgresStore {
                 rfd_revision::updated_at,
                 rfd_revision::deleted_at,
                 rfd_revision::labels,
+                rfd_revision::major_change,
             ))
             .into_boxed();
 
@@ -991,6 +1046,7 @@ impl RfdRevisionPdfStore for PostgresStore {
                 rfd_revision::updated_at,
                 rfd_revision::deleted_at,
                 rfd_revision::labels,
+                rfd_revision::major_change,
             ))
             .into_boxed();
 

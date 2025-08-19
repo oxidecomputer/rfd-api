@@ -84,6 +84,7 @@ diesel::table! {
         updated_at -> Timestamptz,
         deleted_at -> Nullable<Timestamptz>,
         labels -> Nullable<Varchar>,
+        major_change -> Bool,
     }
 }
 
