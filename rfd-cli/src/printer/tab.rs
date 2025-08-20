@@ -101,6 +101,10 @@ impl CliOutput for RfdTabPrinter {
         self.print_cli_output(&value, None);
     }
 
+    fn output_rfd_meta(&self, value: types::RfdWithoutContent) {
+        self.print_cli_output(&value, None);
+    }
+
     fn output_rfd_list(&self, value: Vec<types::RfdWithoutContent>) {
         self.print_cli_output(&value, Some("rfds".to_string()));
     }
@@ -162,6 +166,15 @@ impl TabDisplay for types::Rfd {
         printer.print_field(tw, level, "id", &self.id);
         printer.print_field(tw, level, "rfd_number", &self.rfd_number);
         printer.print_field(tw, level, "visibility", &self.visibility.to_string());
+        printer.print_field(
+            tw,
+            level,
+            "latest_major_change_at",
+            &self
+                .latest_major_change_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
         printer.print_field(
             tw,
             level,
@@ -484,6 +497,15 @@ impl TabDisplay for RfdWithoutContent {
                 .map(|d| d.to_string())
                 .unwrap_or_else(|| "--".to_string()),
         );
+        printer.print_field(
+            tw,
+            level,
+            "latest_major_change_at",
+            &self
+                .latest_major_change_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
     }
 }
 
@@ -554,6 +576,15 @@ impl TabDisplay for RfdWithRaw {
             "committed_at",
             &self
                 .committed_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
+        printer.print_field(
+            tw,
+            level,
+            "latest_major_change_at",
+            &self
+                .latest_major_change_at
                 .map(|d| d.to_string())
                 .unwrap_or_else(|| "--".to_string()),
         );
