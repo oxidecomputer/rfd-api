@@ -603,6 +603,16 @@ export const RfdPdf = z.preprocess(
   }),
 )
 
+export const RfdRevisionMeta = z.preprocess(
+  processResponseBody,
+  z.object({
+    'commitSha': CommitSha,
+    'committedAt': z.coerce.date(),
+    'id': TypedUuidForRfdRevisionId,
+    'majorChange': SafeBoolean,
+  }),
+)
+
 export const RfdUpdateBody = z.preprocess(
   processResponseBody,
   z.object({ 'document': z.string(), 'message': z.string().optional() }),
@@ -700,6 +710,8 @@ export const SearchResults = z.preprocess(
     'query': z.string(),
   }),
 )
+
+export const UpdateRfdAttrBody = z.preprocess(processResponseBody, z.object({ 'majorChange': SafeBoolean.optional() }))
 
 export const RfdAttrName = z.preprocess(processResponseBody, z.enum(['discussion', 'labels', 'state']))
 
@@ -1246,7 +1258,31 @@ export const SetRfdDocumentParams = z.preprocess(
   }),
 )
 
+export const ListRfdRevisionsParams = z.preprocess(
+  processResponseBody,
+  z.object({
+    path: z.object({
+      number: z.string(),
+    }),
+    query: z.object({
+      limit: z.number().optional(),
+      offset: z.number().optional(),
+    }),
+  }),
+)
+
 export const ViewRfdRevisionMetaParams = z.preprocess(
+  processResponseBody,
+  z.object({
+    path: z.object({
+      number: z.string(),
+      revision: TypedUuidForRfdRevisionId,
+    }),
+    query: z.object({}),
+  }),
+)
+
+export const UpdateRfdRevisionParams = z.preprocess(
   processResponseBody,
   z.object({
     path: z.object({
