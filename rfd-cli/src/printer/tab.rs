@@ -10,8 +10,8 @@ use rfd_sdk::types::{
     Error, GetUserResponseForRfdPermission, InitialApiKeyResponseForRfdPermission,
     InitialMagicLinkSecretResponse, InitialOAuthClientSecretResponse, Job, MagicLink,
     MagicLinkRedirectUri, MagicLinkSecret, Mapper, OAuthClient, OAuthClientRedirectUri,
-    OAuthClientSecret, PermissionsForRfdPermission, ReserveRfdResponse, RfdAttr, RfdWithRaw,
-    RfdWithoutContent, SearchResultHit, SearchResults, Visibility,
+    OAuthClientSecret, PermissionsForRfdPermission, ReserveRfdResponse, RfdAttr, RfdRevisionMeta,
+    RfdWithRaw, RfdWithoutContent, SearchResultHit, SearchResults, Visibility,
 };
 use std::{collections::HashMap, fmt::Display, fs::File, io::Write, process::Command};
 use tabwriter::TabWriter;
@@ -115,6 +115,14 @@ impl CliOutput for RfdTabPrinter {
 
     fn output_rfd_attr(&self, value: types::RfdAttr) {
         self.print_cli_output(&value, None);
+    }
+
+    fn output_rfd_revision_meta(&self, value: types::RfdRevisionMeta) {
+        self.print_cli_output(&value, None);
+    }
+
+    fn output_rfd_revision_meta_list(&self, value: Vec<types::RfdRevisionMeta>) {
+        self.print_cli_output(&value, Some("revisions".to_string()));
     }
 
     fn output_search_results(&self, value: types::SearchResults) {
@@ -561,6 +569,15 @@ impl TabDisplay for RfdWithRaw {
         if let Some(content) = &self.content {
             writeln!(tw, "{}", content);
         }
+    }
+}
+
+impl TabDisplay for RfdRevisionMeta {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "revision_id", &self.id.to_string());
+        printer.print_field(tw, level, "commit_sha", &self.commit_sha.to_string());
+        printer.print_field(tw, level, "committed_at", &self.committed_at.to_string());
+        printer.print_field(tw, level, "major_change", &self.major_change.to_string());
     }
 }
 

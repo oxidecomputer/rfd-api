@@ -139,11 +139,14 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::ViewRfdPdf => Some("pdf"),
         CliCommand::SearchRfds => Some("search"),
 
+        CliCommand::ListRfdRevisions => Some("revision list"),
+        CliCommand::ListRfdRevisions => Some("revision list"),
         CliCommand::ViewRfdRevision => Some("revision view"),
         CliCommand::ViewRfdRevisionMeta => Some("revision meta"),
         CliCommand::ViewRfdRevisionAttr => Some("revision attr"),
         CliCommand::ViewRfdRevisionDiscussion => Some("revision discussion"),
         CliCommand::ViewRfdRevisionPdf => Some("revision pdf"),
+        CliCommand::UpdateRfdRevision => Some("revision update"),
 
         CliCommand::ReserveRfd => Some("reserve"),
 
@@ -439,6 +442,14 @@ impl ProgenitorCliConfig for Context {
                 .unwrap()
                 .output_search_results(reserialize(value)),
             "RfdAttr" => self.printer().unwrap().output_rfd_attr(reserialize(value)),
+            "RfdRevisionMeta" => self
+                .printer()
+                .unwrap()
+                .output_rfd_revision_meta(reserialize(value)),
+            "Array_of_RfdRevisionMeta" => self
+                .printer()
+                .unwrap()
+                .output_rfd_revision_meta_list(reserialize(value)),
             "ReserveRfdResponse" => self
                 .printer()
                 .unwrap()

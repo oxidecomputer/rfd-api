@@ -35,6 +35,8 @@ pub trait CliOutput {
     fn output_rfd_full(&self, value: types::RfdWithRaw) {}
     fn output_rfd(&self, value: types::Rfd) {}
     fn output_rfd_attr(&self, value: types::RfdAttr) {}
+    fn output_rfd_revision_meta(&self, value: types::RfdRevisionMeta) {}
+    fn output_rfd_revision_meta_list(&self, value: Vec<types::RfdRevisionMeta>) {}
     fn output_search_results(&self, value: types::SearchResults) {}
     fn output_reserved_rfd(&self, value: types::ReserveRfdResponse) {}
     fn output_job_list(&self, value: Vec<types::Job>) {}
@@ -189,6 +191,20 @@ impl CliOutput for Printer {
         match self {
             Self::Json(printer) => printer.output_rfd_attr(value),
             Self::Tab(printer) => printer.output_rfd_attr(value),
+        }
+    }
+
+    fn output_rfd_revision_meta(&self, value: types::RfdRevisionMeta) {
+        match self {
+            Self::Json(printer) => printer.output_rfd_revision_meta(value),
+            Self::Tab(printer) => printer.output_rfd_revision_meta(value),
+        }
+    }
+
+    fn output_rfd_revision_meta_list(&self, value: Vec<types::RfdRevisionMeta>) {
+        match self {
+            Self::Json(printer) => printer.output_rfd_revision_meta_list(value),
+            Self::Tab(printer) => printer.output_rfd_revision_meta_list(value),
         }
     }
 
