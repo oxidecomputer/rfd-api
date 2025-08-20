@@ -430,6 +430,7 @@ impl ProgenitorCliConfig for Context {
                 .printer()
                 .unwrap()
                 .output_oauth_secret(reserialize(value)),
+            "RfdWithoutContent" => self.printer().unwrap().output_rfd_meta(reserialize(value)),
             "Array_of_RfdWithoutContent" => {
                 self.printer().unwrap().output_rfd_list(reserialize(value))
             }

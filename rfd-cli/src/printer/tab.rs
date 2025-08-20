@@ -101,6 +101,10 @@ impl CliOutput for RfdTabPrinter {
         self.print_cli_output(&value, None);
     }
 
+    fn output_rfd_meta(&self, value: types::RfdWithoutContent) {
+        self.print_cli_output(&value, None);
+    }
+
     fn output_rfd_list(&self, value: Vec<types::RfdWithoutContent>) {
         self.print_cli_output(&value, Some("rfds".to_string()));
     }
