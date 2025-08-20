@@ -2119,6 +2119,63 @@
         }
       }
     },
+    "/rfd/{number}/revision": {
+      "get": {
+        "summary": "List all revisions of an RFD",
+        "operationId": "list_rfd_revisions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "nullable": true,
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "nullable": true,
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Array_of_RfdRevisionMeta",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RfdRevisionMeta"
+                  }
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
     "/rfd/{number}/revision/{revision}": {
       "get": {
         "summary": "Get an RFD revision's metadata",
@@ -4568,6 +4625,30 @@
           "sha",
           "title",
           "updated_at"
+        ]
+      },
+      "RfdRevisionMeta": {
+        "type": "object",
+        "properties": {
+          "commit_sha": {
+            "$ref": "#/components/schemas/CommitSha"
+          },
+          "committed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "$ref": "#/components/schemas/TypedUuidForRfdRevisionId"
+          },
+          "major_change": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "commit_sha",
+          "committed_at",
+          "id",
+          "major_change"
         ]
       },
       "RfdState": {

@@ -20,11 +20,15 @@ use serde::{Deserialize, Serialize};
 use trace_request::trace_request;
 use tracing::instrument;
 use v_api::{response::not_found, ApiContext};
-use v_model::permissions::Caller;
+use v_model::{permissions::Caller, storage::ListPagination};
 
 use crate::{
     caller::CallerExt,
-    context::{RfdContext, RfdRevisionIdentifier, RfdWithPdf, RfdWithRaw, RfdWithoutContent},
+    context::{
+        RfdContext, RfdRevisionIdentifier, RfdRevisionMeta, RfdWithPdf, RfdWithRaw,
+        RfdWithoutContent,
+    },
+    endpoints::UNLIMITED,
     permissions::RfdPermission,
     search::{MeiliSearchResult, SearchRequest},
     util::response::{client_error, internal_error, unauthorized},
@@ -180,6 +184,30 @@ pub async fn view_rfd_discussion(
 }
 
 // Specific RFD revision endpoints
+
+#[derive(Debug, Deserialize, JsonSchema)]
+pub struct ListRevisionQuery {
+    limit: Option<i64>,
+    offset: Option<i64>,
+}
+
+/// List all revisions of an RFD
+#[trace_request]
+#[endpoint {
+    method = GET,
+    path = "/rfd/{number}/revision"
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn list_rfd_revisions(
+    rqctx: RequestContext<RfdContext>,
+    path: Path<RfdPathParams>,
+    query: Query<ListRevisionQuery>,
+) -> Result<HttpResponseOk<Vec<RfdRevisionMeta>>, HttpError> {
+    let ctx = rqctx.context();
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let number = path.into_inner().number;
+    list_rfd_revisions_op(ctx, &caller, number, query.into_inner()).await
+}
 
 /// Get an RFD revision's metadata
 #[trace_request]
@@ -338,6 +366,32 @@ async fn list_rfds_op(
 ) -> Result<HttpResponseOk<Vec<RfdWithoutContent>>, HttpError> {
     let rfds = ctx.list_rfds(caller, None).await?;
     Ok(HttpResponseOk(rfds))
+}
+
+#[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
+async fn list_rfd_revisions_op(
+    ctx: &RfdContext,
+    caller: &Caller<RfdPermission>,
+    number: String,
+    query: ListRevisionQuery,
+) -> Result<HttpResponseOk<Vec<RfdRevisionMeta>>, HttpError> {
+    if let Ok(rfd_number) = number.parse::<i32>() {
+        Ok(HttpResponseOk(
+            ctx.list_revisions(
+                caller,
+                rfd_number,
+                &ListPagination::default()
+                    .limit(query.limit.unwrap_or(UNLIMITED))
+                    .offset(query.offset.unwrap_or(0)),
+            )
+            .await?,
+        ))
+    } else {
+        Err(client_error(
+            ClientErrorStatusCode::BAD_REQUEST,
+            "Malformed RFD number",
+        ))
+    }
 }
 
 #[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]

@@ -17,7 +17,10 @@ use rfd_data::{
 use rfd_github::{GitHubError, GitHubNewRfdNumber, GitHubRfdRepo};
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
-    storage::{JobFilter, JobStore, RfdFilter, RfdMetaStore, RfdPdfsStore, RfdStorage, RfdStore},
+    storage::{
+        JobFilter, JobStore, RfdFilter, RfdMetaStore, RfdPdfsStore, RfdRevisionFilter,
+        RfdRevisionStore, RfdStorage, RfdStore,
+    },
     CommitSha, FileSha, Job, NewJob, Rfd, RfdId, RfdMeta, RfdPdf, RfdPdfs, RfdRevision,
     RfdRevisionId,
 };
@@ -92,6 +95,25 @@ pub enum UpdateRfdContentError {
     NoDefaultBranch,
     #[error(transparent)]
     Storage(#[from] StoreError),
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
+pub struct RfdRevisionMeta {
+    pub id: TypedUuid<RfdRevisionId>,
+    pub commit_sha: CommitSha,
+    pub committed_at: DateTime<Utc>,
+    pub major_change: bool,
+}
+
+impl From<RfdRevision> for RfdRevisionMeta {
+    fn from(value: RfdRevision) -> Self {
+        Self {
+            id: value.id,
+            commit_sha: value.commit,
+            committed_at: value.committed_at,
+            major_change: value.major_change,
+        }
+    }
 }
 
 #[partial(RfdWithoutContent)]
@@ -457,6 +479,32 @@ impl RfdContext {
         rfd_list.sort_by(|a, b| b.rfd_number.cmp(&a.rfd_number));
 
         Ok(rfd_list)
+    }
+
+    #[instrument(skip(self, caller))]
+    pub async fn list_revisions(
+        &self,
+        caller: &Caller<RfdPermission>,
+        rfd_number: i32,
+        pagination: &ListPagination,
+    ) -> ResourceResult<Vec<RfdRevisionMeta>, StoreError> {
+        let rfd = self.get_rfd(caller, rfd_number, None).await?;
+
+        let filter = RfdRevisionFilter::default().rfd(Some(vec![rfd.id]));
+        if caller.can(&RfdPermission::GetRfdsAll)
+            || caller.can(&RfdPermission::GetRfd(rfd_number))
+            || rfd.visibility == Visibility::Public
+        {
+            Ok(
+                RfdRevisionStore::list(&*self.storage, vec![filter], pagination)
+                    .await?
+                    .into_iter()
+                    .map(|rev| rev.into())
+                    .collect(),
+            )
+        } else {
+            resource_not_found()
+        }
     }
 
     #[instrument(skip(self, caller))]
