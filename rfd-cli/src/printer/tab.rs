@@ -165,6 +165,15 @@ impl TabDisplay for types::Rfd {
         printer.print_field(
             tw,
             level,
+            "latest_major_change_at",
+            &self
+                .latest_major_change_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
+        printer.print_field(
+            tw,
+            level,
             "link",
             &self.link.as_ref().map(|s| s.as_str()).unwrap_or(""),
         );
@@ -484,6 +493,15 @@ impl TabDisplay for RfdWithoutContent {
                 .map(|d| d.to_string())
                 .unwrap_or_else(|| "--".to_string()),
         );
+        printer.print_field(
+            tw,
+            level,
+            "latest_major_change_at",
+            &self
+                .latest_major_change_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
     }
 }
 
@@ -554,6 +572,15 @@ impl TabDisplay for RfdWithRaw {
             "committed_at",
             &self
                 .committed_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
+        printer.print_field(
+            tw,
+            level,
+            "latest_major_change_at",
+            &self
+                .latest_major_change_at
                 .map(|d| d.to_string())
                 .unwrap_or_else(|| "--".to_string()),
         );
