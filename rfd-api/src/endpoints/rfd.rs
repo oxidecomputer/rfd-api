@@ -25,8 +25,8 @@ use v_model::{permissions::Caller, storage::ListPagination};
 use crate::{
     caller::CallerExt,
     context::{
-        RfdContext, RfdRevisionIdentifier, RfdRevisionMeta, RfdWithPdf, RfdWithRaw,
-        RfdWithoutContent,
+        RfdContext, RfdRevisionIdentifier, RfdRevisionMeta, RfdRevisionMetadataChange, RfdWithPdf,
+        RfdWithRaw, RfdWithoutContent,
     },
     endpoints::UNLIMITED,
     permissions::RfdPermission,
@@ -857,6 +857,59 @@ pub async fn publish_rfd(
         },
     )
     .await
+}
+
+#[derive(Debug, Clone, Deserialize, JsonSchema)]
+pub struct UpdateRfdAttrBody {
+    major_change: Option<bool>,
+}
+
+/// Update the metadata of an RFD's revision
+#[trace_request]
+#[endpoint {
+    method = PATCH,
+    path = "/rfd/{number}/revision/{revision}",
+}]
+#[instrument(skip(rqctx), fields(request_id = rqctx.request_id), err(Debug))]
+pub async fn update_rfd_revision(
+    rqctx: RequestContext<RfdContext>,
+    path: Path<RfdRevisionPathParams>,
+    body: TypedBody<UpdateRfdAttrBody>,
+) -> Result<HttpResponseOk<RfdRevisionMeta>, HttpError> {
+    let ctx = rqctx.context();
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let path = path.into_inner();
+    update_rfd_revision_op(ctx, &caller, path.number, path.revision, body.into_inner()).await
+}
+
+async fn update_rfd_revision_op(
+    ctx: &RfdContext,
+    caller: &Caller<RfdPermission>,
+    rfd_number: String,
+    revision: TypedUuid<RfdRevisionId>,
+    raw_changes: UpdateRfdAttrBody,
+) -> Result<HttpResponseOk<RfdRevisionMeta>, HttpError> {
+    let Ok(rfd_number) = rfd_number.parse::<i32>() else {
+        return Err(client_error(
+            ClientErrorStatusCode::BAD_REQUEST,
+            "Malformed RFD number",
+        ));
+    };
+
+    // Destructuring to ensure we get an error if a new field is added without being handled.
+    // Make sure to add an `if let` statement later in the fuction when adding a new field.
+    let UpdateRfdAttrBody { major_change } = raw_changes;
+
+    let mut changes = Vec::new();
+    if let Some(major_change) = major_change {
+        changes.push(RfdRevisionMetadataChange::MajorChange(major_change));
+    }
+
+    Ok(HttpResponseOk(
+        ctx.update_rfd_revision_metadata(caller, rfd_number, revision, &changes)
+            .await?
+            .into(),
+    ))
 }
 
 fn extract_attr(attr: &RfdAttrName, content: &RfdContent) -> Result<RfdAttr, HttpError> {

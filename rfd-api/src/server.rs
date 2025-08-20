@@ -18,10 +18,10 @@ use crate::{
         job::list_jobs,
         rfd::{
             discuss_rfd, list_rfd_revisions, list_rfds, publish_rfd, reserve_rfd, search_rfds,
-            set_rfd_attr, set_rfd_content, set_rfd_document, update_rfd_visibility, view_rfd,
-            view_rfd_attr, view_rfd_discussion, view_rfd_meta, view_rfd_pdf, view_rfd_revision,
-            view_rfd_revision_attr, view_rfd_revision_discussion, view_rfd_revision_meta,
-            view_rfd_revision_pdf,
+            set_rfd_attr, set_rfd_content, set_rfd_document, update_rfd_revision,
+            update_rfd_visibility, view_rfd, view_rfd_attr, view_rfd_discussion, view_rfd_meta,
+            view_rfd_pdf, view_rfd_revision, view_rfd_revision_attr, view_rfd_revision_discussion,
+            view_rfd_revision_meta, view_rfd_revision_pdf,
         },
         webhook::github_webhook,
     },
@@ -119,6 +119,8 @@ pub fn server(
     api.register(publish_rfd)
         .expect("Failed to register endpoint");
     api.register(update_rfd_visibility)
+        .expect("Failed to register endpoint");
+    api.register(update_rfd_revision)
         .expect("Failed to register endpoint");
 
     api.register(list_jobs)

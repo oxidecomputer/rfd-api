@@ -2218,6 +2218,58 @@
             "$ref": "#/components/responses/Error"
           }
         }
+      },
+      "patch": {
+        "summary": "Update the metadata of an RFD's revision",
+        "operationId": "update_rfd_revision",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "number",
+            "description": "The RFD number (examples: 1 or 123)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "revision",
+            "description": "The revision id of the RFD",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TypedUuidForRfdRevisionId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRfdAttrBody"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RfdRevisionMeta"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
       }
     },
     "/rfd/{number}/revision/{revision}/attr/{attr}": {
@@ -5105,6 +5157,15 @@
       "TypedUuidForWebhookDeliveryId": {
         "type": "string",
         "format": "uuid"
+      },
+      "UpdateRfdAttrBody": {
+        "type": "object",
+        "properties": {
+          "major_change": {
+            "nullable": true,
+            "type": "boolean"
+          }
+        }
       },
       "Visibility": {
         "type": "string",

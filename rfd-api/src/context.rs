@@ -19,10 +19,10 @@ use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
     storage::{
         JobFilter, JobStore, RfdFilter, RfdMetaStore, RfdPdfsStore, RfdRevisionFilter,
-        RfdRevisionStore, RfdStorage, RfdStore,
+        RfdRevisionMetaStore, RfdRevisionStore, RfdStorage, RfdStore,
     },
-    CommitSha, FileSha, Job, NewJob, Rfd, RfdId, RfdMeta, RfdPdf, RfdPdfs, RfdRevision,
-    RfdRevisionId,
+    CommitSha, FileSha, Job, NewJob, NewRfdRevision, Rfd, RfdId, RfdMeta, RfdPdf, RfdPdfs,
+    RfdRevision, RfdRevisionId,
 };
 use rsa::{
     pkcs1::{DecodeRsaPrivateKey, EncodeRsaPrivateKey},
@@ -287,6 +287,11 @@ impl From<TypedUuid<RfdRevisionId>> for RfdRevisionIdentifier {
     fn from(value: TypedUuid<RfdRevisionId>) -> Self {
         Self::Id(value)
     }
+}
+
+#[derive(Debug, Clone)]
+pub enum RfdRevisionMetadataChange {
+    MajorChange(bool),
 }
 
 impl RfdContext {
@@ -866,6 +871,43 @@ impl RfdContext {
         } else {
             resource_restricted()
         }
+    }
+
+    #[instrument(skip(self, caller))]
+    pub async fn update_rfd_revision_metadata(
+        &self,
+        caller: &Caller<RfdPermission>,
+        rfd_number: i32,
+        id: TypedUuid<RfdRevisionId>,
+        changes: &[RfdRevisionMetadataChange],
+    ) -> ResourceResult<RfdRevision, StoreError> {
+        if !caller.can(&RfdPermission::UpdateRfdsAll)
+            && !caller.can(&RfdPermission::UpdateRfd(rfd_number))
+        {
+            return resource_not_found();
+        }
+
+        let rfd = self.get_rfd(caller, rfd_number, None).await?;
+        let Some(revision) = RfdRevisionStore::get(&*self.storage, &id, false).await? else {
+            return resource_not_found();
+        };
+
+        // Someone is trying to access a revision from a different RFD than the one they claim to
+        // request, probably to bypass access control.
+        if revision.rfd_id != rfd.id {
+            return resource_not_found();
+        }
+
+        let mut to_update = NewRfdRevision::from(revision);
+        for change in changes {
+            match change {
+                RfdRevisionMetadataChange::MajorChange(major_change) => {
+                    to_update.major_change = *major_change;
+                }
+            }
+        }
+
+        Ok(RfdRevisionStore::upsert(&*self.storage, to_update).await?)
     }
 
     // Job Operations
