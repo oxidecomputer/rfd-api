@@ -74,7 +74,9 @@ impl<T: CliConfig> Cli<T> {
             CliCommand::ViewRfdPdf => Self::cli_view_rfd_pdf(),
             CliCommand::ViewRfd => Self::cli_view_rfd(),
             CliCommand::SetRfdDocument => Self::cli_set_rfd_document(),
+            CliCommand::ListRfdRevisions => Self::cli_list_rfd_revisions(),
             CliCommand::ViewRfdRevisionMeta => Self::cli_view_rfd_revision_meta(),
+            CliCommand::UpdateRfdRevision => Self::cli_update_rfd_revision(),
             CliCommand::ViewRfdRevisionAttr => Self::cli_view_rfd_revision_attr(),
             CliCommand::ViewRfdRevisionDiscussion => Self::cli_view_rfd_revision_discussion(),
             CliCommand::ViewRfdRevisionPdf => Self::cli_view_rfd_revision_pdf(),
@@ -1308,6 +1310,30 @@ impl<T: CliConfig> Cli<T> {
             .about("Replace the full document of a RFD")
     }
 
+    pub fn cli_list_rfd_revisions() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("limit")
+                    .long("limit")
+                    .value_parser(::clap::value_parser!(i64))
+                    .required(false),
+            )
+            .arg(
+                ::clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
+            )
+            .arg(
+                ::clap::Arg::new("offset")
+                    .long("offset")
+                    .value_parser(::clap::value_parser!(i64))
+                    .required(false),
+            )
+            .about("List all revisions of an RFD")
+    }
+
     pub fn cli_view_rfd_revision_meta() -> ::clap::Command {
         ::clap::Command::new("")
             .arg(
@@ -1325,6 +1351,45 @@ impl<T: CliConfig> Cli<T> {
                     .help("The revision id of the RFD"),
             )
             .about("Get an RFD revision's metadata")
+    }
+
+    pub fn cli_update_rfd_revision() -> ::clap::Command {
+        ::clap::Command::new("")
+            .arg(
+                ::clap::Arg::new("major-change")
+                    .long("major-change")
+                    .value_parser(::clap::value_parser!(bool))
+                    .required(false),
+            )
+            .arg(
+                ::clap::Arg::new("number")
+                    .long("number")
+                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .required(true)
+                    .help("The RFD number (examples: 1 or 123)"),
+            )
+            .arg(
+                ::clap::Arg::new("revision")
+                    .long("revision")
+                    .value_parser(::clap::value_parser!(types::TypedUuidForRfdRevisionId))
+                    .required(true)
+                    .help("The revision id of the RFD"),
+            )
+            .arg(
+                ::clap::Arg::new("json-body")
+                    .long("json-body")
+                    .value_name("JSON-FILE")
+                    .required(false)
+                    .value_parser(::clap::value_parser!(std::path::PathBuf))
+                    .help("Path to a file that contains the full json body."),
+            )
+            .arg(
+                ::clap::Arg::new("json-body-template")
+                    .long("json-body-template")
+                    .action(::clap::ArgAction::SetTrue)
+                    .help("XXX"),
+            )
+            .about("Update the metadata of an RFD's revision")
     }
 
     pub fn cli_view_rfd_revision_attr() -> ::clap::Command {
@@ -1605,7 +1670,9 @@ impl<T: CliConfig> Cli<T> {
             CliCommand::ViewRfdPdf => self.execute_view_rfd_pdf(matches).await,
             CliCommand::ViewRfd => self.execute_view_rfd(matches).await,
             CliCommand::SetRfdDocument => self.execute_set_rfd_document(matches).await,
+            CliCommand::ListRfdRevisions => self.execute_list_rfd_revisions(matches).await,
             CliCommand::ViewRfdRevisionMeta => self.execute_view_rfd_revision_meta(matches).await,
+            CliCommand::UpdateRfdRevision => self.execute_update_rfd_revision(matches).await,
             CliCommand::ViewRfdRevisionAttr => self.execute_view_rfd_revision_attr(matches).await,
             CliCommand::ViewRfdRevisionDiscussion => {
                 self.execute_view_rfd_revision_discussion(matches).await
@@ -3174,6 +3241,38 @@ impl<T: CliConfig> Cli<T> {
         }
     }
 
+    pub async fn execute_list_rfd_revisions(
+        &self,
+        matches: &::clap::ArgMatches,
+    ) -> anyhow::Result<()> {
+        let mut request = self.client.list_rfd_revisions();
+        if let Some(value) = matches.get_one::<i64>("limit") {
+            request = request.limit(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
+            request = request.number(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<i64>("offset") {
+            request = request.offset(value.clone());
+        }
+
+        self.config
+            .execute_list_rfd_revisions(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.success_item(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
     pub async fn execute_view_rfd_revision_meta(
         &self,
         matches: &::clap::ArgMatches,
@@ -3189,6 +3288,44 @@ impl<T: CliConfig> Cli<T> {
 
         self.config
             .execute_view_rfd_revision_meta(matches, &mut request)?;
+        let result = request.send().await;
+        match result {
+            Ok(r) => {
+                self.config.success_item(&r);
+                Ok(())
+            }
+            Err(r) => {
+                self.config.error(&r);
+                Err(anyhow::Error::new(r))
+            }
+        }
+    }
+
+    pub async fn execute_update_rfd_revision(
+        &self,
+        matches: &::clap::ArgMatches,
+    ) -> anyhow::Result<()> {
+        let mut request = self.client.update_rfd_revision();
+        if let Some(value) = matches.get_one::<bool>("major-change") {
+            request = request.body_map(|body| body.major_change(value.clone()))
+        }
+
+        if let Some(value) = matches.get_one::<::std::string::String>("number") {
+            request = request.number(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<types::TypedUuidForRfdRevisionId>("revision") {
+            request = request.revision(value.clone());
+        }
+
+        if let Some(value) = matches.get_one::<std::path::PathBuf>("json-body") {
+            let body_txt = std::fs::read_to_string(value).unwrap();
+            let body_value = serde_json::from_str::<types::UpdateRfdAttrBody>(&body_txt).unwrap();
+            request = request.body(body_value);
+        }
+
+        self.config
+            .execute_update_rfd_revision(matches, &mut request)?;
         let result = request.send().await;
         match result {
             Ok(r) => {
@@ -3909,10 +4046,26 @@ pub trait CliConfig {
         Ok(())
     }
 
+    fn execute_list_rfd_revisions(
+        &self,
+        matches: &::clap::ArgMatches,
+        request: &mut builder::ListRfdRevisions,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
     fn execute_view_rfd_revision_meta(
         &self,
         matches: &::clap::ArgMatches,
         request: &mut builder::ViewRfdRevisionMeta,
+    ) -> anyhow::Result<()> {
+        Ok(())
+    }
+
+    fn execute_update_rfd_revision(
+        &self,
+        matches: &::clap::ArgMatches,
+        request: &mut builder::UpdateRfdRevision,
     ) -> anyhow::Result<()> {
         Ok(())
     }
@@ -4047,7 +4200,9 @@ pub enum CliCommand {
     ViewRfdPdf,
     ViewRfd,
     SetRfdDocument,
+    ListRfdRevisions,
     ViewRfdRevisionMeta,
+    UpdateRfdRevision,
     ViewRfdRevisionAttr,
     ViewRfdRevisionDiscussion,
     ViewRfdRevisionPdf,
@@ -4117,7 +4272,9 @@ impl CliCommand {
             CliCommand::ViewRfdPdf,
             CliCommand::ViewRfd,
             CliCommand::SetRfdDocument,
+            CliCommand::ListRfdRevisions,
             CliCommand::ViewRfdRevisionMeta,
+            CliCommand::UpdateRfdRevision,
             CliCommand::ViewRfdRevisionAttr,
             CliCommand::ViewRfdRevisionDiscussion,
             CliCommand::ViewRfdRevisionPdf,

@@ -95,6 +95,14 @@ impl CliOutput for RfdJsonPrinter {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 
+    fn output_rfd_revision_meta(&self, value: types::RfdRevisionMeta) {
+        println!("{}", serde_json::to_string(&value).unwrap())
+    }
+
+    fn output_rfd_revision_meta_list(&self, value: Vec<types::RfdRevisionMeta>) {
+        println!("{}", serde_json::to_string(&value).unwrap())
+    }
+
     fn output_reserved_rfd(&self, value: types::ReserveRfdResponse) {
         println!("{}", serde_json::to_string(&value).unwrap())
     }

@@ -4698,6 +4698,62 @@ pub mod types {
         }
     }
 
+    /// `RfdRevisionMeta`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "commit_sha",
+    ///    "committed_at",
+    ///    "id",
+    ///    "major_change"
+    ///  ],
+    ///  "properties": {
+    ///    "commit_sha": {
+    ///      "$ref": "#/components/schemas/CommitSha"
+    ///    },
+    ///    "committed_at": {
+    ///      "type": "string",
+    ///      "format": "date-time"
+    ///    },
+    ///    "id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForRfdRevisionId"
+    ///    },
+    ///    "major_change": {
+    ///      "type": "boolean"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct RfdRevisionMeta {
+        pub commit_sha: CommitSha,
+        pub committed_at: ::chrono::DateTime<::chrono::offset::Utc>,
+        pub id: TypedUuidForRfdRevisionId,
+        pub major_change: bool,
+    }
+
+    impl ::std::convert::From<&RfdRevisionMeta> for RfdRevisionMeta {
+        fn from(value: &RfdRevisionMeta) -> Self {
+            value.clone()
+        }
+    }
+
+    impl RfdRevisionMeta {
+        pub fn builder() -> builder::RfdRevisionMeta {
+            Default::default()
+        }
+    }
+
     /// `RfdState`
     ///
     /// <details><summary>JSON schema</summary>
@@ -6942,6 +6998,55 @@ pub mod types {
     impl ::std::fmt::Display for TypedUuidForWebhookDeliveryId {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             self.0.fmt(f)
+        }
+    }
+
+    /// `UpdateRfdAttrBody`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "properties": {
+    ///    "major_change": {
+    ///      "type": [
+    ///        "boolean",
+    ///        "null"
+    ///      ]
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct UpdateRfdAttrBody {
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub major_change: ::std::option::Option<bool>,
+    }
+
+    impl ::std::convert::From<&UpdateRfdAttrBody> for UpdateRfdAttrBody {
+        fn from(value: &UpdateRfdAttrBody) -> Self {
+            value.clone()
+        }
+    }
+
+    impl ::std::default::Default for UpdateRfdAttrBody {
+        fn default() -> Self {
+            Self {
+                major_change: Default::default(),
+            }
+        }
+    }
+
+    impl UpdateRfdAttrBody {
+        pub fn builder() -> builder::UpdateRfdAttrBody {
+            Default::default()
         }
     }
 
@@ -12099,6 +12204,96 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
+        pub struct RfdRevisionMeta {
+            commit_sha: ::std::result::Result<super::CommitSha, ::std::string::String>,
+            committed_at: ::std::result::Result<
+                ::chrono::DateTime<::chrono::offset::Utc>,
+                ::std::string::String,
+            >,
+            id: ::std::result::Result<super::TypedUuidForRfdRevisionId, ::std::string::String>,
+            major_change: ::std::result::Result<bool, ::std::string::String>,
+        }
+
+        impl ::std::default::Default for RfdRevisionMeta {
+            fn default() -> Self {
+                Self {
+                    commit_sha: Err("no value supplied for commit_sha".to_string()),
+                    committed_at: Err("no value supplied for committed_at".to_string()),
+                    id: Err("no value supplied for id".to_string()),
+                    major_change: Err("no value supplied for major_change".to_string()),
+                }
+            }
+        }
+
+        impl RfdRevisionMeta {
+            pub fn commit_sha<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::CommitSha>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.commit_sha = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for commit_sha: {}", e));
+                self
+            }
+            pub fn committed_at<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.committed_at = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for committed_at: {}", e)
+                });
+                self
+            }
+            pub fn id<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::TypedUuidForRfdRevisionId>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                self
+            }
+            pub fn major_change<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<bool>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.major_change = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for major_change: {}", e)
+                });
+                self
+            }
+        }
+
+        impl ::std::convert::TryFrom<RfdRevisionMeta> for super::RfdRevisionMeta {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: RfdRevisionMeta,
+            ) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    commit_sha: value.commit_sha?,
+                    committed_at: value.committed_at?,
+                    id: value.id?,
+                    major_change: value.major_change?,
+                })
+            }
+        }
+
+        impl ::std::convert::From<super::RfdRevisionMeta> for RfdRevisionMeta {
+            fn from(value: super::RfdRevisionMeta) -> Self {
+                Self {
+                    commit_sha: Ok(value.commit_sha),
+                    committed_at: Ok(value.committed_at),
+                    id: Ok(value.id),
+                    major_change: Ok(value.major_change),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
         pub struct RfdUpdateBody {
             document: ::std::result::Result<::std::string::String, ::std::string::String>,
             message: ::std::result::Result<
@@ -13340,6 +13535,51 @@ pub mod types {
                 }
             }
         }
+
+        #[derive(Clone, Debug)]
+        pub struct UpdateRfdAttrBody {
+            major_change: ::std::result::Result<::std::option::Option<bool>, ::std::string::String>,
+        }
+
+        impl ::std::default::Default for UpdateRfdAttrBody {
+            fn default() -> Self {
+                Self {
+                    major_change: Ok(Default::default()),
+                }
+            }
+        }
+
+        impl UpdateRfdAttrBody {
+            pub fn major_change<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::option::Option<bool>>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.major_change = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for major_change: {}", e)
+                });
+                self
+            }
+        }
+
+        impl ::std::convert::TryFrom<UpdateRfdAttrBody> for super::UpdateRfdAttrBody {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: UpdateRfdAttrBody,
+            ) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    major_change: value.major_change?,
+                })
+            }
+        }
+
+        impl ::std::convert::From<super::UpdateRfdAttrBody> for UpdateRfdAttrBody {
+            fn from(value: super::UpdateRfdAttrBody) -> Self {
+                Self {
+                    major_change: Ok(value.major_change),
+                }
+            }
+        }
     }
 }
 
@@ -13348,7 +13588,7 @@ pub mod types {
 ///
 /// Programmatic access to RFDs
 ///
-/// Version: 0.12.1
+/// Version: 0.12.2
 pub struct Client {
     pub(crate) baseurl: String,
     pub(crate) client: reqwest::Client,
@@ -13389,7 +13629,7 @@ impl Client {
 
 impl ClientInfo<()> for Client {
     fn api_version() -> &'static str {
-        "0.12.1"
+        "0.12.2"
     }
 
     fn baseurl(&self) -> &str {
@@ -14214,6 +14454,26 @@ impl Client {
         builder::SetRfdDocument::new(self)
     }
 
+    /// List all revisions of an RFD
+    ///
+    /// Sends a `GET` request to `/rfd/{number}/revision`
+    ///
+    /// Arguments:
+    /// - `number`: The RFD number (examples: 1 or 123)
+    /// - `limit`
+    /// - `offset`
+    /// ```ignore
+    /// let response = client.list_rfd_revisions()
+    ///    .number(number)
+    ///    .limit(limit)
+    ///    .offset(offset)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn list_rfd_revisions(&self) -> builder::ListRfdRevisions {
+        builder::ListRfdRevisions::new(self)
+    }
+
     /// Get an RFD revision's metadata
     ///
     /// Sends a `GET` request to `/rfd/{number}/revision/{revision}`
@@ -14230,6 +14490,26 @@ impl Client {
     /// ```
     pub fn view_rfd_revision_meta(&self) -> builder::ViewRfdRevisionMeta {
         builder::ViewRfdRevisionMeta::new(self)
+    }
+
+    /// Update the metadata of an RFD's revision
+    ///
+    /// Sends a `PATCH` request to `/rfd/{number}/revision/{revision}`
+    ///
+    /// Arguments:
+    /// - `number`: The RFD number (examples: 1 or 123)
+    /// - `revision`: The revision id of the RFD
+    /// - `body`
+    /// ```ignore
+    /// let response = client.update_rfd_revision()
+    ///    .number(number)
+    ///    .revision(revision)
+    ///    .body(body)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn update_rfd_revision(&self) -> builder::UpdateRfdRevision {
+        builder::UpdateRfdRevision::new(self)
     }
 
     /// Get the an attribute of a revision of a RFD
@@ -19184,6 +19464,115 @@ pub mod builder {
         }
     }
 
+    /// Builder for [`Client::list_rfd_revisions`]
+    ///
+    /// [`Client::list_rfd_revisions`]: super::Client::list_rfd_revisions
+    #[derive(Debug, Clone)]
+    pub struct ListRfdRevisions<'a> {
+        client: &'a super::Client,
+        number: Result<::std::string::String, String>,
+        limit: Result<Option<i64>, String>,
+        offset: Result<Option<i64>, String>,
+    }
+
+    impl<'a> ListRfdRevisions<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                number: Err("number was not initialized".to_string()),
+                limit: Ok(None),
+                offset: Ok(None),
+            }
+        }
+
+        pub fn number<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<::std::string::String>,
+        {
+            self.number = value.try_into().map_err(|_| {
+                "conversion to `:: std :: string :: String` for number failed".to_string()
+            });
+            self
+        }
+
+        pub fn limit<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<i64>,
+        {
+            self.limit = value
+                .try_into()
+                .map(Some)
+                .map_err(|_| "conversion to `i64` for limit failed".to_string());
+            self
+        }
+
+        pub fn offset<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<i64>,
+        {
+            self.offset = value
+                .try_into()
+                .map(Some)
+                .map_err(|_| "conversion to `i64` for offset failed".to_string());
+            self
+        }
+
+        /// Sends a `GET` request to `/rfd/{number}/revision`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<::std::vec::Vec<types::RfdRevisionMeta>>, Error<types::Error>>
+        {
+            let Self {
+                client,
+                number,
+                limit,
+                offset,
+            } = self;
+            let number = number.map_err(Error::InvalidRequest)?;
+            let limit = limit.map_err(Error::InvalidRequest)?;
+            let offset = offset.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/rfd/{}/revision",
+                client.baseurl,
+                encode_path(&number.to_string()),
+            );
+            let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+            header_map.append(
+                ::reqwest::header::HeaderName::from_static("api-version"),
+                ::reqwest::header::HeaderValue::from_static(super::Client::api_version()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .get(url)
+                .header(
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .query(&progenitor_client::QueryParam::new("limit", &limit))
+                .query(&progenitor_client::QueryParam::new("offset", &offset))
+                .headers(header_map)
+                .build()?;
+            let info = OperationInfo {
+                operation_id: "list_rfd_revisions",
+            };
+            client.pre(&mut request, &info).await?;
+            let result = client.exec(request, &info).await;
+            client.post(&result, &info).await?;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
     /// Builder for [`Client::view_rfd_revision_meta`]
     ///
     /// [`Client::view_rfd_revision_meta`]: super::Client::view_rfd_revision_meta
@@ -19257,6 +19646,126 @@ pub mod builder {
                 .build()?;
             let info = OperationInfo {
                 operation_id: "view_rfd_revision_meta",
+            };
+            client.pre(&mut request, &info).await?;
+            let result = client.exec(request, &info).await;
+            client.post(&result, &info).await?;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::update_rfd_revision`]
+    ///
+    /// [`Client::update_rfd_revision`]: super::Client::update_rfd_revision
+    #[derive(Debug, Clone)]
+    pub struct UpdateRfdRevision<'a> {
+        client: &'a super::Client,
+        number: Result<::std::string::String, String>,
+        revision: Result<types::TypedUuidForRfdRevisionId, String>,
+        body: Result<types::builder::UpdateRfdAttrBody, String>,
+    }
+
+    impl<'a> UpdateRfdRevision<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                number: Err("number was not initialized".to_string()),
+                revision: Err("revision was not initialized".to_string()),
+                body: Ok(::std::default::Default::default()),
+            }
+        }
+
+        pub fn number<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<::std::string::String>,
+        {
+            self.number = value.try_into().map_err(|_| {
+                "conversion to `:: std :: string :: String` for number failed".to_string()
+            });
+            self
+        }
+
+        pub fn revision<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::TypedUuidForRfdRevisionId>,
+        {
+            self.revision = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForRfdRevisionId` for revision failed".to_string()
+            });
+            self
+        }
+
+        pub fn body<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::UpdateRfdAttrBody>,
+            <V as std::convert::TryInto<types::UpdateRfdAttrBody>>::Error: std::fmt::Display,
+        {
+            self.body = value
+                .try_into()
+                .map(From::from)
+                .map_err(|s| format!("conversion to `UpdateRfdAttrBody` for body failed: {}", s));
+            self
+        }
+
+        pub fn body_map<F>(mut self, f: F) -> Self
+        where
+            F: std::ops::FnOnce(
+                types::builder::UpdateRfdAttrBody,
+            ) -> types::builder::UpdateRfdAttrBody,
+        {
+            self.body = self.body.map(f);
+            self
+        }
+
+        /// Sends a `PATCH` request to `/rfd/{number}/revision/{revision}`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::RfdRevisionMeta>, Error<types::Error>> {
+            let Self {
+                client,
+                number,
+                revision,
+                body,
+            } = self;
+            let number = number.map_err(Error::InvalidRequest)?;
+            let revision = revision.map_err(Error::InvalidRequest)?;
+            let body = body
+                .and_then(|v| types::UpdateRfdAttrBody::try_from(v).map_err(|e| e.to_string()))
+                .map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/rfd/{}/revision/{}",
+                client.baseurl,
+                encode_path(&number.to_string()),
+                encode_path(&revision.to_string()),
+            );
+            let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+            header_map.append(
+                ::reqwest::header::HeaderName::from_static("api-version"),
+                ::reqwest::header::HeaderValue::from_static(super::Client::api_version()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .patch(url)
+                .header(
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .json(&body)
+                .headers(header_map)
+                .build()?;
+            let info = OperationInfo {
+                operation_id: "update_rfd_revision",
             };
             client.pre(&mut request, &info).await?;
             let result = client.exec(request, &info).await;

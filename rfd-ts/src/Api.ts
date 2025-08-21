@@ -477,6 +477,13 @@ export type RfdPdf = {
   'updatedAt': Date
 }
 
+export type RfdRevisionMeta = {
+  'commitSha': CommitSha
+  'committedAt': Date
+  'id': TypedUuidForRfdRevisionId
+  'majorChange': boolean
+}
+
 export type RfdUpdateBody = {
   /** Full Asciidoc document to store for this RFD */
   'document': string
@@ -558,6 +565,8 @@ export type SearchResultHit = {
 }
 
 export type SearchResults = { 'hits': SearchResultHit[]; 'limit'?: number; 'offset'?: number; 'query': string }
+
+export type UpdateRfdAttrBody = { 'majorChange'?: boolean }
 
 export type RfdAttrName =
   | 'discussion'
@@ -753,7 +762,21 @@ export interface SetRfdDocumentPathParams {
   number: string
 }
 
+export interface ListRfdRevisionsPathParams {
+  number: string
+}
+
+export interface ListRfdRevisionsQueryParams {
+  limit?: number
+  offset?: number
+}
+
 export interface ViewRfdRevisionMetaPathParams {
+  number: string
+  revision: TypedUuidForRfdRevisionId
+}
+
+export interface UpdateRfdRevisionPathParams {
   number: string
   revision: TypedUuidForRfdRevisionId
 }
@@ -1482,6 +1505,20 @@ export class Api extends HttpClient {
       })
     },
     /**
+     * List all revisions of an RFD
+     */
+    listRfdRevisions: ({
+      path,
+      query = {},
+    }: { path: ListRfdRevisionsPathParams; query?: ListRfdRevisionsQueryParams }, params: FetchParams = {}) => {
+      return this.request<RfdRevisionMeta[]>({
+        path: `/rfd/${path.number}/revision`,
+        method: 'GET',
+        query,
+        ...params,
+      })
+    },
+    /**
      * Get an RFD revision's metadata
      */
     viewRfdRevisionMeta: ({
@@ -1490,6 +1527,20 @@ export class Api extends HttpClient {
       return this.request<RfdWithoutContent>({
         path: `/rfd/${path.number}/revision/${path.revision}`,
         method: 'GET',
+        ...params,
+      })
+    },
+    /**
+     * Update the metadata of an RFD's revision
+     */
+    updateRfdRevision: ({
+      path,
+      body,
+    }: { path: UpdateRfdRevisionPathParams; body: UpdateRfdAttrBody }, params: FetchParams = {}) => {
+      return this.request<RfdRevisionMeta>({
+        path: `/rfd/${path.number}/revision/${path.revision}`,
+        method: 'PATCH',
+        body,
         ...params,
       })
     },
