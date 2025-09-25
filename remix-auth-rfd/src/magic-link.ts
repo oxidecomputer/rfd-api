@@ -7,8 +7,7 @@
 //  */
 
 import { Api, ApiResult, GetUserResponse_for_RfdPermission } from '@oxide/rfd.ts/client'
-import type { SessionStorage } from '@remix-run/server-runtime'
-import { redirect } from '@remix-run/server-runtime'
+import { redirect, type SessionStorage } from 'react-router'
 import { Strategy } from 'remix-auth/strategy'
 
 import { RfdScope } from '.'
