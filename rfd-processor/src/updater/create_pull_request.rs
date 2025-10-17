@@ -32,12 +32,12 @@ impl RfdUpdateAction for CreatePullRequest {
             ..
         } = ctx;
 
-        // We only ever create pull requests if the RFD is in the discussion state, we are not
+        // We only ever create pull requests if the RFD is in the discussion or ideation state, we are not
         // handling an update on the default branch, and there are no previous pull requests for
         // for this branch. This includes Closed pull requests, therefore this action will not
         // re-open or create a new pull request for a branch that previously had an open PR
         if update.location.branch != update.location.default_branch
-            && new.is_state("discussion")
+            && (new.is_state("discussion") || new.is_state("ideation"))
             && pull_requests.is_empty()
         {
             tracing::info!("RFD is in the discussion state but there are no open pull requests, creating a new pull request");
