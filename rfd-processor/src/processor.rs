@@ -11,7 +11,10 @@ use rfd_model::{
 use std::sync::Arc;
 use tap::TapFallible;
 use thiserror::Error;
-use tokio::time::interval;
+use tokio::{
+    sync::{AcquireError, Semaphore},
+    time::interval,
+};
 use tracing::instrument;
 use v_model::storage::{ListPagination, StoreError};
 
@@ -19,6 +22,8 @@ use crate::{context::Context, updater::RfdUpdater};
 
 #[derive(Debug, Error)]
 pub enum JobError {
+    #[error("Failed to acquire permit")]
+    Permit(#[from] AcquireError),
     #[error(transparent)]
     Storage(#[from] StoreError),
 }
@@ -26,6 +31,8 @@ pub enum JobError {
 pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
     let mut interval = interval(ctx.processor.interval);
     let pagination = ListPagination::default().limit(ctx.processor.batch_size);
+    let capacity = Arc::new(Semaphore::new(ctx.processor.capacity as usize));
+
     tracing::info!(?interval, ?pagination, "Starting processor");
 
     interval.tick().await;
@@ -49,10 +56,25 @@ pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
                 match JobStore::start(&ctx.db.storage, job.id).await {
                     Ok(Some(job)) => {
                         tracing::info!(job = ?job_id, "Spawning job");
-                        tokio::spawn(run_job(ctx.clone(), job).or_else(move |err| async move {
-                            tracing::error!(id = ?job_id, ?err, "Spawned job failed");
-                            Err(err)
-                        }));
+                        let capacity = capacity.clone();
+                        let ctx = ctx.clone();
+
+                        tokio::spawn(
+                            async move {
+                                tracing::info!(job = ?job_id, "Acquiring permit to run job");
+                                let permit = capacity.acquire().await?;
+                                let result = run_job(ctx, job).await;
+
+                                // Hold the permit until the job has reached a conclusion
+                                drop(permit);
+
+                                result
+                            }
+                            .or_else(move |err| async move {
+                                tracing::error!(id = ?job_id, ?err, "Spawned job failed");
+                                Err(err)
+                            }),
+                        );
                     }
                     Ok(None) => {
                         tracing::error!(?job, "Job that was scheduled to run has gone missing! Was it started by a different task?");
