@@ -319,6 +319,12 @@ When using `--format json`, responses include structured data. Key fields in RFD
 
 Ask the user if they want a quick answer or thorough research when the scope is ambiguous.
 
+**Getting a complete RFD index**: If you need to know what RFDs exist beyond the foundational list, fetch a complete index on-demand:
+```bash
+rfd-cli list --format json | jq -r '.[] | "\(.rfd_number): \(.title)"'
+```
+This returns all accessible RFD numbers and titles (~600+ RFDs). Only fetch this when needed, as it adds context overhead.
+
 ## Following Links and References
 
 When reading RFDs, behave like a researcher browsing documentation - follow links to build a complete picture:
