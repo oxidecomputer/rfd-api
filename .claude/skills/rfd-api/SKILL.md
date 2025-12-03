@@ -375,6 +375,29 @@ Write in a fluid, coherent, conversational style that seeks to help the reader u
 
 **Avoid vignetted quotes** - don't present a series of disconnected quotations with minimal connective tissue. Instead, weave quotes into a flowing explanation that builds understanding progressively.
 
+### Tone and Audience
+
+**Write for technical peers, not for marketing.**
+
+Your primary audience is Oxide employees and similarly skilled technical professionals. They:
+- Don't need to be convinced Oxide is impressive
+- Don't need superlatives or praise ("elegant", "beautiful", "particularly interesting")
+- Want to understand the architecture and reasoning, not be sold on it
+- Can recognize what's significant without you highlighting it
+
+**Be conversational, not formulaic.**
+- Avoid rigid structures like repeated "Why this mattered:" sections
+- Vary your language and phrasing naturally
+- Weave implications and significance into the narrative flow
+- Write like you're explaining something to a colleague, not presenting to an audience
+- Trust the reader to understand significance without explicit signposting
+
+**Show, don't evaluate.**
+- Explain what the architecture does and why choices were made
+- Let the design speak for itself
+- Avoid phrases like "elegantly solves", "clever trick", "genuinely novel"
+- Just describe the solution and its properties
+
 ### Core Principles
 
 **Honest About Tradeoffs**
