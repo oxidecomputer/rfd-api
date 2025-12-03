@@ -288,7 +288,14 @@ When using `--format json`, responses include structured data. Key fields in RFD
 2. **Use meta for quick lookups** when you just need basic info: `rfd-cli meta --number <N> --format json`
 3. **Use view for full content** when you need to read the actual document: `rfd-cli view --number <N> --format json`
 4. **Check discussion URLs** to find related GitHub PRs and conversations
-5. **Summarize findings** for the user - don't just dump raw JSON output
+5. **Quote liberally from RFDs** to support your explanations:
+   - Include direct quotes from RFDs to illustrate key points
+   - Use block quotes (>) for longer passages that capture important context
+   - Quote specific technical decisions, rationale, and determinations verbatim
+   - Include memorable phrases that capture Oxide's engineering philosophy
+   - Attribution is important: always cite the RFD number when quoting
+   - Direct quotes make answers more authoritative and help users understand the source material
+6. **Summarize findings** for the user - but supplement summaries with direct quotes for key points
 
 ## Research Strategies
 
