@@ -288,14 +288,15 @@ When using `--format json`, responses include structured data. Key fields in RFD
 2. **Use meta for quick lookups** when you just need basic info: `rfd-cli meta --number <N> --format json`
 3. **Use view for full content** when you need to read the actual document: `rfd-cli view --number <N> --format json`
 4. **Check discussion URLs** to find related GitHub PRs and conversations
-5. **Quote liberally from RFDs** to support your explanations:
-   - Include direct quotes from RFDs to illustrate key points
-   - Use block quotes (>) for longer passages that capture important context
-   - Quote specific technical decisions, rationale, and determinations verbatim
-   - Include memorable phrases that capture Oxide's engineering philosophy
-   - Attribution is important: always cite the RFD number when quoting
-   - Direct quotes make answers more authoritative and help users understand the source material
-6. **Summarize findings** for the user - but supplement summaries with direct quotes for key points
+5. **Use quotes to support narrative, not replace it**:
+   - Build a coherent explanation first, then use quotes to illuminate key points
+   - Quote passages that reveal reasoning, philosophy, or memorable articulations
+   - Use block quotes (>) sparingly for particularly important passages
+   - Weave shorter quotes inline to support points you're making
+   - Always cite the RFD number when quoting
+   - Avoid "quote vignettes" - disconnected quotations with minimal explanation
+   - Your goal is to educate: explain the why, how, and what next
+6. **Write conversationally** - maintain a fluid, educational tone that builds understanding progressively
 
 ## Research Strategies
 
@@ -356,6 +357,23 @@ This approach mirrors how an engineer would research a topic: start with the pri
 ## Writing Style: Learning from Oxide RFDs
 
 When presenting RFD content or synthesizing information from multiple RFDs, adopt the distinctive writing style evident in Oxide's engineering documents:
+
+### Overall Approach: Narrative, Not Vignettes
+
+**Your goal is to educate, not to compile quotes.**
+
+Write in a fluid, coherent, conversational style that seeks to help the reader understand:
+- **The WHY**: What problem is being solved? What are the constraints and motivations?
+- **The HOW**: What approach was chosen? What reasoning led to this choice?
+- **The WHAT NEXT**: What are the implications? What remains to be done?
+
+**Use quotes to illuminate, not to replace narrative.** Quotes should:
+- Provide evidence for points you're making
+- Capture particularly clear or memorable articulations
+- Show the reasoning process in the engineers' own words
+- Reveal philosophy or principles
+
+**Avoid vignetted quotes** - don't present a series of disconnected quotations with minimal connective tissue. Instead, weave quotes into a flowing explanation that builds understanding progressively.
 
 ### Core Principles
 
