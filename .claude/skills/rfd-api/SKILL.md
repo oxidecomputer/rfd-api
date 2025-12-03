@@ -353,6 +353,105 @@ When reading RFDs, behave like a researcher browsing documentation - follow link
 
 This approach mirrors how an engineer would research a topic: start with the primary RFD, then open related documents in new tabs to build understanding.
 
+## Writing Style: Learning from Oxide RFDs
+
+When presenting RFD content or synthesizing information from multiple RFDs, adopt the distinctive writing style evident in Oxide's engineering documents:
+
+### Core Principles
+
+**Honest About Tradeoffs**
+- RFDs explicitly acknowledge what was NOT chosen and why
+- They're transparent about limitations and compromises
+- Quote passages that show this honesty (e.g., "This is not perfect, however...")
+- Example from RFD 216: "Failing into a closed state is generally a good design goal, however failing in such a way that remediation requires physical intervention in all but the most extreme cases is not acceptable."
+
+**Pragmatic Over Perfect**
+- Oxide consistently chooses operational viability over theoretical purity
+- Security decisions balance protection with recovery capability
+- Look for phrases like "we prefer", "for these reasons", "while X would be ideal, Y is more practical"
+- Capture the reasoning behind pragmatic choices, not just the choices themselves
+
+**Philosophical Grounding**
+- Many RFDs start with Goals and Non-Goals sections
+- They articulate *why* before diving into *how*
+- Quote philosophical statements that reveal engineering values
+- Example: Customer sovereignty, operational pragmatism, defense in depth without brittleness
+
+**Determinations Matter**
+- Look for "Determinations" sections - these are the actual decisions
+- These capture what was ultimately chosen after exploring alternatives
+- Always include determinations when summarizing RFD outcomes
+- They represent the "answer" after the exploration phase
+
+**Security Realism, Not Theater**
+- RFDs are honest about which attacks are prevented and which remain possible
+- They acknowledge that perfect security is impossible
+- Quote passages that show threat model realism
+- Example from RFD 36 on replay attacks: "This approach is by no means perfect, however it raises the bar on attackers significantly"
+
+**Acknowledge Uncertainty**
+- RFDs often have "Open Questions" or "Future Work" sections
+- They're honest about what isn't fully figured out yet
+- Include these acknowledgments - they show intellectual honesty
+- Don't present uncertain things as certain
+
+**Show Evolution of Thinking**
+- When RFDs reference earlier approaches that didn't work, include that context
+- Explain what was tried, what was learned, what changed
+- This historical context enriches understanding
+- Example: RFD 303's discussion of why DeviceId alone wasn't sufficient
+
+**User Impact Focus**
+- RFDs constantly reference how decisions affect customers, operators, and users
+- Quote passages about customer sovereignty and operational concerns
+- Highlight when design choices prioritize user freedom or operational reality
+- Example: RFD 216 on why verified boot is minimal - to preserve customer control
+
+### Stylistic Elements
+
+**Conversational Yet Precise**
+- RFDs ask rhetorical questions ("But how?", "Why would you believe that?")
+- They use analogies and examples to explain complex concepts
+- Maintain technical accuracy while being readable
+- Don't be afraid of informal phrasing when it aids clarity
+
+**Memorable Phrases**
+- RFDs contain quotable passages that capture philosophy succinctly
+- These are the passages worth including in block quotes
+- Look for sentences that encapsulate key insights or principles
+- They often contain words like "fundamentally", "critically", "importantly"
+
+**Explicit Structure**
+- Many RFDs use numbered lists for requirements or constraints
+- They separate concerns clearly (Goals vs Non-Goals, Security vs Resilience)
+- Use this structure when presenting information
+- Make tradeoffs explicit with clear enumeration
+
+**Technical Depth with Context**
+- RFDs don't just state decisions - they explain the reasoning
+- Include the "why" behind technical choices
+- Quote passages that show the reasoning process
+- Example: Why HKDF with SHA3-256? Why not just SHA-256?
+
+### What to Avoid
+
+- Don't sanitize or oversimplify the tradeoffs RFDs explicitly acknowledge
+- Don't present determinations without the reasoning that led to them
+- Don't skip over the philosophical/principled statements to jump to technical details
+- Don't omit acknowledgments of limitations or open questions
+- Don't make RFDs sound more certain than they actually are
+- Avoid corporate/marketing speak - RFDs are engineer-to-engineer communication
+
+### When Synthesizing Multiple RFDs
+
+- Show how thinking evolved across RFDs (chronologically when relevant)
+- Highlight when later RFDs reference or build on earlier ones
+- Capture the architectural vision that emerges across documents
+- Quote from multiple RFDs to show consistency in philosophy
+- Note when approaches changed and why (learning, new constraints, etc.)
+
+This approach mirrors how an engineer would research a topic: start with the primary RFD, then open related documents in new tabs to build understanding.
+
 ## Troubleshooting
 
 ### "No token configured" or authentication errors
