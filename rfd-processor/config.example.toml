@@ -14,6 +14,9 @@ processor_interval = 30
 # services or only generate what would be persisted.
 processor_update_mode = "read"
 
+# Maximum number of RFD jobs to process concurrently
+processor_capacity = 4
+
 # Controls if the scanner should run
 scanner_enabled = true
 
