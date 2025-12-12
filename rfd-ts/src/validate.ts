@@ -351,7 +351,7 @@ export const Job = z.preprocess(
     'repository': z.string(),
     'rfd': z.number().min(-2147483647).max(2147483647),
     'sha': CommitSha,
-    'startedAt': z.coerce.date().optional(),
+    'startedAt': z.coerce.date().nullable().optional(),
     'webhookDeliveryId': TypedUuidForWebhookDeliveryId.optional(),
   }),
 )
