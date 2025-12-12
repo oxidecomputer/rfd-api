@@ -118,9 +118,7 @@ impl RfdStore for PostgresStore {
 
                 if let Some(public) = public {
                     predicates.push(Box::new(
-                        rfd::visibility.eq(public
-                            .then(|| Visibility::Public)
-                            .unwrap_or(Visibility::Private)),
+                        rfd::visibility.eq(if public { Visibility::Public } else { Visibility::Private }),
                     ));
                 }
 
@@ -162,7 +160,7 @@ impl RfdStore for PostgresStore {
         tracing::trace!("Retrieving latest major changes");
         let rfd_ids = results
             .iter()
-            .map(|(rfd, _)| rfd.id.clone())
+            .map(|(rfd, _)| rfd.id)
             .collect::<Vec<_>>();
         let latest_major_changes = rfd_revision::table
             .group_by(rfd_revision::rfd_id)
@@ -200,7 +198,7 @@ impl RfdStore for PostgresStore {
             insert_into(rfd::dsl::rfd)
                 .values((
                     rfd::id.eq(new_rfd.id.into_untyped_uuid()),
-                    rfd::rfd_number.eq(new_rfd.rfd_number.clone()),
+                    rfd::rfd_number.eq(new_rfd.rfd_number),
                     rfd::link.eq(new_rfd.link.clone()),
                     rfd::visibility.eq(new_rfd.visibility.clone()),
                 ))
@@ -289,7 +287,7 @@ impl RfdMetaStore for PostgresStore {
                     .enumerate()
                     .map(|(i, _)| format!("${}", bind_count + i))
                     .collect::<Vec<_>>();
-                bind_count = bind_count + id_binds.len();
+                bind_count += id_binds.len();
                 filter_clause = filter_clause + &format!(" AND rfd.id IN ({})", id_binds.join(","));
             }
 
@@ -299,7 +297,7 @@ impl RfdMetaStore for PostgresStore {
                     .enumerate()
                     .map(|(i, _)| format!("${}", bind_count + i))
                     .collect::<Vec<_>>();
-                bind_count = bind_count + revision_binds.len();
+                bind_count += revision_binds.len();
                 filter_clause = filter_clause
                     + &format!(" AND rfd_revision.id IN ({})", revision_binds.join(","));
             }
@@ -310,7 +308,7 @@ impl RfdMetaStore for PostgresStore {
                     .enumerate()
                     .map(|(i, _)| format!("${}", bind_count + i))
                     .collect::<Vec<_>>();
-                bind_count = bind_count + rfd_number_binds.len();
+                bind_count += rfd_number_binds.len();
                 filter_clause = filter_clause
                     + &format!(" AND rfd.rfd_number IN ({})", rfd_number_binds.join(","));
             }
@@ -321,7 +319,7 @@ impl RfdMetaStore for PostgresStore {
                     .enumerate()
                     .map(|(i, _)| format!("${}", bind_count + i))
                     .collect::<Vec<_>>();
-                bind_count = bind_count + commit_sha_binds.len();
+                bind_count += commit_sha_binds.len();
                 filter_clause = filter_clause
                     + &format!(
                         " AND rfd_revision.commit_sha IN ({})",
@@ -329,23 +327,22 @@ impl RfdMetaStore for PostgresStore {
                     );
             }
 
-            if let Some(_) = &public {
-                bind_count = bind_count + 1;
-                filter_clause = filter_clause + " AND rfd.public = {}";
+            if public.is_some() {
+                bind_count += 1;
+                filter_clause += " AND rfd.public = {}";
             }
 
             if !deleted {
-                filter_clause = filter_clause
-                    + " AND rfd.deleted_at IS NULL AND rfd_revision.deleted_at IS NULL";
+                filter_clause += " AND rfd.deleted_at IS NULL AND rfd_revision.deleted_at IS NULL";
             }
 
             clauses.push(format!("({})", filter_clause));
         }
 
-        let where_clause = if clauses.len() > 0 {
+        let where_clause = if !clauses.is_empty() {
             format!("({})", clauses.join(" OR "))
         } else {
-            format!("1=1")
+            "1=1".to_string()
         };
 
         let raw_query = format!(
@@ -521,7 +518,7 @@ impl RfdPdfsStore for PostgresStore {
                     .enumerate()
                     .map(|(i, _)| format!("${}", bind_count + i))
                     .collect::<Vec<_>>();
-                bind_count = bind_count + id_binds.len();
+                bind_count += id_binds.len();
                 filter_clause = filter_clause + &format!(" AND rfd.id IN ({})", id_binds.join(","));
             }
 
@@ -531,7 +528,7 @@ impl RfdPdfsStore for PostgresStore {
                     .enumerate()
                     .map(|(i, _)| format!("${}", bind_count + i))
                     .collect::<Vec<_>>();
-                bind_count = bind_count + revision_binds.len();
+                bind_count += revision_binds.len();
                 filter_clause = filter_clause
                     + &format!(" AND rfd_revision.id IN ({})", revision_binds.join(","));
             }
@@ -542,7 +539,7 @@ impl RfdPdfsStore for PostgresStore {
                     .enumerate()
                     .map(|(i, _)| format!("${}", bind_count + i))
                     .collect::<Vec<_>>();
-                bind_count = bind_count + rfd_number_binds.len();
+                bind_count += rfd_number_binds.len();
                 filter_clause = filter_clause
                     + &format!(" AND rfd.rfd_number IN ({})", rfd_number_binds.join(","));
             }
@@ -553,7 +550,7 @@ impl RfdPdfsStore for PostgresStore {
                     .enumerate()
                     .map(|(i, _)| format!("${}", bind_count + i))
                     .collect::<Vec<_>>();
-                bind_count = bind_count + commit_sha_binds.len();
+                bind_count += commit_sha_binds.len();
                 filter_clause = filter_clause
                     + &format!(
                         " AND rfd_revision.commit_sha IN ({})",
@@ -561,22 +558,22 @@ impl RfdPdfsStore for PostgresStore {
                     );
             }
 
-            if let Some(_) = &public {
-                bind_count = bind_count + 1;
-                filter_clause = filter_clause + " AND rfd.public = {}";
+            if public.is_some() {
+                bind_count += 1;
+                filter_clause += " AND rfd.public = {}";
             }
 
             if !deleted {
-                filter_clause = filter_clause +" AND rfd.deleted_at IS NULL AND rfd_revision.deleted_at IS NULL AND rfd_pdf.deleted_at IS NULL";
+                filter_clause += " AND rfd.deleted_at IS NULL AND rfd_revision.deleted_at IS NULL AND rfd_pdf.deleted_at IS NULL";
             }
 
             clauses.push(format!("({})", filter_clause));
         }
 
-        let where_clause = if clauses.len() > 0 {
+        let where_clause = if !clauses.is_empty() {
             format!("({})", clauses.join(" OR "))
         } else {
-            format!("1=1")
+            "1=1".to_string()
         };
 
         let raw_query = format!(
@@ -707,7 +704,7 @@ impl RfdPdfsStore for PostgresStore {
                 .await?;
         let results = rows
             .into_iter()
-            .map(|row| <(RfdModel, RfdLatestMajorChange, RfdRevisionPdfModel)>::from(row))
+            .map(<(RfdModel, RfdLatestMajorChange, RfdRevisionPdfModel)>::from)
             .fold(
                 BTreeMap::<TypedUuid<RfdId>, RfdPdfs>::default(),
                 |mut map, (rfd_model, latest_major_change, revision_model)| {
@@ -840,7 +837,7 @@ impl RfdRevisionStore for PostgresStore {
                     rfd_revision::content_format.eq(new_revision.content_format.clone()),
                     rfd_revision::sha.eq(String::from(new_revision.sha)),
                     rfd_revision::commit_sha.eq(String::from(new_revision.commit)),
-                    rfd_revision::committed_at.eq(new_revision.committed_at.clone()),
+                    rfd_revision::committed_at.eq(new_revision.committed_at),
                     rfd_revision::major_change.eq(new_revision.major_change),
                 ))
                 .on_conflict(rfd_revision::id)
@@ -1351,11 +1348,11 @@ impl JobStore for PostgresStore {
                     job::repository.eq(new_job.repository.clone()),
                     job::branch.eq(new_job.branch.clone()),
                     job::sha.eq(String::from(new_job.sha)),
-                    job::rfd.eq(new_job.rfd.clone()),
+                    job::rfd.eq(new_job.rfd),
                     job::webhook_delivery_id
                         .eq(new_job.webhook_delivery_id.map(|id| id.into_untyped_uuid())),
                     job::processed.eq(false),
-                    job::committed_at.eq(new_job.committed_at.clone()),
+                    job::committed_at.eq(new_job.committed_at),
                 ))
                 .get_result_async(&*self.pool.get().await.tap_err(|err| {
                     tracing::error!(?err, "Failed to acquire database connection")

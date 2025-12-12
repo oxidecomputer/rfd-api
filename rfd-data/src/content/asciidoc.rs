@@ -74,7 +74,7 @@ impl<'a> RfdAsciidoc<'a> {
     fn apply_author_line_attributes(content: &mut String) {
         if let Some(author_line) = Self::author_line(content) {
             if let Some(authors) = RfdAuthors::parse(author_line) {
-                if authors.0.len() > 0 {
+                if !authors.0.is_empty() {
                     *content = Self::set_attr(content, "authors", &authors.into_attr());
                 }
             }
@@ -96,7 +96,6 @@ impl<'a> RfdAsciidoc<'a> {
         if let Some(found) = pattern.find(content) {
             content
                 .replacen(found.as_str(), &format!(":{}: {}\n", attr, value), 1)
-                .into()
         } else {
             let title = Self::title_line(content);
 
@@ -111,7 +110,6 @@ impl<'a> RfdAsciidoc<'a> {
                     + "\n\n"
                     + title
                     + body.unwrap_or_default())
-                .into()
             } else {
                 content.to_string()
             }
@@ -134,7 +132,7 @@ impl<'a> RfdAsciidoc<'a> {
     }
 
     fn author_line(content: &str) -> Option<&str> {
-        Self::body(&content).and_then(|body| {
+        Self::body(content).and_then(|body| {
             // After splitting the document at the title, the very first line (asuming it is non-empty)
             // is considered the author line
             body.split_inclusive('\n').nth(0).and_then(|line| {
@@ -349,7 +347,7 @@ impl RfdAuthor {
             1 => {
                 // Without the presence of a < we are in the name only branch. Split the name
                 // on spaces
-                let (first, middle, last) = Self::parse_name(parts.get(0).unwrap().trim());
+                let (first, middle, last) = Self::parse_name(parts.first().unwrap().trim());
 
                 Some(Self {
                     first_name: first.unwrap_or_default(),
@@ -360,9 +358,9 @@ impl RfdAuthor {
             }
             2 => {
                 // A single < indicates that this author has an email or url associated
-                let (first, middle, last) = Self::parse_name(parts.get(0).unwrap().trim());
+                let (first, middle, last) = Self::parse_name(parts.first().unwrap().trim());
                 let email =
-                    Self::parse_email(&format!("<{}", parts.get(1).unwrap().trim()).trim())?;
+                    Self::parse_email(format!("<{}", parts.get(1).unwrap().trim()).trim())?;
 
                 Some(Self {
                     first_name: first.unwrap_or_default(),
@@ -387,7 +385,7 @@ impl RfdAuthor {
             2 => {
                 // Firstname Lastname
                 (
-                    Some(name_parts.get(0).unwrap().to_string()),
+                    Some(name_parts.first().unwrap().to_string()),
                     None,
                     Some(name_parts.get(1).unwrap().to_string()),
                 )
@@ -395,7 +393,7 @@ impl RfdAuthor {
             3 => {
                 // Firstname Middlename Lastname
                 (
-                    Some(name_parts.get(0).unwrap().to_string()),
+                    Some(name_parts.first().unwrap().to_string()),
                     Some(name_parts.get(1).unwrap().to_string()),
                     Some(name_parts.get(2).unwrap().to_string()),
                 )
@@ -443,7 +441,7 @@ impl RfdAuthor {
             email.map(|email| format!("<{}>", email)),
         ]
         .into_iter()
-        .filter_map(|p| p)
+        .flatten()
         .collect::<Vec<_>>()
         .join(" ")
     }

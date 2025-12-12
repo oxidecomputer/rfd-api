@@ -17,7 +17,7 @@ impl BearerAuth {
     }
 
     pub fn key(&self) -> Option<&str> {
-        self.0.as_ref().map(|s| s.as_str())
+        self.0.as_deref()
     }
 
     pub fn consume(self) -> Option<String> {
@@ -43,9 +43,8 @@ impl SharedExtractor for BearerAuth {
                 header
                     .to_str()
                     .map(|s| s.to_string())
-                    .map_err(|err| {
+                    .inspect_err(|err| {
                         tracing::info!("Failed to turn Authorization header into string");
-                        err
                     })
                     .ok()
             });

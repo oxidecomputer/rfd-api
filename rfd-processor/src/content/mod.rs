@@ -151,7 +151,7 @@ impl<'a> RenderableRfd<'a> {
                     .trim_start_matches('/'),
             );
 
-            let path = PathBuf::from(document_path);
+            let path = document_path;
             write_file(&path, &decode_base64(&document.content)?).await?;
 
             tracing::info!(?path, "Wrote supporting document",);
@@ -164,7 +164,7 @@ impl<'a> RenderableRfd<'a> {
     fn tmp_path(&self) -> Result<PathBuf, RenderableRfdError> {
         let mut path = env::temp_dir();
         path.push("rfd-render/");
-        path.push(&self.render_id.to_string());
+        path.push(self.render_id.to_string());
 
         // Ensure the path exists
         std::fs::create_dir_all(path.clone())?;

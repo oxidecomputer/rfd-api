@@ -31,9 +31,7 @@ pub fn format_api_err(ctx: &Context, client_err: ProgenitorClientError<ApiError>
             err = err.context(format!(
                 "Code: {}",
                 response_message
-                    .error_code
-                    .as_ref()
-                    .map(|s| &**s)
+                    .error_code.as_deref()
                     .unwrap_or("")
             ));
             err = err.context(response_message.message);

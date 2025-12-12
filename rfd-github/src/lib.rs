@@ -406,7 +406,7 @@ impl GitHubRfdRepo {
             }.instrument(span).await
         }
 
-        Ok(updates.into_iter().map(|(_, v)| v).collect())
+        Ok(updates.into_values().collect())
     }
 }
 
@@ -443,7 +443,7 @@ impl GitHubRfdLocation {
 
         // Get the contents of the file
         let mut path = format!("{}/README.adoc", dir);
-        match self.fetch_content(&client, &path, &self.commit).await {
+        match self.fetch_content(client, &path, &self.commit).await {
             Ok(_) => path,
             Err(err) => {
                 tracing::trace!(
@@ -452,7 +452,7 @@ impl GitHubRfdLocation {
                 );
 
                 path = format!("{}/README.md", dir);
-                match self.fetch_content(&client, &path, &self.commit).await {
+                match self.fetch_content(client, &path, &self.commit).await {
                     Ok(_) => path,
                     Err(err) => {
                         tracing::trace!(
@@ -490,7 +490,7 @@ impl GitHubRfdLocation {
         let FetchedRfdContent {
             parsed, sha, url, ..
         } = self
-            .fetch_content(&client, &readme_path, &self.commit)
+            .fetch_content(client, &readme_path, &self.commit)
             .await?;
 
         let content = if is_markdown {
@@ -509,7 +509,7 @@ impl GitHubRfdLocation {
 
         Ok(GitHubRfdReadme {
             content,
-            sha: sha.into(),
+            sha: sha,
             location: GitHubRfdReadmeLocation {
                 file: readme_path,
                 blob_link: url,
@@ -636,7 +636,7 @@ impl GitHubRfdLocation {
                     // These should never differ as long as the GitHub API is returning correct
                     // results
                     if pull_branch == self.branch {
-                        Some(pull.into())
+                        Some(pull)
                     } else {
                         tracing::warn!(?pull, "Detected invalid pull request");
                         None
@@ -660,7 +660,7 @@ impl GitHubRfdLocation {
             .list_commits(
                 &self.owner,
                 &self.repo,
-                &self.commit.0.as_str(),
+                self.commit.0.as_str(),
                 &rfd_number.repo_path(),
                 "",
                 None,
@@ -708,7 +708,7 @@ impl GitHubRfdLocation {
         };
 
         // We can short circuit if the new and old content are the same
-        if content == &decoded {
+        if content == decoded {
             tracing::info!("File contents are the same. Skipping commit");
             return Ok(None);
         }
@@ -725,7 +725,7 @@ impl GitHubRfdLocation {
             .create_or_update_file_contents(
                 &self.owner,
                 &self.repo,
-                &readme_path.trim_start_matches('/'),
+                readme_path.trim_start_matches('/'),
                 &ReposCreateUpdateFileContentsRequest {
                     message: format!("{}\nCommitted via rfd-api", message),
                     sha,
@@ -749,7 +749,7 @@ struct GitHubPullRequestComments {
 impl GitHubPullRequestComments {
     async fn comments(&self) {
         let pulls = self.client.pulls();
-        let comments = pulls
+        let _comments = pulls
             .list_all_review_comments(
                 "owner",
                 "repo",

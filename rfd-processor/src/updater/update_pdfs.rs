@@ -38,7 +38,7 @@ impl UpdatePdfs {
         // Generate the PDFs for the RFD
         let pdf = match new
             .content()
-            .map_err(|err| RfdOutputError::ContentFailure(err))?
+            .map_err(RfdOutputError::ContentFailure)?
             .to_pdf(&ctx.github.client, &update.number, &update.location)
             .await
         {
@@ -71,7 +71,7 @@ impl UpdatePdfs {
             RfdUpdateMode::Write => {
                 ctx.pdf
                     .store_rfd_pdf(
-                        new.pdf_external_id.as_ref().map(|s| s.as_str()),
+                        new.pdf_external_id.as_deref(),
                         &new.get_pdf_filename(),
                         &pdf,
                     )
@@ -139,7 +139,7 @@ impl RfdUpdateAction for UpdatePdfs {
                 Ok(_) =>
                 /* Upsert succeeded, nothing to do */
                 {
-                    ()
+                    
                 }
 
                 // A not found error will be returned in the case of a conflict. This is expected

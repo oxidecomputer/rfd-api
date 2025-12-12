@@ -59,7 +59,7 @@ impl DeviceOAuth {
     ) -> Result<StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>> {
         let token = self
             .client
-            .exchange_device_access_token(&details)
+            .exchange_device_access_token(details)
             .set_max_backoff_interval(details.interval())
             .request_async(&self.http, tokio::time::sleep, Some(details.expires_in()))
             .await;

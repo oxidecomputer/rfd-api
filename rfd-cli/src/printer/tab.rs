@@ -187,7 +187,7 @@ impl TabDisplay for types::Rfd {
             tw,
             level,
             "link",
-            &self.link.as_ref().map(|s| s.as_str()).unwrap_or(""),
+            &self.link.as_deref().unwrap_or(""),
         );
     }
 }
@@ -443,13 +443,13 @@ impl TabDisplay for RfdWithoutContent {
             tw,
             level,
             "title",
-            &self.title.as_ref().map(|s| s.as_str()).unwrap_or(""),
+            &self.title.as_deref().unwrap_or(""),
         );
         printer.print_field(
             tw,
             level,
             "state",
-            &self.state.as_ref().map(|s| s.as_str()).unwrap_or(""),
+            &self.state.as_deref().unwrap_or(""),
         );
         printer.print_field(
             tw,
@@ -464,25 +464,25 @@ impl TabDisplay for RfdWithoutContent {
             tw,
             level,
             "authors",
-            &self.authors.as_ref().map(|s| s.as_str()).unwrap_or(""),
+            &self.authors.as_deref().unwrap_or(""),
         );
         printer.print_field(
             tw,
             level,
             "labels",
-            &self.labels.as_ref().map(|s| s.as_str()).unwrap_or(""),
+            &self.labels.as_deref().unwrap_or(""),
         );
         printer.print_field(
             tw,
             level,
             "link",
-            &self.link.as_ref().map(|s| s.as_str()).unwrap_or(""),
+            &self.link.as_deref().unwrap_or(""),
         );
         printer.print_field(
             tw,
             level,
             "discussion",
-            &self.discussion.as_ref().map(|s| s.as_str()).unwrap_or(""),
+            &self.discussion.as_deref().unwrap_or(""),
         );
         printer.print_field(
             tw,
@@ -525,13 +525,13 @@ impl TabDisplay for RfdWithRaw {
             tw,
             level,
             "title",
-            &self.title.as_ref().map(|s| s.as_str()).unwrap_or(""),
+            &self.title.as_deref().unwrap_or(""),
         );
         printer.print_field(
             tw,
             level,
             "state",
-            &self.state.as_ref().map(|s| s.as_str()).unwrap_or(""),
+            &self.state.as_deref().unwrap_or(""),
         );
         printer.print_field(
             tw,
@@ -546,25 +546,25 @@ impl TabDisplay for RfdWithRaw {
             tw,
             level,
             "authors",
-            &self.authors.as_ref().map(|s| s.as_str()).unwrap_or(""),
+            &self.authors.as_deref().unwrap_or(""),
         );
         printer.print_field(
             tw,
             level,
             "labels",
-            &self.labels.as_ref().map(|s| s.as_str()).unwrap_or(""),
+            &self.labels.as_deref().unwrap_or(""),
         );
         printer.print_field(
             tw,
             level,
             "link",
-            &self.link.as_ref().map(|s| s.as_str()).unwrap_or(""),
+            &self.link.as_deref().unwrap_or(""),
         );
         printer.print_field(
             tw,
             level,
             "discussion",
-            &self.discussion.as_ref().map(|s| s.as_str()).unwrap_or(""),
+            &self.discussion.as_deref().unwrap_or(""),
         );
         printer.print_field(
             tw,
@@ -596,7 +596,7 @@ impl TabDisplay for RfdWithRaw {
                 .map(|d| d.to_string())
                 .unwrap_or_else(|| "--".to_string()),
         );
-        writeln!(tw, "");
+        writeln!(tw);
         if let Some(content) = &self.content {
             writeln!(tw, "{}", content);
         }
@@ -627,7 +627,7 @@ impl TabDisplay for SearchResults {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "query", &self.query);
         printer.print_field(tw, level, "total hits", &self.hits.len());
-        writeln!(tw, "");
+        writeln!(tw);
         self.hits.display(tw, level, printer);
     }
 }
@@ -798,7 +798,7 @@ where
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         for entry in self {
             entry.display(tw, level, printer);
-            writeln!(tw, "");
+            writeln!(tw);
         }
     }
 }
