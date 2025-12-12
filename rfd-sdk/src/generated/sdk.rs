@@ -1015,8 +1015,8 @@ pub mod types {
     impl ::std::fmt::Display for ContentFormat {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match *self {
-                Self::Asciidoc => write!(f, "asciidoc"),
-                Self::Markdown => write!(f, "markdown"),
+                Self::Asciidoc => f.write_str("asciidoc"),
+                Self::Markdown => f.write_str("markdown"),
             }
         }
     }
@@ -2338,7 +2338,7 @@ pub mod types {
     impl ::std::fmt::Display for MagicLinkMedium {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match *self {
-                Self::Email => write!(f, "email"),
+                Self::Email => f.write_str("email"),
             }
         }
     }
@@ -3175,8 +3175,8 @@ pub mod types {
     impl ::std::fmt::Display for OAuthProviderName {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match *self {
-                Self::Github => write!(f, "github"),
-                Self::Google => write!(f, "google"),
+                Self::Github => f.write_str("github"),
+                Self::Google => f.write_str("google"),
             }
         }
     }
@@ -3301,8 +3301,8 @@ pub mod types {
     impl ::std::fmt::Display for PdfSource {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match *self {
-                Self::Github => write!(f, "github"),
-                Self::Google => write!(f, "google"),
+                Self::Github => f.write_str("github"),
+                Self::Google => f.write_str("google"),
             }
         }
     }
@@ -3712,9 +3712,9 @@ pub mod types {
     impl ::std::fmt::Display for RfdAttrName {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match *self {
-                Self::Discussion => write!(f, "discussion"),
-                Self::Labels => write!(f, "labels"),
-                Self::State => write!(f, "state"),
+                Self::Discussion => f.write_str("discussion"),
+                Self::Labels => f.write_str("labels"),
+                Self::State => f.write_str("state"),
             }
         }
     }
@@ -4810,12 +4810,12 @@ pub mod types {
     impl ::std::fmt::Display for RfdState {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match *self {
-                Self::Abandoned => write!(f, "abandoned"),
-                Self::Committed => write!(f, "committed"),
-                Self::Discussion => write!(f, "discussion"),
-                Self::Ideation => write!(f, "ideation"),
-                Self::Prediscussion => write!(f, "prediscussion"),
-                Self::Published => write!(f, "published"),
+                Self::Abandoned => f.write_str("abandoned"),
+                Self::Committed => f.write_str("committed"),
+                Self::Discussion => f.write_str("discussion"),
+                Self::Ideation => f.write_str("ideation"),
+                Self::Prediscussion => f.write_str("prediscussion"),
+                Self::Published => f.write_str("published"),
             }
         }
     }
@@ -7094,8 +7094,8 @@ pub mod types {
     impl ::std::fmt::Display for Visibility {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match *self {
-                Self::Public => write!(f, "public"),
-                Self::Private => write!(f, "private"),
+                Self::Public => f.write_str("public"),
+                Self::Private => f.write_str("private"),
             }
         }
     }
@@ -13603,7 +13603,7 @@ impl Client {
     pub fn new(baseurl: &str) -> Self {
         #[cfg(not(target_arch = "wasm32"))]
         let client = {
-            let dur = std::time::Duration::from_secs(15);
+            let dur = ::std::time::Duration::from_secs(15u64);
             reqwest::ClientBuilder::new()
                 .connect_timeout(dur)
                 .timeout(dur)
