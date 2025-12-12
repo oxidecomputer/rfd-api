@@ -21,6 +21,7 @@ use store::CliConfig;
 
 mod cmd;
 mod err;
+#[allow(clippy::all)]
 mod generated;
 mod printer;
 mod store;
