@@ -257,7 +257,7 @@ fn format_code(code: String) -> String {
         },
         contents,
     )
-    .unwrap();
+    .expect("rustfmt_wrapper: ensure a nightly toolchain is installed.");
     let contents = dos2unix(&contents);
 
     // Add newlines after end-braces at <= two levels of indentation. Rustfmt's
