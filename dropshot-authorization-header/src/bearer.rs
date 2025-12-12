@@ -43,7 +43,7 @@ impl SharedExtractor for BearerAuth {
                 header
                     .to_str()
                     .map(|s| s.to_string())
-                    .inspect_err(|err| {
+                    .inspect_err(|_err| {
                         tracing::info!("Failed to turn Authorization header into string");
                     })
                     .ok()

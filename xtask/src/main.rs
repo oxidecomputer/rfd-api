@@ -19,7 +19,6 @@ use similar::{Algorithm, ChangeTag, TextDiff};
 #[derive(Parser)]
 #[command(name = "xtask")]
 #[command(about = "build tasks")]
-
 enum Xtask {
     #[command(about = "bump the global version number")]
     Bump {

@@ -117,6 +117,7 @@ impl PersistedRfd {
         Ok(())
     }
 
+    #[allow(clippy::result_large_err)]
     pub fn content(&self) -> Result<RenderableRfd<'_>, RenderableRfdError> {
         Ok(match self.revision.content_format {
             ContentFormat::Asciidoc => RenderableRfd::new_asciidoc(&self.revision.content)?,
@@ -131,6 +132,7 @@ impl PersistedRfd {
         *self.needs_update.lock().unwrap() = true;
     }
 
+    #[allow(clippy::result_large_err)]
     pub fn update_discussion(&mut self, new_discussion_url: impl ToString) -> Result<(), RfdError> {
         let new_discussion_url = new_discussion_url.to_string();
 
@@ -153,6 +155,7 @@ impl PersistedRfd {
             .unwrap_or(false)
     }
 
+    #[allow(clippy::result_large_err)]
     pub fn update_state(&mut self, new_state: impl ToString) -> Result<(), RfdError> {
         let new_state = new_state.to_string();
 

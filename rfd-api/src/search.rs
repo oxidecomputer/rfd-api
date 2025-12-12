@@ -140,7 +140,7 @@ impl From<SearchResult<MeiliSearchResult>> for SearchResultHit {
             ],
             content: hit.result.content,
             object_id: hit.result.object_id.clone(),
-            rfd_number: hit.result.rfd_number.clone(),
+            rfd_number: hit.result.rfd_number,
             anchor: hit.result.anchor,
             url: hit.result.url,
             formatted: hit

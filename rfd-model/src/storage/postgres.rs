@@ -117,9 +117,11 @@ impl RfdStore for PostgresStore {
                 }
 
                 if let Some(public) = public {
-                    predicates.push(Box::new(
-                        rfd::visibility.eq(if public { Visibility::Public } else { Visibility::Private }),
-                    ));
+                    predicates.push(Box::new(rfd::visibility.eq(if public {
+                        Visibility::Public
+                    } else {
+                        Visibility::Private
+                    })));
                 }
 
                 if !deleted {
@@ -158,10 +160,7 @@ impl RfdStore for PostgresStore {
         // I found it quite hard to get the time of the last major change of an RFD in a single
         // query **using Diesel**. This is the only reason why we are doing a separate query.
         tracing::trace!("Retrieving latest major changes");
-        let rfd_ids = results
-            .iter()
-            .map(|(rfd, _)| rfd.id)
-            .collect::<Vec<_>>();
+        let rfd_ids = results.iter().map(|(rfd, _)| rfd.id).collect::<Vec<_>>();
         let latest_major_changes = rfd_revision::table
             .group_by(rfd_revision::rfd_id)
             .select((rfd_revision::rfd_id, max(rfd_revision::committed_at)))
@@ -1397,6 +1396,7 @@ impl JobStore for PostgresStore {
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn flatten_predicates<T>(
     predicates: Vec<Vec<Box<dyn BoxableExpression<T, Pg, SqlType = Bool>>>>,
 ) -> Option<Box<dyn BoxableExpression<T, Pg, SqlType = Bool>>>

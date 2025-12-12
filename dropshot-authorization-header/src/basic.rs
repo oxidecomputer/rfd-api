@@ -50,7 +50,7 @@ impl SharedExtractor for BasicAuth {
                 header
                     .to_str()
                     .map(|s| s.to_string())
-                    .inspect_err(|err| {
+                    .inspect_err(|_err| {
                         tracing::info!("Failed to turn Authorization header into string");
                     })
                     .ok()
@@ -63,13 +63,13 @@ impl SharedExtractor for BasicAuth {
             match parts {
                 Some(("Basic", token)) => BASE64_STANDARD
                     .decode(token)
-                    .inspect_err(|err| {
+                    .inspect_err(|_err| {
                         tracing::info!("Failed to decode basic auth header");
                     })
                     .ok()
                     .and_then(|decoded| {
                         String::from_utf8(decoded)
-                            .inspect_err(|err| {
+                            .inspect_err(|_err| {
                                 tracing::info!(
                                     "Failed to interpret decoded bytes from authorization header"
                                 );

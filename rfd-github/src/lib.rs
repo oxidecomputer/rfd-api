@@ -358,10 +358,7 @@ impl GitHubRfdRepo {
                         let mut response = client.repos().get_content_file(&self.owner, &self.repo, &format!("rfd/{}/README.adoc", rfd_number.as_number_string()), &branch.commit.sha).await;
 
                         // If we fail to find an Asciidoc readme, try to fall back to a Markdown version
-                        if match response {
-                            Err(ClientError::HttpError { status, .. }) if status == StatusCode::NOT_FOUND => true,
-                            _ => false
-                        } {
+                        if matches!(response, Err(ClientError::HttpError { status, .. }) if status == StatusCode::NOT_FOUND) {
                             response = client.repos().get_content_file(&self.owner, &self.repo, &format!("rfd/{}/README.md", rfd_number.as_number_string()), &branch.commit.sha).await;
                         }
 
@@ -509,7 +506,7 @@ impl GitHubRfdLocation {
 
         Ok(GitHubRfdReadme {
             content,
-            sha: sha,
+            sha,
             location: GitHubRfdReadmeLocation {
                 file: readme_path,
                 blob_link: url,
@@ -741,12 +738,14 @@ impl GitHubRfdLocation {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Clone)]
 struct GitHubPullRequestComments {
     pub client: Client,
 }
 
 impl GitHubPullRequestComments {
+    #[allow(dead_code)]
     async fn comments(&self) {
         let pulls = self.client.pulls();
         let _comments = pulls

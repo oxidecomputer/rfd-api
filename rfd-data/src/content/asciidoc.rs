@@ -94,8 +94,7 @@ impl<'a> RfdAsciidoc<'a> {
         let pattern = Self::attr_pattern(attr);
 
         if let Some(found) = pattern.find(content) {
-            content
-                .replacen(found.as_str(), &format!(":{}: {}\n", attr, value), 1)
+            content.replacen(found.as_str(), &format!(":{}: {}\n", attr, value), 1)
         } else {
             let title = Self::title_line(content);
 
@@ -104,12 +103,12 @@ impl<'a> RfdAsciidoc<'a> {
                 let header = Self::header(content);
                 let body = Self::body(content);
 
-                (header.unwrap_or_default().to_string()
+                header.unwrap_or_default().to_string()
                     + "\n"
                     + &new_attr
                     + "\n\n"
                     + title
-                    + body.unwrap_or_default())
+                    + body.unwrap_or_default()
             } else {
                 content.to_string()
             }
@@ -359,8 +358,7 @@ impl RfdAuthor {
             2 => {
                 // A single < indicates that this author has an email or url associated
                 let (first, middle, last) = Self::parse_name(parts.first().unwrap().trim());
-                let email =
-                    Self::parse_email(format!("<{}", parts.get(1).unwrap().trim()).trim())?;
+                let email = Self::parse_email(format!("<{}", parts.get(1).unwrap().trim()).trim())?;
 
                 Some(Self {
                     first_name: first.unwrap_or_default(),

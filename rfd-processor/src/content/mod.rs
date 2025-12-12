@@ -61,6 +61,7 @@ impl<'a> RenderableRfd<'a> {
     }
 
     /// Construct a new RfdContent wrapper that contains Asciidoc content
+    #[allow(clippy::result_large_err)]
     pub fn new_asciidoc<T>(content: T) -> Result<Self, RenderableRfdError>
     where
         T: Into<Cow<'a, str>>,
@@ -161,6 +162,7 @@ impl<'a> RenderableRfd<'a> {
     }
 
     /// Create a tmp directory for rendering this RFD
+    #[allow(clippy::result_large_err)]
     fn tmp_path(&self) -> Result<PathBuf, RenderableRfdError> {
         let mut path = env::temp_dir();
         path.push("rfd-render/");
@@ -173,6 +175,7 @@ impl<'a> RenderableRfd<'a> {
     }
 
     // Cleanup remaining images and local state that was used by asciidoctor
+    #[allow(clippy::result_large_err)]
     #[instrument(skip(self), fields(storage_path = ?self.tmp_path()), err)]
     fn cleanup_tmp_path(&self) -> Result<(), RenderableRfdError> {
         let storage_path = self.tmp_path()?;
