@@ -137,10 +137,8 @@ impl RfdUpdateAction for UpdatePdfs {
 
             match response {
                 Ok(_) =>
-                /* Upsert succeeded, nothing to do */
-                {
-                    
-                }
+                    /* Upsert succeeded, nothing to do */
+                    {}
 
                 // A not found error will be returned in the case of a conflict. This is expected
                 // and should not cause the function to return
