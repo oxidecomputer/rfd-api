@@ -25,12 +25,12 @@ database_url = "postgres://<user>:<pass>@<host>/<database>"
 # Duration that a JWT is valid for
 default_expiration = 3600
 
-# Keys for signing JWTs and generating secrets. Currently GCP Cloud KMS keys and local static keys
-# are supported. At least one key must be configured.
+# Keys for signing JWTs and generating secrets. GCP Cloud KMS keys and local static keys
+# are supported. At least one signer and one verifier key must be configured.
 
-# Cloud KMS
+# Cloud KMS - Signer
 [[keys]]
-kind = "ckms" # Static identifier indicating Cloud KMS
+kind = "ckms_signer" # Static identifier indicating Cloud KMS
 kid = "" # Unique key identifer, that will be used in JWKS
 version = 1 # KMS key version
 key = "" # KMS key name
@@ -38,11 +38,26 @@ keyring = "" # KMS keying name
 location = "" # KMS region
 project = "" # GCP project containing Cloud KMS
 
-# Local key
+# Cloud KMS - Verifier
 [[keys]]
-kind = "local" # Static identifier indicating a local key
+kind = "ckms_verifier" # Static identifier indicating Cloud KMS
 kid = "" # Unique key identifer, that will be used in JWKS
+version = 1 # KMS key version
+key = "" # KMS key name
+keyring = "" # KMS keying name
+location = "" # KMS region
+project = "" # GCP project containing Cloud KMS
+
+# Local key - Signer
+[[keys]]
+kind = "local_signer" # Static identifier indicating a local signing key
+kid = "" # Unique key identifier, that will be used in JWKS
 private = """""" # PEM encoded private key
+
+# Local key - Verifier
+[[keys]]
+kind = "local_verifier" # Static identifier indicating a local verification key
+kid = "" # Unique key identifier, that will be used in JWKS (must match signer kid)
 public = """""" # PEM encoded public key
 
 # OAuth Providers
