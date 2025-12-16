@@ -25,8 +25,28 @@ database_url = "postgres://<user>:<pass>@<host>/<database>"
 # Duration that a JWT is valid for
 default_expiration = 3600
 
-# Keys for signing JWTs and generating secrets. Local static keys are supported.
-# At least one signer and one verifier key must be configured.
+# Keys for signing JWTs and generating secrets. GCP Cloud KMS keys and local static keys
+# are supported. At least one signer and one verifier key must be configured.
+
+# Cloud KMS - Signer
+[[keys]]
+kind = "ckms_signer" # Static identifier indicating Cloud KMS
+kid = "" # Unique key identifer, that will be used in JWKS
+version = 1 # KMS key version
+key = "" # KMS key name
+keyring = "" # KMS keying name
+location = "" # KMS region
+project = "" # GCP project containing Cloud KMS
+
+# Cloud KMS - Verifier
+[[keys]]
+kind = "ckms_verifier" # Static identifier indicating Cloud KMS
+kid = "" # Unique key identifer, that will be used in JWKS
+version = 1 # KMS key version
+key = "" # KMS key name
+keyring = "" # KMS keying name
+location = "" # KMS region
+project = "" # GCP project containing Cloud KMS
 
 # Local key - Signer
 [[keys]]
