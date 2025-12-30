@@ -183,12 +183,7 @@ impl TabDisplay for types::Rfd {
                 .map(|d| d.to_string())
                 .unwrap_or_else(|| "--".to_string()),
         );
-        printer.print_field(
-            tw,
-            level,
-            "link",
-            &self.link.as_ref().map(|s| s.as_str()).unwrap_or(""),
-        );
+        printer.print_field(tw, level, "link", &self.link.as_deref().unwrap_or(""));
     }
 }
 
@@ -439,18 +434,8 @@ impl TabDisplay for RfdWithoutContent {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "id", &self.id);
         printer.print_field(tw, level, "rfd_number", &self.rfd_number);
-        printer.print_field(
-            tw,
-            level,
-            "title",
-            &self.title.as_ref().map(|s| s.as_str()).unwrap_or(""),
-        );
-        printer.print_field(
-            tw,
-            level,
-            "state",
-            &self.state.as_ref().map(|s| s.as_str()).unwrap_or(""),
-        );
+        printer.print_field(tw, level, "title", &self.title.as_deref().unwrap_or(""));
+        printer.print_field(tw, level, "state", &self.state.as_deref().unwrap_or(""));
         printer.print_field(
             tw,
             level,
@@ -460,29 +445,14 @@ impl TabDisplay for RfdWithoutContent {
                 Visibility::Public => &"public",
             },
         );
-        printer.print_field(
-            tw,
-            level,
-            "authors",
-            &self.authors.as_ref().map(|s| s.as_str()).unwrap_or(""),
-        );
-        printer.print_field(
-            tw,
-            level,
-            "labels",
-            &self.labels.as_ref().map(|s| s.as_str()).unwrap_or(""),
-        );
-        printer.print_field(
-            tw,
-            level,
-            "link",
-            &self.link.as_ref().map(|s| s.as_str()).unwrap_or(""),
-        );
+        printer.print_field(tw, level, "authors", &self.authors.as_deref().unwrap_or(""));
+        printer.print_field(tw, level, "labels", &self.labels.as_deref().unwrap_or(""));
+        printer.print_field(tw, level, "link", &self.link.as_deref().unwrap_or(""));
         printer.print_field(
             tw,
             level,
             "discussion",
-            &self.discussion.as_ref().map(|s| s.as_str()).unwrap_or(""),
+            &self.discussion.as_deref().unwrap_or(""),
         );
         printer.print_field(
             tw,
@@ -521,18 +491,8 @@ impl TabDisplay for RfdWithRaw {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "id", &self.id);
         printer.print_field(tw, level, "rfd_number", &self.rfd_number);
-        printer.print_field(
-            tw,
-            level,
-            "title",
-            &self.title.as_ref().map(|s| s.as_str()).unwrap_or(""),
-        );
-        printer.print_field(
-            tw,
-            level,
-            "state",
-            &self.state.as_ref().map(|s| s.as_str()).unwrap_or(""),
-        );
+        printer.print_field(tw, level, "title", &self.title.as_deref().unwrap_or(""));
+        printer.print_field(tw, level, "state", &self.state.as_deref().unwrap_or(""));
         printer.print_field(
             tw,
             level,
@@ -542,29 +502,14 @@ impl TabDisplay for RfdWithRaw {
                 Visibility::Public => &"public",
             },
         );
-        printer.print_field(
-            tw,
-            level,
-            "authors",
-            &self.authors.as_ref().map(|s| s.as_str()).unwrap_or(""),
-        );
-        printer.print_field(
-            tw,
-            level,
-            "labels",
-            &self.labels.as_ref().map(|s| s.as_str()).unwrap_or(""),
-        );
-        printer.print_field(
-            tw,
-            level,
-            "link",
-            &self.link.as_ref().map(|s| s.as_str()).unwrap_or(""),
-        );
+        printer.print_field(tw, level, "authors", &self.authors.as_deref().unwrap_or(""));
+        printer.print_field(tw, level, "labels", &self.labels.as_deref().unwrap_or(""));
+        printer.print_field(tw, level, "link", &self.link.as_deref().unwrap_or(""));
         printer.print_field(
             tw,
             level,
             "discussion",
-            &self.discussion.as_ref().map(|s| s.as_str()).unwrap_or(""),
+            &self.discussion.as_deref().unwrap_or(""),
         );
         printer.print_field(
             tw,
@@ -596,7 +541,7 @@ impl TabDisplay for RfdWithRaw {
                 .map(|d| d.to_string())
                 .unwrap_or_else(|| "--".to_string()),
         );
-        writeln!(tw, "");
+        writeln!(tw);
         if let Some(content) = &self.content {
             writeln!(tw, "{}", content);
         }
@@ -627,7 +572,7 @@ impl TabDisplay for SearchResults {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "query", &self.query);
         printer.print_field(tw, level, "total hits", &self.hits.len());
-        writeln!(tw, "");
+        writeln!(tw);
         self.hits.display(tw, level, printer);
     }
 }
@@ -798,7 +743,7 @@ where
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         for entry in self {
             entry.display(tw, level, printer);
-            writeln!(tw, "");
+            writeln!(tw);
         }
     }
 }
@@ -832,7 +777,7 @@ impl RfdTabPrinter {
         );
     }
 
-    fn print_list<T>(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, key: &str, list: &Vec<T>)
+    fn print_list<T>(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, key: &str, list: &[T])
     where
         T: Display,
     {

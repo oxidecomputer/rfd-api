@@ -286,7 +286,7 @@ impl PdfStorage for PdfStorageCtx {
     ) -> Vec<Result<PdfFileLocation, RfdPdfError>> {
         tracing::info!("Attempt to store PFD");
 
-        if let Some(location) = self.locations.get(0) {
+        if let Some(location) = self.locations.first() {
             let mut req = File {
                 name: Some(filename.to_string()),
                 ..Default::default()

@@ -1015,8 +1015,8 @@ pub mod types {
     impl ::std::fmt::Display for ContentFormat {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match *self {
-                Self::Asciidoc => write!(f, "asciidoc"),
-                Self::Markdown => write!(f, "markdown"),
+                Self::Asciidoc => f.write_str("asciidoc"),
+                Self::Markdown => f.write_str("markdown"),
             }
         }
     }
@@ -2338,7 +2338,7 @@ pub mod types {
     impl ::std::fmt::Display for MagicLinkMedium {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match *self {
-                Self::Email => write!(f, "email"),
+                Self::Email => f.write_str("email"),
             }
         }
     }
@@ -3175,8 +3175,8 @@ pub mod types {
     impl ::std::fmt::Display for OAuthProviderName {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match *self {
-                Self::Github => write!(f, "github"),
-                Self::Google => write!(f, "google"),
+                Self::Github => f.write_str("github"),
+                Self::Google => f.write_str("google"),
             }
         }
     }
@@ -3301,8 +3301,8 @@ pub mod types {
     impl ::std::fmt::Display for PdfSource {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match *self {
-                Self::Github => write!(f, "github"),
-                Self::Google => write!(f, "google"),
+                Self::Github => f.write_str("github"),
+                Self::Google => f.write_str("google"),
             }
         }
     }
@@ -3712,9 +3712,9 @@ pub mod types {
     impl ::std::fmt::Display for RfdAttrName {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match *self {
-                Self::Discussion => write!(f, "discussion"),
-                Self::Labels => write!(f, "labels"),
-                Self::State => write!(f, "state"),
+                Self::Discussion => f.write_str("discussion"),
+                Self::Labels => f.write_str("labels"),
+                Self::State => f.write_str("state"),
             }
         }
     }
@@ -4810,12 +4810,12 @@ pub mod types {
     impl ::std::fmt::Display for RfdState {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match *self {
-                Self::Abandoned => write!(f, "abandoned"),
-                Self::Committed => write!(f, "committed"),
-                Self::Discussion => write!(f, "discussion"),
-                Self::Ideation => write!(f, "ideation"),
-                Self::Prediscussion => write!(f, "prediscussion"),
-                Self::Published => write!(f, "published"),
+                Self::Abandoned => f.write_str("abandoned"),
+                Self::Committed => f.write_str("committed"),
+                Self::Discussion => f.write_str("discussion"),
+                Self::Ideation => f.write_str("ideation"),
+                Self::Prediscussion => f.write_str("prediscussion"),
+                Self::Published => f.write_str("published"),
             }
         }
     }
@@ -7094,8 +7094,8 @@ pub mod types {
     impl ::std::fmt::Display for Visibility {
         fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
             match *self {
-                Self::Public => write!(f, "public"),
-                Self::Private => write!(f, "private"),
+                Self::Public => f.write_str("public"),
+                Self::Private => f.write_str("private"),
             }
         }
     }
@@ -13603,7 +13603,7 @@ impl Client {
     pub fn new(baseurl: &str) -> Self {
         #[cfg(not(target_arch = "wasm32"))]
         let client = {
-            let dur = std::time::Duration::from_secs(15);
+            let dur = ::std::time::Duration::from_secs(15u64);
             reqwest::ClientBuilder::new()
                 .connect_timeout(dur)
                 .timeout(dur)
@@ -13655,7 +13655,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn jwks_json(&self) -> builder::JwksJson {
+    pub fn jwks_json(&self) -> builder::JwksJson<'_> {
         builder::JwksJson::new(self)
     }
 
@@ -13666,7 +13666,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn openid_configuration(&self) -> builder::OpenidConfiguration {
+    pub fn openid_configuration(&self) -> builder::OpenidConfiguration<'_> {
         builder::OpenidConfiguration::new(self)
     }
 
@@ -13679,7 +13679,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn list_api_users(&self) -> builder::ListApiUsers {
+    pub fn list_api_users(&self) -> builder::ListApiUsers<'_> {
         builder::ListApiUsers::new(self)
     }
 
@@ -13693,7 +13693,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn create_api_user(&self) -> builder::CreateApiUser {
+    pub fn create_api_user(&self) -> builder::CreateApiUser<'_> {
         builder::CreateApiUser::new(self)
     }
 
@@ -13707,7 +13707,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn get_api_user(&self) -> builder::GetApiUser {
+    pub fn get_api_user(&self) -> builder::GetApiUser<'_> {
         builder::GetApiUser::new(self)
     }
 
@@ -13722,7 +13722,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn update_api_user(&self) -> builder::UpdateApiUser {
+    pub fn update_api_user(&self) -> builder::UpdateApiUser<'_> {
         builder::UpdateApiUser::new(self)
     }
 
@@ -13737,7 +13737,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn set_api_user_contact_email(&self) -> builder::SetApiUserContactEmail {
+    pub fn set_api_user_contact_email(&self) -> builder::SetApiUserContactEmail<'_> {
         builder::SetApiUserContactEmail::new(self)
     }
 
@@ -13752,7 +13752,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn add_api_user_to_group(&self) -> builder::AddApiUserToGroup {
+    pub fn add_api_user_to_group(&self) -> builder::AddApiUserToGroup<'_> {
         builder::AddApiUserToGroup::new(self)
     }
 
@@ -13767,7 +13767,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn remove_api_user_from_group(&self) -> builder::RemoveApiUserFromGroup {
+    pub fn remove_api_user_from_group(&self) -> builder::RemoveApiUserFromGroup<'_> {
         builder::RemoveApiUserFromGroup::new(self)
     }
 
@@ -13782,7 +13782,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn link_provider(&self) -> builder::LinkProvider {
+    pub fn link_provider(&self) -> builder::LinkProvider<'_> {
         builder::LinkProvider::new(self)
     }
 
@@ -13796,7 +13796,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn list_api_user_tokens(&self) -> builder::ListApiUserTokens {
+    pub fn list_api_user_tokens(&self) -> builder::ListApiUserTokens<'_> {
         builder::ListApiUserTokens::new(self)
     }
 
@@ -13811,7 +13811,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn create_api_user_token(&self) -> builder::CreateApiUserToken {
+    pub fn create_api_user_token(&self) -> builder::CreateApiUserToken<'_> {
         builder::CreateApiUserToken::new(self)
     }
 
@@ -13826,7 +13826,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn get_api_user_token(&self) -> builder::GetApiUserToken {
+    pub fn get_api_user_token(&self) -> builder::GetApiUserToken<'_> {
         builder::GetApiUserToken::new(self)
     }
 
@@ -13841,7 +13841,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn delete_api_user_token(&self) -> builder::DeleteApiUserToken {
+    pub fn delete_api_user_token(&self) -> builder::DeleteApiUserToken<'_> {
         builder::DeleteApiUserToken::new(self)
     }
 
@@ -13857,7 +13857,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn create_link_token(&self) -> builder::CreateLinkToken {
+    pub fn create_link_token(&self) -> builder::CreateLinkToken<'_> {
         builder::CreateLinkToken::new(self)
     }
 
@@ -13870,7 +13870,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn get_groups(&self) -> builder::GetGroups {
+    pub fn get_groups(&self) -> builder::GetGroups<'_> {
         builder::GetGroups::new(self)
     }
 
@@ -13884,7 +13884,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn create_group(&self) -> builder::CreateGroup {
+    pub fn create_group(&self) -> builder::CreateGroup<'_> {
         builder::CreateGroup::new(self)
     }
 
@@ -13899,7 +13899,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn update_group(&self) -> builder::UpdateGroup {
+    pub fn update_group(&self) -> builder::UpdateGroup<'_> {
         builder::UpdateGroup::new(self)
     }
 
@@ -13913,7 +13913,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn delete_group(&self) -> builder::DeleteGroup {
+    pub fn delete_group(&self) -> builder::DeleteGroup<'_> {
         builder::DeleteGroup::new(self)
     }
 
@@ -13929,7 +13929,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn list_jobs(&self) -> builder::ListJobs {
+    pub fn list_jobs(&self) -> builder::ListJobs<'_> {
         builder::ListJobs::new(self)
     }
 
@@ -13944,7 +13944,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn magic_link_exchange(&self) -> builder::MagicLinkExchange {
+    pub fn magic_link_exchange(&self) -> builder::MagicLinkExchange<'_> {
         builder::MagicLinkExchange::new(self)
     }
 
@@ -13959,7 +13959,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn magic_link_send(&self) -> builder::MagicLinkSend {
+    pub fn magic_link_send(&self) -> builder::MagicLinkSend<'_> {
         builder::MagicLinkSend::new(self)
     }
 
@@ -13978,7 +13978,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn authz_code_redirect(&self) -> builder::AuthzCodeRedirect {
+    pub fn authz_code_redirect(&self) -> builder::AuthzCodeRedirect<'_> {
         builder::AuthzCodeRedirect::new(self)
     }
 
@@ -13995,7 +13995,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn authz_code_callback(&self) -> builder::AuthzCodeCallback {
+    pub fn authz_code_callback(&self) -> builder::AuthzCodeCallback<'_> {
         builder::AuthzCodeCallback::new(self)
     }
 
@@ -14010,7 +14010,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn authz_code_exchange(&self) -> builder::AuthzCodeExchange {
+    pub fn authz_code_exchange(&self) -> builder::AuthzCodeExchange<'_> {
         builder::AuthzCodeExchange::new(self)
     }
 
@@ -14024,7 +14024,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn get_device_provider(&self) -> builder::GetDeviceProvider {
+    pub fn get_device_provider(&self) -> builder::GetDeviceProvider<'_> {
         builder::GetDeviceProvider::new(self)
     }
 
@@ -14039,7 +14039,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn exchange_device_token(&self) -> builder::ExchangeDeviceToken {
+    pub fn exchange_device_token(&self) -> builder::ExchangeDeviceToken<'_> {
         builder::ExchangeDeviceToken::new(self)
     }
 
@@ -14052,7 +14052,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn list_magic_links(&self) -> builder::ListMagicLinks {
+    pub fn list_magic_links(&self) -> builder::ListMagicLinks<'_> {
         builder::ListMagicLinks::new(self)
     }
 
@@ -14065,7 +14065,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn create_magic_link(&self) -> builder::CreateMagicLink {
+    pub fn create_magic_link(&self) -> builder::CreateMagicLink<'_> {
         builder::CreateMagicLink::new(self)
     }
 
@@ -14079,7 +14079,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn get_magic_link(&self) -> builder::GetMagicLink {
+    pub fn get_magic_link(&self) -> builder::GetMagicLink<'_> {
         builder::GetMagicLink::new(self)
     }
 
@@ -14094,7 +14094,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn create_magic_link_redirect_uri(&self) -> builder::CreateMagicLinkRedirectUri {
+    pub fn create_magic_link_redirect_uri(&self) -> builder::CreateMagicLinkRedirectUri<'_> {
         builder::CreateMagicLinkRedirectUri::new(self)
     }
 
@@ -14110,7 +14110,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn delete_magic_link_redirect_uri(&self) -> builder::DeleteMagicLinkRedirectUri {
+    pub fn delete_magic_link_redirect_uri(&self) -> builder::DeleteMagicLinkRedirectUri<'_> {
         builder::DeleteMagicLinkRedirectUri::new(self)
     }
 
@@ -14124,7 +14124,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn create_magic_link_secret(&self) -> builder::CreateMagicLinkSecret {
+    pub fn create_magic_link_secret(&self) -> builder::CreateMagicLinkSecret<'_> {
         builder::CreateMagicLinkSecret::new(self)
     }
 
@@ -14140,7 +14140,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn delete_magic_link_secret(&self) -> builder::DeleteMagicLinkSecret {
+    pub fn delete_magic_link_secret(&self) -> builder::DeleteMagicLinkSecret<'_> {
         builder::DeleteMagicLinkSecret::new(self)
     }
 
@@ -14156,7 +14156,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn get_mappers(&self) -> builder::GetMappers {
+    pub fn get_mappers(&self) -> builder::GetMappers<'_> {
         builder::GetMappers::new(self)
     }
 
@@ -14170,7 +14170,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn create_mapper(&self) -> builder::CreateMapper {
+    pub fn create_mapper(&self) -> builder::CreateMapper<'_> {
         builder::CreateMapper::new(self)
     }
 
@@ -14184,7 +14184,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn delete_mapper(&self) -> builder::DeleteMapper {
+    pub fn delete_mapper(&self) -> builder::DeleteMapper<'_> {
         builder::DeleteMapper::new(self)
     }
 
@@ -14197,7 +14197,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn list_oauth_clients(&self) -> builder::ListOauthClients {
+    pub fn list_oauth_clients(&self) -> builder::ListOauthClients<'_> {
         builder::ListOauthClients::new(self)
     }
 
@@ -14210,7 +14210,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn create_oauth_client(&self) -> builder::CreateOauthClient {
+    pub fn create_oauth_client(&self) -> builder::CreateOauthClient<'_> {
         builder::CreateOauthClient::new(self)
     }
 
@@ -14224,7 +14224,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn get_oauth_client(&self) -> builder::GetOauthClient {
+    pub fn get_oauth_client(&self) -> builder::GetOauthClient<'_> {
         builder::GetOauthClient::new(self)
     }
 
@@ -14239,7 +14239,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn create_oauth_client_redirect_uri(&self) -> builder::CreateOauthClientRedirectUri {
+    pub fn create_oauth_client_redirect_uri(&self) -> builder::CreateOauthClientRedirectUri<'_> {
         builder::CreateOauthClientRedirectUri::new(self)
     }
 
@@ -14255,7 +14255,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn delete_oauth_client_redirect_uri(&self) -> builder::DeleteOauthClientRedirectUri {
+    pub fn delete_oauth_client_redirect_uri(&self) -> builder::DeleteOauthClientRedirectUri<'_> {
         builder::DeleteOauthClientRedirectUri::new(self)
     }
 
@@ -14269,7 +14269,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn create_oauth_client_secret(&self) -> builder::CreateOauthClientSecret {
+    pub fn create_oauth_client_secret(&self) -> builder::CreateOauthClientSecret<'_> {
         builder::CreateOauthClientSecret::new(self)
     }
 
@@ -14285,7 +14285,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn delete_oauth_client_secret(&self) -> builder::DeleteOauthClientSecret {
+    pub fn delete_oauth_client_secret(&self) -> builder::DeleteOauthClientSecret<'_> {
         builder::DeleteOauthClientSecret::new(self)
     }
 
@@ -14298,7 +14298,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn list_rfds(&self) -> builder::ListRfds {
+    pub fn list_rfds(&self) -> builder::ListRfds<'_> {
         builder::ListRfds::new(self)
     }
 
@@ -14312,7 +14312,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn reserve_rfd(&self) -> builder::ReserveRfd {
+    pub fn reserve_rfd(&self) -> builder::ReserveRfd<'_> {
         builder::ReserveRfd::new(self)
     }
 
@@ -14328,7 +14328,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn view_rfd_meta(&self) -> builder::ViewRfdMeta {
+    pub fn view_rfd_meta(&self) -> builder::ViewRfdMeta<'_> {
         builder::ViewRfdMeta::new(self)
     }
 
@@ -14346,7 +14346,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn view_rfd_attr(&self) -> builder::ViewRfdAttr {
+    pub fn view_rfd_attr(&self) -> builder::ViewRfdAttr<'_> {
         builder::ViewRfdAttr::new(self)
     }
 
@@ -14366,7 +14366,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn set_rfd_attr(&self) -> builder::SetRfdAttr {
+    pub fn set_rfd_attr(&self) -> builder::SetRfdAttr<'_> {
         builder::SetRfdAttr::new(self)
     }
 
@@ -14384,7 +14384,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn set_rfd_content(&self) -> builder::SetRfdContent {
+    pub fn set_rfd_content(&self) -> builder::SetRfdContent<'_> {
         builder::SetRfdContent::new(self)
     }
 
@@ -14400,7 +14400,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn view_rfd_discussion(&self) -> builder::ViewRfdDiscussion {
+    pub fn view_rfd_discussion(&self) -> builder::ViewRfdDiscussion<'_> {
         builder::ViewRfdDiscussion::new(self)
     }
 
@@ -14416,7 +14416,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn view_rfd_pdf(&self) -> builder::ViewRfdPdf {
+    pub fn view_rfd_pdf(&self) -> builder::ViewRfdPdf<'_> {
         builder::ViewRfdPdf::new(self)
     }
 
@@ -14432,7 +14432,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn view_rfd(&self) -> builder::ViewRfd {
+    pub fn view_rfd(&self) -> builder::ViewRfd<'_> {
         builder::ViewRfd::new(self)
     }
 
@@ -14450,7 +14450,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn set_rfd_document(&self) -> builder::SetRfdDocument {
+    pub fn set_rfd_document(&self) -> builder::SetRfdDocument<'_> {
         builder::SetRfdDocument::new(self)
     }
 
@@ -14470,7 +14470,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn list_rfd_revisions(&self) -> builder::ListRfdRevisions {
+    pub fn list_rfd_revisions(&self) -> builder::ListRfdRevisions<'_> {
         builder::ListRfdRevisions::new(self)
     }
 
@@ -14488,7 +14488,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn view_rfd_revision_meta(&self) -> builder::ViewRfdRevisionMeta {
+    pub fn view_rfd_revision_meta(&self) -> builder::ViewRfdRevisionMeta<'_> {
         builder::ViewRfdRevisionMeta::new(self)
     }
 
@@ -14508,7 +14508,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn update_rfd_revision(&self) -> builder::UpdateRfdRevision {
+    pub fn update_rfd_revision(&self) -> builder::UpdateRfdRevision<'_> {
         builder::UpdateRfdRevision::new(self)
     }
 
@@ -14528,7 +14528,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn view_rfd_revision_attr(&self) -> builder::ViewRfdRevisionAttr {
+    pub fn view_rfd_revision_attr(&self) -> builder::ViewRfdRevisionAttr<'_> {
         builder::ViewRfdRevisionAttr::new(self)
     }
 
@@ -14546,7 +14546,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn view_rfd_revision_discussion(&self) -> builder::ViewRfdRevisionDiscussion {
+    pub fn view_rfd_revision_discussion(&self) -> builder::ViewRfdRevisionDiscussion<'_> {
         builder::ViewRfdRevisionDiscussion::new(self)
     }
 
@@ -14564,7 +14564,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn view_rfd_revision_pdf(&self) -> builder::ViewRfdRevisionPdf {
+    pub fn view_rfd_revision_pdf(&self) -> builder::ViewRfdRevisionPdf<'_> {
         builder::ViewRfdRevisionPdf::new(self)
     }
 
@@ -14582,7 +14582,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn view_rfd_revision(&self) -> builder::ViewRfdRevision {
+    pub fn view_rfd_revision(&self) -> builder::ViewRfdRevision<'_> {
         builder::ViewRfdRevision::new(self)
     }
 
@@ -14598,7 +14598,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn discuss_rfd(&self) -> builder::DiscussRfd {
+    pub fn discuss_rfd(&self) -> builder::DiscussRfd<'_> {
         builder::DiscussRfd::new(self)
     }
 
@@ -14614,7 +14614,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn publish_rfd(&self) -> builder::PublishRfd {
+    pub fn publish_rfd(&self) -> builder::PublishRfd<'_> {
         builder::PublishRfd::new(self)
     }
 
@@ -14632,7 +14632,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn update_rfd_visibility(&self) -> builder::UpdateRfdVisibility {
+    pub fn update_rfd_visibility(&self) -> builder::UpdateRfdVisibility<'_> {
         builder::UpdateRfdVisibility::new(self)
     }
 
@@ -14651,7 +14651,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn search_rfds(&self) -> builder::SearchRfds {
+    pub fn search_rfds(&self) -> builder::SearchRfds<'_> {
         builder::SearchRfds::new(self)
     }
 
@@ -14664,7 +14664,7 @@ impl Client {
     ///    .send()
     ///    .await;
     /// ```
-    pub fn get_self(&self) -> builder::GetSelf {
+    pub fn get_self(&self) -> builder::GetSelf<'_> {
         builder::GetSelf::new(self)
     }
 }
@@ -14679,11 +14679,11 @@ pub trait ClientHiddenExt {
     ///    .send()
     ///    .await;
     /// ```
-    fn github_webhook(&self) -> builder::GithubWebhook;
+    fn github_webhook(&self) -> builder::GithubWebhook<'_>;
 }
 
 impl ClientHiddenExt for Client {
-    fn github_webhook(&self) -> builder::GithubWebhook {
+    fn github_webhook(&self) -> builder::GithubWebhook<'_> {
         builder::GithubWebhook::new(self)
     }
 }

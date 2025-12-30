@@ -21,6 +21,7 @@ use store::CliConfig;
 
 mod cmd;
 mod err;
+#[allow(clippy::all)]
 mod generated;
 mod printer;
 mod store;
@@ -243,7 +244,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                     node = node.children.entry(ss).or_default();
                 } else {
                     assert!(
-                        node.children.get(ss).is_none(),
+                        !node.children.contains_key(ss),
                         "two identical subcommands {}",
                         path,
                     );

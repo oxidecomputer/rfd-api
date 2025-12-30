@@ -24,7 +24,7 @@ pub trait RfdDocument {
     type Error;
 
     /// Extract the title from the internal content
-    fn get_title<'a>(&'a self) -> Option<&'a str>;
+    fn get_title(&self) -> Option<&str>;
 
     /// Get the state value stored within the document
     fn get_state(&self) -> Option<&str>;

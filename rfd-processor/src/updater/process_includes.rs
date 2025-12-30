@@ -40,7 +40,7 @@ impl RfdUpdateAction for ProcessIncludes {
 
                 // Ensure that we only do the work of downloading supporting documents if there
                 // are include macros to process
-                if includes.len() > 0 {
+                if !includes.is_empty() {
                     let documents = update
                         .location
                         .download_supporting_documents(&ctx.github.client, &update.number)
