@@ -28,7 +28,7 @@ export const isObjectOrArray = (o: unknown) =>
  */
 export const mapObj = (
   kf: (k: string) => string,
-  vf: (k: string | undefined, v: unknown) => unknown = (k, v) => v,
+  vf: (k: string | undefined, v: unknown) => unknown = (_, v) => v,
 ) =>
 (o: unknown): unknown => {
   if (!isObjectOrArray(o)) { return o }
@@ -42,8 +42,18 @@ export const mapObj = (
   return newObj
 }
 
+const isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/
+
 export const parseIfDate = (k: string | undefined, v: unknown) => {
-  if (typeof v === 'string' && (k?.startsWith('time_') || k === 'timestamp')) {
+  if (
+    typeof v === 'string'
+    && isoDateRegex.test(v)
+    && (k?.startsWith('time_')
+      || k?.endsWith('_time')
+      || k?.endsWith('_expiration')
+      || k?.endsWith('_at')
+      || k === 'timestamp')
+  ) {
     const d = new Date(v)
     if (isNaN(d.getTime())) { return v }
     return d
