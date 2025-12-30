@@ -201,7 +201,7 @@ fn generate(check: bool, verbose: bool) -> Result<(), String> {
     // Typescript SDK
     print!("generating typescript sdk ... ");
     Command::new("npx")
-        .arg("@oxide/openapi-gen-ts@0.5.0")
+        .arg("@oxide/openapi-gen-ts@0.12.0")
         .arg("rfd-api-spec.json")
         .arg("rfd-ts/src")
         .arg("--features")
