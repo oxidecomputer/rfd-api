@@ -82,6 +82,23 @@ client_id = ""
 client_secret = ""
 redirect_uri = "https://<rfd-api-hostname>/login/oauth/github/code/callback"
 
+# Magic link (passwordless email login) configuration
+# Leave templates empty to disable magic link authentication
+[magic_link]
+templates = []
+
+# Example of enabled magic link:
+# [[magic_link.templates]]
+# medium = "email"
+# channel = "login"
+# from = "noreply@yourdomain.com"
+# subject = "Login to RFD"
+# text = "Click here to login: {{ url }}"
+# html = "<a href=\"{{ url }}\">Click here to login</a>"
+#
+# [magic_link.email_service.resend]
+# key = "re_xxxxxxxx"
+
 # Search configuration
 [search]
 # Remote url of the search service
