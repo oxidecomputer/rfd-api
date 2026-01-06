@@ -1,17 +1,10 @@
 /* eslint-disable */
 
-/**
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, you can obtain one at https://mozilla.org/MPL/2.0/.
- *
- * Copyright Oxide Computer Company
- */
+import type { ApiResult, FetchParams, FullParams } from './http-client'
+import { dateReplacer, handleResponse, mergeParams, toQueryString } from './http-client'
+import { snakeify } from './util'
 
-import type { FetchParams } from './http-client'
-import { HttpClient, toQueryString } from './http-client'
-
-export type { ApiConfig, ApiResult, ErrorBody, ErrorResult } from './http-client'
+export type { ApiResult, ErrorBody, ErrorResult } from './http-client'
 
 export type TypedUuidForUserId = string
 
@@ -73,53 +66,53 @@ export type RfdPermission =
   | 'ManageMagicLinkClientsAll'
   | 'CreateAccessToken'
   | { 'GetRfd': number }
-  | { 'GetRfds': number[] }
+  | { 'GetRfds': (number)[] }
   | { 'UpdateRfd': number }
-  | { 'UpdateRfds': number[] }
+  | { 'UpdateRfds': (number)[] }
   | { 'ManageRfdVisibility': number }
-  | { 'ManageRfdsVisibility': number[] }
+  | { 'ManageRfdsVisibility': (number)[] }
   | { 'GetDiscussion': number }
-  | { 'GetDiscussions': number[] }
+  | { 'GetDiscussions': (number)[] }
   | { 'GetApiUser': TypedUuidForUserId }
-  | { 'GetApiUsers': TypedUuidForUserId[] }
+  | { 'GetApiUsers': (TypedUuidForUserId)[] }
   | { 'ManageApiUser': TypedUuidForUserId }
-  | { 'ManageApiUsers': TypedUuidForUserId[] }
+  | { 'ManageApiUsers': (TypedUuidForUserId)[] }
   | { 'CreateApiKey': TypedUuidForUserId }
   | { 'GetApiKey': TypedUuidForApiKeyId }
-  | { 'GetApiKeys': TypedUuidForApiKeyId[] }
+  | { 'GetApiKeys': (TypedUuidForApiKeyId)[] }
   | { 'ManageApiKey': TypedUuidForApiKeyId }
-  | { 'ManageApiKeys': TypedUuidForApiKeyId[] }
+  | { 'ManageApiKeys': (TypedUuidForApiKeyId)[] }
   | { 'GetGroup': TypedUuidForAccessGroupId }
   | { 'ManageGroup': TypedUuidForAccessGroupId }
-  | { 'ManageGroups': TypedUuidForAccessGroupId[] }
+  | { 'ManageGroups': (TypedUuidForAccessGroupId)[] }
   | { 'ManageGroupMembership': TypedUuidForAccessGroupId }
-  | { 'ManageGroupMemberships': TypedUuidForAccessGroupId[] }
+  | { 'ManageGroupMemberships': (TypedUuidForAccessGroupId)[] }
   | { 'ManageMapper': TypedUuidForMapperId }
-  | { 'ManageMappers': TypedUuidForMapperId[] }
+  | { 'ManageMappers': (TypedUuidForMapperId)[] }
   | { 'GetOAuthClient': TypedUuidForOAuthClientId }
-  | { 'GetOAuthClients': TypedUuidForOAuthClientId[] }
+  | { 'GetOAuthClients': (TypedUuidForOAuthClientId)[] }
   | { 'ManageOAuthClient': TypedUuidForOAuthClientId }
-  | { 'ManageOAuthClients': TypedUuidForOAuthClientId[] }
+  | { 'ManageOAuthClients': (TypedUuidForOAuthClientId)[] }
   | { 'GetMagicLinkClient': TypedUuidForMagicLinkId }
-  | { 'GetMagicLinkClients': TypedUuidForMagicLinkId[] }
+  | { 'GetMagicLinkClients': (TypedUuidForMagicLinkId)[] }
   | { 'ManageMagicLinkClient': TypedUuidForMagicLinkId }
-  | { 'ManageMagicLinkClients': TypedUuidForMagicLinkId[] }
+  | { 'ManageMagicLinkClients': (TypedUuidForMagicLinkId)[] }
   | { 'Unsupported': Record<string, unknown> }
 
-export type Permissions_for_RfdPermission = RfdPermission[]
+export type Permissions_for_RfdPermission = (RfdPermission)[]
 
 export type AccessGroupUpdateParams_for_RfdPermission = { 'name': string; 'permissions': Permissions_for_RfdPermission }
 
 export type AccessGroup_for_RfdPermission = {
   'createdAt': Date
-  'deletedAt'?: Date
+  'deletedAt'?: Date | null
   'id': TypedUuidForAccessGroupId
   'name': string
   'permissions': Permissions_for_RfdPermission
   'updatedAt': Date
 }
 
-export type AccessTokenExchangeRequest = { 'deviceCode': string; 'expiresAt'?: Date; 'grantType': string }
+export type AccessTokenExchangeRequest = { 'deviceCode': string; 'expiresAt'?: Date | null; 'grantType': string }
 
 export type AddGroupBody = { 'groupId': TypedUuidForAccessGroupId }
 
@@ -127,19 +120,22 @@ export type AddMagicLinkRedirectBody = { 'redirectUri': string }
 
 export type AddOAuthClientRedirectBody = { 'redirectUri': string }
 
-export type ApiKeyCreateParams_for_RfdPermission = { 'expiresAt': Date; 'permissions'?: Permissions_for_RfdPermission }
+export type ApiKeyCreateParams_for_RfdPermission = {
+  'expiresAt': Date
+  'permissions'?: Permissions_for_RfdPermission | null
+}
 
 export type ApiKeyResponse_for_RfdPermission = {
   'createdAt': Date
   'id': TypedUuidForApiKeyId
-  'permissions'?: Permissions_for_RfdPermission
+  'permissions'?: Permissions_for_RfdPermission | null
 }
 
 export type TypedUuidForUserProviderId = string
 
 export type ApiUserContactEmail = {
   'createdAt': Date
-  'deletedAt'?: Date
+  'deletedAt'?: Date | null
   'email': string
   'id': TypedUuidForUserProviderId
   'updatedAt': Date
@@ -156,9 +152,9 @@ export type ApiUserLinkRequestResponse = { 'token': SecretString }
 
 export type ApiUserProvider = {
   'createdAt': Date
-  'deletedAt'?: Date
-  'displayNames': string[]
-  'emails': string[]
+  'deletedAt'?: Date | null
+  'displayNames': (string)[]
+  'emails': (string)[]
   'id': TypedUuidForUserProviderId
   'provider': string
   'providerId': string
@@ -169,14 +165,14 @@ export type ApiUserProvider = {
 export type ApiUserProviderLinkPayload = { 'token': string }
 
 export type ApiUserUpdateParams_for_RfdPermission = {
-  'groupIds': TypedUuidForAccessGroupId[]
+  'groupIds': (TypedUuidForAccessGroupId)[]
   'permissions': Permissions_for_RfdPermission
 }
 
 export type ApiUser_for_RfdPermission = {
   'createdAt': Date
-  'deletedAt'?: Date
-  'groups': TypedUuidForAccessGroupId[]
+  'deletedAt'?: Date | null
+  'groups': (TypedUuidForAccessGroupId)[]
   'id': TypedUuidForUserId
   'permissions': Permissions_for_RfdPermission
   'updatedAt': Date
@@ -188,27 +184,27 @@ export type ContentFormat =
   | 'asciidoc'
   | 'markdown'
 
-export type CreateMapper = { 'maxActivations'?: number; 'name': string; 'rule': Record<string, unknown> }
+export type CreateMapper = { 'maxActivations'?: number | null; 'name': string; 'rule': Record<string, unknown> }
 
 export type FileSha = string
 
 export type FormattedSearchResultHit = {
-  'anchor'?: string
-  'content'?: string
-  'hierarchy': string[]
-  'hierarchyRadio': string[]
+  'anchor'?: string | null
+  'content'?: string | null
+  'hierarchy': (string | null)[]
+  'hierarchyRadio': (string | null)[]
   'objectId': string
   'rfdNumber': number
-  'url'?: string
+  'url'?: string | null
 }
 
-export type GetUserResponse_for_RfdPermission = { 'info': ApiUser_for_RfdPermission; 'providers': ApiUserProvider[] }
+export type GetUserResponse_for_RfdPermission = { 'info': ApiUser_for_RfdPermission; 'providers': (ApiUserProvider)[] }
 
 export type GitHubCommit = {
-  'added': string[]
+  'added': (string)[]
   'id': string
-  'modified': string[]
-  'removed': string[]
+  'modified': (string)[]
+  'removed': (string)[]
   'timestamp': Date
 }
 
@@ -227,8 +223,8 @@ export type GitHubRepository = {
 export type GitHubSender = { 'id': number; 'login': string; 'nodeId': string; 'type': string }
 
 export type GitHubCommitPayload = {
-  'commits': GitHubCommit[]
-  'headCommit'?: GitHubCommit
+  'commits': (GitHubCommit)[]
+  'headCommit'?: GitHubCommit | null
   'installation': GitHubInstallation
   'ref': string
   'repository': GitHubRepository
@@ -239,7 +235,7 @@ export type InitialApiKeyResponse_for_RfdPermission = {
   'createdAt': Date
   'id': TypedUuidForApiKeyId
   'key': SecretString
-  'permissions'?: Permissions_for_RfdPermission
+  'permissions'?: Permissions_for_RfdPermission | null
 }
 
 export type TypedUuidForMagicLinkSecretId = string
@@ -270,19 +266,19 @@ export type Job = {
   'repository': string
   'rfd': number
   'sha': CommitSha
-  'startedAt'?: Date
-  'webhookDeliveryId'?: TypedUuidForWebhookDeliveryId
+  'startedAt'?: Date | null
+  'webhookDeliveryId'?: TypedUuidForWebhookDeliveryId | null
 }
 
 export type Jwk = { 'e': string; 'kid': string; 'kty': string; 'n': string; 'use': string }
 
-export type Jwks = { 'keys': Jwk[] }
+export type Jwks = { 'keys': (Jwk)[] }
 
 export type TypedUuidForMagicLinkRedirectUriId = string
 
 export type MagicLinkRedirectUri = {
   'createdAt': Date
-  'deletedAt'?: Date
+  'deletedAt'?: Date | null
   'id': TypedUuidForMagicLinkRedirectUriId
   'magicLinkClientId': TypedUuidForMagicLinkId
   'redirectUri': string
@@ -290,7 +286,7 @@ export type MagicLinkRedirectUri = {
 
 export type MagicLinkSecret = {
   'createdAt': Date
-  'deletedAt'?: Date
+  'deletedAt'?: Date | null
   'id': TypedUuidForMagicLinkSecretId
   'magicLinkClientId': TypedUuidForMagicLinkId
   'secretSignature': string
@@ -298,10 +294,10 @@ export type MagicLinkSecret = {
 
 export type MagicLink = {
   'createdAt': Date
-  'deletedAt'?: Date
+  'deletedAt'?: Date | null
   'id': TypedUuidForMagicLinkId
-  'redirectUris': MagicLinkRedirectUri[]
-  'secrets': MagicLinkSecret[]
+  'redirectUris': (MagicLinkRedirectUri)[]
+  'secrets': (MagicLinkSecret)[]
 }
 
 export type TypedUuidForMagicLinkAttemptId = string
@@ -321,30 +317,30 @@ export type MagicLinkSendRequest = {
   'medium': MagicLinkMedium
   'recipient': string
   'redirectUri': string
-  'scope'?: string
+  'scope'?: string | null
   'secret': string
 }
 
 export type MagicLinkSendResponse = { 'attemptId': TypedUuidForMagicLinkAttemptId }
 
 export type Mapper = {
-  'activations'?: number
+  'activations'?: number | null
   'createdAt': Date
-  'deletedAt'?: Date
-  'depletedAt'?: Date
+  'deletedAt'?: Date | null
+  'depletedAt'?: Date | null
   'id': TypedUuidForMapperId
-  'maxActivations'?: number
+  'maxActivations'?: number | null
   'name': string
   'rule': Record<string, unknown>
   'updatedAt': Date
 }
 
 export type OAuthAuthzCodeExchangeBody = {
-  'clientId'?: TypedUuidForOAuthClientId
-  'clientSecret'?: SecretString
+  'clientId'?: TypedUuidForOAuthClientId | null
+  'clientSecret'?: SecretString | null
   'code': string
   'grantType': string
-  'pkceVerifier'?: string
+  'pkceVerifier'?: string | null
   'redirectUri': string
 }
 
@@ -354,7 +350,7 @@ export type TypedUuidForOAuthRedirectUriId = string
 
 export type OAuthClientRedirectUri = {
   'createdAt': Date
-  'deletedAt'?: Date
+  'deletedAt'?: Date | null
   'id': TypedUuidForOAuthRedirectUriId
   'oauthClientId': TypedUuidForOAuthClientId
   'redirectUri': string
@@ -362,7 +358,7 @@ export type OAuthClientRedirectUri = {
 
 export type OAuthClientSecret = {
   'createdAt': Date
-  'deletedAt'?: Date
+  'deletedAt'?: Date | null
   'id': TypedUuidForOAuthSecretId
   'oauthClientId': TypedUuidForOAuthClientId
   'secretSignature': string
@@ -370,10 +366,10 @@ export type OAuthClientSecret = {
 
 export type OAuthClient = {
   'createdAt': Date
-  'deletedAt'?: Date
+  'deletedAt'?: Date | null
   'id': TypedUuidForOAuthClientId
-  'redirectUris': OAuthClientRedirectUri[]
-  'secrets': OAuthClientSecret[]
+  'redirectUris': (OAuthClientRedirectUri)[]
+  'secrets': (OAuthClientSecret)[]
 }
 
 export type OAuthProviderName =
@@ -385,7 +381,7 @@ export type OAuthProviderInfo = {
   'clientId': string
   'deviceCodeEndpoint': string
   'provider': OAuthProviderName
-  'scopes': string[]
+  'scopes': (string)[]
   'tokenEndpoint': string
 }
 
@@ -397,7 +393,7 @@ export type PdfSource =
 
 export type ReserveRfdBody = {
   /** Optional contents of the RFD */
-  'content'?: string
+  'content'?: string | null
   /** Title of the RFD */
   'title': string
 }
@@ -409,20 +405,20 @@ export type TypedUuidForRfdRevisionId = string
 export type TypedUuidForRfdId = string
 
 export type RfdRevision = {
-  'authors'?: string
+  'authors'?: string | null
   'commit': CommitSha
   'committedAt': Date
   'content': string
   'contentFormat': ContentFormat
   'createdAt': Date
-  'deletedAt'?: Date
-  'discussion'?: string
+  'deletedAt'?: Date | null
+  'discussion'?: string | null
   'id': TypedUuidForRfdRevisionId
-  'labels'?: string
+  'labels'?: string | null
   'majorChange': boolean
   'rfdId': TypedUuidForRfdId
   'sha': FileSha
-  'state'?: string
+  'state'?: string | null
   'title': string
   'updatedAt': Date
 }
@@ -432,12 +428,12 @@ export type Visibility =
   | 'private'
 
 export type Rfd = {
-  'content'?: RfdRevision
+  'content'?: RfdRevision | null
   'createdAt': Date
-  'deletedAt'?: Date
+  'deletedAt'?: Date | null
   'id': TypedUuidForRfdId
-  'latestMajorChangeAt'?: Date
-  'link'?: string
+  'latestMajorChangeAt'?: Date | null
+  'link'?: string | null
   'rfdNumber': number
   'updatedAt': Date
   'visibility': Visibility
@@ -458,7 +454,7 @@ export type RfdAttr =
 
 export type RfdAttrValue = {
   /** Optional Git commit message to send with this update (recommended) */
-  'message'?: string
+  'message'?: string | null
   /** Full value to set this attribute to in the existing RFD contents */
   'value': string
 }
@@ -467,7 +463,7 @@ export type TypedUuidForRfdPdfId = string
 
 export type RfdPdf = {
   'createdAt': Date
-  'deletedAt'?: Date
+  'deletedAt'?: Date | null
   'externalId': string
   'id': TypedUuidForRfdPdfId
   'link': string
@@ -488,85 +484,90 @@ export type RfdUpdateBody = {
   /** Full Asciidoc document to store for this RFD */
   'document': string
   /** Optional Git commit message to send with this update (recommended) */
-  'message'?: string
+  'message'?: string | null
 }
 
 export type RfdUpdateContentBody = {
   /** Asciidoc content to store for this RFD */
   'content': string
   /** Optional Git commit message to send with this update (recommended) */
-  'message'?: string
+  'message'?: string | null
 }
 
 export type RfdVisibility = { 'visibility': Visibility }
 
 export type RfdWithPdf = {
-  'authors'?: string
-  'commit'?: CommitSha
-  'committedAt'?: Date
-  'content': RfdPdf[]
-  'discussion'?: string
-  'format'?: ContentFormat
+  'authors'?: string | null
+  'commit'?: CommitSha | null
+  'committedAt'?: Date | null
+  'content': (RfdPdf)[]
+  'discussion'?: string | null
+  'format'?: ContentFormat | null
   'id': TypedUuidForRfdId
-  'labels'?: string
-  'latestMajorChangeAt'?: Date
-  'link'?: string
+  'labels'?: string | null
+  'latestMajorChangeAt'?: Date | null
+  'link'?: string | null
   'rfdNumber': number
-  'sha'?: FileSha
-  'state'?: string
-  'title'?: string
+  'sha'?: FileSha | null
+  'state'?: string | null
+  'title'?: string | null
   'visibility': Visibility
 }
 
 export type RfdWithRaw = {
-  'authors'?: string
-  'commit'?: CommitSha
-  'committedAt'?: Date
-  'content'?: string
-  'discussion'?: string
-  'format'?: ContentFormat
+  'authors'?: string | null
+  'commit'?: CommitSha | null
+  'committedAt'?: Date | null
+  'content'?: string | null
+  'discussion'?: string | null
+  'format'?: ContentFormat | null
   'id': TypedUuidForRfdId
-  'labels'?: string
-  'latestMajorChangeAt'?: Date
-  'link'?: string
+  'labels'?: string | null
+  'latestMajorChangeAt'?: Date | null
+  'link'?: string | null
   'rfdNumber': number
-  'sha'?: FileSha
-  'state'?: string
-  'title'?: string
+  'sha'?: FileSha | null
+  'state'?: string | null
+  'title'?: string | null
   'visibility': Visibility
 }
 
 export type RfdWithoutContent = {
-  'authors'?: string
-  'commit'?: CommitSha
-  'committedAt'?: Date
-  'discussion'?: string
-  'format'?: ContentFormat
+  'authors'?: string | null
+  'commit'?: CommitSha | null
+  'committedAt'?: Date | null
+  'discussion'?: string | null
+  'format'?: ContentFormat | null
   'id': TypedUuidForRfdId
-  'labels'?: string
-  'latestMajorChangeAt'?: Date
-  'link'?: string
+  'labels'?: string | null
+  'latestMajorChangeAt'?: Date | null
+  'link'?: string | null
   'rfdNumber': number
-  'sha'?: FileSha
-  'state'?: string
-  'title'?: string
+  'sha'?: FileSha | null
+  'state'?: string | null
+  'title'?: string | null
   'visibility': Visibility
 }
 
 export type SearchResultHit = {
-  'anchor'?: string
+  'anchor'?: string | null
   'content': string
-  'formatted'?: FormattedSearchResultHit
-  'hierarchy': string[]
-  'hierarchyRadio': string[]
+  'formatted'?: FormattedSearchResultHit | null
+  'hierarchy': (string | null)[]
+  'hierarchyRadio': (string | null)[]
   'objectId': string
   'rfdNumber': number
-  'url'?: string
+  'url'?: string | null
 }
 
-export type SearchResults = { 'hits': SearchResultHit[]; 'limit'?: number; 'offset'?: number; 'query': string }
+export type SearchResults = {
+  'hits': (SearchResultHit)[]
+  'limit'?: number | null
+  'offset'?: number | null
+  'query': string
+}
 
-export type UpdateRfdAttrBody = { 'majorChange'?: boolean }
+export type UpdateRfdAttrBody = { 'majorChange'?: boolean | null }
 
 export type RfdAttrName =
   | 'discussion'
@@ -629,8 +630,8 @@ export interface DeleteGroupPathParams {
 }
 
 export interface ListJobsQueryParams {
-  limit?: number
-  offset?: number
+  limit?: number | null
+  offset?: number | null
   rfd: string
 }
 
@@ -650,7 +651,7 @@ export interface AuthzCodeRedirectQueryParams {
   clientId: TypedUuidForOAuthClientId
   redirectUri: string
   responseType: string
-  scope?: string
+  scope?: string | null
   state: string
 }
 
@@ -659,9 +660,9 @@ export interface AuthzCodeCallbackPathParams {
 }
 
 export interface AuthzCodeCallbackQueryParams {
-  code?: string
-  error?: string
-  state?: string
+  code?: string | null
+  error?: string | null
+  state?: string | null
 }
 
 export interface AuthzCodeExchangePathParams {
@@ -699,7 +700,7 @@ export interface DeleteMagicLinkSecretPathParams {
 }
 
 export interface GetMappersQueryParams {
-  includeDepleted?: boolean
+  includeDepleted?: boolean | null
 }
 
 export interface DeleteMapperPathParams {
@@ -767,8 +768,8 @@ export interface ListRfdRevisionsPathParams {
 }
 
 export interface ListRfdRevisionsQueryParams {
-  limit?: number
-  offset?: number
+  limit?: number | null
+  offset?: number | null
 }
 
 export interface ViewRfdRevisionMetaPathParams {
@@ -815,16 +816,64 @@ export interface UpdateRfdVisibilityPathParams {
 }
 
 export interface SearchRfdsQueryParams {
-  attributesToCrop?: string
-  highlightPostTag?: string
-  highlightPreTag?: string
-  limit?: number
-  offset?: number
+  attributesToCrop?: string | null
+  highlightPostTag?: string | null
+  highlightPreTag?: string | null
+  limit?: number | null
+  offset?: number | null
   q: string
 }
 
 type EmptyObj = Record<string, never>
-export class Api extends HttpClient {
+export interface ApiConfig {
+  /**
+   * No host means requests will be sent to the current host. This is used in
+   * the web console.
+   */
+  host?: string
+  token?: string
+  baseParams?: FetchParams
+}
+
+export class Api {
+  host: string
+  token?: string
+  baseParams: FetchParams
+  /**
+   * Pulled from info.version in the OpenAPI schema. Sent in the
+   * `api-version` header on all requests.
+   */
+  apiVersion = '0.12.2'
+
+  constructor({ host = '', baseParams = {}, token }: ApiConfig = {}) {
+    this.host = host
+    this.token = token
+
+    const headers = new Headers({
+      'Content-Type': 'application/json',
+      'api-version': this.apiVersion,
+    })
+
+    if (token) { headers.append('Authorization', `Bearer ${token}`) }
+
+    this.baseParams = mergeParams({ headers }, baseParams)
+  }
+
+  public async request<Data>({
+    body,
+    path,
+    query,
+    host,
+    ...fetchParams
+  }: FullParams): Promise<ApiResult<Data>> {
+    const url = (host || this.host) + path + toQueryString(query)
+    const init = {
+      ...mergeParams(this.baseParams, fetchParams),
+      body: JSON.stringify(snakeify(body), dateReplacer),
+    }
+    return handleResponse(await fetch(url, init))
+  }
+
   methods = {
     jwksJson: (_: EmptyObj, params: FetchParams = {}) => {
       return this.request<Jwks>({

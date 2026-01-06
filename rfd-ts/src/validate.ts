@@ -1,14 +1,6 @@
 /* eslint-disable */
 
-/**
- * This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, you can obtain one at https://mozilla.org/MPL/2.0/.
- *
- * Copyright Oxide Computer Company
- */
-
-import { z, ZodType } from 'zod'
+import { z, ZodType } from 'zod/v4'
 import { processResponseBody, uniqueItems } from './util'
 
 /**
@@ -24,17 +16,17 @@ const IntEnum = <T extends readonly number[]>(values: T) =>
 /** Helper to ensure booleans provided as strings end up with the correct value */
 const SafeBoolean = z.preprocess(v => v === 'false' ? false : v, z.coerce.boolean())
 
-export const TypedUuidForUserId = z.preprocess(processResponseBody, z.string().uuid())
+export const TypedUuidForUserId = z.preprocess(processResponseBody, z.uuid())
 
-export const TypedUuidForApiKeyId = z.preprocess(processResponseBody, z.string().uuid())
+export const TypedUuidForApiKeyId = z.preprocess(processResponseBody, z.uuid())
 
-export const TypedUuidForAccessGroupId = z.preprocess(processResponseBody, z.string().uuid())
+export const TypedUuidForAccessGroupId = z.preprocess(processResponseBody, z.uuid())
 
-export const TypedUuidForMapperId = z.preprocess(processResponseBody, z.string().uuid())
+export const TypedUuidForMapperId = z.preprocess(processResponseBody, z.uuid())
 
-export const TypedUuidForOAuthClientId = z.preprocess(processResponseBody, z.string().uuid())
+export const TypedUuidForOAuthClientId = z.preprocess(processResponseBody, z.uuid())
 
-export const TypedUuidForMagicLinkId = z.preprocess(processResponseBody, z.string().uuid())
+export const TypedUuidForMagicLinkId = z.preprocess(processResponseBody, z.uuid())
 
 export const RfdPermission = z.preprocess(
   processResponseBody,
@@ -119,7 +111,7 @@ export const RfdPermission = z.preprocess(
     z.object({ 'GetMagicLinkClients': TypedUuidForMagicLinkId.array().refine(...uniqueItems) }),
     z.object({ 'ManageMagicLinkClient': TypedUuidForMagicLinkId }),
     z.object({ 'ManageMagicLinkClients': TypedUuidForMagicLinkId.array().refine(...uniqueItems) }),
-    z.object({ 'Unsupported': z.record(z.unknown()) }),
+    z.object({ 'Unsupported': z.record(z.string(), z.unknown()) }),
   ]),
 )
 
@@ -134,7 +126,7 @@ export const AccessGroup_for_RfdPermission = z.preprocess(
   processResponseBody,
   z.object({
     'createdAt': z.coerce.date(),
-    'deletedAt': z.coerce.date().optional(),
+    'deletedAt': z.coerce.date().nullable().optional(),
     'id': TypedUuidForAccessGroupId,
     'name': z.string(),
     'permissions': Permissions_for_RfdPermission,
@@ -144,7 +136,7 @@ export const AccessGroup_for_RfdPermission = z.preprocess(
 
 export const AccessTokenExchangeRequest = z.preprocess(
   processResponseBody,
-  z.object({ 'deviceCode': z.string(), 'expiresAt': z.coerce.date().optional(), 'grantType': z.string() }),
+  z.object({ 'deviceCode': z.string(), 'expiresAt': z.coerce.date().nullable().optional(), 'grantType': z.string() }),
 )
 
 export const AddGroupBody = z.preprocess(processResponseBody, z.object({ 'groupId': TypedUuidForAccessGroupId }))
@@ -155,7 +147,7 @@ export const AddOAuthClientRedirectBody = z.preprocess(processResponseBody, z.ob
 
 export const ApiKeyCreateParams_for_RfdPermission = z.preprocess(
   processResponseBody,
-  z.object({ 'expiresAt': z.coerce.date(), 'permissions': Permissions_for_RfdPermission.optional() }),
+  z.object({ 'expiresAt': z.coerce.date(), 'permissions': Permissions_for_RfdPermission.nullable().optional() }),
 )
 
 export const ApiKeyResponse_for_RfdPermission = z.preprocess(
@@ -163,17 +155,17 @@ export const ApiKeyResponse_for_RfdPermission = z.preprocess(
   z.object({
     'createdAt': z.coerce.date(),
     'id': TypedUuidForApiKeyId,
-    'permissions': Permissions_for_RfdPermission.optional(),
+    'permissions': Permissions_for_RfdPermission.nullable().optional(),
   }),
 )
 
-export const TypedUuidForUserProviderId = z.preprocess(processResponseBody, z.string().uuid())
+export const TypedUuidForUserProviderId = z.preprocess(processResponseBody, z.uuid())
 
 export const ApiUserContactEmail = z.preprocess(
   processResponseBody,
   z.object({
     'createdAt': z.coerce.date(),
-    'deletedAt': z.coerce.date().optional(),
+    'deletedAt': z.coerce.date().nullable().optional(),
     'email': z.string(),
     'id': TypedUuidForUserProviderId,
     'updatedAt': z.coerce.date(),
@@ -193,7 +185,7 @@ export const ApiUserProvider = z.preprocess(
   processResponseBody,
   z.object({
     'createdAt': z.coerce.date(),
-    'deletedAt': z.coerce.date().optional(),
+    'deletedAt': z.coerce.date().nullable().optional(),
     'displayNames': z.string().array(),
     'emails': z.string().array(),
     'id': TypedUuidForUserProviderId,
@@ -218,7 +210,7 @@ export const ApiUser_for_RfdPermission = z.preprocess(
   processResponseBody,
   z.object({
     'createdAt': z.coerce.date(),
-    'deletedAt': z.coerce.date().optional(),
+    'deletedAt': z.coerce.date().nullable().optional(),
     'groups': TypedUuidForAccessGroupId.array().refine(...uniqueItems),
     'id': TypedUuidForUserId,
     'permissions': Permissions_for_RfdPermission,
@@ -233,9 +225,9 @@ export const ContentFormat = z.preprocess(processResponseBody, z.enum(['asciidoc
 export const CreateMapper = z.preprocess(
   processResponseBody,
   z.object({
-    'maxActivations': z.number().min(-2147483647).max(2147483647).optional(),
+    'maxActivations': z.number().min(-2147483647).max(2147483647).nullable().optional(),
     'name': z.string(),
-    'rule': z.record(z.unknown()),
+    'rule': z.record(z.string(), z.unknown()),
   }),
 )
 
@@ -252,13 +244,13 @@ export const FileSha = z.preprocess(processResponseBody, z.string())
 export const FormattedSearchResultHit = z.preprocess(
   processResponseBody,
   z.object({
-    'anchor': z.string().optional(),
-    'content': z.string().optional(),
-    'hierarchy': z.string().array(),
-    'hierarchyRadio': z.string().array(),
+    'anchor': z.string().nullable().optional(),
+    'content': z.string().nullable().optional(),
+    'hierarchy': z.string().nullable().array(),
+    'hierarchyRadio': z.string().nullable().array(),
     'objectId': z.string(),
     'rfdNumber': z.number().min(0),
-    'url': z.string().optional(),
+    'url': z.string().nullable().optional(),
   }),
 )
 
@@ -305,7 +297,7 @@ export const GitHubCommitPayload = z.preprocess(
   processResponseBody,
   z.object({
     'commits': GitHubCommit.array(),
-    'headCommit': GitHubCommit.optional(),
+    'headCommit': GitHubCommit.nullable().optional(),
     'installation': GitHubInstallation,
     'ref': z.string(),
     'repository': GitHubRepository,
@@ -319,25 +311,25 @@ export const InitialApiKeyResponse_for_RfdPermission = z.preprocess(
     'createdAt': z.coerce.date(),
     'id': TypedUuidForApiKeyId,
     'key': SecretString,
-    'permissions': Permissions_for_RfdPermission.optional(),
+    'permissions': Permissions_for_RfdPermission.nullable().optional(),
   }),
 )
 
-export const TypedUuidForMagicLinkSecretId = z.preprocess(processResponseBody, z.string().uuid())
+export const TypedUuidForMagicLinkSecretId = z.preprocess(processResponseBody, z.uuid())
 
 export const InitialMagicLinkSecretResponse = z.preprocess(
   processResponseBody,
   z.object({ 'createdAt': z.coerce.date(), 'id': TypedUuidForMagicLinkSecretId, 'key': SecretString }),
 )
 
-export const TypedUuidForOAuthSecretId = z.preprocess(processResponseBody, z.string().uuid())
+export const TypedUuidForOAuthSecretId = z.preprocess(processResponseBody, z.uuid())
 
 export const InitialOAuthClientSecretResponse = z.preprocess(
   processResponseBody,
   z.object({ 'createdAt': z.coerce.date(), 'id': TypedUuidForOAuthSecretId, 'key': SecretString }),
 )
 
-export const TypedUuidForWebhookDeliveryId = z.preprocess(processResponseBody, z.string().uuid())
+export const TypedUuidForWebhookDeliveryId = z.preprocess(processResponseBody, z.uuid())
 
 export const Job = z.preprocess(
   processResponseBody,
@@ -351,8 +343,8 @@ export const Job = z.preprocess(
     'repository': z.string(),
     'rfd': z.number().min(-2147483647).max(2147483647),
     'sha': CommitSha,
-    'startedAt': z.coerce.date().optional(),
-    'webhookDeliveryId': TypedUuidForWebhookDeliveryId.optional(),
+    'startedAt': z.coerce.date().nullable().optional(),
+    'webhookDeliveryId': TypedUuidForWebhookDeliveryId.nullable().optional(),
   }),
 )
 
@@ -363,13 +355,13 @@ export const Jwk = z.preprocess(
 
 export const Jwks = z.preprocess(processResponseBody, z.object({ 'keys': Jwk.array() }))
 
-export const TypedUuidForMagicLinkRedirectUriId = z.preprocess(processResponseBody, z.string().uuid())
+export const TypedUuidForMagicLinkRedirectUriId = z.preprocess(processResponseBody, z.uuid())
 
 export const MagicLinkRedirectUri = z.preprocess(
   processResponseBody,
   z.object({
     'createdAt': z.coerce.date(),
-    'deletedAt': z.coerce.date().optional(),
+    'deletedAt': z.coerce.date().nullable().optional(),
     'id': TypedUuidForMagicLinkRedirectUriId,
     'magicLinkClientId': TypedUuidForMagicLinkId,
     'redirectUri': z.string(),
@@ -380,7 +372,7 @@ export const MagicLinkSecret = z.preprocess(
   processResponseBody,
   z.object({
     'createdAt': z.coerce.date(),
-    'deletedAt': z.coerce.date().optional(),
+    'deletedAt': z.coerce.date().nullable().optional(),
     'id': TypedUuidForMagicLinkSecretId,
     'magicLinkClientId': TypedUuidForMagicLinkId,
     'secretSignature': z.string(),
@@ -391,14 +383,14 @@ export const MagicLink = z.preprocess(
   processResponseBody,
   z.object({
     'createdAt': z.coerce.date(),
-    'deletedAt': z.coerce.date().optional(),
+    'deletedAt': z.coerce.date().nullable().optional(),
     'id': TypedUuidForMagicLinkId,
     'redirectUris': MagicLinkRedirectUri.array(),
     'secrets': MagicLinkSecret.array(),
   }),
 )
 
-export const TypedUuidForMagicLinkAttemptId = z.preprocess(processResponseBody, z.string().uuid())
+export const TypedUuidForMagicLinkAttemptId = z.preprocess(processResponseBody, z.uuid())
 
 export const MagicLinkExchangeRequest = z.preprocess(
   processResponseBody,
@@ -419,7 +411,7 @@ export const MagicLinkSendRequest = z.preprocess(
     'medium': MagicLinkMedium,
     'recipient': z.string(),
     'redirectUri': z.string(),
-    'scope': z.string().optional(),
+    'scope': z.string().nullable().optional(),
     'secret': z.string(),
   }),
 )
@@ -432,14 +424,14 @@ export const MagicLinkSendResponse = z.preprocess(
 export const Mapper = z.preprocess(
   processResponseBody,
   z.object({
-    'activations': z.number().min(-2147483647).max(2147483647).optional(),
+    'activations': z.number().min(-2147483647).max(2147483647).nullable().optional(),
     'createdAt': z.coerce.date(),
-    'deletedAt': z.coerce.date().optional(),
-    'depletedAt': z.coerce.date().optional(),
+    'deletedAt': z.coerce.date().nullable().optional(),
+    'depletedAt': z.coerce.date().nullable().optional(),
     'id': TypedUuidForMapperId,
-    'maxActivations': z.number().min(-2147483647).max(2147483647).optional(),
+    'maxActivations': z.number().min(-2147483647).max(2147483647).nullable().optional(),
     'name': z.string(),
-    'rule': z.record(z.unknown()),
+    'rule': z.record(z.string(), z.unknown()),
     'updatedAt': z.coerce.date(),
   }),
 )
@@ -447,11 +439,11 @@ export const Mapper = z.preprocess(
 export const OAuthAuthzCodeExchangeBody = z.preprocess(
   processResponseBody,
   z.object({
-    'clientId': TypedUuidForOAuthClientId.optional(),
-    'clientSecret': SecretString.optional(),
+    'clientId': TypedUuidForOAuthClientId.nullable().optional(),
+    'clientSecret': SecretString.nullable().optional(),
     'code': z.string(),
     'grantType': z.string(),
-    'pkceVerifier': z.string().optional(),
+    'pkceVerifier': z.string().nullable().optional(),
     'redirectUri': z.string(),
   }),
 )
@@ -461,13 +453,13 @@ export const OAuthAuthzCodeExchangeResponse = z.preprocess(
   z.object({ 'accessToken': z.string(), 'expiresIn': z.number(), 'tokenType': z.string() }),
 )
 
-export const TypedUuidForOAuthRedirectUriId = z.preprocess(processResponseBody, z.string().uuid())
+export const TypedUuidForOAuthRedirectUriId = z.preprocess(processResponseBody, z.uuid())
 
 export const OAuthClientRedirectUri = z.preprocess(
   processResponseBody,
   z.object({
     'createdAt': z.coerce.date(),
-    'deletedAt': z.coerce.date().optional(),
+    'deletedAt': z.coerce.date().nullable().optional(),
     'id': TypedUuidForOAuthRedirectUriId,
     'oauthClientId': TypedUuidForOAuthClientId,
     'redirectUri': z.string(),
@@ -478,7 +470,7 @@ export const OAuthClientSecret = z.preprocess(
   processResponseBody,
   z.object({
     'createdAt': z.coerce.date(),
-    'deletedAt': z.coerce.date().optional(),
+    'deletedAt': z.coerce.date().nullable().optional(),
     'id': TypedUuidForOAuthSecretId,
     'oauthClientId': TypedUuidForOAuthClientId,
     'secretSignature': z.string(),
@@ -489,7 +481,7 @@ export const OAuthClient = z.preprocess(
   processResponseBody,
   z.object({
     'createdAt': z.coerce.date(),
-    'deletedAt': z.coerce.date().optional(),
+    'deletedAt': z.coerce.date().nullable().optional(),
     'id': TypedUuidForOAuthClientId,
     'redirectUris': OAuthClientRedirectUri.array(),
     'secrets': OAuthClientSecret.array(),
@@ -516,7 +508,7 @@ export const PdfSource = z.preprocess(processResponseBody, z.enum(['github', 'go
 
 export const ReserveRfdBody = z.preprocess(
   processResponseBody,
-  z.object({ 'content': z.string().optional(), 'title': z.string() }),
+  z.object({ 'content': z.string().nullable().optional(), 'title': z.string() }),
 )
 
 export const ReserveRfdResponse = z.preprocess(
@@ -524,27 +516,27 @@ export const ReserveRfdResponse = z.preprocess(
   z.object({ 'number': z.number().min(-2147483647).max(2147483647) }),
 )
 
-export const TypedUuidForRfdRevisionId = z.preprocess(processResponseBody, z.string().uuid())
+export const TypedUuidForRfdRevisionId = z.preprocess(processResponseBody, z.uuid())
 
-export const TypedUuidForRfdId = z.preprocess(processResponseBody, z.string().uuid())
+export const TypedUuidForRfdId = z.preprocess(processResponseBody, z.uuid())
 
 export const RfdRevision = z.preprocess(
   processResponseBody,
   z.object({
-    'authors': z.string().optional(),
+    'authors': z.string().nullable().optional(),
     'commit': CommitSha,
     'committedAt': z.coerce.date(),
     'content': z.string(),
     'contentFormat': ContentFormat,
     'createdAt': z.coerce.date(),
-    'deletedAt': z.coerce.date().optional(),
-    'discussion': z.string().optional(),
+    'deletedAt': z.coerce.date().nullable().optional(),
+    'discussion': z.string().nullable().optional(),
     'id': TypedUuidForRfdRevisionId,
-    'labels': z.string().optional(),
+    'labels': z.string().nullable().optional(),
     'majorChange': SafeBoolean,
     'rfdId': TypedUuidForRfdId,
     'sha': FileSha,
-    'state': z.string().optional(),
+    'state': z.string().nullable().optional(),
     'title': z.string(),
     'updatedAt': z.coerce.date(),
   }),
@@ -555,12 +547,12 @@ export const Visibility = z.preprocess(processResponseBody, z.enum(['public', 'p
 export const Rfd = z.preprocess(
   processResponseBody,
   z.object({
-    'content': RfdRevision.optional(),
+    'content': RfdRevision.nullable().optional(),
     'createdAt': z.coerce.date(),
-    'deletedAt': z.coerce.date().optional(),
+    'deletedAt': z.coerce.date().nullable().optional(),
     'id': TypedUuidForRfdId,
-    'latestMajorChangeAt': z.coerce.date().optional(),
-    'link': z.string().optional(),
+    'latestMajorChangeAt': z.coerce.date().nullable().optional(),
+    'link': z.string().nullable().optional(),
     'rfdNumber': z.number().min(-2147483647).max(2147483647),
     'updatedAt': z.coerce.date(),
     'visibility': Visibility,
@@ -583,16 +575,16 @@ export const RfdAttr = z.preprocess(
 
 export const RfdAttrValue = z.preprocess(
   processResponseBody,
-  z.object({ 'message': z.string().optional(), 'value': z.string() }),
+  z.object({ 'message': z.string().nullable().optional(), 'value': z.string() }),
 )
 
-export const TypedUuidForRfdPdfId = z.preprocess(processResponseBody, z.string().uuid())
+export const TypedUuidForRfdPdfId = z.preprocess(processResponseBody, z.uuid())
 
 export const RfdPdf = z.preprocess(
   processResponseBody,
   z.object({
     'createdAt': z.coerce.date(),
-    'deletedAt': z.coerce.date().optional(),
+    'deletedAt': z.coerce.date().nullable().optional(),
     'externalId': z.string(),
     'id': TypedUuidForRfdPdfId,
     'link': z.string(),
@@ -615,12 +607,12 @@ export const RfdRevisionMeta = z.preprocess(
 
 export const RfdUpdateBody = z.preprocess(
   processResponseBody,
-  z.object({ 'document': z.string(), 'message': z.string().optional() }),
+  z.object({ 'document': z.string(), 'message': z.string().nullable().optional() }),
 )
 
 export const RfdUpdateContentBody = z.preprocess(
   processResponseBody,
-  z.object({ 'content': z.string(), 'message': z.string().optional() }),
+  z.object({ 'content': z.string(), 'message': z.string().nullable().optional() }),
 )
 
 export const RfdVisibility = z.preprocess(processResponseBody, z.object({ 'visibility': Visibility }))
@@ -628,20 +620,20 @@ export const RfdVisibility = z.preprocess(processResponseBody, z.object({ 'visib
 export const RfdWithPdf = z.preprocess(
   processResponseBody,
   z.object({
-    'authors': z.string().optional(),
-    'commit': CommitSha.optional(),
-    'committedAt': z.coerce.date().optional(),
+    'authors': z.string().nullable().optional(),
+    'commit': CommitSha.nullable().optional(),
+    'committedAt': z.coerce.date().nullable().optional(),
     'content': RfdPdf.array(),
-    'discussion': z.string().optional(),
-    'format': ContentFormat.optional(),
+    'discussion': z.string().nullable().optional(),
+    'format': ContentFormat.nullable().optional(),
     'id': TypedUuidForRfdId,
-    'labels': z.string().optional(),
-    'latestMajorChangeAt': z.coerce.date().optional(),
-    'link': z.string().optional(),
+    'labels': z.string().nullable().optional(),
+    'latestMajorChangeAt': z.coerce.date().nullable().optional(),
+    'link': z.string().nullable().optional(),
     'rfdNumber': z.number().min(-2147483647).max(2147483647),
-    'sha': FileSha.optional(),
-    'state': z.string().optional(),
-    'title': z.string().optional(),
+    'sha': FileSha.nullable().optional(),
+    'state': z.string().nullable().optional(),
+    'title': z.string().nullable().optional(),
     'visibility': Visibility,
   }),
 )
@@ -649,20 +641,20 @@ export const RfdWithPdf = z.preprocess(
 export const RfdWithRaw = z.preprocess(
   processResponseBody,
   z.object({
-    'authors': z.string().optional(),
-    'commit': CommitSha.optional(),
-    'committedAt': z.coerce.date().optional(),
-    'content': z.string().optional(),
-    'discussion': z.string().optional(),
-    'format': ContentFormat.optional(),
+    'authors': z.string().nullable().optional(),
+    'commit': CommitSha.nullable().optional(),
+    'committedAt': z.coerce.date().nullable().optional(),
+    'content': z.string().nullable().optional(),
+    'discussion': z.string().nullable().optional(),
+    'format': ContentFormat.nullable().optional(),
     'id': TypedUuidForRfdId,
-    'labels': z.string().optional(),
-    'latestMajorChangeAt': z.coerce.date().optional(),
-    'link': z.string().optional(),
+    'labels': z.string().nullable().optional(),
+    'latestMajorChangeAt': z.coerce.date().nullable().optional(),
+    'link': z.string().nullable().optional(),
     'rfdNumber': z.number().min(-2147483647).max(2147483647),
-    'sha': FileSha.optional(),
-    'state': z.string().optional(),
-    'title': z.string().optional(),
+    'sha': FileSha.nullable().optional(),
+    'state': z.string().nullable().optional(),
+    'title': z.string().nullable().optional(),
     'visibility': Visibility,
   }),
 )
@@ -670,19 +662,19 @@ export const RfdWithRaw = z.preprocess(
 export const RfdWithoutContent = z.preprocess(
   processResponseBody,
   z.object({
-    'authors': z.string().optional(),
-    'commit': CommitSha.optional(),
-    'committedAt': z.coerce.date().optional(),
-    'discussion': z.string().optional(),
-    'format': ContentFormat.optional(),
+    'authors': z.string().nullable().optional(),
+    'commit': CommitSha.nullable().optional(),
+    'committedAt': z.coerce.date().nullable().optional(),
+    'discussion': z.string().nullable().optional(),
+    'format': ContentFormat.nullable().optional(),
     'id': TypedUuidForRfdId,
-    'labels': z.string().optional(),
-    'latestMajorChangeAt': z.coerce.date().optional(),
-    'link': z.string().optional(),
+    'labels': z.string().nullable().optional(),
+    'latestMajorChangeAt': z.coerce.date().nullable().optional(),
+    'link': z.string().nullable().optional(),
     'rfdNumber': z.number().min(-2147483647).max(2147483647),
-    'sha': FileSha.optional(),
-    'state': z.string().optional(),
-    'title': z.string().optional(),
+    'sha': FileSha.nullable().optional(),
+    'state': z.string().nullable().optional(),
+    'title': z.string().nullable().optional(),
     'visibility': Visibility,
   }),
 )
@@ -690,14 +682,14 @@ export const RfdWithoutContent = z.preprocess(
 export const SearchResultHit = z.preprocess(
   processResponseBody,
   z.object({
-    'anchor': z.string().optional(),
+    'anchor': z.string().nullable().optional(),
     'content': z.string(),
-    'formatted': FormattedSearchResultHit.optional(),
-    'hierarchy': z.string().array(),
-    'hierarchyRadio': z.string().array(),
+    'formatted': FormattedSearchResultHit.nullable().optional(),
+    'hierarchy': z.string().nullable().array(),
+    'hierarchyRadio': z.string().nullable().array(),
     'objectId': z.string(),
     'rfdNumber': z.number().min(0),
-    'url': z.string().optional(),
+    'url': z.string().nullable().optional(),
   }),
 )
 
@@ -705,13 +697,16 @@ export const SearchResults = z.preprocess(
   processResponseBody,
   z.object({
     'hits': SearchResultHit.array(),
-    'limit': z.number().min(0).optional(),
-    'offset': z.number().min(0).optional(),
+    'limit': z.number().min(0).nullable().optional(),
+    'offset': z.number().min(0).nullable().optional(),
     'query': z.string(),
   }),
 )
 
-export const UpdateRfdAttrBody = z.preprocess(processResponseBody, z.object({ 'majorChange': SafeBoolean.optional() }))
+export const UpdateRfdAttrBody = z.preprocess(
+  processResponseBody,
+  z.object({ 'majorChange': SafeBoolean.nullable().optional() }),
+)
 
 export const RfdAttrName = z.preprocess(processResponseBody, z.enum(['discussion', 'labels', 'state']))
 
@@ -909,8 +904,8 @@ export const ListJobsParams = z.preprocess(
   z.object({
     path: z.object({}),
     query: z.object({
-      limit: z.number().optional(),
-      offset: z.number().optional(),
+      limit: z.number().nullable().optional(),
+      offset: z.number().nullable().optional(),
       rfd: z.string(),
     }),
   }),
@@ -946,7 +941,7 @@ export const AuthzCodeRedirectParams = z.preprocess(
       clientId: TypedUuidForOAuthClientId,
       redirectUri: z.string(),
       responseType: z.string(),
-      scope: z.string().optional(),
+      scope: z.string().nullable().optional(),
       state: z.string(),
     }),
   }),
@@ -959,9 +954,9 @@ export const AuthzCodeCallbackParams = z.preprocess(
       provider: OAuthProviderName,
     }),
     query: z.object({
-      code: z.string().optional(),
-      error: z.string().optional(),
-      state: z.string().optional(),
+      code: z.string().nullable().optional(),
+      error: z.string().nullable().optional(),
+      state: z.string().nullable().optional(),
     }),
   }),
 )
@@ -1069,7 +1064,7 @@ export const GetMappersParams = z.preprocess(
   z.object({
     path: z.object({}),
     query: z.object({
-      includeDepleted: SafeBoolean.optional(),
+      includeDepleted: SafeBoolean.nullable().optional(),
     }),
   }),
 )
@@ -1265,8 +1260,8 @@ export const ListRfdRevisionsParams = z.preprocess(
       number: z.string(),
     }),
     query: z.object({
-      limit: z.number().optional(),
-      offset: z.number().optional(),
+      limit: z.number().nullable().optional(),
+      offset: z.number().nullable().optional(),
     }),
   }),
 )
@@ -1373,11 +1368,11 @@ export const SearchRfdsParams = z.preprocess(
   z.object({
     path: z.object({}),
     query: z.object({
-      attributesToCrop: z.string().optional(),
-      highlightPostTag: z.string().optional(),
-      highlightPreTag: z.string().optional(),
-      limit: z.number().min(0).max(4294967295).optional(),
-      offset: z.number().min(0).max(4294967295).optional(),
+      attributesToCrop: z.string().nullable().optional(),
+      highlightPostTag: z.string().nullable().optional(),
+      highlightPreTag: z.string().nullable().optional(),
+      limit: z.number().min(0).max(4294967295).nullable().optional(),
+      offset: z.number().min(0).max(4294967295).nullable().optional(),
       q: z.string(),
     }),
   }),
