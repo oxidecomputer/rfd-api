@@ -1,8 +1,10 @@
 name: Build
 
+permissions:
+  contents: read
+
 on:
   push:
-  pull_request:
 
 jobs:
   build:

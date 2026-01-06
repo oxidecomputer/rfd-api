@@ -1,8 +1,10 @@
 name: Test
 
+permissions:
+  contents: read
+
 on:
   push:
-  pull_request:
 
 jobs:
   test:

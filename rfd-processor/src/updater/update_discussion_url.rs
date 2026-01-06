@@ -39,7 +39,7 @@ impl RfdUpdateAction for UpdateDiscussionUrl {
         // branch that we are working on
         match open_prs.len().cmp(&1) {
             Ordering::Equal => {
-                if let Some(pull_request) = open_prs.get(0) {
+                if let Some(pull_request) = open_prs.first() {
                     tracing::debug!(current = ?new.revision.discussion, pr = ?pull_request.html_url, "Found discussion url for pull request. Testing if it matches the current url");
 
                     // If the stored discussion link does not match the PR we found, then and

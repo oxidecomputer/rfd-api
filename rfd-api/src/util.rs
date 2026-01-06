@@ -18,6 +18,7 @@ pub mod response {
         HttpError::for_client_error(None, status_code, message.to_string())
     }
 
+    #[allow(dead_code)]
     #[instrument(skip(error))]
     pub fn to_internal_error<E>(error: E) -> HttpError
     where

@@ -175,12 +175,9 @@ async fn main() -> anyhow::Result<()> {
     let init_data = InitialData::new(config.initial_mappers.map(|p| vec![p])).tap_err(|err| {
         tracing::error!(?err, "Failed to load initial data from configuration");
     })?;
-    init_data
-        .initialize(&context.v_ctx())
-        .await
-        .tap_err(|err| {
-            tracing::error!(?err, "Failed to install initial data");
-        })?;
+    init_data.initialize(context.v_ctx()).await.tap_err(|err| {
+        tracing::error!(?err, "Failed to install initial data");
+    })?;
 
     tracing::info!("Loaded initial data");
 

@@ -486,9 +486,10 @@ async fn view_rfd_attr_op(
     }
 }
 
-#[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]
+#[allow(dead_code)]
+#[instrument(skip(_ctx, caller), fields(caller = ?caller.id), err(Debug))]
 async fn view_rfd_discussion_op(
-    ctx: &RfdContext,
+    _ctx: &RfdContext,
     caller: &Caller<RfdPermission>,
     number: String,
     revision: Option<RfdRevisionIdentifier>,
@@ -526,7 +527,7 @@ async fn search_rfds_op(
                 .map(|num| num.to_string())
                 .collect::<Vec<_>>()
                 .join(", ");
-            if allowed_rfds.len() > 0 {
+            if !allowed_rfds.is_empty() {
                 filter = filter + &format!("OR rfd_number in [{}]", allowed_rfds);
             }
 
@@ -647,7 +648,7 @@ async fn set_rfd_document_op(
     if let Ok(rfd_number) = number.parse::<i32>() {
         ctx.update_rfd_document(
             caller,
-            rfd_number.into(),
+            rfd_number,
             &body.document,
             body.message.as_deref(),
             None,
@@ -695,7 +696,7 @@ async fn set_rfd_content_op(
     if let Ok(rfd_number) = number.parse::<i32>() {
         ctx.update_rfd_document(
             caller,
-            rfd_number.into(),
+            rfd_number,
             &body.content,
             body.message.as_deref(),
             None,
@@ -954,7 +955,6 @@ fn extract_attr(attr: &RfdAttrName, content: &RfdContent) -> Result<RfdAttr, Htt
 
 #[derive(Debug, Deserialize, JsonSchema)]
 pub struct RfdVisibility {
-    ///
     pub visibility: Visibility,
 }
 

@@ -19,7 +19,6 @@ use similar::{Algorithm, ChangeTag, TextDiff};
 #[derive(Parser)]
 #[command(name = "xtask")]
 #[command(about = "build tasks")]
-
 enum Xtask {
     #[command(about = "bump the global version number")]
     Bump {
@@ -84,18 +83,18 @@ impl Bump for Version {
     fn up(mut self, place: &VersionPlace) -> Self {
         match place {
             VersionPlace::Major => {
-                self.major = self.major + 1;
+                self.major += 1;
                 self.minor = 0;
                 self.patch = 0;
                 self.pre = Prerelease::EMPTY;
             }
             VersionPlace::Minor => {
-                self.minor = self.minor + 1;
+                self.minor += 1;
                 self.patch = 0;
                 self.pre = Prerelease::EMPTY;
             }
             VersionPlace::Patch => {
-                self.patch = self.patch + 1;
+                self.patch += 1;
                 self.pre = Prerelease::EMPTY;
             }
             VersionPlace::Pre => match self.pre.as_str().split_once('.') {
@@ -257,7 +256,7 @@ fn format_code(code: String) -> String {
         },
         contents,
     )
-    .unwrap();
+    .expect("rustfmt_wrapper: ensure a nightly toolchain is installed.");
     let contents = dos2unix(&contents);
 
     // Add newlines after end-braces at <= two levels of indentation. Rustfmt's

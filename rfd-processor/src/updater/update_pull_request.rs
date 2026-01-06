@@ -43,7 +43,7 @@ impl RfdUpdateAction for UpdatePullRequest {
         // branch that we are working on
         match open_prs.len().cmp(&1) {
             Ordering::Equal => {
-                if let Some(pull_request) = open_prs.get(0) {
+                if let Some(pull_request) = open_prs.first() {
                     let rfd_name = new.name();
 
                     // Let's make sure the title of the pull request is what it should be.

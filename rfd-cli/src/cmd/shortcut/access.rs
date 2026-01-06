@@ -91,10 +91,7 @@ impl RemoveRfdAccessShortcut {
                 .permissions
                 .0
                 .into_iter()
-                .filter(|permission| match permission {
-                    RfdPermission::GetRfd(number) if *number == self.number => false,
-                    _ => true,
-                })
+                .filter(|permission| !matches!(permission, RfdPermission::GetRfd(number) if *number == self.number))
                 .collect::<Vec<_>>();
 
             let response = client
