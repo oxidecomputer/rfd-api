@@ -91,7 +91,7 @@ v-api = { git = "https://github.com/oxidecomputer/v-api" }
 v-api-installer = { git = "https://github.com/oxidecomputer/v-api" }
 v-model = { git = "https://github.com/oxidecomputer/v-api" }
 v-api-permission-derive = { git = "https://github.com/oxidecomputer/v-api" }
-yup-oauth2 = { version = "11.0.0" }
+yup-oauth2 = { version = "12.1.2" }
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
