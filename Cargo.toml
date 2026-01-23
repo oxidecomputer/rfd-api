@@ -62,7 +62,7 @@ reqwest-retry = "0.7"
 reqwest-tracing = "0.5"
 resend-rs = { version = "0.15.0", default-features = false, features = ["rustls-tls"] }
 ring = "0.17.14"
-rsa = "0.9.8"
+rsa = "0.9.10"
 rustfmt-wrapper = "0.2.1"
 schemars = "0.8.22"
 secrecy = "0.10.3"
