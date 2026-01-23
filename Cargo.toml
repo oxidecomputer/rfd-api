@@ -44,7 +44,7 @@ meilisearch-sdk = "0.28.0"
 md-5 = "0.10.6"
 mime_guess = "2.0.5"
 minijinja = { version = "2.11.0", features = ["loader"] }
-mockall = "0.13.1"
+mockall = "0.14.0"
 newline-converter = "0.3.0"
 newtype-uuid = { version = "1.2.4", features = ["schemars08", "serde", "v4"] }
 oauth2 = { version = "5.0.0", default-features = false, features = ["rustls-tls"] }
