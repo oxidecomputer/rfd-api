@@ -80,7 +80,7 @@ tap = "1.0.1"
 textwrap = "0.16.2"
 thiserror = "2"
 tokio = { version = "1.49.0", default-features = false, features = ["rt-multi-thread", "macros"] }
-toml = "0.9.10"
+toml = "0.9.11"
 tracing = "0.1.44"
 tracing-appender = "0.2.4"
 tracing-slog = { git = "https://github.com/oxidecomputer/tracing-slog", default-features = false }
