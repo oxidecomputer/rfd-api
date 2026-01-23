@@ -55,7 +55,7 @@ progenitor = { git = "https://github.com/oxidecomputer/progenitor" }
 progenitor-client = { git = "https://github.com/oxidecomputer/progenitor" }
 rand = "0.8.5"
 rand_core = "0.6"
-regex = "1.11.1"
+regex = "1.12.2"
 reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
 reqwest-middleware = "0.4"
 reqwest-retry = "0.7"
