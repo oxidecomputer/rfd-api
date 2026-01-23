@@ -51,8 +51,8 @@ oauth2 = { version = "5.0.0", default-features = false, features = ["rustls-tls"
 octorust = "0.10.0"
 owo-colors = "4.2.2"
 partial-struct = { git = "https://github.com/oxidecomputer/partial-struct" }
-progenitor = { git = "https://github.com/oxidecomputer/progenitor" }
-progenitor-client = { git = "https://github.com/oxidecomputer/progenitor" }
+progenitor = { version = "0.11.2" }
+progenitor-client = { version = "0.11.2" }
 rand = "0.8.5"
 rand_core = "0.6"
 regex = "1.12.2"
