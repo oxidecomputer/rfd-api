@@ -1056,7 +1056,29 @@ dependencies = [
  "serde_with",
  "tokio",
  "url",
- "yup-oauth2",
+ "yup-oauth2 11.0.0",
+]
+
+[[package]]
+name = "google-apis-common"
+version = "8.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "020dd415ee200770d835d01674084400a4d11e6c108ae941f660e8264f49d4ca"
+dependencies = [
+ "base64",
+ "chrono",
+ "http 1.4.0",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "mime",
+ "percent-encoding",
+ "serde",
+ "serde_json",
+ "serde_with",
+ "tokio",
+ "url",
+ "yup-oauth2 12.1.2",
 ]
 
 [[package]]
@@ -1066,7 +1088,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "82a9330f7af5181eee3077ba4221f5a45ecdbfb26c36d2b89a7682226c6b9af5"
 dependencies = [
  "chrono",
- "google-apis-common",
+ "google-apis-common 7.0.0",
  "hyper",
  "hyper-rustls",
  "hyper-util",
@@ -1076,17 +1098,17 @@ dependencies = [
  "serde_with",
  "tokio",
  "url",
- "yup-oauth2",
+ "yup-oauth2 11.0.0",
 ]
 
 [[package]]
 name = "google-drive3"
-version = "6.0.0+20240618"
+version = "7.0.0+20251218"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84e3944ee656d220932785cf1d8275519c0989830b9b239453983ac44f328d9f"
+checksum = "30742c5730cad187ffb8922f1a91766830676ec6b714489fcdb89e9b9385fd7c"
 dependencies = [
  "chrono",
- "google-apis-common",
+ "google-apis-common 8.0.0",
  "hyper",
  "hyper-rustls",
  "hyper-util",
@@ -1096,7 +1118,7 @@ dependencies = [
  "serde_with",
  "tokio",
  "url",
- "yup-oauth2",
+ "yup-oauth2 12.1.2",
 ]
 
 [[package]]
@@ -1106,7 +1128,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6d3992b096680be53ba78886d1e2e1cc988c9131344769faf1427ca9adab25d1"
 dependencies = [
  "chrono",
- "google-apis-common",
+ "google-apis-common 7.0.0",
  "hyper",
  "hyper-rustls",
  "hyper-util",
@@ -1116,7 +1138,7 @@ dependencies = [
  "serde_with",
  "tokio",
  "url",
- "yup-oauth2",
+ "yup-oauth2 11.0.0",
 ]
 
 [[package]]
@@ -2923,7 +2945,7 @@ dependencies = [
  "v-api",
  "v-api-permission-derive",
  "v-model",
- "yup-oauth2",
+ "yup-oauth2 11.0.0",
 ]
 
 [[package]]
@@ -3052,7 +3074,7 @@ dependencies = [
  "tracing-subscriber",
  "uuid",
  "v-model",
- "yup-oauth2",
+ "yup-oauth2 11.0.0",
 ]
 
 [[package]]
@@ -4497,7 +4519,7 @@ dependencies = [
  "uuid",
  "v-api-permission-derive",
  "v-model",
- "yup-oauth2",
+ "yup-oauth2 11.0.0",
 ]
 
 [[package]]
@@ -5076,6 +5098,31 @@ dependencies = [
  "seahash",
  "serde",
  "serde_json",
+ "time",
+ "tokio",
+ "url",
+]
+
+[[package]]
+name = "yup-oauth2"
+version = "12.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ef19a12dfb29fe39f78e1547e1be49717b84aef8762a4001359ed4f94d3accc1"
+dependencies = [
+ "async-trait",
+ "base64",
+ "http 1.4.0",
+ "http-body-util",
+ "hyper",
+ "hyper-rustls",
+ "hyper-util",
+ "log",
+ "percent-encoding",
+ "rustls 0.23.35",
+ "seahash",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.17",
  "time",
  "tokio",
  "url",

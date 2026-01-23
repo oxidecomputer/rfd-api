@@ -32,7 +32,7 @@ dirs = "6.0.0"
 dropshot = "0.16"
 dropshot-verified-body = { git = "https://github.com/oxidecomputer/dropshot-verified-body" }
 futures = "0.3.31"
-google-drive3 = "6"
+google-drive3 = "7"
 google-storage1 = "6"
 hex = "0.4.3"
 hmac = "0.12.1"
