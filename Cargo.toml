@@ -1,6 +1,5 @@
 [workspace]
 members = [
-  "dropshot-authorization-header",
   "parse-rfd",
   "rfd-api",
   "rfd-cli",
@@ -30,6 +29,7 @@ diesel = { version = "2.3.5", features = ["postgres"] }
 diesel_migrations = { version = "2.3.1" }
 dirs = "6.0.0"
 dropshot = "0.16"
+dropshot-authorization-header = { git = "https://github.com/oxidecomputer/v-api" }
 dropshot-verified-body = { git = "https://github.com/oxidecomputer/dropshot-verified-body" }
 futures = "0.3.31"
 google-drive3 = "7.0.0"
@@ -112,4 +112,8 @@ inherits = "release"
 lto = "thin"
 
 # [patch."https://github.com/oxidecomputer/v-api"]
+# dropshot-authorization-header = { path = "../v-api/dropshot-authorization-header" }
 # v-api = { path = "../v-api/v-api" }
+# v-api-installer = { path = "../v-api/v-api-installer" }
+# v-model = { path = "../v-api/v-model" }
+# v-api-permission-derive = { path = "../v-api/v-api-permission-derive" }
