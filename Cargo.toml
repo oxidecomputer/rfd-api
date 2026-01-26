@@ -16,7 +16,7 @@ resolver = "2"
 
 [workspace.dependencies]
 anyhow = "1.0.100"
-async-bb8-diesel = { git = "https://github.com/oxidecomputer/async-bb8-diesel", branch = "bb8-0.9" }
+async-bb8-diesel = { git = "https://github.com/oxidecomputer/async-bb8-diesel", version = "0.3" }
 async-trait = "0.1.89"
 base64 = "0.22"
 bb8 = "0.9"
