@@ -90,19 +90,6 @@ checksum = "7d902e3d592a523def97af8f317b08ce16b7ab854c1985a0c671e6f15cebc236"
 
 [[package]]
 name = "async-bb8-diesel"
-version = "0.2.1"
-source = "git+https://github.com/oxidecomputer/async-bb8-diesel?branch=bb8-0.9#00221cdf23269bafa93050dcd18dc60b49a95f8d"
-dependencies = [
- "async-trait",
- "bb8",
- "diesel",
- "futures",
- "thiserror 2.0.18",
- "tokio",
-]
-
-[[package]]
-name = "async-bb8-diesel"
 version = "0.3.0"
 source = "git+https://github.com/oxidecomputer/async-bb8-diesel#18baf49aca5f72bf441951b11669c6c3c3affe70"
 dependencies = [
@@ -780,7 +767,7 @@ dependencies = [
 [[package]]
 name = "dropshot-authorization-header"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#781afe4163b4c6599e6b4a918f9820b9b94de437"
+source = "git+https://github.com/oxidecomputer/v-api#5ea039de839c4a88943961e8bbfb298781671755"
 dependencies = [
  "async-trait",
  "base64",
@@ -3077,7 +3064,7 @@ name = "rfd-api"
 version = "0.12.3"
 dependencies = [
  "anyhow",
- "async-bb8-diesel 0.3.0",
+ "async-bb8-diesel",
  "async-trait",
  "base64",
  "bb8",
@@ -3205,7 +3192,7 @@ dependencies = [
 name = "rfd-model"
 version = "0.1.0"
 dependencies = [
- "async-bb8-diesel 0.3.0",
+ "async-bb8-diesel",
  "async-trait",
  "bb8",
  "chrono",
@@ -4686,7 +4673,7 @@ dependencies = [
 [[package]]
 name = "v-api"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#781afe4163b4c6599e6b4a918f9820b9b94de437"
+source = "git+https://github.com/oxidecomputer/v-api#5ea039de839c4a88943961e8bbfb298781671755"
 dependencies = [
  "async-trait",
  "base64",
@@ -4731,7 +4718,7 @@ dependencies = [
 [[package]]
 name = "v-api-installer"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#781afe4163b4c6599e6b4a918f9820b9b94de437"
+source = "git+https://github.com/oxidecomputer/v-api#5ea039de839c4a88943961e8bbfb298781671755"
 dependencies = [
  "diesel",
  "diesel_migrations",
@@ -4740,7 +4727,7 @@ dependencies = [
 [[package]]
 name = "v-api-permission-derive"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#781afe4163b4c6599e6b4a918f9820b9b94de437"
+source = "git+https://github.com/oxidecomputer/v-api#5ea039de839c4a88943961e8bbfb298781671755"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -4751,9 +4738,9 @@ dependencies = [
 [[package]]
 name = "v-model"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#781afe4163b4c6599e6b4a918f9820b9b94de437"
+source = "git+https://github.com/oxidecomputer/v-api#5ea039de839c4a88943961e8bbfb298781671755"
 dependencies = [
- "async-bb8-diesel 0.2.1",
+ "async-bb8-diesel",
  "async-trait",
  "bb8",
  "chrono",
