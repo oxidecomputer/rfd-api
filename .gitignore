@@ -1,4 +1,4 @@
-/target
+**/target
 
 node_modules
 dist
@@ -13,3 +13,9 @@ test-key.json
 gcp.json
 
 node_modules
+.cargo
+.flox
+.rustup
+/config/
+local_data
+.env
