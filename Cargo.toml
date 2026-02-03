@@ -39,7 +39,7 @@ hmac = "0.12.1"
 http = "1.4.0"
 hyper = "1.8.1"
 itertools = "0.13.0"
-jsonwebtoken = { version = "10.2", features = ["rust_crypto"] }
+jsonwebtoken = { version = "10.3", features = ["rust_crypto"] }
 meilisearch-sdk = "0.28.0"
 md-5 = "0.10.6"
 mime_guess = "2.0.5"
