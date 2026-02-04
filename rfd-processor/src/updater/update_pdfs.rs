@@ -68,15 +68,21 @@ impl UpdatePdfs {
 
         let store_results = match mode {
             RfdUpdateMode::Read => Vec::new(),
-            RfdUpdateMode::Write => {
-                ctx.pdf
-                    .store_rfd_pdf(
-                        new.pdf_external_id.as_deref(),
-                        &new.get_pdf_filename(),
-                        &pdf,
-                    )
-                    .await
-            }
+            RfdUpdateMode::Write => match &ctx.pdf {
+                Some(pdf_storage) => {
+                    pdf_storage
+                        .store_rfd_pdf(
+                            new.pdf_external_id.as_deref(),
+                            &new.get_pdf_filename(),
+                            &pdf,
+                        )
+                        .await
+                }
+                None => {
+                    tracing::debug!("PDF storage is disabled, skipping upload");
+                    Vec::new()
+                }
+            },
         };
 
         Ok(store_results

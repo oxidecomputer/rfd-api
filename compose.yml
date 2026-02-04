@@ -1,0 +1,131 @@
+services:
+  # This requires changes to rfd-site which will be proposed via PR.
+  # rfd-site:
+  #   build:
+  #     context: https://github.com/oxidecomputer/rfd-site.git
+  #     dockerfile: Containerfile
+  #   image: localhost/rfd-site-test:latest
+  #   networks:
+  #     - rfd
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     SESSION_SECRET: ${SESSION_SECRET}
+  #     RFD_API_BACKEND_URL: http://rfd-api:8080
+  #     RFD_API_FRONTEND_URL: http://localhost:8080
+  #     RFD_API_CLIENT_ID: ${RFD_API_CLIENT_ID}
+  #     RFD_API_CLIENT_SECRET: ${RFD_API_CLIENT_SECRET}
+  #     RFD_API_GITHUB_CALLBACK_URL: http://localhost:3000/auth/github/callback
+  #     AUTH_PROVIDERS: github
+  #     STORAGE_PROVIDER: s3
+  #     S3_BUCKET: ${S3_BUCKET}
+  #     AWS_REGION: ${AWS_REGION}
+  #     AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+  #     AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+  #     AWS_SESSION_TOKEN: ${AWS_SESSION_TOKEN}
+  #     TELEMETRY_DISABLE: true
+  #     GITHUB_HOST: ${GITHUB_HOST}
+  #     GITHUB_REPO_CLIENT_ID: ${GITHUB_REPO_CLIENT_ID}
+  #     GITHUB_REPO_CLIENT_SECRET: ${GITHUB_REPO_CLIENT_SECRET}
+
+  rfd-migration:
+    build:
+      dockerfile: Containerfile
+    image: localhost/rfd-api-test:latest
+    networks:
+      - rfd
+    depends_on:
+      postgres:
+        condition: service_healthy
+    entrypoint: []
+    working_dir: /home/rfd/db
+    environment:
+      - DATABASE_URL=postgres://rfd:rfd@postgres/rfd
+    command: /usr/local/bin/rfd-installer && diesel migration run && echo "Migrations Complete!"
+
+  rfd-api:
+    image: localhost/rfd-api-test:latest
+    # Uses default CMD: rfd-api
+    ports:
+      - "8080:8080"
+    environment:
+      # - RFD_API_CONFIG=/config/rfd-api.toml
+      - DATABASE_URL=postgres://rfd:rfd@postgres/rfd
+    command:
+      - /usr/local/bin/rfd-api
+      - /config/rfd-api.toml
+    volumes:
+      - ./config:/config:ro
+    networks:
+      - rfd
+    depends_on:
+      postgres:
+        condition: service_started
+      meilisearch:
+        condition: service_started
+      rfd-migration:
+        condition: service_completed_successfully
+
+  rfd-processor:
+    image: localhost/rfd-api-test:latest
+
+    # Override CMD to run rfd-processor instead
+    environment:
+      # - RFD_API_CONFIG=/config/rfd-api.toml
+      - DATABASE_URL=postgres://rfd:rfd@postgres/rfd
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
+    command:
+      - /usr/local/bin/rfd-processor
+      - /config/rfd-processor.toml
+    volumes:
+      - ./config:/config:ro
+    networks:
+      - rfd
+    depends_on:
+      postgres:
+        condition: service_started
+      meilisearch:
+        condition: service_started
+      rfd-migration:
+        condition: service_completed_successfully
+
+  postgres:
+    image: docker.io/postgres:14-trixie
+    environment:
+      POSTGRES_USER: rfd
+      POSTGRES_PASSWORD: rfd
+      POSTGRES_DB: rfd
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - rfd
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rfd"]
+      start_period: 5s
+      start_interval: 1s
+      retries: 10
+      interval: 5s
+
+  meilisearch:
+    image: docker.io/getmeili/meilisearch:v1.11
+    environment:
+      MEILI_ENV: development
+      MEILI_MASTER_KEY: development-master-key
+    volumes:
+      - meilisearch_data:/meili_data
+    ports:
+      - "7700:7700"
+    networks:
+      - rfd
+
+networks:
+  rfd:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  meilisearch_data:

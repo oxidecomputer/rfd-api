@@ -5,8 +5,13 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[dev-dependencies]
+mockall = { workspace = true }
+
 [dependencies]
 async-trait = { workspace = true }
+aws-config = { workspace = true }
+aws-sdk-s3 = { workspace = true }
 base64 = { workspace = true }
 chrono = { workspace = true }
 config = { workspace = true }

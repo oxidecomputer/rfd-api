@@ -15,6 +15,7 @@ use crate::server::SpecConfig;
 #[derive(Debug, Deserialize)]
 pub struct AppConfig {
     pub log_format: ServerLogFormat,
+    pub log_filter: Option<String>,
     pub log_directory: Option<PathBuf>,
     pub initial_mappers: Option<String>,
     pub public_url: String,
