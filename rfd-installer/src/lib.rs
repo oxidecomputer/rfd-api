@@ -11,6 +11,7 @@ use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../rfd-model/migrations");
 
 pub fn run_migrations(url: &str, v_only: bool) {
+    // These are safe to run multiple times.
     v_api_installer::run_migrations(url);
 
     if !v_only {

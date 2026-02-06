@@ -31,6 +31,7 @@ mod util;
 #[derive(Debug, Deserialize)]
 pub struct AppConfig {
     pub log_directory: Option<String>,
+    pub log_filter: Option<String>,
     #[serde(default)]
     pub log_format: LogFormat,
     pub processor_enabled: bool,
@@ -45,7 +46,9 @@ pub struct AppConfig {
     pub auth: AuthConfig,
     pub source: GitHubSourceRepo,
     #[serde(default)]
-    pub static_storage: Vec<StaticStorageConfig>,
+    pub gcs_storage: Vec<GcsStorageConfig>,
+    #[serde(default)]
+    pub s3_storage: Vec<S3StorageConfig>,
     #[serde(default)]
     pub pdf_storage: Option<PdfStorageConfig>,
     #[serde(default)]
@@ -96,8 +99,15 @@ pub struct GitHubSourceRepo {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct StaticStorageConfig {
+pub struct GcsStorageConfig {
     pub bucket: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct S3StorageConfig {
+    pub bucket: String,
+    pub region: String,
+    pub endpoint: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -145,10 +155,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         NonBlocking::new(std::io::stdout())
     };
 
+    let env_filter = match config.log_filter {
+        Some(ref filter) => EnvFilter::new(filter),
+        None => EnvFilter::from_default_env(),
+    };
+
     let subscriber = tracing_subscriber::fmt()
         .with_file(false)
         .with_line_number(false)
-        .with_env_filter(EnvFilter::from_default_env())
+        .with_env_filter(env_filter)
         .with_writer(writer);
 
     match config.log_format {

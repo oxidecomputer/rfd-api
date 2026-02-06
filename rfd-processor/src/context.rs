@@ -34,8 +34,21 @@ use crate::{
     search::{RfdSearchIndex, SearchError},
     updater::{BoxedAction, RfdUpdateMode, RfdUpdaterError},
     util::{gdrive_client, GDriveError},
-    AppConfig, GitHubAuthConfig, PdfStorageConfig, SearchConfig, StaticStorageConfig,
+    AppConfig, GcsStorageConfig, GitHubAuthConfig, PdfStorageConfig, S3StorageConfig, SearchConfig,
 };
+
+pub type StaticStorageError = Box<dyn std::error::Error + Send + Sync>;
+
+#[async_trait]
+pub trait StaticStorage: Send + Sync {
+    async fn put(
+        &self,
+        key: &str,
+        data: Vec<u8>,
+        content_type: &str,
+    ) -> Result<(), StaticStorageError>;
+    fn name(&self) -> &str;
+}
 
 pub struct Database {
     pub storage: PostgresStore,
@@ -80,8 +93,8 @@ pub struct Context {
     pub db: Database,
     pub github: GitHubCtx,
     pub actions: Vec<BoxedAction>,
-    pub assets: StaticAssetStorageCtx,
-    pub pdf: PdfStorageCtx,
+    pub static_storage: Vec<Box<dyn StaticStorage>>,
+    pub pdf: Option<PdfStorageCtx>,
     pub search: SearchCtx,
 }
 
@@ -161,7 +174,7 @@ impl Context {
                 .iter()
                 .map(|action| action.as_str().try_into())
                 .collect::<Result<Vec<_>, RfdUpdaterError>>()?,
-            assets: StaticAssetStorageCtx::new(&config.static_storage).await?,
+            static_storage: build_static_storage(&config.gcs_storage, &config.s3_storage).await?,
             pdf: PdfStorageCtx::new(&config.pdf_storage).await?,
             search: SearchCtx::new(&config.search_storage)?,
         })
@@ -186,69 +199,150 @@ pub struct GitHubCtx {
     pub repository: GitHubRfdRepo,
 }
 
-pub struct StaticAssetStorageCtx {
-    pub client: Storage<HttpsConnector<HttpConnector>>,
-    pub locations: Vec<StaticAssetLocation>,
+async fn build_static_storage(
+    gcs_entries: &[GcsStorageConfig],
+    s3_entries: &[S3StorageConfig],
+) -> Result<Vec<Box<dyn StaticStorage>>, ContextError> {
+    let mut storage: Vec<Box<dyn StaticStorage>> = Vec::new();
+
+    // Build GCS storage instances
+    for entry in gcs_entries {
+        let client = build_gcs_client().await?;
+        storage.push(Box::new(GcsStorage {
+            client,
+            bucket: entry.bucket.clone(),
+        }));
+    }
+
+    // Build S3 storage instances
+    for entry in s3_entries {
+        let mut config_loader = aws_config::defaults(aws_config::BehaviorVersion::latest())
+            .region(aws_config::Region::new(entry.region.clone()));
+
+        if let Some(endpoint) = &entry.endpoint {
+            config_loader = config_loader.endpoint_url(endpoint);
+        }
+
+        let sdk_config = config_loader.load().await;
+        let client = aws_sdk_s3::Client::new(&sdk_config);
+
+        storage.push(Box::new(S3Storage {
+            client,
+            bucket: entry.bucket.clone(),
+        }));
+    }
+
+    Ok(storage)
 }
 
-impl StaticAssetStorageCtx {
-    pub async fn new(entries: &[StaticStorageConfig]) -> Result<Self, ContextError> {
-        let opts = yup_oauth2::ApplicationDefaultCredentialsFlowOpts::default();
-        let gcp_auth = match yup_oauth2::ApplicationDefaultCredentialsAuthenticator::builder(opts)
-            .await
-        {
-            yup_oauth2::authenticator::ApplicationDefaultCredentialsTypes::ServiceAccount(auth) => {
-                tracing::debug!("Service account based credentials");
+async fn build_gcs_client() -> Result<Storage<HttpsConnector<HttpConnector>>, ContextError> {
+    let opts = yup_oauth2::ApplicationDefaultCredentialsFlowOpts::default();
+    let gcp_auth = match yup_oauth2::ApplicationDefaultCredentialsAuthenticator::builder(opts).await
+    {
+        yup_oauth2::authenticator::ApplicationDefaultCredentialsTypes::ServiceAccount(auth) => {
+            tracing::debug!("Service account based credentials");
 
-                auth.build().await.map_err(|err| {
-                    tracing::error!(
-                        ?err,
-                        "Failed to construct Cloud Storage credentials from service account"
-                    );
-                    ContextError::FailedToFindGcpCredentials(err)
-                })?
-            }
-            yup_oauth2::authenticator::ApplicationDefaultCredentialsTypes::InstanceMetadata(
-                auth,
-            ) => {
-                tracing::debug!("Create instance based credentials");
+            auth.build().await.map_err(|err| {
+                tracing::error!(
+                    ?err,
+                    "Failed to construct Cloud Storage credentials from service account"
+                );
+                ContextError::FailedToFindGcpCredentials(err)
+            })?
+        }
+        yup_oauth2::authenticator::ApplicationDefaultCredentialsTypes::InstanceMetadata(auth) => {
+            tracing::debug!("Create instance based credentials");
 
-                auth.build().await.map_err(|err| {
-                    tracing::error!(
-                        ?err,
-                        "Failed to construct Cloud Storage credentials from instance metadata"
-                    );
-                    ContextError::FailedToFindGcpCredentials(err)
-                })?
-            }
-        };
+            auth.build().await.map_err(|err| {
+                tracing::error!(
+                    ?err,
+                    "Failed to construct Cloud Storage credentials from instance metadata"
+                );
+                ContextError::FailedToFindGcpCredentials(err)
+            })?
+        }
+    };
 
-        let storage = Storage::new(
-            Client::builder(TokioExecutor::new()).build(
-                HttpsConnectorBuilder::new()
-                    .with_native_roots()
-                    .unwrap()
-                    .https_only()
-                    .enable_http2()
-                    .build(),
-            ),
-            gcp_auth,
-        );
+    Ok(Storage::new(
+        Client::builder(TokioExecutor::new()).build(
+            HttpsConnectorBuilder::new()
+                .with_native_roots()
+                .unwrap()
+                .https_only()
+                .enable_http2()
+                .build(),
+        ),
+        gcp_auth,
+    ))
+}
 
-        Ok(Self {
-            client: storage,
-            locations: entries
-                .iter()
-                .map(|e| StaticAssetLocation {
-                    bucket: e.bucket.to_string(),
-                })
-                .collect(),
-        })
+pub struct GcsStorage {
+    client: Storage<HttpsConnector<HttpConnector>>,
+    bucket: String,
+}
+
+#[async_trait]
+impl StaticStorage for GcsStorage {
+    async fn put(
+        &self,
+        key: &str,
+        data: Vec<u8>,
+        content_type: &str,
+    ) -> Result<(), StaticStorageError> {
+        use google_storage1::api::Object;
+
+        let mime_type: mime_guess::Mime = content_type
+            .parse()
+            .unwrap_or(mime_guess::mime::APPLICATION_OCTET_STREAM);
+        let cursor = std::io::Cursor::new(data);
+
+        self.client
+            .objects()
+            .insert(Object::default(), &self.bucket)
+            .name(key)
+            .upload(cursor, mime_type)
+            .await?;
+
+        Ok(())
+    }
+
+    fn name(&self) -> &str {
+        &self.bucket
     }
 }
 
-pub struct StaticAssetLocation {
-    pub bucket: String,
+pub struct S3Storage {
+    client: aws_sdk_s3::Client,
+    bucket: String,
+}
+
+#[async_trait]
+impl StaticStorage for S3Storage {
+    async fn put(
+        &self,
+        key: &str,
+        data: Vec<u8>,
+        content_type: &str,
+    ) -> Result<(), StaticStorageError> {
+        use aws_sdk_s3::primitives::ByteStream;
+
+        let body = ByteStream::from(data);
+
+        self.client
+            .put_object()
+            .bucket(&self.bucket)
+            .key(key)
+            .content_type(content_type)
+            .body(body)
+            .send()
+            .await?;
+
+        Ok(())
+    }
+
+    fn name(&self) -> &str {
+        &self.bucket
+    }
 }
 
 pub type GDriveClient = DriveHub<HttpsConnector<HttpConnector>>;
@@ -259,19 +353,16 @@ pub struct PdfStorageCtx {
 }
 
 impl PdfStorageCtx {
-    pub async fn new(config: &Option<PdfStorageConfig>) -> Result<Self, GDriveError> {
-        Ok(Self {
-            // A client is only needed if files are going to be written
-            client: gdrive_client().await?,
-            locations: config
-                .as_ref()
-                .map(|config| {
-                    vec![PdfStorageLocation {
-                        folder_id: config.folder.clone(),
-                    }]
-                })
-                .unwrap_or_default(),
-        })
+    pub async fn new(config: &Option<PdfStorageConfig>) -> Result<Option<Self>, GDriveError> {
+        match config {
+            Some(config) => Ok(Some(Self {
+                client: gdrive_client().await?,
+                locations: vec![PdfStorageLocation {
+                    folder_id: config.folder.clone(),
+                }],
+            })),
+            None => Ok(None),
+        }
     }
 }
 
@@ -324,7 +415,7 @@ impl PdfStorage for PdfStorageCtx {
                 }
             }
             .tap_ok(|_| {
-                tracing::info!("Sucessfully uploaded PDF");
+                tracing::info!("Successfully uploaded PDF");
             })
             .tap_err(|err| {
                 tracing::error!(?err, "Failed to upload PDF");
@@ -362,5 +453,146 @@ impl SearchCtx {
                 .map(|c| RfdSearchIndex::new(&c.host, &c.key, &c.index))
                 .collect::<Result<Vec<_>, _>>()?,
         })
+    }
+}
+
+#[cfg(test)]
+pub mod test {
+    use super::*;
+    use mockall::mock;
+    use std::collections::HashMap;
+    use std::sync::{Arc, Mutex};
+
+    mock! {
+        pub StaticStorage {}
+
+        #[async_trait]
+        impl StaticStorage for StaticStorage {
+            async fn put(
+                &self,
+                key: &str,
+                data: Vec<u8>,
+                content_type: &str,
+            ) -> Result<(), StaticStorageError>;
+            fn name(&self) -> &str;
+        }
+    }
+
+    /// In-memory storage implementation for testing
+    pub struct InMemoryStorage {
+        name: String,
+        objects: Arc<Mutex<HashMap<String, StoredObject>>>,
+    }
+
+    #[derive(Clone)]
+    pub struct StoredObject {
+        pub data: Vec<u8>,
+        pub content_type: String,
+    }
+
+    impl InMemoryStorage {
+        pub fn new(name: &str) -> Self {
+            Self {
+                name: name.to_string(),
+                objects: Arc::new(Mutex::new(HashMap::new())),
+            }
+        }
+
+        pub fn get(&self, key: &str) -> Option<StoredObject> {
+            self.objects.lock().unwrap().get(key).cloned()
+        }
+
+        pub fn len(&self) -> usize {
+            self.objects.lock().unwrap().len()
+        }
+    }
+
+    #[async_trait]
+    impl StaticStorage for InMemoryStorage {
+        async fn put(
+            &self,
+            key: &str,
+            data: Vec<u8>,
+            content_type: &str,
+        ) -> Result<(), StaticStorageError> {
+            self.objects.lock().unwrap().insert(
+                key.to_string(),
+                StoredObject {
+                    data,
+                    content_type: content_type.to_string(),
+                },
+            );
+            Ok(())
+        }
+
+        fn name(&self) -> &str {
+            &self.name
+        }
+    }
+
+    #[tokio::test]
+    async fn in_memory_storage_stores_and_retrieves_objects() {
+        let storage = InMemoryStorage::new("test-bucket");
+
+        let data = b"hello world".to_vec();
+        storage
+            .put("test/key.txt", data.clone(), "text/plain")
+            .await
+            .unwrap();
+
+        let obj = storage.get("test/key.txt").unwrap();
+        assert_eq!(obj.data, data);
+        assert_eq!(obj.content_type, "text/plain");
+    }
+
+    #[tokio::test]
+    async fn in_memory_storage_returns_correct_name() {
+        let storage = InMemoryStorage::new("my-bucket");
+        assert_eq!(storage.name(), "my-bucket");
+    }
+
+    #[tokio::test]
+    async fn in_memory_storage_overwrites_existing_objects() {
+        let storage = InMemoryStorage::new("test-bucket");
+
+        storage
+            .put("key", b"first".to_vec(), "text/plain")
+            .await
+            .unwrap();
+        storage
+            .put("key", b"second".to_vec(), "text/plain")
+            .await
+            .unwrap();
+
+        let obj = storage.get("key").unwrap();
+        assert_eq!(obj.data, b"second".to_vec());
+        assert_eq!(storage.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn mock_storage_can_simulate_failure() {
+        let mut mock = MockStaticStorage::new();
+        mock.expect_put()
+            .returning(|_, _, _| Err("simulated failure".into()));
+        mock.expect_name().return_const("mock-bucket".to_string());
+
+        let result = mock.put("key", vec![], "text/plain").await;
+        assert!(result.is_err());
+    }
+
+    #[tokio::test]
+    async fn mock_storage_can_verify_calls() {
+        let mut mock = MockStaticStorage::new();
+        mock.expect_put()
+            .withf(|key, data, content_type| {
+                key == "expected/key.png" && data == b"image data" && content_type == "image/png"
+            })
+            .times(1)
+            .returning(|_, _, _| Ok(()));
+        mock.expect_name().return_const("mock-bucket".to_string());
+
+        mock.put("expected/key.png", b"image data".to_vec(), "image/png")
+            .await
+            .unwrap();
     }
 }

@@ -3,7 +3,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use async_trait::async_trait;
-use google_storage1::api::Object;
 use tracing::instrument;
 
 use crate::{rfd::PersistedRfd, util::decode_base64};
@@ -49,24 +48,25 @@ impl RfdUpdateAction for CopyImagesToStorage {
                 "Writing file to storage buckets"
             );
 
-            let cursor = std::io::Cursor::new(data);
-
-            for location in &ctx.assets.locations {
-                tracing::info!(bucket = ?location.bucket, ?object_name, "Writing to location");
+            for storage in &ctx.static_storage {
+                tracing::info!(name = storage.name(), ?object_name, "Writing to storage");
 
                 if mode == RfdUpdateMode::Write {
-                    // TODO: Move implementation to a trait and abstract over different storage systems
-                    if let Err(err) = ctx
-                        .assets
-                        .client
-                        .objects()
-                        .insert(Object::default(), &location.bucket)
-                        .name(&object_name)
-                        .upload(cursor.clone(), mime_type.clone())
+                    if let Err(err) = storage
+                        .put(&object_name, data.clone(), mime_type.as_ref())
                         .await
                     {
-                        tracing::error!(?err, "Failed to upload static file to GCP");
+                        tracing::error!(
+                            name = storage.name(),
+                            ?err,
+                            "Failed to upload static file"
+                        );
                     }
+                } else {
+                    tracing::warn!(
+                        "CopyImagesToStorage is enabled however RfdUpdateMode is not write: {:?}",
+                        mode
+                    );
                 }
             }
         }

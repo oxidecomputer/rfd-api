@@ -107,3 +107,42 @@ cargo run -p rfd-cli --features local-dev
 The processor has multiple jobs that are able to be run, and configuration is only required for
 jobs that are going to be run. The `actions` key defines the jobs that should be run. By default
 all jobs are disabled. In this this mode the processor will only construct a database of RFDs.
+
+##### Static Asset Storage
+
+The processor can copy images and other static assets extracted from RFDs to cloud storage. Both
+Google Cloud Storage (GCS) and Amazon S3 (or S3-compatible services) are supported. Multiple
+storage backends can be configured simultaneously, and assets will be pushed to all of them.
+
+To enable this feature, add `CopyImagesToStorage` to the `actions` list and configure at least one
+storage backend.
+
+**Google Cloud Storage (GCS)**
+
+```toml
+[[gcs_storage]]
+bucket = "your-bucket-name"
+```
+
+GCS uses GCP Application Default Credentials for authentication. Configure credentials using one of:
+- `GOOGLE_APPLICATION_CREDENTIALS` environment variable pointing to a service account key file
+- Instance metadata (when running on GCP Compute Engine, GKE, etc.)
+- `gcloud auth application-default login` (for local development)
+
+**Amazon S3**
+
+```toml
+[[s3_storage]]
+bucket = "your-bucket-name"
+region = "us-west-2"
+# Optional: custom endpoint for S3-compatible services
+# endpoint = "https://s3.example.com"
+```
+
+S3 uses the AWS SDK default credential chain for authentication:
+- Environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, optionally `AWS_SESSION_TOKEN`)
+- Shared credentials file (`~/.aws/credentials`)
+- IAM role (when running on AWS EC2, ECS, Lambda, etc.)
+
+The optional `endpoint` field allows using S3-compatible services such as MinIO, Backblaze B2, or
+Cloudflare R2.

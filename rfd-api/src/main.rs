@@ -55,10 +55,15 @@ async fn main() -> anyhow::Result<()> {
         NonBlocking::new(std::io::stdout())
     };
 
+    let env_filter = match config.log_filter {
+        Some(ref filter) => EnvFilter::new(filter),
+        None => EnvFilter::from_default_env(),
+    };
+
     let subscriber = tracing_subscriber::fmt()
         .with_file(false)
         .with_line_number(false)
-        .with_env_filter(EnvFilter::from_default_env())
+        .with_env_filter(env_filter)
         .with_writer(writer);
 
     match config.log_format {

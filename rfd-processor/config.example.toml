@@ -69,10 +69,24 @@ path = ""
 # Branch to use as the default branch of the repository
 default_branch = ""
 
-# Bucket to push static assets pulled from RFDs to (currently only GCP Storage buckets are supported)
-[[static_storage]]
-# Name of the bucket
+# Static asset storage for images extracted from RFDs. Both GCS and S3 are supported.
+# Multiple storage backends can be configured, and assets will be pushed to all of them.
+
+# Google Cloud Storage (GCS)
+# Requires GCP Application Default Credentials to be configured
+[[gcs_storage]]
+# Name of the GCS bucket
 bucket = ""
+
+# Amazon S3 (or S3-compatible storage)
+# Uses AWS SDK default credential chain
+[[s3_storage]]
+# Name of the S3 bucket
+bucket = ""
+# AWS region (e.g., "us-west-2")
+region = ""
+# Optional: Custom endpoint URL for S3-compatible services (e.g., MinIO, Backblaze B2)
+# endpoint = "https://s3.example.com"
 
 # Location to store generated PDFs (currently on Google Drive Shared Drives are supported)
 [pdf_storage]

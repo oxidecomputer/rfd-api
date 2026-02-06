@@ -56,7 +56,7 @@ pub fn server(
 
     // Construct a shim to pipe dropshot logs into the global tracing logger
     let dropshot_logger = {
-        let level_drain = slog::LevelFilter(TracingSlogDrain, slog::Level::Debug).fuse();
+        let level_drain = slog::LevelFilter(TracingSlogDrain, slog::Level::Trace).fuse();
         let async_drain = slog_async::Async::new(level_drain).build().fuse();
         slog::Logger::root(async_drain, slog::o!())
     };
