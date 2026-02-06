@@ -2,7 +2,8 @@
 # Build stage
 FROM docker.io/rust:1-trixie AS builder
 
-ARG DIESEL_VER=v2.3.5
+ARG DIESEL_VERSION=v2.3.5
+ARG NODE_VERSION=v24.13.0
 
 WORKDIR /app
 
@@ -10,7 +11,6 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     libpq-dev \
     pkg-config
-
 
 # Copy workspace files
 COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
@@ -39,9 +39,14 @@ RUN  cargo build --release \
 
 # Download diesel tool for migrations
 WORKDIR /tmp
-RUN curl -L --output-dir /tmp -O "https://github.com/diesel-rs/diesel/releases/download/${DIESEL_VER}/diesel_cli-x86_64-unknown-linux-gnu.tar.xz" \
-    && curl -L --output-dir /tmp -O "https://github.com/diesel-rs/diesel/releases/download/${DIESEL_VER}/diesel_cli-x86_64-unknown-linux-gnu.tar.xz.sha256" \
+RUN curl -L --output-dir /tmp -O "https://github.com/diesel-rs/diesel/releases/download/${DIESEL_VERSION}/diesel_cli-x86_64-unknown-linux-gnu.tar.xz" \
+    && curl -L --output-dir /tmp -O "https://github.com/diesel-rs/diesel/releases/download/${DIESEL_VERSION}/diesel_cli-x86_64-unknown-linux-gnu.tar.xz.sha256" \
     && sha256sum diesel_cli-x86_64-unknown-linux-gnu.tar.xz.sha256 && tar --strip-components=1 -xJvf diesel_cli-x86_64-unknown-linux-gnu.tar.xz
+
+# Node for search indec
+RUN curl -L --output-dir /tmp -O "https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-linux-x64.tar.xz" \
+    && curl -L --output-dir /tmp -o node.SHASUMS256.txt "https://nodejs.org/dist/${NODE_VERSION}/SHASUMS256.txt" \
+    && sha256sum node.SHASUMS256.txt && tar --strip-components=1 -xJvf "node-${NODE_VERSION}-linux-x64.tar.xz"
 
 # Runtime stage
 FROM docker.io/debian:trixie-slim
@@ -66,6 +71,9 @@ COPY --from=builder /app/target/release/rfd-installer /usr/local/bin/
 COPY --from=builder /tmp/diesel /usr/local/bin/
 # COPY --from=builder /app/rfd-model/diesel.toml /home/rfd/db/
 COPY --from=builder /app/rfd-model/migrations/ /home/rfd/db/migrations/
+
+# Node for search indexing
+COPY --from=builder /tmp/bin/node /usr/local/bin/
 
 # Create non-root user
 USER rfd
