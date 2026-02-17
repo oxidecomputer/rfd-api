@@ -14,7 +14,9 @@ use crate::permissions::RfdPermission;
 
 #[derive(Debug, Deserialize)]
 pub struct InitialData {
+    #[serde(default)]
     pub groups: Vec<InitialGroup>,
+    #[serde(default)]
     pub mappers: Vec<InitialMapper>,
 }
 
