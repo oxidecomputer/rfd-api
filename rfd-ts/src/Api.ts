@@ -6,15 +6,27 @@ import { snakeify } from './util'
 
 export type { ApiResult, ErrorBody, ErrorResult } from './http-client'
 
+export type AccessGroupId = Record<string, unknown>
+
+export type UserId = Record<string, unknown>
+
 export type TypedUuidForUserId = string
+
+export type ApiKeyId = Record<string, unknown>
 
 export type TypedUuidForApiKeyId = string
 
 export type TypedUuidForAccessGroupId = string
 
+export type MapperId = Record<string, unknown>
+
 export type TypedUuidForMapperId = string
 
+export type OAuthClientId = Record<string, unknown>
+
 export type TypedUuidForOAuthClientId = string
+
+export type MagicLinkId = Record<string, unknown>
 
 export type TypedUuidForMagicLinkId = string
 
@@ -131,6 +143,8 @@ export type ApiKeyResponse_for_RfdPermission = {
   'permissions'?: Permissions_for_RfdPermission | null
 }
 
+export type UserProviderId = Record<string, unknown>
+
 export type TypedUuidForUserProviderId = string
 
 export type ApiUserContactEmail = {
@@ -238,6 +252,8 @@ export type InitialApiKeyResponse_for_RfdPermission = {
   'permissions'?: Permissions_for_RfdPermission | null
 }
 
+export type MagicLinkSecretId = Record<string, unknown>
+
 export type TypedUuidForMagicLinkSecretId = string
 
 export type InitialMagicLinkSecretResponse = {
@@ -246,6 +262,8 @@ export type InitialMagicLinkSecretResponse = {
   'key': SecretString
 }
 
+export type OAuthSecretId = Record<string, unknown>
+
 export type TypedUuidForOAuthSecretId = string
 
 export type InitialOAuthClientSecretResponse = {
@@ -253,6 +271,8 @@ export type InitialOAuthClientSecretResponse = {
   'id': TypedUuidForOAuthSecretId
   'key': SecretString
 }
+
+export type WebhookDeliveryId = Record<string, unknown>
 
 export type TypedUuidForWebhookDeliveryId = string
 
@@ -273,6 +293,8 @@ export type Job = {
 export type Jwk = { 'e': string; 'kid': string; 'kty': string; 'n': string; 'use': string }
 
 export type Jwks = { 'keys': (Jwk)[] }
+
+export type MagicLinkRedirectUriId = Record<string, unknown>
 
 export type TypedUuidForMagicLinkRedirectUriId = string
 
@@ -299,6 +321,8 @@ export type MagicLink = {
   'redirectUris': (MagicLinkRedirectUri)[]
   'secrets': (MagicLinkSecret)[]
 }
+
+export type MagicLinkAttemptId = Record<string, unknown>
 
 export type TypedUuidForMagicLinkAttemptId = string
 
@@ -345,6 +369,8 @@ export type OAuthAuthzCodeExchangeBody = {
 }
 
 export type OAuthAuthzCodeExchangeResponse = { 'accessToken': string; 'expiresIn': number; 'tokenType': string }
+
+export type OAuthRedirectUriId = Record<string, unknown>
 
 export type TypedUuidForOAuthRedirectUriId = string
 
@@ -400,7 +426,11 @@ export type ReserveRfdBody = {
 
 export type ReserveRfdResponse = { 'number': number }
 
+export type RfdRevisionId = Record<string, unknown>
+
 export type TypedUuidForRfdRevisionId = string
+
+export type RfdId = Record<string, unknown>
 
 export type TypedUuidForRfdId = string
 
@@ -458,6 +488,8 @@ export type RfdAttrValue = {
   /** Full value to set this attribute to in the existing RFD contents */
   'value': string
 }
+
+export type RfdPdfId = Record<string, unknown>
 
 export type TypedUuidForRfdPdfId = string
 
@@ -626,6 +658,10 @@ export interface UpdateGroupPathParams {
 }
 
 export interface DeleteGroupPathParams {
+  groupId: TypedUuidForAccessGroupId
+}
+
+export interface GetGroupMembersPathParams {
   groupId: TypedUuidForAccessGroupId
 }
 
@@ -843,7 +879,7 @@ export class Api {
    * Pulled from info.version in the OpenAPI schema. Sent in the
    * `api-version` header on all requests.
    */
-  apiVersion = '0.12.2'
+  apiVersion = '0.13.1'
 
   constructor({ host = '', baseParams = {}, token }: ApiConfig = {}) {
     this.host = host
@@ -1115,6 +1151,18 @@ export class Api {
       return this.request<AccessGroup_for_RfdPermission>({
         path: `/group/${path.groupId}`,
         method: 'DELETE',
+        ...params,
+      })
+    },
+    /**
+     * Get members of a group
+     */
+    getGroupMembers: ({
+      path,
+    }: { path: GetGroupMembersPathParams }, params: FetchParams = {}) => {
+      return this.request<ApiUser_for_RfdPermission[]>({
+        path: `/group-membership/${path.groupId}`,
+        method: 'GET',
         ...params,
       })
     },

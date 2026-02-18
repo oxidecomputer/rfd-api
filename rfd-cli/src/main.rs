@@ -186,6 +186,7 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::DeleteGroup => Some("sys group delete"),
 
         // User admin commands
+        CliCommand::GetGroupMembers => Some("sys group membership list"),
         CliCommand::AddApiUserToGroup => Some("sys group membership add"),
         CliCommand::RemoveApiUserFromGroup => Some("sys group membership remove"),
 
