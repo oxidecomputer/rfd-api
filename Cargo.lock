@@ -767,7 +767,7 @@ dependencies = [
 [[package]]
 name = "dropshot-authorization-header"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#dcac9d795bbd3c93a09de4b5f7c8c0bff3a22a77"
+source = "git+https://github.com/oxidecomputer/v-api#1ba9ce83fa58a543c23e7da80590008c3e3c33bb"
 dependencies = [
  "async-trait",
  "base64",
@@ -3094,7 +3094,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-api"
-version = "0.13.1"
+version = "0.14.0"
 dependencies = [
  "anyhow",
  "async-bb8-diesel",
@@ -3160,7 +3160,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-cli"
-version = "0.13.1"
+version = "0.14.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -3247,7 +3247,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-processor"
-version = "0.13.1"
+version = "0.14.0"
 dependencies = [
  "async-trait",
  "base64",
@@ -3289,7 +3289,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-sdk"
-version = "0.13.1"
+version = "0.14.0"
 dependencies = [
  "chrono",
  "progenitor-client",
@@ -4712,7 +4712,7 @@ dependencies = [
 [[package]]
 name = "v-api"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#dcac9d795bbd3c93a09de4b5f7c8c0bff3a22a77"
+source = "git+https://github.com/oxidecomputer/v-api#1ba9ce83fa58a543c23e7da80590008c3e3c33bb"
 dependencies = [
  "async-trait",
  "base64",
@@ -4757,7 +4757,7 @@ dependencies = [
 [[package]]
 name = "v-api-installer"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#dcac9d795bbd3c93a09de4b5f7c8c0bff3a22a77"
+source = "git+https://github.com/oxidecomputer/v-api#1ba9ce83fa58a543c23e7da80590008c3e3c33bb"
 dependencies = [
  "diesel",
  "diesel_migrations",
@@ -4766,7 +4766,7 @@ dependencies = [
 [[package]]
 name = "v-api-permission-derive"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#dcac9d795bbd3c93a09de4b5f7c8c0bff3a22a77"
+source = "git+https://github.com/oxidecomputer/v-api#1ba9ce83fa58a543c23e7da80590008c3e3c33bb"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -4777,7 +4777,7 @@ dependencies = [
 [[package]]
 name = "v-model"
 version = "0.1.0"
-source = "git+https://github.com/oxidecomputer/v-api#dcac9d795bbd3c93a09de4b5f7c8c0bff3a22a77"
+source = "git+https://github.com/oxidecomputer/v-api#1ba9ce83fa58a543c23e7da80590008c3e3c33bb"
 dependencies = [
  "async-bb8-diesel",
  "async-trait",

@@ -15,11 +15,19 @@ impl CliOutput for RfdJsonPrinter {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 
-    fn output_api_user_list(&self, value: Vec<types::GetUserResponseForRfdPermission>) {
+    fn output_api_user_list(&self, value: Vec<types::ApiUserForRfdPermission>) {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 
     fn output_user(&self, value: types::GetUserResponseForRfdPermission) {
+        println!("{}", serde_json::to_string(&value).unwrap())
+    }
+
+    fn output_api_user_contact_email(&self, value: types::ApiUserContactEmail) {
+        println!("{}", serde_json::to_string(&value).unwrap())
+    }
+
+    fn output_api_user_link_request_response(&self, value: types::ApiUserLinkRequestResponse) {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 
@@ -71,6 +79,17 @@ impl CliOutput for RfdJsonPrinter {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 
+    fn output_oauth_authz_code_exchange_response(
+        &self,
+        value: types::OAuthAuthzCodeExchangeResponse,
+    ) {
+        println!("{}", serde_json::to_string(&value).unwrap())
+    }
+
+    fn output_oauth_provider_info(&self, value: types::OAuthProviderInfo) {
+        println!("{}", serde_json::to_string(&value).unwrap())
+    }
+
     fn output_rfd_meta(&self, value: types::RfdWithoutContent) {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
@@ -80,6 +99,10 @@ impl CliOutput for RfdJsonPrinter {
     }
 
     fn output_rfd_full(&self, value: types::RfdWithRaw) {
+        println!("{}", serde_json::to_string(&value).unwrap())
+    }
+
+    fn output_rfd_with_pdf(&self, value: types::RfdWithPdf) {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 
@@ -128,6 +151,22 @@ impl CliOutput for RfdJsonPrinter {
     }
 
     fn output_magic_link_secret(&self, value: types::MagicLinkSecret) {
+        println!("{}", serde_json::to_string(&value).unwrap())
+    }
+
+    fn output_magic_link_exchange_response(&self, value: types::MagicLinkExchangeResponse) {
+        println!("{}", serde_json::to_string(&value).unwrap())
+    }
+
+    fn output_magic_link_send_response(&self, value: types::MagicLinkSendResponse) {
+        println!("{}", serde_json::to_string(&value).unwrap())
+    }
+
+    fn output_jwks(&self, value: types::Jwks) {
+        println!("{}", serde_json::to_string(&value).unwrap())
+    }
+
+    fn output_openid_configuration(&self, value: types::OpenIdConfiguration) {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
 

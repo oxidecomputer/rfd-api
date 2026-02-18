@@ -17,8 +17,10 @@ pub enum Printer {
 
 pub trait CliOutput {
     fn output_api_user(&self, value: types::ApiUserForRfdPermission) {}
-    fn output_api_user_list(&self, value: Vec<types::GetUserResponseForRfdPermission>) {}
+    fn output_api_user_list(&self, value: Vec<types::ApiUserForRfdPermission>) {}
     fn output_user(&self, value: types::GetUserResponseForRfdPermission) {}
+    fn output_api_user_contact_email(&self, value: types::ApiUserContactEmail) {}
+    fn output_api_user_link_request_response(&self, value: types::ApiUserLinkRequestResponse) {}
     fn output_api_key_list(&self, value: Vec<types::ApiKeyResponseForRfdPermission>) {}
     fn output_api_key_initial(&self, value: types::InitialApiKeyResponseForRfdPermission) {}
     fn output_api_key(&self, value: types::ApiKeyResponseForRfdPermission) {}
@@ -31,9 +33,16 @@ pub trait CliOutput {
     fn output_oauth_redirect_uri(&self, value: types::OAuthClientRedirectUri) {}
     fn output_oauth_secret_initial(&self, value: types::InitialOAuthClientSecretResponse) {}
     fn output_oauth_secret(&self, value: types::OAuthClientSecret) {}
+    fn output_oauth_authz_code_exchange_response(
+        &self,
+        value: types::OAuthAuthzCodeExchangeResponse,
+    ) {
+    }
+    fn output_oauth_provider_info(&self, value: types::OAuthProviderInfo) {}
     fn output_rfd_meta(&self, value: types::RfdWithoutContent) {}
     fn output_rfd_list(&self, value: Vec<types::RfdWithoutContent>) {}
     fn output_rfd_full(&self, value: types::RfdWithRaw) {}
+    fn output_rfd_with_pdf(&self, value: types::RfdWithPdf) {}
     fn output_rfd(&self, value: types::Rfd) {}
     fn output_rfd_attr(&self, value: types::RfdAttr) {}
     fn output_rfd_revision_meta(&self, value: types::RfdRevisionMeta) {}
@@ -56,6 +65,10 @@ pub trait CliOutput {
     fn output_magic_link_secret(&self, value: types::MagicLinkSecret) {
         println!("{}", serde_json::to_string(&value).unwrap())
     }
+    fn output_magic_link_exchange_response(&self, value: types::MagicLinkExchangeResponse) {}
+    fn output_magic_link_send_response(&self, value: types::MagicLinkSendResponse) {}
+    fn output_jwks(&self, value: types::Jwks) {}
+    fn output_openid_configuration(&self, value: types::OpenIdConfiguration) {}
     fn output_error<T>(&self, value: &progenitor_client::Error<T>)
     where
         T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug;
@@ -69,7 +82,7 @@ impl CliOutput for Printer {
         }
     }
 
-    fn output_api_user_list(&self, value: Vec<types::GetUserResponseForRfdPermission>) {
+    fn output_api_user_list(&self, value: Vec<types::ApiUserForRfdPermission>) {
         match self {
             Self::Json(printer) => printer.output_api_user_list(value),
             Self::Tab(printer) => printer.output_api_user_list(value),
@@ -80,6 +93,20 @@ impl CliOutput for Printer {
         match self {
             Self::Json(printer) => printer.output_user(value),
             Self::Tab(printer) => printer.output_user(value),
+        }
+    }
+
+    fn output_api_user_contact_email(&self, value: types::ApiUserContactEmail) {
+        match self {
+            Self::Json(printer) => printer.output_api_user_contact_email(value),
+            Self::Tab(printer) => printer.output_api_user_contact_email(value),
+        }
+    }
+
+    fn output_api_user_link_request_response(&self, value: types::ApiUserLinkRequestResponse) {
+        match self {
+            Self::Json(printer) => printer.output_api_user_link_request_response(value),
+            Self::Tab(printer) => printer.output_api_user_link_request_response(value),
         }
     }
 
@@ -167,6 +194,23 @@ impl CliOutput for Printer {
         }
     }
 
+    fn output_oauth_authz_code_exchange_response(
+        &self,
+        value: types::OAuthAuthzCodeExchangeResponse,
+    ) {
+        match self {
+            Self::Json(printer) => printer.output_oauth_authz_code_exchange_response(value),
+            Self::Tab(printer) => printer.output_oauth_authz_code_exchange_response(value),
+        }
+    }
+
+    fn output_oauth_provider_info(&self, value: types::OAuthProviderInfo) {
+        match self {
+            Self::Json(printer) => printer.output_oauth_provider_info(value),
+            Self::Tab(printer) => printer.output_oauth_provider_info(value),
+        }
+    }
+
     fn output_rfd_meta(&self, value: types::RfdWithoutContent) {
         match self {
             Self::Json(printer) => printer.output_rfd_meta(value),
@@ -185,6 +229,13 @@ impl CliOutput for Printer {
         match self {
             Self::Json(printer) => printer.output_rfd_full(value),
             Self::Tab(printer) => printer.output_rfd_full(value),
+        }
+    }
+
+    fn output_rfd_with_pdf(&self, value: types::RfdWithPdf) {
+        match self {
+            Self::Json(printer) => printer.output_rfd_with_pdf(value),
+            Self::Tab(printer) => printer.output_rfd_with_pdf(value),
         }
     }
 
@@ -234,6 +285,34 @@ impl CliOutput for Printer {
         match self {
             Self::Json(printer) => printer.output_job_list(value),
             Self::Tab(printer) => printer.output_job_list(value),
+        }
+    }
+
+    fn output_magic_link_exchange_response(&self, value: types::MagicLinkExchangeResponse) {
+        match self {
+            Self::Json(printer) => printer.output_magic_link_exchange_response(value),
+            Self::Tab(printer) => printer.output_magic_link_exchange_response(value),
+        }
+    }
+
+    fn output_magic_link_send_response(&self, value: types::MagicLinkSendResponse) {
+        match self {
+            Self::Json(printer) => printer.output_magic_link_send_response(value),
+            Self::Tab(printer) => printer.output_magic_link_send_response(value),
+        }
+    }
+
+    fn output_jwks(&self, value: types::Jwks) {
+        match self {
+            Self::Json(printer) => printer.output_jwks(value),
+            Self::Tab(printer) => printer.output_jwks(value),
+        }
+    }
+
+    fn output_openid_configuration(&self, value: types::OpenIdConfiguration) {
+        match self {
+            Self::Json(printer) => printer.output_openid_configuration(value),
+            Self::Tab(printer) => printer.output_openid_configuration(value),
         }
     }
 
