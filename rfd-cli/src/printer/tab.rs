@@ -48,7 +48,7 @@ impl CliOutput for RfdTabPrinter {
         self.print_cli_output(&value, None);
     }
 
-    fn output_api_user_list(&self, value: Vec<types::ApiUserForRfdPermission>) {
+    fn output_api_user_list(&self, value: Vec<types::GetUserResponseForRfdPermission>) {
         self.print_cli_output(&value, Some("users".to_string()));
     }
 
@@ -226,6 +226,17 @@ impl TabDisplay for types::Rfd {
                 .unwrap_or_else(|| "--".to_string()),
         );
         printer.print_field(tw, level, "link", &self.link.as_deref().unwrap_or(""));
+        printer.print_field(tw, level, "created_at", &self.created_at);
+        printer.print_field(tw, level, "updated_at", &self.updated_at);
+        printer.print_field(
+            tw,
+            level,
+            "deleted_at",
+            &self
+                .deleted_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
     }
 }
 
@@ -387,6 +398,7 @@ impl TabDisplay for Mapper {
             &serde_json::to_string(&self.rule).unwrap(),
         );
         printer.print_field(tw, level, "created_at", &self.created_at);
+        printer.print_field(tw, level, "updated_at", &self.updated_at);
         printer.print_field(
             tw,
             level,
@@ -489,6 +501,16 @@ impl TabDisplay for RfdWithoutContent {
         );
         printer.print_field(tw, level, "authors", &self.authors.as_deref().unwrap_or(""));
         printer.print_field(tw, level, "labels", &self.labels.as_deref().unwrap_or(""));
+        printer.print_field(
+            tw,
+            level,
+            "format",
+            &self
+                .format
+                .as_ref()
+                .map(|f| f.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
         printer.print_field(tw, level, "link", &self.link.as_deref().unwrap_or(""));
         printer.print_field(
             tw,
@@ -546,6 +568,16 @@ impl TabDisplay for RfdWithRaw {
         );
         printer.print_field(tw, level, "authors", &self.authors.as_deref().unwrap_or(""));
         printer.print_field(tw, level, "labels", &self.labels.as_deref().unwrap_or(""));
+        printer.print_field(
+            tw,
+            level,
+            "format",
+            &self
+                .format
+                .as_ref()
+                .map(|f| f.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
         printer.print_field(tw, level, "link", &self.link.as_deref().unwrap_or(""));
         printer.print_field(
             tw,
@@ -613,6 +645,24 @@ impl TabDisplay for RfdAttr {
 impl TabDisplay for SearchResults {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "query", &self.query);
+        printer.print_field(
+            tw,
+            level,
+            "limit",
+            &self
+                .limit
+                .map(|l| l.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
+        printer.print_field(
+            tw,
+            level,
+            "offset",
+            &self
+                .offset
+                .map(|o| o.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
         printer.print_field(tw, level, "total hits", &self.hits.len());
         writeln!(tw);
         self.hits.display(tw, level, printer);
@@ -844,6 +894,16 @@ impl TabDisplay for RfdWithPdf {
         );
         printer.print_field(tw, level, "authors", &self.authors.as_deref().unwrap_or(""));
         printer.print_field(tw, level, "labels", &self.labels.as_deref().unwrap_or(""));
+        printer.print_field(
+            tw,
+            level,
+            "format",
+            &self
+                .format
+                .as_ref()
+                .map(|f| f.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
         printer.print_field(tw, level, "link", &self.link.as_deref().unwrap_or(""));
         printer.print_field(
             tw,

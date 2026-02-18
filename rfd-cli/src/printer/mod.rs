@@ -17,7 +17,7 @@ pub enum Printer {
 
 pub trait CliOutput {
     fn output_api_user(&self, value: types::ApiUserForRfdPermission) {}
-    fn output_api_user_list(&self, value: Vec<types::ApiUserForRfdPermission>) {}
+    fn output_api_user_list(&self, value: Vec<types::GetUserResponseForRfdPermission>) {}
     fn output_user(&self, value: types::GetUserResponseForRfdPermission) {}
     fn output_api_user_contact_email(&self, value: types::ApiUserContactEmail) {}
     fn output_api_user_link_request_response(&self, value: types::ApiUserLinkRequestResponse) {}
@@ -82,7 +82,7 @@ impl CliOutput for Printer {
         }
     }
 
-    fn output_api_user_list(&self, value: Vec<types::ApiUserForRfdPermission>) {
+    fn output_api_user_list(&self, value: Vec<types::GetUserResponseForRfdPermission>) {
         match self {
             Self::Json(printer) => printer.output_api_user_list(value),
             Self::Tab(printer) => printer.output_api_user_list(value),
