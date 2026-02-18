@@ -7,7 +7,7 @@
       "url": "https://oxide.computer",
       "email": "augustus@oxidecomputer.com"
     },
-    "version": "0.12.2"
+    "version": "0.13.1"
   },
   "paths": {
     "/.well-known/jwks.json": {
@@ -728,6 +728,44 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AccessGroup_for_RfdPermission"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/group-membership/{group_id}": {
+      "get": {
+        "summary": "Get members of a group",
+        "operationId": "get_group_members",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "group_id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Array_of_ApiUser_for_RfdPermission",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApiUser_for_RfdPermission"
+                  }
                 }
               }
             }
@@ -2681,6 +2719,9 @@
   },
   "components": {
     "schemas": {
+      "AccessGroupId": {
+        "not": {}
+      },
       "AccessGroupUpdateParams_for_RfdPermission": {
         "type": "object",
         "properties": {
@@ -2802,6 +2843,9 @@
         "required": [
           "expires_at"
         ]
+      },
+      "ApiKeyId": {
+        "not": {}
       },
       "ApiKeyResponse_for_RfdPermission": {
         "type": "object",
@@ -3492,6 +3536,9 @@
           "secrets"
         ]
       },
+      "MagicLinkAttemptId": {
+        "not": {}
+      },
       "MagicLinkExchangeRequest": {
         "type": "object",
         "properties": {
@@ -3531,6 +3578,9 @@
           "token_type"
         ]
       },
+      "MagicLinkId": {
+        "not": {}
+      },
       "MagicLinkMedium": {
         "type": "string",
         "enum": [
@@ -3566,6 +3616,9 @@
           "redirect_uri"
         ]
       },
+      "MagicLinkRedirectUriId": {
+        "not": {}
+      },
       "MagicLinkSecret": {
         "type": "object",
         "properties": {
@@ -3594,6 +3647,9 @@
           "magic_link_client_id",
           "secret_signature"
         ]
+      },
+      "MagicLinkSecretId": {
+        "not": {}
       },
       "MagicLinkSendRequest": {
         "type": "object",
@@ -3685,6 +3741,9 @@
           "rule",
           "updated_at"
         ]
+      },
+      "MapperId": {
+        "not": {}
       },
       "OAuthAuthzCodeExchangeBody": {
         "type": "object",
@@ -3779,6 +3838,9 @@
           "redirect_uris",
           "secrets"
         ]
+      },
+      "OAuthClientId": {
+        "not": {}
       },
       "OAuthClientRedirectUri": {
         "type": "object",
@@ -3878,6 +3940,12 @@
           "github",
           "google"
         ]
+      },
+      "OAuthRedirectUriId": {
+        "not": {}
+      },
+      "OAuthSecretId": {
+        "not": {}
       },
       "OpenIdConfiguration": {
         "type": "object",
@@ -4041,6 +4109,9 @@
           "value"
         ]
       },
+      "RfdId": {
+        "not": {}
+      },
       "RfdPdf": {
         "type": "object",
         "properties": {
@@ -4086,6 +4157,9 @@
           "source",
           "updated_at"
         ]
+      },
+      "RfdPdfId": {
+        "not": {}
       },
       "RfdPermission": {
         "oneOf": [
@@ -4679,6 +4753,9 @@
           "updated_at"
         ]
       },
+      "RfdRevisionId": {
+        "not": {}
+      },
       "RfdRevisionMeta": {
         "type": "object",
         "properties": {
@@ -5095,66 +5172,226 @@
         "type": "string"
       },
       "TypedUuidForAccessGroupId": {
+        "x-rust-type": {
+          "crate": "newtype-uuid",
+          "parameters": [
+            {
+              "$ref": "#/components/schemas/AccessGroupId"
+            }
+          ],
+          "path": "newtype_uuid::TypedUuid",
+          "version": "1"
+        },
         "type": "string",
         "format": "uuid"
       },
       "TypedUuidForApiKeyId": {
+        "x-rust-type": {
+          "crate": "newtype-uuid",
+          "parameters": [
+            {
+              "$ref": "#/components/schemas/ApiKeyId"
+            }
+          ],
+          "path": "newtype_uuid::TypedUuid",
+          "version": "1"
+        },
         "type": "string",
         "format": "uuid"
       },
       "TypedUuidForMagicLinkAttemptId": {
+        "x-rust-type": {
+          "crate": "newtype-uuid",
+          "parameters": [
+            {
+              "$ref": "#/components/schemas/MagicLinkAttemptId"
+            }
+          ],
+          "path": "newtype_uuid::TypedUuid",
+          "version": "1"
+        },
         "type": "string",
         "format": "uuid"
       },
       "TypedUuidForMagicLinkId": {
+        "x-rust-type": {
+          "crate": "newtype-uuid",
+          "parameters": [
+            {
+              "$ref": "#/components/schemas/MagicLinkId"
+            }
+          ],
+          "path": "newtype_uuid::TypedUuid",
+          "version": "1"
+        },
         "type": "string",
         "format": "uuid"
       },
       "TypedUuidForMagicLinkRedirectUriId": {
+        "x-rust-type": {
+          "crate": "newtype-uuid",
+          "parameters": [
+            {
+              "$ref": "#/components/schemas/MagicLinkRedirectUriId"
+            }
+          ],
+          "path": "newtype_uuid::TypedUuid",
+          "version": "1"
+        },
         "type": "string",
         "format": "uuid"
       },
       "TypedUuidForMagicLinkSecretId": {
+        "x-rust-type": {
+          "crate": "newtype-uuid",
+          "parameters": [
+            {
+              "$ref": "#/components/schemas/MagicLinkSecretId"
+            }
+          ],
+          "path": "newtype_uuid::TypedUuid",
+          "version": "1"
+        },
         "type": "string",
         "format": "uuid"
       },
       "TypedUuidForMapperId": {
+        "x-rust-type": {
+          "crate": "newtype-uuid",
+          "parameters": [
+            {
+              "$ref": "#/components/schemas/MapperId"
+            }
+          ],
+          "path": "newtype_uuid::TypedUuid",
+          "version": "1"
+        },
         "type": "string",
         "format": "uuid"
       },
       "TypedUuidForOAuthClientId": {
+        "x-rust-type": {
+          "crate": "newtype-uuid",
+          "parameters": [
+            {
+              "$ref": "#/components/schemas/OAuthClientId"
+            }
+          ],
+          "path": "newtype_uuid::TypedUuid",
+          "version": "1"
+        },
         "type": "string",
         "format": "uuid"
       },
       "TypedUuidForOAuthRedirectUriId": {
+        "x-rust-type": {
+          "crate": "newtype-uuid",
+          "parameters": [
+            {
+              "$ref": "#/components/schemas/OAuthRedirectUriId"
+            }
+          ],
+          "path": "newtype_uuid::TypedUuid",
+          "version": "1"
+        },
         "type": "string",
         "format": "uuid"
       },
       "TypedUuidForOAuthSecretId": {
+        "x-rust-type": {
+          "crate": "newtype-uuid",
+          "parameters": [
+            {
+              "$ref": "#/components/schemas/OAuthSecretId"
+            }
+          ],
+          "path": "newtype_uuid::TypedUuid",
+          "version": "1"
+        },
         "type": "string",
         "format": "uuid"
       },
       "TypedUuidForRfdId": {
+        "x-rust-type": {
+          "crate": "newtype-uuid",
+          "parameters": [
+            {
+              "$ref": "#/components/schemas/RfdId"
+            }
+          ],
+          "path": "newtype_uuid::TypedUuid",
+          "version": "1"
+        },
         "type": "string",
         "format": "uuid"
       },
       "TypedUuidForRfdPdfId": {
+        "x-rust-type": {
+          "crate": "newtype-uuid",
+          "parameters": [
+            {
+              "$ref": "#/components/schemas/RfdPdfId"
+            }
+          ],
+          "path": "newtype_uuid::TypedUuid",
+          "version": "1"
+        },
         "type": "string",
         "format": "uuid"
       },
       "TypedUuidForRfdRevisionId": {
+        "x-rust-type": {
+          "crate": "newtype-uuid",
+          "parameters": [
+            {
+              "$ref": "#/components/schemas/RfdRevisionId"
+            }
+          ],
+          "path": "newtype_uuid::TypedUuid",
+          "version": "1"
+        },
         "type": "string",
         "format": "uuid"
       },
       "TypedUuidForUserId": {
+        "x-rust-type": {
+          "crate": "newtype-uuid",
+          "parameters": [
+            {
+              "$ref": "#/components/schemas/UserId"
+            }
+          ],
+          "path": "newtype_uuid::TypedUuid",
+          "version": "1"
+        },
         "type": "string",
         "format": "uuid"
       },
       "TypedUuidForUserProviderId": {
+        "x-rust-type": {
+          "crate": "newtype-uuid",
+          "parameters": [
+            {
+              "$ref": "#/components/schemas/UserProviderId"
+            }
+          ],
+          "path": "newtype_uuid::TypedUuid",
+          "version": "1"
+        },
         "type": "string",
         "format": "uuid"
       },
       "TypedUuidForWebhookDeliveryId": {
+        "x-rust-type": {
+          "crate": "newtype-uuid",
+          "parameters": [
+            {
+              "$ref": "#/components/schemas/WebhookDeliveryId"
+            }
+          ],
+          "path": "newtype_uuid::TypedUuid",
+          "version": "1"
+        },
         "type": "string",
         "format": "uuid"
       },
@@ -5167,12 +5404,21 @@
           }
         }
       },
+      "UserId": {
+        "not": {}
+      },
+      "UserProviderId": {
+        "not": {}
+      },
       "Visibility": {
         "type": "string",
         "enum": [
           "public",
           "private"
         ]
+      },
+      "WebhookDeliveryId": {
+        "not": {}
       },
       "RfdAttrName": {
         "type": "string",

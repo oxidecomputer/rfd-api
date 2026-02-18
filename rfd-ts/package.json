@@ -1,11 +1,16 @@
 {
-  "name": "@oxide/rfd.ts",
-  "version": "0.3.0",
+  "author": "Oxide Computer Company",
+  "bugs": {
+    "url": "https://github.com/oxidecomputer/rfd-api/issues"
+  },
   "description": "TypeScript client for the RFD API",
+  "devDependencies": {
+    "tsup": "^8.0.2",
+    "typescript": "^5.7.2"
+  },
   "engines": {
     "node": ">=18"
   },
-  "type": "module",
   "exports": {
     "./client": {
       "import": "./dist/Api.js",
@@ -20,6 +25,37 @@
       "require": "./dist/validate.cjs"
     }
   },
+  "homepage": "https://github.com/oxidecomputer/rfd-api#readme",
+  "keywords": [],
+  "license": "MPL-2.0",
+  "name": "@oxide/rfd.ts",
+  "peerDependencies": {
+    "zod": "^3.23.8 || ^4.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oxidecomputer/rfd-api.git"
+  },
+  "scripts": {
+    "build": "tsup --dts",
+    "prepublishOnly": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "tsc": "tsc"
+  },
+  "tsup": {
+    "clean": true,
+    "entry": [
+      "src/Api.ts",
+      "src/retry.ts",
+      "src/validate.ts"
+    ],
+    "format": [
+      "cjs",
+      "esm"
+    ],
+    "splitting": false
+  },
+  "type": "module",
   "typesVersions": {
     "*": {
       "client": [
@@ -33,41 +69,5 @@
       ]
     }
   },
-  "scripts": {
-    "build": "tsup --dts",
-    "prepublishOnly": "npm run build",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "tsc": "tsc"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/oxidecomputer/rfd-api.git"
-  },
-  "keywords": [],
-  "author": "Oxide Computer Company",
-  "license": "MPL-2.0",
-  "bugs": {
-    "url": "https://github.com/oxidecomputer/rfd-api/issues"
-  },
-  "homepage": "https://github.com/oxidecomputer/rfd-api#readme",
-  "peerDependencies": {
-    "zod": "^3.23.8 || ^4.0.0"
-  },
-  "devDependencies": {
-    "tsup": "^8.0.2",
-    "typescript": "^5.7.2"
-  },
-  "tsup": {
-    "clean": true,
-    "entry": [
-      "src/Api.ts",
-      "src/retry.ts",
-      "src/validate.ts"
-    ],
-    "splitting": false,
-    "format": [
-      "cjs",
-      "esm"
-    ]
-  }
+  "version": "0.13.1"
 }

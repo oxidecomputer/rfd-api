@@ -16,15 +16,27 @@ const IntEnum = <T extends readonly number[]>(values: T) =>
 /** Helper to ensure booleans provided as strings end up with the correct value */
 const SafeBoolean = z.preprocess(v => v === 'false' ? false : v, z.coerce.boolean())
 
+export const AccessGroupId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
+
+export const UserId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
+
 export const TypedUuidForUserId = z.preprocess(processResponseBody, z.uuid())
+
+export const ApiKeyId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
 
 export const TypedUuidForApiKeyId = z.preprocess(processResponseBody, z.uuid())
 
 export const TypedUuidForAccessGroupId = z.preprocess(processResponseBody, z.uuid())
 
+export const MapperId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
+
 export const TypedUuidForMapperId = z.preprocess(processResponseBody, z.uuid())
 
+export const OAuthClientId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
+
 export const TypedUuidForOAuthClientId = z.preprocess(processResponseBody, z.uuid())
+
+export const MagicLinkId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
 
 export const TypedUuidForMagicLinkId = z.preprocess(processResponseBody, z.uuid())
 
@@ -158,6 +170,8 @@ export const ApiKeyResponse_for_RfdPermission = z.preprocess(
     'permissions': Permissions_for_RfdPermission.nullable().optional(),
   }),
 )
+
+export const UserProviderId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
 
 export const TypedUuidForUserProviderId = z.preprocess(processResponseBody, z.uuid())
 
@@ -315,6 +329,8 @@ export const InitialApiKeyResponse_for_RfdPermission = z.preprocess(
   }),
 )
 
+export const MagicLinkSecretId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
+
 export const TypedUuidForMagicLinkSecretId = z.preprocess(processResponseBody, z.uuid())
 
 export const InitialMagicLinkSecretResponse = z.preprocess(
@@ -322,12 +338,16 @@ export const InitialMagicLinkSecretResponse = z.preprocess(
   z.object({ 'createdAt': z.coerce.date(), 'id': TypedUuidForMagicLinkSecretId, 'key': SecretString }),
 )
 
+export const OAuthSecretId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
+
 export const TypedUuidForOAuthSecretId = z.preprocess(processResponseBody, z.uuid())
 
 export const InitialOAuthClientSecretResponse = z.preprocess(
   processResponseBody,
   z.object({ 'createdAt': z.coerce.date(), 'id': TypedUuidForOAuthSecretId, 'key': SecretString }),
 )
+
+export const WebhookDeliveryId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
 
 export const TypedUuidForWebhookDeliveryId = z.preprocess(processResponseBody, z.uuid())
 
@@ -354,6 +374,8 @@ export const Jwk = z.preprocess(
 )
 
 export const Jwks = z.preprocess(processResponseBody, z.object({ 'keys': Jwk.array() }))
+
+export const MagicLinkRedirectUriId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
 
 export const TypedUuidForMagicLinkRedirectUriId = z.preprocess(processResponseBody, z.uuid())
 
@@ -389,6 +411,8 @@ export const MagicLink = z.preprocess(
     'secrets': MagicLinkSecret.array(),
   }),
 )
+
+export const MagicLinkAttemptId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
 
 export const TypedUuidForMagicLinkAttemptId = z.preprocess(processResponseBody, z.uuid())
 
@@ -453,6 +477,8 @@ export const OAuthAuthzCodeExchangeResponse = z.preprocess(
   z.object({ 'accessToken': z.string(), 'expiresIn': z.number(), 'tokenType': z.string() }),
 )
 
+export const OAuthRedirectUriId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
+
 export const TypedUuidForOAuthRedirectUriId = z.preprocess(processResponseBody, z.uuid())
 
 export const OAuthClientRedirectUri = z.preprocess(
@@ -516,7 +542,11 @@ export const ReserveRfdResponse = z.preprocess(
   z.object({ 'number': z.number().min(-2147483647).max(2147483647) }),
 )
 
+export const RfdRevisionId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
+
 export const TypedUuidForRfdRevisionId = z.preprocess(processResponseBody, z.uuid())
+
+export const RfdId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
 
 export const TypedUuidForRfdId = z.preprocess(processResponseBody, z.uuid())
 
@@ -577,6 +607,8 @@ export const RfdAttrValue = z.preprocess(
   processResponseBody,
   z.object({ 'message': z.string().nullable().optional(), 'value': z.string() }),
 )
+
+export const RfdPdfId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
 
 export const TypedUuidForRfdPdfId = z.preprocess(processResponseBody, z.uuid())
 
@@ -890,6 +922,16 @@ export const UpdateGroupParams = z.preprocess(
 )
 
 export const DeleteGroupParams = z.preprocess(
+  processResponseBody,
+  z.object({
+    path: z.object({
+      groupId: TypedUuidForAccessGroupId,
+    }),
+    query: z.object({}),
+  }),
+)
+
+export const GetGroupMembersParams = z.preprocess(
   processResponseBody,
   z.object({
     path: z.object({

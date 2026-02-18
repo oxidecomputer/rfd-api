@@ -109,6 +109,36 @@ pub mod types {
         }
     }
 
+    /// `AccessGroupId`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// false
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    #[serde(deny_unknown_fields)]
+    pub enum AccessGroupId {}
+
+    impl ::std::convert::From<&Self> for AccessGroupId {
+        fn from(value: &AccessGroupId) -> Self {
+            value.clone()
+        }
+    }
+
     /// `AccessGroupUpdateParamsForRfdPermission`
     ///
     /// <details><summary>JSON schema</summary>
@@ -389,6 +419,36 @@ pub mod types {
     impl ApiKeyCreateParamsForRfdPermission {
         pub fn builder() -> builder::ApiKeyCreateParamsForRfdPermission {
             Default::default()
+        }
+    }
+
+    /// `ApiKeyId`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// false
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    #[serde(deny_unknown_fields)]
+    pub enum ApiKeyId {}
+
+    impl ::std::convert::From<&Self> for ApiKeyId {
+        fn from(value: &ApiKeyId) -> Self {
+            value.clone()
         }
     }
 
@@ -2196,6 +2256,36 @@ pub mod types {
         }
     }
 
+    /// `MagicLinkAttemptId`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// false
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    #[serde(deny_unknown_fields)]
+    pub enum MagicLinkAttemptId {}
+
+    impl ::std::convert::From<&Self> for MagicLinkAttemptId {
+        fn from(value: &MagicLinkAttemptId) -> Self {
+            value.clone()
+        }
+    }
+
     /// `MagicLinkExchangeRequest`
     ///
     /// <details><summary>JSON schema</summary>
@@ -2294,6 +2384,36 @@ pub mod types {
     impl MagicLinkExchangeResponse {
         pub fn builder() -> builder::MagicLinkExchangeResponse {
             Default::default()
+        }
+    }
+
+    /// `MagicLinkId`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// false
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    #[serde(deny_unknown_fields)]
+    pub enum MagicLinkId {}
+
+    impl ::std::convert::From<&Self> for MagicLinkId {
+        fn from(value: &MagicLinkId) -> Self {
+            value.clone()
         }
     }
 
@@ -2443,6 +2563,36 @@ pub mod types {
         }
     }
 
+    /// `MagicLinkRedirectUriId`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// false
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    #[serde(deny_unknown_fields)]
+    pub enum MagicLinkRedirectUriId {}
+
+    impl ::std::convert::From<&Self> for MagicLinkRedirectUriId {
+        fn from(value: &MagicLinkRedirectUriId) -> Self {
+            value.clone()
+        }
+    }
+
     /// `MagicLinkSecret`
     ///
     /// <details><summary>JSON schema</summary>
@@ -2505,6 +2655,36 @@ pub mod types {
     impl MagicLinkSecret {
         pub fn builder() -> builder::MagicLinkSecret {
             Default::default()
+        }
+    }
+
+    /// `MagicLinkSecretId`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// false
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    #[serde(deny_unknown_fields)]
+    pub enum MagicLinkSecretId {}
+
+    impl ::std::convert::From<&Self> for MagicLinkSecretId {
+        fn from(value: &MagicLinkSecretId) -> Self {
+            value.clone()
         }
     }
 
@@ -2711,6 +2891,36 @@ pub mod types {
     impl Mapper {
         pub fn builder() -> builder::Mapper {
             Default::default()
+        }
+    }
+
+    /// `MapperId`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// false
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    #[serde(deny_unknown_fields)]
+    pub enum MapperId {}
+
+    impl ::std::convert::From<&Self> for MapperId {
+        fn from(value: &MapperId) -> Self {
+            value.clone()
         }
     }
 
@@ -2929,6 +3139,36 @@ pub mod types {
     impl OAuthClient {
         pub fn builder() -> builder::OAuthClient {
             Default::default()
+        }
+    }
+
+    /// `OAuthClientId`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// false
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    #[serde(deny_unknown_fields)]
+    pub enum OAuthClientId {}
+
+    impl ::std::convert::From<&Self> for OAuthClientId {
+        fn from(value: &OAuthClientId) -> Self {
+            value.clone()
         }
     }
 
@@ -3214,6 +3454,66 @@ pub mod types {
             value: ::std::string::String,
         ) -> ::std::result::Result<Self, self::error::ConversionError> {
             value.parse()
+        }
+    }
+
+    /// `OAuthRedirectUriId`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// false
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    #[serde(deny_unknown_fields)]
+    pub enum OAuthRedirectUriId {}
+
+    impl ::std::convert::From<&Self> for OAuthRedirectUriId {
+        fn from(value: &OAuthRedirectUriId) -> Self {
+            value.clone()
+        }
+    }
+
+    /// `OAuthSecretId`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// false
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    #[serde(deny_unknown_fields)]
+    pub enum OAuthSecretId {}
+
+    impl ::std::convert::From<&Self> for OAuthSecretId {
+        fn from(value: &OAuthSecretId) -> Self {
+            value.clone()
         }
     }
 
@@ -3810,6 +4110,36 @@ pub mod types {
         }
     }
 
+    /// `RfdId`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// false
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    #[serde(deny_unknown_fields)]
+    pub enum RfdId {}
+
+    impl ::std::convert::From<&Self> for RfdId {
+        fn from(value: &RfdId) -> Self {
+            value.clone()
+        }
+    }
+
     /// `RfdPdf`
     ///
     /// <details><summary>JSON schema</summary>
@@ -3893,6 +4223,36 @@ pub mod types {
     impl RfdPdf {
         pub fn builder() -> builder::RfdPdf {
             Default::default()
+        }
+    }
+
+    /// `RfdPdfId`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// false
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    #[serde(deny_unknown_fields)]
+    pub enum RfdPdfId {}
+
+    impl ::std::convert::From<&Self> for RfdPdfId {
+        fn from(value: &RfdPdfId) -> Self {
+            value.clone()
         }
     }
 
@@ -4695,6 +5055,36 @@ pub mod types {
     impl RfdRevision {
         pub fn builder() -> builder::RfdRevision {
             Default::default()
+        }
+    }
+
+    /// `RfdRevisionId`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// false
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    #[serde(deny_unknown_fields)]
+    pub enum RfdRevisionId {}
+
+    impl ::std::convert::From<&Self> for RfdRevisionId {
+        fn from(value: &RfdRevisionId) -> Self {
+            value.clone()
         }
     }
 
@@ -5790,7 +6180,19 @@ pub mod types {
     /// ```json
     /// {
     ///  "type": "string",
-    ///  "format": "uuid"
+    ///  "format": "uuid",
+    ///  "x-rust-type": {
+    ///    "crate": "newtype-uuid",
+    ///    "parameters": [
+    ///      {
+    ///        "$ref": "#/components/schemas/AccessGroupId"
+    ///      }
+
+    ///    ],
+    ///    "path": "newtype_uuid::TypedUuid",
+    ///    "version": "1"
+    ///  }
+
     /// }
 
     /// ```
@@ -5866,7 +6268,19 @@ pub mod types {
     /// ```json
     /// {
     ///  "type": "string",
-    ///  "format": "uuid"
+    ///  "format": "uuid",
+    ///  "x-rust-type": {
+    ///    "crate": "newtype-uuid",
+    ///    "parameters": [
+    ///      {
+    ///        "$ref": "#/components/schemas/ApiKeyId"
+    ///      }
+
+    ///    ],
+    ///    "path": "newtype_uuid::TypedUuid",
+    ///    "version": "1"
+    ///  }
+
     /// }
 
     /// ```
@@ -5942,7 +6356,19 @@ pub mod types {
     /// ```json
     /// {
     ///  "type": "string",
-    ///  "format": "uuid"
+    ///  "format": "uuid",
+    ///  "x-rust-type": {
+    ///    "crate": "newtype-uuid",
+    ///    "parameters": [
+    ///      {
+    ///        "$ref": "#/components/schemas/MagicLinkAttemptId"
+    ///      }
+
+    ///    ],
+    ///    "path": "newtype_uuid::TypedUuid",
+    ///    "version": "1"
+    ///  }
+
     /// }
 
     /// ```
@@ -6018,7 +6444,19 @@ pub mod types {
     /// ```json
     /// {
     ///  "type": "string",
-    ///  "format": "uuid"
+    ///  "format": "uuid",
+    ///  "x-rust-type": {
+    ///    "crate": "newtype-uuid",
+    ///    "parameters": [
+    ///      {
+    ///        "$ref": "#/components/schemas/MagicLinkId"
+    ///      }
+
+    ///    ],
+    ///    "path": "newtype_uuid::TypedUuid",
+    ///    "version": "1"
+    ///  }
+
     /// }
 
     /// ```
@@ -6094,7 +6532,19 @@ pub mod types {
     /// ```json
     /// {
     ///  "type": "string",
-    ///  "format": "uuid"
+    ///  "format": "uuid",
+    ///  "x-rust-type": {
+    ///    "crate": "newtype-uuid",
+    ///    "parameters": [
+    ///      {
+    ///        "$ref": "#/components/schemas/MagicLinkRedirectUriId"
+    ///      }
+
+    ///    ],
+    ///    "path": "newtype_uuid::TypedUuid",
+    ///    "version": "1"
+    ///  }
+
     /// }
 
     /// ```
@@ -6172,7 +6622,19 @@ pub mod types {
     /// ```json
     /// {
     ///  "type": "string",
-    ///  "format": "uuid"
+    ///  "format": "uuid",
+    ///  "x-rust-type": {
+    ///    "crate": "newtype-uuid",
+    ///    "parameters": [
+    ///      {
+    ///        "$ref": "#/components/schemas/MagicLinkSecretId"
+    ///      }
+
+    ///    ],
+    ///    "path": "newtype_uuid::TypedUuid",
+    ///    "version": "1"
+    ///  }
+
     /// }
 
     /// ```
@@ -6248,7 +6710,19 @@ pub mod types {
     /// ```json
     /// {
     ///  "type": "string",
-    ///  "format": "uuid"
+    ///  "format": "uuid",
+    ///  "x-rust-type": {
+    ///    "crate": "newtype-uuid",
+    ///    "parameters": [
+    ///      {
+    ///        "$ref": "#/components/schemas/MapperId"
+    ///      }
+
+    ///    ],
+    ///    "path": "newtype_uuid::TypedUuid",
+    ///    "version": "1"
+    ///  }
+
     /// }
 
     /// ```
@@ -6324,7 +6798,19 @@ pub mod types {
     /// ```json
     /// {
     ///  "type": "string",
-    ///  "format": "uuid"
+    ///  "format": "uuid",
+    ///  "x-rust-type": {
+    ///    "crate": "newtype-uuid",
+    ///    "parameters": [
+    ///      {
+    ///        "$ref": "#/components/schemas/OAuthClientId"
+    ///      }
+
+    ///    ],
+    ///    "path": "newtype_uuid::TypedUuid",
+    ///    "version": "1"
+    ///  }
+
     /// }
 
     /// ```
@@ -6400,7 +6886,19 @@ pub mod types {
     /// ```json
     /// {
     ///  "type": "string",
-    ///  "format": "uuid"
+    ///  "format": "uuid",
+    ///  "x-rust-type": {
+    ///    "crate": "newtype-uuid",
+    ///    "parameters": [
+    ///      {
+    ///        "$ref": "#/components/schemas/OAuthRedirectUriId"
+    ///      }
+
+    ///    ],
+    ///    "path": "newtype_uuid::TypedUuid",
+    ///    "version": "1"
+    ///  }
+
     /// }
 
     /// ```
@@ -6476,7 +6974,19 @@ pub mod types {
     /// ```json
     /// {
     ///  "type": "string",
-    ///  "format": "uuid"
+    ///  "format": "uuid",
+    ///  "x-rust-type": {
+    ///    "crate": "newtype-uuid",
+    ///    "parameters": [
+    ///      {
+    ///        "$ref": "#/components/schemas/OAuthSecretId"
+    ///      }
+
+    ///    ],
+    ///    "path": "newtype_uuid::TypedUuid",
+    ///    "version": "1"
+    ///  }
+
     /// }
 
     /// ```
@@ -6552,7 +7062,19 @@ pub mod types {
     /// ```json
     /// {
     ///  "type": "string",
-    ///  "format": "uuid"
+    ///  "format": "uuid",
+    ///  "x-rust-type": {
+    ///    "crate": "newtype-uuid",
+    ///    "parameters": [
+    ///      {
+    ///        "$ref": "#/components/schemas/RfdId"
+    ///      }
+
+    ///    ],
+    ///    "path": "newtype_uuid::TypedUuid",
+    ///    "version": "1"
+    ///  }
+
     /// }
 
     /// ```
@@ -6628,7 +7150,19 @@ pub mod types {
     /// ```json
     /// {
     ///  "type": "string",
-    ///  "format": "uuid"
+    ///  "format": "uuid",
+    ///  "x-rust-type": {
+    ///    "crate": "newtype-uuid",
+    ///    "parameters": [
+    ///      {
+    ///        "$ref": "#/components/schemas/RfdPdfId"
+    ///      }
+
+    ///    ],
+    ///    "path": "newtype_uuid::TypedUuid",
+    ///    "version": "1"
+    ///  }
+
     /// }
 
     /// ```
@@ -6704,7 +7238,19 @@ pub mod types {
     /// ```json
     /// {
     ///  "type": "string",
-    ///  "format": "uuid"
+    ///  "format": "uuid",
+    ///  "x-rust-type": {
+    ///    "crate": "newtype-uuid",
+    ///    "parameters": [
+    ///      {
+    ///        "$ref": "#/components/schemas/RfdRevisionId"
+    ///      }
+
+    ///    ],
+    ///    "path": "newtype_uuid::TypedUuid",
+    ///    "version": "1"
+    ///  }
+
     /// }
 
     /// ```
@@ -6780,7 +7326,19 @@ pub mod types {
     /// ```json
     /// {
     ///  "type": "string",
-    ///  "format": "uuid"
+    ///  "format": "uuid",
+    ///  "x-rust-type": {
+    ///    "crate": "newtype-uuid",
+    ///    "parameters": [
+    ///      {
+    ///        "$ref": "#/components/schemas/UserId"
+    ///      }
+
+    ///    ],
+    ///    "path": "newtype_uuid::TypedUuid",
+    ///    "version": "1"
+    ///  }
+
     /// }
 
     /// ```
@@ -6856,7 +7414,19 @@ pub mod types {
     /// ```json
     /// {
     ///  "type": "string",
-    ///  "format": "uuid"
+    ///  "format": "uuid",
+    ///  "x-rust-type": {
+    ///    "crate": "newtype-uuid",
+    ///    "parameters": [
+    ///      {
+    ///        "$ref": "#/components/schemas/UserProviderId"
+    ///      }
+
+    ///    ],
+    ///    "path": "newtype_uuid::TypedUuid",
+    ///    "version": "1"
+    ///  }
+
     /// }
 
     /// ```
@@ -6932,7 +7502,19 @@ pub mod types {
     /// ```json
     /// {
     ///  "type": "string",
-    ///  "format": "uuid"
+    ///  "format": "uuid",
+    ///  "x-rust-type": {
+    ///    "crate": "newtype-uuid",
+    ///    "parameters": [
+    ///      {
+    ///        "$ref": "#/components/schemas/WebhookDeliveryId"
+    ///      }
+
+    ///    ],
+    ///    "path": "newtype_uuid::TypedUuid",
+    ///    "version": "1"
+    ///  }
+
     /// }
 
     /// ```
@@ -7050,6 +7632,66 @@ pub mod types {
         }
     }
 
+    /// `UserId`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// false
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    #[serde(deny_unknown_fields)]
+    pub enum UserId {}
+
+    impl ::std::convert::From<&Self> for UserId {
+        fn from(value: &UserId) -> Self {
+            value.clone()
+        }
+    }
+
+    /// `UserProviderId`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// false
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    #[serde(deny_unknown_fields)]
+    pub enum UserProviderId {}
+
+    impl ::std::convert::From<&Self> for UserProviderId {
+        fn from(value: &UserProviderId) -> Self {
+            value.clone()
+        }
+    }
+
     /// `Visibility`
     ///
     /// <details><summary>JSON schema</summary>
@@ -7133,6 +7775,36 @@ pub mod types {
             value: ::std::string::String,
         ) -> ::std::result::Result<Self, self::error::ConversionError> {
             value.parse()
+        }
+    }
+
+    /// `WebhookDeliveryId`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// false
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    #[serde(deny_unknown_fields)]
+    pub enum WebhookDeliveryId {}
+
+    impl ::std::convert::From<&Self> for WebhookDeliveryId {
+        fn from(value: &WebhookDeliveryId) -> Self {
+            value.clone()
         }
     }
 
@@ -13588,7 +14260,7 @@ pub mod types {
 ///
 /// Programmatic access to RFDs
 ///
-/// Version: 0.12.2
+/// Version: 0.13.1
 pub struct Client {
     pub(crate) baseurl: String,
     pub(crate) client: reqwest::Client,
@@ -13629,7 +14301,7 @@ impl Client {
 
 impl ClientInfo<()> for Client {
     fn api_version() -> &'static str {
-        "0.12.2"
+        "0.13.1"
     }
 
     fn baseurl(&self) -> &str {
@@ -13915,6 +14587,20 @@ impl Client {
     /// ```
     pub fn delete_group(&self) -> builder::DeleteGroup<'_> {
         builder::DeleteGroup::new(self)
+    }
+
+    /// Get members of a group
+    ///
+    /// Sends a `GET` request to `/group-membership/{group_id}`
+    ///
+    /// ```ignore
+    /// let response = client.get_group_members()
+    ///    .group_id(group_id)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn get_group_members(&self) -> builder::GetGroupMembers<'_> {
+        builder::GetGroupMembers::new(self)
     }
 
     /// List all jobs for a RFD
@@ -16429,6 +17115,82 @@ pub mod builder {
                 .build()?;
             let info = OperationInfo {
                 operation_id: "delete_group",
+            };
+            client.pre(&mut request, &info).await?;
+            let result = client.exec(request, &info).await;
+            client.post(&result, &info).await?;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::get_group_members`]
+    ///
+    /// [`Client::get_group_members`]: super::Client::get_group_members
+    #[derive(Debug, Clone)]
+    pub struct GetGroupMembers<'a> {
+        client: &'a super::Client,
+        group_id: Result<types::TypedUuidForAccessGroupId, String>,
+    }
+
+    impl<'a> GetGroupMembers<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                group_id: Err("group_id was not initialized".to_string()),
+            }
+        }
+
+        pub fn group_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::TypedUuidForAccessGroupId>,
+        {
+            self.group_id = value.try_into().map_err(|_| {
+                "conversion to `TypedUuidForAccessGroupId` for group_id failed".to_string()
+            });
+            self
+        }
+
+        /// Sends a `GET` request to `/group-membership/{group_id}`
+        pub async fn send(
+            self,
+        ) -> Result<
+            ResponseValue<::std::vec::Vec<types::ApiUserForRfdPermission>>,
+            Error<types::Error>,
+        > {
+            let Self { client, group_id } = self;
+            let group_id = group_id.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/group-membership/{}",
+                client.baseurl,
+                encode_path(&group_id.to_string()),
+            );
+            let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+            header_map.append(
+                ::reqwest::header::HeaderName::from_static("api-version"),
+                ::reqwest::header::HeaderValue::from_static(super::Client::api_version()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .get(url)
+                .header(
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .headers(header_map)
+                .build()?;
+            let info = OperationInfo {
+                operation_id: "get_group_members",
             };
             client.pre(&mut request, &info).await?;
             let result = client.exec(request, &info).await;
