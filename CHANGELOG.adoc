@@ -11,13 +11,11 @@
 
 ==== 1. User Endpoint Response Type Changes
 
-**Impact:** High - Changes response structure for multiple user-related endpoints
-
-**Affected Endpoints:**
-- `POST /api-user` (create_api_user)
-- `POST /api-user/{user_id}` (update_api_user)
-- `POST /api-user/{user_id}/group` (add_api_user_to_group)
-- `DELETE /api-user/{user_id}/group/{group_id}` (remove_api_user_from_group)
+**Affected Endpoints:** +
+- `POST /api-user` (create_api_user) +
+- `POST /api-user/{user_id}` (update_api_user) +
+- `POST /api-user/{user_id}/group` (add_api_user_to_group) +
+- `DELETE /api-user/{user_id}/group/{group_id}` (remove_api_user_from_group) 
 
 **Change Details:**
 
@@ -117,8 +115,6 @@ let members = client.get_group_members()
     .send()
     .await?;
 ```
-
-**Impact:** None on existing code - this is a new endpoint that adds functionality.
 
 === Migration Guide
 
