@@ -1,0 +1,157 @@
+:showtitle:
+:toc: left
+:icons: font
+:toclevels: 1
+
+= CHANGELOG
+
+== RFD API Changes: v0.13.0 to v0.14.0
+
+=== BREAKING CHANGES
+
+==== 1. User Endpoint Response Type Changes
+
+**Impact:** High - Changes response structure for multiple user-related endpoints
+
+**Affected Endpoints:**
+- `POST /api-user` (create_api_user)
+- `POST /api-user/{user_id}` (update_api_user)
+- `POST /api-user/{user_id}/group` (add_api_user_to_group)
+- `DELETE /api-user/{user_id}/group/{group_id}` (remove_api_user_from_group)
+
+**Change Details:**
+
+These endpoints previously returned `ApiUser_for_RfdPermission` directly:
+```json
+{
+  "id": "uuid",
+  "created_at": "timestamp",
+  "updated_at": "timestamp",
+  "deleted_at": null,
+  "groups": ["group-uuid"],
+  "permissions": { ... }
+}
+```
+
+Now they return `GetUserResponse_for_RfdPermission`, which wraps the user info:
+```json
+{
+  "info": {
+    "id": "uuid",
+    "created_at": "timestamp",
+    "updated_at": "timestamp",
+    "deleted_at": null,
+    "groups": ["group-uuid"],
+    "permissions": { ... }
+  },
+  "providers": [
+    {
+      "id": "provider-uuid",
+      "user_id": "uuid",
+      "provider": "github",
+      "provider_id": "github-id",
+      "emails": ["email@example.com"],
+      "display_names": ["Display Name"],
+      "created_at": "timestamp",
+      "updated_at": "timestamp",
+      "deleted_at": null
+    }
+  ]
+}
+```
+
+**Breaking Reason:** Client code must be updated to access user data through the `info` property instead of at the root level. The addition of the `providers` array is new information that wasn't previously available in these responses.
+
+**SDK Impact:**
+
+TypeScript (rfd-ts):
+```typescript
+// Before (v0.13.0)
+const response: ApiUser_for_RfdPermission = await client.createApiUser({ body });
+
+// After (v0.14.0)
+const response: GetUserResponse_for_RfdPermission = await client.createApiUser({ body });
+// Access user info: response.info
+// Access providers: response.providers
+```
+
+Rust (rfd-sdk):
+```rust
+// Before (v0.13.0)
+let response: ApiUserForRfdPermission = client.create_api_user().body(body).send().await?;
+
+// After (v0.14.0)
+let response: GetUserResponseForRfdPermission = client.create_api_user().body(body).send().await?;
+// Access user info: response.info
+// Access providers: response.providers
+```
+
+---
+
+=== NON-BREAKING CHANGES
+
+==== 1. New Endpoint: Get Group Members
+
+**Added:** `GET /group-membership/{group_id}` (operation ID: `get_group_members`)
+
+**Description:** Retrieve all members of a specific access group.
+
+**Parameters:**
+- `group_id` (path): TypedUuidForAccessGroupId - The group ID to query
+
+**Response:** Array of `GetUserResponse_for_RfdPermission` objects
+
+**SDK Usage:**
+
+TypeScript:
+```typescript
+const members = await client.getGroupMembers({
+  path: { groupId: 'group-uuid' }
+});
+```
+
+Rust:
+```rust
+let members = client.get_group_members()
+    .group_id(group_id)
+    .send()
+    .await?;
+```
+
+**Impact:** None on existing code - this is a new endpoint that adds functionality.
+
+=== Migration Guide
+
+==== For Breaking Changes
+
+If you're using any of these endpoints:
+- `POST /api-user` (createApiUser)
+- `POST /api-user/{user_id}` (updateApiUser)
+- `POST /api-user/{user_id}/group` (addApiUserToGroup)
+- `DELETE /api-user/{user_id}/group/{group_id}` (removeApiUserFromGroup)
+
+You must update your code to handle the new response structure:
+
+**TypeScript:**
+```typescript
+// Before
+const user = await api.createApiUser({ body: params });
+console.log(user.id);  // ❌ Will fail in v0.14.0
+
+// After
+const response = await api.createApiUser({ body: params });
+console.log(response.info.id);  // ✅ Correct for v0.14.0
+console.log(response.providers); // New data available
+```
+
+**Rust:**
+```rust
+// Before
+let user = client.create_api_user().body(params).send().await?;
+println!("{}", user.id);  // ❌ Will fail in v0.14.0
+
+// After
+let response = client.create_api_user().body(params).send().await?;
+println!("{}", response.info.id);  // ✅ Correct for v0.14.0
+// Access response.providers for additional data
+```
