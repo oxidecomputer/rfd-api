@@ -378,9 +378,7 @@ impl ProgenitorCliConfig for Context {
         T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
     {
         match T::schema_name().as_str() {
-            "ApiUserForApiPermissionResponse" => {
-                self.printer().unwrap().output_api_user(reserialize(value))
-            }
+            // User response types
             "Array_of_GetUserResponseForRfdPermission" => self
                 .printer()
                 .unwrap()
@@ -388,33 +386,45 @@ impl ProgenitorCliConfig for Context {
             "GetUserResponseForRfdPermission" => {
                 self.printer().unwrap().output_user(reserialize(value))
             }
+            "ApiUserContactEmail" => self
+                .printer()
+                .unwrap()
+                .output_api_user_contact_email(reserialize(value)),
+            "ApiUserLinkRequestResponse" => self
+                .printer()
+                .unwrap()
+                .output_api_user_link_request_response(reserialize(value)),
+
+            // API key response types
             "Array_of_ApiKeyResponseForRfdPermission" => self
                 .printer()
                 .unwrap()
                 .output_api_key_list(reserialize(value)),
-            "InitialApiKeyResponse" => self
+            "InitialApiKeyResponseForRfdPermission" => self
                 .printer()
                 .unwrap()
                 .output_api_key_initial(reserialize(value)),
             "ApiKeyResponseForRfdPermission" => {
                 self.printer().unwrap().output_api_key(reserialize(value))
             }
-            "Array_of_AccessGroupForApiPermissionResponse" => self
-                .printer()
-                .unwrap()
-                .output_group_list(reserialize(value)),
-            "AccessGroupForApiPermissionResponse" => {
-                self.printer().unwrap().output_api_user(reserialize(value))
-            }
+
+            // Group response types
             "Array_of_AccessGroupForRfdPermission" => self
                 .printer()
                 .unwrap()
                 .output_group_list(reserialize(value)),
+            "AccessGroupForRfdPermission" => {
+                self.printer().unwrap().output_group(reserialize(value))
+            }
+
+            // Mapper response types
             "Array_of_Mapper" => self
                 .printer()
                 .unwrap()
                 .output_mapper_list(reserialize(value)),
             "Mapper" => self.printer().unwrap().output_mapper(reserialize(value)),
+
+            // OAuth client response types
             "Array_of_OAuthClient" => self
                 .printer()
                 .unwrap()
@@ -435,30 +445,16 @@ impl ProgenitorCliConfig for Context {
                 .printer()
                 .unwrap()
                 .output_oauth_secret(reserialize(value)),
-            "RfdWithoutContent" => self.printer().unwrap().output_rfd_meta(reserialize(value)),
-            "Array_of_RfdWithoutContent" => {
-                self.printer().unwrap().output_rfd_list(reserialize(value))
-            }
-            "RfdWithRaw" => self.printer().unwrap().output_rfd_full(reserialize(value)),
-            "SearchResults" => self
+            "OAuthAuthzCodeExchangeResponse" => self
                 .printer()
                 .unwrap()
-                .output_search_results(reserialize(value)),
-            "RfdAttr" => self.printer().unwrap().output_rfd_attr(reserialize(value)),
-            "RfdRevisionMeta" => self
+                .output_oauth_authz_code_exchange_response(reserialize(value)),
+            "OAuthProviderInfo" => self
                 .printer()
                 .unwrap()
-                .output_rfd_revision_meta(reserialize(value)),
-            "Array_of_RfdRevisionMeta" => self
-                .printer()
-                .unwrap()
-                .output_rfd_revision_meta_list(reserialize(value)),
-            "ReserveRfdResponse" => self
-                .printer()
-                .unwrap()
-                .output_reserved_rfd(reserialize(value)),
-            "Array_of_Job" => self.printer().unwrap().output_job_list(reserialize(value)),
+                .output_oauth_provider_info(reserialize(value)),
 
+            // Magic link response types
             "Array_of_MagicLink" => self
                 .printer()
                 .unwrap()
@@ -479,6 +475,54 @@ impl ProgenitorCliConfig for Context {
                 .printer()
                 .unwrap()
                 .output_magic_link_secret(reserialize(value)),
+            "MagicLinkExchangeResponse" => self
+                .printer()
+                .unwrap()
+                .output_magic_link_exchange_response(reserialize(value)),
+            "MagicLinkSendResponse" => self
+                .printer()
+                .unwrap()
+                .output_magic_link_send_response(reserialize(value)),
+
+            // RFD response types
+            "RfdWithoutContent" => self.printer().unwrap().output_rfd_meta(reserialize(value)),
+            "Array_of_RfdWithoutContent" => {
+                self.printer().unwrap().output_rfd_list(reserialize(value))
+            }
+            "RfdWithRaw" => self.printer().unwrap().output_rfd_full(reserialize(value)),
+            "RfdWithPdf" => self
+                .printer()
+                .unwrap()
+                .output_rfd_with_pdf(reserialize(value)),
+            "Rfd" => self.printer().unwrap().output_rfd(reserialize(value)),
+            "RfdAttr" => self.printer().unwrap().output_rfd_attr(reserialize(value)),
+            "RfdRevisionMeta" => self
+                .printer()
+                .unwrap()
+                .output_rfd_revision_meta(reserialize(value)),
+            "Array_of_RfdRevisionMeta" => self
+                .printer()
+                .unwrap()
+                .output_rfd_revision_meta_list(reserialize(value)),
+            "ReserveRfdResponse" => self
+                .printer()
+                .unwrap()
+                .output_reserved_rfd(reserialize(value)),
+            "SearchResults" => self
+                .printer()
+                .unwrap()
+                .output_search_results(reserialize(value)),
+
+            // Job response types
+            "Array_of_Job" => self.printer().unwrap().output_job_list(reserialize(value)),
+
+            // OpenID/JWKS response types
+            "Jwks" => self.printer().unwrap().output_jwks(reserialize(value)),
+            "OpenIdConfiguration" => self
+                .printer()
+                .unwrap()
+                .output_openid_configuration(reserialize(value)),
+
             other => eprintln!(
                 "Unhandled response type: {}. Please report this as a bug.",
                 other

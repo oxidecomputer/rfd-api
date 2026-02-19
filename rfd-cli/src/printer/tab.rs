@@ -6,12 +6,15 @@ use itertools::{EitherOrBoth, Itertools};
 use owo_colors::{OwoColorize, Style};
 use progenitor_client::ResponseValue;
 use rfd_sdk::types::{
-    self, AccessGroupForRfdPermission, ApiKeyResponseForRfdPermission, ApiUserForRfdPermission,
-    Error, GetUserResponseForRfdPermission, InitialApiKeyResponseForRfdPermission,
-    InitialMagicLinkSecretResponse, InitialOAuthClientSecretResponse, Job, MagicLink,
-    MagicLinkRedirectUri, MagicLinkSecret, Mapper, OAuthClient, OAuthClientRedirectUri,
-    OAuthClientSecret, PermissionsForRfdPermission, ReserveRfdResponse, RfdAttr, RfdRevisionMeta,
-    RfdWithRaw, RfdWithoutContent, SearchResultHit, SearchResults, Visibility,
+    self, AccessGroupForRfdPermission, ApiKeyResponseForRfdPermission, ApiUserContactEmail,
+    ApiUserForRfdPermission, ApiUserLinkRequestResponse, Error, GetUserResponseForRfdPermission,
+    InitialApiKeyResponseForRfdPermission, InitialMagicLinkSecretResponse,
+    InitialOAuthClientSecretResponse, Job, Jwk, Jwks, MagicLink, MagicLinkExchangeResponse,
+    MagicLinkRedirectUri, MagicLinkSecret, MagicLinkSendResponse, Mapper,
+    OAuthAuthzCodeExchangeResponse, OAuthClient, OAuthClientRedirectUri, OAuthClientSecret,
+    OAuthProviderInfo, OpenIdConfiguration, PermissionsForRfdPermission, ReserveRfdResponse,
+    RfdAttr, RfdPdf, RfdRevisionMeta, RfdWithPdf, RfdWithRaw, RfdWithoutContent, SearchResultHit,
+    SearchResults, Visibility,
 };
 use std::{collections::HashMap, fmt::Display, fs::File, io::Write, process::Command};
 use tabwriter::TabWriter;
@@ -50,6 +53,14 @@ impl CliOutput for RfdTabPrinter {
     }
 
     fn output_user(&self, value: types::GetUserResponseForRfdPermission) {
+        self.print_cli_output(&value, None);
+    }
+
+    fn output_api_user_contact_email(&self, value: types::ApiUserContactEmail) {
+        self.print_cli_output(&value, None);
+    }
+
+    fn output_api_user_link_request_response(&self, value: types::ApiUserLinkRequestResponse) {
         self.print_cli_output(&value, None);
     }
 
@@ -101,6 +112,17 @@ impl CliOutput for RfdTabPrinter {
         self.print_cli_output(&value, None);
     }
 
+    fn output_oauth_authz_code_exchange_response(
+        &self,
+        value: types::OAuthAuthzCodeExchangeResponse,
+    ) {
+        self.print_cli_output(&value, None);
+    }
+
+    fn output_oauth_provider_info(&self, value: types::OAuthProviderInfo) {
+        self.print_cli_output(&value, None);
+    }
+
     fn output_rfd_meta(&self, value: types::RfdWithoutContent) {
         self.print_cli_output(&value, None);
     }
@@ -110,6 +132,10 @@ impl CliOutput for RfdTabPrinter {
     }
 
     fn output_rfd_full(&self, value: types::RfdWithRaw) {
+        self.print_cli_output(&value, None);
+    }
+
+    fn output_rfd_with_pdf(&self, value: types::RfdWithPdf) {
         self.print_cli_output(&value, None);
     }
 
@@ -157,6 +183,22 @@ impl CliOutput for RfdTabPrinter {
         self.print_cli_output(&value, None);
     }
 
+    fn output_magic_link_exchange_response(&self, value: types::MagicLinkExchangeResponse) {
+        self.print_cli_output(&value, None);
+    }
+
+    fn output_magic_link_send_response(&self, value: types::MagicLinkSendResponse) {
+        self.print_cli_output(&value, None);
+    }
+
+    fn output_jwks(&self, value: types::Jwks) {
+        self.print_cli_output(&value, None);
+    }
+
+    fn output_openid_configuration(&self, value: types::OpenIdConfiguration) {
+        self.print_cli_output(&value, None);
+    }
+
     fn output_error<T>(&self, value: &progenitor_client::Error<T>)
     where
         T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
@@ -184,6 +226,17 @@ impl TabDisplay for types::Rfd {
                 .unwrap_or_else(|| "--".to_string()),
         );
         printer.print_field(tw, level, "link", &self.link.as_deref().unwrap_or(""));
+        printer.print_field(tw, level, "created_at", &self.created_at);
+        printer.print_field(tw, level, "updated_at", &self.updated_at);
+        printer.print_field(
+            tw,
+            level,
+            "deleted_at",
+            &self
+                .deleted_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
     }
 }
 
@@ -345,6 +398,7 @@ impl TabDisplay for Mapper {
             &serde_json::to_string(&self.rule).unwrap(),
         );
         printer.print_field(tw, level, "created_at", &self.created_at);
+        printer.print_field(tw, level, "updated_at", &self.updated_at);
         printer.print_field(
             tw,
             level,
@@ -447,6 +501,16 @@ impl TabDisplay for RfdWithoutContent {
         );
         printer.print_field(tw, level, "authors", &self.authors.as_deref().unwrap_or(""));
         printer.print_field(tw, level, "labels", &self.labels.as_deref().unwrap_or(""));
+        printer.print_field(
+            tw,
+            level,
+            "format",
+            &self
+                .format
+                .as_ref()
+                .map(|f| f.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
         printer.print_field(tw, level, "link", &self.link.as_deref().unwrap_or(""));
         printer.print_field(
             tw,
@@ -504,6 +568,16 @@ impl TabDisplay for RfdWithRaw {
         );
         printer.print_field(tw, level, "authors", &self.authors.as_deref().unwrap_or(""));
         printer.print_field(tw, level, "labels", &self.labels.as_deref().unwrap_or(""));
+        printer.print_field(
+            tw,
+            level,
+            "format",
+            &self
+                .format
+                .as_ref()
+                .map(|f| f.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
         printer.print_field(tw, level, "link", &self.link.as_deref().unwrap_or(""));
         printer.print_field(
             tw,
@@ -571,6 +645,24 @@ impl TabDisplay for RfdAttr {
 impl TabDisplay for SearchResults {
     fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
         printer.print_field(tw, level, "query", &self.query);
+        printer.print_field(
+            tw,
+            level,
+            "limit",
+            &self
+                .limit
+                .map(|l| l.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
+        printer.print_field(
+            tw,
+            level,
+            "offset",
+            &self
+                .offset
+                .map(|o| o.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
         printer.print_field(tw, level, "total hits", &self.hits.len());
         writeln!(tw);
         self.hits.display(tw, level, printer);
@@ -733,6 +825,183 @@ impl TabDisplay for InitialMagicLinkSecretResponse {
         printer.print_field(tw, level, "id", &*self.id);
         printer.print_field(tw, level, "key", &self.key.0);
         printer.print_field(tw, level, "created_at", &self.created_at);
+    }
+}
+
+impl TabDisplay for ApiUserContactEmail {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &self.id);
+        printer.print_field(tw, level, "user_id", &self.user_id);
+        printer.print_field(tw, level, "email", &self.email);
+        printer.print_field(tw, level, "created_at", &self.created_at);
+        printer.print_field(tw, level, "updated_at", &self.updated_at);
+        printer.print_field(
+            tw,
+            level,
+            "deleted_at",
+            &self
+                .deleted_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
+    }
+}
+
+impl TabDisplay for ApiUserLinkRequestResponse {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "token", &self.token.0);
+    }
+}
+
+impl TabDisplay for OAuthAuthzCodeExchangeResponse {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "access_token", &self.access_token);
+        printer.print_field(tw, level, "token_type", &self.token_type);
+        printer.print_field(tw, level, "expires_in", &self.expires_in);
+    }
+}
+
+impl TabDisplay for OAuthProviderInfo {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "provider", &self.provider.to_string());
+        printer.print_field(tw, level, "client_id", &self.client_id);
+        printer.print_field(tw, level, "auth_url_endpoint", &self.auth_url_endpoint);
+        printer.print_field(tw, level, "token_endpoint", &self.token_endpoint);
+        printer.print_field(
+            tw,
+            level,
+            "device_code_endpoint",
+            &self.device_code_endpoint,
+        );
+        printer.print_list(tw, level, "scopes", &self.scopes);
+    }
+}
+
+impl TabDisplay for RfdWithPdf {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &self.id);
+        printer.print_field(tw, level, "rfd_number", &self.rfd_number);
+        printer.print_field(tw, level, "title", &self.title.as_deref().unwrap_or(""));
+        printer.print_field(tw, level, "state", &self.state.as_deref().unwrap_or(""));
+        printer.print_field(
+            tw,
+            level,
+            "visibility",
+            match self.visibility {
+                Visibility::Private => &"private",
+                Visibility::Public => &"public",
+            },
+        );
+        printer.print_field(tw, level, "authors", &self.authors.as_deref().unwrap_or(""));
+        printer.print_field(tw, level, "labels", &self.labels.as_deref().unwrap_or(""));
+        printer.print_field(
+            tw,
+            level,
+            "format",
+            &self
+                .format
+                .as_ref()
+                .map(|f| f.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
+        printer.print_field(tw, level, "link", &self.link.as_deref().unwrap_or(""));
+        printer.print_field(
+            tw,
+            level,
+            "discussion",
+            &self.discussion.as_deref().unwrap_or(""),
+        );
+        printer.print_field(
+            tw,
+            level,
+            "sha",
+            &self.sha.as_ref().map(|s| s.as_str()).unwrap_or(""),
+        );
+        printer.print_field(
+            tw,
+            level,
+            "commit",
+            &self.commit.as_ref().map(|s| s.as_str()).unwrap_or(""),
+        );
+        printer.print_field(
+            tw,
+            level,
+            "committed_at",
+            &self
+                .committed_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
+        printer.print_field(
+            tw,
+            level,
+            "latest_major_change_at",
+            &self
+                .latest_major_change_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
+        printer.print_field(tw, level, "pdfs", &"");
+        self.content.display(tw, level + 1, printer);
+    }
+}
+
+impl TabDisplay for RfdPdf {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "id", &self.id);
+        printer.print_field(tw, level, "source", &self.source.to_string());
+        printer.print_field(tw, level, "link", &self.link);
+        printer.print_field(tw, level, "external_id", &self.external_id);
+        printer.print_field(tw, level, "rfd_id", &self.rfd_id);
+        printer.print_field(tw, level, "rfd_revision_id", &self.rfd_revision_id);
+        printer.print_field(tw, level, "created_at", &self.created_at);
+        printer.print_field(tw, level, "updated_at", &self.updated_at);
+        printer.print_field(
+            tw,
+            level,
+            "deleted_at",
+            &self
+                .deleted_at
+                .map(|d| d.to_string())
+                .unwrap_or_else(|| "--".to_string()),
+        );
+    }
+}
+
+impl TabDisplay for MagicLinkExchangeResponse {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "access_token", &self.access_token);
+        printer.print_field(tw, level, "token_type", &self.token_type);
+        printer.print_field(tw, level, "expires_in", &self.expires_in);
+    }
+}
+
+impl TabDisplay for MagicLinkSendResponse {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "attempt_id", &*self.attempt_id);
+    }
+}
+
+impl TabDisplay for Jwks {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "keys", &"");
+        self.keys.display(tw, level + 1, printer);
+    }
+}
+
+impl TabDisplay for Jwk {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "kid", &self.kid);
+        printer.print_field(tw, level, "kty", &self.kty);
+        printer.print_field(tw, level, "use", &self.use_);
+        printer.print_field(tw, level, "n", &self.n);
+        printer.print_field(tw, level, "e", &self.e);
+    }
+}
+
+impl TabDisplay for OpenIdConfiguration {
+    fn display(&self, tw: &mut TabWriter<Vec<u8>>, level: u8, printer: &RfdTabPrinter) {
+        printer.print_field(tw, level, "jwks_uri", &self.jwks_uri);
     }
 }
 

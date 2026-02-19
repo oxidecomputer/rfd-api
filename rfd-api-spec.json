@@ -7,7 +7,7 @@
       "url": "https://oxide.computer",
       "email": "augustus@oxidecomputer.com"
     },
-    "version": "0.13.1"
+    "version": "0.14.0"
   },
   "paths": {
     "/.well-known/jwks.json": {
@@ -102,7 +102,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiUser_for_RfdPermission"
+                  "$ref": "#/components/schemas/GetUserResponse_for_RfdPermission"
                 }
               }
             }
@@ -178,7 +178,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiUser_for_RfdPermission"
+                  "$ref": "#/components/schemas/GetUserResponse_for_RfdPermission"
                 }
               }
             }
@@ -266,7 +266,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiUser_for_RfdPermission"
+                  "$ref": "#/components/schemas/GetUserResponse_for_RfdPermission"
                 }
               }
             }
@@ -308,7 +308,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ApiUser_for_RfdPermission"
+                  "$ref": "#/components/schemas/GetUserResponse_for_RfdPermission"
                 }
               }
             }
@@ -761,10 +761,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "title": "Array_of_ApiUser_for_RfdPermission",
+                  "title": "Array_of_GetUserResponse_for_RfdPermission",
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/ApiUser_for_RfdPermission"
+                    "$ref": "#/components/schemas/GetUserResponse_for_RfdPermission"
                   }
                 }
               }

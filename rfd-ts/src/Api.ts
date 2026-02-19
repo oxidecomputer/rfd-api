@@ -879,7 +879,7 @@ export class Api {
    * Pulled from info.version in the OpenAPI schema. Sent in the
    * `api-version` header on all requests.
    */
-  apiVersion = '0.13.1'
+  apiVersion = '0.14.0'
 
   constructor({ host = '', baseParams = {}, token }: ApiConfig = {}) {
     this.host = host
@@ -941,7 +941,7 @@ export class Api {
     createApiUser: ({
       body,
     }: { body: ApiUserUpdateParams_for_RfdPermission }, params: FetchParams = {}) => {
-      return this.request<ApiUser_for_RfdPermission>({
+      return this.request<GetUserResponse_for_RfdPermission>({
         path: `/api-user`,
         method: 'POST',
         body,
@@ -967,7 +967,7 @@ export class Api {
       path,
       body,
     }: { path: UpdateApiUserPathParams; body: ApiUserUpdateParams_for_RfdPermission }, params: FetchParams = {}) => {
-      return this.request<ApiUser_for_RfdPermission>({
+      return this.request<GetUserResponse_for_RfdPermission>({
         path: `/api-user/${path.userId}`,
         method: 'POST',
         body,
@@ -995,7 +995,7 @@ export class Api {
       path,
       body,
     }: { path: AddApiUserToGroupPathParams; body: AddGroupBody }, params: FetchParams = {}) => {
-      return this.request<ApiUser_for_RfdPermission>({
+      return this.request<GetUserResponse_for_RfdPermission>({
         path: `/api-user/${path.userId}/group`,
         method: 'POST',
         body,
@@ -1008,7 +1008,7 @@ export class Api {
     removeApiUserFromGroup: ({
       path,
     }: { path: RemoveApiUserFromGroupPathParams }, params: FetchParams = {}) => {
-      return this.request<ApiUser_for_RfdPermission>({
+      return this.request<GetUserResponse_for_RfdPermission>({
         path: `/api-user/${path.userId}/group/${path.groupId}`,
         method: 'DELETE',
         ...params,
@@ -1160,7 +1160,7 @@ export class Api {
     getGroupMembers: ({
       path,
     }: { path: GetGroupMembersPathParams }, params: FetchParams = {}) => {
-      return this.request<ApiUser_for_RfdPermission[]>({
+      return this.request<GetUserResponse_for_RfdPermission[]>({
         path: `/group-membership/${path.groupId}`,
         method: 'GET',
         ...params,

@@ -14260,7 +14260,7 @@ pub mod types {
 ///
 /// Programmatic access to RFDs
 ///
-/// Version: 0.13.1
+/// Version: 0.14.0
 pub struct Client {
     pub(crate) baseurl: String,
     pub(crate) client: reqwest::Client,
@@ -14301,7 +14301,7 @@ impl Client {
 
 impl ClientInfo<()> for Client {
     fn api_version() -> &'static str {
-        "0.13.1"
+        "0.14.0"
     }
 
     fn baseurl(&self) -> &str {
@@ -15591,7 +15591,8 @@ pub mod builder {
         /// Sends a `POST` request to `/api-user`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::ApiUserForRfdPermission>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::GetUserResponseForRfdPermission>, Error<types::Error>>
+        {
             let Self { client, body } = self;
             let body = body
                 .and_then(|v| {
@@ -15767,7 +15768,8 @@ pub mod builder {
         /// Sends a `POST` request to `/api-user/{user_id}`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::ApiUserForRfdPermission>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::GetUserResponseForRfdPermission>, Error<types::Error>>
+        {
             let Self {
                 client,
                 user_id,
@@ -15982,7 +15984,8 @@ pub mod builder {
         /// Sends a `POST` request to `/api-user/{user_id}/group`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::ApiUserForRfdPermission>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::GetUserResponseForRfdPermission>, Error<types::Error>>
+        {
             let Self {
                 client,
                 user_id,
@@ -16075,7 +16078,8 @@ pub mod builder {
         /// Sends a `DELETE` request to `/api-user/{user_id}/group/{group_id}`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::ApiUserForRfdPermission>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::GetUserResponseForRfdPermission>, Error<types::Error>>
+        {
             let Self {
                 client,
                 user_id,
@@ -17164,7 +17168,7 @@ pub mod builder {
         pub async fn send(
             self,
         ) -> Result<
-            ResponseValue<::std::vec::Vec<types::ApiUserForRfdPermission>>,
+            ResponseValue<::std::vec::Vec<types::GetUserResponseForRfdPermission>>,
             Error<types::Error>,
         > {
             let Self { client, group_id } = self;
