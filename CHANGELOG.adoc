@@ -11,11 +11,11 @@
 
 ==== 1. User Endpoint Response Type Changes
 
-**Affected Endpoints:** +
-- `POST /api-user` (create_api_user) +
-- `POST /api-user/{user_id}` (update_api_user) +
-- `POST /api-user/{user_id}/group` (add_api_user_to_group) +
-- `DELETE /api-user/{user_id}/group/{group_id}` (remove_api_user_from_group) 
+**Affected Endpoints:**
+* `POST /api-user` (create_api_user)
+* `POST /api-user/{user_id}` (update_api_user)
+* `POST /api-user/{user_id}/group` (add_api_user_to_group)
+* `DELETE /api-user/{user_id}/group/{group_id}` (remove_api_user_from_group) 
 
 **Change Details:**
 
@@ -95,7 +95,7 @@ let response: GetUserResponseForRfdPermission = client.create_api_user().body(bo
 **Description:** Retrieve all members of a specific access group.
 
 **Parameters:**
-- `group_id` (path): TypedUuidForAccessGroupId - The group ID to query
+* `group_id` (path): TypedUuidForAccessGroupId - The group ID to query
 
 **Response:** Array of `GetUserResponse_for_RfdPermission` objects
 
