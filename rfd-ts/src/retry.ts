@@ -1,5 +1,5 @@
-import Api from './Api'
-import { ApiConfig, ApiResult, FullParams, handleResponse, mergeParams, toQueryString } from './http-client'
+import { Api, ApiConfig } from './Api'
+import { ApiResult, FullParams, handleResponse, mergeParams, toQueryString } from './http-client'
 import { snakeify } from './util'
 
 export type RetryHandler = (err: any) => boolean
