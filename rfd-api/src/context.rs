@@ -313,7 +313,7 @@ impl RfdContext {
             public_url,
             storage,
             search: SearchContext {
-                client: SearchClient::new(search.host, search.index, search.key),
+                client: SearchClient::new(search.host, search.index, search.key.resolve()?),
             },
             content: ContentContext {
                 placeholder_template: content
@@ -333,24 +333,27 @@ impl RfdContext {
                         app_id,
                         installation_id,
                         private_key,
-                    } => GitHubClient::custom(
-                        "rfd-api",
-                        Credentials::InstallationToken(InstallationTokenGenerator::new(
-                            installation_id,
-                            JWTCredentials::new(
-                                app_id,
-                                RsaPrivateKey::from_pkcs1_pem(&private_key)?
-                                    .to_pkcs1_der()?
-                                    .to_bytes()
-                                    .to_vec(),
-                            )?,
-                        )),
-                        client,
-                        Box::new(NoCache),
-                    ),
+                    } => {
+                        let resolved_key = private_key.resolve()?;
+                        GitHubClient::custom(
+                            "rfd-api",
+                            Credentials::InstallationToken(InstallationTokenGenerator::new(
+                                installation_id,
+                                JWTCredentials::new(
+                                    app_id,
+                                    RsaPrivateKey::from_pkcs1_pem(&resolved_key)?
+                                        .to_pkcs1_der()?
+                                        .to_bytes()
+                                        .to_vec(),
+                                )?,
+                            )),
+                            client,
+                            Box::new(NoCache),
+                        )
+                    }
                     GitHubAuthConfig::User { token } => GitHubClient::custom(
                         "rfd-api",
-                        Credentials::Token(token.to_string()),
+                        Credentials::Token(token.resolve()?),
                         client,
                         Box::new(NoCache),
                     ),
@@ -956,9 +959,9 @@ pub(crate) mod test_mocks {
     };
     use v_model::storage::postgres::PostgresStore;
 
-    use crate::config::{
-        ContentConfig, GitHubAuthConfig, GitHubConfig, SearchConfig, ServicesConfig,
-    };
+    use rfd_secret::SecretString;
+
+    use crate::config::{ContentConfig, GitHubAuthConfig, GitHubConfig, SearchConfig, ServicesConfig};
 
     use super::RfdContext;
 
@@ -1031,7 +1034,7 @@ pub(crate) mod test_mocks {
                     path: String::new(),
                     default_branch: String::new(),
                     auth: GitHubAuthConfig::User {
-                        token: String::default(),
+                        token: SecretString::default(),
                     },
                 },
             },

@@ -23,8 +23,16 @@ scanner_enabled = true
 # How often the processor scanner should check the remote GitHub repo for RFDs
 scanner_interval = 900
 
-# The internal database url to store RFD information
-database_url = "postgres://<user>:<pass>@<host>/<database>"
+# Database connection configuration
+# Password can be specified inline or read from a file:
+#   Inline:    password = "your-password"
+#   From file: password = { path = "/run/secrets/db-password" }
+[database]
+host = "localhost"
+port = 5432
+user = "rfd"
+password = ""
+database = "rfd"
 
 # The list of actions that should be run for each processing job
 actions = [
@@ -42,6 +50,10 @@ actions = [
 #   1. A GitHub App installation that is defined by an app_id, installation_id, and private_key
 #   2. A GitHub access token
 # Exactly one authentication must be specified
+#
+# Secret values (private_key, token) can be specified inline or read from a file:
+#   Inline:    private_key = "-----BEGIN RSA PRIVATE KEY-----\n..."
+#   From file: private_key = { path = "/run/secrets/github-app-key" }
 
 # App Installation
 [auth.github]
@@ -50,12 +62,13 @@ app_id = 1111111
 # Numeric GitHub App installation id corresponding to the organization that the configured repo
 # belongs to
 installation_id = 2222222
-# PEM encoded private key for the GitHub App
+# PEM encoded private key for the GitHub App (can be inline or { path = "..." })
 private_key = """"""
 
 # Access Token
 [auth.github]
 # This may be any GitHub access token that has permission to the configured repo
+# (can be inline or { path = "/run/secrets/github-token" })
 token = ""
 
 # The GitHub repository to use to read and write RFDs
@@ -99,7 +112,7 @@ folder = ""
 [[search_storage]]
 # Https endpoint of the search instance
 host = ""
-# API Key for reading and writing documents
+# API Key for reading and writing documents (can be inline or { path = "/run/secrets/search-key" })
 key = ""
 # Search index to store documents in
 index = ""

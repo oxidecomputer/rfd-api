@@ -7,6 +7,7 @@ use db::{
     JobModel, RfdLatestMajorChange, RfdModel, RfdPdfModel, RfdRevisionMetaModel, RfdRevisionModel,
     RfdRevisionPdfModel,
 };
+pub use db::InitializationModel;
 use newtype_uuid::{GenericUuid, TypedUuid, TypedUuidKind, TypedUuidTag};
 use partial_struct::partial;
 use schema_ext::{ContentFormat, PdfSource, Visibility};

@@ -92,13 +92,13 @@ services:
         condition: service_completed_successfully
 
   postgres:
-    image: docker.io/postgres:14-trixie
+    image: docker.io/postgres:18-trixie
     environment:
       POSTGRES_USER: rfd
       POSTGRES_PASSWORD: rfd
       POSTGRES_DB: rfd
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     ports:
       - "5432:5432"
     networks:

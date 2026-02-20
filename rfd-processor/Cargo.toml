@@ -36,6 +36,7 @@ reqwest-tracing = { workspace = true }
 rfd-data = { path = "../rfd-data" }
 rfd-github = { path = "../rfd-github" }
 rfd-model = { path = "../rfd-model" }
+rfd-secret = { path = "../rfd-secret" }
 rsa = { workspace = true }
 serde = { workspace = true }
 tap = { workspace = true }

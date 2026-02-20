@@ -39,6 +39,54 @@ The RFD API backend services expect to run against a Postgres database.
 
 Running the API requires setting up a configuration file as outlined in `config.example.toml`.
 
+### Initialization
+
+The `/init` endpoint is used to bootstrap the RFD API with an initial OAuth client. This is designed for automated deployment scenarios where an OAuth client needs to be created before any authenticated access is possible.
+
+#### Usage
+
+The endpoint requires no authentication and can only be called **once**. After successful initialization, subsequent calls will fail with a 409 Conflict status.
+
+```bash
+curl -X POST http://localhost:8080/init \
+  -H "Content-Type: application/json" \
+  -d '{
+    "redirect_uris": [
+      "https://app.example.com/callback",
+      "http://localhost:3000/callback"
+    ]
+  }'
+```
+
+#### Response
+
+On success, the endpoint returns the created OAuth client credentials. **The client secret is only returned in this response and cannot be retrieved later.**
+
+```json
+{
+  "client_id": "01234567-89ab-cdef-0123-456789abcdef",
+  "secret": "rfd_abc123def456ghi789jkl012mno345pqr678stu901vwx234yz",
+  "redirect_uris": [
+    "https://app.example.com/callback",
+    "http://localhost:3000/callback"
+  ]
+}
+```
+
+#### Re-initialization
+
+To re-initialize the system (e.g., for testing or recovery), a human must manually delete the initialization record from the database:
+
+```sql
+-- Delete the initialization record to allow /init to be called again
+DELETE FROM initialization;
+
+-- Optionally also delete existing OAuth clients
+DELETE FROM oauth_client_redirect_uri;
+DELETE FROM oauth_client_secret;
+DELETE FROM oauth_client;
+```
+
 ### Processor
 
 Dependencies

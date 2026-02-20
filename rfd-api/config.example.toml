@@ -16,8 +16,16 @@ public_url = ""
 # the server is running behind a proxy)
 server_port = 8080
 
-# Full url of the Postgres database to connect to
-database_url = "postgres://<user>:<pass>@<host>/<database>"
+# Database connection configuration
+# Password can be specified inline or read from a file:
+#   Inline:    password = "your-password"
+#   From file: password = { path = "/run/secrets/db-password" }
+[database]
+host = "localhost"
+port = 5432
+user = "rfd"
+password = ""
+database = "rfd"
 
 # Settings for JWT management
 [jwt]
@@ -27,6 +35,10 @@ default_expiration = 3600
 
 # Keys for signing JWTs and generating secrets. GCP Cloud KMS keys and local static keys
 # are supported. At least one signer and one verifier key must be configured.
+#
+# Secret values (private, public) can be specified inline or read from a file:
+#   Inline:    private = "-----BEGIN RSA PRIVATE KEY-----\n..."
+#   From file: private = { path = "/run/secrets/jwt-private-key" }
 
 # Cloud KMS - Signer
 [[keys]]
@@ -63,6 +75,10 @@ public = """""" # PEM encoded public key
 # OAuth Providers
 # Google and GitHub are supported. An OAuth provider needs to have both a web and device config.
 # At least one OAuth provider must be configured
+#
+# Secret values (client_id, client_secret) can be specified inline or read from a file:
+#   Inline:    client_secret = "your-secret"
+#   From file: client_secret = { path = "/run/secrets/google-client-secret" }
 
 [authn.oauth.google.device]
 client_id = ""
@@ -97,13 +113,13 @@ templates = []
 # html = "<a href=\"{{ url }}\">Click here to login</a>"
 #
 # [magic_link.email_service.resend]
-# key = "re_xxxxxxxx"
+# key = "re_xxxxxxxx"  # or { path = "/run/secrets/resend-key" }
 
 # Search configuration
 [search]
 # Remote url of the search service
 host = ""
-# Read-only search key
+# Read-only search key (can be inline or { path = "/run/secrets/search-key" })
 key = ""
 # Index to perform searches against
 index = ""
@@ -144,6 +160,10 @@ default_branch = ""
 #   1. A GitHub App installation that is defined by an app_id, installation_id, and private_key
 #   2. A GitHub access token
 # Exactly one authentication must be specified
+#
+# Secret values (private_key, token) can be specified inline or read from a file:
+#   Inline:    private_key = "-----BEGIN RSA PRIVATE KEY-----\n..."
+#   From file: private_key = { path = "/run/secrets/github-app-key" }
 
 # App Installation
 [services.github.auth]
@@ -152,10 +172,11 @@ app_id = 1111111
 # Numeric GitHub App installation id corresponding to the organization that the configured repo
 # belongs to
 installation_id = 2222222
-# PEM encoded private key for the GitHub App
+# PEM encoded private key for the GitHub App (can be inline or { path = "..." })
 private_key = """"""
 
 # Access Token
 [services.github.auth]
 # This may be any GitHub access token that has permission to the configured repo
+# (can be inline or { path = "/run/secrets/github-token" })
 token = ""

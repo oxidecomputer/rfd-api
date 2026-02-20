@@ -1,0 +1,30 @@
+[package]
+name = "rfd-kube-init"
+version = "0.1.0"
+edition = "2021"
+description = "Kubernetes initialization tool for RFD services"
+repository = "https://github.com/oxidecomputer/rfd-api"
+
+[[bin]]
+name = "rfd-kube-init"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0"
+clap = { version = "4", features = ["derive", "env"] }
+k8s-openapi = { version = "0.27", features = ["v1_32"] }
+kube = { version = "3.0.1", features = ["client", "runtime", "rustls-tls", "aws-lc-rs"] }
+meilisearch-sdk = { version = "0.32.0", default-features = false, features = ["reqwest", "tls", "jwt_aws_lc_rs"] }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+reqwest-middleware = "0.4"
+reqwest-retry = "0.7"
+secrecy = "0.10"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+time = "0.3"
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+[package.metadata.dist]
+targets = []

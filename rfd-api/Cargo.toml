@@ -43,6 +43,7 @@ ring = { workspace = true }
 rfd-data = { path = "../rfd-data" }
 rfd-github = { path = "../rfd-github" }
 rfd-model = { path = "../rfd-model" }
+rfd-secret = { path = "../rfd-secret" }
 rsa = { workspace = true, features = ["sha2"] }
 schemars = { workspace = true, features = ["chrono"] }
 secrecy = { workspace = true, features = ["serde"] }

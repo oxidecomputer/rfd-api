@@ -10,6 +10,8 @@ use thiserror::Error;
 use v_api::response::{conflict, forbidden, internal_error, not_found, ResourceError};
 use v_model::storage::StoreError;
 
+use rfd_secret::SecretResolutionError;
+
 #[derive(Debug, Error)]
 pub enum AppError {
     #[error("Failed to construct HTTP client")]
@@ -24,6 +26,8 @@ pub enum AppError {
     NoConfiguredJwtKeys,
     #[error("Failed to construct GitHub client")]
     Octorust(#[from] OctorustError),
+    #[error("Failed to resolve secret")]
+    SecretResolution(#[from] SecretResolutionError),
 }
 
 #[derive(Debug, Error)]

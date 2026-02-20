@@ -17,6 +17,14 @@ pub mod sql_types {
 }
 
 diesel::table! {
+    initialization (id) {
+        id -> Uuid,
+        initialized_at -> Timestamptz,
+        oauth_client_id -> Uuid,
+    }
+}
+
+diesel::table! {
     job (id) {
         id -> Int4,
         owner -> Varchar,
@@ -93,6 +101,7 @@ diesel::joinable!(rfd_pdf -> rfd_revision (rfd_revision_id));
 diesel::joinable!(rfd_revision -> rfd (rfd_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
+    initialization,
     job,
     rfd,
     rfd_pdf,

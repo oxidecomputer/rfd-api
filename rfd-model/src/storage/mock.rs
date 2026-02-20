@@ -8,15 +8,16 @@ use std::sync::Arc;
 use v_model::storage::StoreError;
 
 use crate::{
-    Job, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdId, RfdMeta, RfdPdf, RfdPdfId, RfdPdfs,
-    RfdRevision, RfdRevisionId, RfdRevisionMeta,
+    db::InitializationModel, Job, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdId, RfdMeta,
+    RfdPdf, RfdPdfId, RfdPdfs, RfdRevision, RfdRevisionId, RfdRevisionMeta,
 };
 
 use super::{
-    JobFilter, JobStore, ListPagination, MockJobStore, MockRfdMetaStore, MockRfdPdfStore,
-    MockRfdPdfsStore, MockRfdRevisionMetaStore, MockRfdRevisionPdfStore, MockRfdRevisionStore,
-    MockRfdStore, RfdFilter, RfdMetaStore, RfdPdfFilter, RfdPdfStore, RfdPdfsStore,
-    RfdRevisionFilter, RfdRevisionMetaStore, RfdRevisionStore, RfdStore,
+    InitializationStore, JobFilter, JobStore, ListPagination, MockInitializationStore,
+    MockJobStore, MockRfdMetaStore, MockRfdPdfStore, MockRfdPdfsStore, MockRfdRevisionMetaStore,
+    MockRfdRevisionPdfStore, MockRfdRevisionStore, MockRfdStore, RfdFilter, RfdMetaStore,
+    RfdPdfFilter, RfdPdfStore, RfdPdfsStore, RfdRevisionFilter, RfdRevisionMetaStore,
+    RfdRevisionStore, RfdStore,
 };
 
 pub struct MockStorage {
@@ -28,6 +29,7 @@ pub struct MockStorage {
     pub rfd_revision_pdf_store: Option<Arc<MockRfdRevisionPdfStore>>,
     pub rfd_pdf_store: Option<Arc<MockRfdPdfStore>>,
     pub job_store: Option<Arc<MockJobStore>>,
+    pub initialization_store: Option<Arc<MockInitializationStore>>,
 }
 
 impl MockStorage {
@@ -41,6 +43,7 @@ impl MockStorage {
             rfd_revision_pdf_store: None,
             rfd_pdf_store: None,
             job_store: None,
+            initialization_store: None,
         }
     }
 }
@@ -265,5 +268,23 @@ impl JobStore for MockStorage {
 
     async fn complete(&self, id: i32) -> Result<Option<Job>, StoreError> {
         self.job_store.as_ref().unwrap().complete(id).await
+    }
+}
+
+#[async_trait]
+impl InitializationStore for MockStorage {
+    async fn get(&self) -> Result<Option<InitializationModel>, StoreError> {
+        self.initialization_store.as_ref().unwrap().get().await
+    }
+
+    async fn insert(
+        &self,
+        record: InitializationModel,
+    ) -> Result<InitializationModel, StoreError> {
+        self.initialization_store
+            .as_ref()
+            .unwrap()
+            .insert(record)
+            .await
     }
 }

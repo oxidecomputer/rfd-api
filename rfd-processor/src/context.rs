@@ -29,6 +29,8 @@ use thiserror::Error;
 use tracing::instrument;
 use v_model::storage::postgres::PostgresStore;
 
+use rfd_secret::SecretResolutionError;
+
 use crate::{
     pdf::{PdfFileLocation, PdfStorage, RfdPdf, RfdPdfError},
     search::{RfdSearchIndex, SearchError},
@@ -85,6 +87,8 @@ pub enum ContextError {
     InvalidGitHubPrivateKey(#[from] rsa::pkcs1::Error),
     #[error(transparent)]
     Search(#[from] SearchError),
+    #[error(transparent)]
+    SecretResolution(#[from] SecretResolutionError),
 }
 
 pub struct Context {
@@ -120,24 +124,27 @@ impl Context {
                 app_id,
                 installation_id,
                 private_key,
-            } => GitHubClient::custom(
-                "rfd-processor",
-                Credentials::InstallationToken(InstallationTokenGenerator::new(
-                    *installation_id,
-                    JWTCredentials::new(
-                        *app_id,
-                        RsaPrivateKey::from_pkcs1_pem(private_key)?
-                            .to_pkcs1_der()?
-                            .to_bytes()
-                            .to_vec(),
-                    )?,
-                )),
-                client,
-                http_cache,
-            ),
+            } => {
+                let resolved_key = private_key.resolve()?;
+                GitHubClient::custom(
+                    "rfd-processor",
+                    Credentials::InstallationToken(InstallationTokenGenerator::new(
+                        *installation_id,
+                        JWTCredentials::new(
+                            *app_id,
+                            RsaPrivateKey::from_pkcs1_pem(&resolved_key)?
+                                .to_pkcs1_der()?
+                                .to_bytes()
+                                .to_vec(),
+                        )?,
+                    )),
+                    client,
+                    http_cache,
+                )
+            }
             GitHubAuthConfig::User { token } => GitHubClient::custom(
                 "rfd-processor",
-                Credentials::Token(token.to_string()),
+                Credentials::Token(token.resolve()?),
                 client,
                 http_cache,
             ),
@@ -446,11 +453,14 @@ pub struct SearchCtx {
 }
 
 impl SearchCtx {
-    pub fn new(entries: &[SearchConfig]) -> Result<Self, SearchError> {
+    pub fn new(entries: &[SearchConfig]) -> Result<Self, ContextError> {
         Ok(Self {
             indexes: entries
                 .iter()
-                .map(|c| RfdSearchIndex::new(&c.host, &c.key, &c.index))
+                .map(|c| {
+                    let key = c.key.resolve()?;
+                    RfdSearchIndex::new(&c.host, key, &c.index).map_err(ContextError::from)
+                })
                 .collect::<Result<Vec<_>, _>>()?,
         })
     }

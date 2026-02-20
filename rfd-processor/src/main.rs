@@ -4,6 +4,7 @@
 
 use config::{Config, ConfigError, Environment, File};
 use processor::{processor, JobError};
+use rfd_secret::SecretString;
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
 use thiserror::Error;
@@ -41,7 +42,7 @@ pub struct AppConfig {
     pub processor_update_mode: RfdUpdateMode,
     pub scanner_enabled: bool,
     pub scanner_interval: u64,
-    pub database_url: String,
+    pub database: DatabaseConfig,
     pub actions: Vec<String>,
     pub auth: AuthConfig,
     pub source: GitHubSourceRepo,
@@ -83,10 +84,10 @@ pub enum GitHubAuthConfig {
     Installation {
         app_id: i64,
         installation_id: i64,
-        private_key: String,
+        private_key: SecretString,
     },
     User {
-        token: String,
+        token: SecretString,
     },
 }
 
@@ -119,8 +120,27 @@ pub struct PdfStorageConfig {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct SearchConfig {
     pub host: String,
-    pub key: String,
+    pub key: SecretString,
     pub index: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct DatabaseConfig {
+    pub host: String,
+    pub port: u16,
+    pub user: String,
+    pub password: SecretString,
+    pub database: String,
+}
+
+impl DatabaseConfig {
+    pub fn to_url(&self) -> Result<String, rfd_secret::SecretResolutionError> {
+        let password = self.password.resolve()?;
+        Ok(format!(
+            "postgres://{}:{}@{}:{}/{}",
+            self.user, password, self.host, self.port, self.database
+        ))
+    }
 }
 
 impl AppConfig {
@@ -171,7 +191,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         LogFormat::Json => subscriber.json().init(),
     }
 
-    let ctx = Arc::new(Context::new(Database::new(&config.database_url).await, &config).await?);
+    let database_url = config.database.to_url()?;
+    let ctx = Arc::new(Context::new(Database::new(&database_url).await, &config).await?);
 
     let scanner_ctx = ctx.clone();
     let scanner_handle = tokio::spawn(async move {

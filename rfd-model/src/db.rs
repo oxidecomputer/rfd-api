@@ -9,9 +9,17 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{
-    schema::{job, rfd, rfd_pdf, rfd_revision},
+    schema::{initialization, job, rfd, rfd_pdf, rfd_revision},
     schema_ext::{rfd_meta_join, rfd_pdf_join, ContentFormat, PdfSource, Visibility},
 };
+
+#[derive(Debug, Deserialize, Serialize, Queryable, Insertable, Selectable)]
+#[diesel(table_name = initialization)]
+pub struct InitializationModel {
+    pub id: Uuid,
+    pub initialized_at: DateTime<Utc>,
+    pub oauth_client_id: Uuid,
+}
 
 #[derive(Debug, Deserialize, Serialize, Queryable, Insertable, Selectable)]
 #[diesel(table_name = rfd)]

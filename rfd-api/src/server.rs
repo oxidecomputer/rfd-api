@@ -15,6 +15,7 @@ use v_api::{inject_endpoints, v_system_endpoints};
 use crate::{
     context::RfdContext,
     endpoints::{
+        init::init,
         job::list_jobs,
         rfd::{
             discuss_rfd, list_rfd_revisions, list_rfds, publish_rfd, reserve_rfd, search_rfds,
@@ -77,6 +78,9 @@ pub fn server(
     });
 
     inject_endpoints!(api);
+
+    // Initialization
+    api.register(init).expect("Failed to register endpoint");
 
     // RFDs
     api.register(list_rfds)

@@ -1,0 +1,14 @@
+[package]
+name = "rfd-secret"
+version = "0.1.0"
+edition = "2021"
+description = "Secret string utilities for RFD API configuration"
+repository = "https://github.com/oxidecomputer/rfd-api"
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+toml = { workspace = true }

@@ -9,9 +9,11 @@ members = [
   "rfd-model",
   "rfd-processor",
   "rfd-sdk",
+  "rfd-secret",
   "trace-request",
   "xtask"
 ]
+exclude = ["rfd-kube-init"]
 resolver = "2"
 
 [workspace.dependencies]
@@ -42,7 +44,8 @@ http = "1.4.0"
 hyper = "1.8.1"
 itertools = "0.13.0"
 jsonwebtoken = { version = "10.2", features = ["rust_crypto"] }
-meilisearch-sdk = "0.28.0"
+meilisearch-sdk = "0.32.0"
+k8s-openapi = { version = "0.27", features = ["v1_32"] }
 md-5 = "0.10.6"
 mime_guess = "2.0.5"
 minijinja = { version = "2.14", features = ["loader"] }
@@ -79,6 +82,7 @@ slog = "2.8.2"
 slog-async = "2.8.0"
 tabwriter = "1.4.1"
 tap = "1.0.1"
+tempfile = "3"
 textwrap = "0.16.2"
 thiserror = "2"
 tokio = { version = "1.49.0", default-features = false, features = ["rt-multi-thread", "macros"] }
@@ -119,3 +123,6 @@ lto = "thin"
 # v-api-installer = { path = "../v-api/v-api-installer" }
 # v-model = { path = "../v-api/v-model" }
 # v-api-permission-derive = { path = "../v-api/v-api-permission-derive" }
+
+[profile.release]
+debug = 1

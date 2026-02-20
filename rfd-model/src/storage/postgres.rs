@@ -26,10 +26,10 @@ use v_model::storage::postgres::PostgresStore;
 
 use crate::{
     db::{
-        JobModel, RfdLatestMajorChange, RfdMetaJoinRow, RfdModel, RfdPdfJoinRow, RfdPdfModel,
-        RfdRevisionMetaModel, RfdRevisionModel, RfdRevisionPdfModel,
+        InitializationModel, JobModel, RfdLatestMajorChange, RfdMetaJoinRow, RfdModel,
+        RfdPdfJoinRow, RfdPdfModel, RfdRevisionMetaModel, RfdRevisionModel, RfdRevisionPdfModel,
     },
-    schema::{job, rfd, rfd_pdf, rfd_revision},
+    schema::{initialization, job, rfd, rfd_pdf, rfd_revision},
     schema_ext::Visibility,
     storage::StoreError,
     Job, NewJob, NewRfd, NewRfdPdf, NewRfdRevision, Rfd, RfdId, RfdMeta, RfdPdf, RfdPdfId, RfdPdfs,
@@ -37,9 +37,9 @@ use crate::{
 };
 
 use super::{
-    JobFilter, JobStore, ListPagination, RfdFilter, RfdMetaStore, RfdPdfFilter, RfdPdfStore,
-    RfdPdfsStore, RfdRevisionFilter, RfdRevisionMetaStore, RfdRevisionPdfStore, RfdRevisionStore,
-    RfdStore,
+    InitializationStore, JobFilter, JobStore, ListPagination, RfdFilter, RfdMetaStore,
+    RfdPdfFilter, RfdPdfStore, RfdPdfsStore, RfdRevisionFilter, RfdRevisionMetaStore,
+    RfdRevisionPdfStore, RfdRevisionStore, RfdStore,
 };
 
 #[async_trait]
@@ -1393,6 +1393,43 @@ impl JobStore for PostgresStore {
         tracing::trace!("Done complete job query");
 
         JobStore::get(self, id).await
+    }
+}
+
+#[async_trait]
+impl InitializationStore for PostgresStore {
+    async fn get(&self) -> Result<Option<InitializationModel>, StoreError> {
+        let result = initialization::table
+            .first_async::<InitializationModel>(
+                &*self.pool.get().await.tap_err(|err| {
+                    tracing::error!(?err, "Failed to acquire database connection")
+                })?,
+            )
+            .await;
+
+        match result {
+            Ok(record) => Ok(Some(record)),
+            Err(diesel::result::Error::NotFound) => Ok(None),
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    async fn insert(
+        &self,
+        record: InitializationModel,
+    ) -> Result<InitializationModel, StoreError> {
+        let result = insert_into(initialization::table)
+            .values((
+                initialization::id.eq(record.id),
+                initialization::initialized_at.eq(record.initialized_at),
+                initialization::oauth_client_id.eq(record.oauth_client_id),
+            ))
+            .get_result_async(&*self.pool.get().await.tap_err(|err| {
+                tracing::error!(?err, "Failed to acquire database connection")
+            })?)
+            .await?;
+
+        Ok(result)
     }
 }
 
