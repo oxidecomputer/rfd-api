@@ -281,7 +281,7 @@ async fn generate_and_distribute_token(
         "Found API key for token",
     );
 
-    let token = client.generate_tenant_token(key.uid, search_rules, None, expires_at)?;
+    let token = client.generate_tenant_token(key.uid, search_rules, Some(&key.key), expires_at)?;
 
     tracing::info!(
         token_type = token_type_str.as_str(),
