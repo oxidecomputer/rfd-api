@@ -4,6 +4,7 @@
 
 mod kube;
 mod meilisearch;
+mod meilisearch_client;
 mod oauth_init;
 
 use anyhow::Result;

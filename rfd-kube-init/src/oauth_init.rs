@@ -4,6 +4,7 @@
 
 use anyhow::{anyhow, Context, Result};
 use clap::Args;
+use reqwest::Response;
 use reqwest_middleware::ClientBuilder;
 use reqwest_retry::{policies::ExponentialBackoff, RetryTransientMiddleware};
 use serde::{Deserialize, Serialize};
@@ -90,7 +91,7 @@ pub async fn init(kube_client: &::kube::Client, args: &OAuthInitArgs) -> Result<
 
     tracing::debug!(url = %init_url, "Calling /init endpoint");
 
-    let response = client
+    let response: Response = client
         .post(&init_url)
         .header("Content-Type", "application/json")
         .body(serde_json::to_string(&request_body)?)

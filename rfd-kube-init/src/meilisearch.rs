@@ -6,13 +6,15 @@ use anyhow::{anyhow, Context, Result};
 use clap::Args;
 use meilisearch_sdk::client::Client;
 use meilisearch_sdk::key::Key;
+use reqwest_middleware::ClientBuilder;
+use reqwest_retry::{policies::ExponentialBackoff, RetryTransientMiddleware};
 use secrecy::ExposeSecret;
 use std::fmt;
-use std::time::Duration as StdDuration;
-use time::{Duration, OffsetDateTime};
-use tokio::time::sleep;
+use std::time::Duration;
+use time::OffsetDateTime;
 
 use crate::kube;
+use crate::meilisearch_client::RetryingMeilisearchClient;
 
 const DEFAULT_SEARCH_API_KEY_NAME: &str = "Default Search API Key";
 const DEFAULT_ADMIN_API_KEY_NAME: &str = "Default Admin API Key";
@@ -108,131 +110,6 @@ impl fmt::Display for FailedNamespace {
     }
 }
 
-/// Fetch API keys from Meilisearch and return the search and admin keys.
-async fn get_api_keys(client: &Client) -> Result<(Option<Key>, Option<Key>)> {
-    tracing::debug!("Fetching API keys from Meilisearch");
-    let keys_result = client
-        .get_keys()
-        .await
-        .context("Failed to fetch API keys from Meilisearch")?;
-
-    tracing::debug!(key_count = keys_result.results.len(), "Retrieved API keys from Meilisearch");
-
-    let mut search_key = None;
-    let mut admin_key = None;
-
-    for key in keys_result.results {
-        match key.name.as_deref() {
-            Some(DEFAULT_SEARCH_API_KEY_NAME) => {
-                tracing::debug!("Found default search API key");
-                search_key = Some(key);
-            }
-            Some(DEFAULT_ADMIN_API_KEY_NAME) => {
-                tracing::debug!("Found default admin API key");
-                admin_key = Some(key);
-            }
-            _ => {}
-        }
-    }
-
-    if search_key.is_none() {
-        tracing::warn!("Default search API key not found");
-    }
-    if admin_key.is_none() {
-        tracing::warn!("Default admin API key not found");
-    }
-
-    Ok((search_key, admin_key))
-}
-
-/// Generate a tenant token and distribute it to the specified namespaces.
-/// Returns a list of namespaces that failed to write.
-async fn generate_and_distribute_token(
-    client: &Client,
-    kube_client: &::kube::Client,
-    namespaces: &[String],
-    secret_name: &str,
-    search_rules: serde_json::Value,
-    expires_at: Option<OffsetDateTime>,
-    token_type: TokenType,
-) -> Result<Vec<FailedNamespace>> {
-    if namespaces.is_empty() {
-        tracing::debug!(token_type = %token_type, "No namespaces configured, skipping");
-        return Ok(Vec::new());
-    }
-
-    tracing::info!(
-        token_type = %token_type,
-        namespace_count = namespaces.len(),
-        "Distributing tokens to namespaces"
-    );
-
-    let token_type_str = token_type.to_string();
-    let key_name = token_type.key_name();
-
-    let key = match token_type.key() {
-        Some(key) => key,
-        None => {
-            tracing::error!(
-                key_name = key_name,
-                token_type = token_type_str.as_str(),
-                "API key not found in Meilisearch but namespaces are configured"
-            );
-            return Err(anyhow!(
-                "Could not find '{}' in Meilisearch keys",
-                key_name
-            ));
-        }
-    };
-
-    tracing::info!(
-        key_name = key.name,
-        token_type = token_type_str.as_str(),
-        "Found API key for token",
-    );
-
-    let token = client.generate_tenant_token(key.uid, search_rules, None, expires_at)?;
-
-    tracing::info!(token_type = token_type_str.as_str(), "Generated Meilisearch tenant token");
-
-    let mut failures = Vec::new();
-
-    for ns in namespaces {
-        match kube::write_secret(
-            kube_client,
-            ns,
-            secret_name,
-            &[("MEILISEARCH_API_KEY", &token)],
-        )
-        .await
-        {
-            Ok(()) => {
-                tracing::info!(
-                    namespace = ns.as_str(),
-                    secret = secret_name,
-                    token_type = token_type_str.as_str(),
-                    "Wrote meilisearch secret"
-                );
-            }
-            Err(err) => {
-                failures.push(FailedNamespace {
-                    namespace: ns.clone(),
-                    token_type: token_type_str.clone(),
-                });
-                tracing::error!(
-                    namespace = ns.as_str(),
-                    secret = secret_name,
-                    token_type = token_type_str.as_str(),
-                    error = %err,
-                    "Failed to write meilisearch secret"
-                );
-            }
-        }
-    }
-
-    Ok(failures)
-}
-
 /// Initialize meilisearch secrets across target namespaces.
 pub async fn init(kube_client: &::kube::Client, args: &MeilisearchArgs) -> Result<()> {
     // Read master key from kubernetes secret
@@ -248,7 +125,7 @@ pub async fn init(kube_client: &::kube::Client, args: &MeilisearchArgs) -> Resul
     // Calculate expiration time if provided
     let expires_at = args
         .expiration_seconds
-        .map(|secs| OffsetDateTime::now_utc() + Duration::seconds(secs));
+        .map(|secs| OffsetDateTime::now_utc() + time::Duration::seconds(secs));
 
     // Parse search rules filter (empty string or missing means wildcard access to all indexes)
     let search_rules: serde_json::Value = match &args.token_filter {
@@ -258,31 +135,19 @@ pub async fn init(kube_client: &::kube::Client, args: &MeilisearchArgs) -> Resul
         _ => serde_json::json!(["*"]),
     };
 
-    // Create meilisearch client and fetch API keys with retry
-    let client = Client::new(&args.host, Some(master_key.expose_secret()))?;
-    let (search_key, admin_key) = 'retry: {
-        let mut last_error = None;
+    // Create meilisearch client with retry middleware
+    let retry_policy = ExponentialBackoff::builder()
+        .retry_bounds(Duration::from_secs(1), Duration::from_secs(30))
+        .build_with_max_retries(args.max_retries);
 
-        for attempt in 0..args.max_retries {
-            let backoff_secs = std::cmp::min(30, 1u64 << attempt);
+    let http_client = RetryingMeilisearchClient::new(
+        ClientBuilder::new(reqwest::Client::new())
+            .with(RetryTransientMiddleware::new_with_policy(retry_policy))
+            .build(),
+    );
 
-            match get_api_keys(&client).await {
-                Ok(keys) => break 'retry keys,
-                Err(e) => {
-                    last_error = Some(e);
-                    tracing::warn!(
-                        attempt = attempt + 1,
-                        max_retries = args.max_retries,
-                        backoff_secs = backoff_secs,
-                        "Failed to fetch API keys from Meilisearch, retrying"
-                    );
-                    sleep(StdDuration::from_secs(backoff_secs)).await;
-                }
-            }
-        }
-
-        return Err(last_error.unwrap_or_else(|| anyhow!("Max retries exceeded")));
-    };
+    let client = Client::new_with_client(&args.host, Some(master_key.expose_secret()), http_client);
+    let (search_key, admin_key) = get_api_keys(&client).await?;
 
     let mut failures = Vec::new();
 
@@ -330,6 +195,136 @@ pub async fn init(kube_client: &::kube::Client, args: &MeilisearchArgs) -> Resul
     Ok(())
 }
 
+/// Fetch API keys from Meilisearch and return the search and admin keys.
+async fn get_api_keys(
+    client: &Client<RetryingMeilisearchClient>,
+) -> Result<(Option<Key>, Option<Key>)> {
+    tracing::debug!("Fetching API keys from Meilisearch");
+    let keys_result = client
+        .get_keys()
+        .await
+        .context("Failed to fetch API keys from Meilisearch")?;
+
+    tracing::debug!(
+        key_count = keys_result.results.len(),
+        "Retrieved API keys from Meilisearch"
+    );
+
+    let mut search_key = None;
+    let mut admin_key = None;
+
+    for key in keys_result.results {
+        match key.name.as_deref() {
+            Some(DEFAULT_SEARCH_API_KEY_NAME) => {
+                tracing::debug!("Found default search API key");
+                search_key = Some(key);
+            }
+            Some(DEFAULT_ADMIN_API_KEY_NAME) => {
+                tracing::debug!("Found default admin API key");
+                admin_key = Some(key);
+            }
+            _ => {}
+        }
+    }
+
+    if search_key.is_none() {
+        tracing::warn!("Default search API key not found");
+    }
+    if admin_key.is_none() {
+        tracing::warn!("Default admin API key not found");
+    }
+
+    Ok((search_key, admin_key))
+}
+
+/// Generate a tenant token and distribute it to the specified namespaces.
+/// Returns a list of namespaces that failed to write.
+async fn generate_and_distribute_token(
+    client: &Client<RetryingMeilisearchClient>,
+    kube_client: &::kube::Client,
+    namespaces: &[String],
+    secret_name: &str,
+    search_rules: serde_json::Value,
+    expires_at: Option<OffsetDateTime>,
+    token_type: TokenType,
+) -> Result<Vec<FailedNamespace>> {
+    if namespaces.is_empty() {
+        tracing::debug!(token_type = %token_type, "No namespaces configured, skipping");
+        return Ok(Vec::new());
+    }
+
+    tracing::info!(
+        token_type = %token_type,
+        namespace_count = namespaces.len(),
+        "Distributing tokens to namespaces"
+    );
+
+    let token_type_str = token_type.to_string();
+    let key_name = token_type.key_name();
+
+    let key = match token_type.key() {
+        Some(key) => key,
+        None => {
+            tracing::error!(
+                key_name = key_name,
+                token_type = token_type_str.as_str(),
+                "API key not found in Meilisearch but namespaces are configured"
+            );
+            return Err(anyhow!("Could not find '{}' in Meilisearch keys", key_name));
+        }
+    };
+
+    tracing::info!(
+        key_name = key.name,
+        token_type = token_type_str.as_str(),
+        "Found API key for token",
+    );
+
+    let token = client.generate_tenant_token(key.uid, search_rules, None, expires_at)?;
+
+    tracing::info!(
+        token_type = token_type_str.as_str(),
+        "Generated Meilisearch tenant token"
+    );
+
+    let mut failures = Vec::new();
+
+    for ns in namespaces {
+        match kube::write_secret(
+            kube_client,
+            ns,
+            secret_name,
+            &[("MEILISEARCH_API_KEY", &token)],
+        )
+        .await
+        {
+            Ok(()) => {
+                tracing::info!(
+                    namespace = ns.as_str(),
+                    secret = secret_name,
+                    token_type = token_type_str.as_str(),
+                    "Wrote meilisearch secret"
+                );
+            }
+            Err(err) => {
+                failures.push(FailedNamespace {
+                    namespace: ns.clone(),
+                    token_type: token_type_str.clone(),
+                });
+                tracing::error!(
+                    namespace = ns.as_str(),
+                    secret = secret_name,
+                    token_type = token_type_str.as_str(),
+                    error = %err,
+                    "Failed to write meilisearch secret"
+                );
+            }
+        }
+    }
+
+    Ok(failures)
+}
+
 #[cfg(test)]
 mod tests {
     use meilisearch_sdk::client::Client;
@@ -351,10 +346,18 @@ mod tests {
 
         // The token generation should succeed (crypto works) even though
         // the key UID is fake - we're testing the signing, not validation
-        assert!(result.is_ok(), "JWT token generation failed: {:?}", result.err());
+        assert!(
+            result.is_ok(),
+            "JWT token generation failed: {:?}",
+            result.err()
+        );
 
         let token = result.unwrap();
         // JWT tokens have 3 parts separated by dots
-        assert_eq!(token.split('.').count(), 3, "Generated token should be a valid JWT format");
+        assert_eq!(
+            token.split('.').count(),
+            3,
+            "Generated token should be a valid JWT format"
+        );
     }
 }

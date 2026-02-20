@@ -11,6 +11,8 @@ path = "src/main.rs"
 
 [dependencies]
 anyhow = "1.0"
+async-trait = "0.1"
+futures-io = "0.3"
 clap = { version = "4", features = ["derive", "env"] }
 k8s-openapi = { version = "0.27", features = ["v1_32"] }
 kube = { version = "3.0.1", features = ["client", "runtime", "rustls-tls", "aws-lc-rs"] }
@@ -23,6 +25,8 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 time = "0.3"
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+tokio-util = { version = "0.7", features = ["compat", "io"] }
+yaup = "0.3"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
