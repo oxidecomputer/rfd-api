@@ -144,6 +144,7 @@ pub async fn init(kube_client: &::kube::Client, args: &MeilisearchArgs) -> Resul
         ClientBuilder::new(reqwest::Client::new())
             .with(RetryTransientMiddleware::new_with_policy(retry_policy))
             .build(),
+        master_key.expose_secret().to_string(),
     );
 
     let client = Client::new_with_client(&args.host, Some(master_key.expose_secret()), http_client);

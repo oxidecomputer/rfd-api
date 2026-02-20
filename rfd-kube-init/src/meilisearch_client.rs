@@ -13,11 +13,12 @@ use tokio_util::io::ReaderStream;
 #[derive(Clone)]
 pub struct RetryingMeilisearchClient {
     client: ClientWithMiddleware,
+    api_key: String,
 }
 
 impl RetryingMeilisearchClient {
-    pub fn new(client: ClientWithMiddleware) -> Self {
-        Self { client }
+    pub fn new(client: ClientWithMiddleware, api_key: String) -> Self {
+        Self { client, api_key }
     }
 }
 
@@ -44,6 +45,8 @@ impl HttpClient for RetryingMeilisearchClient {
             Method::Patch { body, .. } => self.client.patch(&url).body(to_body(body)),
         }
         .header(reqwest::header::CONTENT_TYPE, content_type);
+
+        let request = request.header(reqwest::header::AUTHORIZATION, format!("Bearer {}", self.api_key));
 
         let response = request.send().await.map_err(|e| Error::Other(e.into()))?;
         let status = response.status().as_u16();

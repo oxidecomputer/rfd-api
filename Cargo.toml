@@ -44,7 +44,7 @@ http = "1.4.0"
 hyper = "1.8.1"
 itertools = "0.13.0"
 jsonwebtoken = { version = "10.2", features = ["rust_crypto"] }
-meilisearch-sdk = "0.32.0"
+meilisearch-sdk = { version = "0.32.0", default-features = false, features = ["reqwest", "tls", "jwt_rust_crypto"] }
 k8s-openapi = { version = "0.27", features = ["v1_32"] }
 md-5 = "0.10.6"
 mime_guess = "2.0.5"
