@@ -51,6 +51,7 @@ export const parseIfDate = (k: string | undefined, v: unknown) => {
     && (k?.startsWith('time_')
       || k?.endsWith('_time')
       || k?.endsWith('_expiration')
+      || k?.endsWith('_at')
       || k === 'timestamp')
   ) {
     const d = new Date(v)

@@ -3094,7 +3094,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-api"
-version = "0.14.0"
+version = "0.14.1"
 dependencies = [
  "anyhow",
  "async-bb8-diesel",
@@ -3160,7 +3160,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-cli"
-version = "0.14.0"
+version = "0.14.1"
 dependencies = [
  "anyhow",
  "chrono",
@@ -3247,7 +3247,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-processor"
-version = "0.14.0"
+version = "0.14.1"
 dependencies = [
  "async-trait",
  "base64",
@@ -3289,7 +3289,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-sdk"
-version = "0.14.0"
+version = "0.14.1"
 dependencies = [
  "chrono",
  "progenitor-client",
