@@ -2,13 +2,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use std::pin::pin;
+
 use futures_io::AsyncRead;
+use futures_util::io::AsyncReadExt;
 use meilisearch_sdk::errors::Error;
 use meilisearch_sdk::request::{parse_response, HttpClient, Method};
 use reqwest_middleware::ClientWithMiddleware;
 use serde::{de::DeserializeOwned, Serialize};
-use tokio_util::compat::FuturesAsyncReadCompatExt;
-use tokio_util::io::ReaderStream;
 
 #[derive(Clone)]
 pub struct RetryingMeilisearchClient {
@@ -40,9 +41,9 @@ impl HttpClient for RetryingMeilisearchClient {
         let request = match method {
             Method::Get { .. } => self.client.get(&url),
             Method::Delete { .. } => self.client.delete(&url),
-            Method::Post { body, .. } => self.client.post(&url).body(to_body(body)),
-            Method::Put { body, .. } => self.client.put(&url).body(to_body(body)),
-            Method::Patch { body, .. } => self.client.patch(&url).body(to_body(body)),
+            Method::Post { body, .. } => self.client.post(&url).body(to_body(body).await),
+            Method::Put { body, .. } => self.client.put(&url).body(to_body(body).await),
+            Method::Patch { body, .. } => self.client.patch(&url).body(to_body(body).await),
         }
         .header(reqwest::header::CONTENT_TYPE, content_type);
 
@@ -61,6 +62,10 @@ impl HttpClient for RetryingMeilisearchClient {
     }
 }
 
-fn to_body(reader: impl AsyncRead + Send + Sync + 'static) -> reqwest::Body {
-    reqwest::Body::wrap_stream(ReaderStream::new(reader.compat()))
+async fn to_body(reader: impl AsyncRead + Send + Sync + 'static) -> reqwest::Body {
+    let mut buf = Vec::new();
+    let mut pinned = pin!(reader);
+    // Buffer the body so it can be cloned by retry middleware
+    let _ = pinned.read_to_end(&mut buf).await;
+    reqwest::Body::from(buf)
 }

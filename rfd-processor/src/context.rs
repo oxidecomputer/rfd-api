@@ -183,7 +183,7 @@ impl Context {
                 .collect::<Result<Vec<_>, RfdUpdaterError>>()?,
             static_storage: build_static_storage(&config.gcs_storage, &config.s3_storage).await?,
             pdf: PdfStorageCtx::new(&config.pdf_storage).await?,
-            search: SearchCtx::new(&config.search_storage)?,
+            search: SearchCtx::new(&config.search_storage).await?,
         })
     }
 }
@@ -453,16 +453,18 @@ pub struct SearchCtx {
 }
 
 impl SearchCtx {
-    pub fn new(entries: &[SearchConfig]) -> Result<Self, ContextError> {
-        Ok(Self {
-            indexes: entries
-                .iter()
-                .map(|c| {
-                    let key = c.key.resolve()?;
-                    RfdSearchIndex::new(&c.host, key, &c.index).map_err(ContextError::from)
-                })
-                .collect::<Result<Vec<_>, _>>()?,
-        })
+    pub async fn new(entries: &[SearchConfig]) -> Result<Self, ContextError> {
+        tracing::debug!("Search config entries: {:?}", entries);
+        let mut indexes = Vec::with_capacity(entries.len());
+
+        for config in entries {
+            let key = config.key.resolve()?;
+            let index = RfdSearchIndex::new(&config.host, key, &config.index)?;
+            index.ensure_index_exists().await?;
+            indexes.push(index);
+        }
+
+        Ok(Self { indexes })
     }
 }
 

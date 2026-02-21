@@ -146,3 +146,76 @@ S3 uses the AWS SDK default credential chain for authentication:
 
 The optional `endpoint` field allows using S3-compatible services such as MinIO, Backblaze B2, or
 Cloudflare R2.
+
+##### Search (Meilisearch)
+
+The processor can index RFD content to Meilisearch for full-text search. To enable this feature,
+add `UpdateSearch` to the `actions` list and configure at least one search backend.
+
+```toml
+[[search_storage]]
+host = "http://meilisearch:7700"
+key = "your-api-key"
+index = "rfd"
+```
+
+The `key` field supports reading from a file using the secret path syntax:
+
+```toml
+[[search_storage]]
+host = "http://meilisearch:7700"
+key = { path = "/run/secrets/meilisearch-key" }
+index = "rfd"
+```
+
+**Index Creation**
+
+The processor will automatically create the search index on startup if it does not exist. This
+requires the API key to have the `indexes.create` permission.
+
+**Scoped API Keys**
+
+When using scoped API keys (recommended for production), the key must have the following
+Meilisearch actions:
+
+| Action | Required | Purpose |
+|--------|----------|---------|
+| `indexes.create` | Yes | Create the index if it doesn't exist |
+| `indexes.get` | Yes | Check index existence and fetch info |
+| `documents.add` | Yes | Index RFD content |
+| `documents.get` | Yes | Retrieve existing documents |
+| `documents.delete` | Yes | Remove outdated documents when re-indexing |
+| `settings.get` | Yes | Read index settings |
+| `settings.update` | Yes | Configure filterable attributes |
+| `search` | Yes | Query for existing documents by RFD number |
+
+The key should be scoped to the specific index (e.g., `rfd`) rather than using a wildcard.
+
+Example key creation using the Meilisearch master key:
+
+```bash
+curl -X POST "http://meilisearch:7700/keys" \
+  -H "Authorization: Bearer $MEILI_MASTER_KEY" \
+  -H "Content-Type: application/json" \
+  --data '{
+    "name": "rfd-processor",
+    "description": "Scoped key for rfd-processor",
+    "actions": [
+      "indexes.create",
+      "indexes.get",
+      "documents.add",
+      "documents.get",
+      "documents.delete",
+      "settings.get",
+      "settings.update",
+      "search"
+    ],
+    "indexes": ["rfd"],
+    "expiresAt": null
+  }'
+```
+
+> [!NOTE]
+>
+> If using `rfd-kube-init` to manage Meilisearch API keys in Kubernetes, it will automatically
+> create scoped keys with the required permissions. See the `rfd-kube-init` README for details.

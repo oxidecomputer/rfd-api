@@ -28,7 +28,7 @@ pub enum SearchError {
 #[derive(Debug)]
 pub struct RfdSearchIndex {
     client: Client,
-    index: String,
+    pub index: String,
 }
 
 impl RfdSearchIndex {
@@ -41,6 +41,38 @@ impl RfdSearchIndex {
             client: Client::new(host, Some(api_key))?,
             index: index.into(),
         })
+    }
+
+    /// Ensure the search index exists, creating it if necessary.
+    /// This should be called at startup before attempting to index documents.
+    #[instrument(skip(self), fields(index = ?self.index), err(Debug))]
+    pub async fn ensure_index_exists(&self) -> Result<(), SearchError> {
+        tracing::info!(index = ?self.index, "Ensuring search index exists");
+
+        match self
+            .client
+            .create_index(&self.index, Some("objectID"))
+            .await
+        {
+            Ok(task) => {
+                tracing::info!(index = ?self.index, task_uid = task.task_uid, "Search index creation task enqueued");
+            }
+            Err(MeiliError::Meilisearch(err))
+                if err.error_code == ErrorCode::IndexAlreadyExists =>
+            {
+                tracing::info!(index = ?self.index, "Search index already exists");
+            }
+            Err(err) => {
+                return Err(err.into());
+            }
+        }
+
+        // Configure the required filterable attributes
+        let index = self.client.index(&self.index);
+        let settings = Settings::new().with_filterable_attributes(["rfd_number"]);
+        index.set_settings(&settings).await?;
+
+        Ok(())
     }
 
     /// Trigger updating the search index for the RFD.

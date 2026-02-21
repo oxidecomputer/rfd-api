@@ -5,7 +5,7 @@
 use anyhow::{anyhow, Context, Result};
 use clap::Args;
 use meilisearch_sdk::client::Client;
-use meilisearch_sdk::key::Key;
+use meilisearch_sdk::key::{Action, Key, KeyBuilder};
 use reqwest_middleware::ClientBuilder;
 use reqwest_retry::{policies::ExponentialBackoff, RetryTransientMiddleware};
 use secrecy::ExposeSecret;
@@ -19,49 +19,50 @@ use crate::meilisearch_client::RetryingMeilisearchClient;
 const DEFAULT_SEARCH_API_KEY_NAME: &str = "Default Search API Key";
 const DEFAULT_ADMIN_API_KEY_NAME: &str = "Default Admin API Key";
 
-enum TokenType {
-    ReadOnly(Option<Key>),
-    ReadWrite(Option<Key>),
+enum TokenType<'a> {
+    /// Read-only tenant token derived from the search key
+    ReadOnly { search_key: Option<Key> },
+    /// Scoped write API key with access to specific indexes
+    ReadWrite { indexes: &'a [String] },
 }
 
-impl TokenType {
-    fn key_name(&self) -> &'static str {
-        match self {
-            TokenType::ReadOnly(_) => DEFAULT_SEARCH_API_KEY_NAME,
-            TokenType::ReadWrite(_) => DEFAULT_ADMIN_API_KEY_NAME,
-        }
-    }
-
-    fn key(self) -> Option<Key> {
-        match self {
-            TokenType::ReadOnly(key) => key,
-            TokenType::ReadWrite(key) => key,
-        }
-    }
-}
-
-impl fmt::Display for TokenType {
+impl fmt::Display for TokenType<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            TokenType::ReadOnly(_) => write!(f, "RO"),
-            TokenType::ReadWrite(_) => write!(f, "RW"),
+            TokenType::ReadOnly { .. } => write!(f, "RO"),
+            TokenType::ReadWrite { .. } => write!(f, "RW"),
         }
     }
 }
 
 #[derive(Args)]
 pub struct MeilisearchArgs {
-    /// Namespace where the Meilisearch master key secret is located
-    #[arg(long, env = "MEILI_MASTER_NAMESPACE")]
-    master_namespace: String,
+    /// Namespace where the Meilisearch master key secret is located.
+    /// If set, --master-secret-name and --master-secret-key must also be provided.
+    #[arg(
+        long,
+        env = "MEILI_MASTER_NAMESPACE",
+        requires_all = ["master_secret_name", "master_secret_key"]
+    )]
+    master_namespace: Option<String>,
 
-    /// Name of the Kubernetes secret containing the master key
-    #[arg(long, env = "MEILI_MASTER_SECRET_NAME")]
-    master_secret_name: String,
+    /// Name of the Kubernetes secret containing the master key.
+    /// If set, --master-namespace and --master-secret-key must also be provided.
+    #[arg(
+        long,
+        env = "MEILI_MASTER_SECRET_NAME",
+        requires_all = ["master_namespace", "master_secret_key"]
+    )]
+    master_secret_name: Option<String>,
 
-    /// Key within the secret that contains the master key value
-    #[arg(long, env = "MEILI_MASTER_SECRET_KEY")]
-    master_secret_key: String,
+    /// Key within the secret that contains the master key value.
+    /// If set, --master-namespace and --master-secret-name must also be provided.
+    #[arg(
+        long,
+        env = "MEILI_MASTER_SECRET_KEY",
+        requires_all = ["master_namespace", "master_secret_name"]
+    )]
+    master_secret_key: Option<String>,
 
     /// Meilisearch host URL
     #[arg(long, env = "MEILI_HOST")]
@@ -79,6 +80,11 @@ pub struct MeilisearchArgs {
     #[arg(long, env = "MEILI_TOKEN_FILTER")]
     token_filter: Option<String>,
 
+    /// Indexes that the RW key can access (comma-separated). Supports wildcards (e.g., "rfd-*").
+    /// Required when --rw-namespaces is provided.
+    #[arg(long, env = "MEILI_RW_INDEXES", value_delimiter = ',')]
+    rw_indexes: Vec<String>,
+
     #[command(flatten)]
     namespaces: NamespaceArgs,
 
@@ -90,8 +96,14 @@ pub struct MeilisearchArgs {
 #[derive(Args)]
 #[group(required = true, multiple = true)]
 struct NamespaceArgs {
-    /// Target namespaces for read-write tokens (comma-separated)
-    #[arg(long, env = "MEILI_RW_TOKEN_TARGET_NAMESPACES", value_delimiter = ',')]
+    /// Target namespaces for read-write tokens (comma-separated).
+    /// Requires --rw-indexes to be specified.
+    #[arg(
+        long,
+        env = "MEILI_RW_TOKEN_TARGET_NAMESPACES",
+        value_delimiter = ',',
+        requires = "rw_indexes"
+    )]
     rw_namespaces: Vec<String>,
 
     /// Target namespaces for read-only tokens (comma-separated)
@@ -112,12 +124,25 @@ impl fmt::Display for FailedNamespace {
 
 /// Initialize meilisearch secrets across target namespaces.
 pub async fn init(kube_client: &::kube::Client, args: &MeilisearchArgs) -> Result<()> {
-    // Read master key from kubernetes secret
-    let master_key = kube::read_secret_key(
-        kube_client,
+    // Check if master key configuration is provided (clap ensures all three are set together)
+    let (master_namespace, master_secret_name, master_secret_key) = match (
         &args.master_namespace,
         &args.master_secret_name,
         &args.master_secret_key,
+    ) {
+        (Some(ns), Some(name), Some(key)) => (ns, name, key),
+        _ => {
+            tracing::info!("Meilisearch master key not configured, skipping initialization");
+            return Ok(());
+        }
+    };
+
+    // Read master key from kubernetes secret
+    let master_key = kube::read_secret_key(
+        kube_client,
+        master_namespace,
+        master_secret_name,
+        master_secret_key,
     )
     .await
     .context("Failed to read Meilisearch master key from Kubernetes secret")?;
@@ -148,11 +173,11 @@ pub async fn init(kube_client: &::kube::Client, args: &MeilisearchArgs) -> Resul
     );
 
     let client = Client::new_with_client(&args.host, Some(master_key.expose_secret()), http_client);
-    let (search_key, admin_key) = get_api_keys(&client).await?;
+    let (search_key, _admin_key) = get_api_keys(&client).await?;
 
     let mut failures = Vec::new();
 
-    // Generate and distribute RW token
+    // Generate and distribute RW key (scoped write API key)
     failures.extend(
         generate_and_distribute_token(
             &client,
@@ -161,12 +186,14 @@ pub async fn init(kube_client: &::kube::Client, args: &MeilisearchArgs) -> Resul
             &args.secret_name,
             search_rules.clone(),
             expires_at,
-            TokenType::ReadWrite(admin_key),
+            TokenType::ReadWrite {
+                indexes: &args.rw_indexes,
+            },
         )
         .await?,
     );
 
-    // Generate and distribute RO token
+    // Generate and distribute RO token (tenant token)
     failures.extend(
         generate_and_distribute_token(
             &client,
@@ -175,7 +202,7 @@ pub async fn init(kube_client: &::kube::Client, args: &MeilisearchArgs) -> Resul
             &args.secret_name,
             search_rules,
             expires_at,
-            TokenType::ReadOnly(search_key),
+            TokenType::ReadOnly { search_key },
         )
         .await?,
     );
@@ -238,7 +265,74 @@ async fn get_api_keys(
     Ok((search_key, admin_key))
 }
 
-/// Generate a tenant token and distribute it to the specified namespaces.
+/// Create a scoped API key with write permissions limited to specific indexes.
+async fn create_scoped_write_key(
+    client: &Client<RetryingMeilisearchClient>,
+    indexes: &[String],
+    expires_at: Option<OffsetDateTime>,
+) -> Result<Key> {
+    let timestamp = OffsetDateTime::now_utc().unix_timestamp();
+    let key_name = format!("rfd-kube-init-rw-{}", timestamp);
+
+    tracing::info!(
+        key_name = key_name.as_str(),
+        indexes = ?indexes,
+        "Creating scoped write API key"
+    );
+
+    let mut key_builder = KeyBuilder::new();
+    key_builder
+        .with_name(&key_name)
+        .with_description("Scoped write key created by rfd-kube-init")
+        .with_indexes(indexes)
+        .with_actions([
+            Action::DocumentsAdd,
+            Action::DocumentsGet,
+            Action::DocumentsDelete,
+            Action::IndexesGet,
+            Action::IndexesCreate,
+            Action::SettingsGet,
+            Action::SettingsUpdate,
+            Action::Search,
+        ]);
+
+    if let Some(expires) = expires_at {
+        key_builder.with_expires_at(expires);
+    }
+
+    let key = client
+        .create_key(&key_builder)
+        .await
+        .context("Failed to create scoped write API key")?;
+
+    tracing::info!(
+        key_name = key.name,
+        key_uid = %key.uid,
+        "Created scoped write API key"
+    );
+
+    Ok(key)
+}
+
+/// Generate a tenant token from the given search key.
+fn generate_tenant_token(
+    client: &Client<RetryingMeilisearchClient>,
+    search_key: &Key,
+    search_rules: serde_json::Value,
+    expires_at: Option<OffsetDateTime>,
+) -> Result<String> {
+    let token = client.generate_tenant_token(
+        search_key.uid.clone(),
+        search_rules,
+        Some(&search_key.key),
+        expires_at,
+    )?;
+
+    tracing::info!("Generated Meilisearch tenant token");
+    Ok(token)
+}
+
+/// Generate an API key or token and distribute it to the specified namespaces.
 /// Returns a list of namespaces that failed to write.
 async fn generate_and_distribute_token(
     client: &Client<RetryingMeilisearchClient>,
@@ -247,7 +341,7 @@ async fn generate_and_distribute_token(
     secret_name: &str,
     search_rules: serde_json::Value,
     expires_at: Option<OffsetDateTime>,
-    token_type: TokenType,
+    token_type: TokenType<'_>,
 ) -> Result<Vec<FailedNamespace>> {
     if namespaces.is_empty() {
         tracing::debug!(token_type = %token_type, "No namespaces configured, skipping");
@@ -261,32 +355,33 @@ async fn generate_and_distribute_token(
     );
 
     let token_type_str = token_type.to_string();
-    let key_name = token_type.key_name();
 
-    let key = match token_type.key() {
-        Some(key) => key,
-        None => {
-            tracing::error!(
-                key_name = key_name,
+    let api_key = match token_type {
+        TokenType::ReadWrite { indexes } => {
+            let key = create_scoped_write_key(client, indexes, expires_at).await?;
+            key.key
+        }
+        TokenType::ReadOnly { search_key } => {
+            let key = search_key.ok_or_else(|| {
+                tracing::error!(
+                    key_name = DEFAULT_SEARCH_API_KEY_NAME,
+                    "API key not found in Meilisearch but namespaces are configured"
+                );
+                anyhow!(
+                    "Could not find '{}' in Meilisearch keys",
+                    DEFAULT_SEARCH_API_KEY_NAME
+                )
+            })?;
+
+            tracing::info!(
+                key_name = key.name,
                 token_type = token_type_str.as_str(),
-                "API key not found in Meilisearch but namespaces are configured"
+                "Found API key for token",
             );
-            return Err(anyhow!("Could not find '{}' in Meilisearch keys", key_name));
+
+            generate_tenant_token(client, &key, search_rules, expires_at)?
         }
     };
-
-    tracing::info!(
-        key_name = key.name,
-        token_type = token_type_str.as_str(),
-        "Found API key for token",
-    );
-
-    let token = client.generate_tenant_token(key.uid, search_rules, Some(&key.key), expires_at)?;
-
-    tracing::info!(
-        token_type = token_type_str.as_str(),
-        "Generated Meilisearch tenant token"
-    );
 
     let mut failures = Vec::new();
 
@@ -295,7 +390,7 @@ async fn generate_and_distribute_token(
             kube_client,
             ns,
             secret_name,
-            &[("MEILISEARCH_API_KEY", &token)],
+            &[("MEILISEARCH_API_KEY", &api_key)],
         )
         .await
         {

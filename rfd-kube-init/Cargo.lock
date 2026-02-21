@@ -2123,6 +2123,7 @@ dependencies = [
  "async-trait",
  "clap",
  "futures-io",
+ "futures-util",
  "k8s-openapi",
  "kube",
  "meilisearch-sdk",

@@ -28,7 +28,7 @@ impl RfdUpdateAction for UpdateSearch {
         let RfdUpdateActionContext { ctx, .. } = ctx;
 
         for (i, index) in ctx.search.indexes.iter().enumerate() {
-            tracing::info!("Updating search index");
+            tracing::info!("Updating search index {}", index.index);
 
             if mode == RfdUpdateMode::Write {
                 let public = match new.rfd.visibility {

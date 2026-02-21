@@ -19,29 +19,33 @@ This tool is designed to run as a Kubernetes Job or init container. It provides 
 | `MEILI_HOST` | Yes | Meilisearch host URL (e.g., `http://meilisearch:7700`) |
 | `MEILI_RW_TOKEN_TARGET_NAMESPACES` | Yes** | Comma-delimited list of namespaces for read-write tokens (e.g., `rfd-api`) |
 | `MEILI_RO_TOKEN_TARGET_NAMESPACES` | Yes** | Comma-delimited list of namespaces for read-only tokens (e.g., `rfd-web`) |
+| `MEILI_RW_INDEXES` | Yes*** | Comma-delimited list of indexes the RW key can access. Supports wildcards (e.g., `rfd-*`). |
 | `MEILI_SECRET_NAME` | No | Name of the secret to create (default: `meilisearch-token`) |
-| `MEILI_API_EXPIRATION_SECONDS` | No | Token expiration in seconds from now (default: no expiration) |
-| `MEILI_TOKEN_FILTER` | No | JSON search rules for the tenant token (default: `["*"]` - full access to all indexes) |
+| `MEILI_API_EXPIRATION_SECONDS` | No | Token/key expiration in seconds from now (default: no expiration) |
+| `MEILI_TOKEN_FILTER` | No | JSON search rules for the RO tenant token (default: `["*"]` - full access to all indexes) |
+| `MEILI_MAX_RETRIES` | No | Maximum number of retry attempts for Meilisearch connection (default: 30) |
 
-*If any of `MEILI_MASTER_NAMESPACE`, `MEILI_MASTER_SECRET_NAME`, or `MEILI_MASTER_SECRET_KEY` are unset or empty, Meilisearch initialization is skipped entirely.
+*These three variables must be provided together. If any one is set, all three are required. If none are set, Meilisearch initialization is skipped entirely.
 
 **At least one of `MEILI_RW_TOKEN_TARGET_NAMESPACES` or `MEILI_RO_TOKEN_TARGET_NAMESPACES` must be set.
 
+***Required when `MEILI_RW_TOKEN_TARGET_NAMESPACES` is set.
+
 ## Token Types
 
-The tool generates two types of tenant tokens:
+The tool generates two types of API credentials:
 
-- **RW (Read-Write)**: Generated from the "Default Admin API Key". Grants full access including document indexing, settings updates, and searches. Use for backend services that need to write to Meilisearch.
+- **RW (Read-Write)**: A scoped API key with write permissions limited to specific indexes (configured via `MEILI_RW_INDEXES`). Grants document add/get/delete, index create/get, settings get/update, and search permissions on the specified indexes only. Use for backend services that need to write to Meilisearch.
 
-- **RO (Read-Only)**: Generated from the "Default Search API Key". Grants search access only. Use for frontend applications or services that only need to query.
+- **RO (Read-Only)**: A tenant token generated from the "Default Search API Key". Grants search access only. Use for frontend applications or services that only need to query.
 
 ## How It Works
 
 1. Reads the Meilisearch master key from the specified Kubernetes secret
-2. Connects to Meilisearch and fetches the list of API keys
-3. For RW namespaces: finds the "Default Admin API Key" and generates a tenant token
+2. Connects to Meilisearch using the master key
+3. For RW namespaces: creates a scoped API key with write permissions limited to the indexes specified in `MEILI_RW_INDEXES`
 4. For RO namespaces: finds the "Default Search API Key" and generates a tenant token
-5. Writes the appropriate token to secrets in each target namespace
+5. Writes the appropriate key/token to secrets in each target namespace
 
 ## Secret Format
 
@@ -125,6 +129,8 @@ spec:
             # Token distribution
             - name: MEILI_RW_TOKEN_TARGET_NAMESPACES
               value: "rfd-api,rfd-processor"
+            - name: MEILI_RW_INDEXES
+              value: "rfd-*"  # Wildcards supported
             - name: MEILI_RO_TOKEN_TARGET_NAMESPACES
               value: "rfd-web"
             - name: MEILI_API_EXPIRATION_SECONDS
@@ -161,6 +167,8 @@ spec:
                   value: "http://meilisearch.meilisearch:7700"
                 - name: MEILI_RW_TOKEN_TARGET_NAMESPACES
                   value: "rfd-api,rfd-processor"
+                - name: MEILI_RW_INDEXES
+                  value: "rfd-*"
                 - name: MEILI_RO_TOKEN_TARGET_NAMESPACES
                   value: "rfd-web"
                 - name: MEILI_API_EXPIRATION_SECONDS
@@ -206,6 +214,7 @@ The `oauth-init` subcommand initializes an OAuth client by calling the RFD API `
 | `OAUTH_REDIRECT_URIS` | Yes | Comma-delimited list of redirect URIs for the OAuth client |
 | `OAUTH_TARGET_NAMESPACES` | Yes | Comma-delimited list of namespaces to write credentials to |
 | `OAUTH_SECRET_NAME` | No | Name of the secret to create (default: `rfd-oauth-client`) |
+| `OAUTH_MAX_RETRIES` | No | Maximum number of retry attempts for the /init endpoint (default: 30) |
 
 ### OAuth Init Response
 
