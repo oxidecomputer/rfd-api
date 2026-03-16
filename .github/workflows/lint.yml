@@ -1,10 +1,14 @@
 name: lint
 
-permissions:
-  contents: read
-
 on:
   push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.ref_name == 'main' && github.sha || 'anysha' }}
+  cancel-in-progress: true
 
 jobs:
   format:
