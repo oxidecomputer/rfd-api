@@ -17,17 +17,17 @@ jobs:
       matrix:
         include:
           - os: ubuntu-24.04
-            target: x86_64-unknown-linux-gnu
             binary: rfd-cli
+            artifact: rfd-cli-x86_64-unknown-linux-gnu
           - os: macos-15
-            target: aarch64-apple-darwin
             binary: rfd-cli
+            artifact: rfd-cli-aarch64-apple-darwin
           - os: macos-15-intel
-            target: x86_64-apple-darwin
             binary: rfd-cli
+            artifact: rfd-cli-x86_64-apple-darwin
           - os: windows-2025
-            target: x86_64-pc-windows-msvc
             binary: rfd-cli.exe
+            artifact: rfd-cli-x86_64-pc-windows-msvc.exe
     runs-on: ${{ matrix.os }}
     permissions:
       contents: write
@@ -55,11 +55,11 @@ jobs:
       - name: Rename Binary
         shell: bash
         run: |
-          mv "target/release/${{ matrix.binary }}" "target/release/rfd-cli-${{ matrix.target }}"
+          mv "target/release/${{ matrix.binary }}" "target/release/${{ matrix.artifact }}"
 
       - uses: ncipollo/release-action@caacf56b56ba217c4eaf0a9deb59dbcdd12abfcd
         with:
           allowUpdates: true
           draft: ${{ github.event_name == 'pull_request' }}
           tag: ${{ steps.tag.outputs.value }}
-          artifacts: "target/release/rfd-cli-${{ matrix.target }}"
+          artifacts: "target/release/${{ matrix.artifact }}"
