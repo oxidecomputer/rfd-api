@@ -3,73 +3,63 @@ name: Release CLI
 on:
   push:
     tags:
-      - '**[0-9]+.[0-9]+.[0-9]+*'
+      - "**[0-9]+.[0-9]+.[0-9]+*"
+  pull_request:
+    types: [labeled, synchronize]
 
 jobs:
-  release-linux:
-    runs-on: ubuntu-24.04
+  release:
+    if: >-
+      github.event_name == 'push' ||
+      github.event.label.name == 'release-test' ||
+      contains(github.event.pull_request.labels.*.name, 'release-test')
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            binary: rfd-cli
+            artifact: rfd-cli-x86_64-unknown-linux-gnu
+          - os: macos-15
+            binary: rfd-cli
+            artifact: rfd-cli-aarch64-apple-darwin
+          - os: macos-15-intel
+            binary: rfd-cli
+            artifact: rfd-cli-x86_64-apple-darwin
+          - os: windows-2025
+            binary: rfd-cli.exe
+            artifact: rfd-cli-x86_64-pc-windows-msvc.exe
+    runs-on: ${{ matrix.os }}
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af # v1
-        with:
-          toolchain: stable
-          targets: x86_64-unknown-linux-gnu
+      - name: Determine release tag
+        id: tag
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "value=v0.0.0-pre+${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
+      - run: |
+          rustup toolchain install
+
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # 2.9.1
 
       - name: Build Release Binary
         run: |
           cargo build --release --package rfd-cli
-          mv target/release/rfd-cli target/release/rfd-cli-x86_64-unknown-linux-gnu
-        
-      - uses: ncipollo/release-action@bcfe5470707e8832e12347755757cec0eb3c22af # v1
-        with:
-          allowUpdates: true
-          artifacts: "target/release/rfd-cli-x86_64-unknown-linux-gnu"
-  release-macos:
-    runs-on: macos-15
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
-      - name: Install Rust
-        uses: actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af # v1
-        with:
-          toolchain: stable
-          targets: aarch64-apple-darwin
-
-      - name: Build Release Binary
+      - name: Rename Binary
+        shell: bash
         run: |
-          cargo build --release --package rfd-cli
-          mv target/release/rfd-cli target/release/rfd-cli-aarch64-apple-darwin
+          mv "target/release/${{ matrix.binary }}" "target/release/${{ matrix.artifact }}"
 
-      - uses: ncipollo/release-action@bcfe5470707e8832e12347755757cec0eb3c22af # v1
+      - uses: ncipollo/release-action@caacf56b56ba217c4eaf0a9deb59dbcdd12abfcd
         with:
           allowUpdates: true
-          artifacts: "target/release/rfd-cli-aarch64-apple-darwin"
-          
-  release-windows:
-    runs-on: windows-2025
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-
-      - name: Install Rust
-        uses: actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af # v1
-        with:
-          toolchain: stable
-          targets: x86_64-pc-windows-msvc
-
-      - name: Build Release Binary
-        run: |
-          cargo build --release --package rfd-cli
-          move target\release\rfd-cli.exe target\release\rfd-cli-x86_64-pc-windows-msvc.exe
-
-      - uses: ncipollo/release-action@bcfe5470707e8832e12347755757cec0eb3c22af # v1
-        with:
-          allowUpdates: true
-          artifacts: "target\\/release\\/rfd-cli-x86_64-pc-windows-msvc.exe"
+          draft: ${{ github.event_name == 'pull_request' }}
+          tag: ${{ steps.tag.outputs.value }}
+          artifacts: "target/release/${{ matrix.artifact }}"
