@@ -53,8 +53,8 @@ owo-colors = "4.2.3"
 partial-struct = { git = "https://github.com/oxidecomputer/partial-struct" }
 progenitor = { version = "0.11.2" }
 progenitor-client = { version = "0.11.2" }
-rand = "0.8.5"
-rand_core = "0.6"
+rand = "0.10.0"
+rand_core = "0.10"
 regex = "1.12.2"
 reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
 reqwest-middleware = "0.4"
