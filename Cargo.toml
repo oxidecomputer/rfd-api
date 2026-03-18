@@ -56,7 +56,7 @@ progenitor-client = { version = "0.11.2" }
 rand = "0.8.5"
 rand_core = "0.6"
 regex = "1.12.2"
-reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
+reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "rustls-tls"] }
 reqwest-middleware = "0.4"
 reqwest-retry = "0.7"
 reqwest-tracing = "0.5"
