@@ -9,6 +9,3 @@ insert_final_newline = true
 [LICENSE]
 trim_trailing_whitespace = false
 insert_final_newline = false
-
-[**/migrations/**/*.sql]
-insert_final_newline = false
