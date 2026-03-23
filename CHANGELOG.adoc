@@ -16,7 +16,7 @@
 * `POST /api-user` (create_api_user)
 * `POST /api-user/{user_id}` (update_api_user)
 * `POST /api-user/{user_id}/group` (add_api_user_to_group)
-* `DELETE /api-user/{user_id}/group/{group_id}` (remove_api_user_from_group) 
+* `DELETE /api-user/{user_id}/group/{group_id}` (remove_api_user_from_group)
 
 *Change Details:*
 

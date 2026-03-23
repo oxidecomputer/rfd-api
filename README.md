@@ -90,7 +90,7 @@ Objects reference:
 └─────────┘
 ```
 Note: Scanner and Webhook operations that occur on the default branch do not use the branch name for
-determining the RFD number to update. Instead they use the numeric portion of the 
+determining the RFD number to update. Instead they use the numeric portion of the
 `rfd/{number}/README.adoc` path.
 
 ### Revisions
