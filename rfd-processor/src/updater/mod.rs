@@ -128,7 +128,7 @@ impl<'a> RfdUpdater<'a> {
                 if update.location.exists_in_remote(&ctx.github.client).await {
                     tracing::trace!("Located remote branch");
 
-                    if let Err(err) = self.run_update(&ctx, update).await {
+                    if let Err(err) = self.run_update(ctx, update).await {
                         tracing::warn!(?update, ?err, "Failed to run update for RFD to completion",);
                     }
                 } else {
@@ -168,7 +168,7 @@ impl<'a> RfdUpdater<'a> {
         // provided to further actions for inspecting changes between the two revisions.
         let existing = PersistedRfd::load(remote.number, &ctx.db.storage)
             .await
-            .map_err(|err| RfdUpdaterError::ExistingLookup(err))?;
+            .map_err(RfdUpdaterError::ExistingLookup)?;
 
         let major_change = if let Some(existing) = &existing {
             tracing::info!(id = ?existing.rfd.id, number = ?update.number, "Found previous revision for RFD");

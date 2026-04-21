@@ -23,6 +23,18 @@ export type RfdOAuthStrategyOptions = {
    * @default "user:info:r"
    */
   scopes?: RfdScope[]
+  /**
+   * Custom host for the authorization endpoint. Overrides `host` when
+   * constructing the authorization URL.
+   * @default host
+   */
+  authorizationHost?: string
+  /**
+   * Custom host for the token endpoint. Overrides `host` when
+   * constructing the token URL.
+   * @default host
+   */
+  tokenHost?: string
 }
 
 export type ExpiringUser = {
@@ -46,6 +58,8 @@ export class RfdOAuthStrategy<User extends ExpiringUser> extends OAuth2Strategy<
       redirectURI,
       remoteProvider,
       scopes,
+      authorizationHost,
+      tokenHost,
     }: RfdOAuthStrategyOptions,
     verify: RfdVerifyCallback<User>,
   ) {
@@ -54,8 +68,8 @@ export class RfdOAuthStrategy<User extends ExpiringUser> extends OAuth2Strategy<
         clientId,
         clientSecret,
         redirectURI,
-        authorizationEndpoint: `${host}/login/oauth/${remoteProvider}/code/authorize`,
-        tokenEndpoint: `${host}/login/oauth/${remoteProvider}/code/token`,
+        authorizationEndpoint: `${authorizationHost ?? host}/login/oauth/${remoteProvider}/code/authorize`,
+        tokenEndpoint: `${tokenHost ?? host}/login/oauth/${remoteProvider}/code/token`,
         scopes: scopes ?? ['user:info:r'],
       },
       verify,

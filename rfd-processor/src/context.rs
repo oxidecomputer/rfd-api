@@ -145,6 +145,7 @@ impl Context {
                 batch_size: config.processor_batch_size,
                 interval: Duration::from_secs(config.processor_interval),
                 update_mode: config.processor_update_mode,
+                capacity: config.processor_capacity,
             },
             scanner: ScannerCtx {
                 enabled: config.scanner_enabled,
@@ -172,6 +173,7 @@ pub struct ProcessorCtx {
     pub batch_size: i64,
     pub interval: Duration,
     pub update_mode: RfdUpdateMode,
+    pub capacity: u64,
 }
 
 pub struct ScannerCtx {
@@ -284,7 +286,7 @@ impl PdfStorage for PdfStorageCtx {
     ) -> Vec<Result<PdfFileLocation, RfdPdfError>> {
         tracing::info!("Attempt to store PFD");
 
-        if let Some(location) = self.locations.get(0) {
+        if let Some(location) = self.locations.first() {
             let mut req = File {
                 name: Some(filename.to_string()),
                 ..Default::default()

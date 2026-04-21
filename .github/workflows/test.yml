@@ -2,7 +2,13 @@ name: Test
 
 on:
   push:
+    branches:
+      - main
   pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.ref_name == 'main' && github.sha || 'anysha' }}
+  cancel-in-progress: true
 
 jobs:
   test:
@@ -22,10 +28,7 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - uses: actions-rs/toolchain@16499b5e05bf2e26879000db0c1d13f7e13fa3af # v1
-        with:
-          toolchain: stable
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Install asciidoctor
         shell: bash
         run: |
@@ -44,9 +47,11 @@ jobs:
           asciidoctor --version
           asciidoctor-pdf --version
           mmdc --version
-      - uses: actions-rs/cargo@844f36862e911db73fe0815f00a4a2602c279505 # v1
-        with:
-          command: test
+      - run: |
+          rustup toolchain install
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+      - run: |
+          cargo test
         env:
           TEST_DATABASE: postgres://test:test@localhost
           RUST_LOG: v=trace,rfd=trace

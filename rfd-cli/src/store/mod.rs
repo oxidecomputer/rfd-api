@@ -48,7 +48,7 @@ impl CliConfig {
     }
 
     pub fn host(&self) -> Result<&str> {
-        self.host.as_ref().map(|s| &**s).ok_or_else(|| {
+        self.host.as_deref().ok_or_else(|| {
             anyhow!("Host must either be configured via a configuration file or the environment")
         })
     }
@@ -58,7 +58,7 @@ impl CliConfig {
     }
 
     pub fn token(&self) -> Result<&str> {
-        self.token.as_ref().map(|s| &**s).ok_or_else(|| {
+        self.token.as_deref().ok_or_else(|| {
             anyhow!("Token must either be configured via a configuration file or the environment")
         })
     }
@@ -80,7 +80,7 @@ impl CliConfig {
 
     pub fn save(&self) -> Result<()> {
         let (_, mut file) = Self::file(true)?;
-        let _ = file.write_all(toml::to_string(&self)?.as_bytes())?;
+        file.write_all(toml::to_string(&self)?.as_bytes())?;
 
         println!("Configuration updated");
         Ok(())

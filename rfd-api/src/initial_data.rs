@@ -14,7 +14,9 @@ use crate::permissions::RfdPermission;
 
 #[derive(Debug, Deserialize)]
 pub struct InitialData {
+    #[serde(default)]
     pub groups: Vec<InitialGroup>,
+    #[serde(default)]
     pub mappers: Vec<InitialMapper>,
 }
 
@@ -74,7 +76,7 @@ impl InitialData {
                     .iter()
                     .find(|g| g.name == group.name)
                     .map(|g| g.id)
-                    .unwrap_or_else(|| TypedUuid::new_v4());
+                    .unwrap_or_else(TypedUuid::new_v4);
 
                 ctx.group
                     .create_group(

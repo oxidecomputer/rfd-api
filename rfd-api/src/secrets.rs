@@ -10,6 +10,7 @@ use secrecy::{ExposeSecret, SecretString};
 use serde::{Deserialize, Serialize, Serializer};
 use std::borrow::Cow;
 
+#[allow(dead_code)]
 #[derive(Debug, Deserialize)]
 pub struct OpenApiSecretString(pub SecretString);
 

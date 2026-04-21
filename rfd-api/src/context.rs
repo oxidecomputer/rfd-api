@@ -19,7 +19,7 @@ use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
     storage::{
         JobFilter, JobStore, RfdFilter, RfdMetaStore, RfdPdfsStore, RfdRevisionFilter,
-        RfdRevisionMetaStore, RfdRevisionStore, RfdStorage, RfdStore,
+        RfdRevisionStore, RfdStorage, RfdStore,
     },
     CommitSha, FileSha, Job, NewJob, NewRfdRevision, Rfd, RfdId, RfdMeta, RfdPdf, RfdPdfs,
     RfdRevision, RfdRevisionId,
@@ -172,11 +172,8 @@ impl From<Rfd> for RfdWithRaw {
                 .map(|content| content.content_format.clone()),
             sha: value.content.as_ref().map(|content| content.sha.clone()),
             commit: value.content.as_ref().map(|content| content.commit.clone()),
-            committed_at: value
-                .content
-                .as_ref()
-                .map(|content| content.committed_at.clone()),
-            latest_major_change_at: value.latest_major_change_at.clone(),
+            committed_at: value.content.as_ref().map(|content| content.committed_at),
+            latest_major_change_at: value.latest_major_change_at,
             visibility: value.visibility,
         }
     }
@@ -211,11 +208,8 @@ impl From<RfdMeta> for RfdWithoutContent {
                 .map(|content| content.content_format.clone()),
             sha: value.content.as_ref().map(|content| content.sha.clone()),
             commit: value.content.as_ref().map(|content| content.commit.clone()),
-            committed_at: value
-                .content
-                .as_ref()
-                .map(|content| content.committed_at.clone()),
-            latest_major_change_at: value.latest_major_change_at.clone(),
+            committed_at: value.content.as_ref().map(|content| content.committed_at),
+            latest_major_change_at: value.latest_major_change_at,
             visibility: value.visibility,
         }
     }
@@ -255,16 +249,14 @@ impl From<RfdPdfs> for RfdWithPdf {
                 .map(|content| content.content_format.clone()),
             sha: value.content.as_ref().map(|content| content.sha.clone()),
             commit: value.content.as_ref().map(|content| content.commit.clone()),
-            committed_at: value
-                .content
-                .as_ref()
-                .map(|content| content.committed_at.clone()),
-            latest_major_change_at: value.latest_major_change_at.clone(),
+            committed_at: value.content.as_ref().map(|content| content.committed_at),
+            latest_major_change_at: value.latest_major_change_at,
             visibility: value.visibility,
         }
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema)]
 pub struct PdfEntry {
     pub source: String,
@@ -433,7 +425,7 @@ impl RfdContext {
 
             self.commit_rfd_document(
                 caller,
-                next_rfd_number.into(),
+                next_rfd_number,
                 &content.render(),
                 Some("Reserving RFD number"),
                 commit,
@@ -477,7 +469,7 @@ impl RfdContext {
 
         let mut rfd_list = rfds
             .into_iter()
-            .map(|rfd| RfdWithoutContent::from(rfd))
+            .map(RfdWithoutContent::from)
             .collect::<Vec<_>>();
 
         // Finally sort the RFD list by RFD number
@@ -769,8 +761,10 @@ impl RfdContext {
             })
             .collect::<Vec<_>>();
 
-        let mut filter = ApiUserProviderFilter::default();
-        filter.api_user_id = Some(vec![caller.id]);
+        let filter = ApiUserProviderFilter {
+            api_user_id: Some(vec![caller.id]),
+            ..Default::default()
+        };
         let mut providers = self
             .v_ctx()
             .user
@@ -793,7 +787,7 @@ impl RfdContext {
             .into_iter()
             .filter(|provider| !provider.display_names.is_empty())
             .nth(0)
-            .and_then(|p| p.display_names.get(0).map(|s| s.clone()))
+            .and_then(|p| p.display_names.first().cloned())
             .unwrap_or_else(|| caller.id.to_string());
 
         match github_locations.len() {
@@ -845,7 +839,9 @@ impl RfdContext {
 
                 Ok(commit)
             }
-            _ => Err(UpdateRfdContentError::InternalState).map_err(ResourceError::InternalError),
+            _ => Err(ResourceError::InternalError(
+                UpdateRfdContentError::InternalState,
+            )),
         }
     }
 

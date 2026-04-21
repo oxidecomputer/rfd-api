@@ -14,12 +14,12 @@ use newline_converter::dos2unix;
 use progenitor::{GenerationSettings, Generator, TagStyle};
 use regex::Regex;
 use semver::{Prerelease, Version};
+use serde_json::Value;
 use similar::{Algorithm, ChangeTag, TextDiff};
 
 #[derive(Parser)]
 #[command(name = "xtask")]
 #[command(about = "build tasks")]
-
 enum Xtask {
     #[command(about = "bump the global version number")]
     Bump {
@@ -53,14 +53,15 @@ fn main() -> Result<(), String> {
 }
 
 fn bump_package_versions(place: &VersionPlace) -> Result<(), String> {
-    let packages = vec!["rfd-api", "rfd-cli", "rfd-processor"];
+    let rust_crates = vec!["rfd-api", "rfd-processor", "rfd-sdk", "rfd-cli"];
+    let node_package = vec!["rfd-ts"];
 
-    let version_pattern = Regex::new(r#"(?m)^version = "(.*)"$"#).unwrap();
+    let crate_version_pattern = Regex::new(r#"(?m)^version = "(.*)"$"#).unwrap();
 
-    for package in packages {
-        let path = format!("{}/Cargo.toml", package);
+    for rust_crate in rust_crates {
+        let path = format!("{}/Cargo.toml", rust_crate);
         let contents = fs::read_to_string(&path).unwrap();
-        let version_line = version_pattern.captures(&contents).unwrap();
+        let version_line = crate_version_pattern.captures(&contents).unwrap();
         let mut version: Version = version_line.get(1).unwrap().as_str().parse().unwrap();
         version = version.up(place);
 
@@ -70,7 +71,32 @@ fn bump_package_versions(place: &VersionPlace) -> Result<(), String> {
 
         fs::write(path, new_contents).unwrap();
 
-        println!("Updated {} to {}", package, version);
+        println!("Updated {} to {}", rust_crate, version);
+    }
+
+    for node_package in node_package {
+        let path = format!("{}/package.json", node_package);
+        let contents = fs::read_to_string(&path).unwrap();
+        let mut parsed: Value = serde_json::from_str(&contents).unwrap();
+        let mut version: Version = parsed
+            .as_object()
+            .unwrap()
+            .get("version")
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .parse()
+            .unwrap();
+        version = version.up(place);
+
+        parsed
+            .as_object_mut()
+            .unwrap()
+            .insert("version".to_string(), Value::String(version.to_string()));
+
+        fs::write(path, serde_json::to_string_pretty(&parsed).unwrap()).unwrap();
+
+        println!("Updated {} to {}", node_package, version);
     }
 
     Ok(())
@@ -84,18 +110,18 @@ impl Bump for Version {
     fn up(mut self, place: &VersionPlace) -> Self {
         match place {
             VersionPlace::Major => {
-                self.major = self.major + 1;
+                self.major += 1;
                 self.minor = 0;
                 self.patch = 0;
                 self.pre = Prerelease::EMPTY;
             }
             VersionPlace::Minor => {
-                self.minor = self.minor + 1;
+                self.minor += 1;
                 self.patch = 0;
                 self.pre = Prerelease::EMPTY;
             }
             VersionPlace::Patch => {
-                self.patch = self.patch + 1;
+                self.patch += 1;
                 self.pre = Prerelease::EMPTY;
             }
             VersionPlace::Pre => match self.pre.as_str().split_once('.') {
@@ -201,7 +227,7 @@ fn generate(check: bool, verbose: bool) -> Result<(), String> {
     // Typescript SDK
     print!("generating typescript sdk ... ");
     Command::new("npx")
-        .arg("@oxide/openapi-gen-ts@0.5.0")
+        .arg("@oxide/openapi-gen-ts@0.12.0")
         .arg("rfd-api-spec.json")
         .arg("rfd-ts/src")
         .arg("--features")
@@ -257,7 +283,7 @@ fn format_code(code: String) -> String {
         },
         contents,
     )
-    .unwrap();
+    .expect("rustfmt_wrapper: ensure a nightly toolchain is installed.");
     let contents = dos2unix(&contents);
 
     // Add newlines after end-braces at <= two levels of indentation. Rustfmt's

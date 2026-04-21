@@ -84,7 +84,7 @@ impl PersistedRfd {
 
             Ok(most_recent_revision.map(|revision| {
                 PersistedRfd::new(
-                    number.into(),
+                    number,
                     rfd,
                     revision,
                     most_recent_pdf.map(|pdf| pdf.external_id),
@@ -117,7 +117,8 @@ impl PersistedRfd {
         Ok(())
     }
 
-    pub fn content(&self) -> Result<RenderableRfd, RenderableRfdError> {
+    #[allow(clippy::result_large_err)]
+    pub fn content(&self) -> Result<RenderableRfd<'_>, RenderableRfdError> {
         Ok(match self.revision.content_format {
             ContentFormat::Asciidoc => RenderableRfd::new_asciidoc(&self.revision.content)?,
             ContentFormat::Markdown => RenderableRfd::new_markdown(&self.revision.content),
@@ -131,6 +132,7 @@ impl PersistedRfd {
         *self.needs_update.lock().unwrap() = true;
     }
 
+    #[allow(clippy::result_large_err)]
     pub fn update_discussion(&mut self, new_discussion_url: impl ToString) -> Result<(), RfdError> {
         let new_discussion_url = new_discussion_url.to_string();
 
@@ -153,6 +155,7 @@ impl PersistedRfd {
             .unwrap_or(false)
     }
 
+    #[allow(clippy::result_large_err)]
     pub fn update_state(&mut self, new_state: impl ToString) -> Result<(), RfdError> {
         let new_state = new_state.to_string();
 
@@ -179,14 +182,13 @@ impl PersistedRfd {
                     .revision
                     .title
                     .replace('/', "-")
-                    .replace('\'', "")
-                    .replace(':', "")
+                    .replace(['\'', ':'], "")
                     .trim();
         } else {
             tracing::trace!(?filename, "Omitting RFD title from pdf filename");
         }
 
-        filename = filename + ".pdf";
+        filename += ".pdf";
 
         filename
     }
@@ -268,7 +270,7 @@ impl RemoteRfd {
             number: update.number,
             readme,
             commit: update.location.commit.clone(),
-            commit_date: commit_date,
+            commit_date,
         })
     }
 
@@ -317,7 +319,7 @@ impl RemoteRfd {
             content_format,
             authors,
             labels,
-            sha: self.readme.sha.into(),
+            sha: self.readme.sha,
             commit_sha: self.commit,
             commit_date: self.commit_date,
         })
@@ -336,7 +338,7 @@ impl RemoteRfd {
 
         let (id, visibility) = RfdStore::list(
             storage,
-            vec![RfdFilter::default().rfd_number(Some(vec![payload.number.into()]))],
+            vec![RfdFilter::default().rfd_number(Some(vec![payload.number]))],
             &ListPagination::latest(),
         )
         .await?
@@ -349,7 +351,7 @@ impl RemoteRfd {
             storage,
             NewRfd {
                 id,
-                rfd_number: payload.number.into(),
+                rfd_number: payload.number,
                 link: payload.link.into(),
                 visibility,
             },

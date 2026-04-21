@@ -18,6 +18,7 @@ pub enum RfdPdfError {
 
 #[derive(Debug)]
 pub struct PdfFileLocation {
+    #[allow(dead_code)]
     pub source: PdfSource,
     pub url: String,
     pub external_id: String,

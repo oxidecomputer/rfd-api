@@ -3,25 +3,19 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use diesel::{
-    migration::{Migration, MigrationSource},
-    pg::Pg,
     r2d2::{ConnectionManager, ManageConnection},
     PgConnection,
 };
-use diesel_migrations::{embed_migrations, EmbeddedMigrations};
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("../rfd-model/migrations");
 
 pub fn run_migrations(url: &str, v_only: bool) {
-    v_api_installer::run_migrations(&url);
+    v_api_installer::run_migrations(url);
 
     if !v_only {
-        let mut conn = db_conn(&url);
-        let migrations: Vec<Box<dyn Migration<Pg>>> = MIGRATIONS.migrations().unwrap();
-
-        for migration in migrations {
-            migration.run(&mut conn).unwrap();
-        }
+        let mut conn = db_conn(url);
+        conn.run_pending_migrations(MIGRATIONS).unwrap();
     }
 }
 

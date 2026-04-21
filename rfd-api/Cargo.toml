@@ -1,6 +1,6 @@
 [package]
 name = "rfd-api"
-version = "0.12.2"
+version = "0.14.1"
 edition = "2021"
 repository = "https://github.com/oxidecomputer/rfd-api"
 
@@ -19,7 +19,7 @@ cookie = { workspace = true }
 crc32c = { workspace = true }
 diesel = { workspace = true }
 dropshot = { workspace = true }
-dropshot-authorization-header = { path = "../dropshot-authorization-header" }
+dropshot-authorization-header = { workspace = true }
 dropshot-verified-body = { workspace = true, features = ["github"] }
 hex = { workspace = true }
 http = { workspace = true }

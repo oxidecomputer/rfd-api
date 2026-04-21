@@ -63,8 +63,9 @@ impl GitHubMapper {
         let result = request.send().await;
         match result {
             Ok(r) => ctx.printer()?.output_mapper(r.into_inner()),
-            // Err(r) => ctx.printer()?.output_create_mapper(Err(r)),
-            _ => (),
+            Err(r) => {
+                // ctx.printer()?.output_create_mapper(Err(r))
+            }
         }
 
         Ok(())
@@ -88,8 +89,9 @@ impl EmailMapper {
         let result = request.send().await;
         match result {
             Ok(r) => ctx.printer()?.output_mapper(r.into_inner()),
-            // Err(r) => ctx.printer()?.output_create_mapper(Err(r)),
-            _ => (),
+            Err(r) => {
+                // ctx.printer()?.output_create_mapper(Err(r))
+            }
         }
 
         Ok(())

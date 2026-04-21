@@ -41,7 +41,7 @@ impl RfdTemplate {
             .cloned()
             .collect::<Vec<_>>();
 
-        if missing_fields.len() == 0 {
+        if missing_fields.is_empty() {
             Ok(RenderableRfdTemplate(self))
         } else {
             Err(TemplateError::MissingRequiredFields {

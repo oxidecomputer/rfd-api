@@ -1,4 +1,4 @@
-/target
+**/target
 
 node_modules
 dist
@@ -11,5 +11,12 @@ spec.toml
 key.json
 test-key.json
 gcp.json
+rfd-api.log.*
 
 node_modules
+.cargo
+.flox
+.rustup
+/config/
+local_data
+.env

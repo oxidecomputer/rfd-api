@@ -84,6 +84,7 @@ pub struct MagicLinkConfig {
 
 #[derive(Debug, Deserialize)]
 pub struct MagicLinkTemplate {
+    #[allow(dead_code)]
     pub medium: MagicLinkMedium,
     pub channel: String,
     pub from: String,

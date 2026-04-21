@@ -48,9 +48,11 @@ v_system_endpoints!(RfdContext, RfdPermission);
 pub fn server(
     config: ServerConfig,
 ) -> Result<ServerBuilder<RfdContext>, Box<dyn Error + Send + Sync>> {
-    let mut config_dropshot = ConfigDropshot::default();
-    config_dropshot.bind_address = config.server_address;
-    config_dropshot.default_request_body_max_bytes = 1024 * 1024;
+    let config_dropshot = ConfigDropshot {
+        bind_address: config.server_address,
+        default_request_body_max_bytes: 1024 * 1024,
+        ..Default::default()
+    };
 
     // Construct a shim to pipe dropshot logs into the global tracing logger
     let dropshot_logger = {
