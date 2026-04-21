@@ -55,3 +55,40 @@ jobs:
         env:
           TEST_DATABASE: postgres://test:test@localhost
           RUST_LOG: v=trace,rfd=trace
+
+  generate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - run: |
+          rustup toolchain install
+          rustup toolchain install nightly --component rustfmt
+      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+      - name: Install Dprint
+        run: |
+          mkdir -p "$HOME/.dprint/bin"
+          curl -fsSL \
+            "https://github.com/dprint/dprint/releases/download/${DPRINT_VERSION}/${DPRINT_ASSET}" \
+            > "$HOME/.dprint/bin/${DPRINT_ASSET}"
+          cd "$HOME/.dprint/bin"
+          echo "${DPRINT_HASH}  ${DPRINT_ASSET}" | sha256sum --check
+          unzip "${DPRINT_ASSET}"
+          rm "${DPRINT_ASSET}"
+          echo "/home/runner/.dprint/bin" >> $GITHUB_PATH
+        env:
+          DPRINT_VERSION: 0.53.0
+          DPRINT_HASH: 987185f5f0db6205e5bca88aaab04a7b29bc18bf7a8c1a84f56eef08c9730df0
+          DPRINT_ASSET: dprint-x86_64-unknown-linux-gnu.zip
+
+      - name: Verify SDK Generation
+        run: |
+          cargo xtask generate
+          GENERATED="rfd-sdk/src/generated/ rfd-cli/src/generated/ rfd-ts/"
+          if ! git diff --quiet -- $GENERATED; then
+            git diff -- $GENERATED
+            echo "Found changed files after generating SDKs:"
+            git status -s -- $GENERATED
+            echo "To fix, regenerate with, commit the changes from running:"
+            echo "  cargo xtask generate"
+            exit 1
+          fi
