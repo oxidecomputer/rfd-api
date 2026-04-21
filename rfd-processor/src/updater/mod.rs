@@ -381,5 +381,6 @@ pub enum RfdUpdateActionErr {
 }
 
 fn is_major_change(old: &RfdContent, new: &RfdContent) -> bool {
-    old.body() != new.body() || old.get_state() != new.get_state()
+    // Major if body or state changes; unless format changed (e.g. .md -> .adoc)
+    old.format() == new.format() && (old.body() != new.body() || old.get_state() != new.get_state())
 }
