@@ -236,6 +236,19 @@ fn generate(check: bool, verbose: bool) -> Result<(), String> {
         .map_err(|err| err.to_string())?;
     println!("done.");
 
+    // The generator's parseIfDate heuristic doesn't include `_at` suffixes,
+    // but our API uses fields like created_at, updated_at, expires_at.
+    let util_path = xtask_path.parent().unwrap().join("rfd-ts/src/util.ts");
+    let util_contents = fs::read_to_string(&util_path).map_err(|e| e.to_string())?;
+    let patched = util_contents.replace(
+        r#"k?.endsWith("_expiration")"#,
+        "k?.endsWith(\"_expiration\") ||\n      k?.endsWith(\"_at\")",
+    );
+    if patched == util_contents {
+        return Err("Failed to patch util.ts: could not find _expiration pattern".to_string());
+    }
+    fs::write(&util_path, patched).map_err(|e| e.to_string())?;
+
     print!("formatting typescript sdk ... ");
     Command::new("dprint")
         .arg("fmt")
