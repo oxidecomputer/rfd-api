@@ -333,7 +333,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
             }
 
             let cli = Cli::new(ctx.client()?.clone(), ctx);
-            cli.execute(node.cmd.unwrap(), sm).await;
+            if cli.execute(node.cmd.unwrap(), sm).await.is_err() {
+                std::process::exit(1);
+            }
         }
     };
 
