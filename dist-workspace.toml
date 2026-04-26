@@ -1,0 +1,21 @@
+[workspace]
+members = ["cargo:."]
+
+# Config for 'dist'
+[dist]
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "1.0.14"
+# CI backends to support
+ci = "github"
+# The installers to generate for each app
+installers = []
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu"]
+# Which actions to run on pull requests
+pr-run-mode = "plan"
+# Whether to sign macOS executables
+macos-sign = true
+
+[dist.github-custom-runners]
+x86_64-apple-darwin = "macos-14"
+aarch64-apple-darwin = "macos-14"
