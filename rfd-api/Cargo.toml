@@ -31,8 +31,8 @@ newtype-uuid = { workspace = true }
 oauth2 = { workspace = true }
 octorust = { workspace = true, features = ["httpcache"] }
 partial-struct = { workspace = true }
-rand = { workspace = true, features = ["std"] }
-rand_core = { workspace = true, features = ["std"] }
+rand = { workspace = true}
+rand_core = { workspace = true }
 regex = { workspace = true }
 reqwest = { workspace = true }
 reqwest-middleware = { workspace = true }

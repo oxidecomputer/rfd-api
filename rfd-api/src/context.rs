@@ -941,9 +941,9 @@ impl RfdContext {
 
 #[cfg(test)]
 pub(crate) mod test_mocks {
-    use rand::RngCore;
     use rfd_data::content::RfdTemplate;
     use rfd_model::storage::mock::MockStorage;
+    use rsa::rand_core::{OsRng, RngCore};
     use rsa::{
         pkcs8::{EncodePrivateKey, EncodePublicKey, LineEnding},
         RsaPrivateKey, RsaPublicKey,
@@ -972,7 +972,7 @@ pub(crate) mod test_mocks {
             .templates
             .insert("placeholder".to_string(), RfdTemplate::default());
 
-        let mut rng = rand::thread_rng();
+        let mut rng = OsRng;
         let bits = 2048;
         let priv_key = RsaPrivateKey::new(&mut rng, bits).expect("Failed to generate a key");
         let pub_key = RsaPublicKey::from(&priv_key);
