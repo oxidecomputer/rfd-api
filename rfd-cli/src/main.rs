@@ -379,7 +379,7 @@ impl ProgenitorCliConfig for Context {
     where
         T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
     {
-        match T::schema_name().as_str() {
+        match &*T::schema_name() {
             // User response types
             "Array_of_GetUserResponseForRfdPermission" => self
                 .printer()
