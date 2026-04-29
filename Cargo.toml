@@ -42,22 +42,22 @@ http = "1.4.0"
 hyper = "1.8.1"
 itertools = "0.13.0"
 jsonwebtoken = { version = "10.2", features = ["rust_crypto"] }
-meilisearch-sdk = "0.28.0"
+meilisearch-sdk = "0.33.0"
 md-5 = "0.10.6"
 mime_guess = "2.0.5"
-minijinja = { version = "2.14", features = ["loader"] }
+minijinja = { version = "2.19", features = ["loader"] }
 mockall = "0.14"
 newline-converter = "0.3.0"
 newtype-uuid = { version = "1.3.2", features = ["schemars08", "serde", "v4"] }
 oauth2 = { version = "5.0.0", default-features = false, features = ["rustls-tls"] }
 octorust = "0.10.0"
-owo-colors = "4.2.3"
+owo-colors = "4.3.0"
 partial-struct = { git = "https://github.com/oxidecomputer/partial-struct" }
 progenitor = { version = "0.11.2" }
 progenitor-client = { version = "0.11.2" }
-rand = "0.8.5"
-rand_core = "0.6"
-regex = "1.12.2"
+rand = "0.10.1"
+rand_core = "0.10.1"
+regex = "1.12.3"
 reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
 reqwest-middleware = "0.4"
 reqwest-retry = "0.7"
