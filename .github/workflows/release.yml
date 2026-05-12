@@ -10,9 +10,11 @@ on:
 jobs:
   release:
     if: >-
-      github.event_name == 'push' ||
-      github.event.label.name == 'release-test' ||
-      contains(github.event.pull_request.labels.*.name, 'release-test')
+      github.repository_owner == 'oxidecomputer' && (
+        github.event_name == 'push' ||
+        github.event.label.name == 'release-test' ||
+        contains(github.event.pull_request.labels.*.name, 'release-test')
+      )
     strategy:
       matrix:
         include:
