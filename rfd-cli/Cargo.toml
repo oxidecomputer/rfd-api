@@ -1,7 +1,7 @@
 [package]
 name = "rfd-cli"
-version = "0.14.1"
-edition = "2021"
+version = { workspace = true }
+edition = { workspace = true }
 
 [features]
 local-dev = []
