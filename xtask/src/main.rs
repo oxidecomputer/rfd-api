@@ -22,10 +22,8 @@ use similar::{Algorithm, ChangeTag, TextDiff};
 #[command(about = "build tasks")]
 enum Xtask {
     #[command(about = "bump the global version number")]
-    Bump {
-        #[clap(long)]
-        place: VersionPlace,
-    },
+    #[command(arg_required_else_help = true)]
+    Bump { place: VersionPlace },
     #[command(about = "generate RFD sdk")]
     Generate {
         #[clap(long)]
@@ -37,8 +35,8 @@ enum Xtask {
 
 #[derive(Clone, ValueEnum)]
 enum VersionPlace {
-    Minor,
     Major,
+    Minor,
     Patch,
     Pre,
 }
@@ -53,26 +51,22 @@ fn main() -> Result<(), String> {
 }
 
 fn bump_package_versions(place: &VersionPlace) -> Result<(), String> {
-    let rust_crates = vec!["rfd-api", "rfd-processor", "rfd-sdk", "rfd-cli"];
     let node_package = vec!["rfd-ts"];
 
     let crate_version_pattern = Regex::new(r#"(?m)^version = "(.*)"$"#).unwrap();
 
-    for rust_crate in rust_crates {
-        let path = format!("{}/Cargo.toml", rust_crate);
-        let contents = fs::read_to_string(&path).unwrap();
-        let version_line = crate_version_pattern.captures(&contents).unwrap();
-        let mut version: Version = version_line.get(1).unwrap().as_str().parse().unwrap();
-        version = version.up(place);
+    let contents = fs::read_to_string("Cargo.toml").unwrap();
+    let version_line = crate_version_pattern.captures(&contents).unwrap();
+    let mut version: Version = version_line.get(1).unwrap().as_str().parse().unwrap();
+    version = version.up(place);
 
-        let old_version_line = version_line.get(0).unwrap().as_str();
-        let new_version_line = format!(r#"version = "{}""#, version);
-        let new_contents = contents.replace(old_version_line, &new_version_line);
+    let old_version_line = version_line.get(0).unwrap().as_str();
+    let new_version_line = format!(r#"version = "{}""#, version);
+    let new_contents = contents.replace(old_version_line, &new_version_line);
 
-        fs::write(path, new_contents).unwrap();
+    fs::write("Cargo.toml", new_contents).unwrap();
 
-        println!("Updated {} to {}", rust_crate, version);
-    }
+    println!("Updated workspace to {}", version);
 
     for node_package in node_package {
         let path = format!("{}/package.json", node_package);
@@ -97,6 +91,15 @@ fn bump_package_versions(place: &VersionPlace) -> Result<(), String> {
         fs::write(path, serde_json::to_string_pretty(&parsed).unwrap()).unwrap();
 
         println!("Updated {} to {}", node_package, version);
+    }
+
+    println!("Running cargo check to update Cargo.lock...");
+    let status = Command::new("cargo")
+        .args(["check", "-q"])
+        .status()
+        .map_err(|e| format!("Failed to run cargo check: {}", e))?;
+    if !status.success() {
+        return Err("cargo check failed".to_string());
     }
 
     Ok(())

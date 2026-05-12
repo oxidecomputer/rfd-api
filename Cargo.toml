@@ -14,6 +14,10 @@ members = [
 ]
 resolver = "2"
 
+[workspace.package]
+version = "0.14.1"
+edition = "2024"
+
 [workspace.dependencies]
 anyhow = "1.0.102"
 async-bb8-diesel = { git = "https://github.com/oxidecomputer/async-bb8-diesel", version = "0.3" }

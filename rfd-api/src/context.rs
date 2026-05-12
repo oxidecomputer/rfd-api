@@ -1019,7 +1019,7 @@ pub(crate) mod test_mocks {
             }),
         );
 
-        let ctx = RfdContext::new(
+        RfdContext::new(
             "".to_string(),
             Arc::new(storage),
             SearchConfig::default(),
@@ -1038,8 +1038,6 @@ pub(crate) mod test_mocks {
             v_context,
         )
         .await
-        .unwrap();
-
-        ctx
+        .unwrap()
     }
 }

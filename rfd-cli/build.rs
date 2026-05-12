@@ -75,17 +75,17 @@ fn schema_to_entry(schema: &Value) -> Option<String> {
             "<rfd_sdk::types::{rust} as schemars::JsonSchema>::schema_name()"
         ));
     }
-    if schema.get("type").and_then(Value::as_str) == Some("array") {
-        if let Some(r) = schema.pointer("/items/$ref").and_then(Value::as_str) {
-            let rust = strip_underscores(&ref_tail(r));
-            return Some(format!(
-                "<Vec<rfd_sdk::types::{rust}> as schemars::JsonSchema>::schema_name()"
-            ));
-        }
-        // Inline arrays without a `$ref` items target (e.g. `Vec<u8>`) have no
-        // matching `rfd_sdk::types::*` to reference. The dispatch table is not
-        // expected to cover them, so we skip rather than emit.
+    if schema.get("type").and_then(Value::as_str) == Some("array")
+        && let Some(r) = schema.pointer("/items/$ref").and_then(Value::as_str)
+    {
+        let rust = strip_underscores(&ref_tail(r));
+        return Some(format!(
+            "<Vec<rfd_sdk::types::{rust}> as schemars::JsonSchema>::schema_name()"
+        ));
     }
+    // Inline arrays without a `$ref` items target (e.g. `Vec<u8>`) have no
+    // matching `rfd_sdk::types::*` to reference. The dispatch table is not
+    // expected to cover them, so we skip rather than emit.
     None
 }
 
