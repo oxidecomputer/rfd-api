@@ -74,7 +74,7 @@ jobs:
           echo "${DPRINT_HASH}  ${DPRINT_ASSET}" | sha256sum --check
           unzip "${DPRINT_ASSET}"
           rm "${DPRINT_ASSET}"
-          echo "/home/runner/.dprint/bin" >> $GITHUB_PATH
+          echo "/home/runner/.dprint/bin" >> "$GITHUB_PATH"
         env:
           DPRINT_VERSION: 0.53.0
           DPRINT_HASH: 987185f5f0db6205e5bca88aaab04a7b29bc18bf7a8c1a84f56eef08c9730df0
@@ -84,10 +84,10 @@ jobs:
         run: |
           cargo xtask generate
           GENERATED="rfd-sdk/src/generated/ rfd-cli/src/generated/ rfd-ts/"
-          if ! git diff --quiet -- $GENERATED; then
-            git diff -- $GENERATED
+          if ! git diff --quiet -- "$GENERATED"; then
+            git diff -- "$GENERATED"
             echo "Found changed files after generating SDKs:"
-            git status -s -- $GENERATED
+            git status -s -- "$GENERATED"
             echo "To fix, regenerate with, commit the changes from running:"
             echo "  cargo xtask generate"
             exit 1

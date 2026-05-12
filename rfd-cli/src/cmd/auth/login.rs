@@ -5,11 +5,12 @@
 use std::ops::Add;
 
 use anyhow::Result;
-use chrono::{Duration, NaiveDate, Utc};
+use chrono::{Duration, Utc};
 use clap::{Parser, Subcommand, ValueEnum};
-use futures::stream::StreamExt;
 use oauth2::{basic::BasicTokenType, EmptyExtraTokenFields, StandardTokenResponse, TokenResponse};
 use rfd_sdk::types::OAuthProviderName;
+#[cfg(feature = "local-dev")]
+use serde::Serialize;
 
 use crate::{cmd::auth::oauth, Context};
 
@@ -66,10 +67,16 @@ pub enum AuthenticationMode {
 pub struct OAuthProviderRunner(OAuthProviderName);
 
 #[cfg(feature = "local-dev")]
-
 pub struct LocalProviderRunner {
     email: String,
     external_id: String,
+}
+
+#[cfg(feature = "local-dev")]
+#[derive(Serialize)]
+struct LocalLoginBody<'a> {
+    external_id: &'a str,
+    email: &'a str,
 }
 
 pub trait ProviderRunner {
@@ -119,34 +126,29 @@ impl ProviderRunner for OAuthProviderRunner {
 }
 
 #[cfg(feature = "local-dev")]
-
 impl ProviderRunner for LocalProviderRunner {
     async fn run(&self, ctx: &mut Context, mode: &AuthenticationMode) -> Result<String> {
-        let identity_token = ctx
-            .client()?
-            .local_login()
-            .body_map(|body| {
-                body.email(self.email.clone())
-                    .external_id(self.external_id.clone())
+        // The `/login/local` endpoint is registered by v-api only when its
+        // `local-dev` feature is enabled, so it is not present in the public
+        // OpenAPI spec and not exposed through the generated SDK. Hit it
+        // directly via reqwest instead.
+        let host = ctx.config.host()?;
+        let url = format!("{}/login/local", host.trim_end_matches('/'));
+
+        let response = reqwest::Client::new()
+            .post(&url)
+            .json(&LocalLoginBody {
+                external_id: &self.external_id,
+                email: &self.email,
             })
             .send()
             .await?
-            .into_inner();
+            .error_for_status()?
+            .json::<StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>>()
+            .await
+            .map_err(|err| anyhow::anyhow!("Authentication failed: {}", err))?;
 
-        let mut bytes = identity_token.into_inner();
-
-        let mut data = vec![];
-        while let Some(chunk) = bytes.next().await {
-            data.append(&mut chunk?.to_vec());
-        }
-
-        let identity_token = match serde_json::from_slice::<
-            StandardTokenResponse<EmptyExtraTokenFields, BasicTokenType>,
-        >(&data)
-        {
-            Ok(token) => Ok(token.access_token().to_owned()),
-            Err(err) => Err(anyhow::anyhow!("Authentication failed: {}", err)),
-        }?;
+        let identity_token = response.access_token().to_owned();
 
         if mode == &AuthenticationMode::Token {
             let client = ctx.new_client(Some(identity_token.secret()))?;

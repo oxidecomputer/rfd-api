@@ -218,8 +218,6 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::GetDeviceProvider => None,
         CliCommand::MagicLinkSend => None,
         CliCommand::MagicLinkExchange => None,
-        #[cfg(feature = "local-dev")]
-        CliCommand::LocalLogin => None,
 
         // Unsupported commands
         CliCommand::AuthzCodeRedirect => None,
