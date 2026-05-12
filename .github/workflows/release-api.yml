@@ -50,7 +50,7 @@ jobs:
 
       - name: Build Release Binary
         run: |
-          cargo build --release --package rfd-api --no-default-features
+          cargo build --release --package rfd-api
 
       - name: Upload Release Artifact
         run: |
