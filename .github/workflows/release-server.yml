@@ -1,4 +1,4 @@
-name: Release rfd-api
+name: Release rfd-api and rfd-processor
 
 on:
   push:
@@ -39,14 +39,14 @@ jobs:
       - run: |
           rustup toolchain install
 
-      - name: Build Release Binary
+      - name: Build Release Binaries
         run: |
-          cargo build --release --package rfd-api
+          cargo build --release --package rfd-api --package rfd-processor
 
       - uses: ncipollo/release-action@caacf56b56ba217c4eaf0a9deb59dbcdd12abfcd
         with:
           allowUpdates: true
           draft: ${{ github.event_name == 'pull_request' }}
           tag: ${{ steps.tag.outputs.value }}
-          artifacts: "target/release/rfd-api"
+          artifacts: "target/release/rfd-api,target/release/rfd-processor"
           generateReleaseNotes: true
