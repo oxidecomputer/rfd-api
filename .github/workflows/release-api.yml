@@ -3,7 +3,7 @@ name: Release rfd-api
 on:
   push:
     tags:
-      - "**[0-9]+.[0-9]+.[0-9]+*"
+      - "v*.*.*"
   pull_request:
     types: [labeled, synchronize]
 
@@ -14,12 +14,9 @@ concurrency:
 jobs:
   release:
     if: >-
-      github.repository_owner == 'oxidecomputer' && (
-        github.event_name == 'push' ||
-        github.event.label.name == 'release-test' ||
-        contains(github.event.pull_request.labels.*.name, 'release-test')
-      )
-
+      github.event_name == 'push' ||
+      github.event.label.name == 'release-test' ||
+      contains(github.event.pull_request.labels.*.name, 'release-test')
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -36,17 +33,25 @@ jobs:
             echo "value=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
           fi
 
+      # Do this first, to avoid racing with release.yml
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@caacf56b56ba217c4eaf0a9deb59dbcdd12abfcd
+        with:
+          allowUpdates: true
+          draft: ${{ github.event_name == 'pull_request' }}
+          tag: ${{ steps.tag.outputs.value }}
+          generateReleaseNotes: true
+          prerelease: ${{ contains(steps.tag.outputs.value, '-pre') }}
+
       - run: |
           rustup toolchain install
 
       - name: Build Release Binary
         run: |
-          cargo build --release --package rfd-api
+          cargo build --release --package rfd-api --no-default-features
 
-      - uses: ncipollo/release-action@caacf56b56ba217c4eaf0a9deb59dbcdd12abfcd
-        with:
-          allowUpdates: true
-          draft: ${{ github.event_name == 'pull_request' }}
-          tag: ${{ steps.tag.outputs.value }}
-          artifacts: "target/release/rfd-api"
-          generateReleaseNotes: true
+      - name: Upload Release Artifact
+        run: |
+          gh release upload --clobber "${{ steps.tag.outputs.value }}" "target/release/rfd-api"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
