@@ -1118,7 +1118,7 @@ mod tests {
             ];
 
             results.retain(|rfd| {
-                filter.len() == 0
+                filter.is_empty()
                     || filter[0].rfd_number.is_none()
                     || filter[0]
                         .rfd_number
@@ -1217,7 +1217,7 @@ mod tests {
             ];
 
             results.retain(|rfd| {
-                filter.len() == 0
+                filter.is_empty()
                     || filter[0].rfd_number.is_none()
                     || filter[0]
                         .rfd_number
@@ -1360,7 +1360,7 @@ mod tests {
                 ];
 
                 results.retain(|revision| {
-                    filter.len() == 0
+                    filter.is_empty()
                         || filter[0].rfd.is_none()
                         || filter[0].rfd.as_ref().unwrap().contains(&revision.rfd_id)
                 });

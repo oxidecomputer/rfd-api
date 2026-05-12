@@ -72,12 +72,11 @@ impl<'a> RfdAsciidoc<'a> {
     }
 
     fn apply_author_line_attributes(content: &mut String) {
-        if let Some(author_line) = Self::author_line(content) {
-            if let Some(authors) = RfdAuthors::parse(author_line) {
-                if !authors.0.is_empty() {
-                    *content = Self::set_attr(content, "authors", &authors.into_attr());
-                }
-            }
+        if let Some(author_line) = Self::author_line(content)
+            && let Some(authors) = RfdAuthors::parse(author_line)
+            && !authors.0.is_empty()
+        {
+            *content = Self::set_attr(content, "authors", &authors.into_attr());
         }
     }
 
@@ -455,67 +454,67 @@ mod tests {
     fn test_single_author() {
         let line = "firstname";
         let authors = RfdAuthors::parse(line).unwrap();
-        assert_eq!(authors.0.get(0).unwrap().first_name, "firstname");
-        assert_eq!(authors.0.get(0).unwrap().middle_name, None);
-        assert_eq!(authors.0.get(0).unwrap().last_name, None);
-        assert_eq!(authors.0.get(0).unwrap().email, None);
+        assert_eq!(authors.0.first().unwrap().first_name, "firstname");
+        assert_eq!(authors.0.first().unwrap().middle_name, None);
+        assert_eq!(authors.0.first().unwrap().last_name, None);
+        assert_eq!(authors.0.first().unwrap().email, None);
         let line = "firstname <email@company.com>";
         let authors = RfdAuthors::parse(line).unwrap();
-        assert_eq!(authors.0.get(0).unwrap().first_name, "firstname");
-        assert_eq!(authors.0.get(0).unwrap().middle_name, None);
-        assert_eq!(authors.0.get(0).unwrap().last_name, None);
+        assert_eq!(authors.0.first().unwrap().first_name, "firstname");
+        assert_eq!(authors.0.first().unwrap().middle_name, None);
+        assert_eq!(authors.0.first().unwrap().last_name, None);
         assert_eq!(
-            authors.0.get(0).unwrap().email.as_deref(),
+            authors.0.first().unwrap().email.as_deref(),
             Some("email@company.com")
         );
 
         let line = "firstname lastname";
         let authors = RfdAuthors::parse(line).unwrap();
-        assert_eq!(authors.0.get(0).unwrap().first_name, "firstname");
-        assert_eq!(authors.0.get(0).unwrap().middle_name, None);
+        assert_eq!(authors.0.first().unwrap().first_name, "firstname");
+        assert_eq!(authors.0.first().unwrap().middle_name, None);
         assert_eq!(
-            authors.0.get(0).unwrap().last_name.as_deref(),
+            authors.0.first().unwrap().last_name.as_deref(),
             Some("lastname")
         );
-        assert_eq!(authors.0.get(0).unwrap().email, None);
+        assert_eq!(authors.0.first().unwrap().email, None);
         let line = "firstname lastname <email@company.com>";
         let authors = RfdAuthors::parse(line).unwrap();
-        assert_eq!(authors.0.get(0).unwrap().first_name, "firstname");
-        assert_eq!(authors.0.get(0).unwrap().middle_name, None);
+        assert_eq!(authors.0.first().unwrap().first_name, "firstname");
+        assert_eq!(authors.0.first().unwrap().middle_name, None);
         assert_eq!(
-            authors.0.get(0).unwrap().last_name.as_deref(),
+            authors.0.first().unwrap().last_name.as_deref(),
             Some("lastname")
         );
         assert_eq!(
-            authors.0.get(0).unwrap().email.as_deref(),
+            authors.0.first().unwrap().email.as_deref(),
             Some("email@company.com")
         );
 
         let line = "firstname middlename lastname";
         let authors = RfdAuthors::parse(line).unwrap();
-        assert_eq!(authors.0.get(0).unwrap().first_name, "firstname");
+        assert_eq!(authors.0.first().unwrap().first_name, "firstname");
         assert_eq!(
-            authors.0.get(0).unwrap().middle_name.as_deref(),
+            authors.0.first().unwrap().middle_name.as_deref(),
             Some("middlename")
         );
         assert_eq!(
-            authors.0.get(0).unwrap().last_name.as_deref(),
+            authors.0.first().unwrap().last_name.as_deref(),
             Some("lastname")
         );
-        assert_eq!(authors.0.get(0).unwrap().email, None);
+        assert_eq!(authors.0.first().unwrap().email, None);
         let line = "firstname middlename lastname <email@company.com>";
         let authors = RfdAuthors::parse(line).unwrap();
-        assert_eq!(authors.0.get(0).unwrap().first_name, "firstname");
+        assert_eq!(authors.0.first().unwrap().first_name, "firstname");
         assert_eq!(
-            authors.0.get(0).unwrap().middle_name.as_deref(),
+            authors.0.first().unwrap().middle_name.as_deref(),
             Some("middlename")
         );
         assert_eq!(
-            authors.0.get(0).unwrap().last_name.as_deref(),
+            authors.0.first().unwrap().last_name.as_deref(),
             Some("lastname")
         );
         assert_eq!(
-            authors.0.get(0).unwrap().email.as_deref(),
+            authors.0.first().unwrap().email.as_deref(),
             Some("email@company.com")
         );
     }
@@ -524,17 +523,17 @@ mod tests {
     fn test_author_trailing_semicolon() {
         let line = "firstname middlename lastname <email@company.com>;";
         let authors = RfdAuthors::parse(line).unwrap();
-        assert_eq!(authors.0.get(0).unwrap().first_name, "firstname");
+        assert_eq!(authors.0.first().unwrap().first_name, "firstname");
         assert_eq!(
-            authors.0.get(0).unwrap().middle_name.as_deref(),
+            authors.0.first().unwrap().middle_name.as_deref(),
             Some("middlename")
         );
         assert_eq!(
-            authors.0.get(0).unwrap().last_name.as_deref(),
+            authors.0.first().unwrap().last_name.as_deref(),
             Some("lastname")
         );
         assert_eq!(
-            authors.0.get(0).unwrap().email.as_deref(),
+            authors.0.first().unwrap().email.as_deref(),
             Some("email@company.com")
         );
     }
@@ -545,7 +544,7 @@ mod tests {
 
         let authors = RfdAuthors::parse(line).unwrap();
         let expected = r#"First2 M2 Last2 \"#.to_string();
-        assert_eq!(expected, authors.0.get(0).unwrap().first_name);
+        assert_eq!(expected, authors.0.first().unwrap().first_name);
     }
 
     // Reference resolution tests
@@ -558,7 +557,7 @@ mod tests {
 dsfsdf
 sdf"#;
         let rfd = RfdAsciidoc::new(content).unwrap();
-        assert!(rfd.content.to_string() != rfd.resolved);
+        assert!(rfd.content != rfd.resolved);
         assert!(!rfd.resolved.contains("{authors}"));
     }
 
@@ -967,7 +966,7 @@ FirstName LastName <fname@company.org>
 
 This is the new body"#;
         let mut rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content())).unwrap();
-        rfd.update_body(&new_content).unwrap();
+        rfd.update_body(new_content).unwrap();
         assert_eq!(expected, rfd.raw());
     }
 

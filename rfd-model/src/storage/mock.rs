@@ -30,6 +30,12 @@ pub struct MockStorage {
     pub job_store: Option<Arc<MockJobStore>>,
 }
 
+impl Default for MockStorage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl MockStorage {
     pub fn new() -> Self {
         Self {
