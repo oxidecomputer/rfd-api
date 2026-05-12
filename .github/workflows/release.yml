@@ -15,6 +15,7 @@ jobs:
         github.event.label.name == 'release-test' ||
         contains(github.event.pull_request.labels.*.name, 'release-test')
       )
+
     strategy:
       matrix:
         include:
