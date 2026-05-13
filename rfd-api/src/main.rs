@@ -42,6 +42,13 @@ mod util;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    rustls::crypto::ring::default_provider()
+        .install_default()
+        .expect("Failed to install rustls crypto provider");
+    jsonwebtoken::crypto::aws_lc::DEFAULT_PROVIDER
+        .install_default()
+        .expect("Failed to install jsonwebtoken crypto provider");
+
     let mut args = std::env::args();
     let _ = args.next();
     let config_path = args.next();

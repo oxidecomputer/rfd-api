@@ -32,6 +32,7 @@ rfd-data = { path = "../rfd-data" }
 rfd-github = { path = "../rfd-github" }
 rfd-model = { path = "../rfd-model" }
 rsa = { workspace = true }
+rustls = { workspace = true }
 serde = { workspace = true }
 tap = { workspace = true }
 thiserror = { workspace = true }
