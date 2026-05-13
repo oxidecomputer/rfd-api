@@ -48,7 +48,7 @@
     ]
   },
   "dependencies": {
-    "@oxide/rfd.ts": "^0.2.1",
+    "@oxide/rfd.ts": "^0.14.0",
     "remix-auth-oauth2": "^3.4.0"
   }
 }
