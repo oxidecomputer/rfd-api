@@ -20,6 +20,7 @@ owo-colors = { workspace = true }
 progenitor-client = { workspace = true }
 reqwest = { workspace = true }
 rfd-sdk = { path = "../rfd-sdk" }
+rustls = { workspace = true }
 schemars = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

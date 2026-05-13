@@ -231,6 +231,13 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    rustls::crypto::ring::default_provider()
+        .install_default()
+        .expect("Failed to install rustls crypto provider");
+    jsonwebtoken::crypto::aws_lc::DEFAULT_PROVIDER
+        .install_default()
+        .expect("Failed to install jsonwebtoken crypto provider");
+
     let mut root = Tree::default();
 
     for cmd in CliCommand::iter() {
