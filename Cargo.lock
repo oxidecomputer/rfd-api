@@ -3,6 +3,12 @@
 version = 4
 
 [[package]]
+name = "adler2"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
+
+[[package]]
 name = "aho-corasick"
 version = "1.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -98,6 +104,18 @@ dependencies = [
  "diesel",
  "futures",
  "thiserror 2.0.18",
+ "tokio",
+]
+
+[[package]]
+name = "async-compression"
+version = "0.4.42"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e79b3f8a79cccc2898f31920fc69f304859b3bd567490f75ebf51ae1c792a9ac"
+dependencies = [
+ "compression-codecs",
+ "compression-core",
+ "pin-project-lite",
  "tokio",
 ]
 
@@ -414,6 +432,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "compression-codecs"
+version = "0.4.38"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ce2548391e9c1929c21bf6aa2680af86fe4c1b33e6cea9ac1cfeec0bd11218cf"
+dependencies = [
+ "compression-core",
+ "flate2",
+ "memchr",
+]
+
+[[package]]
+name = "compression-core"
+version = "0.4.32"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cc14f565cf027a105f7a44ccf9e5b424348421a1d8952a8fc9d499d313107789"
+
+[[package]]
 name = "config"
 version = "0.15.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -544,6 +579,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3a47af21622d091a8f0fb295b88bc886ac74efcc613efc19f5d0b21de5c89e47"
 dependencies = [
  "rustc_version",
+]
+
+[[package]]
+name = "crc32fast"
+version = "1.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9481c1c90cbf2ac953f07c8d4a58aa3945c425b7185c9154d67a65e4230da511"
+dependencies = [
+ "cfg-if",
 ]
 
 [[package]]
@@ -877,7 +921,7 @@ dependencies = [
  "camino",
  "chrono",
  "debug-ignore",
- "dropshot_endpoint",
+ "dropshot_endpoint 0.16.7",
  "form_urlencoded",
  "futures",
  "hostname 0.4.2",
@@ -915,13 +959,65 @@ dependencies = [
 ]
 
 [[package]]
+name = "dropshot"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "409eb76c7ea1623d270393248ff55ec436841fcd724c2e1c9de294291edd35f5"
+dependencies = [
+ "async-compression",
+ "async-stream",
+ "async-trait",
+ "base64",
+ "bytes",
+ "camino",
+ "chrono",
+ "debug-ignore",
+ "dropshot_endpoint 0.17.0",
+ "form_urlencoded",
+ "futures",
+ "hostname 0.4.2",
+ "http 1.4.0",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "indexmap 2.14.0",
+ "multer",
+ "openapiv3",
+ "paste",
+ "percent-encoding",
+ "rustls 0.22.4",
+ "rustls-pemfile",
+ "schemars 0.8.22",
+ "scopeguard",
+ "semver",
+ "serde",
+ "serde_json",
+ "serde_path_to_error",
+ "serde_urlencoded",
+ "sha1",
+ "slog",
+ "slog-async",
+ "slog-bunyan",
+ "slog-json",
+ "slog-term",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-rustls 0.25.0",
+ "tokio-util",
+ "toml 1.1.2+spec-1.1.0",
+ "uuid",
+ "version_check",
+ "waitgroup",
+]
+
+[[package]]
 name = "dropshot-authorization-header"
 version = "0.1.0"
 source = "git+https://github.com/oxidecomputer/v-api#1ba9ce83fa58a543c23e7da80590008c3e3c33bb"
 dependencies = [
  "async-trait",
  "base64",
- "dropshot",
+ "dropshot 0.16.7",
  "tracing",
 ]
 
@@ -932,7 +1028,7 @@ source = "git+https://github.com/oxidecomputer/dropshot-verified-body#6f709859b2
 dependencies = [
  "async-trait",
  "digest 0.10.7",
- "dropshot",
+ "dropshot 0.16.7",
  "hex",
  "hmac 0.12.1",
  "http 1.4.0",
@@ -950,6 +1046,21 @@ name = "dropshot_endpoint"
 version = "0.16.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "67d106478e4a4782556981d028a667f41c4845cdaa6e2d3a9f58c5d15e725401"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "semver",
+ "serde",
+ "serde_tokenstream",
+ "syn",
+]
+
+[[package]]
+name = "dropshot_endpoint"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "906c3adfd4472030607130ed763e9af1b85f7e18832dd22998379d42ff81c28d"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -1135,6 +1246,16 @@ name = "find-msvc-tools"
 version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5baebc0774151f905a1a2cc41989300b1e6fbb29aff0ceffa1064fdd3088d582"
+
+[[package]]
+name = "flate2"
+version = "1.1.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "843fba2746e448b37e26a819579957415c8cef339bf08564fe8b7ddbd959573c"
+dependencies = [
+ "crc32fast",
+ "miniz_oxide",
+]
 
 [[package]]
 name = "fnv"
@@ -2291,6 +2412,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "miniz_oxide"
+version = "0.8.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1fa76a2c86f704bdb222d66965fb3d63269ce38518b83cb0575fca855ebb6316"
+dependencies = [
+ "adler2",
+ "simd-adler32",
+]
+
+[[package]]
 name = "mio"
 version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3438,7 +3569,7 @@ dependencies = [
  "cookie",
  "crc32c",
  "diesel",
- "dropshot",
+ "dropshot 0.17.0",
  "dropshot-authorization-header",
  "dropshot-verified-body",
  "hex",
@@ -4239,6 +4370,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "simd-adler32"
+version = "0.3.9"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "703d5c7ef118737c72f1af64ad2f6f8c5e1921f818cdcb97b8fe6fc69bf66214"
+
+[[package]]
 name = "simd_cesu8"
 version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4876,7 +5013,7 @@ checksum = "8df9b6e13f2d32c91b9bd719c00d1958837bc7dec474d94952798cc8e69eeec3"
 name = "trace-request"
 version = "0.14.5"
 dependencies = [
- "dropshot",
+ "dropshot 0.17.0",
  "http 1.4.0",
  "proc-macro2",
  "quote",
@@ -5147,7 +5284,7 @@ dependencies = [
  "cookie",
  "crc32c",
  "diesel",
- "dropshot",
+ "dropshot 0.16.7",
  "dropshot-authorization-header",
  "futures",
  "google-cloudkms1",
