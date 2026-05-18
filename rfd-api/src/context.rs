@@ -952,13 +952,14 @@ pub(crate) mod test_mocks {
     use v_api::{
         config::{AsymmetricKey, JwtConfig},
         endpoints::login::oauth::{google::GoogleOAuthProvider, OAuthProviderName},
-        VContext,
+        VContextBuilder,
     };
     use v_model::storage::postgres::PostgresStore;
 
     use crate::config::{
         ContentConfig, GitHubAuthConfig, GitHubConfig, SearchConfig, ServicesConfig,
     };
+    use crate::permissions::RfdPermission;
 
     use super::RfdContext;
 
@@ -989,23 +990,27 @@ pub(crate) mod test_mocks {
                     .as_bytes()
                     .to_vec(),
             )
-            .unwrap(),
+            .unwrap()
+            .into(),
         };
         let verifier = AsymmetricKey::LocalVerifier {
             kid: hex::encode(kid),
-            public: pub_key.to_public_key_pem(LineEnding::LF).unwrap(),
+            public: pub_key.to_public_key_pem(LineEnding::LF).unwrap().into(),
         };
 
-        let mut v_context = VContext::new(
-            String::new(),
-            Arc::new(PostgresStore::new("").await.unwrap()),
-            JwtConfig {
-                default_expiration: 0,
-            },
-            vec![signer, verifier],
-        )
-        .await
-        .unwrap();
+        let mut v_context = VContextBuilder::<RfdPermission>::new()
+            .with_public_url(String::new())
+            .with_storage(Arc::new(PostgresStore::new("").await.unwrap()))
+            .with_jwt_expiration(
+                JwtConfig {
+                    default_expiration: 0,
+                }
+                .default_expiration,
+            )
+            .with_keys(vec![signer, verifier])
+            .build()
+            .await
+            .unwrap();
         v_context.insert_oauth_provider(
             OAuthProviderName::Google,
             Box::new(move || {
