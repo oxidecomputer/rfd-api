@@ -7,6 +7,7 @@ use minijinja::Environment;
 use server::{server, ServerConfig};
 use std::{
     net::{SocketAddr, SocketAddrV4},
+    path::Path,
     sync::Arc,
 };
 use tap::TapFallible;
@@ -16,7 +17,7 @@ use v_api::{
     endpoints::login::oauth::{
         github::GitHubOAuthProvider, google::GoogleOAuthProvider, OAuthProviderName,
     },
-    ApiContext, MagicLinkTarget, VContext,
+    ApiContext, MagicLinkTarget, VContextBuilder,
 };
 use v_model::{schema_ext::MagicLinkMedium, storage::postgres::PostgresStore as VApiPostgresStore};
 
@@ -52,8 +53,13 @@ async fn main() -> anyhow::Result<()> {
     let mut args = std::env::args();
     let _ = args.next();
     let config_path = args.next();
+    let param_path = config_path
+        .as_deref()
+        .and_then(|path| Path::new(path).parent())
+        .filter(|path| !path.as_os_str().is_empty())
+        .map(|path| path.to_path_buf());
 
-    let config = AppConfig::new(config_path.map(|path| vec![path]))?;
+    let mut config = AppConfig::new(config_path.clone().map(|path| vec![path]))?;
 
     let (writer, _guard) = if let Some(log_directory) = config.log_directory {
         let file_appender = tracing_appender::rolling::daily(log_directory, "rfd-api.log");
@@ -75,29 +81,34 @@ async fn main() -> anyhow::Result<()> {
 
     tracing::info!("Initialized logger");
 
-    let mut v_ctx = VContext::new(
-        config.public_url.clone(),
-        Arc::new(
-            VApiPostgresStore::new(&config.database_url)
-                .await
-                .tap_err(|err| {
-                    tracing::error!(?err, "Failed to establish initial database connection");
-                })?,
-        ),
-        config.jwt,
-        config.keys,
-    )
-    .await?;
+    let storage = Arc::new(
+        VApiPostgresStore::new(&config.database_url)
+            .await
+            .tap_err(|err| {
+                tracing::error!(?err, "Failed to establish initial database connection");
+            })?,
+    );
+    let mut v_ctx_builder = VContextBuilder::<RfdPermission>::new()
+        .with_public_url(config.public_url.clone())
+        .with_storage(storage.clone())
+        .with_jwt_expiration(config.jwt.default_expiration)
+        .with_keys(std::mem::take(&mut config.keys));
+    if let Some(param_path) = param_path.clone() {
+        v_ctx_builder = v_ctx_builder.with_param_path(param_path);
+    }
+    let mut v_ctx = v_ctx_builder.build().await?;
 
     if let Some(github) = config.authn.oauth.github {
+        let device_client_secret = github.device.client_secret.resolve(param_path.clone())?;
+        let web_client_secret = github.web.client_secret.resolve(param_path.clone())?;
         v_ctx.insert_oauth_provider(
             OAuthProviderName::GitHub,
             Box::new(move || {
                 Box::new(GitHubOAuthProvider::new(
                     github.device.client_id.clone(),
-                    github.device.client_secret.clone(),
+                    device_client_secret.clone(),
                     github.web.client_id.clone(),
-                    github.web.client_secret.clone(),
+                    web_client_secret.clone(),
                     None,
                 ))
             }),
@@ -107,14 +118,16 @@ async fn main() -> anyhow::Result<()> {
     }
 
     if let Some(google) = config.authn.oauth.google {
+        let device_client_secret = google.device.client_secret.resolve(param_path.clone())?;
+        let web_client_secret = google.web.client_secret.resolve(param_path.clone())?;
         v_ctx.insert_oauth_provider(
             OAuthProviderName::Google,
             Box::new(move || {
                 Box::new(GoogleOAuthProvider::new(
                     google.device.client_id.clone(),
-                    google.device.client_secret.clone(),
+                    device_client_secret.clone(),
                     google.web.client_id.clone(),
-                    google.web.client_secret.clone(),
+                    web_client_secret.clone(),
                     None,
                 ))
             }),
@@ -163,13 +176,7 @@ async fn main() -> anyhow::Result<()> {
 
     let context = RfdContext::new(
         config.public_url,
-        Arc::new(
-            VApiPostgresStore::new(&config.database_url)
-                .await
-                .tap_err(|err| {
-                    tracing::error!(?err, "Failed to establish initial database connection");
-                })?,
-        ),
+        storage,
         config.search,
         config.content,
         config.services,
