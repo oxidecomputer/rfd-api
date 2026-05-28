@@ -927,6 +927,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "dropshot-authorization-header"
+version = "0.4.0-alpha.2"
+source = "git+https://github.com/oxidecomputer/v-api?rev=a780d9063b0baf678fc3a4f2a3b46bde06fc5a98#a780d9063b0baf678fc3a4f2a3b46bde06fc5a98"
+dependencies = [
+ "async-trait",
+ "base64",
+ "dropshot",
+ "tracing",
+]
+
+[[package]]
 name = "dropshot-verified-body"
 version = "0.2.0"
 source = "git+https://github.com/oxidecomputer/dropshot-verified-body?rev=0b124eeb0f52db783a44d395a41425a1f9b709b7#0b124eeb0f52db783a44d395a41425a1f9b709b7"
@@ -3317,7 +3328,7 @@ dependencies = [
  "crc32c",
  "diesel",
  "dropshot",
- "dropshot-authorization-header",
+ "dropshot-authorization-header 0.4.0-alpha.2",
  "dropshot-verified-body",
  "hex",
  "http 1.4.0",
@@ -5016,7 +5027,7 @@ dependencies = [
  "cookie",
  "crc32c",
  "dropshot",
- "dropshot-authorization-header",
+ "dropshot-authorization-header 0.3.1",
  "futures",
  "google-cloudkms1",
  "hex",

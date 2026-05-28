@@ -33,7 +33,7 @@ diesel = { version = "2.3.9", features = ["postgres"] }
 diesel_migrations = { version = "2.3.2" }
 dirs = "6.0.0"
 dropshot = "0.17"
-dropshot-authorization-header = { git = "https://github.com/oxidecomputer/v-api", rev = "d3fff6f7e539a9435e8dcbb07b54e937237ff623" }
+dropshot-authorization-header = { git = "https://github.com/oxidecomputer/v-api", rev = "a780d9063b0baf678fc3a4f2a3b46bde06fc5a98" }
 dropshot-verified-body = { git = "https://github.com/oxidecomputer/dropshot-verified-body", rev = "0b124eeb0f52db783a44d395a41425a1f9b709b7" }
 futures = "0.3.32"
 google-drive3 = "7.0.0"
