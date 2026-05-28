@@ -918,7 +918,7 @@ dependencies = [
 [[package]]
 name = "dropshot-authorization-header"
 version = "0.3.1"
-source = "git+https://github.com/oxidecomputer/v-api?rev=d3fff6f7e539a9435e8dcbb07b54e937237ff623#d3fff6f7e539a9435e8dcbb07b54e937237ff623"
+source = "git+https://github.com/oxidecomputer/v-api?tag=v0.3.1#d3fff6f7e539a9435e8dcbb07b54e937237ff623"
 dependencies = [
  "async-trait",
  "base64",
@@ -5007,7 +5007,7 @@ dependencies = [
 [[package]]
 name = "v-api"
 version = "0.3.1"
-source = "git+https://github.com/oxidecomputer/v-api?rev=d3fff6f7e539a9435e8dcbb07b54e937237ff623#d3fff6f7e539a9435e8dcbb07b54e937237ff623"
+source = "git+https://github.com/oxidecomputer/v-api?tag=v0.3.1#d3fff6f7e539a9435e8dcbb07b54e937237ff623"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5053,7 +5053,7 @@ dependencies = [
 [[package]]
 name = "v-api-installer"
 version = "0.3.1"
-source = "git+https://github.com/oxidecomputer/v-api?rev=d3fff6f7e539a9435e8dcbb07b54e937237ff623#d3fff6f7e539a9435e8dcbb07b54e937237ff623"
+source = "git+https://github.com/oxidecomputer/v-api?tag=v0.3.1#d3fff6f7e539a9435e8dcbb07b54e937237ff623"
 dependencies = [
  "diesel",
  "diesel_migrations",
@@ -5062,7 +5062,7 @@ dependencies = [
 [[package]]
 name = "v-api-param"
 version = "0.3.1"
-source = "git+https://github.com/oxidecomputer/v-api?rev=d3fff6f7e539a9435e8dcbb07b54e937237ff623#d3fff6f7e539a9435e8dcbb07b54e937237ff623"
+source = "git+https://github.com/oxidecomputer/v-api?tag=v0.3.1#d3fff6f7e539a9435e8dcbb07b54e937237ff623"
 dependencies = [
  "secrecy",
  "serde",
@@ -5072,7 +5072,7 @@ dependencies = [
 [[package]]
 name = "v-api-permission-derive"
 version = "0.3.1"
-source = "git+https://github.com/oxidecomputer/v-api?rev=d3fff6f7e539a9435e8dcbb07b54e937237ff623#d3fff6f7e539a9435e8dcbb07b54e937237ff623"
+source = "git+https://github.com/oxidecomputer/v-api?tag=v0.3.1#d3fff6f7e539a9435e8dcbb07b54e937237ff623"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -5083,7 +5083,7 @@ dependencies = [
 [[package]]
 name = "v-model"
 version = "0.3.1"
-source = "git+https://github.com/oxidecomputer/v-api?rev=d3fff6f7e539a9435e8dcbb07b54e937237ff623#d3fff6f7e539a9435e8dcbb07b54e937237ff623"
+source = "git+https://github.com/oxidecomputer/v-api?tag=v0.3.1#d3fff6f7e539a9435e8dcbb07b54e937237ff623"
 dependencies = [
  "async-bb8-diesel",
  "async-trait",
