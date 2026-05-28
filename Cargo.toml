@@ -33,7 +33,7 @@ diesel = { version = "2.3.9", features = ["postgres"] }
 diesel_migrations = { version = "2.3.2" }
 dirs = "6.0.0"
 dropshot = "0.17"
-dropshot-authorization-header = { git = "https://github.com/oxidecomputer/v-api", rev = "d3fff6f7e539a9435e8dcbb07b54e937237ff623" }
+dropshot-authorization-header = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.3.1" }
 dropshot-verified-body = { git = "https://github.com/oxidecomputer/dropshot-verified-body", rev = "0b124eeb0f52db783a44d395a41425a1f9b709b7" }
 futures = "0.3.32"
 google-drive3 = "7.0.0"
@@ -92,10 +92,10 @@ tracing-slog = { git = "https://github.com/oxidecomputer/tracing-slog", default-
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
 uuid = { version = "1.23.1", features = ["serde", "v4"] }
 valuable = "0.1.1"
-v-api = { git = "https://github.com/oxidecomputer/v-api", rev = "d3fff6f7e539a9435e8dcbb07b54e937237ff623", default-features = false }
-v-api-installer = { git = "https://github.com/oxidecomputer/v-api", rev = "d3fff6f7e539a9435e8dcbb07b54e937237ff623" }
-v-model = { git = "https://github.com/oxidecomputer/v-api", rev = "d3fff6f7e539a9435e8dcbb07b54e937237ff623" }
-v-api-permission-derive = { git = "https://github.com/oxidecomputer/v-api", rev = "d3fff6f7e539a9435e8dcbb07b54e937237ff623" }
+v-api = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.3.1", default-features = false }
+v-api-installer = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.3.1" }
+v-model = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.3.1" }
+v-api-permission-derive = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.3.1" }
 yup-oauth2 = { version = "12.1.2" }
 
 # Config for 'cargo dist'
