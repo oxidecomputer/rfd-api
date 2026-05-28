@@ -927,6 +927,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "dropshot-authorization-header"
+version = "0.4.0-alpha.2"
+source = "git+https://github.com/oxidecomputer/v-api?rev=a780d9063b0baf678fc3a4f2a3b46bde06fc5a98#a780d9063b0baf678fc3a4f2a3b46bde06fc5a98"
+dependencies = [
+ "async-trait",
+ "base64",
+ "dropshot",
+ "tracing",
+]
+
+[[package]]
 name = "dropshot-verified-body"
 version = "0.2.0"
 source = "git+https://github.com/oxidecomputer/dropshot-verified-body?rev=0b124eeb0f52db783a44d395a41425a1f9b709b7#0b124eeb0f52db783a44d395a41425a1f9b709b7"
@@ -3317,7 +3328,7 @@ dependencies = [
  "crc32c",
  "diesel",
  "dropshot",
- "dropshot-authorization-header",
+ "dropshot-authorization-header 0.3.1",
  "dropshot-verified-body",
  "hex",
  "http 1.4.0",
@@ -3364,8 +3375,8 @@ dependencies = [
  "tracing-subscriber",
  "uuid",
  "v-api",
- "v-api-permission-derive",
- "v-model",
+ "v-api-permission-derive 0.3.1",
+ "v-model 0.3.1",
  "yup-oauth2",
 ]
 
@@ -3455,7 +3466,7 @@ dependencies = [
  "tokio",
  "tracing",
  "uuid",
- "v-model",
+ "v-model 0.3.1",
 ]
 
 [[package]]
@@ -3497,7 +3508,7 @@ dependencies = [
  "tracing-appender",
  "tracing-subscriber",
  "uuid",
- "v-model",
+ "v-model 0.3.1",
  "yup-oauth2",
 ]
 
@@ -4044,6 +4055,12 @@ dependencies = [
  "cpufeatures 0.2.17",
  "digest 0.10.7",
 ]
+
+[[package]]
+name = "sha1_smol"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbfa15b3dddfee50a0fff136974b3e1bde555604ba463834a7eb7deb6417705d"
 
 [[package]]
 name = "sha2"
@@ -5001,13 +5018,14 @@ dependencies = [
  "getrandom 0.4.2",
  "js-sys",
  "serde_core",
+ "sha1_smol",
  "wasm-bindgen",
 ]
 
 [[package]]
 name = "v-api"
-version = "0.3.1"
-source = "git+https://github.com/oxidecomputer/v-api?rev=d3fff6f7e539a9435e8dcbb07b54e937237ff623#d3fff6f7e539a9435e8dcbb07b54e937237ff623"
+version = "0.4.0-alpha.2"
+source = "git+https://github.com/oxidecomputer/v-api?rev=a780d9063b0baf678fc3a4f2a3b46bde06fc5a98#a780d9063b0baf678fc3a4f2a3b46bde06fc5a98"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -5016,7 +5034,7 @@ dependencies = [
  "cookie",
  "crc32c",
  "dropshot",
- "dropshot-authorization-header",
+ "dropshot-authorization-header 0.4.0-alpha.2",
  "futures",
  "google-cloudkms1",
  "hex",
@@ -5028,7 +5046,6 @@ dependencies = [
  "oauth2",
  "oauth2-reqwest",
  "partial-struct",
- "percent-encoding",
  "rand 0.10.1",
  "reqwest 0.13.3",
  "rsa",
@@ -5045,8 +5062,8 @@ dependencies = [
  "url",
  "uuid",
  "v-api-param",
- "v-api-permission-derive",
- "v-model",
+ "v-api-permission-derive 0.4.0-alpha.2",
+ "v-model 0.4.0-alpha.2",
  "yup-oauth2",
 ]
 
@@ -5061,8 +5078,8 @@ dependencies = [
 
 [[package]]
 name = "v-api-param"
-version = "0.3.1"
-source = "git+https://github.com/oxidecomputer/v-api?rev=d3fff6f7e539a9435e8dcbb07b54e937237ff623#d3fff6f7e539a9435e8dcbb07b54e937237ff623"
+version = "0.4.0-alpha.2"
+source = "git+https://github.com/oxidecomputer/v-api?rev=a780d9063b0baf678fc3a4f2a3b46bde06fc5a98#a780d9063b0baf678fc3a4f2a3b46bde06fc5a98"
 dependencies = [
  "secrecy",
  "serde",
@@ -5073,6 +5090,17 @@ dependencies = [
 name = "v-api-permission-derive"
 version = "0.3.1"
 source = "git+https://github.com/oxidecomputer/v-api?rev=d3fff6f7e539a9435e8dcbb07b54e937237ff623#d3fff6f7e539a9435e8dcbb07b54e937237ff623"
+dependencies = [
+ "heck",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "v-api-permission-derive"
+version = "0.4.0-alpha.2"
+source = "git+https://github.com/oxidecomputer/v-api?rev=a780d9063b0baf678fc3a4f2a3b46bde06fc5a98#a780d9063b0baf678fc3a4f2a3b46bde06fc5a98"
 dependencies = [
  "heck",
  "proc-macro2",
@@ -5097,6 +5125,28 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.18",
  "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "v-model"
+version = "0.4.0-alpha.2"
+source = "git+https://github.com/oxidecomputer/v-api?rev=a780d9063b0baf678fc3a4f2a3b46bde06fc5a98#a780d9063b0baf678fc3a4f2a3b46bde06fc5a98"
+dependencies = [
+ "async-bb8-diesel",
+ "async-trait",
+ "bb8",
+ "chrono",
+ "diesel",
+ "diesel_migrations",
+ "newtype-uuid",
+ "partial-struct",
+ "schemars 0.8.22",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tracing",
+ "url",
  "uuid",
 ]
 

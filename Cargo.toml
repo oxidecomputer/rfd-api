@@ -92,7 +92,7 @@ tracing-slog = { git = "https://github.com/oxidecomputer/tracing-slog", default-
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
 uuid = { version = "1.23.1", features = ["serde", "v4"] }
 valuable = "0.1.1"
-v-api = { git = "https://github.com/oxidecomputer/v-api", rev = "d3fff6f7e539a9435e8dcbb07b54e937237ff623", default-features = false }
+v-api = { git = "https://github.com/oxidecomputer/v-api", rev = "a780d9063b0baf678fc3a4f2a3b46bde06fc5a98", default-features = false }
 v-api-installer = { git = "https://github.com/oxidecomputer/v-api", rev = "d3fff6f7e539a9435e8dcbb07b54e937237ff623" }
 v-model = { git = "https://github.com/oxidecomputer/v-api", rev = "d3fff6f7e539a9435e8dcbb07b54e937237ff623" }
 v-api-permission-derive = { git = "https://github.com/oxidecomputer/v-api", rev = "d3fff6f7e539a9435e8dcbb07b54e937237ff623" }
