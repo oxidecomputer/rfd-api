@@ -2,7 +2,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use diesel::result::{DatabaseErrorKind, Error as DieselError};
 use rfd_github::{GitHubError, GitHubRfdUpdate};
 use rfd_model::{storage::JobStore, NewJob};
 use std::sync::Arc;
@@ -37,10 +36,7 @@ pub async fn scanner(ctx: Arc<Context>) -> Result<(), ScannerError> {
                     Ok(job) => tracing::trace!(?job.id, "Added job to the queue"),
                     Err(err) => {
                         match err {
-                            StoreError::Db(DieselError::DatabaseError(
-                                DatabaseErrorKind::UniqueViolation,
-                                _,
-                            )) => {
+                            StoreError::Conflict => {
                                 // Nothing to do here, we expect uniqueness conflicts. It is expected
                                 // that the scanner picks ups redundant jobs for RFDs that have not
                                 // changed since the last scan

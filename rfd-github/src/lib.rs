@@ -269,7 +269,7 @@ impl GitHubRfdRepo {
             .await?
             .body;
 
-        tracing::info!(?rfd_files, "Fetched repo files");
+        tracing::info!(count = ?rfd_files.len(), "Fetched repo files");
 
         // Each RFD should exist at a path that looks like rfd/{number}/README.adoc
         for entry in rfd_files {
