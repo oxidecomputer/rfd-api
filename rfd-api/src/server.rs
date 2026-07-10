@@ -8,7 +8,9 @@ use dropshot::{
 use semver::Version;
 use serde::Deserialize;
 use slog::Drain;
-use std::{collections::HashMap, error::Error, fs::File, net::SocketAddr, path::PathBuf};
+use std::{
+    collections::HashMap, error::Error, fs::File, io::Write, net::SocketAddr, path::PathBuf,
+};
 use tracing_slog::TracingSlogDrain;
 use v_api::{inject_endpoints, v_system_endpoints};
 
@@ -43,24 +45,16 @@ pub struct ServerConfig {
     pub spec_output: Option<SpecConfig>,
 }
 
+// Static metadata used when generating the OpenAPI document on demand (i.e. via
+// `rfd-api describe`), independent of any per-deployment `[spec]` configuration.
+const SPEC_TITLE: &str = "RFD API";
+const SPEC_DESCRIPTION: &str = "Programmatic access to RFDs";
+const SPEC_CONTACT_URL: &str = "https://oxide.computer";
+const SPEC_CONTACT_EMAIL: &str = "corp-services@oxidecomputer.com";
+
 v_system_endpoints!(RfdContext, RfdPermission);
 
-pub fn server(
-    config: ServerConfig,
-) -> Result<ServerBuilder<RfdContext>, Box<dyn Error + Send + Sync>> {
-    let config_dropshot = ConfigDropshot {
-        bind_address: config.server_address,
-        default_request_body_max_bytes: 1024 * 1024,
-        ..Default::default()
-    };
-
-    // Construct a shim to pipe dropshot logs into the global tracing logger
-    let dropshot_logger = {
-        let level_drain = slog::LevelFilter(TracingSlogDrain, slog::Level::Debug).fuse();
-        let async_drain = slog_async::Async::new(level_drain).build().fuse();
-        slog::Logger::root(async_drain, slog::o!())
-    };
-
+fn api_description() -> ApiDescription<RfdContext> {
     let mut tags = HashMap::new();
     tags.insert(
         "hidden".to_string(),
@@ -131,6 +125,42 @@ pub fn server(
     // Webhooks
     api.register(github_webhook)
         .expect("Failed to register endpoint");
+
+    api
+}
+
+/// Writes the current OpenAPI document to `out`, using static spec metadata. Used by the
+/// `describe` CLI command to print the spec independent of any runtime configuration.
+pub fn write_openapi<W: Write>(out: &mut W) -> Result<(), Box<dyn Error + Send + Sync>> {
+    let api = api_description();
+    let mut api_definition =
+        &mut api.openapi(SPEC_TITLE, Version::parse(env!("CARGO_PKG_VERSION"))?);
+    api_definition = api_definition
+        .description(SPEC_DESCRIPTION)
+        .contact_url(SPEC_CONTACT_URL)
+        .contact_email(SPEC_CONTACT_EMAIL);
+    api_definition.write(out)?;
+
+    Ok(())
+}
+
+pub fn server(
+    config: ServerConfig,
+) -> Result<ServerBuilder<RfdContext>, Box<dyn Error + Send + Sync>> {
+    let config_dropshot = ConfigDropshot {
+        bind_address: config.server_address,
+        default_request_body_max_bytes: 1024 * 1024,
+        ..Default::default()
+    };
+
+    // Construct a shim to pipe dropshot logs into the global tracing logger
+    let dropshot_logger = {
+        let level_drain = slog::LevelFilter(TracingSlogDrain, slog::Level::Debug).fuse();
+        let async_drain = slog_async::Async::new(level_drain).build().fuse();
+        slog::Logger::root(async_drain, slog::o!())
+    };
+
+    let api = api_description();
 
     if let Some(spec) = config.spec_output {
         // TODO: How do we validate that spec_output can be read or written? Currently File::create
