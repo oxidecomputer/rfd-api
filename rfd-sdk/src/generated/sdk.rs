@@ -14260,7 +14260,7 @@ pub mod types {
 ///
 /// Programmatic access to RFDs
 ///
-/// Version: 0.14.0
+/// Version: 0.14.5
 pub struct Client {
     pub(crate) baseurl: String,
     pub(crate) client: reqwest::Client,
@@ -14301,7 +14301,7 @@ impl Client {
 
 impl ClientInfo<()> for Client {
     fn api_version() -> &'static str {
-        "0.14.0"
+        "0.14.5"
     }
 
     fn baseurl(&self) -> &str {
@@ -17622,7 +17622,7 @@ pub mod builder {
         }
 
         /// Sends a `GET` request to `/login/oauth/{provider}/code/authorize`
-        pub async fn send(self) -> Result<ResponseValue<ByteStream>, Error<ByteStream>> {
+        pub async fn send(self) -> Result<ResponseValue<ByteStream>, Error<types::Error>> {
             let Self {
                 client,
                 provider,
@@ -17674,7 +17674,13 @@ pub mod builder {
             let response = result?;
             match response.status().as_u16() {
                 200..=299 => Ok(ResponseValue::stream(response)),
-                _ => Err(Error::ErrorResponse(ResponseValue::stream(response))),
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
             }
         }
     }

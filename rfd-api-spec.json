@@ -5,9 +5,9 @@
     "description": "Programmatic access to RFDs",
     "contact": {
       "url": "https://oxide.computer",
-      "email": "augustus@oxidecomputer.com"
+      "email": "corp-services@oxidecomputer.com"
     },
-    "version": "0.14.0"
+    "version": "0.14.5"
   },
   "paths": {
     "/.well-known/jwks.json": {
@@ -978,13 +978,24 @@
           }
         ],
         "responses": {
-          "default": {
-            "description": "",
-            "content": {
-              "*/*": {
-                "schema": {}
+          "307": {
+            "description": "redirect (temporary redirect)",
+            "headers": {
+              "location": {
+                "description": "HTTP \"Location\" header",
+                "style": "simple",
+                "required": true,
+                "schema": {
+                  "type": "string"
+                }
               }
             }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
           }
         }
       }
