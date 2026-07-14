@@ -29,6 +29,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Install PDF comparison tool
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y diff-pdf-wx
       - uses: ruby/setup-ruby@6e5d382445ae5590b7449d8b3bc8cb1c2c27f617 # v1.3.7
         with:
           working-directory: rfd-processor
@@ -60,8 +64,10 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: rfd-processor-example-local-pdf
-          path: rfd-processor/tests/content/example-local.pdf
+          name: rfd-processor-example-pdf-artifacts
+          path: |
+            rfd-processor/tests/content/example-rendered.pdf
+            rfd-processor/tests/content/example-diff.pdf
           if-no-files-found: ignore
 
   generate:

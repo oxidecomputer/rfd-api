@@ -176,37 +176,40 @@ exec "$real_mmdc" --puppeteerConfigFile "$puppeteer_config" "$@"
             .expect("example RFD should render to PDF");
         let pdf = pdf.into_inner();
 
-        fs::write(
-            Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/content/example-local.pdf"),
-            &pdf,
-        )
-        .expect("failed to write local example PDF");
+        let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let rendered_pdf_path = manifest_dir.join("tests/content/example-rendered.pdf");
+        let diff_pdf_path = manifest_dir.join("tests/content/example-diff.pdf");
+        fs::write(&rendered_pdf_path, &pdf).expect("failed to write rendered example PDF");
+        let _ = fs::remove_file(&diff_pdf_path);
 
         assert!(pdf.starts_with(b"%PDF-"), "rendered bytes should be a PDF");
-        let repo_pdf_path =
-            Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/content/example-repo.pdf");
-        let expected_pdf = match fs::read(&repo_pdf_path) {
-            Ok(pdf) => pdf,
+        let repo_pdf_path = manifest_dir.join("tests/content/example-repo.pdf");
+        match fs::read(&repo_pdf_path) {
+            Ok(_) => {}
             Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
                 fs::write(&repo_pdf_path, &pdf).expect("failed to write repo example PDF");
-                pdf.clone()
+                return;
             }
             Err(err) => panic!("failed to read repo example PDF: {err}"),
-        };
+        }
 
-        if pdf != expected_pdf {
-            let first_diff = pdf
-                .iter()
-                .zip(expected_pdf.iter())
-                .position(|(actual, expected)| actual != expected);
+        let diff_output = Command::new("diff-pdf")
+            .arg("--output-diff")
+            .arg(&diff_pdf_path)
+            .arg(&repo_pdf_path)
+            .arg(&rendered_pdf_path)
+            .output()
+            .expect("failed to run diff-pdf; install it with `brew install diff-pdf` or `apt-get install diff-pdf-wx`");
 
+        if !diff_output.status.success() {
             panic!(
-                "rendered PDF should match tests/content/example-repo.pdf; actual len {}, expected len {}, first differing byte {:?}",
-                pdf.len(),
-                expected_pdf.len(),
-                first_diff
+                "rendered PDF should visually match tests/content/example-repo.pdf; wrote actual PDF to tests/content/example-rendered.pdf and visual diff to tests/content/example-diff.pdf\nstdout:\n{}\nstderr:\n{}",
+                String::from_utf8_lossy(&diff_output.stdout),
+                String::from_utf8_lossy(&diff_output.stderr),
             );
         }
+
+        let _ = fs::remove_file(&diff_pdf_path);
     }
 
     fn find_executable(name: &str, path_prefixes: &[PathBuf]) -> PathBuf {

@@ -43,8 +43,9 @@ Running the API requires setting up a configuration file as outlined in `config.
 
 Dependencies
 
-The PDF renderer shells out to `asciidoctor-pdf` and `mmdc`. The toolchain
-versions are pinned in:
+The PDF renderer shells out to `asciidoctor-pdf` and `mmdc`. The PDF rendering
+test also shells out to `diff-pdf` to visually compare the generated PDF with
+the checked-in example. The toolchain versions are pinned in:
 
 * `rfd-processor/Gemfile`
 * `rfd-processor/Gemfile.lock`
@@ -76,6 +77,8 @@ On macOS, use `brew install ruby@3.2` and then install the PDF toolchain
 through Bundler and npm as shown above.
 If you previously installed `asciidoctor` via Homebrew, uninstall
 with `brew uninstall asciidoctor`.
+Install the visual PDF comparison tool with `brew install diff-pdf` on macOS or
+`apt-get install diff-pdf-wx` on Ubuntu.
 
 ## Background
 
