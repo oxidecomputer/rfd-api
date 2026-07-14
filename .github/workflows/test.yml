@@ -29,19 +29,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Install PDF toolchain system dependencies
-        shell: bash
-        run: |
-          sudo apt update -y && sudo apt install -y \
-            ruby \
-          sudo gem install bundler -v 4.0.11
+      - uses: ruby/setup-ruby@v1
+        with:
+          working-directory: rfd-processor
+          bundler-cache: true
       - name: Install PDF toolchain
         shell: bash
         working-directory: rfd-processor
         run: |
-          bundle config set path vendor/bundle
           bundle config set bin .bundle/bin
-          bundle install
           bundle binstubs asciidoctor asciidoctor-pdf
           npm ci
           npm run install:chrome
