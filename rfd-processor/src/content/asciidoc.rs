@@ -119,6 +119,13 @@ mod tests {
             fs::create_dir_all(&debug_dir).expect("failed to create mmdc debug directory");
 
             let real_mmdc = find_executable("mmdc");
+            let puppeteer_config = debug_dir.join("puppeteer.json");
+            fs::write(
+                &puppeteer_config,
+                r#"{"args":["--no-sandbox","--disable-setuid-sandbox"]}"#,
+            )
+            .expect("failed to write puppeteer config");
+
             let wrapper = wrapper_dir.join("mmdc");
             fs::write(
                 &wrapper,
@@ -128,6 +135,7 @@ set +e
 
 debug_dir={debug_dir}
 real_mmdc={real_mmdc}
+puppeteer_config={puppeteer_config}
 mkdir -p "$debug_dir"
 
 input="$debug_dir/stdin.mmd"
@@ -138,13 +146,14 @@ invocation="$debug_dir/invocation.txt"
 
 {{
     printf 'real_mmdc=%s\n' "$real_mmdc"
+    printf 'puppeteer_config=%s\n' "$puppeteer_config"
     printf 'args:'
     printf ' <%s>' "$@"
     printf '\n'
 }} > "$invocation"
 
 cat > "$input"
-"$real_mmdc" "$@" < "$input" > "$stdout" 2> "$stderr"
+"$real_mmdc" --puppeteerConfigFile "$puppeteer_config" "$@" < "$input" > "$stdout" 2> "$stderr"
 code=$?
 printf '%s\n' "$code" > "$status"
 cat "$stdout"
@@ -153,6 +162,7 @@ exit "$code"
 "#,
                     debug_dir = shell_quote(debug_dir.as_path()),
                     real_mmdc = shell_quote(real_mmdc.as_path()),
+                    puppeteer_config = shell_quote(puppeteer_config.as_path()),
                 ),
             )
             .expect("failed to write mmdc debug wrapper");
@@ -179,6 +189,7 @@ exit "$code"
             for file in [
                 "invocation.txt",
                 "status.txt",
+                "puppeteer.json",
                 "stdin.mmd",
                 "stdout.log",
                 "stderr.log",
