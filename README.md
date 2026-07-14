@@ -43,15 +43,38 @@ Running the API requires setting up a configuration file as outlined in `config.
 
 Dependencies
 
-* asciidoctor
-* Node
-  * @mermaid-js/mermaid-cli
-* Ruby
-  * rouge
-  * asciidoctor-pdf
-  * asciidoctor-mermaid
+The PDF renderer shells out to `asciidoctor-pdf` and `mmdc`. The toolchain
+versions are pinned in:
 
-Mac: `brew install asciidoctor && npm install -g @mermaid-js/mermaid-cli`
+* `rfd-processor/Gemfile`
+* `rfd-processor/Gemfile.lock`
+* `rfd-processor/package.json`
+* `rfd-processor/package-lock.json`
+
+Install the Ruby dependencies:
+
+```sh
+cd rfd-processor
+gem install bundler -v 4.0.11
+bundle config set path vendor/bundle
+bundle config set bin .bundle/bin
+bundle install
+bundle binstubs asciidoctor asciidoctor-pdf
+export PATH="$PWD/.bundle/bin:$PATH"
+```
+
+Install the Node dependencies and Chromium runtime used by Mermaid:
+
+```sh
+cd rfd-processor
+npm ci
+npm run install:chrome
+export PATH="$PWD/node_modules/.bin:$PATH"
+```
+
+On macOS, use Homebrew `ruby` and `node`, then install the PDF toolchain through
+Bundler and npm as shown above. If you have previous installed `asciidoctor`
+via homebrew, uninstall with `brew uninstall asciidoctor`.
 
 ## Background
 

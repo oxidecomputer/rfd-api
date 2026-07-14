@@ -1,0 +1,103 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    Ascii85 (2.0.1)
+    addressable (2.9.0)
+      public_suffix (>= 2.0.2, < 8.0)
+    afm (1.0.0)
+    asciidoctor (2.0.26)
+    asciidoctor-mermaid (0.4.1)
+    asciidoctor-pdf (2.3.24)
+      asciidoctor (~> 2.0)
+      concurrent-ruby (~> 1.3)
+      matrix (~> 0.4)
+      prawn (~> 2.4.0)
+      prawn-icon (~> 3.0.0)
+      prawn-svg (~> 0.34.0)
+      prawn-table (~> 0.2.0)
+      prawn-templates (~> 0.1.0)
+      treetop (~> 1.6.0)
+      ttfunk (~> 1.7.0)
+    base64 (0.3.0)
+    concurrent-ruby (1.3.7)
+    css_parser (1.22.0)
+      addressable
+    hashery (2.1.2)
+    logger (1.7.0)
+    matrix (0.4.3)
+    pdf-core (0.9.0)
+    pdf-reader (2.15.1)
+      Ascii85 (>= 1.0, < 3.0, != 2.0.0)
+      afm (>= 0.2.1, < 2)
+      hashery (~> 2.0)
+      ruby-rc4
+      ttfunk
+    polyglot (0.3.5)
+    prawn (2.4.0)
+      pdf-core (~> 0.9.0)
+      ttfunk (~> 1.7)
+    prawn-icon (3.0.0)
+      prawn (>= 1.1.0, < 3.0.0)
+    prawn-svg (0.34.2)
+      css_parser (~> 1.6)
+      matrix (~> 0.4.2)
+      prawn (>= 0.11.1, < 3)
+      rexml (~> 3.2)
+    prawn-table (0.2.2)
+      prawn (>= 1.3.0, < 3.0.0)
+    prawn-templates (0.1.2)
+      pdf-reader (~> 2.0)
+      prawn (~> 2.2)
+    public_suffix (7.0.5)
+    rexml (3.4.4)
+    rouge (5.0.0)
+      strscan (~> 3.1)
+    ruby-rc4 (0.1.5)
+    strscan (3.1.8)
+    treetop (1.6.18)
+      polyglot (~> 0.3)
+    ttfunk (1.7.0)
+
+PLATFORMS
+  arm64-darwin-25
+  ruby
+
+DEPENDENCIES
+  asciidoctor (= 2.0.26)
+  asciidoctor-mermaid (= 0.4.1)
+  asciidoctor-pdf (= 2.3.24)
+  base64 (= 0.3.0)
+  logger (= 1.7.0)
+  rouge (= 5.0.0)
+
+CHECKSUMS
+  Ascii85 (2.0.1) sha256=15cb5d941808543cbb9e7e6aea3c8ec3877f154c3461e8b3673e97f7ecedbe5a
+  addressable (2.9.0) sha256=7fdf6ac3660f7f4e867a0838be3f6cf722ace541dd97767fa42bc6cfa980c7af
+  afm (1.0.0) sha256=5bd4d6f6241e7014ef090985ec6f4c3e9745f6de0828ddd58bc1efdd138f4545
+  asciidoctor (2.0.26) sha256=16e3accf1fc206bbd6335848649d7fd65f31d2daa60d85af13d47a8ee4b071c1
+  asciidoctor-mermaid (0.4.1) sha256=51146b0df171d112c118df9236c062f38a5da49afd2086baf21a3ab95343a46c
+  asciidoctor-pdf (2.3.24) sha256=3076e55132d43b21de93cd7c8149a8c1b2e4afc07e79855fb6b795a0ef20b051
+  base64 (0.3.0) sha256=27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b
+  concurrent-ruby (1.3.7) sha256=4412caec3a5ea2e5fdc52076724c071a81f2c0593d83b2ac8cbb8ca63b3151b0
+  css_parser (1.22.0) sha256=f274988a40c6178305530d60e7deb5162f7b5538b701b61b5488fc703e5b40c1
+  hashery (2.1.2) sha256=d239cc2310401903f6b79d458c2bbef5bf74c46f3f974ae9c1061fb74a404862
+  logger (1.7.0) sha256=196edec7cc44b66cfb40f9755ce11b392f21f7967696af15d274dde7edff0203
+  matrix (0.4.3) sha256=a0d5ab7ddcc1973ff690ab361b67f359acbb16958d1dc072b8b956a286564c5b
+  pdf-core (0.9.0) sha256=4f368b2f12b57ec979872d4bf4bd1a67e8648e0c81ab89801431d2fc89f4e0bb
+  pdf-reader (2.15.1) sha256=18c6a986a84a3117fa49f4279fc2de51f5d2399b71833df5d2bccd595c7068ce
+  polyglot (0.3.5) sha256=59d66ef5e3c166431c39cb8b7c1d02af419051352f27912f6a43981b3def16af
+  prawn (2.4.0) sha256=82062744f7126c2d77501da253a154271790254dfa8c309b8e52e79bc5de2abd
+  prawn-icon (3.0.0) sha256=dac8d481dee0f60a769c0cab0fd1baec7351b4806bf9ba959cd6c65f6694b6f5
+  prawn-svg (0.34.2) sha256=afff79d332940f6d59604d0b2810f54d46e9335533a2aa4e892fb7d514777a90
+  prawn-table (0.2.2) sha256=336d46e39e003f77bf973337a958af6a68300b941c85cb22288872dc2b36addb
+  prawn-templates (0.1.2) sha256=117aa03db570147cb86fcd7de4fd896994f702eada1d699848a9529a87cd31f1
+  public_suffix (7.0.5) sha256=1a8bb08f1bbea19228d3bed6e5ed908d1cb4f7c2726d18bd9cadf60bc676f623
+  rexml (3.4.4) sha256=19e0a2c3425dfbf2d4fc1189747bdb2f849b6c5e74180401b15734bc97b5d142
+  rouge (5.0.0) sha256=e2de9bba2f9cb88f8a73bca3643b560b2b398f32f91bf716f584477bc0175ebc
+  ruby-rc4 (0.1.5) sha256=00cc40a39d20b53f5459e7ea006a92cf584e9bc275e2a6f7aa1515510e896c03
+  strscan (3.1.8) sha256=aae2db611a225559f21ffbb71765c9a4e60fd262534a9ea84f4f11c7f32f679e
+  treetop (1.6.18) sha256=a3043f32f1c652aa2abdf3a3848edb2d2f69897257af2675516ac61355c183da
+  ttfunk (1.7.0) sha256=2370ba484b1891c70bdcafd3448cfd82a32dd794802d81d720a64c15d3ef2a96
+
+BUNDLED WITH
+  4.0.11

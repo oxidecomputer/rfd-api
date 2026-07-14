@@ -29,20 +29,24 @@ jobs:
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Install asciidoctor
+      - name: Install PDF toolchain system dependencies
         shell: bash
         run: |
           sudo apt update -y && sudo apt install -y \
-            asciidoctor \
             ruby \
-      - name: Install asciidoctor-pdf, asciidoctor-mermaid
+          sudo gem install bundler -v 4.0.11
+      - name: Install PDF toolchain
         shell: bash
+        working-directory: rfd-processor
         run: |
-          sudo gem install rouge
-          sudo gem install asciidoctor-pdf -v 2.3.15
-          sudo gem install asciidoctor-mermaid -v 0.4.1
-          sudo npm install -g @mermaid-js/mermaid-cli@11.16.0
-          "$(npm root -g)/@mermaid-js/mermaid-cli/node_modules/.bin/puppeteer" browsers install chrome-headless-shell
+          bundle config set path vendor/bundle
+          bundle config set bin .bundle/bin
+          bundle install
+          bundle binstubs asciidoctor asciidoctor-pdf
+          npm ci
+          npm run install:chrome
+          echo "$PWD/.bundle/bin" >> "$GITHUB_PATH"
+          echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH"
       - name: Report versions
         run: |
           asciidoctor --version
