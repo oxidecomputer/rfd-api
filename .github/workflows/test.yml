@@ -107,7 +107,7 @@ jobs:
       - name: Verify SDK Generation
         run: |
           cargo xtask generate
-          GENERATED="rfd-sdk/src/generated/ rfd-cli/src/generated/ rfd-ts/"
+          GENERATED="rfd-api-spec.json rfd-sdk/src/generated/ rfd-cli/src/generated/ rfd-ts/"
           if ! git diff --quiet -- "$GENERATED"; then
             git diff -- "$GENERATED"
             echo "Found changed files after generating SDKs:"

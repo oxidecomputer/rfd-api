@@ -53,6 +53,14 @@ async fn main() -> anyhow::Result<()> {
     let mut args = std::env::args();
     let _ = args.next();
     let config_path = args.next();
+
+    // Print the OpenAPI document to stdout and exit, without requiring the rest of the server's
+    // runtime configuration (database, secrets, etc). Used to keep the checked-in
+    // rfd-api-spec.json up to date via `cargo xtask generate`.
+    if config_path.as_deref() == Some("describe") {
+        return server::write_openapi(&mut std::io::stdout()).map_err(|err| anyhow::anyhow!(err));
+    }
+
     let param_path = config_path
         .as_deref()
         .and_then(|path| Path::new(path).parent())

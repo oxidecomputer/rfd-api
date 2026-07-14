@@ -102,7 +102,7 @@ fn bump_package_versions(place: &VersionPlace) -> Result<(), String> {
         return Err("cargo check failed".to_string());
     }
 
-    Ok(())
+    generate(false, false)
 }
 
 trait Bump {
@@ -147,6 +147,24 @@ fn generate(check: bool, verbose: bool) -> Result<(), String> {
     let root_path = xtask_path.parent().unwrap().to_path_buf();
     let mut spec_path = root_path.clone();
     spec_path.push("rfd-api-spec.json");
+
+    // Regenerate the OpenAPI spec from the API server itself, so the SDKs below are always
+    // derived from the canonical description and the checked-in spec can be checked for drift.
+    print!("generating spec ... ");
+    std::io::stdout().flush().unwrap();
+    let output = Command::new("cargo")
+        .args(["run", "--quiet", "-p", "rfd-api", "--", "describe"])
+        .current_dir(&root_path)
+        .output()
+        .map_err(|err| format!("failed to run rfd-api describe: {}", err))?;
+    if !output.status.success() {
+        return Err(format!(
+            "rfd-api describe failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        ));
+    }
+    fs::write(&spec_path, &output.stdout).map_err(|e| e.to_string())?;
+    println!("done.");
 
     let file = File::open(spec_path).unwrap();
     let spec = serde_json::from_reader(file).unwrap();
