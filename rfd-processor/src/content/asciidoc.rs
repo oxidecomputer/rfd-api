@@ -110,7 +110,11 @@ mod tests {
             &self.path
         }
 
-        fn write_mmdc_wrapper(&self, path_prefixes: &[PathBuf]) -> PathBuf {
+        fn write_mmdc_wrapper(
+            &self,
+            path_prefixes: &[PathBuf],
+            mermaid_image_path: &Path,
+        ) -> PathBuf {
             let wrapper_dir = self.path.join("mmdc-bin");
             fs::create_dir_all(&wrapper_dir).expect("failed to create mmdc wrapper directory");
 
@@ -129,10 +133,45 @@ mod tests {
                     r#"#!/usr/bin/env bash
 real_mmdc={real_mmdc}
 puppeteer_config={puppeteer_config}
-exec "$real_mmdc" --puppeteerConfigFile "$puppeteer_config" "$@"
+mermaid_image={mermaid_image}
+
+output_file=""
+previous_arg=""
+for arg in "$@"; do
+    if [[ "$previous_arg" == "-o" || "$previous_arg" == "--output" ]]; then
+        output_file="$arg"
+        break
+    fi
+
+    if [[ "$arg" == "-o" || "$arg" == "--output" ]]; then
+        previous_arg="$arg"
+        continue
+    fi
+
+    case "$arg" in
+        -o*)
+            output_file="${{arg#-o}}"
+            break
+            ;;
+        --output=*)
+            output_file="${{arg#--output=}}"
+            break
+            ;;
+    esac
+
+    previous_arg="$arg"
+done
+
+"$real_mmdc" --puppeteerConfigFile "$puppeteer_config" "$@"
+status="$?"
+if [[ "$status" == "0" && -n "$output_file" && -f "$output_file" ]]; then
+    cp "$output_file" "$mermaid_image"
+fi
+exit "$status"
 "#,
                     real_mmdc = shell_quote(real_mmdc.as_path()),
                     puppeteer_config = shell_quote(puppeteer_config.as_path()),
+                    mermaid_image = shell_quote(mermaid_image_path),
                 ),
             )
             .expect("failed to write mmdc wrapper");
@@ -162,12 +201,19 @@ exec "$real_mmdc" --puppeteerConfigFile "$puppeteer_config" "$@"
     #[tokio::test]
     async fn render_pdf_example() {
         let render_dir = RenderDir::new();
+        let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let rendered_pdf_path = manifest_dir.join("tests/content/example-rendered.pdf");
+        let diff_pdf_path = manifest_dir.join("tests/content/example-diff.pdf");
+        let mermaid_image_path = manifest_dir.join("tests/content/example-mermaid-rendered.png");
+        let _ = fs::remove_file(&diff_pdf_path);
+        let _ = fs::remove_file(&mermaid_image_path);
+
         fs::write(render_dir.path().join("example.csv"), EXAMPLE_CSV)
             .expect("failed to write CSV include");
         fs::write(render_dir.path().join("oxide-logo.svg"), OXIDE_LOGO)
             .expect("failed to write supporting image");
         let mut path_prefixes = test_toolchain_path_prefixes();
-        let mmdc_path_prefix = render_dir.write_mmdc_wrapper(&path_prefixes);
+        let mmdc_path_prefix = render_dir.write_mmdc_wrapper(&path_prefixes, &mermaid_image_path);
         path_prefixes.insert(0, mmdc_path_prefix);
 
         let content = RfdAsciidoc::new(EXAMPLE_RFD).expect("example RFD should parse");
@@ -176,13 +222,13 @@ exec "$real_mmdc" --puppeteerConfigFile "$puppeteer_config" "$@"
             .expect("example RFD should render to PDF");
         let pdf = pdf.into_inner();
 
-        let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
-        let rendered_pdf_path = manifest_dir.join("tests/content/example-rendered.pdf");
-        let diff_pdf_path = manifest_dir.join("tests/content/example-diff.pdf");
         fs::write(&rendered_pdf_path, &pdf).expect("failed to write rendered example PDF");
-        let _ = fs::remove_file(&diff_pdf_path);
 
         assert!(pdf.starts_with(b"%PDF-"), "rendered bytes should be a PDF");
+        assert!(
+            mermaid_image_path.is_file(),
+            "rendering should write tests/content/example-mermaid-rendered.png"
+        );
         let repo_pdf_path = manifest_dir.join("tests/content/example-repo.pdf");
         match fs::read(&repo_pdf_path) {
             Ok(_) => {}

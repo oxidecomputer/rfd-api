@@ -32,7 +32,7 @@ jobs:
       - name: Install PDF comparison tool
         run: |
           sudo apt-get update
-          sudo apt-get install -y diff-pdf-wx
+          sudo apt-get install -y diff-pdf-wx fontconfig
       - uses: ruby/setup-ruby@6e5d382445ae5590b7449d8b3bc8cb1c2c27f617 # v1.3.7
         with:
           working-directory: rfd-processor
@@ -48,10 +48,19 @@ jobs:
           echo "$PWD/.bundle/bin" >> "$GITHUB_PATH"
           echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH"
       - name: Report versions
+        working-directory: rfd-processor
         run: |
           asciidoctor --version
           asciidoctor-pdf --version
           mmdc --version
+          node --version
+          npm --version
+          node -e 'const puppeteer = require("puppeteer"); puppeteer.executablePath().then(console.log)'
+          "$(node -e 'const puppeteer = require("puppeteer"); puppeteer.executablePath().then((path) => process.stdout.write(path))')" --version
+          fc-match sans-serif
+          fc-match Arial
+          fc-match Verdana
+          fc-match "Trebuchet MS"
       - run: |
           rustup toolchain install
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
@@ -68,6 +77,7 @@ jobs:
           path: |
             rfd-processor/tests/content/example-rendered.pdf
             rfd-processor/tests/content/example-diff.pdf
+            rfd-processor/tests/content/example-mermaid-rendered.png
           if-no-files-found: ignore
 
   generate:
