@@ -2,9 +2,6 @@
   "name": "@oxide/rfd-processor-pdf-toolchain",
   "private": true,
   "description": "Node dependencies for rendering RFD PDFs",
-  "scripts": {
-    "install:chrome": "puppeteer browsers install chrome-headless-shell"
-  },
   "dependencies": {
     "@mermaid-js/mermaid-cli": "11.16.0"
   }

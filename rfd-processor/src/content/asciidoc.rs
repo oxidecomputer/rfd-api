@@ -47,24 +47,7 @@ async fn render_pdf(
         file_path.to_str().unwrap(),
     ]);
 
-    let cmd_output = tokio::task::spawn_blocking(move || {
-        tracing::info!(?file_path, "Shelling out to asciidoctor");
-
-        // Verify the expected resources exist
-        tracing::info!(?file_path, exists = file_path.exists(), "Check document");
-
-        let out = command.output();
-
-        match &out {
-            Ok(_) => tracing::info!(?file_path, "Command succeeded"),
-            Err(err) => tracing::info!(?file_path, ?err, "Command failed"),
-        };
-
-        out
-    })
-    .await?;
-
-    tracing::info!("Completed asciidoc rendering");
+    let cmd_output = tokio::task::spawn_blocking(move || command.output()).await?;
 
     let cmd_output = cmd_output.map_err(|error| RenderableRfdError::ProcessStart {
         command: "asciidoctor-pdf",

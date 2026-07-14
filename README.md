@@ -63,7 +63,6 @@ Install the Node dependencies and Chromium runtime used by Mermaid:
 ```sh
 cd rfd-processor
 npm ci
-npm run install:chrome
 export PATH="$PWD/node_modules/.bin:$PATH"
 ```
 

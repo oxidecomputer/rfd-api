@@ -10,6 +10,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.ref_name == 'main' && github.sha || 'anysha' }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-24.04
@@ -40,8 +43,6 @@ jobs:
           bundle config set bin .bundle/bin
           bundle binstubs asciidoctor asciidoctor-pdf
           npm ci
-          npm run install:chrome
-          mkdir -p .bundle/bin
           printf '%s\n' '{"args":["--no-sandbox","--disable-setuid-sandbox"]}' > .bundle/bin/puppeteer.json
           printf '%s\n' '#!/usr/bin/env bash' \
             "exec '$PWD/node_modules/.bin/mmdc' --puppeteerConfigFile '$PWD/.bundle/bin/puppeteer.json' \"\$@\"" \
@@ -68,7 +69,7 @@ jobs:
           generated_pdf="rfd-processor/tests/rfd_9999-generated.pdf"
           diff_pdf="rfd-processor/tests/rfd_9999-diff.pdf"
 
-          cargo run -p rfd-processor -- pdf rfd-processor/tests/rfd_9999 -o "$generated_pdf"
+          cargo run --profile test -p rfd-processor -- pdf rfd-processor/tests/rfd_9999 -o "$generated_pdf"
 
           expected_checksum="$(sha256sum "$expected_pdf" | cut -d ' ' -f 1)"
           generated_checksum="$(sha256sum "$generated_pdf" | cut -d ' ' -f 1)"
