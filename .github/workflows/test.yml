@@ -41,15 +41,13 @@ jobs:
           bundle binstubs asciidoctor asciidoctor-pdf
           npm ci
           npm run install:chrome
-          mkdir -p .ci-bin
-          printf '%s\n' '{"args":["--no-sandbox","--disable-setuid-sandbox"]}' > .ci-bin/puppeteer.json
+          mkdir -p .bundle/bin
+          printf '%s\n' '{"args":["--no-sandbox","--disable-setuid-sandbox"]}' > .bundle/bin/puppeteer.json
           printf '%s\n' '#!/usr/bin/env bash' \
-            "exec '$PWD/node_modules/.bin/mmdc' --puppeteerConfigFile '$PWD/.ci-bin/puppeteer.json' \"\$@\"" \
-            > .ci-bin/mmdc
-          chmod +x .ci-bin/mmdc
+            "exec '$PWD/node_modules/.bin/mmdc' --puppeteerConfigFile '$PWD/.bundle/bin/puppeteer.json' \"\$@\"" \
+            > .bundle/bin/mmdc
+          chmod +x .bundle/bin/mmdc
           echo "$PWD/.bundle/bin" >> "$GITHUB_PATH"
-          echo "$PWD/.ci-bin" >> "$GITHUB_PATH"
-          echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH"
       - name: Report versions
         run: |
           asciidoctor --version
