@@ -72,9 +72,10 @@ npm run install:chrome
 export PATH="$PWD/node_modules/.bin:$PATH"
 ```
 
-On macOS, use Homebrew `ruby` and `node`, then install the PDF toolchain through
-Bundler and npm as shown above. If you have previous installed `asciidoctor`
-via homebrew, uninstall with `brew uninstall asciidoctor`.
+On macOS, use `brew install ruby@3.2` and then install the PDF toolchain
+through Bundler and npm as shown above.
+If you previously installed `asciidoctor` via Homebrew, uninstall
+with `brew uninstall asciidoctor`.
 
 ## Background
 
