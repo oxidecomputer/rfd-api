@@ -102,7 +102,7 @@ fn bump_package_versions(place: &VersionPlace) -> Result<(), String> {
         return Err("cargo check failed".to_string());
     }
 
-    Ok(())
+    generate(false, false)
 }
 
 trait Bump {
