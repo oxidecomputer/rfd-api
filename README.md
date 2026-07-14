@@ -51,6 +51,8 @@ Dependencies
   * asciidoctor-pdf
   * asciidoctor-mermaid
 
+Mac: `brew install asciidoctor && npm install -g @mermaid-js/mermaid-cli`
+
 ## Background
 
 Objects reference:
