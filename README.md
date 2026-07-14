@@ -43,14 +43,8 @@ Running the API requires setting up a configuration file as outlined in `config.
 
 Dependencies
 
-The PDF renderer shells out to `asciidoctor-pdf` and `mmdc`. The PDF rendering
-test also shells out to `diff-pdf` to visually compare the generated PDF with
-the checked-in example. The toolchain versions are pinned in:
-
-* `rfd-processor/Gemfile`
-* `rfd-processor/Gemfile.lock`
-* `rfd-processor/package.json`
-* `rfd-processor/package-lock.json`
+The PDF renderer shells out to `asciidoctor-pdf` and `mmdc`. The toolchain
+versions are pinned in: `rfd-processor/Gemfile` and `rfd-processor/package.json`.
 
 Install the Ruby dependencies:
 
@@ -77,8 +71,24 @@ On macOS, use `brew install ruby@3.2` and then install the PDF toolchain
 through Bundler and npm as shown above.
 If you previously installed `asciidoctor` via Homebrew, uninstall
 with `brew uninstall asciidoctor`.
-Install the visual PDF comparison tool with `brew install diff-pdf` on macOS or
-`apt-get install diff-pdf-wx` on Ubuntu.
+
+Render an RFD directory with:
+
+```sh
+PATH="$PWD/rfd-processor/.bundle/bin:$PWD/rfd-processor/node_modules/.bin:$PATH" \
+    cargo run -p rfd-processor -- pdf rfd-processor/tests/rfd_9999 -o /tmp/rfd_9999.pdf
+```
+
+On macOS with Homebrew Ruby:
+
+```sh
+PATH="/opt/homebrew/opt/ruby@3.2/bin:$PWD/rfd-processor/.bundle/bin:$PWD/rfd-processor/node_modules/.bin:$PATH" \
+    cargo run -p rfd-processor -- pdf rfd-processor/tests/rfd_9999 -o /tmp/rfd_9999.pdf
+```
+
+CI renders `rfd-processor/tests/rfd_9999` on Linux and compares the checksum
+against `rfd-processor/tests/rfd_9999.pdf`. If the checksum changes, CI uploads
+the generated PDF and a `diff-pdf` visual diff artifact.
 
 ## Background
 

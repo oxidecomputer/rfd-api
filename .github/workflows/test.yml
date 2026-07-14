@@ -29,10 +29,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Install PDF comparison tool
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y diff-pdf-wx fontconfig
       - uses: ruby/setup-ruby@6e5d382445ae5590b7449d8b3bc8cb1c2c27f617 # v1.3.7
         with:
           working-directory: rfd-processor
@@ -45,22 +41,20 @@ jobs:
           bundle binstubs asciidoctor asciidoctor-pdf
           npm ci
           npm run install:chrome
+          mkdir -p .ci-bin
+          printf '%s\n' '{"args":["--no-sandbox","--disable-setuid-sandbox"]}' > .ci-bin/puppeteer.json
+          printf '%s\n' '#!/usr/bin/env bash' \
+            "exec '$PWD/node_modules/.bin/mmdc' --puppeteerConfigFile '$PWD/.ci-bin/puppeteer.json' \"\$@\"" \
+            > .ci-bin/mmdc
+          chmod +x .ci-bin/mmdc
           echo "$PWD/.bundle/bin" >> "$GITHUB_PATH"
+          echo "$PWD/.ci-bin" >> "$GITHUB_PATH"
           echo "$PWD/node_modules/.bin" >> "$GITHUB_PATH"
       - name: Report versions
-        working-directory: rfd-processor
         run: |
           asciidoctor --version
           asciidoctor-pdf --version
           mmdc --version
-          node --version
-          npm --version
-          node -e 'const puppeteer = require("puppeteer"); puppeteer.executablePath().then(console.log)'
-          "$(node -e 'const puppeteer = require("puppeteer"); puppeteer.executablePath().then((path) => process.stdout.write(path))')" --version
-          fc-match sans-serif
-          fc-match Arial
-          fc-match Verdana
-          fc-match "Trebuchet MS"
       - run: |
           rustup toolchain install
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
@@ -69,15 +63,35 @@ jobs:
         env:
           TEST_DATABASE: postgres://test:test@localhost
           RUST_LOG: v=trace,rfd=trace
+      - name: Verify RFD 9999 PDF fixture
+        shell: bash
+        run: |
+          expected_pdf="rfd-processor/tests/rfd_9999.pdf"
+          generated_pdf="rfd-processor/tests/rfd_9999-generated.pdf"
+          diff_pdf="rfd-processor/tests/rfd_9999-diff.pdf"
+
+          cargo run -p rfd-processor -- pdf rfd-processor/tests/rfd_9999 -o "$generated_pdf"
+
+          expected_checksum="$(sha256sum "$expected_pdf" | cut -d ' ' -f 1)"
+          generated_checksum="$(sha256sum "$generated_pdf" | cut -d ' ' -f 1)"
+
+          if [[ "$expected_checksum" != "$generated_checksum" ]]; then
+            echo "Rendered PDF does not match checked-in RFD 9999 PDF"
+            echo "expected:  $expected_checksum  $expected_pdf"
+            echo "generated: $generated_checksum  $generated_pdf"
+            sudo apt-get update
+            sudo apt-get install -y diff-pdf-wx xvfb
+            xvfb-run -a diff-pdf --output-diff "$diff_pdf" "$expected_pdf" "$generated_pdf" || true
+            exit 1
+          fi
       - name: Upload rendered PDF
         if: failure()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: rfd-processor-example-pdf-artifacts
+          name: rfd-processor-rfd-9999-pdf-artifacts
           path: |
-            rfd-processor/tests/content/example-rendered.pdf
-            rfd-processor/tests/content/example-diff.pdf
-            rfd-processor/tests/content/example-mermaid-rendered.png
+            rfd-processor/tests/rfd_9999-generated.pdf
+            rfd-processor/tests/rfd_9999-diff.pdf
           if-no-files-found: ignore
 
   generate:
