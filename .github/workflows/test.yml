@@ -43,7 +43,7 @@ jobs:
           bundle config set bin .bundle/bin
           bundle binstubs asciidoctor asciidoctor-pdf
           npm ci
-          printf '%s\n' '{"args":["--no-sandbox","--disable-setuid-sandbox"]}' > .bundle/bin/puppeteer.json
+          printf '%s\n' '{"args":["--no-sandbox"]}' > .bundle/bin/puppeteer.json
           printf '%s\n' '#!/usr/bin/env bash' \
             "exec '$PWD/node_modules/.bin/mmdc' --puppeteerConfigFile '$PWD/.bundle/bin/puppeteer.json' \"\$@\"" \
             > .bundle/bin/mmdc
@@ -76,8 +76,6 @@ jobs:
 
           if [[ "$expected_checksum" != "$generated_checksum" ]]; then
             echo "Rendered PDF does not match checked-in RFD 9999 PDF"
-            echo "expected:  $expected_checksum  $expected_pdf"
-            echo "generated: $generated_checksum  $generated_pdf"
             sudo apt-get update
             sudo apt-get install -y diff-pdf-wx xvfb
             xvfb-run -a diff-pdf --output-diff "$diff_pdf" "$expected_pdf" "$generated_pdf" || true
