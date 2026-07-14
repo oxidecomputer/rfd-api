@@ -42,6 +42,7 @@ jobs:
           sudo gem install asciidoctor-pdf -v 2.3.2
           sudo gem install asciidoctor-mermaid -v 0.4.1
           sudo npm install -g @mermaid-js/mermaid-cli@11.4.0
+          "$(npm root -g)/@mermaid-js/mermaid-cli/node_modules/.bin/puppeteer" browsers install chrome-headless-shell
       - name: Report versions
         run: |
           asciidoctor --version
