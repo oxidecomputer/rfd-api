@@ -112,14 +112,12 @@ mod tests {
             &self.path
         }
 
-        fn write_mmdc_debug_wrapper(&self) -> PathBuf {
+        fn write_mmdc_wrapper(&self) -> PathBuf {
             let wrapper_dir = self.path.join("mmdc-bin");
-            let debug_dir = self.path.join("mmdc-debug");
             fs::create_dir_all(&wrapper_dir).expect("failed to create mmdc wrapper directory");
-            fs::create_dir_all(&debug_dir).expect("failed to create mmdc debug directory");
 
             let real_mmdc = find_executable("mmdc");
-            let puppeteer_config = debug_dir.join("puppeteer.json");
+            let puppeteer_config = wrapper_dir.join("puppeteer.json");
             fs::write(
                 &puppeteer_config,
                 r#"{"args":["--no-sandbox","--disable-setuid-sandbox"]}"#,
@@ -131,88 +129,29 @@ mod tests {
                 &wrapper,
                 format!(
                     r#"#!/usr/bin/env bash
-set +e
-
-debug_dir={debug_dir}
 real_mmdc={real_mmdc}
 puppeteer_config={puppeteer_config}
-mkdir -p "$debug_dir"
-
-input="$debug_dir/stdin.mmd"
-stdout="$debug_dir/stdout.log"
-stderr="$debug_dir/stderr.log"
-status="$debug_dir/status.txt"
-invocation="$debug_dir/invocation.txt"
-
-{{
-    printf 'real_mmdc=%s\n' "$real_mmdc"
-    printf 'puppeteer_config=%s\n' "$puppeteer_config"
-    printf 'args:'
-    printf ' <%s>' "$@"
-    printf '\n'
-}} > "$invocation"
-
-cat > "$input"
-"$real_mmdc" --puppeteerConfigFile "$puppeteer_config" "$@" < "$input" > "$stdout" 2> "$stderr"
-code=$?
-printf '%s\n' "$code" > "$status"
-cat "$stdout"
-cat "$stderr" >&2
-exit "$code"
+exec "$real_mmdc" --puppeteerConfigFile "$puppeteer_config" "$@"
 "#,
-                    debug_dir = shell_quote(debug_dir.as_path()),
                     real_mmdc = shell_quote(real_mmdc.as_path()),
                     puppeteer_config = shell_quote(puppeteer_config.as_path()),
                 ),
             )
-            .expect("failed to write mmdc debug wrapper");
+            .expect("failed to write mmdc wrapper");
 
             #[cfg(unix)]
             {
                 use std::os::unix::fs::PermissionsExt;
 
                 let mut permissions = fs::metadata(&wrapper)
-                    .expect("failed to stat mmdc debug wrapper")
+                    .expect("failed to stat mmdc wrapper")
                     .permissions();
                 permissions.set_mode(0o755);
                 fs::set_permissions(&wrapper, permissions)
-                    .expect("failed to make mmdc debug wrapper executable");
+                    .expect("failed to make mmdc wrapper executable");
             }
 
             wrapper_dir
-        }
-
-        fn mmdc_debug_output(&self) -> String {
-            let debug_dir = self.path.join("mmdc-debug");
-            let mut output = String::new();
-
-            for file in [
-                "invocation.txt",
-                "status.txt",
-                "puppeteer.json",
-                "stdin.mmd",
-                "stdout.log",
-                "stderr.log",
-            ] {
-                let path = debug_dir.join(file);
-                match fs::read_to_string(&path) {
-                    Ok(contents) => {
-                        output.push_str("\n--- ");
-                        output.push_str(file);
-                        output.push_str(" ---\n");
-                        output.push_str(&contents);
-                    }
-                    Err(err) => {
-                        output.push_str("\n--- ");
-                        output.push_str(file);
-                        output.push_str(" unavailable: ");
-                        output.push_str(&err.to_string());
-                        output.push_str(" ---\n");
-                    }
-                }
-            }
-
-            output
         }
     }
 
@@ -229,22 +168,16 @@ exit "$code"
             .expect("failed to write CSV include");
         fs::write(render_dir.path().join("oxide-logo.svg"), OXIDE_LOGO)
             .expect("failed to write supporting image");
-        let mmdc_path_prefix = render_dir.write_mmdc_debug_wrapper();
+        let mmdc_path_prefix = render_dir.write_mmdc_wrapper();
 
         let content = RfdAsciidoc::new(EXAMPLE_RFD).expect("example RFD should parse");
-        let pdf = match render_pdf(
+        let pdf = render_pdf(
             &content,
             render_dir.path().to_path_buf(),
             Some(mmdc_path_prefix.as_path()),
         )
         .await
-        {
-            Ok(pdf) => pdf,
-            Err(err) => panic!(
-                "example RFD should render to PDF: {err:?}\n{}",
-                render_dir.mmdc_debug_output()
-            ),
-        };
+        .expect("example RFD should render to PDF");
         let pdf = pdf.into_inner();
 
         fs::write(
