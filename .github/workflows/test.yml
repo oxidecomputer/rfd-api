@@ -78,7 +78,7 @@ jobs:
             echo "Rendered PDF does not match checked-in RFD 9999 PDF"
             sudo apt-get update
             sudo apt-get install -y diff-pdf-wx xvfb
-            xvfb-run -a diff-pdf --output-diff "$diff_pdf" "$expected_pdf" "$generated_pdf" || true
+            xvfb-run -a diff-pdf --skip-identical --mark-differences "$diff_pdf" "$expected_pdf" --output-diff "$generated_pdf" || true
             exit 1
           fi
       - name: Upload rendered PDF
