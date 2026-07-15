@@ -5,7 +5,7 @@
 use config::{Config, ConfigError, Environment, File};
 use processor::{processor, JobError};
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
+use std::{io, path::PathBuf, sync::Arc};
 use thiserror::Error;
 use tokio::select;
 use tracing_appender::non_blocking::NonBlocking;
@@ -136,10 +136,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .install_default()
         .expect("Failed to install rustls crypto provider");
 
-    let mut args = std::env::args();
-    let _ = args.next();
-    let config_path = args.next();
+    let mut args = std::env::args().skip(1);
+    let first_arg = args.next();
 
+    if first_arg.as_deref() == Some("pdf") {
+        return render_pdf_command(args).await;
+    }
+
+    let config_path = first_arg;
     let config = AppConfig::new(config_path.map(|path| vec![path]))?;
 
     let (writer, _guard) = if let Some(log_directory) = &config.log_directory {
@@ -188,4 +192,39 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     Ok(error?)
+}
+
+async fn render_pdf_command(
+    mut args: impl Iterator<Item = String>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let directory = args
+        .next()
+        .ok_or_else(|| invalid_pdf_command("missing directory"))?;
+
+    if args.next().as_deref() != Some("-o") {
+        return Err(invalid_pdf_command("missing -o filename.pdf").into());
+    }
+
+    let output = args
+        .next()
+        .ok_or_else(|| invalid_pdf_command("missing output filename"))?;
+
+    if args.next().is_some() {
+        return Err(invalid_pdf_command("unexpected extra argument").into());
+    }
+
+    let pdf = content::render_pdf_from_dir(PathBuf::from(directory)).await?;
+    std::fs::write(output, pdf.into_inner())?;
+
+    Ok(())
+}
+
+fn invalid_pdf_command(message: &str) -> io::Error {
+    io::Error::new(
+        io::ErrorKind::InvalidInput,
+        format!(
+            "{}; usage: rfd-processor pdf <directory> -o filename.pdf",
+            message
+        ),
+    )
 }

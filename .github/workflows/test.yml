@@ -10,6 +10,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.ref_name == 'main' && github.sha || 'anysha' }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-24.04
@@ -29,19 +32,23 @@ jobs:
 
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Install asciidoctor
+      - uses: ruby/setup-ruby@6e5d382445ae5590b7449d8b3bc8cb1c2c27f617 # v1.3.7
+        with:
+          working-directory: rfd-processor
+          bundler-cache: true
+      - name: Install PDF toolchain
         shell: bash
+        working-directory: rfd-processor
         run: |
-          sudo apt update -y && sudo apt install -y \
-            asciidoctor \
-            ruby \
-      - name: Install asciidoctor-pdf, asciidoctor-mermaid
-        shell: bash
-        run: |
-          sudo gem install rouge
-          sudo gem install asciidoctor-pdf -v 2.3.2
-          sudo gem install asciidoctor-mermaid -v 0.4.1
-          sudo npm install -g @mermaid-js/mermaid-cli@11.4.0
+          bundle config set bin .bundle/bin
+          bundle binstubs asciidoctor asciidoctor-pdf
+          npm ci
+          printf '%s\n' '{"args":["--no-sandbox"]}' > .bundle/bin/puppeteer.json
+          printf '%s\n' '#!/usr/bin/env bash' \
+            "exec '$PWD/node_modules/.bin/mmdc' --puppeteerConfigFile '$PWD/.bundle/bin/puppeteer.json' \"\$@\"" \
+            > .bundle/bin/mmdc
+          chmod +x .bundle/bin/mmdc
+          echo "$PWD/.bundle/bin" >> "$GITHUB_PATH"
       - name: Report versions
         run: |
           asciidoctor --version
@@ -55,6 +62,34 @@ jobs:
         env:
           TEST_DATABASE: postgres://test:test@localhost
           RUST_LOG: v=trace,rfd=trace
+      - name: Verify RFD 9999 PDF fixture
+        shell: bash
+        run: |
+          expected_pdf="rfd-processor/tests/rfd_9999.pdf"
+          generated_pdf="rfd-processor/tests/rfd_9999-generated.pdf"
+          diff_pdf="rfd-processor/tests/rfd_9999-diff.pdf"
+
+          cargo run --profile test -p rfd-processor -- pdf rfd-processor/tests/rfd_9999 -o "$generated_pdf"
+
+          expected_checksum="$(sha256sum "$expected_pdf" | cut -d ' ' -f 1)"
+          generated_checksum="$(sha256sum "$generated_pdf" | cut -d ' ' -f 1)"
+
+          if [[ "$expected_checksum" != "$generated_checksum" ]]; then
+            echo "Rendered PDF does not match checked-in RFD 9999 PDF"
+            sudo apt-get update
+            sudo apt-get install -y diff-pdf-wx xvfb
+            xvfb-run -a diff-pdf --skip-identical --mark-differences "$diff_pdf" "$expected_pdf" --output-diff "$generated_pdf" || true
+            exit 1
+          fi
+      - name: Upload rendered PDF
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: rfd-processor-rfd-9999-pdf-artifacts
+          path: |
+            rfd-processor/tests/rfd_9999-generated.pdf
+            rfd-processor/tests/rfd_9999-diff.pdf
+          if-no-files-found: ignore
 
   generate:
     runs-on: ubuntu-24.04

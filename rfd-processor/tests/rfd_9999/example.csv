@@ -1,0 +1,4 @@
+Device,Capacity,Interface,Use
+Boot flash,64 MiB,SPI,Stores boot loader and early platform state
+Recovery flash,128 MiB,SPI,Stores recovery image and fallback metadata
+Manufacturing flash,32 MiB,SPI,Stores manufacturing diagnostics

@@ -1,0 +1,177 @@
+:authors: Author Name <author@domain.tld>, Other Author <other@domain.tld>
+:discussion: https://github.com/org/repo/pull/123
+:icons: font
+:labels: security, manufacturing, platform-identity
+:numbered:
+:revremark: State: {state} | {discussion}
+:showtitle:
+:state: published
+:toc: left
+:toclevels: 3
+
+= RFD 9999 Representative Asciidoc PDF Fixture
+Test Author <test@example.com>
+
+toc::[]
+
+[abstract]
+This fixture exercises the Asciidoc PDF rendering pipeline.
+
+== Overview
+
+=== TOC Level Two
+
+Text styles:
+. bold: *bold*
+. italic: _italic_
+. monospace: `monospace`
+. attribute references: {authors}
+. inline link: https://example.com[example.com]
+. cross references: <<representative-lists>>.
+. footnotes: details.footnote:[The footnote exists to exercise Asciidoc footnote rendering.]
+. bibliography: <<rfd44>>
+
+==== TOC Level Three
+
+This deeper subsection exercises the third TOC level.
+
+[[pipeline-diagram]]
+.Mermaid diagram
+```mermaid
+sequenceDiagram
+     actor operator
+     participant nexus
+     participant crdb
+     participant sled-agent
+
+     operator->>nexus: add physical disk
+     nexus->>crdb: add physical disk adoption request
+     nexus->>crdb: bg task adds physical disk in init state and soft delete disk adoption request
+     loop
+         nexus->>sled-agent: send OmicronPhysicalDiskRequest in init state
+     end
+     sled-agent->>sled-agent: delete zpool and create gpt/zpool if necessary
+     loop
+         nexus->>sled-agent: poll inventory for initialized zpool
+     end
+     nexus->>crdb: change physical disk state to active
+     loop
+         nexus->>sled-agent: send OmicronPhysicalDiskRequest in active state
+     end
+     sled-agent->>sled-agent: persist new active config to ledger
+```
+
+Before pagebreak
+
+<<<
+
+After pagebreak
+
+[[supporting-image]]
+.Oxide logo
+image::oxide-logo.svg[Oxide logo,width=220]
+
+[[representative-lists]]
+== Representative Lists
+
+. Ordered item one
+. Ordered item two
+.. Nested ordered item
+.. Another nested ordered item
+
+* Unordered item one
+* Unordered item two
+** Nested unordered item
+** Another nested unordered item
+
+== Source Code
+
+```rust
+fn render_pipeline() -> &'static str {
+    "asciidoctor-pdf" // <1>
+}
+```
+
+<1> The renderer shells out to `asciidoctor-pdf` for PDF generation.
+
+== Tables And Blocks
+
+[cols="1,2a",options="header"]
+|===
+| Feature | Why it is in this fixture
+| Mermaid | Exercises the asciidoctor-mermaid/pdf extension
+| Image | Exercises supporting image resolution from the render directory
+| Lists | Exercises ordered and unordered list rendering
+| Source
+|
+Exercises Rouge-backed source highlighting, including source blocks nested in table cells.
+
+[source,rust]
+----
+fn nested_source_block() -> bool {
+    true
+}
+----
+|===
+
+[[csv-include-table]]
+.NOR flash table from CSV include
+[format="csv", options="header"]
+|===
+include::example.csv[]
+|===
+
+[[breaks-inside-block]]
+.Breaks inside a block
+****
+[discrete]
+==== Notes
+
+This delimited block exercises a page break inside block content.
+
+<<<
+
+This paragraph should remain inside the same block after the page break.
+
+'''
+
+This paragraph follows an Asciidoc thematic break inside the block.
+****
+
+== Admonitions
+
+NOTE: Notes should render cleanly.
+
+TIP: Tips should render cleanly.
+
+IMPORTANT: Important callouts should render cleanly.
+
+CAUTION: Cautions should render cleanly.
+
+WARNING: Warnings should render cleanly.
+
+[quote, Test Fixture]
+____
+Block quotes should survive the PDF pipeline.
+____
+
+[%collapsible]
+.Collapsible Details
+====
+This block exercises collapsible Asciidoc content. PDF output should still render
+the contents even though the interactive disclosure behavior is HTML-specific.
+====
+
+[bibliography]
+== External References
+
+* [[[omicron-5112]]] https://github.com/oxidecomputer/omicron/issues/5112
+
+* [[[rfd44]]] Oxide Computer Company. RFD 44.
+  https://rfd.shared.oxide.computer/rfd/44
+
+* [[[rfd595]]] Oxide Computer Company. Oxide CSI Plugin.
+  https://rfd.shared.oxide.computer/rfd/595
+
+* [[[rfd605]]] Oxide Computer Company. Virtual Machine Identity and Attestation.
+  https://rfd.shared.oxide.computer/rfd/605

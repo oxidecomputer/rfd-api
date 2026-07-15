@@ -26,6 +26,8 @@ use crate::{
 
 mod asciidoc;
 
+pub(crate) use asciidoc::render_pdf_from_dir;
+
 #[derive(Debug, Error)]
 pub enum RenderableRfdError {
     #[error("Failed to decode content file {0}")]
@@ -42,6 +44,13 @@ pub enum RenderableRfdError {
     File(#[from] FileIoError),
     #[error("Failed to parse content")]
     ParserFailed(Result<String, FromUtf8Error>),
+    #[error("Failed to run `{command}`. Is it installed and on PATH? PATH={path:?}")]
+    ProcessStart {
+        command: &'static str,
+        path: Option<String>,
+        #[source]
+        error: io::Error,
+    },
     #[error("Failed to run output generator to completion {0}")]
     TaskFailure(#[from] JoinError),
 }

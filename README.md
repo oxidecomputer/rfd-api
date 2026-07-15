@@ -43,13 +43,51 @@ Running the API requires setting up a configuration file as outlined in `config.
 
 Dependencies
 
-* asciidoctor
-* Node
-  * @mermaid-js/mermaid-cli
-* Ruby
-  * rouge
-  * asciidoctor-pdf
-  * asciidoctor-mermaid
+The PDF renderer shells out to `asciidoctor-pdf` and `mmdc`. The toolchain
+versions are pinned in: `rfd-processor/Gemfile` and `rfd-processor/package.json`.
+
+Install the Ruby dependencies:
+
+```sh
+cd rfd-processor
+gem install bundler -v 4.0.11
+bundle config set path vendor/bundle
+bundle config set bin .bundle/bin
+bundle install
+bundle binstubs asciidoctor asciidoctor-pdf
+export PATH="$PWD/.bundle/bin:$PATH"
+```
+
+Install the Node dependencies and Chromium runtime used by Mermaid:
+
+```sh
+cd rfd-processor
+npm ci
+export PATH="$PWD/node_modules/.bin:$PATH"
+```
+
+On macOS, use `brew install ruby@3.2` and then install the PDF toolchain
+through Bundler and npm as shown above.
+If you previously installed `asciidoctor` via Homebrew, uninstall
+with `brew uninstall asciidoctor`.
+
+Render an RFD directory with:
+
+```sh
+PATH="$PWD/rfd-processor/.bundle/bin:$PWD/rfd-processor/node_modules/.bin:$PATH" \
+    cargo run -p rfd-processor -- pdf rfd-processor/tests/rfd_9999 -o /tmp/rfd_9999.pdf
+```
+
+On macOS with Homebrew Ruby:
+
+```sh
+PATH="/opt/homebrew/opt/ruby@3.2/bin:$PWD/rfd-processor/.bundle/bin:$PWD/rfd-processor/node_modules/.bin:$PATH" \
+    cargo run -p rfd-processor -- pdf rfd-processor/tests/rfd_9999 -o /tmp/rfd_9999.pdf
+```
+
+CI renders `rfd-processor/tests/rfd_9999` on Linux and compares the checksum
+against `rfd-processor/tests/rfd_9999.pdf`. If the checksum changes, CI uploads
+the generated PDF and a `diff-pdf` visual diff artifact.
 
 ## Background
 
