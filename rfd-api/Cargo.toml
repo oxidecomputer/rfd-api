@@ -70,6 +70,9 @@ v-model = { workspace = true }
 v-api-permission-derive = { workspace = true }
 yup-oauth2 = { workspace = true }
 
+[build-dependencies]
+build-info = { path = "../build-info" }
+
 [dev-dependencies]
 async-trait = { workspace = true }
 mockall = { workspace = true }

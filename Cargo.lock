@@ -267,6 +267,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "build-info"
+version = "0.14.6"
+
+[[package]]
 name = "bumpalo"
 version = "3.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3311,6 +3315,7 @@ dependencies = [
  "async-trait",
  "base64",
  "bb8",
+ "build-info",
  "chrono",
  "clap",
  "config",
@@ -3375,6 +3380,7 @@ name = "rfd-cli"
 version = "0.14.6"
 dependencies = [
  "anyhow",
+ "build-info",
  "chrono",
  "clap",
  "config",
@@ -3457,6 +3463,7 @@ version = "0.14.6"
 dependencies = [
  "async-trait",
  "base64",
+ "build-info",
  "chrono",
  "clap",
  "config",

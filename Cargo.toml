@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "build-info",
   "parse-rfd",
   "rfd-api",
   "rfd-cli",
