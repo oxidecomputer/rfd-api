@@ -117,7 +117,7 @@ pub struct SearchConfig {
 impl AppConfig {
     pub fn new(config_sources: Option<Vec<String>>) -> Result<Self, ConfigError> {
         let mut config = Config::builder()
-            .add_source(File::with_name("config.toml").required(false))
+            .add_source(File::with_name("/etc/rfd-processor/config.toml").required(false))
             .add_source(File::with_name("rfd-processor/config.toml").required(false));
 
         for source in config_sources.unwrap_or_default() {
@@ -138,7 +138,7 @@ Examples:
   rfd-processor version
   rfd-processor pdf       <directory> -o <output.pdf>
 
-If --config is omitted, configuration is read from ./config.toml or ./rfd-processor/config.toml.";
+If --config is omitted, configuration is read from ./rfd-processor/config.toml or /etc/rfd-processor/config.toml.";
 
 /// RFD processor worker
 #[derive(Parser)]
@@ -152,13 +152,13 @@ struct Args {
 enum ServerCommand {
     /// Start the processor
     Start {
-        /// Path to the configuration file [default: ./config.toml or ./rfd-processor/config.toml]
+        /// Path to the configuration file [default: ./rfd-processor/config.toml or /etc/rfd-processor/config.toml]
         #[arg(short, long)]
         config: Option<String>,
     },
     /// Validate a configuration file
     Validate {
-        /// Path to the configuration file [default: ./config.toml or ./rfd-processor/config.toml]
+        /// Path to the configuration file [default: ./rfd-processor/config.toml or /etc/rfd-processor/config.toml]
         #[arg(short, long)]
         config: Option<String>,
     },

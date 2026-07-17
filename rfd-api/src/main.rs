@@ -50,7 +50,7 @@ Examples:
   rfd-api version
   rfd-api migrate  [--database-url URL] [--v-only]
 
-If --config is omitted, configuration is read from ./config.toml or ./rfd-api/config.toml.";
+If --config is omitted, configuration is read from ./rfd-api/config.toml or /etc/rfd-api/config.toml.";
 
 /// RFD API server
 #[derive(Parser)]
@@ -64,13 +64,13 @@ struct Args {
 enum ServerCommand {
     /// Start the server
     Start {
-        /// Path to the configuration file [default: ./config.toml or ./rfd-api/config.toml]
+        /// Path to the configuration file [default: ./rfd-api/config.toml or /etc/rfd-api/config.toml]
         #[arg(short, long)]
         config: Option<String>,
     },
     /// Validate a configuration file
     Validate {
-        /// Path to the configuration file [default: ./config.toml or ./rfd-api/config.toml]
+        /// Path to the configuration file [default: ./rfd-api/config.toml or /etc/rfd-api/config.toml]
         #[arg(short, long)]
         config: Option<String>,
     },

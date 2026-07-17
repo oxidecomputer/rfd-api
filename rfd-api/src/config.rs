@@ -102,7 +102,7 @@ pub enum EmailService {
 impl AppConfig {
     pub fn new(config_sources: Option<Vec<String>>) -> Result<Self, ConfigError> {
         let mut config = Config::builder()
-            .add_source(File::with_name("config.toml").required(false))
+            .add_source(File::with_name("/etc/rfd-api/config.toml").required(false))
             .add_source(File::with_name("rfd-api/config.toml").required(false));
 
         for source in config_sources.unwrap_or_default() {
