@@ -3312,6 +3312,7 @@ dependencies = [
  "base64",
  "bb8",
  "chrono",
+ "clap",
  "config",
  "cookie",
  "crc32c",
@@ -3426,15 +3427,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rfd-installer"
-version = "0.14.6"
-dependencies = [
- "diesel",
- "diesel_migrations",
- "v-api-installer",
-]
-
-[[package]]
 name = "rfd-model"
 version = "0.14.6"
 dependencies = [
@@ -3455,6 +3447,7 @@ dependencies = [
  "tokio",
  "tracing",
  "uuid",
+ "v-api-installer",
  "v-model",
 ]
 
@@ -3465,6 +3458,7 @@ dependencies = [
  "async-trait",
  "base64",
  "chrono",
+ "clap",
  "config",
  "diesel",
  "futures",

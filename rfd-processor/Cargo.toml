@@ -9,6 +9,7 @@ edition = { workspace = true }
 async-trait = { workspace = true }
 base64 = { workspace = true }
 chrono = { workspace = true }
+clap = { workspace = true }
 config = { workspace = true }
 diesel = { workspace = true }
 futures = { workspace = true }

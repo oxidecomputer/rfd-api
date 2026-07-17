@@ -290,6 +290,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     cmd = cmd.subcommand(cmd::auth::Auth::command());
     cmd = cmd.subcommand(cmd::config::ConfigCmd::command());
     cmd = cmd.subcommand(cmd::shortcut::ShortcutCmd::command());
+    cmd = cmd.subcommand(cmd::version::VersionCmd::command());
 
     let mut ctx = Context::new()?;
 
@@ -327,6 +328,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
         Some(("shortcut", sub_matches)) => {
             cmd::shortcut::ShortcutCmd::from_arg_matches(sub_matches)
+                .unwrap()
+                .run(&mut ctx)
+                .await?;
+        }
+        Some(("version", sub_matches)) => {
+            cmd::version::VersionCmd::from_arg_matches(sub_matches)
                 .unwrap()
                 .run(&mut ctx)
                 .await?;

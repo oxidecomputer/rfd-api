@@ -2,10 +2,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use clap::Parser;
 use config::{Config, ConfigError, Environment, File};
 use processor::{processor, JobError};
 use serde::{Deserialize, Serialize};
-use std::{io, path::PathBuf, sync::Arc};
+use std::{path::PathBuf, sync::Arc};
 use thiserror::Error;
 use tokio::select;
 use tracing_appender::non_blocking::NonBlocking;
@@ -130,20 +131,90 @@ impl AppConfig {
     }
 }
 
+const AFTER_HELP: &str = "\
+Examples:
+  rfd-processor start    [--config PATH]
+  rfd-processor validate [--config PATH]
+  rfd-processor version
+  rfd-processor pdf       <directory> -o <output.pdf>
+
+If --config is omitted, configuration is read from ./config.toml or ./rfd-processor/config.toml.";
+
+/// RFD processor worker
+#[derive(Parser)]
+#[command(disable_help_subcommand = true, after_help = AFTER_HELP)]
+struct Args {
+    #[command(subcommand)]
+    command: ServerCommand,
+}
+
+#[derive(Parser)]
+enum ServerCommand {
+    /// Start the processor
+    Start {
+        /// Path to the configuration file [default: ./config.toml or ./rfd-processor/config.toml]
+        #[arg(short, long)]
+        config: Option<String>,
+    },
+    /// Validate a configuration file
+    Validate {
+        /// Path to the configuration file [default: ./config.toml or ./rfd-processor/config.toml]
+        #[arg(short, long)]
+        config: Option<String>,
+    },
+    /// Print the version
+    Version,
+    /// Render RFD content in a directory to a PDF file
+    Pdf {
+        /// Directory containing the RFD content to render
+        directory: String,
+        /// Path to write the rendered PDF to
+        #[arg(short = 'o', long)]
+        output: String,
+    },
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args = Args::parse();
+
+    match args.command {
+        ServerCommand::Version => {
+            println!(
+                "{} ({}, {})",
+                env!("CARGO_PKG_VERSION"),
+                env!("RFD_PROCESSOR_GIT_HASH"),
+                env!("RFD_PROCESSOR_BUILD_TYPE"),
+            );
+            Ok(())
+        }
+        ServerCommand::Validate { config } => {
+            AppConfig::new(config.clone().map(|path| vec![path])).map_err(|err| {
+                format!(
+                    "Configuration {} is invalid: {err}",
+                    describe_config(&config)
+                )
+            })?;
+            println!("Configuration {} is valid", describe_config(&config));
+            Ok(())
+        }
+        ServerCommand::Pdf { directory, output } => render_pdf_command(directory, output).await,
+        ServerCommand::Start { config } => run_processor(config).await,
+    }
+}
+
+fn describe_config(config: &Option<String>) -> String {
+    match config {
+        Some(path) => format!("file {path}"),
+        None => "(default file locations)".to_string(),
+    }
+}
+
+async fn run_processor(config_path: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
     rustls::crypto::ring::default_provider()
         .install_default()
         .expect("Failed to install rustls crypto provider");
 
-    let mut args = std::env::args().skip(1);
-    let first_arg = args.next();
-
-    if first_arg.as_deref() == Some("pdf") {
-        return render_pdf_command(args).await;
-    }
-
-    let config_path = first_arg;
     let config = AppConfig::new(config_path.map(|path| vec![path]))?;
 
     let (writer, _guard) = if let Some(log_directory) = &config.log_directory {
@@ -195,36 +266,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn render_pdf_command(
-    mut args: impl Iterator<Item = String>,
+    directory: String,
+    output: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let directory = args
-        .next()
-        .ok_or_else(|| invalid_pdf_command("missing directory"))?;
-
-    if args.next().as_deref() != Some("-o") {
-        return Err(invalid_pdf_command("missing -o filename.pdf").into());
-    }
-
-    let output = args
-        .next()
-        .ok_or_else(|| invalid_pdf_command("missing output filename"))?;
-
-    if args.next().is_some() {
-        return Err(invalid_pdf_command("unexpected extra argument").into());
-    }
-
     let pdf = content::render_pdf_from_dir(PathBuf::from(directory)).await?;
     std::fs::write(output, pdf.into_inner())?;
 
     Ok(())
-}
-
-fn invalid_pdf_command(message: &str) -> io::Error {
-    io::Error::new(
-        io::ErrorKind::InvalidInput,
-        format!(
-            "{}; usage: rfd-processor pdf <directory> -o filename.pdf",
-            message
-        ),
-    )
 }

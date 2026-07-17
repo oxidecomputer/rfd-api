@@ -2,6 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use clap::Parser;
 use context::RfdContext;
 use minijinja::Environment;
 use server::{server, ServerConfig};
@@ -41,8 +42,116 @@ mod secrets;
 mod server;
 mod util;
 
+const AFTER_HELP: &str = "\
+Examples:
+  rfd-api start    [--config PATH]
+  rfd-api validate [--config PATH]
+  rfd-api describe
+  rfd-api version
+  rfd-api migrate  [--database-url URL] [--v-only]
+
+If --config is omitted, configuration is read from ./config.toml or ./rfd-api/config.toml.";
+
+/// RFD API server
+#[derive(Parser)]
+#[command(disable_help_subcommand = true, after_help = AFTER_HELP)]
+struct Args {
+    #[command(subcommand)]
+    command: ServerCommand,
+}
+
+#[derive(Parser)]
+enum ServerCommand {
+    /// Start the server
+    Start {
+        /// Path to the configuration file [default: ./config.toml or ./rfd-api/config.toml]
+        #[arg(short, long)]
+        config: Option<String>,
+    },
+    /// Validate a configuration file
+    Validate {
+        /// Path to the configuration file [default: ./config.toml or ./rfd-api/config.toml]
+        #[arg(short, long)]
+        config: Option<String>,
+    },
+    /// Print the version
+    Version,
+    /// Print the OpenAPI JSON schema to stdout
+    Describe,
+    /// Run database migrations
+    Migrate {
+        /// Database connection string [default: $DATABASE_URL]
+        #[arg(long)]
+        database_url: Option<String>,
+        /// Only run v-api migrations, skip RFD-specific migrations
+        #[arg(long)]
+        v_only: bool,
+    },
+}
+
+fn describe_config(config: &Option<String>) -> String {
+    match config {
+        Some(path) => format!("file {path}"),
+        None => "(default file locations)".to_string(),
+    }
+}
+
+fn resolve_database_url(database_url: &Option<String>) -> anyhow::Result<String> {
+    database_url
+        .clone()
+        .or_else(|| std::env::var("DATABASE_URL").ok())
+        .ok_or_else(|| {
+            anyhow::anyhow!(
+                "Database URL must be specified via --database-url or the DATABASE_URL \
+                 environment variable"
+            )
+        })
+}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    let args = Args::parse();
+
+    match args.command {
+        ServerCommand::Version => {
+            println!(
+                "{} ({}, {})",
+                env!("CARGO_PKG_VERSION"),
+                env!("RFD_API_GIT_HASH"),
+                env!("RFD_API_BUILD_TYPE"),
+            );
+            Ok(())
+        }
+        // Print the OpenAPI document to stdout and exit, without requiring the rest of the
+        // server's runtime configuration (database, secrets, etc). Used to keep the checked-in
+        // rfd-api-spec.json up to date via `cargo xtask generate`.
+        ServerCommand::Describe => {
+            server::write_openapi(&mut std::io::stdout()).map_err(|err| anyhow::anyhow!(err))
+        }
+        ServerCommand::Validate { config } => {
+            AppConfig::new(config.clone().map(|path| vec![path])).map_err(|err| {
+                anyhow::anyhow!(
+                    "Configuration {} is invalid: {err}",
+                    describe_config(&config)
+                )
+            })?;
+            println!("Configuration {} is valid", describe_config(&config));
+            Ok(())
+        }
+        ServerCommand::Migrate {
+            database_url,
+            v_only,
+        } => {
+            let url = resolve_database_url(&database_url)?;
+            rfd_model::migrations::run_migrations(&url, v_only);
+            println!("Migrations completed successfully");
+            Ok(())
+        }
+        ServerCommand::Start { config } => run_server(config).await,
+    }
+}
+
+async fn run_server(config_path: Option<String>) -> anyhow::Result<()> {
     rustls::crypto::ring::default_provider()
         .install_default()
         .expect("Failed to install rustls crypto provider");
@@ -50,24 +159,13 @@ async fn main() -> anyhow::Result<()> {
         .install_default()
         .expect("Failed to install jsonwebtoken crypto provider");
 
-    let mut args = std::env::args();
-    let _ = args.next();
-    let config_path = args.next();
-
-    // Print the OpenAPI document to stdout and exit, without requiring the rest of the server's
-    // runtime configuration (database, secrets, etc). Used to keep the checked-in
-    // rfd-api-spec.json up to date via `cargo xtask generate`.
-    if config_path.as_deref() == Some("describe") {
-        return server::write_openapi(&mut std::io::stdout()).map_err(|err| anyhow::anyhow!(err));
-    }
-
     let param_path = config_path
         .as_deref()
         .and_then(|path| Path::new(path).parent())
         .filter(|path| !path.as_os_str().is_empty())
         .map(|path| path.to_path_buf());
 
-    let mut config = AppConfig::new(config_path.clone().map(|path| vec![path]))?;
+    let mut config = AppConfig::new(config_path.map(|path| vec![path]))?;
 
     let (writer, _guard) = if let Some(log_directory) = config.log_directory {
         let file_appender = tracing_appender::rolling::daily(log_directory, "rfd-api.log");
