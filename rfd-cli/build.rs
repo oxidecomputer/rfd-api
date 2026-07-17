@@ -39,6 +39,8 @@ fn main() {
     let out_dir = env::var_os("OUT_DIR").expect("OUT_DIR set by cargo");
     let dest = Path::new(&out_dir).join("expected_response_types.rs");
     fs::write(&dest, src).expect("write expected_response_types.rs");
+
+    build_info::emit("RFD_CLI");
 }
 
 fn collect_entries(spec: &Value) -> Vec<String> {

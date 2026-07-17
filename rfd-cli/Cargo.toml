@@ -30,6 +30,7 @@ toml = { workspace = true }
 uuid = { workspace = true, features = ["serde", "v4"] }
 
 [build-dependencies]
+build-info = { path = "../build-info" }
 serde_json = { workspace = true }
 
 [dev-dependencies]

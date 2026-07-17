@@ -99,13 +99,13 @@ pub enum EmailService {
     Resend { key: String },
 }
 
+const DEFAULT_CONFIG_PATHS: &[&str] = &["/etc/rfd-api/config.toml", "rfd-api/config.toml"];
+
 impl AppConfig {
     pub fn new(config_sources: Option<Vec<String>>) -> Result<Self, ConfigError> {
-        let mut config = Config::builder()
-            .add_source(File::with_name("config.toml").required(false))
-            .add_source(File::with_name("rfd-api/config.toml").required(false));
+        let mut config = Config::builder();
 
-        for source in config_sources.unwrap_or_default() {
+        for source in Self::candidate_paths(&config_sources) {
             config = config.add_source(File::with_name(&source).required(false));
         }
 
@@ -113,5 +113,15 @@ impl AppConfig {
             .add_source(Environment::default())
             .build()?
             .try_deserialize()
+    }
+
+    /// The configuration file paths that will be consulted, in priority order (later entries
+    /// override earlier ones). An explicit path replaces the default search locations entirely,
+    /// rather than layering on top of them.
+    pub fn candidate_paths(config_sources: &Option<Vec<String>>) -> Vec<String> {
+        match config_sources {
+            Some(sources) if !sources.is_empty() => sources.clone(),
+            _ => DEFAULT_CONFIG_PATHS.iter().map(|s| s.to_string()).collect(),
+        }
     }
 }

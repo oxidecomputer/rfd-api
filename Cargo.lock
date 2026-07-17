@@ -267,6 +267,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "build-info"
+version = "0.14.6"
+
+[[package]]
 name = "bumpalo"
 version = "3.20.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3311,7 +3315,9 @@ dependencies = [
  "async-trait",
  "base64",
  "bb8",
+ "build-info",
  "chrono",
+ "clap",
  "config",
  "cookie",
  "crc32c",
@@ -3374,6 +3380,7 @@ name = "rfd-cli"
 version = "0.14.6"
 dependencies = [
  "anyhow",
+ "build-info",
  "chrono",
  "clap",
  "config",
@@ -3426,15 +3433,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rfd-installer"
-version = "0.14.6"
-dependencies = [
- "diesel",
- "diesel_migrations",
- "v-api-installer",
-]
-
-[[package]]
 name = "rfd-model"
 version = "0.14.6"
 dependencies = [
@@ -3455,6 +3453,7 @@ dependencies = [
  "tokio",
  "tracing",
  "uuid",
+ "v-api-installer",
  "v-model",
 ]
 
@@ -3464,7 +3463,9 @@ version = "0.14.6"
 dependencies = [
  "async-trait",
  "base64",
+ "build-info",
  "chrono",
+ "clap",
  "config",
  "diesel",
  "futures",

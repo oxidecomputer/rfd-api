@@ -15,7 +15,6 @@
 - `rfd-cli`: CLI crate for calling the `rfd-api` service
 - `rfd-data`: Shared data types and content helpers for the workspace
 - `rfd-github`: GitHub client crate for reading and updating RFD source
-- `rfd-installer`: Migration runner crate for `rfd-model` and `v-api`
 - `rfd-model`: Core RFD models, Diesel schema, and storage types
 - `rfd-processor`: Worker crate for scanning and processing RFD updates
 - `rfd-sdk`: Generated Rust SDK crate for the RFD API

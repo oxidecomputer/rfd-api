@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-pub mod auth;
-pub mod config;
-pub mod shortcut;
-pub mod version;
+fn main() {
+    println!("cargo:rerun-if-changed=build.rs");
+    build_info::emit("RFD_API");
+}

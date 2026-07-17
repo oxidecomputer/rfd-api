@@ -2,10 +2,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use clap::Parser;
 use config::{Config, ConfigError, Environment, File};
 use processor::{processor, JobError};
 use serde::{Deserialize, Serialize};
-use std::{io, path::PathBuf, sync::Arc};
+use std::{
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 use thiserror::Error;
 use tokio::select;
 use tracing_appender::non_blocking::NonBlocking;
@@ -113,14 +117,17 @@ pub struct SearchConfig {
     pub index: String,
 }
 
+const DEFAULT_CONFIG_PATHS: &[&str] = &[
+    "/etc/rfd-processor/config.toml",
+    "rfd-processor/config.toml",
+];
+
 impl AppConfig {
     pub fn new(config_sources: Option<Vec<String>>) -> Result<Self, ConfigError> {
-        let mut config = Config::builder()
-            .add_source(File::with_name("config.toml").required(false))
-            .add_source(File::with_name("rfd-processor/config.toml").required(false));
+        let mut config = Config::builder();
 
-        for source in config_sources.unwrap_or_default() {
-            config = config.add_source(File::with_name(&source).required(false));
+        for path in Self::candidate_paths(&config_sources) {
+            config = config.add_source(File::with_name(&path).required(false));
         }
 
         config
@@ -128,23 +135,117 @@ impl AppConfig {
             .build()?
             .try_deserialize()
     }
+
+    /// The configuration file paths that will be consulted, in priority order (later entries
+    /// override earlier ones). An explicit path replaces the default search locations entirely,
+    /// rather than layering on top of them.
+    pub fn candidate_paths(config_sources: &Option<Vec<String>>) -> Vec<String> {
+        match config_sources {
+            Some(sources) if !sources.is_empty() => sources.clone(),
+            _ => DEFAULT_CONFIG_PATHS.iter().map(|s| s.to_string()).collect(),
+        }
+    }
+}
+
+const AFTER_HELP: &str = "\
+Examples:
+  rfd-processor start    [--config PATH]
+  rfd-processor validate [--config PATH]
+  rfd-processor version
+  rfd-processor pdf       <directory> -o <output.pdf>
+
+If --config is omitted, configuration is read from ./rfd-processor/config.toml or /etc/rfd-processor/config.toml.";
+
+/// RFD processor worker
+#[derive(Parser)]
+#[command(disable_help_subcommand = true, after_help = AFTER_HELP)]
+struct Args {
+    #[command(subcommand)]
+    command: ServerCommand,
+}
+
+#[derive(Parser)]
+enum ServerCommand {
+    /// Start the processor
+    Start {
+        /// Path to the configuration file [default: ./rfd-processor/config.toml or /etc/rfd-processor/config.toml]
+        #[arg(short, long)]
+        config: Option<String>,
+    },
+    /// Validate a configuration file
+    Validate {
+        /// Path to the configuration file [default: ./rfd-processor/config.toml or /etc/rfd-processor/config.toml]
+        #[arg(short, long)]
+        config: Option<String>,
+    },
+    /// Print the version
+    Version,
+    /// Render RFD content in a directory to a PDF file
+    Pdf {
+        /// Directory containing the RFD content to render
+        directory: String,
+        /// Path to write the rendered PDF to
+        #[arg(short = 'o', long)]
+        output: String,
+    },
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args = Args::parse();
+
+    match args.command {
+        ServerCommand::Version => {
+            println!(
+                "{} ({}, {})",
+                env!("CARGO_PKG_VERSION"),
+                env!("RFD_PROCESSOR_GIT_HASH"),
+                env!("RFD_PROCESSOR_BUILD_TYPE"),
+            );
+            Ok(())
+        }
+        ServerCommand::Validate { config } => {
+            let config_sources = config.map(|path| vec![path]);
+            let candidate_paths = AppConfig::candidate_paths(&config_sources);
+            AppConfig::new(config_sources).map_err(|err| {
+                format!(
+                    "Configuration is invalid ({}): {err}",
+                    describe_config_paths(&candidate_paths)
+                )
+            })?;
+            println!(
+                "Configuration is valid ({})",
+                describe_config_paths(&candidate_paths)
+            );
+            Ok(())
+        }
+        ServerCommand::Pdf { directory, output } => render_pdf_command(directory, output).await,
+        ServerCommand::Start { config } => run_processor(config).await,
+    }
+}
+
+fn describe_config_paths(paths: &[String]) -> String {
+    paths
+        .iter()
+        .map(|path| {
+            if Path::new(path).is_file() {
+                path.clone()
+            } else {
+                format!("{path} (not found)")
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
+}
+
+async fn run_processor(config_path: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
     rustls::crypto::ring::default_provider()
         .install_default()
         .expect("Failed to install rustls crypto provider");
 
-    let mut args = std::env::args().skip(1);
-    let first_arg = args.next();
-
-    if first_arg.as_deref() == Some("pdf") {
-        return render_pdf_command(args).await;
-    }
-
-    let config_path = first_arg;
-    let config = AppConfig::new(config_path.map(|path| vec![path]))?;
+    let config_sources = config_path.map(|path| vec![path]);
+    let candidate_paths = AppConfig::candidate_paths(&config_sources);
+    let config = AppConfig::new(config_sources)?;
 
     let (writer, _guard) = if let Some(log_directory) = &config.log_directory {
         let file_appender = tracing_appender::rolling::daily(log_directory, "rfd-processor.log");
@@ -163,6 +264,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         LogFormat::Pretty => subscriber.pretty().init(),
         LogFormat::Json => subscriber.json().init(),
     }
+
+    tracing::info!("Initialized logger");
+    tracing::info!(
+        config_file = %describe_config_paths(&candidate_paths),
+        "Loaded configuration"
+    );
 
     let ctx = Arc::new(Context::new(Database::new(&config.database_url).await, &config).await?);
 
@@ -195,36 +302,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 async fn render_pdf_command(
-    mut args: impl Iterator<Item = String>,
+    directory: String,
+    output: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let directory = args
-        .next()
-        .ok_or_else(|| invalid_pdf_command("missing directory"))?;
-
-    if args.next().as_deref() != Some("-o") {
-        return Err(invalid_pdf_command("missing -o filename.pdf").into());
-    }
-
-    let output = args
-        .next()
-        .ok_or_else(|| invalid_pdf_command("missing output filename"))?;
-
-    if args.next().is_some() {
-        return Err(invalid_pdf_command("unexpected extra argument").into());
-    }
-
     let pdf = content::render_pdf_from_dir(PathBuf::from(directory)).await?;
     std::fs::write(output, pdf.into_inner())?;
 
     Ok(())
-}
-
-fn invalid_pdf_command(message: &str) -> io::Error {
-    io::Error::new(
-        io::ErrorKind::InvalidInput,
-        format!(
-            "{}; usage: rfd-processor pdf <directory> -o filename.pdf",
-            message
-        ),
-    )
 }

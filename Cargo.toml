@@ -1,11 +1,11 @@
 [workspace]
 members = [
+  "build-info",
   "parse-rfd",
   "rfd-api",
   "rfd-cli",
   "rfd-data",
   "rfd-github",
-  "rfd-installer",
   "rfd-model",
   "rfd-processor",
   "rfd-sdk",

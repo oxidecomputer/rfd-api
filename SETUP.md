@@ -39,11 +39,11 @@ emitted at:
 ### Installation
 
 Once all of the dependencies have been installed, database migrations will need to be run to prepare
-the database tables. These can be run using the `rfd-installer` tool:
+the database tables. These can be run using the `rfd-api` CLI:
 
 ```sh
+DATABASE_URL=<database-url> cargo run -p rfd-api -- migrate --v-only
 cd rfd-model
-V_ONLY=1 DATABASE_URL=<database-url> cargo run -p rfd-installer
 DATABASE_URL=<database-url> diesel migration run
 ```
 

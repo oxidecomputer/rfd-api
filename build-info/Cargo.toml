@@ -1,0 +1,7 @@
+[package]
+name = "build-info"
+version = { workspace = true }
+edition = { workspace = true }
+
+[package.metadata.dist]
+dist = false
