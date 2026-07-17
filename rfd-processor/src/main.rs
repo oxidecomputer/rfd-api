@@ -6,7 +6,10 @@ use clap::Parser;
 use config::{Config, ConfigError, Environment, File};
 use processor::{processor, JobError};
 use serde::{Deserialize, Serialize};
-use std::{path::PathBuf, sync::Arc};
+use std::{
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 use thiserror::Error;
 use tokio::select;
 use tracing_appender::non_blocking::NonBlocking;
@@ -114,20 +117,30 @@ pub struct SearchConfig {
     pub index: String,
 }
 
+const DEFAULT_CONFIG_PATHS: &[&str] = &["/etc/rfd-processor/config.toml", "rfd-processor/config.toml"];
+
 impl AppConfig {
     pub fn new(config_sources: Option<Vec<String>>) -> Result<Self, ConfigError> {
-        let mut config = Config::builder()
-            .add_source(File::with_name("/etc/rfd-processor/config.toml").required(false))
-            .add_source(File::with_name("rfd-processor/config.toml").required(false));
+        let mut config = Config::builder();
 
-        for source in config_sources.unwrap_or_default() {
-            config = config.add_source(File::with_name(&source).required(false));
+        for path in Self::candidate_paths(&config_sources) {
+            config = config.add_source(File::with_name(&path).required(false));
         }
 
         config
             .add_source(Environment::default())
             .build()?
             .try_deserialize()
+    }
+
+    /// The configuration file paths that will be consulted, in priority order (later entries
+    /// override earlier ones). An explicit path replaces the default search locations entirely,
+    /// rather than layering on top of them.
+    pub fn candidate_paths(config_sources: &Option<Vec<String>>) -> Vec<String> {
+        match config_sources {
+            Some(sources) if !sources.is_empty() => sources.clone(),
+            _ => DEFAULT_CONFIG_PATHS.iter().map(|s| s.to_string()).collect(),
+        }
     }
 }
 
@@ -189,13 +202,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(())
         }
         ServerCommand::Validate { config } => {
-            AppConfig::new(config.clone().map(|path| vec![path])).map_err(|err| {
+            let config_sources = config.map(|path| vec![path]);
+            let candidate_paths = AppConfig::candidate_paths(&config_sources);
+            AppConfig::new(config_sources).map_err(|err| {
                 format!(
-                    "Configuration {} is invalid: {err}",
-                    describe_config(&config)
+                    "Configuration is invalid ({}): {err}",
+                    describe_config_paths(&candidate_paths)
                 )
             })?;
-            println!("Configuration {} is valid", describe_config(&config));
+            println!(
+                "Configuration is valid ({})",
+                describe_config_paths(&candidate_paths)
+            );
             Ok(())
         }
         ServerCommand::Pdf { directory, output } => render_pdf_command(directory, output).await,
@@ -203,11 +221,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 }
 
-fn describe_config(config: &Option<String>) -> String {
-    match config {
-        Some(path) => format!("file {path}"),
-        None => "(default file locations)".to_string(),
-    }
+fn describe_config_paths(paths: &[String]) -> String {
+    paths
+        .iter()
+        .map(|path| {
+            if Path::new(path).is_file() {
+                path.clone()
+            } else {
+                format!("{path} (not found)")
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 async fn run_processor(config_path: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
@@ -215,7 +240,9 @@ async fn run_processor(config_path: Option<String>) -> Result<(), Box<dyn std::e
         .install_default()
         .expect("Failed to install rustls crypto provider");
 
-    let config = AppConfig::new(config_path.map(|path| vec![path]))?;
+    let config_sources = config_path.map(|path| vec![path]);
+    let candidate_paths = AppConfig::candidate_paths(&config_sources);
+    let config = AppConfig::new(config_sources)?;
 
     let (writer, _guard) = if let Some(log_directory) = &config.log_directory {
         let file_appender = tracing_appender::rolling::daily(log_directory, "rfd-processor.log");
@@ -234,6 +261,12 @@ async fn run_processor(config_path: Option<String>) -> Result<(), Box<dyn std::e
         LogFormat::Pretty => subscriber.pretty().init(),
         LogFormat::Json => subscriber.json().init(),
     }
+
+    tracing::info!("Initialized logger");
+    tracing::info!(
+        config_file = %describe_config_paths(&candidate_paths),
+        "Loaded configuration"
+    );
 
     let ctx = Arc::new(Context::new(Database::new(&config.database_url).await, &config).await?);
 

@@ -89,11 +89,18 @@ enum ServerCommand {
     },
 }
 
-fn describe_config(config: &Option<String>) -> String {
-    match config {
-        Some(path) => format!("file {path}"),
-        None => "(default file locations)".to_string(),
-    }
+fn describe_config_paths(paths: &[String]) -> String {
+    paths
+        .iter()
+        .map(|path| {
+            if Path::new(path).is_file() {
+                path.clone()
+            } else {
+                format!("{path} (not found)")
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 fn resolve_database_url(database_url: &Option<String>) -> anyhow::Result<String> {
@@ -129,13 +136,18 @@ async fn main() -> anyhow::Result<()> {
             server::write_openapi(&mut std::io::stdout()).map_err(|err| anyhow::anyhow!(err))
         }
         ServerCommand::Validate { config } => {
-            AppConfig::new(config.clone().map(|path| vec![path])).map_err(|err| {
+            let config_sources = config.map(|path| vec![path]);
+            let candidate_paths = AppConfig::candidate_paths(&config_sources);
+            AppConfig::new(config_sources).map_err(|err| {
                 anyhow::anyhow!(
-                    "Configuration {} is invalid: {err}",
-                    describe_config(&config)
+                    "Configuration is invalid ({}): {err}",
+                    describe_config_paths(&candidate_paths)
                 )
             })?;
-            println!("Configuration {} is valid", describe_config(&config));
+            println!(
+                "Configuration is valid ({})",
+                describe_config_paths(&candidate_paths)
+            );
             Ok(())
         }
         ServerCommand::Migrate {
@@ -165,7 +177,9 @@ async fn run_server(config_path: Option<String>) -> anyhow::Result<()> {
         .filter(|path| !path.as_os_str().is_empty())
         .map(|path| path.to_path_buf());
 
-    let mut config = AppConfig::new(config_path.map(|path| vec![path]))?;
+    let config_sources = config_path.map(|path| vec![path]);
+    let candidate_paths = AppConfig::candidate_paths(&config_sources);
+    let mut config = AppConfig::new(config_sources)?;
 
     let (writer, _guard) = if let Some(log_directory) = config.log_directory {
         let file_appender = tracing_appender::rolling::daily(log_directory, "rfd-api.log");
@@ -186,6 +200,10 @@ async fn run_server(config_path: Option<String>) -> anyhow::Result<()> {
     };
 
     tracing::info!("Initialized logger");
+    tracing::info!(
+        config_file = %describe_config_paths(&candidate_paths),
+        "Loaded configuration"
+    );
 
     let storage = Arc::new(
         VApiPostgresStore::new(&config.database_url)
