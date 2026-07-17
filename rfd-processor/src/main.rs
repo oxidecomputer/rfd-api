@@ -117,7 +117,10 @@ pub struct SearchConfig {
     pub index: String,
 }
 
-const DEFAULT_CONFIG_PATHS: &[&str] = &["/etc/rfd-processor/config.toml", "rfd-processor/config.toml"];
+const DEFAULT_CONFIG_PATHS: &[&str] = &[
+    "/etc/rfd-processor/config.toml",
+    "rfd-processor/config.toml",
+];
 
 impl AppConfig {
     pub fn new(config_sources: Option<Vec<String>>) -> Result<Self, ConfigError> {

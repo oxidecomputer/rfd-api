@@ -105,8 +105,8 @@ impl AppConfig {
     pub fn new(config_sources: Option<Vec<String>>) -> Result<Self, ConfigError> {
         let mut config = Config::builder();
 
-        for path in Self::candidate_paths(&config_sources) {
-            config = config.add_source(File::with_name(&path).required(false));
+        for source in Self::candidate_paths(&config_sources) {
+            config = config.add_source(File::with_name(&source).required(false));
         }
 
         config
