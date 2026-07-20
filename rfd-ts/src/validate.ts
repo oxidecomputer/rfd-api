@@ -90,6 +90,7 @@ export const RfdPermission = z.preprocess(
       'ManageMagicLinkClientsAssigned',
       'ManageMagicLinkClientsAll',
       'CreateAccessToken',
+      'RetrieveRemoteAccessToken',
     ]),
     z.object({ 'GetRfd': z.number().min(-2147483647).max(2147483647) }),
     z.object({ 'GetRfds': z.number().min(-2147483647).max(2147483647).array().refine(...uniqueItems) }),
@@ -146,11 +147,6 @@ export const AccessGroup_for_RfdPermission = z.preprocess(
   }),
 )
 
-export const AccessTokenExchangeRequest = z.preprocess(
-  processResponseBody,
-  z.object({ 'deviceCode': z.string(), 'expiresAt': z.coerce.date().nullable().optional(), 'grantType': z.string() }),
-)
-
 export const AddGroupBody = z.preprocess(processResponseBody, z.object({ 'groupId': TypedUuidForAccessGroupId }))
 
 export const AddMagicLinkRedirectBody = z.preprocess(processResponseBody, z.object({ 'redirectUri': z.string() }))
@@ -159,7 +155,7 @@ export const AddOAuthClientRedirectBody = z.preprocess(processResponseBody, z.ob
 
 export const ApiKeyCreateParams_for_RfdPermission = z.preprocess(
   processResponseBody,
-  z.object({ 'expiresAt': z.coerce.date(), 'permissions': Permissions_for_RfdPermission.nullable().optional() }),
+  z.object({ 'expiresAt': z.coerce.date(), 'permissionBoundary': Permissions_for_RfdPermission.nullable().optional() }),
 )
 
 export const ApiKeyResponse_for_RfdPermission = z.preprocess(
@@ -167,7 +163,7 @@ export const ApiKeyResponse_for_RfdPermission = z.preprocess(
   z.object({
     'createdAt': z.coerce.date(),
     'id': TypedUuidForApiKeyId,
-    'permissions': Permissions_for_RfdPermission.nullable().optional(),
+    'permissionBoundary': Permissions_for_RfdPermission.nullable().optional(),
   }),
 )
 
@@ -195,6 +191,11 @@ export const SecretString = z.preprocess(processResponseBody, z.string())
 
 export const ApiUserLinkRequestResponse = z.preprocess(processResponseBody, z.object({ 'token': SecretString }))
 
+export const ApiUserPermissionParams_for_RfdPermission = z.preprocess(
+  processResponseBody,
+  z.object({ 'permission': RfdPermission }),
+)
+
 export const ApiUserProvider = z.preprocess(
   processResponseBody,
   z.object({
@@ -215,7 +216,7 @@ export const ApiUserProviderLinkPayload = z.preprocess(processResponseBody, z.ob
 export const ApiUserUpdateParams_for_RfdPermission = z.preprocess(
   processResponseBody,
   z.object({
-    'groupIds': TypedUuidForAccessGroupId.array().refine(...uniqueItems),
+    'groupIds': TypedUuidForAccessGroupId.array().default([]).refine(...uniqueItems).optional(),
     'permissions': Permissions_for_RfdPermission,
   }),
 )
@@ -243,6 +244,22 @@ export const CreateMapper = z.preprocess(
     'name': z.string(),
     'rule': z.record(z.string(), z.unknown()),
   }),
+)
+
+/**
+ * Request body for initiating a device authorization flow. The client sends its `client_id` and an optional `scope`. The API server proxies the device authorization request to the upstream provider and tracks it as a login attempt.
+ */
+export const DeviceAuthorizationRequest = z.preprocess(
+  processResponseBody,
+  z.object({ 'clientId': TypedUuidForOAuthClientId, 'scope': z.string().nullable().optional() }),
+)
+
+/**
+ * Request body for the device token exchange. The client polls this endpoint with the device_code received from the authorization step.
+ */
+export const DeviceTokenExchangeRequest = z.preprocess(
+  processResponseBody,
+  z.object({ 'clientId': TypedUuidForOAuthClientId, 'deviceCode': z.string(), 'grantType': z.string() }),
 )
 
 /**
@@ -325,7 +342,7 @@ export const InitialApiKeyResponse_for_RfdPermission = z.preprocess(
     'createdAt': z.coerce.date(),
     'id': TypedUuidForApiKeyId,
     'key': SecretString,
-    'permissions': Permissions_for_RfdPermission.nullable().optional(),
+    'permissionBoundary': Permissions_for_RfdPermission.nullable().optional(),
   }),
 )
 
@@ -418,7 +435,7 @@ export const TypedUuidForMagicLinkAttemptId = z.preprocess(processResponseBody, 
 
 export const MagicLinkExchangeRequest = z.preprocess(
   processResponseBody,
-  z.object({ 'attemptId': TypedUuidForMagicLinkAttemptId, 'recipient': z.string(), 'secret': z.string() }),
+  z.object({ 'attemptId': TypedUuidForMagicLinkAttemptId, 'recipient': z.string(), 'secret': SecretString }),
 )
 
 export const MagicLinkExchangeResponse = z.preprocess(
@@ -436,7 +453,7 @@ export const MagicLinkSendRequest = z.preprocess(
     'recipient': z.string(),
     'redirectUri': z.string(),
     'scope': z.string().nullable().optional(),
-    'secret': z.string(),
+    'secret': SecretString,
   }),
 )
 
@@ -444,6 +461,8 @@ export const MagicLinkSendResponse = z.preprocess(
   processResponseBody,
   z.object({ 'attemptId': TypedUuidForMagicLinkAttemptId }),
 )
+
+export const MapperSource = z.preprocess(processResponseBody, z.enum(['dynamic', 'preset']))
 
 export const Mapper = z.preprocess(
   processResponseBody,
@@ -456,6 +475,7 @@ export const Mapper = z.preprocess(
     'maxActivations': z.number().min(-2147483647).max(2147483647).nullable().optional(),
     'name': z.string(),
     'rule': z.record(z.string(), z.unknown()),
+    'source': MapperSource,
     'updatedAt': z.coerce.date(),
   }),
 )
@@ -466,15 +486,21 @@ export const OAuthAuthzCodeExchangeBody = z.preprocess(
     'clientId': TypedUuidForOAuthClientId.nullable().optional(),
     'clientSecret': SecretString.nullable().optional(),
     'code': z.string(),
+    'codeVerifier': z.string(),
     'grantType': z.string(),
-    'pkceVerifier': z.string().nullable().optional(),
     'redirectUri': z.string(),
   }),
 )
 
 export const OAuthAuthzCodeExchangeResponse = z.preprocess(
   processResponseBody,
-  z.object({ 'accessToken': z.string(), 'expiresIn': z.number(), 'tokenType': z.string() }),
+  z.object({
+    'accessToken': z.string(),
+    'expiresIn': z.number(),
+    'idpToken': z.string().nullable().optional(),
+    'scope': z.string(),
+    'tokenType': z.string(),
+  }),
 )
 
 export const OAuthRedirectUriId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
@@ -514,18 +540,29 @@ export const OAuthClient = z.preprocess(
   }),
 )
 
-export const OAuthProviderName = z.preprocess(processResponseBody, z.enum(['github', 'google']))
-
-export const OAuthProviderInfo = z.preprocess(
+export const OAuthProviderAuthorizationCodeInfo = z.preprocess(
   processResponseBody,
   z.object({
     'authUrlEndpoint': z.string(),
-    'clientId': z.string(),
-    'deviceCodeEndpoint': z.string(),
-    'provider': OAuthProviderName,
-    'scopes': z.string().array(),
+    'redirectEndpoint': z.string(),
     'tokenEndpoint': z.string(),
+    'tokenEndpointContentType': z.string(),
   }),
+)
+
+export const OAuthProviderAuthorizationCodePkceInfo = z.preprocess(
+  processResponseBody,
+  z.object({
+    'clientId': TypedUuidForOAuthClientId,
+    'proxyPort': z.number().min(0).max(65535),
+    'redirectEndpoint': z.string(),
+    'web': OAuthProviderAuthorizationCodeInfo,
+  }),
+)
+
+export const OAuthProviderDeviceInfo = z.preprocess(
+  processResponseBody,
+  z.object({ 'authUrlEndpoint': z.string(), 'clientId': TypedUuidForOAuthClientId, 'tokenEndpoint': z.string() }),
 )
 
 export const OpenIdConfiguration = z.preprocess(processResponseBody, z.object({ 'jwksUri': z.string() }))
@@ -740,6 +777,8 @@ export const UpdateRfdAttrBody = z.preprocess(
   z.object({ 'majorChange': SafeBoolean.nullable().optional() }),
 )
 
+export const OAuthProviderName = z.preprocess(processResponseBody, z.enum(['github', 'google', 'zendesk']))
+
 export const RfdAttrName = z.preprocess(processResponseBody, z.enum(['discussion', 'labels', 'state']))
 
 export const JwksJsonParams = z.preprocess(
@@ -826,6 +865,26 @@ export const RemoveApiUserFromGroupParams = z.preprocess(
 )
 
 export const LinkProviderParams = z.preprocess(
+  processResponseBody,
+  z.object({
+    path: z.object({
+      userId: TypedUuidForUserId,
+    }),
+    query: z.object({}),
+  }),
+)
+
+export const AddApiUserPermissionParams = z.preprocess(
+  processResponseBody,
+  z.object({
+    path: z.object({
+      userId: TypedUuidForUserId,
+    }),
+    query: z.object({}),
+  }),
+)
+
+export const RemoveApiUserPermissionParams = z.preprocess(
   processResponseBody,
   z.object({
     path: z.object({
@@ -981,6 +1040,8 @@ export const AuthzCodeRedirectParams = z.preprocess(
     }),
     query: z.object({
       clientId: TypedUuidForOAuthClientId,
+      codeChallenge: z.string(),
+      codeChallengeMethod: z.string(),
       redirectUri: z.string(),
       responseType: z.string(),
       scope: z.string().nullable().optional(),
@@ -1009,7 +1070,9 @@ export const AuthzCodeExchangeParams = z.preprocess(
     path: z.object({
       provider: OAuthProviderName,
     }),
-    query: z.object({}),
+    query: z.object({
+      requestIdpToken: SafeBoolean.optional(),
+    }),
   }),
 )
 
@@ -1023,7 +1086,27 @@ export const GetDeviceProviderParams = z.preprocess(
   }),
 )
 
+export const DeviceAuthzParams = z.preprocess(
+  processResponseBody,
+  z.object({
+    path: z.object({
+      provider: OAuthProviderName,
+    }),
+    query: z.object({}),
+  }),
+)
+
 export const ExchangeDeviceTokenParams = z.preprocess(
+  processResponseBody,
+  z.object({
+    path: z.object({
+      provider: OAuthProviderName,
+    }),
+    query: z.object({}),
+  }),
+)
+
+export const GetWebPkceProviderParams = z.preprocess(
   processResponseBody,
   z.object({
     path: z.object({

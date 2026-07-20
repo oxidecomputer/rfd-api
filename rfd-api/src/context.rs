@@ -950,8 +950,8 @@ pub(crate) mod test_mocks {
     };
     use std::sync::Arc;
     use v_api::{
-        config::{AsymmetricKey, JwtConfig},
-        endpoints::login::oauth::{google::GoogleOAuthProvider, OAuthProviderName},
+        config::{AsymmetricKey, JwtConfig, ResolvedOAuthConfig, ResolvedOAuthWebConfig},
+        endpoints::login::oauth::{remote::google::GoogleOAuthProvider, OAuthProviderName},
         VContextBuilder,
     };
     use v_model::storage::postgres::PostgresStore;
@@ -1015,10 +1015,15 @@ pub(crate) mod test_mocks {
             OAuthProviderName::Google,
             Box::new(move || {
                 Box::new(GoogleOAuthProvider::new(
-                    "google_device_client_id".to_string(),
-                    "google_device_client_secret".to_string().into(),
-                    "google_web_client_id".to_string(),
-                    "google_web_client_secret".to_string().into(),
+                    ResolvedOAuthConfig {
+                        device: None,
+                        web: Some(ResolvedOAuthWebConfig {
+                            remote_client_id: "google_web_client_id".to_string(),
+                            remote_client_secret: "google_web_client_secret".to_string().into(),
+                        }),
+                        proxy_web: None,
+                    },
+                    String::new(),
                     None,
                 ))
             }),

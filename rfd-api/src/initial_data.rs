@@ -8,7 +8,10 @@ use serde::Deserialize;
 use thiserror::Error;
 use tracing::Instrument;
 use v_api::{mapper::MappingRulesData, response::ResourceError, VContext};
-use v_model::{storage::StoreError, NewAccessGroup, NewMapper, Permissions};
+use v_model::{
+    storage::{AccessGroupFilter, StoreError},
+    NewAccessGroup, NewMapper, Permissions,
+};
 
 use crate::permissions::RfdPermission;
 
@@ -65,7 +68,10 @@ impl InitialData {
     pub async fn initialize(self, ctx: &VContext<RfdPermission>) -> Result<(), InitError> {
         let existing_groups = ctx
             .group
-            .get_groups(&ctx.builtin_registration_user())
+            .list_groups(
+                &ctx.builtin_registration_user(),
+                AccessGroupFilter::default(),
+            )
             .await?;
 
         for group in self.groups {

@@ -6,6 +6,7 @@ use clap::Parser;
 use context::RfdContext;
 use minijinja::Environment;
 use server::{server, ServerConfig};
+use strum::IntoEnumIterator;
 use std::{
     net::{SocketAddr, SocketAddrV4},
     path::Path,
@@ -16,7 +17,8 @@ use tracing_appender::non_blocking::NonBlocking;
 use tracing_subscriber::EnvFilter;
 use v_api::{
     endpoints::login::oauth::{
-        github::GitHubOAuthProvider, google::GoogleOAuthProvider, OAuthProviderName,
+        remote::{github::GitHubOAuthProvider, google::GoogleOAuthProvider},
+        OAuthProviderName,
     },
     ApiContext, MagicLinkTarget, VContextBuilder,
 };
@@ -216,23 +218,22 @@ async fn run_server(config_path: Option<String>) -> anyhow::Result<()> {
         .with_public_url(config.public_url.clone())
         .with_storage(storage.clone())
         .with_jwt_expiration(config.jwt.default_expiration)
-        .with_keys(std::mem::take(&mut config.keys));
+        .with_keys(std::mem::take(&mut config.keys))
+        .with_additional_builtin_permissions(RfdPermission::iter().collect());
     if let Some(param_path) = param_path.clone() {
         v_ctx_builder = v_ctx_builder.with_param_path(param_path);
     }
     let mut v_ctx = v_ctx_builder.build().await?;
 
     if let Some(github) = config.authn.oauth.github {
-        let device_client_secret = github.device.client_secret.resolve(param_path.clone())?;
-        let web_client_secret = github.web.client_secret.resolve(param_path.clone())?;
+        let github_config = github.resolve(param_path.as_deref())?;
+        let public_url = config.public_url.clone();
         v_ctx.insert_oauth_provider(
             OAuthProviderName::GitHub,
             Box::new(move || {
                 Box::new(GitHubOAuthProvider::new(
-                    github.device.client_id.clone(),
-                    device_client_secret.clone(),
-                    github.web.client_id.clone(),
-                    web_client_secret.clone(),
+                    github_config.clone(),
+                    public_url.clone(),
                     None,
                 ))
             }),
@@ -242,16 +243,14 @@ async fn run_server(config_path: Option<String>) -> anyhow::Result<()> {
     }
 
     if let Some(google) = config.authn.oauth.google {
-        let device_client_secret = google.device.client_secret.resolve(param_path.clone())?;
-        let web_client_secret = google.web.client_secret.resolve(param_path.clone())?;
+        let google_config = google.resolve(param_path.as_deref())?;
+        let public_url = config.public_url.clone();
         v_ctx.insert_oauth_provider(
             OAuthProviderName::Google,
             Box::new(move || {
                 Box::new(GoogleOAuthProvider::new(
-                    google.device.client_id.clone(),
-                    device_client_secret.clone(),
-                    google.web.client_id.clone(),
-                    web_client_secret.clone(),
+                    google_config.clone(),
+                    public_url.clone(),
                     None,
                 ))
             }),
