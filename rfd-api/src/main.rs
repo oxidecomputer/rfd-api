@@ -6,12 +6,12 @@ use clap::Parser;
 use context::RfdContext;
 use minijinja::Environment;
 use server::{server, ServerConfig};
-use strum::IntoEnumIterator;
 use std::{
     net::{SocketAddr, SocketAddrV4},
     path::Path,
     sync::Arc,
 };
+use strum::IntoEnumIterator;
 use tap::TapFallible;
 use tracing_appender::non_blocking::NonBlocking;
 use tracing_subscriber::EnvFilter;
