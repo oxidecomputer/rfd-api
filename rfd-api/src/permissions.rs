@@ -5,11 +5,12 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeSet;
+use strum::EnumIter;
 use v_api::permissions::VPermission;
 use v_api_permission_derive::v_api;
 
 #[v_api(From(VPermission))]
-#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, EnumIter)]
 pub enum RfdPermission {
     #[v_api(
         contract(kind = append, variant = GetRfds),

@@ -61,26 +61,31 @@ kid = "" # Unique key identifier, that will be used in JWKS (must match signer k
 public = """""" # PEM encoded public key
 
 # OAuth Providers
-# Google and GitHub are supported. An OAuth provider needs to have both a web and device config.
-# At least one OAuth provider must be configured
+# Google and GitHub are supported. An OAuth provider may configure a device flow
+# (`device`) and/or an authorization code flow (`web`).
+# At least one OAuth provider must be configured.
+#
+# `client_id`            - UUID of the v-api OAuth client that fronts the device flow
+# `remote_client_id`     - client id issued by the upstream provider (Google/GitHub)
+# `remote_client_secret` - client secret issued by the upstream provider
 
 [authn.oauth.google.device]
 client_id = ""
-client_secret = ""
+remote_client_id = ""
+remote_client_secret = ""
 
 [authn.oauth.google.web]
-client_id = ""
-client_secret = ""
-redirect_uri = "https://<rfd-api-hostname>/login/oauth/google/code/callback"
+remote_client_id = ""
+remote_client_secret = ""
 
 [authn.oauth.github.device]
 client_id = ""
-client_secret = ""
+remote_client_id = ""
+remote_client_secret = ""
 
 [authn.oauth.github.web]
-client_id = ""
-client_secret = ""
-redirect_uri = "https://<rfd-api-hostname>/login/oauth/github/code/callback"
+remote_client_id = ""
+remote_client_secret = ""
 
 # Magic link (passwordless email login) configuration
 # Leave templates empty to disable magic link authentication

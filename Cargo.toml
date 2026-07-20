@@ -15,7 +15,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.14.7"
+version = "0.15.0"
 edition = "2024"
 
 [workspace.dependencies]
@@ -33,7 +33,7 @@ diesel = { version = "2.3.9", features = ["postgres"] }
 diesel_migrations = { version = "2.3.2" }
 dirs = "6.0.0"
 dropshot = "0.17"
-dropshot-authorization-header = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.3.1" }
+dropshot-authorization-header = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.4.7" }
 dropshot-verified-body = { git = "https://github.com/oxidecomputer/dropshot-verified-body", rev = "0b124eeb0f52db783a44d395a41425a1f9b709b7" }
 futures = "0.3.32"
 google-drive3 = "7.0.0"
@@ -55,8 +55,8 @@ oauth2 = { version = "5.0.0", default-features = false, features = ["rustls-tls"
 octorust = "0.10.0"
 owo-colors = "4.3.0"
 partial-struct = { git = "https://github.com/oxidecomputer/partial-struct" }
-progenitor = { version = "0.11.2" }
-progenitor-client = { version = "0.11.2" }
+progenitor = { version = "0.14" }
+progenitor-client = { version = "0.14" }
 rand = "0.10.1"
 rand_core = "0.10.1"
 regex = "1.12.3"
@@ -80,6 +80,7 @@ sha2 = "0.11.0"
 similar = "3.1.0"
 slog = "2.8.2"
 slog-async = "2.8.0"
+strum = { version = "0.28.0", features = ["derive"] }
 tabwriter = "1.4.1"
 tap = "1.0.1"
 textwrap = "0.16.2"
@@ -92,10 +93,10 @@ tracing-slog = { git = "https://github.com/oxidecomputer/tracing-slog", default-
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
 uuid = { version = "1.23.1", features = ["serde", "v4"] }
 valuable = "0.1.1"
-v-api = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.3.1", default-features = false }
-v-api-installer = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.3.1" }
-v-model = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.3.1" }
-v-api-permission-derive = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.3.1" }
+v-api = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.4.7", default-features = false }
+v-cli-sdk = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.4.7" }
+v-model = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.4.7" }
+v-api-permission-derive = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.4.7" }
 yup-oauth2 = { version = "12.1.2" }
 
 # Config for 'cargo dist'
@@ -119,6 +120,6 @@ lto = "thin"
 # [patch."https://github.com/oxidecomputer/v-api"]
 # dropshot-authorization-header = { path = "../v-api/dropshot-authorization-header" }
 # v-api = { path = "../v-api/v-api" }
-# v-api-installer = { path = "../v-api/v-api-installer" }
+# v-cli-sdk = { path = "../v-api/v-cli-sdk" }
 # v-model = { path = "../v-api/v-model" }
 # v-api-permission-derive = { path = "../v-api/v-api-permission-derive" }

@@ -11,7 +11,7 @@ use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
 const MIGRATIONS: EmbeddedMigrations = embed_migrations!("migrations");
 
 pub fn run_migrations(url: &str, v_only: bool) {
-    v_api_installer::run_migrations(url);
+    v_model::migrations::run_migrations(url);
 
     if !v_only {
         let mut conn = db_conn(url);

@@ -11,5 +11,6 @@ progenitor-client = { workspace = true }
 schemars = { workspace = true, features = ["chrono", "uuid1"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
-reqwest = { workspace = true }
+# progenitor 0.14 generates code targeting reqwest 0.13.
+reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "rustls"] }
 uuid = { workspace = true }
