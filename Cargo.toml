@@ -40,7 +40,7 @@ google-drive3 = "7.0.0"
 google-storage1 = "7.0.0"
 hex = "0.4.3"
 hmac = "0.13.0"
-http = "1.4.0"
+http = "1.4.2"
 hyper = "1.9.0"
 itertools = "0.14.0"
 jsonwebtoken = { version = "10.2", features = ["aws_lc_rs"] }
