@@ -5,7 +5,6 @@
 use clap::Parser;
 use context::RfdContext;
 use minijinja::Environment;
-use rustls;
 use server::{server, ServerConfig};
 use std::{
     net::{SocketAddr, SocketAddrV4},
