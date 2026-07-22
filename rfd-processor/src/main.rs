@@ -239,7 +239,6 @@ fn describe_config_paths(paths: &[String]) -> String {
 }
 
 async fn run_processor(config_path: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
-    // yup_oauth2 panics unless an application level default crypto provider is installed.
     rustls::crypto::aws_lc_rs::default_provider()
         .install_default()
         .expect("Failed to install rustls crypto provider");
