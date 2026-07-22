@@ -5,6 +5,7 @@
 use clap::Parser;
 use context::RfdContext;
 use minijinja::Environment;
+use rustls;
 use server::{server, ServerConfig};
 use std::{
     net::{SocketAddr, SocketAddrV4},
@@ -119,6 +120,10 @@ fn resolve_database_url(database_url: &Option<String>) -> anyhow::Result<String>
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    rustls::crypto::aws_lc_rs::default_provider()
+        .install_default()
+        .expect("Failed to install rustls crypto provider");
+
     let args = Args::parse();
 
     match args.command {
