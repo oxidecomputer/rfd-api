@@ -4,105 +4,24 @@
 
 #![allow(unused)]
 
-use anyhow::{anyhow, Result};
-use clap::{value_parser, Arg, ArgAction, Command, CommandFactory, FromArgMatches, ValueEnum};
+use clap::{value_parser, Arg, ArgAction, Command, CommandFactory, FromArgMatches};
 use generated::cli::{CliConfig as ProgenitorCliConfig, *};
-use printer::{CliOutput, Printer, RfdJsonPrinter, RfdTabPrinter};
-use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
-use rfd_sdk::Client;
-use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
-use std::any::Any;
-use std::fmt::{Debug, Display};
-use std::ops::Deref;
-use std::time::Duration;
-use std::{collections::HashMap, error::Error};
-use store::CliConfig;
+use std::collections::HashMap;
+use std::error::Error;
+use v_cli_sdk::{
+    cmd::{auth::Auth, config::ConfigCmd},
+    printer::Printer,
+    FormatStyle, VCliConfig, VCliContext, VerbosityLevel,
+};
 
+use crate::{auth::LoginProvider, context::Context};
+
+mod auth;
 mod cmd;
-mod err;
+mod context;
 #[allow(clippy::all)]
 mod generated;
-mod printer;
 mod store;
-
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
-pub enum VerbosityLevel {
-    None,
-    All,
-}
-
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, ValueEnum, Clone, Serialize, Deserialize)]
-pub enum FormatStyle {
-    #[value(name = "json")]
-    Json,
-    #[value(name = "tab")]
-    Tab,
-}
-
-impl Display for FormatStyle {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Json => write!(f, "json"),
-            Self::Tab => write!(f, "tab"),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct Context {
-    config: CliConfig,
-    client: Option<Client>,
-    printer: Option<Printer>,
-    verbosity: VerbosityLevel,
-}
-
-impl Context {
-    pub fn new() -> Result<Self> {
-        let config = CliConfig::new()?;
-
-        Ok(Self {
-            config,
-            client: None,
-            printer: None,
-            verbosity: VerbosityLevel::None,
-        })
-    }
-
-    pub fn new_client(&self, token: Option<&str>) -> Result<Client> {
-        let mut default_headers = HeaderMap::new();
-
-        if let Some(token) = token {
-            let mut auth_header = HeaderValue::from_str(&format!("Bearer {}", token))?;
-            auth_header.set_sensitive(true);
-            default_headers.insert(AUTHORIZATION, auth_header);
-        }
-
-        let http_client = reqwest::Client::builder()
-            .default_headers(default_headers)
-            .connect_timeout(Duration::from_secs(5))
-            .timeout(Duration::from_secs(10))
-            .build()?;
-
-        Ok(Client::new_with_client(self.config.host()?, http_client))
-    }
-
-    pub fn client(&mut self) -> Result<&Client> {
-        if self.client.is_none() {
-            self.client = Some(Self::new_client(self, self.config.token().ok())?);
-        }
-
-        self.client
-            .as_ref()
-            .ok_or_else(|| anyhow!("Failed to construct client"))
-    }
-
-    pub fn printer(&self) -> Result<&Printer> {
-        self.printer
-            .as_ref()
-            .ok_or_else(|| anyhow!("No printer configured"))
-    }
-}
 
 #[derive(Debug, Default)]
 struct Tree<'a> {
@@ -171,6 +90,8 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
         CliCommand::ListApiUserTokens => Some("sys user token list"),
         CliCommand::UpdateApiUser => Some("sys user update"),
         CliCommand::GetSelf => Some("sys user self"),
+        CliCommand::AddApiUserPermission => Some("sys user permission add"),
+        CliCommand::RemoveApiUserPermission => Some("sys user permission remove"),
 
         // Set user email
         CliCommand::SetApiUserContactEmail => Some("sys user contact email set"),
@@ -215,7 +136,9 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
 
         // Authentication is handled separately
         CliCommand::ExchangeDeviceToken => None,
+        CliCommand::DeviceAuthz => None,
         CliCommand::GetDeviceProvider => None,
+        CliCommand::GetWebPkceProvider => None,
         CliCommand::MagicLinkSend => None,
         CliCommand::MagicLinkExchange => None,
 
@@ -231,13 +154,6 @@ fn cmd_path<'a>(cmd: &CliCommand) -> Option<&'a str> {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    rustls::crypto::aws_lc_rs::default_provider()
-        .install_default()
-        .expect("Failed to install rustls crypto provider");
-    jsonwebtoken::crypto::aws_lc::DEFAULT_PROVIDER
-        .install_default()
-        .expect("Failed to install jsonwebtoken crypto provider");
-
     let mut root = Tree::default();
 
     for cmd in CliCommand::iter() {
@@ -287,8 +203,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 .action(ArgAction::Set),
         );
 
-    cmd = cmd.subcommand(cmd::auth::Auth::command());
-    cmd = cmd.subcommand(cmd::config::ConfigCmd::command());
+    cmd = cmd.subcommand(Auth::<LoginProvider>::command());
+    cmd = cmd.subcommand(ConfigCmd::command());
     cmd = cmd.subcommand(cmd::shortcut::ShortcutCmd::command());
     cmd = cmd.subcommand(cmd::version::VersionCmd::command());
 
@@ -297,31 +213,31 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let matches = cmd.get_matches();
 
     if matches.try_get_one::<bool>("debug").ok().is_some() {
-        ctx.verbosity = VerbosityLevel::All;
+        ctx.set_verbosity(VerbosityLevel::All);
     }
 
     let format = matches
         .try_get_one::<FormatStyle>("format")
         .unwrap()
         .cloned()
-        .unwrap_or_else(|| ctx.config.format_style());
-    ctx.printer = Some(match format {
-        FormatStyle::Json => Printer::Json(RfdJsonPrinter),
-        FormatStyle::Tab => Printer::Tab(RfdTabPrinter::default()),
-    });
+        .unwrap_or_else(|| ctx.config().default_format());
+    ctx.set_printer(Some(match format {
+        FormatStyle::Json => Printer::Json,
+        FormatStyle::Tab => Printer::Tab,
+    }));
 
     let mut node = &root;
     let mut sm = &matches;
 
     match matches.subcommand() {
         Some(("auth", sub_matches)) => {
-            cmd::auth::Auth::from_arg_matches(sub_matches)
+            Auth::<LoginProvider>::from_arg_matches(sub_matches)
                 .unwrap()
                 .run(&mut ctx)
                 .await?;
         }
         Some(("config", sub_matches)) => {
-            cmd::config::ConfigCmd::from_arg_matches(sub_matches)
+            ConfigCmd::from_arg_matches(sub_matches)
                 .unwrap()
                 .run(&mut ctx)
                 .await?;
@@ -344,7 +260,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 sm = sub_matches;
             }
 
-            let cli = Cli::new(ctx.client()?.clone(), ctx);
+            let client = match ctx.require_client() {
+                Ok(client) => client,
+                Err(_) => {
+                    println!(
+                        "A host must be configured. Run `rfd config set host <HOST>` to configure a host."
+                    );
+                    std::process::exit(1);
+                }
+            };
+            let cli = Cli::new(client, ctx);
             if cli.execute(node.cmd.unwrap(), sm).await.is_err() {
                 std::process::exit(1);
             }
@@ -352,14 +277,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
     };
 
     Ok(())
-}
-
-pub fn reserialize<T, U>(value: &T) -> U
-where
-    T: Serialize + Debug,
-    U: DeserializeOwned,
-{
-    serde_json::from_str::<U>(&serde_json::to_string::<T>(value).unwrap()).unwrap()
 }
 
 impl ProgenitorCliConfig for Context {
@@ -378,7 +295,9 @@ impl ProgenitorCliConfig for Context {
     where
         T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
     {
-        self.printer().unwrap().output_error(value)
+        if let Some(printer) = self.printer() {
+            printer.print_error_response(value);
+        }
     }
 
     fn list_start<T>(&self)
@@ -391,156 +310,8 @@ impl ProgenitorCliConfig for Context {
     where
         T: schemars::JsonSchema + serde::Serialize + std::fmt::Debug,
     {
-        match &*T::schema_name() {
-            // User response types
-            "Array_of_GetUserResponseForRfdPermission" => self
-                .printer()
-                .unwrap()
-                .output_api_user_list(reserialize(value)),
-            "GetUserResponseForRfdPermission" => {
-                self.printer().unwrap().output_user(reserialize(value))
-            }
-            "ApiUserContactEmail" => self
-                .printer()
-                .unwrap()
-                .output_api_user_contact_email(reserialize(value)),
-            "ApiUserLinkRequestResponse" => self
-                .printer()
-                .unwrap()
-                .output_api_user_link_request_response(reserialize(value)),
-
-            // API key response types
-            "Array_of_ApiKeyResponseForRfdPermission" => self
-                .printer()
-                .unwrap()
-                .output_api_key_list(reserialize(value)),
-            "InitialApiKeyResponseForRfdPermission" => self
-                .printer()
-                .unwrap()
-                .output_api_key_initial(reserialize(value)),
-            "ApiKeyResponseForRfdPermission" => {
-                self.printer().unwrap().output_api_key(reserialize(value))
-            }
-
-            // Group response types
-            "Array_of_AccessGroupForRfdPermission" => self
-                .printer()
-                .unwrap()
-                .output_group_list(reserialize(value)),
-            "AccessGroupForRfdPermission" => {
-                self.printer().unwrap().output_group(reserialize(value))
-            }
-
-            // Mapper response types
-            "Array_of_Mapper" => self
-                .printer()
-                .unwrap()
-                .output_mapper_list(reserialize(value)),
-            "Mapper" => self.printer().unwrap().output_mapper(reserialize(value)),
-
-            // OAuth client response types
-            "Array_of_OAuthClient" => self
-                .printer()
-                .unwrap()
-                .output_oauth_client_list(reserialize(value)),
-            "OAuthClient" => self
-                .printer()
-                .unwrap()
-                .output_oauth_client(reserialize(value)),
-            "OAuthClientRedirectUri" => self
-                .printer()
-                .unwrap()
-                .output_oauth_redirect_uri(reserialize(value)),
-            "InitialOAuthClientSecretResponse" => self
-                .printer()
-                .unwrap()
-                .output_oauth_secret_initial(reserialize(value)),
-            "OAuthClientSecret" => self
-                .printer()
-                .unwrap()
-                .output_oauth_secret(reserialize(value)),
-            "OAuthAuthzCodeExchangeResponse" => self
-                .printer()
-                .unwrap()
-                .output_oauth_authz_code_exchange_response(reserialize(value)),
-            "OAuthProviderInfo" => self
-                .printer()
-                .unwrap()
-                .output_oauth_provider_info(reserialize(value)),
-
-            // Magic link response types
-            "Array_of_MagicLink" => self
-                .printer()
-                .unwrap()
-                .output_magic_link_client_list(reserialize(value)),
-            "MagicLink" => self
-                .printer()
-                .unwrap()
-                .output_magic_link_client(reserialize(value)),
-            "MagicLinkRedirectUri" => self
-                .printer()
-                .unwrap()
-                .output_magic_link_redirect_uri(reserialize(value)),
-            "InitialMagicLinkSecretResponse" => self
-                .printer()
-                .unwrap()
-                .output_magic_link_secret_initial(reserialize(value)),
-            "MagicLinkSecret" => self
-                .printer()
-                .unwrap()
-                .output_magic_link_secret(reserialize(value)),
-            "MagicLinkExchangeResponse" => self
-                .printer()
-                .unwrap()
-                .output_magic_link_exchange_response(reserialize(value)),
-            "MagicLinkSendResponse" => self
-                .printer()
-                .unwrap()
-                .output_magic_link_send_response(reserialize(value)),
-
-            // RFD response types
-            "RfdWithoutContent" => self.printer().unwrap().output_rfd_meta(reserialize(value)),
-            "Array_of_RfdWithoutContent" => {
-                self.printer().unwrap().output_rfd_list(reserialize(value))
-            }
-            "RfdWithRaw" => self.printer().unwrap().output_rfd_full(reserialize(value)),
-            "RfdWithPdf" => self
-                .printer()
-                .unwrap()
-                .output_rfd_with_pdf(reserialize(value)),
-            "Rfd" => self.printer().unwrap().output_rfd(reserialize(value)),
-            "RfdAttr" => self.printer().unwrap().output_rfd_attr(reserialize(value)),
-            "RfdRevisionMeta" => self
-                .printer()
-                .unwrap()
-                .output_rfd_revision_meta(reserialize(value)),
-            "Array_of_RfdRevisionMeta" => self
-                .printer()
-                .unwrap()
-                .output_rfd_revision_meta_list(reserialize(value)),
-            "ReserveRfdResponse" => self
-                .printer()
-                .unwrap()
-                .output_reserved_rfd(reserialize(value)),
-            "SearchResults" => self
-                .printer()
-                .unwrap()
-                .output_search_results(reserialize(value)),
-
-            // Job response types
-            "Array_of_Job" => self.printer().unwrap().output_job_list(reserialize(value)),
-
-            // OpenID/JWKS response types
-            "Jwks" => self.printer().unwrap().output_jwks(reserialize(value)),
-            "OpenIdConfiguration" => self
-                .printer()
-                .unwrap()
-                .output_openid_configuration(reserialize(value)),
-
-            other => eprintln!(
-                "Unhandled response type: {}. Please report this as a bug.",
-                other
-            ),
+        if let Some(printer) = self.printer() {
+            printer.print_response(value);
         }
     }
 

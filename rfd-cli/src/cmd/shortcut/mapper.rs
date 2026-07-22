@@ -4,12 +4,11 @@
 
 use anyhow::Result;
 use clap::{Parser, Subcommand};
-use progenitor_client::Error;
 use rfd_sdk::types::RfdPermission;
 use serde_json::json;
 use uuid::Uuid;
 
-use crate::{printer::CliOutput, Context};
+use crate::context::Context;
 
 #[derive(Debug, Parser)]
 pub struct MapperShortcut {
@@ -48,7 +47,8 @@ pub struct EmailMapper {
 
 impl GitHubMapper {
     pub async fn run(&self, ctx: &mut Context) -> Result<()> {
-        let mut request = ctx.client()?.create_mapper();
+        let client = ctx.require_client()?;
+        let mut request = client.create_mapper();
         request = request.body_map(|body| {
             body.max_activations(1)
                 .name(format!("map-github-{}", Uuid::new_v4()))
@@ -60,13 +60,8 @@ impl GitHubMapper {
                 }))
         });
 
-        let result = request.send().await;
-        match result {
-            Ok(r) => ctx.printer()?.output_mapper(r.into_inner()),
-            Err(r) => {
-                // ctx.printer()?.output_create_mapper(Err(r))
-            }
-        }
+        let result = request.send().await?;
+        ctx.require_printer()?.print_response(&result.into_inner());
 
         Ok(())
     }
@@ -74,7 +69,8 @@ impl GitHubMapper {
 
 impl EmailMapper {
     pub async fn run(&self, ctx: &mut Context) -> Result<()> {
-        let mut request = ctx.client()?.create_mapper();
+        let client = ctx.require_client()?;
+        let mut request = client.create_mapper();
         request = request.body_map(|body| {
             body.max_activations(1)
                 .name(format!("map-email-{}", Uuid::new_v4()))
@@ -86,13 +82,8 @@ impl EmailMapper {
                 }))
         });
 
-        let result = request.send().await;
-        match result {
-            Ok(r) => ctx.printer()?.output_mapper(r.into_inner()),
-            Err(r) => {
-                // ctx.printer()?.output_create_mapper(Err(r))
-            }
-        }
+        let result = request.send().await?;
+        ctx.require_printer()?.print_response(&result.into_inner());
 
         Ok(())
     }

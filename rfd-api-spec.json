@@ -7,7 +7,7 @@
       "url": "https://oxide.computer",
       "email": "corp-services@oxidecomputer.com"
     },
-    "version": "0.14.6"
+    "version": "0.15.0"
   },
   "paths": {
     "/.well-known/jwks.json": {
@@ -150,7 +150,8 @@
         }
       },
       "post": {
-        "summary": "Update the permissions assigned to a given user",
+        "summary": "Update the permissions assigned to a given user. These replace any existing",
+        "description": "permissions.",
         "operationId": "update_api_user",
         "parameters": [
           {
@@ -349,6 +350,92 @@
         "responses": {
           "204": {
             "description": "resource updated"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      }
+    },
+    "/api-user/{user_id}/permission": {
+      "post": {
+        "summary": "Add a single permission to a user",
+        "operationId": "add_api_user_permission",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TypedUuidForUserId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiUserPermissionParams_for_RfdPermission"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetUserResponse_for_RfdPermission"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove a single permission from a user",
+        "operationId": "remove_api_user_permission",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/TypedUuidForUserId"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApiUserPermissionParams_for_RfdPermission"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetUserResponse_for_RfdPermission"
+                }
+              }
+            }
           },
           "4XX": {
             "$ref": "#/components/responses/Error"
@@ -946,6 +1033,24 @@
           },
           {
             "in": "query",
+            "name": "code_challenge",
+            "description": "PKCE code challenge (RFC 7636). Required for all authorization code flows.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "code_challenge_method",
+            "description": "PKCE code challenge method. Must be \"S256\".",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
             "name": "redirect_uri",
             "required": true,
             "schema": {
@@ -1067,6 +1172,13 @@
         "operationId": "authz_code_exchange",
         "parameters": [
           {
+            "in": "query",
+            "name": "request_idp_token",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
             "in": "path",
             "name": "provider",
             "required": true,
@@ -1107,7 +1219,7 @@
     },
     "/login/oauth/{provider}/device": {
       "get": {
-        "summary": "Retrieve the metadata about an OAuth provider",
+        "summary": "Retrieve the metadata about an OAuth provider for device authorization flow",
         "operationId": "get_device_provider",
         "parameters": [
           {
@@ -1125,7 +1237,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OAuthProviderInfo"
+                  "$ref": "#/components/schemas/OAuthProviderDeviceInfo"
                 }
               }
             }
@@ -1137,11 +1249,47 @@
             "$ref": "#/components/responses/Error"
           }
         }
+      },
+      "post": {
+        "summary": "Initiate a device authorization flow by proxying the request to the",
+        "description": "upstream OAuth provider. Creates a login attempt and returns the upstream device authorization response.",
+        "operationId": "device_authz",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OAuthProviderName"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceAuthorizationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "default": {
+            "description": "",
+            "content": {
+              "*/*": {
+                "schema": {}
+              }
+            }
+          }
+        }
       }
     },
     "/login/oauth/{provider}/device/exchange": {
       "post": {
-        "summary": "Exchange an OAuth device code request for an access token",
+        "summary": "Exchange an OAuth device code for an access token. The client polls",
+        "description": "this endpoint until the user completes authorization.",
         "operationId": "exchange_device_token",
         "parameters": [
           {
@@ -1157,7 +1305,7 @@
           "content": {
             "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/AccessTokenExchangeRequest"
+                "$ref": "#/components/schemas/DeviceTokenExchangeRequest"
               }
             }
           },
@@ -1171,6 +1319,40 @@
                 "schema": {}
               }
             }
+          }
+        }
+      }
+    },
+    "/login/oauth/{provider}/public-pkce": {
+      "get": {
+        "summary": "Retrieve the metadata about an OAuth provider for public PKCE authorization code flow",
+        "operationId": "get_web_pkce_provider",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "provider",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/OAuthProviderName"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OAuthProviderAuthorizationCodePkceInfo"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/Error"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/Error"
           }
         }
       }
@@ -2782,26 +2964,6 @@
           "updated_at"
         ]
       },
-      "AccessTokenExchangeRequest": {
-        "type": "object",
-        "properties": {
-          "device_code": {
-            "type": "string"
-          },
-          "expires_at": {
-            "nullable": true,
-            "type": "string",
-            "format": "date-time"
-          },
-          "grant_type": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "device_code",
-          "grant_type"
-        ]
-      },
       "AddGroupBody": {
         "type": "object",
         "properties": {
@@ -2842,7 +3004,7 @@
             "type": "string",
             "format": "date-time"
           },
-          "permissions": {
+          "permission_boundary": {
             "nullable": true,
             "allOf": [
               {
@@ -2868,7 +3030,7 @@
           "id": {
             "$ref": "#/components/schemas/TypedUuidForApiKeyId"
           },
-          "permissions": {
+          "permission_boundary": {
             "nullable": true,
             "allOf": [
               {
@@ -2949,6 +3111,17 @@
           "token"
         ]
       },
+      "ApiUserPermissionParams_for_RfdPermission": {
+        "type": "object",
+        "properties": {
+          "permission": {
+            "$ref": "#/components/schemas/RfdPermission"
+          }
+        },
+        "required": [
+          "permission"
+        ]
+      },
       "ApiUserProvider": {
         "type": "object",
         "properties": {
@@ -3016,6 +3189,7 @@
         "type": "object",
         "properties": {
           "group_ids": {
+            "default": [],
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
@@ -3027,7 +3201,6 @@
           }
         },
         "required": [
-          "group_ids",
           "permissions"
         ]
       },
@@ -3095,6 +3268,42 @@
         "required": [
           "name",
           "rule"
+        ]
+      },
+      "DeviceAuthorizationRequest": {
+        "description": "Request body for initiating a device authorization flow. The client sends its `client_id` and an optional `scope`. The API server proxies the device authorization request to the upstream provider and tracks it as a login attempt.",
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
+          },
+          "scope": {
+            "nullable": true,
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id"
+        ]
+      },
+      "DeviceTokenExchangeRequest": {
+        "description": "Request body for the device token exchange. The client polls this endpoint with the device_code received from the authorization step.",
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
+          },
+          "device_code": {
+            "type": "string"
+          },
+          "grant_type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "client_id",
+          "device_code",
+          "grant_type"
         ]
       },
       "Error": {
@@ -3356,7 +3565,7 @@
           "key": {
             "$ref": "#/components/schemas/SecretString"
           },
-          "permissions": {
+          "permission_boundary": {
             "nullable": true,
             "allOf": [
               {
@@ -3560,7 +3769,7 @@
             "type": "string"
           },
           "secret": {
-            "type": "string"
+            "$ref": "#/components/schemas/SecretString"
           }
         },
         "required": [
@@ -3684,7 +3893,7 @@
             "type": "string"
           },
           "secret": {
-            "type": "string"
+            "$ref": "#/components/schemas/SecretString"
           }
         },
         "required": [
@@ -3740,6 +3949,9 @@
             "type": "string"
           },
           "rule": {},
+          "source": {
+            "$ref": "#/components/schemas/MapperSource"
+          },
           "updated_at": {
             "type": "string",
             "format": "date-time"
@@ -3750,11 +3962,30 @@
           "id",
           "name",
           "rule",
+          "source",
           "updated_at"
         ]
       },
       "MapperId": {
         "not": {}
+      },
+      "MapperSource": {
+        "oneOf": [
+          {
+            "description": "Created via the API, persisted in the database, supports activation limits",
+            "type": "string",
+            "enum": [
+              "dynamic"
+            ]
+          },
+          {
+            "description": "Loaded from service configuration, in-memory only, no activation limits",
+            "type": "string",
+            "enum": [
+              "preset"
+            ]
+          }
+        ]
       },
       "OAuthAuthzCodeExchangeBody": {
         "type": "object",
@@ -3778,11 +4009,11 @@
           "code": {
             "type": "string"
           },
-          "grant_type": {
+          "code_verifier": {
+            "description": "PKCE code verifier (RFC 7636). Required for all authorization code exchanges.",
             "type": "string"
           },
-          "pkce_verifier": {
-            "nullable": true,
+          "grant_type": {
             "type": "string"
           },
           "redirect_uri": {
@@ -3791,6 +4022,7 @@
         },
         "required": [
           "code",
+          "code_verifier",
           "grant_type",
           "redirect_uri"
         ]
@@ -3805,6 +4037,14 @@
             "type": "integer",
             "format": "int64"
           },
+          "idp_token": {
+            "nullable": true,
+            "type": "string"
+          },
+          "scope": {
+            "description": "The scope granted to the access token per RFC 6749 §5.1. An empty string indicates no permissions. Use \"full\" for all permissions.",
+            "type": "string"
+          },
           "token_type": {
             "type": "string"
           }
@@ -3812,6 +4052,7 @@
         "required": [
           "access_token",
           "expires_in",
+          "scope",
           "token_type"
         ]
       },
@@ -3911,26 +4152,62 @@
           "secret_signature"
         ]
       },
-      "OAuthProviderInfo": {
+      "OAuthProviderAuthorizationCodeInfo": {
+        "type": "object",
+        "properties": {
+          "auth_url_endpoint": {
+            "type": "string"
+          },
+          "redirect_endpoint": {
+            "type": "string"
+          },
+          "token_endpoint": {
+            "type": "string"
+          },
+          "token_endpoint_content_type": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "auth_url_endpoint",
+          "redirect_endpoint",
+          "token_endpoint",
+          "token_endpoint_content_type"
+        ]
+      },
+      "OAuthProviderAuthorizationCodePkceInfo": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
+          },
+          "proxy_port": {
+            "type": "integer",
+            "format": "uint16",
+            "minimum": 0
+          },
+          "redirect_endpoint": {
+            "type": "string"
+          },
+          "web": {
+            "$ref": "#/components/schemas/OAuthProviderAuthorizationCodeInfo"
+          }
+        },
+        "required": [
+          "client_id",
+          "proxy_port",
+          "redirect_endpoint",
+          "web"
+        ]
+      },
+      "OAuthProviderDeviceInfo": {
         "type": "object",
         "properties": {
           "auth_url_endpoint": {
             "type": "string"
           },
           "client_id": {
-            "type": "string"
-          },
-          "device_code_endpoint": {
-            "type": "string"
-          },
-          "provider": {
-            "$ref": "#/components/schemas/OAuthProviderName"
-          },
-          "scopes": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
+            "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
           },
           "token_endpoint": {
             "type": "string"
@@ -3939,17 +4216,7 @@
         "required": [
           "auth_url_endpoint",
           "client_id",
-          "device_code_endpoint",
-          "provider",
-          "scopes",
           "token_endpoint"
-        ]
-      },
-      "OAuthProviderName": {
-        "type": "string",
-        "enum": [
-          "github",
-          "google"
         ]
       },
       "OAuthRedirectUriId": {
@@ -4222,7 +4489,8 @@
               "GetMagicLinkClientsAll",
               "ManageMagicLinkClientsAssigned",
               "ManageMagicLinkClientsAll",
-              "CreateAccessToken"
+              "CreateAccessToken",
+              "RetrieveRemoteAccessToken"
             ]
           },
           {
@@ -5430,6 +5698,14 @@
       },
       "WebhookDeliveryId": {
         "not": {}
+      },
+      "OAuthProviderName": {
+        "type": "string",
+        "enum": [
+          "github",
+          "google",
+          "zendesk"
+        ]
       },
       "RfdAttrName": {
         "type": "string",

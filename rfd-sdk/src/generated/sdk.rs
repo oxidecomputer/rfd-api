@@ -97,12 +97,6 @@ pub mod types {
         pub updated_at: ::chrono::DateTime<::chrono::offset::Utc>,
     }
 
-    impl ::std::convert::From<&AccessGroupForRfdPermission> for AccessGroupForRfdPermission {
-        fn from(value: &AccessGroupForRfdPermission) -> Self {
-            value.clone()
-        }
-    }
-
     impl AccessGroupForRfdPermission {
         pub fn builder() -> builder::AccessGroupForRfdPermission {
             Default::default()
@@ -132,12 +126,6 @@ pub mod types {
     )]
     #[serde(deny_unknown_fields)]
     pub enum AccessGroupId {}
-
-    impl ::std::convert::From<&Self> for AccessGroupId {
-        fn from(value: &AccessGroupId) -> Self {
-            value.clone()
-        }
-    }
 
     /// `AccessGroupUpdateParamsForRfdPermission`
     ///
@@ -172,70 +160,8 @@ pub mod types {
         pub permissions: PermissionsForRfdPermission,
     }
 
-    impl ::std::convert::From<&AccessGroupUpdateParamsForRfdPermission>
-        for AccessGroupUpdateParamsForRfdPermission
-    {
-        fn from(value: &AccessGroupUpdateParamsForRfdPermission) -> Self {
-            value.clone()
-        }
-    }
-
     impl AccessGroupUpdateParamsForRfdPermission {
         pub fn builder() -> builder::AccessGroupUpdateParamsForRfdPermission {
-            Default::default()
-        }
-    }
-
-    /// `AccessTokenExchangeRequest`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "device_code",
-    ///    "grant_type"
-    ///  ],
-    ///  "properties": {
-    ///    "device_code": {
-    ///      "type": "string"
-    ///    },
-    ///    "expires_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "grant_type": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
-    #[derive(
-        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
-    )]
-    pub struct AccessTokenExchangeRequest {
-        pub device_code: ::std::string::String,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub expires_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
-        pub grant_type: ::std::string::String,
-    }
-
-    impl ::std::convert::From<&AccessTokenExchangeRequest> for AccessTokenExchangeRequest {
-        fn from(value: &AccessTokenExchangeRequest) -> Self {
-            value.clone()
-        }
-    }
-
-    impl AccessTokenExchangeRequest {
-        pub fn builder() -> builder::AccessTokenExchangeRequest {
             Default::default()
         }
     }
@@ -266,12 +192,6 @@ pub mod types {
     )]
     pub struct AddGroupBody {
         pub group_id: TypedUuidForAccessGroupId,
-    }
-
-    impl ::std::convert::From<&AddGroupBody> for AddGroupBody {
-        fn from(value: &AddGroupBody) -> Self {
-            value.clone()
-        }
     }
 
     impl AddGroupBody {
@@ -308,12 +228,6 @@ pub mod types {
         pub redirect_uri: ::std::string::String,
     }
 
-    impl ::std::convert::From<&AddMagicLinkRedirectBody> for AddMagicLinkRedirectBody {
-        fn from(value: &AddMagicLinkRedirectBody) -> Self {
-            value.clone()
-        }
-    }
-
     impl AddMagicLinkRedirectBody {
         pub fn builder() -> builder::AddMagicLinkRedirectBody {
             Default::default()
@@ -348,12 +262,6 @@ pub mod types {
         pub redirect_uri: ::std::string::String,
     }
 
-    impl ::std::convert::From<&AddOAuthClientRedirectBody> for AddOAuthClientRedirectBody {
-        fn from(value: &AddOAuthClientRedirectBody) -> Self {
-            value.clone()
-        }
-    }
-
     impl AddOAuthClientRedirectBody {
         pub fn builder() -> builder::AddOAuthClientRedirectBody {
             Default::default()
@@ -375,7 +283,7 @@ pub mod types {
     ///      "type": "string",
     ///      "format": "date-time"
     ///    },
-    ///    "permissions": {
+    ///    "permission_boundary": {
     ///      "oneOf": [
     ///        {
     ///          "type": "null"
@@ -405,15 +313,7 @@ pub mod types {
     pub struct ApiKeyCreateParamsForRfdPermission {
         pub expires_at: ::chrono::DateTime<::chrono::offset::Utc>,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub permissions: ::std::option::Option<PermissionsForRfdPermission>,
-    }
-
-    impl ::std::convert::From<&ApiKeyCreateParamsForRfdPermission>
-        for ApiKeyCreateParamsForRfdPermission
-    {
-        fn from(value: &ApiKeyCreateParamsForRfdPermission) -> Self {
-            value.clone()
-        }
+        pub permission_boundary: ::std::option::Option<PermissionsForRfdPermission>,
     }
 
     impl ApiKeyCreateParamsForRfdPermission {
@@ -446,12 +346,6 @@ pub mod types {
     #[serde(deny_unknown_fields)]
     pub enum ApiKeyId {}
 
-    impl ::std::convert::From<&Self> for ApiKeyId {
-        fn from(value: &ApiKeyId) -> Self {
-            value.clone()
-        }
-    }
-
     /// `ApiKeyResponseForRfdPermission`
     ///
     /// <details><summary>JSON schema</summary>
@@ -471,7 +365,7 @@ pub mod types {
     ///    "id": {
     ///      "$ref": "#/components/schemas/TypedUuidForApiKeyId"
     ///    },
-    ///    "permissions": {
+    ///    "permission_boundary": {
     ///      "oneOf": [
     ///        {
     ///          "type": "null"
@@ -502,13 +396,7 @@ pub mod types {
         pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         pub id: TypedUuidForApiKeyId,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub permissions: ::std::option::Option<PermissionsForRfdPermission>,
-    }
-
-    impl ::std::convert::From<&ApiKeyResponseForRfdPermission> for ApiKeyResponseForRfdPermission {
-        fn from(value: &ApiKeyResponseForRfdPermission) -> Self {
-            value.clone()
-        }
+        pub permission_boundary: ::std::option::Option<PermissionsForRfdPermission>,
     }
 
     impl ApiKeyResponseForRfdPermission {
@@ -576,12 +464,6 @@ pub mod types {
         pub user_id: TypedUuidForUserId,
     }
 
-    impl ::std::convert::From<&ApiUserContactEmail> for ApiUserContactEmail {
-        fn from(value: &ApiUserContactEmail) -> Self {
-            value.clone()
-        }
-    }
-
     impl ApiUserContactEmail {
         pub fn builder() -> builder::ApiUserContactEmail {
             Default::default()
@@ -614,12 +496,6 @@ pub mod types {
     )]
     pub struct ApiUserEmailUpdateParams {
         pub email: ::std::string::String,
-    }
-
-    impl ::std::convert::From<&ApiUserEmailUpdateParams> for ApiUserEmailUpdateParams {
-        fn from(value: &ApiUserEmailUpdateParams) -> Self {
-            value.clone()
-        }
     }
 
     impl ApiUserEmailUpdateParams {
@@ -691,12 +567,6 @@ pub mod types {
         pub updated_at: ::chrono::DateTime<::chrono::offset::Utc>,
     }
 
-    impl ::std::convert::From<&ApiUserForRfdPermission> for ApiUserForRfdPermission {
-        fn from(value: &ApiUserForRfdPermission) -> Self {
-            value.clone()
-        }
-    }
-
     impl ApiUserForRfdPermission {
         pub fn builder() -> builder::ApiUserForRfdPermission {
             Default::default()
@@ -729,12 +599,6 @@ pub mod types {
     )]
     pub struct ApiUserLinkRequestPayload {
         pub user_id: TypedUuidForUserId,
-    }
-
-    impl ::std::convert::From<&ApiUserLinkRequestPayload> for ApiUserLinkRequestPayload {
-        fn from(value: &ApiUserLinkRequestPayload) -> Self {
-            value.clone()
-        }
     }
 
     impl ApiUserLinkRequestPayload {
@@ -771,14 +635,42 @@ pub mod types {
         pub token: SecretString,
     }
 
-    impl ::std::convert::From<&ApiUserLinkRequestResponse> for ApiUserLinkRequestResponse {
-        fn from(value: &ApiUserLinkRequestResponse) -> Self {
-            value.clone()
+    impl ApiUserLinkRequestResponse {
+        pub fn builder() -> builder::ApiUserLinkRequestResponse {
+            Default::default()
         }
     }
 
-    impl ApiUserLinkRequestResponse {
-        pub fn builder() -> builder::ApiUserLinkRequestResponse {
+    /// `ApiUserPermissionParamsForRfdPermission`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "permission"
+    ///  ],
+    ///  "properties": {
+    ///    "permission": {
+    ///      "$ref": "#/components/schemas/RfdPermission"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct ApiUserPermissionParamsForRfdPermission {
+        pub permission: RfdPermission,
+    }
+
+    impl ApiUserPermissionParamsForRfdPermission {
+        pub fn builder() -> builder::ApiUserPermissionParamsForRfdPermission {
             Default::default()
         }
     }
@@ -865,12 +757,6 @@ pub mod types {
         pub user_id: TypedUuidForUserId,
     }
 
-    impl ::std::convert::From<&ApiUserProvider> for ApiUserProvider {
-        fn from(value: &ApiUserProvider) -> Self {
-            value.clone()
-        }
-    }
-
     impl ApiUserProvider {
         pub fn builder() -> builder::ApiUserProvider {
             Default::default()
@@ -905,12 +791,6 @@ pub mod types {
         pub token: ::std::string::String,
     }
 
-    impl ::std::convert::From<&ApiUserProviderLinkPayload> for ApiUserProviderLinkPayload {
-        fn from(value: &ApiUserProviderLinkPayload) -> Self {
-            value.clone()
-        }
-    }
-
     impl ApiUserProviderLinkPayload {
         pub fn builder() -> builder::ApiUserProviderLinkPayload {
             Default::default()
@@ -925,11 +805,11 @@ pub mod types {
     /// {
     ///  "type": "object",
     ///  "required": [
-    ///    "group_ids",
     ///    "permissions"
     ///  ],
     ///  "properties": {
     ///    "group_ids": {
+    ///      "default": [],
     ///      "type": "array",
     ///      "items": {
     ///        "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
@@ -950,16 +830,9 @@ pub mod types {
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct ApiUserUpdateParamsForRfdPermission {
+        #[serde(default = "defaults::api_user_update_params_for_rfd_permission_group_ids")]
         pub group_ids: Vec<TypedUuidForAccessGroupId>,
         pub permissions: PermissionsForRfdPermission,
-    }
-
-    impl ::std::convert::From<&ApiUserUpdateParamsForRfdPermission>
-        for ApiUserUpdateParamsForRfdPermission
-    {
-        fn from(value: &ApiUserUpdateParamsForRfdPermission) -> Self {
-            value.clone()
-        }
     }
 
     impl ApiUserUpdateParamsForRfdPermission {
@@ -1003,12 +876,6 @@ pub mod types {
     impl ::std::convert::From<CommitSha> for ::std::string::String {
         fn from(value: CommitSha) -> Self {
             value.0
-        }
-    }
-
-    impl ::std::convert::From<&CommitSha> for CommitSha {
-        fn from(value: &CommitSha) -> Self {
-            value.clone()
         }
     }
 
@@ -1064,12 +931,6 @@ pub mod types {
         Asciidoc,
         #[serde(rename = "markdown")]
         Markdown,
-    }
-
-    impl ::std::convert::From<&Self> for ContentFormat {
-        fn from(value: &ContentFormat) -> Self {
-            value.clone()
-        }
     }
 
     impl ::std::fmt::Display for ContentFormat {
@@ -1157,14 +1018,105 @@ pub mod types {
         pub rule: ::serde_json::Value,
     }
 
-    impl ::std::convert::From<&CreateMapper> for CreateMapper {
-        fn from(value: &CreateMapper) -> Self {
-            value.clone()
+    impl CreateMapper {
+        pub fn builder() -> builder::CreateMapper {
+            Default::default()
         }
     }
 
-    impl CreateMapper {
-        pub fn builder() -> builder::CreateMapper {
+    /// Request body for initiating a device authorization flow. The client
+    /// sends its `client_id` and an optional `scope`. The API server proxies
+    /// the device authorization request to the upstream provider and tracks it
+    /// as a login attempt.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "description": "Request body for initiating a device authorization
+    /// flow. The client sends its `client_id` and an optional `scope`. The API
+    /// server proxies the device authorization request to the upstream provider
+    /// and tracks it as a login attempt.",
+    ///  "type": "object",
+    ///  "required": [
+    ///    "client_id"
+    ///  ],
+    ///  "properties": {
+    ///    "client_id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
+    ///    },
+    ///    "scope": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct DeviceAuthorizationRequest {
+        pub client_id: TypedUuidForOAuthClientId,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub scope: ::std::option::Option<::std::string::String>,
+    }
+
+    impl DeviceAuthorizationRequest {
+        pub fn builder() -> builder::DeviceAuthorizationRequest {
+            Default::default()
+        }
+    }
+
+    /// Request body for the device token exchange. The client polls this
+    /// endpoint with the device_code received from the authorization step.
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "description": "Request body for the device token exchange. The client
+    /// polls this endpoint with the device_code received from the authorization
+    /// step.",
+    ///  "type": "object",
+    ///  "required": [
+    ///    "client_id",
+    ///    "device_code",
+    ///    "grant_type"
+    ///  ],
+    ///  "properties": {
+    ///    "client_id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
+    ///    },
+    ///    "device_code": {
+    ///      "type": "string"
+    ///    },
+    ///    "grant_type": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct DeviceTokenExchangeRequest {
+        pub client_id: TypedUuidForOAuthClientId,
+        pub device_code: ::std::string::String,
+        pub grant_type: ::std::string::String,
+    }
+
+    impl DeviceTokenExchangeRequest {
+        pub fn builder() -> builder::DeviceTokenExchangeRequest {
             Default::default()
         }
     }
@@ -1208,12 +1160,6 @@ pub mod types {
         pub request_id: ::std::string::String,
     }
 
-    impl ::std::convert::From<&Error> for Error {
-        fn from(value: &Error) -> Self {
-            value.clone()
-        }
-    }
-
     impl Error {
         pub fn builder() -> builder::Error {
             Default::default()
@@ -1255,12 +1201,6 @@ pub mod types {
     impl ::std::convert::From<FileSha> for ::std::string::String {
         fn from(value: FileSha) -> Self {
             value.0
-        }
-    }
-
-    impl ::std::convert::From<&FileSha> for FileSha {
-        fn from(value: &FileSha) -> Self {
-            value.clone()
         }
     }
 
@@ -1368,12 +1308,6 @@ pub mod types {
         pub url: ::std::option::Option<::std::string::String>,
     }
 
-    impl ::std::convert::From<&FormattedSearchResultHit> for FormattedSearchResultHit {
-        fn from(value: &FormattedSearchResultHit) -> Self {
-            value.clone()
-        }
-    }
-
     impl FormattedSearchResultHit {
         pub fn builder() -> builder::FormattedSearchResultHit {
             Default::default()
@@ -1415,12 +1349,6 @@ pub mod types {
     pub struct GetUserResponseForRfdPermission {
         pub info: ApiUserForRfdPermission,
         pub providers: ::std::vec::Vec<ApiUserProvider>,
-    }
-
-    impl ::std::convert::From<&GetUserResponseForRfdPermission> for GetUserResponseForRfdPermission {
-        fn from(value: &GetUserResponseForRfdPermission) -> Self {
-            value.clone()
-        }
     }
 
     impl GetUserResponseForRfdPermission {
@@ -1488,12 +1416,6 @@ pub mod types {
         pub modified: ::std::vec::Vec<::std::string::String>,
         pub removed: ::std::vec::Vec<::std::string::String>,
         pub timestamp: ::chrono::DateTime<::chrono::offset::Utc>,
-    }
-
-    impl ::std::convert::From<&GitHubCommit> for GitHubCommit {
-        fn from(value: &GitHubCommit) -> Self {
-            value.clone()
-        }
     }
 
     impl GitHubCommit {
@@ -1573,12 +1495,6 @@ pub mod types {
         pub sender: GitHubSender,
     }
 
-    impl ::std::convert::From<&GitHubCommitPayload> for GitHubCommitPayload {
-        fn from(value: &GitHubCommitPayload) -> Self {
-            value.clone()
-        }
-    }
-
     impl GitHubCommitPayload {
         pub fn builder() -> builder::GitHubCommitPayload {
             Default::default()
@@ -1618,12 +1534,6 @@ pub mod types {
     pub struct GitHubInstallation {
         pub id: u64,
         pub node_id: ::std::string::String,
-    }
-
-    impl ::std::convert::From<&GitHubInstallation> for GitHubInstallation {
-        fn from(value: &GitHubInstallation) -> Self {
-            value.clone()
-        }
     }
 
     impl GitHubInstallation {
@@ -1682,12 +1592,6 @@ pub mod types {
         pub owner: GitHubRepositoryOwner,
     }
 
-    impl ::std::convert::From<&GitHubRepository> for GitHubRepository {
-        fn from(value: &GitHubRepository) -> Self {
-            value.clone()
-        }
-    }
-
     impl GitHubRepository {
         pub fn builder() -> builder::GitHubRepository {
             Default::default()
@@ -1720,12 +1624,6 @@ pub mod types {
     )]
     pub struct GitHubRepositoryOwner {
         pub login: ::std::string::String,
-    }
-
-    impl ::std::convert::From<&GitHubRepositoryOwner> for GitHubRepositoryOwner {
-        fn from(value: &GitHubRepositoryOwner) -> Self {
-            value.clone()
-        }
     }
 
     impl GitHubRepositoryOwner {
@@ -1780,12 +1678,6 @@ pub mod types {
         pub type_: ::std::string::String,
     }
 
-    impl ::std::convert::From<&GitHubSender> for GitHubSender {
-        fn from(value: &GitHubSender) -> Self {
-            value.clone()
-        }
-    }
-
     impl GitHubSender {
         pub fn builder() -> builder::GitHubSender {
             Default::default()
@@ -1815,7 +1707,7 @@ pub mod types {
     ///    "key": {
     ///      "$ref": "#/components/schemas/SecretString"
     ///    },
-    ///    "permissions": {
+    ///    "permission_boundary": {
     ///      "oneOf": [
     ///        {
     ///          "type": "null"
@@ -1847,15 +1739,7 @@ pub mod types {
         pub id: TypedUuidForApiKeyId,
         pub key: SecretString,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub permissions: ::std::option::Option<PermissionsForRfdPermission>,
-    }
-
-    impl ::std::convert::From<&InitialApiKeyResponseForRfdPermission>
-        for InitialApiKeyResponseForRfdPermission
-    {
-        fn from(value: &InitialApiKeyResponseForRfdPermission) -> Self {
-            value.clone()
-        }
+        pub permission_boundary: ::std::option::Option<PermissionsForRfdPermission>,
     }
 
     impl InitialApiKeyResponseForRfdPermission {
@@ -1903,12 +1787,6 @@ pub mod types {
         pub key: SecretString,
     }
 
-    impl ::std::convert::From<&InitialMagicLinkSecretResponse> for InitialMagicLinkSecretResponse {
-        fn from(value: &InitialMagicLinkSecretResponse) -> Self {
-            value.clone()
-        }
-    }
-
     impl InitialMagicLinkSecretResponse {
         pub fn builder() -> builder::InitialMagicLinkSecretResponse {
             Default::default()
@@ -1952,12 +1830,6 @@ pub mod types {
         pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         pub id: TypedUuidForOAuthSecretId,
         pub key: SecretString,
-    }
-
-    impl ::std::convert::From<&InitialOAuthClientSecretResponse> for InitialOAuthClientSecretResponse {
-        fn from(value: &InitialOAuthClientSecretResponse) -> Self {
-            value.clone()
-        }
     }
 
     impl InitialOAuthClientSecretResponse {
@@ -2066,12 +1938,6 @@ pub mod types {
         pub webhook_delivery_id: ::std::option::Option<TypedUuidForWebhookDeliveryId>,
     }
 
-    impl ::std::convert::From<&Job> for Job {
-        fn from(value: &Job) -> Self {
-            value.clone()
-        }
-    }
-
     impl Job {
         pub fn builder() -> builder::Job {
             Default::default()
@@ -2127,12 +1993,6 @@ pub mod types {
         pub use_: ::std::string::String,
     }
 
-    impl ::std::convert::From<&Jwk> for Jwk {
-        fn from(value: &Jwk) -> Self {
-            value.clone()
-        }
-    }
-
     impl Jwk {
         pub fn builder() -> builder::Jwk {
             Default::default()
@@ -2169,12 +2029,6 @@ pub mod types {
     )]
     pub struct Jwks {
         pub keys: ::std::vec::Vec<Jwk>,
-    }
-
-    impl ::std::convert::From<&Jwks> for Jwks {
-        fn from(value: &Jwks) -> Self {
-            value.clone()
-        }
     }
 
     impl Jwks {
@@ -2244,12 +2098,6 @@ pub mod types {
         pub secrets: ::std::vec::Vec<MagicLinkSecret>,
     }
 
-    impl ::std::convert::From<&MagicLink> for MagicLink {
-        fn from(value: &MagicLink) -> Self {
-            value.clone()
-        }
-    }
-
     impl MagicLink {
         pub fn builder() -> builder::MagicLink {
             Default::default()
@@ -2280,12 +2128,6 @@ pub mod types {
     #[serde(deny_unknown_fields)]
     pub enum MagicLinkAttemptId {}
 
-    impl ::std::convert::From<&Self> for MagicLinkAttemptId {
-        fn from(value: &MagicLinkAttemptId) -> Self {
-            value.clone()
-        }
-    }
-
     /// `MagicLinkExchangeRequest`
     ///
     /// <details><summary>JSON schema</summary>
@@ -2306,7 +2148,7 @@ pub mod types {
     ///      "type": "string"
     ///    },
     ///    "secret": {
-    ///      "type": "string"
+    ///      "$ref": "#/components/schemas/SecretString"
     ///    }
 
     ///  }
@@ -2321,13 +2163,7 @@ pub mod types {
     pub struct MagicLinkExchangeRequest {
         pub attempt_id: TypedUuidForMagicLinkAttemptId,
         pub recipient: ::std::string::String,
-        pub secret: ::std::string::String,
-    }
-
-    impl ::std::convert::From<&MagicLinkExchangeRequest> for MagicLinkExchangeRequest {
-        fn from(value: &MagicLinkExchangeRequest) -> Self {
-            value.clone()
-        }
+        pub secret: SecretString,
     }
 
     impl MagicLinkExchangeRequest {
@@ -2375,12 +2211,6 @@ pub mod types {
         pub token_type: ::std::string::String,
     }
 
-    impl ::std::convert::From<&MagicLinkExchangeResponse> for MagicLinkExchangeResponse {
-        fn from(value: &MagicLinkExchangeResponse) -> Self {
-            value.clone()
-        }
-    }
-
     impl MagicLinkExchangeResponse {
         pub fn builder() -> builder::MagicLinkExchangeResponse {
             Default::default()
@@ -2410,12 +2240,6 @@ pub mod types {
     )]
     #[serde(deny_unknown_fields)]
     pub enum MagicLinkId {}
-
-    impl ::std::convert::From<&Self> for MagicLinkId {
-        fn from(value: &MagicLinkId) -> Self {
-            value.clone()
-        }
-    }
 
     /// `MagicLinkMedium`
     ///
@@ -2447,12 +2271,6 @@ pub mod types {
     pub enum MagicLinkMedium {
         #[serde(rename = "email")]
         Email,
-    }
-
-    impl ::std::convert::From<&Self> for MagicLinkMedium {
-        fn from(value: &MagicLinkMedium) -> Self {
-            value.clone()
-        }
     }
 
     impl ::std::fmt::Display for MagicLinkMedium {
@@ -2551,12 +2369,6 @@ pub mod types {
         pub redirect_uri: ::std::string::String,
     }
 
-    impl ::std::convert::From<&MagicLinkRedirectUri> for MagicLinkRedirectUri {
-        fn from(value: &MagicLinkRedirectUri) -> Self {
-            value.clone()
-        }
-    }
-
     impl MagicLinkRedirectUri {
         pub fn builder() -> builder::MagicLinkRedirectUri {
             Default::default()
@@ -2586,12 +2398,6 @@ pub mod types {
     )]
     #[serde(deny_unknown_fields)]
     pub enum MagicLinkRedirectUriId {}
-
-    impl ::std::convert::From<&Self> for MagicLinkRedirectUriId {
-        fn from(value: &MagicLinkRedirectUriId) -> Self {
-            value.clone()
-        }
-    }
 
     /// `MagicLinkSecret`
     ///
@@ -2646,12 +2452,6 @@ pub mod types {
         pub secret_signature: ::std::string::String,
     }
 
-    impl ::std::convert::From<&MagicLinkSecret> for MagicLinkSecret {
-        fn from(value: &MagicLinkSecret) -> Self {
-            value.clone()
-        }
-    }
-
     impl MagicLinkSecret {
         pub fn builder() -> builder::MagicLinkSecret {
             Default::default()
@@ -2681,12 +2481,6 @@ pub mod types {
     )]
     #[serde(deny_unknown_fields)]
     pub enum MagicLinkSecretId {}
-
-    impl ::std::convert::From<&Self> for MagicLinkSecretId {
-        fn from(value: &MagicLinkSecretId) -> Self {
-            value.clone()
-        }
-    }
 
     /// `MagicLinkSendRequest`
     ///
@@ -2724,7 +2518,7 @@ pub mod types {
     ///      ]
     ///    },
     ///    "secret": {
-    ///      "type": "string"
+    ///      "$ref": "#/components/schemas/SecretString"
     ///    }
 
     ///  }
@@ -2743,13 +2537,7 @@ pub mod types {
         pub redirect_uri: ::std::string::String,
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub scope: ::std::option::Option<::std::string::String>,
-        pub secret: ::std::string::String,
-    }
-
-    impl ::std::convert::From<&MagicLinkSendRequest> for MagicLinkSendRequest {
-        fn from(value: &MagicLinkSendRequest) -> Self {
-            value.clone()
-        }
+        pub secret: SecretString,
     }
 
     impl MagicLinkSendRequest {
@@ -2786,12 +2574,6 @@ pub mod types {
         pub attempt_id: TypedUuidForMagicLinkAttemptId,
     }
 
-    impl ::std::convert::From<&MagicLinkSendResponse> for MagicLinkSendResponse {
-        fn from(value: &MagicLinkSendResponse) -> Self {
-            value.clone()
-        }
-    }
-
     impl MagicLinkSendResponse {
         pub fn builder() -> builder::MagicLinkSendResponse {
             Default::default()
@@ -2810,6 +2592,7 @@ pub mod types {
     ///    "id",
     ///    "name",
     ///    "rule",
+    ///    "source",
     ///    "updated_at"
     ///  ],
     ///  "properties": {
@@ -2852,6 +2635,9 @@ pub mod types {
     ///      "type": "string"
     ///    },
     ///    "rule": {},
+    ///    "source": {
+    ///      "$ref": "#/components/schemas/MapperSource"
+    ///    },
     ///    "updated_at": {
     ///      "type": "string",
     ///      "format": "date-time"
@@ -2879,13 +2665,8 @@ pub mod types {
         pub max_activations: ::std::option::Option<i32>,
         pub name: ::std::string::String,
         pub rule: ::serde_json::Value,
+        pub source: MapperSource,
         pub updated_at: ::chrono::DateTime<::chrono::offset::Utc>,
-    }
-
-    impl ::std::convert::From<&Mapper> for Mapper {
-        fn from(value: &Mapper) -> Self {
-            value.clone()
-        }
     }
 
     impl Mapper {
@@ -2918,9 +2699,101 @@ pub mod types {
     #[serde(deny_unknown_fields)]
     pub enum MapperId {}
 
-    impl ::std::convert::From<&Self> for MapperId {
-        fn from(value: &MapperId) -> Self {
-            value.clone()
+    /// `MapperSource`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "oneOf": [
+    ///    {
+    ///      "description": "Created via the API, persisted in the database,
+    /// supports activation limits",
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "dynamic"
+    ///      ]
+    ///    },
+    ///    {
+    ///      "description": "Loaded from service configuration, in-memory only,
+    /// no activation limits",
+    ///      "type": "string",
+    ///      "enum": [
+    ///        "preset"
+    ///      ]
+    ///    }
+
+    ///  ]
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    pub enum MapperSource {
+        /// Created via the API, persisted in the database, supports activation
+        /// limits
+        #[serde(rename = "dynamic")]
+        Dynamic,
+        /// Loaded from service configuration, in-memory only, no activation
+        /// limits
+        #[serde(rename = "preset")]
+        Preset,
+    }
+
+    impl ::std::fmt::Display for MapperSource {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Dynamic => f.write_str("dynamic"),
+                Self::Preset => f.write_str("preset"),
+            }
+        }
+    }
+
+    impl ::std::str::FromStr for MapperSource {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "dynamic" => Ok(Self::Dynamic),
+                "preset" => Ok(Self::Preset),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for MapperSource {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<&::std::string::String> for MapperSource {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: &::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for MapperSource {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
         }
     }
 
@@ -2933,6 +2806,7 @@ pub mod types {
     ///  "type": "object",
     ///  "required": [
     ///    "code",
+    ///    "code_verifier",
     ///    "grant_type",
     ///    "redirect_uri"
     ///  ],
@@ -2972,14 +2846,13 @@ pub mod types {
     ///    "code": {
     ///      "type": "string"
     ///    },
-    ///    "grant_type": {
+    ///    "code_verifier": {
+    ///      "description": "PKCE code verifier (RFC 7636). Required for all
+    /// authorization code exchanges.",
     ///      "type": "string"
     ///    },
-    ///    "pkce_verifier": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
+    ///    "grant_type": {
+    ///      "type": "string"
     ///    },
     ///    "redirect_uri": {
     ///      "type": "string"
@@ -3000,16 +2873,11 @@ pub mod types {
         #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
         pub client_secret: ::std::option::Option<SecretString>,
         pub code: ::std::string::String,
+        /// PKCE code verifier (RFC 7636). Required for all authorization code
+        /// exchanges.
+        pub code_verifier: ::std::string::String,
         pub grant_type: ::std::string::String,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
-        pub pkce_verifier: ::std::option::Option<::std::string::String>,
         pub redirect_uri: ::std::string::String,
-    }
-
-    impl ::std::convert::From<&OAuthAuthzCodeExchangeBody> for OAuthAuthzCodeExchangeBody {
-        fn from(value: &OAuthAuthzCodeExchangeBody) -> Self {
-            value.clone()
-        }
     }
 
     impl OAuthAuthzCodeExchangeBody {
@@ -3028,6 +2896,7 @@ pub mod types {
     ///  "required": [
     ///    "access_token",
     ///    "expires_in",
+    ///    "scope",
     ///    "token_type"
     ///  ],
     ///  "properties": {
@@ -3037,6 +2906,18 @@ pub mod types {
     ///    "expires_in": {
     ///      "type": "integer",
     ///      "format": "int64"
+    ///    },
+    ///    "idp_token": {
+    ///      "type": [
+    ///        "string",
+    ///        "null"
+    ///      ]
+    ///    },
+    ///    "scope": {
+    ///      "description": "The scope granted to the access token per RFC 6749
+    /// §5.1. An empty string indicates no permissions. Use \"full\" for all
+    /// permissions.",
+    ///      "type": "string"
     ///    },
     ///    "token_type": {
     ///      "type": "string"
@@ -3054,13 +2935,12 @@ pub mod types {
     pub struct OAuthAuthzCodeExchangeResponse {
         pub access_token: ::std::string::String,
         pub expires_in: i64,
+        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        pub idp_token: ::std::option::Option<::std::string::String>,
+        /// The scope granted to the access token per RFC 6749 §5.1. An empty
+        /// string indicates no permissions. Use "full" for all permissions.
+        pub scope: ::std::string::String,
         pub token_type: ::std::string::String,
-    }
-
-    impl ::std::convert::From<&OAuthAuthzCodeExchangeResponse> for OAuthAuthzCodeExchangeResponse {
-        fn from(value: &OAuthAuthzCodeExchangeResponse) -> Self {
-            value.clone()
-        }
     }
 
     impl OAuthAuthzCodeExchangeResponse {
@@ -3130,12 +3010,6 @@ pub mod types {
         pub secrets: ::std::vec::Vec<OAuthClientSecret>,
     }
 
-    impl ::std::convert::From<&OAuthClient> for OAuthClient {
-        fn from(value: &OAuthClient) -> Self {
-            value.clone()
-        }
-    }
-
     impl OAuthClient {
         pub fn builder() -> builder::OAuthClient {
             Default::default()
@@ -3165,12 +3039,6 @@ pub mod types {
     )]
     #[serde(deny_unknown_fields)]
     pub enum OAuthClientId {}
-
-    impl ::std::convert::From<&Self> for OAuthClientId {
-        fn from(value: &OAuthClientId) -> Self {
-            value.clone()
-        }
-    }
 
     /// `OAuthClientRedirectUri`
     ///
@@ -3223,12 +3091,6 @@ pub mod types {
         pub id: TypedUuidForOAuthRedirectUriId,
         pub oauth_client_id: TypedUuidForOAuthClientId,
         pub redirect_uri: ::std::string::String,
-    }
-
-    impl ::std::convert::From<&OAuthClientRedirectUri> for OAuthClientRedirectUri {
-        fn from(value: &OAuthClientRedirectUri) -> Self {
-            value.clone()
-        }
     }
 
     impl OAuthClientRedirectUri {
@@ -3290,19 +3152,113 @@ pub mod types {
         pub secret_signature: ::std::string::String,
     }
 
-    impl ::std::convert::From<&OAuthClientSecret> for OAuthClientSecret {
-        fn from(value: &OAuthClientSecret) -> Self {
-            value.clone()
-        }
-    }
-
     impl OAuthClientSecret {
         pub fn builder() -> builder::OAuthClientSecret {
             Default::default()
         }
     }
 
-    /// `OAuthProviderInfo`
+    /// `OAuthProviderAuthorizationCodeInfo`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "auth_url_endpoint",
+    ///    "redirect_endpoint",
+    ///    "token_endpoint",
+    ///    "token_endpoint_content_type"
+    ///  ],
+    ///  "properties": {
+    ///    "auth_url_endpoint": {
+    ///      "type": "string"
+    ///    },
+    ///    "redirect_endpoint": {
+    ///      "type": "string"
+    ///    },
+    ///    "token_endpoint": {
+    ///      "type": "string"
+    ///    },
+    ///    "token_endpoint_content_type": {
+    ///      "type": "string"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct OAuthProviderAuthorizationCodeInfo {
+        pub auth_url_endpoint: ::std::string::String,
+        pub redirect_endpoint: ::std::string::String,
+        pub token_endpoint: ::std::string::String,
+        pub token_endpoint_content_type: ::std::string::String,
+    }
+
+    impl OAuthProviderAuthorizationCodeInfo {
+        pub fn builder() -> builder::OAuthProviderAuthorizationCodeInfo {
+            Default::default()
+        }
+    }
+
+    /// `OAuthProviderAuthorizationCodePkceInfo`
+    ///
+    /// <details><summary>JSON schema</summary>
+    ///
+    /// ```json
+    /// {
+    ///  "type": "object",
+    ///  "required": [
+    ///    "client_id",
+    ///    "proxy_port",
+    ///    "redirect_endpoint",
+    ///    "web"
+    ///  ],
+    ///  "properties": {
+    ///    "client_id": {
+    ///      "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
+    ///    },
+    ///    "proxy_port": {
+    ///      "type": "integer",
+    ///      "format": "uint16",
+    ///      "minimum": 0.0
+    ///    },
+    ///    "redirect_endpoint": {
+    ///      "type": "string"
+    ///    },
+    ///    "web": {
+    ///      "$ref": "#/components/schemas/OAuthProviderAuthorizationCodeInfo"
+    ///    }
+
+    ///  }
+
+    /// }
+
+    /// ```
+    /// </details>
+    #[derive(
+        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+    )]
+    pub struct OAuthProviderAuthorizationCodePkceInfo {
+        pub client_id: TypedUuidForOAuthClientId,
+        pub proxy_port: u16,
+        pub redirect_endpoint: ::std::string::String,
+        pub web: OAuthProviderAuthorizationCodeInfo,
+    }
+
+    impl OAuthProviderAuthorizationCodePkceInfo {
+        pub fn builder() -> builder::OAuthProviderAuthorizationCodePkceInfo {
+            Default::default()
+        }
+    }
+
+    /// `OAuthProviderDeviceInfo`
     ///
     /// <details><summary>JSON schema</summary>
     ///
@@ -3312,9 +3268,6 @@ pub mod types {
     ///  "required": [
     ///    "auth_url_endpoint",
     ///    "client_id",
-    ///    "device_code_endpoint",
-    ///    "provider",
-    ///    "scopes",
     ///    "token_endpoint"
     ///  ],
     ///  "properties": {
@@ -3322,20 +3275,7 @@ pub mod types {
     ///      "type": "string"
     ///    },
     ///    "client_id": {
-    ///      "type": "string"
-    ///    },
-    ///    "device_code_endpoint": {
-    ///      "type": "string"
-    ///    },
-    ///    "provider": {
-    ///      "$ref": "#/components/schemas/OAuthProviderName"
-    ///    },
-    ///    "scopes": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": "string"
-    ///      }
-
+    ///      "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
     ///    },
     ///    "token_endpoint": {
     ///      "type": "string"
@@ -3350,23 +3290,14 @@ pub mod types {
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
-    pub struct OAuthProviderInfo {
+    pub struct OAuthProviderDeviceInfo {
         pub auth_url_endpoint: ::std::string::String,
-        pub client_id: ::std::string::String,
-        pub device_code_endpoint: ::std::string::String,
-        pub provider: OAuthProviderName,
-        pub scopes: ::std::vec::Vec<::std::string::String>,
+        pub client_id: TypedUuidForOAuthClientId,
         pub token_endpoint: ::std::string::String,
     }
 
-    impl ::std::convert::From<&OAuthProviderInfo> for OAuthProviderInfo {
-        fn from(value: &OAuthProviderInfo) -> Self {
-            value.clone()
-        }
-    }
-
-    impl OAuthProviderInfo {
-        pub fn builder() -> builder::OAuthProviderInfo {
+    impl OAuthProviderDeviceInfo {
+        pub fn builder() -> builder::OAuthProviderDeviceInfo {
             Default::default()
         }
     }
@@ -3380,7 +3311,8 @@ pub mod types {
     ///  "type": "string",
     ///  "enum": [
     ///    "github",
-    ///    "google"
+    ///    "google",
+    ///    "zendesk"
     ///  ]
     /// }
 
@@ -3404,12 +3336,8 @@ pub mod types {
         Github,
         #[serde(rename = "google")]
         Google,
-    }
-
-    impl ::std::convert::From<&Self> for OAuthProviderName {
-        fn from(value: &OAuthProviderName) -> Self {
-            value.clone()
-        }
+        #[serde(rename = "zendesk")]
+        Zendesk,
     }
 
     impl ::std::fmt::Display for OAuthProviderName {
@@ -3417,6 +3345,7 @@ pub mod types {
             match *self {
                 Self::Github => f.write_str("github"),
                 Self::Google => f.write_str("google"),
+                Self::Zendesk => f.write_str("zendesk"),
             }
         }
     }
@@ -3427,6 +3356,7 @@ pub mod types {
             match value {
                 "github" => Ok(Self::Github),
                 "google" => Ok(Self::Google),
+                "zendesk" => Ok(Self::Zendesk),
                 _ => Err("invalid value".into()),
             }
         }
@@ -3481,12 +3411,6 @@ pub mod types {
     #[serde(deny_unknown_fields)]
     pub enum OAuthRedirectUriId {}
 
-    impl ::std::convert::From<&Self> for OAuthRedirectUriId {
-        fn from(value: &OAuthRedirectUriId) -> Self {
-            value.clone()
-        }
-    }
-
     /// `OAuthSecretId`
     ///
     /// <details><summary>JSON schema</summary>
@@ -3510,12 +3434,6 @@ pub mod types {
     )]
     #[serde(deny_unknown_fields)]
     pub enum OAuthSecretId {}
-
-    impl ::std::convert::From<&Self> for OAuthSecretId {
-        fn from(value: &OAuthSecretId) -> Self {
-            value.clone()
-        }
-    }
 
     /// `OpenIdConfiguration`
     ///
@@ -3543,12 +3461,6 @@ pub mod types {
     )]
     pub struct OpenIdConfiguration {
         pub jwks_uri: ::std::string::String,
-    }
-
-    impl ::std::convert::From<&OpenIdConfiguration> for OpenIdConfiguration {
-        fn from(value: &OpenIdConfiguration) -> Self {
-            value.clone()
-        }
     }
 
     impl OpenIdConfiguration {
@@ -3590,12 +3502,6 @@ pub mod types {
         Github,
         #[serde(rename = "google")]
         Google,
-    }
-
-    impl ::std::convert::From<&Self> for PdfSource {
-        fn from(value: &PdfSource) -> Self {
-            value.clone()
-        }
     }
 
     impl ::std::fmt::Display for PdfSource {
@@ -3676,12 +3582,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::From<&PermissionsForRfdPermission> for PermissionsForRfdPermission {
-        fn from(value: &PermissionsForRfdPermission) -> Self {
-            value.clone()
-        }
-    }
-
     impl ::std::convert::From<::std::vec::Vec<RfdPermission>> for PermissionsForRfdPermission {
         fn from(value: ::std::vec::Vec<RfdPermission>) -> Self {
             Self(value)
@@ -3728,12 +3628,6 @@ pub mod types {
         pub title: ::std::string::String,
     }
 
-    impl ::std::convert::From<&ReserveRfdBody> for ReserveRfdBody {
-        fn from(value: &ReserveRfdBody) -> Self {
-            value.clone()
-        }
-    }
-
     impl ReserveRfdBody {
         pub fn builder() -> builder::ReserveRfdBody {
             Default::default()
@@ -3767,12 +3661,6 @@ pub mod types {
     )]
     pub struct ReserveRfdResponse {
         pub number: i32,
-    }
-
-    impl ::std::convert::From<&ReserveRfdResponse> for ReserveRfdResponse {
-        fn from(value: &ReserveRfdResponse) -> Self {
-            value.clone()
-        }
     }
 
     impl ReserveRfdResponse {
@@ -3877,12 +3765,6 @@ pub mod types {
         pub visibility: Visibility,
     }
 
-    impl ::std::convert::From<&Rfd> for Rfd {
-        fn from(value: &Rfd) -> Self {
-            value.clone()
-        }
-    }
-
     impl Rfd {
         pub fn builder() -> builder::Rfd {
             Default::default()
@@ -3953,12 +3835,6 @@ pub mod types {
         State(RfdState),
     }
 
-    impl ::std::convert::From<&Self> for RfdAttr {
-        fn from(value: &RfdAttr) -> Self {
-            value.clone()
-        }
-    }
-
     impl ::std::convert::From<RfdState> for RfdAttr {
         fn from(value: RfdState) -> Self {
             Self::State(value)
@@ -4001,12 +3877,6 @@ pub mod types {
         Labels,
         #[serde(rename = "state")]
         State,
-    }
-
-    impl ::std::convert::From<&Self> for RfdAttrName {
-        fn from(value: &RfdAttrName) -> Self {
-            value.clone()
-        }
     }
 
     impl ::std::fmt::Display for RfdAttrName {
@@ -4098,12 +3968,6 @@ pub mod types {
         pub value: ::std::string::String,
     }
 
-    impl ::std::convert::From<&RfdAttrValue> for RfdAttrValue {
-        fn from(value: &RfdAttrValue) -> Self {
-            value.clone()
-        }
-    }
-
     impl RfdAttrValue {
         pub fn builder() -> builder::RfdAttrValue {
             Default::default()
@@ -4133,12 +3997,6 @@ pub mod types {
     )]
     #[serde(deny_unknown_fields)]
     pub enum RfdId {}
-
-    impl ::std::convert::From<&Self> for RfdId {
-        fn from(value: &RfdId) -> Self {
-            value.clone()
-        }
-    }
 
     /// `RfdPdf`
     ///
@@ -4214,12 +4072,6 @@ pub mod types {
         pub updated_at: ::chrono::DateTime<::chrono::offset::Utc>,
     }
 
-    impl ::std::convert::From<&RfdPdf> for RfdPdf {
-        fn from(value: &RfdPdf) -> Self {
-            value.clone()
-        }
-    }
-
     impl RfdPdf {
         pub fn builder() -> builder::RfdPdf {
             Default::default()
@@ -4249,12 +4101,6 @@ pub mod types {
     )]
     #[serde(deny_unknown_fields)]
     pub enum RfdPdfId {}
-
-    impl ::std::convert::From<&Self> for RfdPdfId {
-        fn from(value: &RfdPdfId) -> Self {
-            value.clone()
-        }
-    }
 
     /// `RfdPermission`
     ///
@@ -4311,7 +4157,8 @@ pub mod types {
     ///        "GetMagicLinkClientsAll",
     ///        "ManageMagicLinkClientsAssigned",
     ///        "ManageMagicLinkClientsAll",
-    ///        "CreateAccessToken"
+    ///        "CreateAccessToken",
+    ///        "RetrieveRemoteAccessToken"
     ///      ]
     ///    },
     ///    {
@@ -4865,6 +4712,7 @@ pub mod types {
         ManageMagicLinkClientsAssigned,
         ManageMagicLinkClientsAll,
         CreateAccessToken,
+        RetrieveRemoteAccessToken,
         GetRfd(i32),
         GetRfds(Vec<i32>),
         UpdateRfd(i32),
@@ -4898,12 +4746,6 @@ pub mod types {
         ManageMagicLinkClient(TypedUuidForMagicLinkId),
         ManageMagicLinkClients(Vec<TypedUuidForMagicLinkId>),
         Unsupported(::serde_json::Value),
-    }
-
-    impl ::std::convert::From<&Self> for RfdPermission {
-        fn from(value: &RfdPermission) -> Self {
-            value.clone()
-        }
     }
 
     impl ::std::convert::From<TypedUuidForMapperId> for RfdPermission {
@@ -5046,12 +4888,6 @@ pub mod types {
         pub updated_at: ::chrono::DateTime<::chrono::offset::Utc>,
     }
 
-    impl ::std::convert::From<&RfdRevision> for RfdRevision {
-        fn from(value: &RfdRevision) -> Self {
-            value.clone()
-        }
-    }
-
     impl RfdRevision {
         pub fn builder() -> builder::RfdRevision {
             Default::default()
@@ -5081,12 +4917,6 @@ pub mod types {
     )]
     #[serde(deny_unknown_fields)]
     pub enum RfdRevisionId {}
-
-    impl ::std::convert::From<&Self> for RfdRevisionId {
-        fn from(value: &RfdRevisionId) -> Self {
-            value.clone()
-        }
-    }
 
     /// `RfdRevisionMeta`
     ///
@@ -5130,12 +4960,6 @@ pub mod types {
         pub committed_at: ::chrono::DateTime<::chrono::offset::Utc>,
         pub id: TypedUuidForRfdRevisionId,
         pub major_change: bool,
-    }
-
-    impl ::std::convert::From<&RfdRevisionMeta> for RfdRevisionMeta {
-        fn from(value: &RfdRevisionMeta) -> Self {
-            value.clone()
-        }
     }
 
     impl RfdRevisionMeta {
@@ -5189,12 +5013,6 @@ pub mod types {
         Prediscussion,
         #[serde(rename = "published")]
         Published,
-    }
-
-    impl ::std::convert::From<&Self> for RfdState {
-        fn from(value: &RfdState) -> Self {
-            value.clone()
-        }
     }
 
     impl ::std::fmt::Display for RfdState {
@@ -5291,12 +5109,6 @@ pub mod types {
         pub message: ::std::option::Option<::std::string::String>,
     }
 
-    impl ::std::convert::From<&RfdUpdateBody> for RfdUpdateBody {
-        fn from(value: &RfdUpdateBody) -> Self {
-            value.clone()
-        }
-    }
-
     impl RfdUpdateBody {
         pub fn builder() -> builder::RfdUpdateBody {
             Default::default()
@@ -5344,12 +5156,6 @@ pub mod types {
         pub message: ::std::option::Option<::std::string::String>,
     }
 
-    impl ::std::convert::From<&RfdUpdateContentBody> for RfdUpdateContentBody {
-        fn from(value: &RfdUpdateContentBody) -> Self {
-            value.clone()
-        }
-    }
-
     impl RfdUpdateContentBody {
         pub fn builder() -> builder::RfdUpdateContentBody {
             Default::default()
@@ -5382,12 +5188,6 @@ pub mod types {
     )]
     pub struct RfdVisibility {
         pub visibility: Visibility,
-    }
-
-    impl ::std::convert::From<&RfdVisibility> for RfdVisibility {
-        fn from(value: &RfdVisibility) -> Self {
-            value.clone()
-        }
     }
 
     impl RfdVisibility {
@@ -5565,12 +5365,6 @@ pub mod types {
         pub visibility: Visibility,
     }
 
-    impl ::std::convert::From<&RfdWithPdf> for RfdWithPdf {
-        fn from(value: &RfdWithPdf) -> Self {
-            value.clone()
-        }
-    }
-
     impl RfdWithPdf {
         pub fn builder() -> builder::RfdWithPdf {
             Default::default()
@@ -5745,12 +5539,6 @@ pub mod types {
         pub visibility: Visibility,
     }
 
-    impl ::std::convert::From<&RfdWithRaw> for RfdWithRaw {
-        fn from(value: &RfdWithRaw) -> Self {
-            value.clone()
-        }
-    }
-
     impl RfdWithRaw {
         pub fn builder() -> builder::RfdWithRaw {
             Default::default()
@@ -5917,12 +5705,6 @@ pub mod types {
         pub visibility: Visibility,
     }
 
-    impl ::std::convert::From<&RfdWithoutContent> for RfdWithoutContent {
-        fn from(value: &RfdWithoutContent) -> Self {
-            value.clone()
-        }
-    }
-
     impl RfdWithoutContent {
         pub fn builder() -> builder::RfdWithoutContent {
             Default::default()
@@ -6029,12 +5811,6 @@ pub mod types {
         pub url: ::std::option::Option<::std::string::String>,
     }
 
-    impl ::std::convert::From<&SearchResultHit> for SearchResultHit {
-        fn from(value: &SearchResultHit) -> Self {
-            value.clone()
-        }
-    }
-
     impl SearchResultHit {
         pub fn builder() -> builder::SearchResultHit {
             Default::default()
@@ -6098,12 +5874,6 @@ pub mod types {
         pub query: ::std::string::String,
     }
 
-    impl ::std::convert::From<&SearchResults> for SearchResults {
-        fn from(value: &SearchResults) -> Self {
-            value.clone()
-        }
-    }
-
     impl SearchResults {
         pub fn builder() -> builder::SearchResults {
             Default::default()
@@ -6145,12 +5915,6 @@ pub mod types {
     impl ::std::convert::From<SecretString> for ::std::string::String {
         fn from(value: SecretString) -> Self {
             value.0
-        }
-    }
-
-    impl ::std::convert::From<&SecretString> for SecretString {
-        fn from(value: &SecretString) -> Self {
-            value.clone()
         }
     }
 
@@ -6215,12 +5979,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::From<&TypedUuidForAccessGroupId> for TypedUuidForAccessGroupId {
-        fn from(value: &TypedUuidForAccessGroupId) -> Self {
-            value.clone()
-        }
-    }
-
     impl ::std::convert::From<::uuid::Uuid> for TypedUuidForAccessGroupId {
         fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
@@ -6237,13 +5995,6 @@ pub mod types {
     impl ::std::convert::TryFrom<&str> for TypedUuidForAccessGroupId {
         type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
-            value.parse()
-        }
-    }
-
-    impl ::std::convert::TryFrom<&String> for TypedUuidForAccessGroupId {
-        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
-        fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
@@ -6303,12 +6054,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::From<&TypedUuidForApiKeyId> for TypedUuidForApiKeyId {
-        fn from(value: &TypedUuidForApiKeyId) -> Self {
-            value.clone()
-        }
-    }
-
     impl ::std::convert::From<::uuid::Uuid> for TypedUuidForApiKeyId {
         fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
@@ -6325,13 +6070,6 @@ pub mod types {
     impl ::std::convert::TryFrom<&str> for TypedUuidForApiKeyId {
         type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
-            value.parse()
-        }
-    }
-
-    impl ::std::convert::TryFrom<&String> for TypedUuidForApiKeyId {
-        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
-        fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
@@ -6391,12 +6129,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::From<&TypedUuidForMagicLinkAttemptId> for TypedUuidForMagicLinkAttemptId {
-        fn from(value: &TypedUuidForMagicLinkAttemptId) -> Self {
-            value.clone()
-        }
-    }
-
     impl ::std::convert::From<::uuid::Uuid> for TypedUuidForMagicLinkAttemptId {
         fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
@@ -6413,13 +6145,6 @@ pub mod types {
     impl ::std::convert::TryFrom<&str> for TypedUuidForMagicLinkAttemptId {
         type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
-            value.parse()
-        }
-    }
-
-    impl ::std::convert::TryFrom<&String> for TypedUuidForMagicLinkAttemptId {
-        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
-        fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
@@ -6479,12 +6204,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::From<&TypedUuidForMagicLinkId> for TypedUuidForMagicLinkId {
-        fn from(value: &TypedUuidForMagicLinkId) -> Self {
-            value.clone()
-        }
-    }
-
     impl ::std::convert::From<::uuid::Uuid> for TypedUuidForMagicLinkId {
         fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
@@ -6501,13 +6220,6 @@ pub mod types {
     impl ::std::convert::TryFrom<&str> for TypedUuidForMagicLinkId {
         type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
-            value.parse()
-        }
-    }
-
-    impl ::std::convert::TryFrom<&String> for TypedUuidForMagicLinkId {
-        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
-        fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
@@ -6567,14 +6279,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::From<&TypedUuidForMagicLinkRedirectUriId>
-        for TypedUuidForMagicLinkRedirectUriId
-    {
-        fn from(value: &TypedUuidForMagicLinkRedirectUriId) -> Self {
-            value.clone()
-        }
-    }
-
     impl ::std::convert::From<::uuid::Uuid> for TypedUuidForMagicLinkRedirectUriId {
         fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
@@ -6591,13 +6295,6 @@ pub mod types {
     impl ::std::convert::TryFrom<&str> for TypedUuidForMagicLinkRedirectUriId {
         type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
-            value.parse()
-        }
-    }
-
-    impl ::std::convert::TryFrom<&String> for TypedUuidForMagicLinkRedirectUriId {
-        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
-        fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
@@ -6657,12 +6354,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::From<&TypedUuidForMagicLinkSecretId> for TypedUuidForMagicLinkSecretId {
-        fn from(value: &TypedUuidForMagicLinkSecretId) -> Self {
-            value.clone()
-        }
-    }
-
     impl ::std::convert::From<::uuid::Uuid> for TypedUuidForMagicLinkSecretId {
         fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
@@ -6679,13 +6370,6 @@ pub mod types {
     impl ::std::convert::TryFrom<&str> for TypedUuidForMagicLinkSecretId {
         type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
-            value.parse()
-        }
-    }
-
-    impl ::std::convert::TryFrom<&String> for TypedUuidForMagicLinkSecretId {
-        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
-        fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
@@ -6745,12 +6429,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::From<&TypedUuidForMapperId> for TypedUuidForMapperId {
-        fn from(value: &TypedUuidForMapperId) -> Self {
-            value.clone()
-        }
-    }
-
     impl ::std::convert::From<::uuid::Uuid> for TypedUuidForMapperId {
         fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
@@ -6767,13 +6445,6 @@ pub mod types {
     impl ::std::convert::TryFrom<&str> for TypedUuidForMapperId {
         type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
-            value.parse()
-        }
-    }
-
-    impl ::std::convert::TryFrom<&String> for TypedUuidForMapperId {
-        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
-        fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
@@ -6833,12 +6504,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::From<&TypedUuidForOAuthClientId> for TypedUuidForOAuthClientId {
-        fn from(value: &TypedUuidForOAuthClientId) -> Self {
-            value.clone()
-        }
-    }
-
     impl ::std::convert::From<::uuid::Uuid> for TypedUuidForOAuthClientId {
         fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
@@ -6855,13 +6520,6 @@ pub mod types {
     impl ::std::convert::TryFrom<&str> for TypedUuidForOAuthClientId {
         type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
-            value.parse()
-        }
-    }
-
-    impl ::std::convert::TryFrom<&String> for TypedUuidForOAuthClientId {
-        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
-        fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
@@ -6921,12 +6579,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::From<&TypedUuidForOAuthRedirectUriId> for TypedUuidForOAuthRedirectUriId {
-        fn from(value: &TypedUuidForOAuthRedirectUriId) -> Self {
-            value.clone()
-        }
-    }
-
     impl ::std::convert::From<::uuid::Uuid> for TypedUuidForOAuthRedirectUriId {
         fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
@@ -6943,13 +6595,6 @@ pub mod types {
     impl ::std::convert::TryFrom<&str> for TypedUuidForOAuthRedirectUriId {
         type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
-            value.parse()
-        }
-    }
-
-    impl ::std::convert::TryFrom<&String> for TypedUuidForOAuthRedirectUriId {
-        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
-        fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
@@ -7009,12 +6654,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::From<&TypedUuidForOAuthSecretId> for TypedUuidForOAuthSecretId {
-        fn from(value: &TypedUuidForOAuthSecretId) -> Self {
-            value.clone()
-        }
-    }
-
     impl ::std::convert::From<::uuid::Uuid> for TypedUuidForOAuthSecretId {
         fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
@@ -7031,13 +6670,6 @@ pub mod types {
     impl ::std::convert::TryFrom<&str> for TypedUuidForOAuthSecretId {
         type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
-            value.parse()
-        }
-    }
-
-    impl ::std::convert::TryFrom<&String> for TypedUuidForOAuthSecretId {
-        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
-        fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
@@ -7097,12 +6729,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::From<&TypedUuidForRfdId> for TypedUuidForRfdId {
-        fn from(value: &TypedUuidForRfdId) -> Self {
-            value.clone()
-        }
-    }
-
     impl ::std::convert::From<::uuid::Uuid> for TypedUuidForRfdId {
         fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
@@ -7119,13 +6745,6 @@ pub mod types {
     impl ::std::convert::TryFrom<&str> for TypedUuidForRfdId {
         type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
-            value.parse()
-        }
-    }
-
-    impl ::std::convert::TryFrom<&String> for TypedUuidForRfdId {
-        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
-        fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
@@ -7185,12 +6804,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::From<&TypedUuidForRfdPdfId> for TypedUuidForRfdPdfId {
-        fn from(value: &TypedUuidForRfdPdfId) -> Self {
-            value.clone()
-        }
-    }
-
     impl ::std::convert::From<::uuid::Uuid> for TypedUuidForRfdPdfId {
         fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
@@ -7207,13 +6820,6 @@ pub mod types {
     impl ::std::convert::TryFrom<&str> for TypedUuidForRfdPdfId {
         type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
-            value.parse()
-        }
-    }
-
-    impl ::std::convert::TryFrom<&String> for TypedUuidForRfdPdfId {
-        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
-        fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
@@ -7273,12 +6879,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::From<&TypedUuidForRfdRevisionId> for TypedUuidForRfdRevisionId {
-        fn from(value: &TypedUuidForRfdRevisionId) -> Self {
-            value.clone()
-        }
-    }
-
     impl ::std::convert::From<::uuid::Uuid> for TypedUuidForRfdRevisionId {
         fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
@@ -7295,13 +6895,6 @@ pub mod types {
     impl ::std::convert::TryFrom<&str> for TypedUuidForRfdRevisionId {
         type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
-            value.parse()
-        }
-    }
-
-    impl ::std::convert::TryFrom<&String> for TypedUuidForRfdRevisionId {
-        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
-        fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
@@ -7361,12 +6954,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::From<&TypedUuidForUserId> for TypedUuidForUserId {
-        fn from(value: &TypedUuidForUserId) -> Self {
-            value.clone()
-        }
-    }
-
     impl ::std::convert::From<::uuid::Uuid> for TypedUuidForUserId {
         fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
@@ -7383,13 +6970,6 @@ pub mod types {
     impl ::std::convert::TryFrom<&str> for TypedUuidForUserId {
         type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
-            value.parse()
-        }
-    }
-
-    impl ::std::convert::TryFrom<&String> for TypedUuidForUserId {
-        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
-        fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
@@ -7449,12 +7029,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::From<&TypedUuidForUserProviderId> for TypedUuidForUserProviderId {
-        fn from(value: &TypedUuidForUserProviderId) -> Self {
-            value.clone()
-        }
-    }
-
     impl ::std::convert::From<::uuid::Uuid> for TypedUuidForUserProviderId {
         fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
@@ -7471,13 +7045,6 @@ pub mod types {
     impl ::std::convert::TryFrom<&str> for TypedUuidForUserProviderId {
         type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
-            value.parse()
-        }
-    }
-
-    impl ::std::convert::TryFrom<&String> for TypedUuidForUserProviderId {
-        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
-        fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
@@ -7537,12 +7104,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::From<&TypedUuidForWebhookDeliveryId> for TypedUuidForWebhookDeliveryId {
-        fn from(value: &TypedUuidForWebhookDeliveryId) -> Self {
-            value.clone()
-        }
-    }
-
     impl ::std::convert::From<::uuid::Uuid> for TypedUuidForWebhookDeliveryId {
         fn from(value: ::uuid::Uuid) -> Self {
             Self(value)
@@ -7559,13 +7120,6 @@ pub mod types {
     impl ::std::convert::TryFrom<&str> for TypedUuidForWebhookDeliveryId {
         type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
-            value.parse()
-        }
-    }
-
-    impl ::std::convert::TryFrom<&String> for TypedUuidForWebhookDeliveryId {
-        type Error = <::uuid::Uuid as ::std::str::FromStr>::Err;
-        fn try_from(value: &String) -> ::std::result::Result<Self, Self::Error> {
             value.parse()
         }
     }
@@ -7612,12 +7166,6 @@ pub mod types {
         pub major_change: ::std::option::Option<bool>,
     }
 
-    impl ::std::convert::From<&UpdateRfdAttrBody> for UpdateRfdAttrBody {
-        fn from(value: &UpdateRfdAttrBody) -> Self {
-            value.clone()
-        }
-    }
-
     impl ::std::default::Default for UpdateRfdAttrBody {
         fn default() -> Self {
             Self {
@@ -7656,12 +7204,6 @@ pub mod types {
     #[serde(deny_unknown_fields)]
     pub enum UserId {}
 
-    impl ::std::convert::From<&Self> for UserId {
-        fn from(value: &UserId) -> Self {
-            value.clone()
-        }
-    }
-
     /// `UserProviderId`
     ///
     /// <details><summary>JSON schema</summary>
@@ -7685,12 +7227,6 @@ pub mod types {
     )]
     #[serde(deny_unknown_fields)]
     pub enum UserProviderId {}
-
-    impl ::std::convert::From<&Self> for UserProviderId {
-        fn from(value: &UserProviderId) -> Self {
-            value.clone()
-        }
-    }
 
     /// `Visibility`
     ///
@@ -7725,12 +7261,6 @@ pub mod types {
         Public,
         #[serde(rename = "private")]
         Private,
-    }
-
-    impl ::std::convert::From<&Self> for Visibility {
-        fn from(value: &Visibility) -> Self {
-            value.clone()
-        }
     }
 
     impl ::std::fmt::Display for Visibility {
@@ -7802,12 +7332,6 @@ pub mod types {
     #[serde(deny_unknown_fields)]
     pub enum WebhookDeliveryId {}
 
-    impl ::std::convert::From<&Self> for WebhookDeliveryId {
-        fn from(value: &WebhookDeliveryId) -> Self {
-            value.clone()
-        }
-    }
-
     /// Types for composing complex structures.
     pub mod builder {
         #[derive(Clone, Debug)]
@@ -7851,7 +7375,7 @@ pub mod types {
             {
                 self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {e}"));
                 self
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
@@ -7863,7 +7387,7 @@ pub mod types {
             {
                 self.deleted_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -7873,7 +7397,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn name<T>(mut self, value: T) -> Self
@@ -7883,7 +7407,7 @@ pub mod types {
             {
                 self.name = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for name: {}", e));
+                    .map_err(|e| format!("error converting supplied value for name: {e}"));
                 self
             }
             pub fn permissions<T>(mut self, value: T) -> Self
@@ -7893,7 +7417,7 @@ pub mod types {
             {
                 self.permissions = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for permissions: {}", e));
+                    .map_err(|e| format!("error converting supplied value for permissions: {e}"));
                 self
             }
             pub fn updated_at<T>(mut self, value: T) -> Self
@@ -7903,7 +7427,7 @@ pub mod types {
             {
                 self.updated_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for updated_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for updated_at: {e}"));
                 self
             }
         }
@@ -7961,7 +7485,7 @@ pub mod types {
             {
                 self.name = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for name: {}", e));
+                    .map_err(|e| format!("error converting supplied value for name: {e}"));
                 self
             }
             pub fn permissions<T>(mut self, value: T) -> Self
@@ -7971,7 +7495,7 @@ pub mod types {
             {
                 self.permissions = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for permissions: {}", e));
+                    .map_err(|e| format!("error converting supplied value for permissions: {e}"));
                 self
             }
         }
@@ -8002,84 +7526,6 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
-        pub struct AccessTokenExchangeRequest {
-            device_code: ::std::result::Result<::std::string::String, ::std::string::String>,
-            expires_at: ::std::result::Result<
-                ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
-                ::std::string::String,
-            >,
-            grant_type: ::std::result::Result<::std::string::String, ::std::string::String>,
-        }
-
-        impl ::std::default::Default for AccessTokenExchangeRequest {
-            fn default() -> Self {
-                Self {
-                    device_code: Err("no value supplied for device_code".to_string()),
-                    expires_at: Ok(Default::default()),
-                    grant_type: Err("no value supplied for grant_type".to_string()),
-                }
-            }
-        }
-
-        impl AccessTokenExchangeRequest {
-            pub fn device_code<T>(mut self, value: T) -> Self
-            where
-                T: ::std::convert::TryInto<::std::string::String>,
-                T::Error: ::std::fmt::Display,
-            {
-                self.device_code = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for device_code: {}", e));
-                self
-            }
-            pub fn expires_at<T>(mut self, value: T) -> Self
-            where
-                T: ::std::convert::TryInto<
-                    ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
-                >,
-                T::Error: ::std::fmt::Display,
-            {
-                self.expires_at = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for expires_at: {}", e));
-                self
-            }
-            pub fn grant_type<T>(mut self, value: T) -> Self
-            where
-                T: ::std::convert::TryInto<::std::string::String>,
-                T::Error: ::std::fmt::Display,
-            {
-                self.grant_type = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for grant_type: {}", e));
-                self
-            }
-        }
-
-        impl ::std::convert::TryFrom<AccessTokenExchangeRequest> for super::AccessTokenExchangeRequest {
-            type Error = super::error::ConversionError;
-            fn try_from(
-                value: AccessTokenExchangeRequest,
-            ) -> ::std::result::Result<Self, super::error::ConversionError> {
-                Ok(Self {
-                    device_code: value.device_code?,
-                    expires_at: value.expires_at?,
-                    grant_type: value.grant_type?,
-                })
-            }
-        }
-
-        impl ::std::convert::From<super::AccessTokenExchangeRequest> for AccessTokenExchangeRequest {
-            fn from(value: super::AccessTokenExchangeRequest) -> Self {
-                Self {
-                    device_code: Ok(value.device_code),
-                    expires_at: Ok(value.expires_at),
-                    grant_type: Ok(value.grant_type),
-                }
-            }
-        }
-
-        #[derive(Clone, Debug)]
         pub struct AddGroupBody {
             group_id:
                 ::std::result::Result<super::TypedUuidForAccessGroupId, ::std::string::String>,
@@ -8101,7 +7547,7 @@ pub mod types {
             {
                 self.group_id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for group_id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for group_id: {e}"));
                 self
             }
         }
@@ -8144,9 +7590,9 @@ pub mod types {
                 T: ::std::convert::TryInto<::std::string::String>,
                 T::Error: ::std::fmt::Display,
             {
-                self.redirect_uri = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for redirect_uri: {}", e)
-                });
+                self.redirect_uri = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for redirect_uri: {e}"));
                 self
             }
         }
@@ -8189,9 +7635,9 @@ pub mod types {
                 T: ::std::convert::TryInto<::std::string::String>,
                 T::Error: ::std::fmt::Display,
             {
-                self.redirect_uri = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for redirect_uri: {}", e)
-                });
+                self.redirect_uri = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for redirect_uri: {e}"));
                 self
             }
         }
@@ -8221,7 +7667,7 @@ pub mod types {
                 ::chrono::DateTime<::chrono::offset::Utc>,
                 ::std::string::String,
             >,
-            permissions: ::std::result::Result<
+            permission_boundary: ::std::result::Result<
                 ::std::option::Option<super::PermissionsForRfdPermission>,
                 ::std::string::String,
             >,
@@ -8231,7 +7677,7 @@ pub mod types {
             fn default() -> Self {
                 Self {
                     expires_at: Err("no value supplied for expires_at".to_string()),
-                    permissions: Ok(Default::default()),
+                    permission_boundary: Ok(Default::default()),
                 }
             }
         }
@@ -8244,19 +7690,19 @@ pub mod types {
             {
                 self.expires_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for expires_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for expires_at: {e}"));
                 self
             }
-            pub fn permissions<T>(mut self, value: T) -> Self
+            pub fn permission_boundary<T>(mut self, value: T) -> Self
             where
                 T: ::std::convert::TryInto<
                     ::std::option::Option<super::PermissionsForRfdPermission>,
                 >,
                 T::Error: ::std::fmt::Display,
             {
-                self.permissions = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for permissions: {}", e));
+                self.permission_boundary = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for permission_boundary: {e}")
+                });
                 self
             }
         }
@@ -8270,7 +7716,7 @@ pub mod types {
             ) -> ::std::result::Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     expires_at: value.expires_at?,
-                    permissions: value.permissions?,
+                    permission_boundary: value.permission_boundary?,
                 })
             }
         }
@@ -8281,7 +7727,7 @@ pub mod types {
             fn from(value: super::ApiKeyCreateParamsForRfdPermission) -> Self {
                 Self {
                     expires_at: Ok(value.expires_at),
-                    permissions: Ok(value.permissions),
+                    permission_boundary: Ok(value.permission_boundary),
                 }
             }
         }
@@ -8293,7 +7739,7 @@ pub mod types {
                 ::std::string::String,
             >,
             id: ::std::result::Result<super::TypedUuidForApiKeyId, ::std::string::String>,
-            permissions: ::std::result::Result<
+            permission_boundary: ::std::result::Result<
                 ::std::option::Option<super::PermissionsForRfdPermission>,
                 ::std::string::String,
             >,
@@ -8304,7 +7750,7 @@ pub mod types {
                 Self {
                     created_at: Err("no value supplied for created_at".to_string()),
                     id: Err("no value supplied for id".to_string()),
-                    permissions: Ok(Default::default()),
+                    permission_boundary: Ok(Default::default()),
                 }
             }
         }
@@ -8317,7 +7763,7 @@ pub mod types {
             {
                 self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -8327,19 +7773,19 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
-            pub fn permissions<T>(mut self, value: T) -> Self
+            pub fn permission_boundary<T>(mut self, value: T) -> Self
             where
                 T: ::std::convert::TryInto<
                     ::std::option::Option<super::PermissionsForRfdPermission>,
                 >,
                 T::Error: ::std::fmt::Display,
             {
-                self.permissions = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for permissions: {}", e));
+                self.permission_boundary = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for permission_boundary: {e}")
+                });
                 self
             }
         }
@@ -8354,7 +7800,7 @@ pub mod types {
                 Ok(Self {
                     created_at: value.created_at?,
                     id: value.id?,
-                    permissions: value.permissions?,
+                    permission_boundary: value.permission_boundary?,
                 })
             }
         }
@@ -8366,7 +7812,7 @@ pub mod types {
                 Self {
                     created_at: Ok(value.created_at),
                     id: Ok(value.id),
-                    permissions: Ok(value.permissions),
+                    permission_boundary: Ok(value.permission_boundary),
                 }
             }
         }
@@ -8411,7 +7857,7 @@ pub mod types {
             {
                 self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {e}"));
                 self
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
@@ -8423,7 +7869,7 @@ pub mod types {
             {
                 self.deleted_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {e}"));
                 self
             }
             pub fn email<T>(mut self, value: T) -> Self
@@ -8433,7 +7879,7 @@ pub mod types {
             {
                 self.email = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for email: {}", e));
+                    .map_err(|e| format!("error converting supplied value for email: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -8443,7 +7889,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn updated_at<T>(mut self, value: T) -> Self
@@ -8453,7 +7899,7 @@ pub mod types {
             {
                 self.updated_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for updated_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for updated_at: {e}"));
                 self
             }
             pub fn user_id<T>(mut self, value: T) -> Self
@@ -8463,7 +7909,7 @@ pub mod types {
             {
                 self.user_id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for user_id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for user_id: {e}"));
                 self
             }
         }
@@ -8518,7 +7964,7 @@ pub mod types {
             {
                 self.email = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for email: {}", e));
+                    .map_err(|e| format!("error converting supplied value for email: {e}"));
                 self
             }
         }
@@ -8584,7 +8030,7 @@ pub mod types {
             {
                 self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {e}"));
                 self
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
@@ -8596,7 +8042,7 @@ pub mod types {
             {
                 self.deleted_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {e}"));
                 self
             }
             pub fn groups<T>(mut self, value: T) -> Self
@@ -8606,7 +8052,7 @@ pub mod types {
             {
                 self.groups = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for groups: {}", e));
+                    .map_err(|e| format!("error converting supplied value for groups: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -8616,7 +8062,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn permissions<T>(mut self, value: T) -> Self
@@ -8626,7 +8072,7 @@ pub mod types {
             {
                 self.permissions = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for permissions: {}", e));
+                    .map_err(|e| format!("error converting supplied value for permissions: {e}"));
                 self
             }
             pub fn updated_at<T>(mut self, value: T) -> Self
@@ -8636,7 +8082,7 @@ pub mod types {
             {
                 self.updated_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for updated_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for updated_at: {e}"));
                 self
             }
         }
@@ -8691,7 +8137,7 @@ pub mod types {
             {
                 self.user_id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for user_id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for user_id: {e}"));
                 self
             }
         }
@@ -8736,7 +8182,7 @@ pub mod types {
             {
                 self.token = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for token: {}", e));
+                    .map_err(|e| format!("error converting supplied value for token: {e}"));
                 self
             }
         }
@@ -8756,6 +8202,55 @@ pub mod types {
             fn from(value: super::ApiUserLinkRequestResponse) -> Self {
                 Self {
                     token: Ok(value.token),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct ApiUserPermissionParamsForRfdPermission {
+            permission: ::std::result::Result<super::RfdPermission, ::std::string::String>,
+        }
+
+        impl ::std::default::Default for ApiUserPermissionParamsForRfdPermission {
+            fn default() -> Self {
+                Self {
+                    permission: Err("no value supplied for permission".to_string()),
+                }
+            }
+        }
+
+        impl ApiUserPermissionParamsForRfdPermission {
+            pub fn permission<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::RfdPermission>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.permission = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for permission: {e}"));
+                self
+            }
+        }
+
+        impl ::std::convert::TryFrom<ApiUserPermissionParamsForRfdPermission>
+            for super::ApiUserPermissionParamsForRfdPermission
+        {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: ApiUserPermissionParamsForRfdPermission,
+            ) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    permission: value.permission?,
+                })
+            }
+        }
+
+        impl ::std::convert::From<super::ApiUserPermissionParamsForRfdPermission>
+            for ApiUserPermissionParamsForRfdPermission
+        {
+            fn from(value: super::ApiUserPermissionParamsForRfdPermission) -> Self {
+                Self {
+                    permission: Ok(value.permission),
                 }
             }
         }
@@ -8812,7 +8307,7 @@ pub mod types {
             {
                 self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {e}"));
                 self
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
@@ -8824,7 +8319,7 @@ pub mod types {
             {
                 self.deleted_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {e}"));
                 self
             }
             pub fn display_names<T>(mut self, value: T) -> Self
@@ -8832,9 +8327,9 @@ pub mod types {
                 T: ::std::convert::TryInto<::std::vec::Vec<::std::string::String>>,
                 T::Error: ::std::fmt::Display,
             {
-                self.display_names = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for display_names: {}", e)
-                });
+                self.display_names = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for display_names: {e}"));
                 self
             }
             pub fn emails<T>(mut self, value: T) -> Self
@@ -8844,7 +8339,7 @@ pub mod types {
             {
                 self.emails = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for emails: {}", e));
+                    .map_err(|e| format!("error converting supplied value for emails: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -8854,7 +8349,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn provider<T>(mut self, value: T) -> Self
@@ -8864,7 +8359,7 @@ pub mod types {
             {
                 self.provider = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for provider: {}", e));
+                    .map_err(|e| format!("error converting supplied value for provider: {e}"));
                 self
             }
             pub fn provider_id<T>(mut self, value: T) -> Self
@@ -8874,7 +8369,7 @@ pub mod types {
             {
                 self.provider_id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for provider_id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for provider_id: {e}"));
                 self
             }
             pub fn updated_at<T>(mut self, value: T) -> Self
@@ -8884,7 +8379,7 @@ pub mod types {
             {
                 self.updated_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for updated_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for updated_at: {e}"));
                 self
             }
             pub fn user_id<T>(mut self, value: T) -> Self
@@ -8894,7 +8389,7 @@ pub mod types {
             {
                 self.user_id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for user_id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for user_id: {e}"));
                 self
             }
         }
@@ -8955,7 +8450,7 @@ pub mod types {
             {
                 self.token = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for token: {}", e));
+                    .map_err(|e| format!("error converting supplied value for token: {e}"));
                 self
             }
         }
@@ -8990,7 +8485,9 @@ pub mod types {
         impl ::std::default::Default for ApiUserUpdateParamsForRfdPermission {
             fn default() -> Self {
                 Self {
-                    group_ids: Err("no value supplied for group_ids".to_string()),
+                    group_ids: Ok(
+                        super::defaults::api_user_update_params_for_rfd_permission_group_ids(),
+                    ),
                     permissions: Err("no value supplied for permissions".to_string()),
                 }
             }
@@ -9004,7 +8501,7 @@ pub mod types {
             {
                 self.group_ids = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for group_ids: {}", e));
+                    .map_err(|e| format!("error converting supplied value for group_ids: {e}"));
                 self
             }
             pub fn permissions<T>(mut self, value: T) -> Self
@@ -9014,7 +8511,7 @@ pub mod types {
             {
                 self.permissions = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for permissions: {}", e));
+                    .map_err(|e| format!("error converting supplied value for permissions: {e}"));
                 self
             }
         }
@@ -9069,7 +8566,7 @@ pub mod types {
                 T::Error: ::std::fmt::Display,
             {
                 self.max_activations = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for max_activations: {}", e)
+                    format!("error converting supplied value for max_activations: {e}")
                 });
                 self
             }
@@ -9080,7 +8577,7 @@ pub mod types {
             {
                 self.name = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for name: {}", e));
+                    .map_err(|e| format!("error converting supplied value for name: {e}"));
                 self
             }
             pub fn rule<T>(mut self, value: T) -> Self
@@ -9090,7 +8587,7 @@ pub mod types {
             {
                 self.rule = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for rule: {}", e));
+                    .map_err(|e| format!("error converting supplied value for rule: {e}"));
                 self
             }
         }
@@ -9114,6 +8611,143 @@ pub mod types {
                     max_activations: Ok(value.max_activations),
                     name: Ok(value.name),
                     rule: Ok(value.rule),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct DeviceAuthorizationRequest {
+            client_id:
+                ::std::result::Result<super::TypedUuidForOAuthClientId, ::std::string::String>,
+            scope: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+        }
+
+        impl ::std::default::Default for DeviceAuthorizationRequest {
+            fn default() -> Self {
+                Self {
+                    client_id: Err("no value supplied for client_id".to_string()),
+                    scope: Ok(Default::default()),
+                }
+            }
+        }
+
+        impl DeviceAuthorizationRequest {
+            pub fn client_id<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::TypedUuidForOAuthClientId>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.client_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for client_id: {e}"));
+                self
+            }
+            pub fn scope<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.scope = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for scope: {e}"));
+                self
+            }
+        }
+
+        impl ::std::convert::TryFrom<DeviceAuthorizationRequest> for super::DeviceAuthorizationRequest {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: DeviceAuthorizationRequest,
+            ) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    client_id: value.client_id?,
+                    scope: value.scope?,
+                })
+            }
+        }
+
+        impl ::std::convert::From<super::DeviceAuthorizationRequest> for DeviceAuthorizationRequest {
+            fn from(value: super::DeviceAuthorizationRequest) -> Self {
+                Self {
+                    client_id: Ok(value.client_id),
+                    scope: Ok(value.scope),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct DeviceTokenExchangeRequest {
+            client_id:
+                ::std::result::Result<super::TypedUuidForOAuthClientId, ::std::string::String>,
+            device_code: ::std::result::Result<::std::string::String, ::std::string::String>,
+            grant_type: ::std::result::Result<::std::string::String, ::std::string::String>,
+        }
+
+        impl ::std::default::Default for DeviceTokenExchangeRequest {
+            fn default() -> Self {
+                Self {
+                    client_id: Err("no value supplied for client_id".to_string()),
+                    device_code: Err("no value supplied for device_code".to_string()),
+                    grant_type: Err("no value supplied for grant_type".to_string()),
+                }
+            }
+        }
+
+        impl DeviceTokenExchangeRequest {
+            pub fn client_id<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::TypedUuidForOAuthClientId>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.client_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for client_id: {e}"));
+                self
+            }
+            pub fn device_code<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.device_code = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for device_code: {e}"));
+                self
+            }
+            pub fn grant_type<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.grant_type = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for grant_type: {e}"));
+                self
+            }
+        }
+
+        impl ::std::convert::TryFrom<DeviceTokenExchangeRequest> for super::DeviceTokenExchangeRequest {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: DeviceTokenExchangeRequest,
+            ) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    client_id: value.client_id?,
+                    device_code: value.device_code?,
+                    grant_type: value.grant_type?,
+                })
+            }
+        }
+
+        impl ::std::convert::From<super::DeviceTokenExchangeRequest> for DeviceTokenExchangeRequest {
+            fn from(value: super::DeviceTokenExchangeRequest) -> Self {
+                Self {
+                    client_id: Ok(value.client_id),
+                    device_code: Ok(value.device_code),
+                    grant_type: Ok(value.grant_type),
                 }
             }
         }
@@ -9146,7 +8780,7 @@ pub mod types {
             {
                 self.error_code = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for error_code: {}", e));
+                    .map_err(|e| format!("error converting supplied value for error_code: {e}"));
                 self
             }
             pub fn message<T>(mut self, value: T) -> Self
@@ -9156,7 +8790,7 @@ pub mod types {
             {
                 self.message = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for message: {}", e));
+                    .map_err(|e| format!("error converting supplied value for message: {e}"));
                 self
             }
             pub fn request_id<T>(mut self, value: T) -> Self
@@ -9166,7 +8800,7 @@ pub mod types {
             {
                 self.request_id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for request_id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for request_id: {e}"));
                 self
             }
         }
@@ -9242,7 +8876,7 @@ pub mod types {
             {
                 self.anchor = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for anchor: {}", e));
+                    .map_err(|e| format!("error converting supplied value for anchor: {e}"));
                 self
             }
             pub fn content<T>(mut self, value: T) -> Self
@@ -9252,7 +8886,7 @@ pub mod types {
             {
                 self.content = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for content: {}", e));
+                    .map_err(|e| format!("error converting supplied value for content: {e}"));
                 self
             }
             pub fn hierarchy<T>(mut self, value: T) -> Self
@@ -9262,7 +8896,7 @@ pub mod types {
             {
                 self.hierarchy = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for hierarchy: {}", e));
+                    .map_err(|e| format!("error converting supplied value for hierarchy: {e}"));
                 self
             }
             pub fn hierarchy_radio<T>(mut self, value: T) -> Self
@@ -9271,7 +8905,7 @@ pub mod types {
                 T::Error: ::std::fmt::Display,
             {
                 self.hierarchy_radio = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for hierarchy_radio: {}", e)
+                    format!("error converting supplied value for hierarchy_radio: {e}")
                 });
                 self
             }
@@ -9282,7 +8916,7 @@ pub mod types {
             {
                 self.object_id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for object_id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for object_id: {e}"));
                 self
             }
             pub fn rfd_number<T>(mut self, value: T) -> Self
@@ -9292,7 +8926,7 @@ pub mod types {
             {
                 self.rfd_number = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for rfd_number: {}", e));
+                    .map_err(|e| format!("error converting supplied value for rfd_number: {e}"));
                 self
             }
             pub fn url<T>(mut self, value: T) -> Self
@@ -9302,7 +8936,7 @@ pub mod types {
             {
                 self.url = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for url: {}", e));
+                    .map_err(|e| format!("error converting supplied value for url: {e}"));
                 self
             }
         }
@@ -9364,7 +8998,7 @@ pub mod types {
             {
                 self.info = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for info: {}", e));
+                    .map_err(|e| format!("error converting supplied value for info: {e}"));
                 self
             }
             pub fn providers<T>(mut self, value: T) -> Self
@@ -9374,7 +9008,7 @@ pub mod types {
             {
                 self.providers = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for providers: {}", e));
+                    .map_err(|e| format!("error converting supplied value for providers: {e}"));
                 self
             }
         }
@@ -9445,7 +9079,7 @@ pub mod types {
             {
                 self.added = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for added: {}", e));
+                    .map_err(|e| format!("error converting supplied value for added: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -9455,7 +9089,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn modified<T>(mut self, value: T) -> Self
@@ -9465,7 +9099,7 @@ pub mod types {
             {
                 self.modified = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for modified: {}", e));
+                    .map_err(|e| format!("error converting supplied value for modified: {e}"));
                 self
             }
             pub fn removed<T>(mut self, value: T) -> Self
@@ -9475,7 +9109,7 @@ pub mod types {
             {
                 self.removed = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for removed: {}", e));
+                    .map_err(|e| format!("error converting supplied value for removed: {e}"));
                 self
             }
             pub fn timestamp<T>(mut self, value: T) -> Self
@@ -9485,7 +9119,7 @@ pub mod types {
             {
                 self.timestamp = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for timestamp: {}", e));
+                    .map_err(|e| format!("error converting supplied value for timestamp: {e}"));
                 self
             }
         }
@@ -9552,7 +9186,7 @@ pub mod types {
             {
                 self.commits = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for commits: {}", e));
+                    .map_err(|e| format!("error converting supplied value for commits: {e}"));
                 self
             }
             pub fn head_commit<T>(mut self, value: T) -> Self
@@ -9562,7 +9196,7 @@ pub mod types {
             {
                 self.head_commit = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for head_commit: {}", e));
+                    .map_err(|e| format!("error converting supplied value for head_commit: {e}"));
                 self
             }
             pub fn installation<T>(mut self, value: T) -> Self
@@ -9570,9 +9204,9 @@ pub mod types {
                 T: ::std::convert::TryInto<super::GitHubInstallation>,
                 T::Error: ::std::fmt::Display,
             {
-                self.installation = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for installation: {}", e)
-                });
+                self.installation = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for installation: {e}"));
                 self
             }
             pub fn ref_<T>(mut self, value: T) -> Self
@@ -9582,7 +9216,7 @@ pub mod types {
             {
                 self.ref_ = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for ref_: {}", e));
+                    .map_err(|e| format!("error converting supplied value for ref_: {e}"));
                 self
             }
             pub fn repository<T>(mut self, value: T) -> Self
@@ -9592,7 +9226,7 @@ pub mod types {
             {
                 self.repository = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for repository: {}", e));
+                    .map_err(|e| format!("error converting supplied value for repository: {e}"));
                 self
             }
             pub fn sender<T>(mut self, value: T) -> Self
@@ -9602,7 +9236,7 @@ pub mod types {
             {
                 self.sender = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for sender: {}", e));
+                    .map_err(|e| format!("error converting supplied value for sender: {e}"));
                 self
             }
         }
@@ -9659,7 +9293,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn node_id<T>(mut self, value: T) -> Self
@@ -9669,7 +9303,7 @@ pub mod types {
             {
                 self.node_id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for node_id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for node_id: {e}"));
                 self
             }
         }
@@ -9723,7 +9357,7 @@ pub mod types {
                 T::Error: ::std::fmt::Display,
             {
                 self.default_branch = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for default_branch: {}", e)
+                    format!("error converting supplied value for default_branch: {e}")
                 });
                 self
             }
@@ -9734,7 +9368,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn name<T>(mut self, value: T) -> Self
@@ -9744,7 +9378,7 @@ pub mod types {
             {
                 self.name = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for name: {}", e));
+                    .map_err(|e| format!("error converting supplied value for name: {e}"));
                 self
             }
             pub fn node_id<T>(mut self, value: T) -> Self
@@ -9754,7 +9388,7 @@ pub mod types {
             {
                 self.node_id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for node_id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for node_id: {e}"));
                 self
             }
             pub fn owner<T>(mut self, value: T) -> Self
@@ -9764,7 +9398,7 @@ pub mod types {
             {
                 self.owner = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for owner: {}", e));
+                    .map_err(|e| format!("error converting supplied value for owner: {e}"));
                 self
             }
         }
@@ -9817,7 +9451,7 @@ pub mod types {
             {
                 self.login = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for login: {}", e));
+                    .map_err(|e| format!("error converting supplied value for login: {e}"));
                 self
             }
         }
@@ -9868,7 +9502,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn login<T>(mut self, value: T) -> Self
@@ -9878,7 +9512,7 @@ pub mod types {
             {
                 self.login = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for login: {}", e));
+                    .map_err(|e| format!("error converting supplied value for login: {e}"));
                 self
             }
             pub fn node_id<T>(mut self, value: T) -> Self
@@ -9888,7 +9522,7 @@ pub mod types {
             {
                 self.node_id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for node_id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for node_id: {e}"));
                 self
             }
             pub fn type_<T>(mut self, value: T) -> Self
@@ -9898,7 +9532,7 @@ pub mod types {
             {
                 self.type_ = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for type_: {}", e));
+                    .map_err(|e| format!("error converting supplied value for type_: {e}"));
                 self
             }
         }
@@ -9936,7 +9570,7 @@ pub mod types {
             >,
             id: ::std::result::Result<super::TypedUuidForApiKeyId, ::std::string::String>,
             key: ::std::result::Result<super::SecretString, ::std::string::String>,
-            permissions: ::std::result::Result<
+            permission_boundary: ::std::result::Result<
                 ::std::option::Option<super::PermissionsForRfdPermission>,
                 ::std::string::String,
             >,
@@ -9948,7 +9582,7 @@ pub mod types {
                     created_at: Err("no value supplied for created_at".to_string()),
                     id: Err("no value supplied for id".to_string()),
                     key: Err("no value supplied for key".to_string()),
-                    permissions: Ok(Default::default()),
+                    permission_boundary: Ok(Default::default()),
                 }
             }
         }
@@ -9961,7 +9595,7 @@ pub mod types {
             {
                 self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -9971,7 +9605,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn key<T>(mut self, value: T) -> Self
@@ -9981,19 +9615,19 @@ pub mod types {
             {
                 self.key = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for key: {}", e));
+                    .map_err(|e| format!("error converting supplied value for key: {e}"));
                 self
             }
-            pub fn permissions<T>(mut self, value: T) -> Self
+            pub fn permission_boundary<T>(mut self, value: T) -> Self
             where
                 T: ::std::convert::TryInto<
                     ::std::option::Option<super::PermissionsForRfdPermission>,
                 >,
                 T::Error: ::std::fmt::Display,
             {
-                self.permissions = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for permissions: {}", e));
+                self.permission_boundary = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for permission_boundary: {e}")
+                });
                 self
             }
         }
@@ -10009,7 +9643,7 @@ pub mod types {
                     created_at: value.created_at?,
                     id: value.id?,
                     key: value.key?,
-                    permissions: value.permissions?,
+                    permission_boundary: value.permission_boundary?,
                 })
             }
         }
@@ -10022,7 +9656,7 @@ pub mod types {
                     created_at: Ok(value.created_at),
                     id: Ok(value.id),
                     key: Ok(value.key),
-                    permissions: Ok(value.permissions),
+                    permission_boundary: Ok(value.permission_boundary),
                 }
             }
         }
@@ -10055,7 +9689,7 @@ pub mod types {
             {
                 self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -10065,7 +9699,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn key<T>(mut self, value: T) -> Self
@@ -10075,7 +9709,7 @@ pub mod types {
             {
                 self.key = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for key: {}", e));
+                    .map_err(|e| format!("error converting supplied value for key: {e}"));
                 self
             }
         }
@@ -10135,7 +9769,7 @@ pub mod types {
             {
                 self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -10145,7 +9779,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn key<T>(mut self, value: T) -> Self
@@ -10155,7 +9789,7 @@ pub mod types {
             {
                 self.key = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for key: {}", e));
+                    .map_err(|e| format!("error converting supplied value for key: {e}"));
                 self
             }
         }
@@ -10240,7 +9874,7 @@ pub mod types {
             {
                 self.branch = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for branch: {}", e));
+                    .map_err(|e| format!("error converting supplied value for branch: {e}"));
                 self
             }
             pub fn committed_at<T>(mut self, value: T) -> Self
@@ -10248,9 +9882,9 @@ pub mod types {
                 T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
                 T::Error: ::std::fmt::Display,
             {
-                self.committed_at = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for committed_at: {}", e)
-                });
+                self.committed_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for committed_at: {e}"));
                 self
             }
             pub fn created_at<T>(mut self, value: T) -> Self
@@ -10260,7 +9894,7 @@ pub mod types {
             {
                 self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -10270,7 +9904,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn owner<T>(mut self, value: T) -> Self
@@ -10280,7 +9914,7 @@ pub mod types {
             {
                 self.owner = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for owner: {}", e));
+                    .map_err(|e| format!("error converting supplied value for owner: {e}"));
                 self
             }
             pub fn processed<T>(mut self, value: T) -> Self
@@ -10290,7 +9924,7 @@ pub mod types {
             {
                 self.processed = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for processed: {}", e));
+                    .map_err(|e| format!("error converting supplied value for processed: {e}"));
                 self
             }
             pub fn repository<T>(mut self, value: T) -> Self
@@ -10300,7 +9934,7 @@ pub mod types {
             {
                 self.repository = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for repository: {}", e));
+                    .map_err(|e| format!("error converting supplied value for repository: {e}"));
                 self
             }
             pub fn rfd<T>(mut self, value: T) -> Self
@@ -10310,7 +9944,7 @@ pub mod types {
             {
                 self.rfd = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for rfd: {}", e));
+                    .map_err(|e| format!("error converting supplied value for rfd: {e}"));
                 self
             }
             pub fn sha<T>(mut self, value: T) -> Self
@@ -10320,7 +9954,7 @@ pub mod types {
             {
                 self.sha = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for sha: {}", e));
+                    .map_err(|e| format!("error converting supplied value for sha: {e}"));
                 self
             }
             pub fn started_at<T>(mut self, value: T) -> Self
@@ -10332,7 +9966,7 @@ pub mod types {
             {
                 self.started_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for started_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for started_at: {e}"));
                 self
             }
             pub fn webhook_delivery_id<T>(mut self, value: T) -> Self
@@ -10343,10 +9977,7 @@ pub mod types {
                 T::Error: ::std::fmt::Display,
             {
                 self.webhook_delivery_id = value.try_into().map_err(|e| {
-                    format!(
-                        "error converting supplied value for webhook_delivery_id: {}",
-                        e
-                    )
+                    format!("error converting supplied value for webhook_delivery_id: {e}")
                 });
                 self
             }
@@ -10418,7 +10049,7 @@ pub mod types {
             {
                 self.e = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for e: {}", e));
+                    .map_err(|e| format!("error converting supplied value for e: {e}"));
                 self
             }
             pub fn kid<T>(mut self, value: T) -> Self
@@ -10428,7 +10059,7 @@ pub mod types {
             {
                 self.kid = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for kid: {}", e));
+                    .map_err(|e| format!("error converting supplied value for kid: {e}"));
                 self
             }
             pub fn kty<T>(mut self, value: T) -> Self
@@ -10438,7 +10069,7 @@ pub mod types {
             {
                 self.kty = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for kty: {}", e));
+                    .map_err(|e| format!("error converting supplied value for kty: {e}"));
                 self
             }
             pub fn n<T>(mut self, value: T) -> Self
@@ -10448,7 +10079,7 @@ pub mod types {
             {
                 self.n = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for n: {}", e));
+                    .map_err(|e| format!("error converting supplied value for n: {e}"));
                 self
             }
             pub fn use_<T>(mut self, value: T) -> Self
@@ -10458,7 +10089,7 @@ pub mod types {
             {
                 self.use_ = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for use_: {}", e));
+                    .map_err(|e| format!("error converting supplied value for use_: {e}"));
                 self
             }
         }
@@ -10509,7 +10140,7 @@ pub mod types {
             {
                 self.keys = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for keys: {}", e));
+                    .map_err(|e| format!("error converting supplied value for keys: {e}"));
                 self
             }
         }
@@ -10570,7 +10201,7 @@ pub mod types {
             {
                 self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {e}"));
                 self
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
@@ -10582,7 +10213,7 @@ pub mod types {
             {
                 self.deleted_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -10592,7 +10223,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn redirect_uris<T>(mut self, value: T) -> Self
@@ -10600,9 +10231,9 @@ pub mod types {
                 T: ::std::convert::TryInto<::std::vec::Vec<super::MagicLinkRedirectUri>>,
                 T::Error: ::std::fmt::Display,
             {
-                self.redirect_uris = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for redirect_uris: {}", e)
-                });
+                self.redirect_uris = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for redirect_uris: {e}"));
                 self
             }
             pub fn secrets<T>(mut self, value: T) -> Self
@@ -10612,7 +10243,7 @@ pub mod types {
             {
                 self.secrets = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for secrets: {}", e));
+                    .map_err(|e| format!("error converting supplied value for secrets: {e}"));
                 self
             }
         }
@@ -10649,7 +10280,7 @@ pub mod types {
             attempt_id:
                 ::std::result::Result<super::TypedUuidForMagicLinkAttemptId, ::std::string::String>,
             recipient: ::std::result::Result<::std::string::String, ::std::string::String>,
-            secret: ::std::result::Result<::std::string::String, ::std::string::String>,
+            secret: ::std::result::Result<super::SecretString, ::std::string::String>,
         }
 
         impl ::std::default::Default for MagicLinkExchangeRequest {
@@ -10670,7 +10301,7 @@ pub mod types {
             {
                 self.attempt_id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for attempt_id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for attempt_id: {e}"));
                 self
             }
             pub fn recipient<T>(mut self, value: T) -> Self
@@ -10680,17 +10311,17 @@ pub mod types {
             {
                 self.recipient = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for recipient: {}", e));
+                    .map_err(|e| format!("error converting supplied value for recipient: {e}"));
                 self
             }
             pub fn secret<T>(mut self, value: T) -> Self
             where
-                T: ::std::convert::TryInto<::std::string::String>,
+                T: ::std::convert::TryInto<super::SecretString>,
                 T::Error: ::std::fmt::Display,
             {
                 self.secret = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for secret: {}", e));
+                    .map_err(|e| format!("error converting supplied value for secret: {e}"));
                 self
             }
         }
@@ -10741,9 +10372,9 @@ pub mod types {
                 T: ::std::convert::TryInto<::std::string::String>,
                 T::Error: ::std::fmt::Display,
             {
-                self.access_token = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for access_token: {}", e)
-                });
+                self.access_token = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for access_token: {e}"));
                 self
             }
             pub fn expires_in<T>(mut self, value: T) -> Self
@@ -10753,7 +10384,7 @@ pub mod types {
             {
                 self.expires_in = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for expires_in: {}", e));
+                    .map_err(|e| format!("error converting supplied value for expires_in: {e}"));
                 self
             }
             pub fn token_type<T>(mut self, value: T) -> Self
@@ -10763,7 +10394,7 @@ pub mod types {
             {
                 self.token_type = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for token_type: {}", e));
+                    .map_err(|e| format!("error converting supplied value for token_type: {e}"));
                 self
             }
         }
@@ -10832,7 +10463,7 @@ pub mod types {
             {
                 self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {e}"));
                 self
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
@@ -10844,7 +10475,7 @@ pub mod types {
             {
                 self.deleted_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -10854,7 +10485,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn magic_link_client_id<T>(mut self, value: T) -> Self
@@ -10863,10 +10494,7 @@ pub mod types {
                 T::Error: ::std::fmt::Display,
             {
                 self.magic_link_client_id = value.try_into().map_err(|e| {
-                    format!(
-                        "error converting supplied value for magic_link_client_id: {}",
-                        e
-                    )
+                    format!("error converting supplied value for magic_link_client_id: {e}")
                 });
                 self
             }
@@ -10875,9 +10503,9 @@ pub mod types {
                 T: ::std::convert::TryInto<::std::string::String>,
                 T::Error: ::std::fmt::Display,
             {
-                self.redirect_uri = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for redirect_uri: {}", e)
-                });
+                self.redirect_uri = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for redirect_uri: {e}"));
                 self
             }
         }
@@ -10947,7 +10575,7 @@ pub mod types {
             {
                 self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {e}"));
                 self
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
@@ -10959,7 +10587,7 @@ pub mod types {
             {
                 self.deleted_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -10969,7 +10597,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn magic_link_client_id<T>(mut self, value: T) -> Self
@@ -10978,10 +10606,7 @@ pub mod types {
                 T::Error: ::std::fmt::Display,
             {
                 self.magic_link_client_id = value.try_into().map_err(|e| {
-                    format!(
-                        "error converting supplied value for magic_link_client_id: {}",
-                        e
-                    )
+                    format!("error converting supplied value for magic_link_client_id: {e}")
                 });
                 self
             }
@@ -10991,10 +10616,7 @@ pub mod types {
                 T::Error: ::std::fmt::Display,
             {
                 self.secret_signature = value.try_into().map_err(|e| {
-                    format!(
-                        "error converting supplied value for secret_signature: {}",
-                        e
-                    )
+                    format!("error converting supplied value for secret_signature: {e}")
                 });
                 self
             }
@@ -11037,7 +10659,7 @@ pub mod types {
                 ::std::option::Option<::std::string::String>,
                 ::std::string::String,
             >,
-            secret: ::std::result::Result<::std::string::String, ::std::string::String>,
+            secret: ::std::result::Result<super::SecretString, ::std::string::String>,
         }
 
         impl ::std::default::Default for MagicLinkSendRequest {
@@ -11061,7 +10683,7 @@ pub mod types {
             {
                 self.expires_in = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for expires_in: {}", e));
+                    .map_err(|e| format!("error converting supplied value for expires_in: {e}"));
                 self
             }
             pub fn medium<T>(mut self, value: T) -> Self
@@ -11071,7 +10693,7 @@ pub mod types {
             {
                 self.medium = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for medium: {}", e));
+                    .map_err(|e| format!("error converting supplied value for medium: {e}"));
                 self
             }
             pub fn recipient<T>(mut self, value: T) -> Self
@@ -11081,7 +10703,7 @@ pub mod types {
             {
                 self.recipient = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for recipient: {}", e));
+                    .map_err(|e| format!("error converting supplied value for recipient: {e}"));
                 self
             }
             pub fn redirect_uri<T>(mut self, value: T) -> Self
@@ -11089,9 +10711,9 @@ pub mod types {
                 T: ::std::convert::TryInto<::std::string::String>,
                 T::Error: ::std::fmt::Display,
             {
-                self.redirect_uri = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for redirect_uri: {}", e)
-                });
+                self.redirect_uri = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for redirect_uri: {e}"));
                 self
             }
             pub fn scope<T>(mut self, value: T) -> Self
@@ -11101,17 +10723,17 @@ pub mod types {
             {
                 self.scope = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for scope: {}", e));
+                    .map_err(|e| format!("error converting supplied value for scope: {e}"));
                 self
             }
             pub fn secret<T>(mut self, value: T) -> Self
             where
-                T: ::std::convert::TryInto<::std::string::String>,
+                T: ::std::convert::TryInto<super::SecretString>,
                 T::Error: ::std::fmt::Display,
             {
                 self.secret = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for secret: {}", e));
+                    .map_err(|e| format!("error converting supplied value for secret: {e}"));
                 self
             }
         }
@@ -11167,7 +10789,7 @@ pub mod types {
             {
                 self.attempt_id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for attempt_id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for attempt_id: {e}"));
                 self
             }
         }
@@ -11211,6 +10833,7 @@ pub mod types {
                 ::std::result::Result<::std::option::Option<i32>, ::std::string::String>,
             name: ::std::result::Result<::std::string::String, ::std::string::String>,
             rule: ::std::result::Result<::serde_json::Value, ::std::string::String>,
+            source: ::std::result::Result<super::MapperSource, ::std::string::String>,
             updated_at: ::std::result::Result<
                 ::chrono::DateTime<::chrono::offset::Utc>,
                 ::std::string::String,
@@ -11228,6 +10851,7 @@ pub mod types {
                     max_activations: Ok(Default::default()),
                     name: Err("no value supplied for name".to_string()),
                     rule: Err("no value supplied for rule".to_string()),
+                    source: Err("no value supplied for source".to_string()),
                     updated_at: Err("no value supplied for updated_at".to_string()),
                 }
             }
@@ -11241,7 +10865,7 @@ pub mod types {
             {
                 self.activations = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for activations: {}", e));
+                    .map_err(|e| format!("error converting supplied value for activations: {e}"));
                 self
             }
             pub fn created_at<T>(mut self, value: T) -> Self
@@ -11251,7 +10875,7 @@ pub mod types {
             {
                 self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {e}"));
                 self
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
@@ -11263,7 +10887,7 @@ pub mod types {
             {
                 self.deleted_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {e}"));
                 self
             }
             pub fn depleted_at<T>(mut self, value: T) -> Self
@@ -11275,7 +10899,7 @@ pub mod types {
             {
                 self.depleted_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for depleted_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for depleted_at: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -11285,7 +10909,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn max_activations<T>(mut self, value: T) -> Self
@@ -11294,7 +10918,7 @@ pub mod types {
                 T::Error: ::std::fmt::Display,
             {
                 self.max_activations = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for max_activations: {}", e)
+                    format!("error converting supplied value for max_activations: {e}")
                 });
                 self
             }
@@ -11305,7 +10929,7 @@ pub mod types {
             {
                 self.name = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for name: {}", e));
+                    .map_err(|e| format!("error converting supplied value for name: {e}"));
                 self
             }
             pub fn rule<T>(mut self, value: T) -> Self
@@ -11315,7 +10939,17 @@ pub mod types {
             {
                 self.rule = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for rule: {}", e));
+                    .map_err(|e| format!("error converting supplied value for rule: {e}"));
+                self
+            }
+            pub fn source<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::MapperSource>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.source = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for source: {e}"));
                 self
             }
             pub fn updated_at<T>(mut self, value: T) -> Self
@@ -11325,7 +10959,7 @@ pub mod types {
             {
                 self.updated_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for updated_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for updated_at: {e}"));
                 self
             }
         }
@@ -11344,6 +10978,7 @@ pub mod types {
                     max_activations: value.max_activations?,
                     name: value.name?,
                     rule: value.rule?,
+                    source: value.source?,
                     updated_at: value.updated_at?,
                 })
             }
@@ -11360,6 +10995,7 @@ pub mod types {
                     max_activations: Ok(value.max_activations),
                     name: Ok(value.name),
                     rule: Ok(value.rule),
+                    source: Ok(value.source),
                     updated_at: Ok(value.updated_at),
                 }
             }
@@ -11376,11 +11012,8 @@ pub mod types {
                 ::std::string::String,
             >,
             code: ::std::result::Result<::std::string::String, ::std::string::String>,
+            code_verifier: ::std::result::Result<::std::string::String, ::std::string::String>,
             grant_type: ::std::result::Result<::std::string::String, ::std::string::String>,
-            pkce_verifier: ::std::result::Result<
-                ::std::option::Option<::std::string::String>,
-                ::std::string::String,
-            >,
             redirect_uri: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
@@ -11390,8 +11023,8 @@ pub mod types {
                     client_id: Ok(Default::default()),
                     client_secret: Ok(Default::default()),
                     code: Err("no value supplied for code".to_string()),
+                    code_verifier: Err("no value supplied for code_verifier".to_string()),
                     grant_type: Err("no value supplied for grant_type".to_string()),
-                    pkce_verifier: Ok(Default::default()),
                     redirect_uri: Err("no value supplied for redirect_uri".to_string()),
                 }
             }
@@ -11405,7 +11038,7 @@ pub mod types {
             {
                 self.client_id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for client_id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for client_id: {e}"));
                 self
             }
             pub fn client_secret<T>(mut self, value: T) -> Self
@@ -11413,9 +11046,9 @@ pub mod types {
                 T: ::std::convert::TryInto<::std::option::Option<super::SecretString>>,
                 T::Error: ::std::fmt::Display,
             {
-                self.client_secret = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for client_secret: {}", e)
-                });
+                self.client_secret = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for client_secret: {e}"));
                 self
             }
             pub fn code<T>(mut self, value: T) -> Self
@@ -11425,7 +11058,17 @@ pub mod types {
             {
                 self.code = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for code: {}", e));
+                    .map_err(|e| format!("error converting supplied value for code: {e}"));
+                self
+            }
+            pub fn code_verifier<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.code_verifier = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for code_verifier: {e}"));
                 self
             }
             pub fn grant_type<T>(mut self, value: T) -> Self
@@ -11435,17 +11078,7 @@ pub mod types {
             {
                 self.grant_type = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for grant_type: {}", e));
-                self
-            }
-            pub fn pkce_verifier<T>(mut self, value: T) -> Self
-            where
-                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
-                T::Error: ::std::fmt::Display,
-            {
-                self.pkce_verifier = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for pkce_verifier: {}", e)
-                });
+                    .map_err(|e| format!("error converting supplied value for grant_type: {e}"));
                 self
             }
             pub fn redirect_uri<T>(mut self, value: T) -> Self
@@ -11453,9 +11086,9 @@ pub mod types {
                 T: ::std::convert::TryInto<::std::string::String>,
                 T::Error: ::std::fmt::Display,
             {
-                self.redirect_uri = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for redirect_uri: {}", e)
-                });
+                self.redirect_uri = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for redirect_uri: {e}"));
                 self
             }
         }
@@ -11469,8 +11102,8 @@ pub mod types {
                     client_id: value.client_id?,
                     client_secret: value.client_secret?,
                     code: value.code?,
+                    code_verifier: value.code_verifier?,
                     grant_type: value.grant_type?,
-                    pkce_verifier: value.pkce_verifier?,
                     redirect_uri: value.redirect_uri?,
                 })
             }
@@ -11482,8 +11115,8 @@ pub mod types {
                     client_id: Ok(value.client_id),
                     client_secret: Ok(value.client_secret),
                     code: Ok(value.code),
+                    code_verifier: Ok(value.code_verifier),
                     grant_type: Ok(value.grant_type),
-                    pkce_verifier: Ok(value.pkce_verifier),
                     redirect_uri: Ok(value.redirect_uri),
                 }
             }
@@ -11493,6 +11126,11 @@ pub mod types {
         pub struct OAuthAuthzCodeExchangeResponse {
             access_token: ::std::result::Result<::std::string::String, ::std::string::String>,
             expires_in: ::std::result::Result<i64, ::std::string::String>,
+            idp_token: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
+            scope: ::std::result::Result<::std::string::String, ::std::string::String>,
             token_type: ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
@@ -11501,6 +11139,8 @@ pub mod types {
                 Self {
                     access_token: Err("no value supplied for access_token".to_string()),
                     expires_in: Err("no value supplied for expires_in".to_string()),
+                    idp_token: Ok(Default::default()),
+                    scope: Err("no value supplied for scope".to_string()),
                     token_type: Err("no value supplied for token_type".to_string()),
                 }
             }
@@ -11512,9 +11152,9 @@ pub mod types {
                 T: ::std::convert::TryInto<::std::string::String>,
                 T::Error: ::std::fmt::Display,
             {
-                self.access_token = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for access_token: {}", e)
-                });
+                self.access_token = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for access_token: {e}"));
                 self
             }
             pub fn expires_in<T>(mut self, value: T) -> Self
@@ -11524,7 +11164,27 @@ pub mod types {
             {
                 self.expires_in = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for expires_in: {}", e));
+                    .map_err(|e| format!("error converting supplied value for expires_in: {e}"));
+                self
+            }
+            pub fn idp_token<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.idp_token = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for idp_token: {e}"));
+                self
+            }
+            pub fn scope<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.scope = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for scope: {e}"));
                 self
             }
             pub fn token_type<T>(mut self, value: T) -> Self
@@ -11534,7 +11194,7 @@ pub mod types {
             {
                 self.token_type = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for token_type: {}", e));
+                    .map_err(|e| format!("error converting supplied value for token_type: {e}"));
                 self
             }
         }
@@ -11549,6 +11209,8 @@ pub mod types {
                 Ok(Self {
                     access_token: value.access_token?,
                     expires_in: value.expires_in?,
+                    idp_token: value.idp_token?,
+                    scope: value.scope?,
                     token_type: value.token_type?,
                 })
             }
@@ -11561,6 +11223,8 @@ pub mod types {
                 Self {
                     access_token: Ok(value.access_token),
                     expires_in: Ok(value.expires_in),
+                    idp_token: Ok(value.idp_token),
+                    scope: Ok(value.scope),
                     token_type: Ok(value.token_type),
                 }
             }
@@ -11607,7 +11271,7 @@ pub mod types {
             {
                 self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {e}"));
                 self
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
@@ -11619,7 +11283,7 @@ pub mod types {
             {
                 self.deleted_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -11629,7 +11293,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn redirect_uris<T>(mut self, value: T) -> Self
@@ -11637,9 +11301,9 @@ pub mod types {
                 T: ::std::convert::TryInto<::std::vec::Vec<super::OAuthClientRedirectUri>>,
                 T::Error: ::std::fmt::Display,
             {
-                self.redirect_uris = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for redirect_uris: {}", e)
-                });
+                self.redirect_uris = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for redirect_uris: {e}"));
                 self
             }
             pub fn secrets<T>(mut self, value: T) -> Self
@@ -11649,7 +11313,7 @@ pub mod types {
             {
                 self.secrets = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for secrets: {}", e));
+                    .map_err(|e| format!("error converting supplied value for secrets: {e}"));
                 self
             }
         }
@@ -11717,7 +11381,7 @@ pub mod types {
             {
                 self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {e}"));
                 self
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
@@ -11729,7 +11393,7 @@ pub mod types {
             {
                 self.deleted_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -11739,7 +11403,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn oauth_client_id<T>(mut self, value: T) -> Self
@@ -11748,7 +11412,7 @@ pub mod types {
                 T::Error: ::std::fmt::Display,
             {
                 self.oauth_client_id = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for oauth_client_id: {}", e)
+                    format!("error converting supplied value for oauth_client_id: {e}")
                 });
                 self
             }
@@ -11757,9 +11421,9 @@ pub mod types {
                 T: ::std::convert::TryInto<::std::string::String>,
                 T::Error: ::std::fmt::Display,
             {
-                self.redirect_uri = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for redirect_uri: {}", e)
-                });
+                self.redirect_uri = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for redirect_uri: {e}"));
                 self
             }
         }
@@ -11827,7 +11491,7 @@ pub mod types {
             {
                 self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {e}"));
                 self
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
@@ -11839,7 +11503,7 @@ pub mod types {
             {
                 self.deleted_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -11849,7 +11513,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn oauth_client_id<T>(mut self, value: T) -> Self
@@ -11858,7 +11522,7 @@ pub mod types {
                 T::Error: ::std::fmt::Display,
             {
                 self.oauth_client_id = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for oauth_client_id: {}", e)
+                    format!("error converting supplied value for oauth_client_id: {e}")
                 });
                 self
             }
@@ -11868,10 +11532,7 @@ pub mod types {
                 T::Error: ::std::fmt::Display,
             {
                 self.secret_signature = value.try_into().map_err(|e| {
-                    format!(
-                        "error converting supplied value for secret_signature: {}",
-                        e
-                    )
+                    format!("error converting supplied value for secret_signature: {e}")
                 });
                 self
             }
@@ -11905,89 +11566,46 @@ pub mod types {
         }
 
         #[derive(Clone, Debug)]
-        pub struct OAuthProviderInfo {
+        pub struct OAuthProviderAuthorizationCodeInfo {
             auth_url_endpoint: ::std::result::Result<::std::string::String, ::std::string::String>,
-            client_id: ::std::result::Result<::std::string::String, ::std::string::String>,
-            device_code_endpoint:
-                ::std::result::Result<::std::string::String, ::std::string::String>,
-            provider: ::std::result::Result<super::OAuthProviderName, ::std::string::String>,
-            scopes: ::std::result::Result<
-                ::std::vec::Vec<::std::string::String>,
-                ::std::string::String,
-            >,
+            redirect_endpoint: ::std::result::Result<::std::string::String, ::std::string::String>,
             token_endpoint: ::std::result::Result<::std::string::String, ::std::string::String>,
+            token_endpoint_content_type:
+                ::std::result::Result<::std::string::String, ::std::string::String>,
         }
 
-        impl ::std::default::Default for OAuthProviderInfo {
+        impl ::std::default::Default for OAuthProviderAuthorizationCodeInfo {
             fn default() -> Self {
                 Self {
                     auth_url_endpoint: Err("no value supplied for auth_url_endpoint".to_string()),
-                    client_id: Err("no value supplied for client_id".to_string()),
-                    device_code_endpoint: Err(
-                        "no value supplied for device_code_endpoint".to_string()
-                    ),
-                    provider: Err("no value supplied for provider".to_string()),
-                    scopes: Err("no value supplied for scopes".to_string()),
+                    redirect_endpoint: Err("no value supplied for redirect_endpoint".to_string()),
                     token_endpoint: Err("no value supplied for token_endpoint".to_string()),
+                    token_endpoint_content_type: Err("no value supplied for \
+                                                      token_endpoint_content_type"
+                        .to_string()),
                 }
             }
         }
 
-        impl OAuthProviderInfo {
+        impl OAuthProviderAuthorizationCodeInfo {
             pub fn auth_url_endpoint<T>(mut self, value: T) -> Self
             where
                 T: ::std::convert::TryInto<::std::string::String>,
                 T::Error: ::std::fmt::Display,
             {
                 self.auth_url_endpoint = value.try_into().map_err(|e| {
-                    format!(
-                        "error converting supplied value for auth_url_endpoint: {}",
-                        e
-                    )
+                    format!("error converting supplied value for auth_url_endpoint: {e}")
                 });
                 self
             }
-            pub fn client_id<T>(mut self, value: T) -> Self
+            pub fn redirect_endpoint<T>(mut self, value: T) -> Self
             where
                 T: ::std::convert::TryInto<::std::string::String>,
                 T::Error: ::std::fmt::Display,
             {
-                self.client_id = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for client_id: {}", e));
-                self
-            }
-            pub fn device_code_endpoint<T>(mut self, value: T) -> Self
-            where
-                T: ::std::convert::TryInto<::std::string::String>,
-                T::Error: ::std::fmt::Display,
-            {
-                self.device_code_endpoint = value.try_into().map_err(|e| {
-                    format!(
-                        "error converting supplied value for device_code_endpoint: {}",
-                        e
-                    )
+                self.redirect_endpoint = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for redirect_endpoint: {e}")
                 });
-                self
-            }
-            pub fn provider<T>(mut self, value: T) -> Self
-            where
-                T: ::std::convert::TryInto<super::OAuthProviderName>,
-                T::Error: ::std::fmt::Display,
-            {
-                self.provider = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for provider: {}", e));
-                self
-            }
-            pub fn scopes<T>(mut self, value: T) -> Self
-            where
-                T: ::std::convert::TryInto<::std::vec::Vec<::std::string::String>>,
-                T::Error: ::std::fmt::Display,
-            {
-                self.scopes = value
-                    .try_into()
-                    .map_err(|e| format!("error converting supplied value for scopes: {}", e));
                 self
             }
             pub fn token_endpoint<T>(mut self, value: T) -> Self
@@ -11996,36 +11614,215 @@ pub mod types {
                 T::Error: ::std::fmt::Display,
             {
                 self.token_endpoint = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for token_endpoint: {}", e)
+                    format!("error converting supplied value for token_endpoint: {e}")
+                });
+                self
+            }
+            pub fn token_endpoint_content_type<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.token_endpoint_content_type = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for token_endpoint_content_type: {e}")
                 });
                 self
             }
         }
 
-        impl ::std::convert::TryFrom<OAuthProviderInfo> for super::OAuthProviderInfo {
+        impl ::std::convert::TryFrom<OAuthProviderAuthorizationCodeInfo>
+            for super::OAuthProviderAuthorizationCodeInfo
+        {
             type Error = super::error::ConversionError;
             fn try_from(
-                value: OAuthProviderInfo,
+                value: OAuthProviderAuthorizationCodeInfo,
+            ) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    auth_url_endpoint: value.auth_url_endpoint?,
+                    redirect_endpoint: value.redirect_endpoint?,
+                    token_endpoint: value.token_endpoint?,
+                    token_endpoint_content_type: value.token_endpoint_content_type?,
+                })
+            }
+        }
+
+        impl ::std::convert::From<super::OAuthProviderAuthorizationCodeInfo>
+            for OAuthProviderAuthorizationCodeInfo
+        {
+            fn from(value: super::OAuthProviderAuthorizationCodeInfo) -> Self {
+                Self {
+                    auth_url_endpoint: Ok(value.auth_url_endpoint),
+                    redirect_endpoint: Ok(value.redirect_endpoint),
+                    token_endpoint: Ok(value.token_endpoint),
+                    token_endpoint_content_type: Ok(value.token_endpoint_content_type),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct OAuthProviderAuthorizationCodePkceInfo {
+            client_id:
+                ::std::result::Result<super::TypedUuidForOAuthClientId, ::std::string::String>,
+            proxy_port: ::std::result::Result<u16, ::std::string::String>,
+            redirect_endpoint: ::std::result::Result<::std::string::String, ::std::string::String>,
+            web: ::std::result::Result<
+                super::OAuthProviderAuthorizationCodeInfo,
+                ::std::string::String,
+            >,
+        }
+
+        impl ::std::default::Default for OAuthProviderAuthorizationCodePkceInfo {
+            fn default() -> Self {
+                Self {
+                    client_id: Err("no value supplied for client_id".to_string()),
+                    proxy_port: Err("no value supplied for proxy_port".to_string()),
+                    redirect_endpoint: Err("no value supplied for redirect_endpoint".to_string()),
+                    web: Err("no value supplied for web".to_string()),
+                }
+            }
+        }
+
+        impl OAuthProviderAuthorizationCodePkceInfo {
+            pub fn client_id<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::TypedUuidForOAuthClientId>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.client_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for client_id: {e}"));
+                self
+            }
+            pub fn proxy_port<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<u16>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.proxy_port = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for proxy_port: {e}"));
+                self
+            }
+            pub fn redirect_endpoint<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.redirect_endpoint = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for redirect_endpoint: {e}")
+                });
+                self
+            }
+            pub fn web<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::OAuthProviderAuthorizationCodeInfo>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.web = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for web: {e}"));
+                self
+            }
+        }
+
+        impl ::std::convert::TryFrom<OAuthProviderAuthorizationCodePkceInfo>
+            for super::OAuthProviderAuthorizationCodePkceInfo
+        {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: OAuthProviderAuthorizationCodePkceInfo,
+            ) -> ::std::result::Result<Self, super::error::ConversionError> {
+                Ok(Self {
+                    client_id: value.client_id?,
+                    proxy_port: value.proxy_port?,
+                    redirect_endpoint: value.redirect_endpoint?,
+                    web: value.web?,
+                })
+            }
+        }
+
+        impl ::std::convert::From<super::OAuthProviderAuthorizationCodePkceInfo>
+            for OAuthProviderAuthorizationCodePkceInfo
+        {
+            fn from(value: super::OAuthProviderAuthorizationCodePkceInfo) -> Self {
+                Self {
+                    client_id: Ok(value.client_id),
+                    proxy_port: Ok(value.proxy_port),
+                    redirect_endpoint: Ok(value.redirect_endpoint),
+                    web: Ok(value.web),
+                }
+            }
+        }
+
+        #[derive(Clone, Debug)]
+        pub struct OAuthProviderDeviceInfo {
+            auth_url_endpoint: ::std::result::Result<::std::string::String, ::std::string::String>,
+            client_id:
+                ::std::result::Result<super::TypedUuidForOAuthClientId, ::std::string::String>,
+            token_endpoint: ::std::result::Result<::std::string::String, ::std::string::String>,
+        }
+
+        impl ::std::default::Default for OAuthProviderDeviceInfo {
+            fn default() -> Self {
+                Self {
+                    auth_url_endpoint: Err("no value supplied for auth_url_endpoint".to_string()),
+                    client_id: Err("no value supplied for client_id".to_string()),
+                    token_endpoint: Err("no value supplied for token_endpoint".to_string()),
+                }
+            }
+        }
+
+        impl OAuthProviderDeviceInfo {
+            pub fn auth_url_endpoint<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.auth_url_endpoint = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for auth_url_endpoint: {e}")
+                });
+                self
+            }
+            pub fn client_id<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::TypedUuidForOAuthClientId>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.client_id = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for client_id: {e}"));
+                self
+            }
+            pub fn token_endpoint<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.token_endpoint = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for token_endpoint: {e}")
+                });
+                self
+            }
+        }
+
+        impl ::std::convert::TryFrom<OAuthProviderDeviceInfo> for super::OAuthProviderDeviceInfo {
+            type Error = super::error::ConversionError;
+            fn try_from(
+                value: OAuthProviderDeviceInfo,
             ) -> ::std::result::Result<Self, super::error::ConversionError> {
                 Ok(Self {
                     auth_url_endpoint: value.auth_url_endpoint?,
                     client_id: value.client_id?,
-                    device_code_endpoint: value.device_code_endpoint?,
-                    provider: value.provider?,
-                    scopes: value.scopes?,
                     token_endpoint: value.token_endpoint?,
                 })
             }
         }
 
-        impl ::std::convert::From<super::OAuthProviderInfo> for OAuthProviderInfo {
-            fn from(value: super::OAuthProviderInfo) -> Self {
+        impl ::std::convert::From<super::OAuthProviderDeviceInfo> for OAuthProviderDeviceInfo {
+            fn from(value: super::OAuthProviderDeviceInfo) -> Self {
                 Self {
                     auth_url_endpoint: Ok(value.auth_url_endpoint),
                     client_id: Ok(value.client_id),
-                    device_code_endpoint: Ok(value.device_code_endpoint),
-                    provider: Ok(value.provider),
-                    scopes: Ok(value.scopes),
                     token_endpoint: Ok(value.token_endpoint),
                 }
             }
@@ -12052,7 +11849,7 @@ pub mod types {
             {
                 self.jwks_uri = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for jwks_uri: {}", e));
+                    .map_err(|e| format!("error converting supplied value for jwks_uri: {e}"));
                 self
             }
         }
@@ -12102,7 +11899,7 @@ pub mod types {
             {
                 self.content = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for content: {}", e));
+                    .map_err(|e| format!("error converting supplied value for content: {e}"));
                 self
             }
             pub fn title<T>(mut self, value: T) -> Self
@@ -12112,7 +11909,7 @@ pub mod types {
             {
                 self.title = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for title: {}", e));
+                    .map_err(|e| format!("error converting supplied value for title: {e}"));
                 self
             }
         }
@@ -12159,7 +11956,7 @@ pub mod types {
             {
                 self.number = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for number: {}", e));
+                    .map_err(|e| format!("error converting supplied value for number: {e}"));
                 self
             }
         }
@@ -12238,7 +12035,7 @@ pub mod types {
             {
                 self.content = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for content: {}", e));
+                    .map_err(|e| format!("error converting supplied value for content: {e}"));
                 self
             }
             pub fn created_at<T>(mut self, value: T) -> Self
@@ -12248,7 +12045,7 @@ pub mod types {
             {
                 self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {e}"));
                 self
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
@@ -12260,7 +12057,7 @@ pub mod types {
             {
                 self.deleted_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -12270,7 +12067,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn latest_major_change_at<T>(mut self, value: T) -> Self
@@ -12281,10 +12078,7 @@ pub mod types {
                 T::Error: ::std::fmt::Display,
             {
                 self.latest_major_change_at = value.try_into().map_err(|e| {
-                    format!(
-                        "error converting supplied value for latest_major_change_at: {}",
-                        e
-                    )
+                    format!("error converting supplied value for latest_major_change_at: {e}")
                 });
                 self
             }
@@ -12295,7 +12089,7 @@ pub mod types {
             {
                 self.link = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for link: {}", e));
+                    .map_err(|e| format!("error converting supplied value for link: {e}"));
                 self
             }
             pub fn rfd_number<T>(mut self, value: T) -> Self
@@ -12305,7 +12099,7 @@ pub mod types {
             {
                 self.rfd_number = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for rfd_number: {}", e));
+                    .map_err(|e| format!("error converting supplied value for rfd_number: {e}"));
                 self
             }
             pub fn updated_at<T>(mut self, value: T) -> Self
@@ -12315,7 +12109,7 @@ pub mod types {
             {
                 self.updated_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for updated_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for updated_at: {e}"));
                 self
             }
             pub fn visibility<T>(mut self, value: T) -> Self
@@ -12325,7 +12119,7 @@ pub mod types {
             {
                 self.visibility = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for visibility: {}", e));
+                    .map_err(|e| format!("error converting supplied value for visibility: {e}"));
                 self
             }
         }
@@ -12389,7 +12183,7 @@ pub mod types {
             {
                 self.message = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for message: {}", e));
+                    .map_err(|e| format!("error converting supplied value for message: {e}"));
                 self
             }
             pub fn value<T>(mut self, value: T) -> Self
@@ -12399,7 +12193,7 @@ pub mod types {
             {
                 self.value = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for value: {}", e));
+                    .map_err(|e| format!("error converting supplied value for value: {e}"));
                 self
             }
         }
@@ -12472,7 +12266,7 @@ pub mod types {
             {
                 self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {e}"));
                 self
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
@@ -12484,7 +12278,7 @@ pub mod types {
             {
                 self.deleted_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {e}"));
                 self
             }
             pub fn external_id<T>(mut self, value: T) -> Self
@@ -12494,7 +12288,7 @@ pub mod types {
             {
                 self.external_id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for external_id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for external_id: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -12504,7 +12298,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn link<T>(mut self, value: T) -> Self
@@ -12514,7 +12308,7 @@ pub mod types {
             {
                 self.link = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for link: {}", e));
+                    .map_err(|e| format!("error converting supplied value for link: {e}"));
                 self
             }
             pub fn rfd_id<T>(mut self, value: T) -> Self
@@ -12524,7 +12318,7 @@ pub mod types {
             {
                 self.rfd_id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for rfd_id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for rfd_id: {e}"));
                 self
             }
             pub fn rfd_revision_id<T>(mut self, value: T) -> Self
@@ -12533,7 +12327,7 @@ pub mod types {
                 T::Error: ::std::fmt::Display,
             {
                 self.rfd_revision_id = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for rfd_revision_id: {}", e)
+                    format!("error converting supplied value for rfd_revision_id: {e}")
                 });
                 self
             }
@@ -12544,7 +12338,7 @@ pub mod types {
             {
                 self.source = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for source: {}", e));
+                    .map_err(|e| format!("error converting supplied value for source: {e}"));
                 self
             }
             pub fn updated_at<T>(mut self, value: T) -> Self
@@ -12554,7 +12348,7 @@ pub mod types {
             {
                 self.updated_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for updated_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for updated_at: {e}"));
                 self
             }
         }
@@ -12669,7 +12463,7 @@ pub mod types {
             {
                 self.authors = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for authors: {}", e));
+                    .map_err(|e| format!("error converting supplied value for authors: {e}"));
                 self
             }
             pub fn commit<T>(mut self, value: T) -> Self
@@ -12679,7 +12473,7 @@ pub mod types {
             {
                 self.commit = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for commit: {}", e));
+                    .map_err(|e| format!("error converting supplied value for commit: {e}"));
                 self
             }
             pub fn committed_at<T>(mut self, value: T) -> Self
@@ -12687,9 +12481,9 @@ pub mod types {
                 T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
                 T::Error: ::std::fmt::Display,
             {
-                self.committed_at = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for committed_at: {}", e)
-                });
+                self.committed_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for committed_at: {e}"));
                 self
             }
             pub fn content<T>(mut self, value: T) -> Self
@@ -12699,7 +12493,7 @@ pub mod types {
             {
                 self.content = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for content: {}", e));
+                    .map_err(|e| format!("error converting supplied value for content: {e}"));
                 self
             }
             pub fn content_format<T>(mut self, value: T) -> Self
@@ -12708,7 +12502,7 @@ pub mod types {
                 T::Error: ::std::fmt::Display,
             {
                 self.content_format = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for content_format: {}", e)
+                    format!("error converting supplied value for content_format: {e}")
                 });
                 self
             }
@@ -12719,7 +12513,7 @@ pub mod types {
             {
                 self.created_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for created_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for created_at: {e}"));
                 self
             }
             pub fn deleted_at<T>(mut self, value: T) -> Self
@@ -12731,7 +12525,7 @@ pub mod types {
             {
                 self.deleted_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for deleted_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for deleted_at: {e}"));
                 self
             }
             pub fn discussion<T>(mut self, value: T) -> Self
@@ -12741,7 +12535,7 @@ pub mod types {
             {
                 self.discussion = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for discussion: {}", e));
+                    .map_err(|e| format!("error converting supplied value for discussion: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -12751,7 +12545,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn labels<T>(mut self, value: T) -> Self
@@ -12761,7 +12555,7 @@ pub mod types {
             {
                 self.labels = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for labels: {}", e));
+                    .map_err(|e| format!("error converting supplied value for labels: {e}"));
                 self
             }
             pub fn major_change<T>(mut self, value: T) -> Self
@@ -12769,9 +12563,9 @@ pub mod types {
                 T: ::std::convert::TryInto<bool>,
                 T::Error: ::std::fmt::Display,
             {
-                self.major_change = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for major_change: {}", e)
-                });
+                self.major_change = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for major_change: {e}"));
                 self
             }
             pub fn rfd_id<T>(mut self, value: T) -> Self
@@ -12781,7 +12575,7 @@ pub mod types {
             {
                 self.rfd_id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for rfd_id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for rfd_id: {e}"));
                 self
             }
             pub fn sha<T>(mut self, value: T) -> Self
@@ -12791,7 +12585,7 @@ pub mod types {
             {
                 self.sha = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for sha: {}", e));
+                    .map_err(|e| format!("error converting supplied value for sha: {e}"));
                 self
             }
             pub fn state<T>(mut self, value: T) -> Self
@@ -12801,7 +12595,7 @@ pub mod types {
             {
                 self.state = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for state: {}", e));
+                    .map_err(|e| format!("error converting supplied value for state: {e}"));
                 self
             }
             pub fn title<T>(mut self, value: T) -> Self
@@ -12811,7 +12605,7 @@ pub mod types {
             {
                 self.title = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for title: {}", e));
+                    .map_err(|e| format!("error converting supplied value for title: {e}"));
                 self
             }
             pub fn updated_at<T>(mut self, value: T) -> Self
@@ -12821,7 +12615,7 @@ pub mod types {
             {
                 self.updated_at = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for updated_at: {}", e));
+                    .map_err(|e| format!("error converting supplied value for updated_at: {e}"));
                 self
             }
         }
@@ -12905,7 +12699,7 @@ pub mod types {
             {
                 self.commit_sha = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for commit_sha: {}", e));
+                    .map_err(|e| format!("error converting supplied value for commit_sha: {e}"));
                 self
             }
             pub fn committed_at<T>(mut self, value: T) -> Self
@@ -12913,9 +12707,9 @@ pub mod types {
                 T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
                 T::Error: ::std::fmt::Display,
             {
-                self.committed_at = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for committed_at: {}", e)
-                });
+                self.committed_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for committed_at: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -12925,7 +12719,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn major_change<T>(mut self, value: T) -> Self
@@ -12933,9 +12727,9 @@ pub mod types {
                 T: ::std::convert::TryInto<bool>,
                 T::Error: ::std::fmt::Display,
             {
-                self.major_change = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for major_change: {}", e)
-                });
+                self.major_change = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for major_change: {e}"));
                 self
             }
         }
@@ -12991,7 +12785,7 @@ pub mod types {
             {
                 self.document = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for document: {}", e));
+                    .map_err(|e| format!("error converting supplied value for document: {e}"));
                 self
             }
             pub fn message<T>(mut self, value: T) -> Self
@@ -13001,7 +12795,7 @@ pub mod types {
             {
                 self.message = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for message: {}", e));
+                    .map_err(|e| format!("error converting supplied value for message: {e}"));
                 self
             }
         }
@@ -13053,7 +12847,7 @@ pub mod types {
             {
                 self.content = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for content: {}", e));
+                    .map_err(|e| format!("error converting supplied value for content: {e}"));
                 self
             }
             pub fn message<T>(mut self, value: T) -> Self
@@ -13063,7 +12857,7 @@ pub mod types {
             {
                 self.message = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for message: {}", e));
+                    .map_err(|e| format!("error converting supplied value for message: {e}"));
                 self
             }
         }
@@ -13110,7 +12904,7 @@ pub mod types {
             {
                 self.visibility = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for visibility: {}", e));
+                    .map_err(|e| format!("error converting supplied value for visibility: {e}"));
                 self
             }
         }
@@ -13214,7 +13008,7 @@ pub mod types {
             {
                 self.authors = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for authors: {}", e));
+                    .map_err(|e| format!("error converting supplied value for authors: {e}"));
                 self
             }
             pub fn commit<T>(mut self, value: T) -> Self
@@ -13224,7 +13018,7 @@ pub mod types {
             {
                 self.commit = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for commit: {}", e));
+                    .map_err(|e| format!("error converting supplied value for commit: {e}"));
                 self
             }
             pub fn committed_at<T>(mut self, value: T) -> Self
@@ -13234,9 +13028,9 @@ pub mod types {
                 >,
                 T::Error: ::std::fmt::Display,
             {
-                self.committed_at = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for committed_at: {}", e)
-                });
+                self.committed_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for committed_at: {e}"));
                 self
             }
             pub fn content<T>(mut self, value: T) -> Self
@@ -13246,7 +13040,7 @@ pub mod types {
             {
                 self.content = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for content: {}", e));
+                    .map_err(|e| format!("error converting supplied value for content: {e}"));
                 self
             }
             pub fn discussion<T>(mut self, value: T) -> Self
@@ -13256,7 +13050,7 @@ pub mod types {
             {
                 self.discussion = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for discussion: {}", e));
+                    .map_err(|e| format!("error converting supplied value for discussion: {e}"));
                 self
             }
             pub fn format<T>(mut self, value: T) -> Self
@@ -13266,7 +13060,7 @@ pub mod types {
             {
                 self.format = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for format: {}", e));
+                    .map_err(|e| format!("error converting supplied value for format: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -13276,7 +13070,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn labels<T>(mut self, value: T) -> Self
@@ -13286,7 +13080,7 @@ pub mod types {
             {
                 self.labels = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for labels: {}", e));
+                    .map_err(|e| format!("error converting supplied value for labels: {e}"));
                 self
             }
             pub fn latest_major_change_at<T>(mut self, value: T) -> Self
@@ -13297,10 +13091,7 @@ pub mod types {
                 T::Error: ::std::fmt::Display,
             {
                 self.latest_major_change_at = value.try_into().map_err(|e| {
-                    format!(
-                        "error converting supplied value for latest_major_change_at: {}",
-                        e
-                    )
+                    format!("error converting supplied value for latest_major_change_at: {e}")
                 });
                 self
             }
@@ -13311,7 +13102,7 @@ pub mod types {
             {
                 self.link = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for link: {}", e));
+                    .map_err(|e| format!("error converting supplied value for link: {e}"));
                 self
             }
             pub fn rfd_number<T>(mut self, value: T) -> Self
@@ -13321,7 +13112,7 @@ pub mod types {
             {
                 self.rfd_number = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for rfd_number: {}", e));
+                    .map_err(|e| format!("error converting supplied value for rfd_number: {e}"));
                 self
             }
             pub fn sha<T>(mut self, value: T) -> Self
@@ -13331,7 +13122,7 @@ pub mod types {
             {
                 self.sha = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for sha: {}", e));
+                    .map_err(|e| format!("error converting supplied value for sha: {e}"));
                 self
             }
             pub fn state<T>(mut self, value: T) -> Self
@@ -13341,7 +13132,7 @@ pub mod types {
             {
                 self.state = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for state: {}", e));
+                    .map_err(|e| format!("error converting supplied value for state: {e}"));
                 self
             }
             pub fn title<T>(mut self, value: T) -> Self
@@ -13351,7 +13142,7 @@ pub mod types {
             {
                 self.title = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for title: {}", e));
+                    .map_err(|e| format!("error converting supplied value for title: {e}"));
                 self
             }
             pub fn visibility<T>(mut self, value: T) -> Self
@@ -13361,7 +13152,7 @@ pub mod types {
             {
                 self.visibility = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for visibility: {}", e));
+                    .map_err(|e| format!("error converting supplied value for visibility: {e}"));
                 self
             }
         }
@@ -13496,7 +13287,7 @@ pub mod types {
             {
                 self.authors = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for authors: {}", e));
+                    .map_err(|e| format!("error converting supplied value for authors: {e}"));
                 self
             }
             pub fn commit<T>(mut self, value: T) -> Self
@@ -13506,7 +13297,7 @@ pub mod types {
             {
                 self.commit = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for commit: {}", e));
+                    .map_err(|e| format!("error converting supplied value for commit: {e}"));
                 self
             }
             pub fn committed_at<T>(mut self, value: T) -> Self
@@ -13516,9 +13307,9 @@ pub mod types {
                 >,
                 T::Error: ::std::fmt::Display,
             {
-                self.committed_at = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for committed_at: {}", e)
-                });
+                self.committed_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for committed_at: {e}"));
                 self
             }
             pub fn content<T>(mut self, value: T) -> Self
@@ -13528,7 +13319,7 @@ pub mod types {
             {
                 self.content = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for content: {}", e));
+                    .map_err(|e| format!("error converting supplied value for content: {e}"));
                 self
             }
             pub fn discussion<T>(mut self, value: T) -> Self
@@ -13538,7 +13329,7 @@ pub mod types {
             {
                 self.discussion = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for discussion: {}", e));
+                    .map_err(|e| format!("error converting supplied value for discussion: {e}"));
                 self
             }
             pub fn format<T>(mut self, value: T) -> Self
@@ -13548,7 +13339,7 @@ pub mod types {
             {
                 self.format = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for format: {}", e));
+                    .map_err(|e| format!("error converting supplied value for format: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -13558,7 +13349,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn labels<T>(mut self, value: T) -> Self
@@ -13568,7 +13359,7 @@ pub mod types {
             {
                 self.labels = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for labels: {}", e));
+                    .map_err(|e| format!("error converting supplied value for labels: {e}"));
                 self
             }
             pub fn latest_major_change_at<T>(mut self, value: T) -> Self
@@ -13579,10 +13370,7 @@ pub mod types {
                 T::Error: ::std::fmt::Display,
             {
                 self.latest_major_change_at = value.try_into().map_err(|e| {
-                    format!(
-                        "error converting supplied value for latest_major_change_at: {}",
-                        e
-                    )
+                    format!("error converting supplied value for latest_major_change_at: {e}")
                 });
                 self
             }
@@ -13593,7 +13381,7 @@ pub mod types {
             {
                 self.link = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for link: {}", e));
+                    .map_err(|e| format!("error converting supplied value for link: {e}"));
                 self
             }
             pub fn rfd_number<T>(mut self, value: T) -> Self
@@ -13603,7 +13391,7 @@ pub mod types {
             {
                 self.rfd_number = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for rfd_number: {}", e));
+                    .map_err(|e| format!("error converting supplied value for rfd_number: {e}"));
                 self
             }
             pub fn sha<T>(mut self, value: T) -> Self
@@ -13613,7 +13401,7 @@ pub mod types {
             {
                 self.sha = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for sha: {}", e));
+                    .map_err(|e| format!("error converting supplied value for sha: {e}"));
                 self
             }
             pub fn state<T>(mut self, value: T) -> Self
@@ -13623,7 +13411,7 @@ pub mod types {
             {
                 self.state = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for state: {}", e));
+                    .map_err(|e| format!("error converting supplied value for state: {e}"));
                 self
             }
             pub fn title<T>(mut self, value: T) -> Self
@@ -13633,7 +13421,7 @@ pub mod types {
             {
                 self.title = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for title: {}", e));
+                    .map_err(|e| format!("error converting supplied value for title: {e}"));
                 self
             }
             pub fn visibility<T>(mut self, value: T) -> Self
@@ -13643,7 +13431,7 @@ pub mod types {
             {
                 self.visibility = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for visibility: {}", e));
+                    .map_err(|e| format!("error converting supplied value for visibility: {e}"));
                 self
             }
         }
@@ -13773,7 +13561,7 @@ pub mod types {
             {
                 self.authors = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for authors: {}", e));
+                    .map_err(|e| format!("error converting supplied value for authors: {e}"));
                 self
             }
             pub fn commit<T>(mut self, value: T) -> Self
@@ -13783,7 +13571,7 @@ pub mod types {
             {
                 self.commit = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for commit: {}", e));
+                    .map_err(|e| format!("error converting supplied value for commit: {e}"));
                 self
             }
             pub fn committed_at<T>(mut self, value: T) -> Self
@@ -13793,9 +13581,9 @@ pub mod types {
                 >,
                 T::Error: ::std::fmt::Display,
             {
-                self.committed_at = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for committed_at: {}", e)
-                });
+                self.committed_at = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for committed_at: {e}"));
                 self
             }
             pub fn discussion<T>(mut self, value: T) -> Self
@@ -13805,7 +13593,7 @@ pub mod types {
             {
                 self.discussion = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for discussion: {}", e));
+                    .map_err(|e| format!("error converting supplied value for discussion: {e}"));
                 self
             }
             pub fn format<T>(mut self, value: T) -> Self
@@ -13815,7 +13603,7 @@ pub mod types {
             {
                 self.format = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for format: {}", e));
+                    .map_err(|e| format!("error converting supplied value for format: {e}"));
                 self
             }
             pub fn id<T>(mut self, value: T) -> Self
@@ -13825,7 +13613,7 @@ pub mod types {
             {
                 self.id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for id: {e}"));
                 self
             }
             pub fn labels<T>(mut self, value: T) -> Self
@@ -13835,7 +13623,7 @@ pub mod types {
             {
                 self.labels = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for labels: {}", e));
+                    .map_err(|e| format!("error converting supplied value for labels: {e}"));
                 self
             }
             pub fn latest_major_change_at<T>(mut self, value: T) -> Self
@@ -13846,10 +13634,7 @@ pub mod types {
                 T::Error: ::std::fmt::Display,
             {
                 self.latest_major_change_at = value.try_into().map_err(|e| {
-                    format!(
-                        "error converting supplied value for latest_major_change_at: {}",
-                        e
-                    )
+                    format!("error converting supplied value for latest_major_change_at: {e}")
                 });
                 self
             }
@@ -13860,7 +13645,7 @@ pub mod types {
             {
                 self.link = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for link: {}", e));
+                    .map_err(|e| format!("error converting supplied value for link: {e}"));
                 self
             }
             pub fn rfd_number<T>(mut self, value: T) -> Self
@@ -13870,7 +13655,7 @@ pub mod types {
             {
                 self.rfd_number = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for rfd_number: {}", e));
+                    .map_err(|e| format!("error converting supplied value for rfd_number: {e}"));
                 self
             }
             pub fn sha<T>(mut self, value: T) -> Self
@@ -13880,7 +13665,7 @@ pub mod types {
             {
                 self.sha = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for sha: {}", e));
+                    .map_err(|e| format!("error converting supplied value for sha: {e}"));
                 self
             }
             pub fn state<T>(mut self, value: T) -> Self
@@ -13890,7 +13675,7 @@ pub mod types {
             {
                 self.state = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for state: {}", e));
+                    .map_err(|e| format!("error converting supplied value for state: {e}"));
                 self
             }
             pub fn title<T>(mut self, value: T) -> Self
@@ -13900,7 +13685,7 @@ pub mod types {
             {
                 self.title = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for title: {}", e));
+                    .map_err(|e| format!("error converting supplied value for title: {e}"));
                 self
             }
             pub fn visibility<T>(mut self, value: T) -> Self
@@ -13910,7 +13695,7 @@ pub mod types {
             {
                 self.visibility = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for visibility: {}", e));
+                    .map_err(|e| format!("error converting supplied value for visibility: {e}"));
                 self
             }
         }
@@ -14010,7 +13795,7 @@ pub mod types {
             {
                 self.anchor = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for anchor: {}", e));
+                    .map_err(|e| format!("error converting supplied value for anchor: {e}"));
                 self
             }
             pub fn content<T>(mut self, value: T) -> Self
@@ -14020,7 +13805,7 @@ pub mod types {
             {
                 self.content = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for content: {}", e));
+                    .map_err(|e| format!("error converting supplied value for content: {e}"));
                 self
             }
             pub fn formatted<T>(mut self, value: T) -> Self
@@ -14030,7 +13815,7 @@ pub mod types {
             {
                 self.formatted = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for formatted: {}", e));
+                    .map_err(|e| format!("error converting supplied value for formatted: {e}"));
                 self
             }
             pub fn hierarchy<T>(mut self, value: T) -> Self
@@ -14040,7 +13825,7 @@ pub mod types {
             {
                 self.hierarchy = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for hierarchy: {}", e));
+                    .map_err(|e| format!("error converting supplied value for hierarchy: {e}"));
                 self
             }
             pub fn hierarchy_radio<T>(mut self, value: T) -> Self
@@ -14049,7 +13834,7 @@ pub mod types {
                 T::Error: ::std::fmt::Display,
             {
                 self.hierarchy_radio = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for hierarchy_radio: {}", e)
+                    format!("error converting supplied value for hierarchy_radio: {e}")
                 });
                 self
             }
@@ -14060,7 +13845,7 @@ pub mod types {
             {
                 self.object_id = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for object_id: {}", e));
+                    .map_err(|e| format!("error converting supplied value for object_id: {e}"));
                 self
             }
             pub fn rfd_number<T>(mut self, value: T) -> Self
@@ -14070,7 +13855,7 @@ pub mod types {
             {
                 self.rfd_number = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for rfd_number: {}", e));
+                    .map_err(|e| format!("error converting supplied value for rfd_number: {e}"));
                 self
             }
             pub fn url<T>(mut self, value: T) -> Self
@@ -14080,7 +13865,7 @@ pub mod types {
             {
                 self.url = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for url: {}", e));
+                    .map_err(|e| format!("error converting supplied value for url: {e}"));
                 self
             }
         }
@@ -14148,7 +13933,7 @@ pub mod types {
             {
                 self.hits = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for hits: {}", e));
+                    .map_err(|e| format!("error converting supplied value for hits: {e}"));
                 self
             }
             pub fn limit<T>(mut self, value: T) -> Self
@@ -14158,7 +13943,7 @@ pub mod types {
             {
                 self.limit = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for limit: {}", e));
+                    .map_err(|e| format!("error converting supplied value for limit: {e}"));
                 self
             }
             pub fn offset<T>(mut self, value: T) -> Self
@@ -14168,7 +13953,7 @@ pub mod types {
             {
                 self.offset = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for offset: {}", e));
+                    .map_err(|e| format!("error converting supplied value for offset: {e}"));
                 self
             }
             pub fn query<T>(mut self, value: T) -> Self
@@ -14178,7 +13963,7 @@ pub mod types {
             {
                 self.query = value
                     .try_into()
-                    .map_err(|e| format!("error converting supplied value for query: {}", e));
+                    .map_err(|e| format!("error converting supplied value for query: {e}"));
                 self
             }
         }
@@ -14227,9 +14012,9 @@ pub mod types {
                 T: ::std::convert::TryInto<::std::option::Option<bool>>,
                 T::Error: ::std::fmt::Display,
             {
-                self.major_change = value.try_into().map_err(|e| {
-                    format!("error converting supplied value for major_change: {}", e)
-                });
+                self.major_change = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for major_change: {e}"));
                 self
             }
         }
@@ -14253,6 +14038,14 @@ pub mod types {
             }
         }
     }
+
+    /// Generation of default values for serde.
+    pub mod defaults {
+        pub(super) fn api_user_update_params_for_rfd_permission_group_ids(
+        ) -> Vec<super::TypedUuidForAccessGroupId> {
+            vec![]
+        }
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -14260,7 +14053,7 @@ pub mod types {
 ///
 /// Programmatic access to RFDs
 ///
-/// Version: 0.14.6
+/// Version: 0.15.0
 pub struct Client {
     pub(crate) baseurl: String,
     pub(crate) client: reqwest::Client,
@@ -14301,7 +14094,7 @@ impl Client {
 
 impl ClientInfo<()> for Client {
     fn api_version() -> &'static str {
-        "0.14.6"
+        "0.15.0"
     }
 
     fn baseurl(&self) -> &str {
@@ -14383,7 +14176,10 @@ impl Client {
         builder::GetApiUser::new(self)
     }
 
-    /// Update the permissions assigned to a given user
+    /// Update the permissions assigned to a given user. These replace any
+    /// existing
+    ///
+    /// permissions.
     ///
     /// Sends a `POST` request to `/api-user/{user_id}`
     ///
@@ -14456,6 +14252,36 @@ impl Client {
     /// ```
     pub fn link_provider(&self) -> builder::LinkProvider<'_> {
         builder::LinkProvider::new(self)
+    }
+
+    /// Add a single permission to a user
+    ///
+    /// Sends a `POST` request to `/api-user/{user_id}/permission`
+    ///
+    /// ```ignore
+    /// let response = client.add_api_user_permission()
+    ///    .user_id(user_id)
+    ///    .body(body)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn add_api_user_permission(&self) -> builder::AddApiUserPermission<'_> {
+        builder::AddApiUserPermission::new(self)
+    }
+
+    /// Remove a single permission from a user
+    ///
+    /// Sends a `DELETE` request to `/api-user/{user_id}/permission`
+    ///
+    /// ```ignore
+    /// let response = client.remove_api_user_permission()
+    ///    .user_id(user_id)
+    ///    .body(body)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn remove_api_user_permission(&self) -> builder::RemoveApiUserPermission<'_> {
+        builder::RemoveApiUserPermission::new(self)
     }
 
     /// List api keys for a user
@@ -14653,10 +14479,22 @@ impl Client {
     ///
     /// Sends a `GET` request to `/login/oauth/{provider}/code/authorize`
     ///
+    /// Arguments:
+    /// - `provider`
+    /// - `client_id`
+    /// - `code_challenge`: PKCE code challenge (RFC 7636). Required for all
+    ///   authorization code flows.
+    /// - `code_challenge_method`: PKCE code challenge method. Must be "S256".
+    /// - `redirect_uri`
+    /// - `response_type`
+    /// - `scope`
+    /// - `state`
     /// ```ignore
     /// let response = client.authz_code_redirect()
     ///    .provider(provider)
     ///    .client_id(client_id)
+    ///    .code_challenge(code_challenge)
+    ///    .code_challenge_method(code_challenge_method)
     ///    .redirect_uri(redirect_uri)
     ///    .response_type(response_type)
     ///    .scope(scope)
@@ -14692,6 +14530,7 @@ impl Client {
     /// ```ignore
     /// let response = client.authz_code_exchange()
     ///    .provider(provider)
+    ///    .request_idp_token(request_idp_token)
     ///    .body(body)
     ///    .send()
     ///    .await;
@@ -14700,7 +14539,8 @@ impl Client {
         builder::AuthzCodeExchange::new(self)
     }
 
-    /// Retrieve the metadata about an OAuth provider
+    /// Retrieve the metadata about an OAuth provider for device authorization
+    /// flow
     ///
     /// Sends a `GET` request to `/login/oauth/{provider}/device`
     ///
@@ -14714,7 +14554,27 @@ impl Client {
         builder::GetDeviceProvider::new(self)
     }
 
-    /// Exchange an OAuth device code request for an access token
+    /// Initiate a device authorization flow by proxying the request to the
+    ///
+    /// upstream OAuth provider. Creates a login attempt and returns the
+    /// upstream device authorization response.
+    ///
+    /// Sends a `POST` request to `/login/oauth/{provider}/device`
+    ///
+    /// ```ignore
+    /// let response = client.device_authz()
+    ///    .provider(provider)
+    ///    .body(body)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn device_authz(&self) -> builder::DeviceAuthz<'_> {
+        builder::DeviceAuthz::new(self)
+    }
+
+    /// Exchange an OAuth device code for an access token. The client polls
+    ///
+    /// this endpoint until the user completes authorization.
     ///
     /// Sends a `POST` request to `/login/oauth/{provider}/device/exchange`
     ///
@@ -14727,6 +14587,21 @@ impl Client {
     /// ```
     pub fn exchange_device_token(&self) -> builder::ExchangeDeviceToken<'_> {
         builder::ExchangeDeviceToken::new(self)
+    }
+
+    /// Retrieve the metadata about an OAuth provider for public PKCE
+    /// authorization code flow
+    ///
+    /// Sends a `GET` request to `/login/oauth/{provider}/public-pkce`
+    ///
+    /// ```ignore
+    /// let response = client.get_web_pkce_provider()
+    ///    .provider(provider)
+    ///    .send()
+    ///    .await;
+    /// ```
+    pub fn get_web_pkce_provider(&self) -> builder::GetWebPkceProvider<'_> {
+        builder::GetWebPkceProvider::new(self)
     }
 
     /// List Magic Link clients
@@ -16236,6 +16111,232 @@ pub mod builder {
         }
     }
 
+    /// Builder for [`Client::add_api_user_permission`]
+    ///
+    /// [`Client::add_api_user_permission`]: super::Client::add_api_user_permission
+    #[derive(Debug, Clone)]
+    pub struct AddApiUserPermission<'a> {
+        client: &'a super::Client,
+        user_id: Result<types::TypedUuidForUserId, String>,
+        body: Result<types::builder::ApiUserPermissionParamsForRfdPermission, String>,
+    }
+
+    impl<'a> AddApiUserPermission<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                user_id: Err("user_id was not initialized".to_string()),
+                body: Ok(::std::default::Default::default()),
+            }
+        }
+
+        pub fn user_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::TypedUuidForUserId>,
+        {
+            self.user_id = value
+                .try_into()
+                .map_err(|_| "conversion to `TypedUuidForUserId` for user_id failed".to_string());
+            self
+        }
+
+        pub fn body<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::ApiUserPermissionParamsForRfdPermission>,
+            <V as std::convert::TryInto<types::ApiUserPermissionParamsForRfdPermission>>::Error:
+                std::fmt::Display,
+        {
+            self.body = value.try_into().map(From::from).map_err(|s| {
+                format!(
+                    "conversion to `ApiUserPermissionParamsForRfdPermission` for body failed: {}",
+                    s
+                )
+            });
+            self
+        }
+
+        pub fn body_map<F>(mut self, f: F) -> Self
+        where
+            F: std::ops::FnOnce(
+                types::builder::ApiUserPermissionParamsForRfdPermission,
+            )
+                -> types::builder::ApiUserPermissionParamsForRfdPermission,
+        {
+            self.body = self.body.map(f);
+            self
+        }
+
+        /// Sends a `POST` request to `/api-user/{user_id}/permission`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::GetUserResponseForRfdPermission>, Error<types::Error>>
+        {
+            let Self {
+                client,
+                user_id,
+                body,
+            } = self;
+            let user_id = user_id.map_err(Error::InvalidRequest)?;
+            let body = body
+                .and_then(|v| {
+                    types::ApiUserPermissionParamsForRfdPermission::try_from(v)
+                        .map_err(|e| e.to_string())
+                })
+                .map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/api-user/{}/permission",
+                client.baseurl,
+                encode_path(&user_id.to_string()),
+            );
+            let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+            header_map.append(
+                ::reqwest::header::HeaderName::from_static("api-version"),
+                ::reqwest::header::HeaderValue::from_static(super::Client::api_version()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .post(url)
+                .header(
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .json(&body)
+                .headers(header_map)
+                .build()?;
+            let info = OperationInfo {
+                operation_id: "add_api_user_permission",
+            };
+            client.pre(&mut request, &info).await?;
+            let result = client.exec(request, &info).await;
+            client.post(&result, &info).await?;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
+    /// Builder for [`Client::remove_api_user_permission`]
+    ///
+    /// [`Client::remove_api_user_permission`]: super::Client::remove_api_user_permission
+    #[derive(Debug, Clone)]
+    pub struct RemoveApiUserPermission<'a> {
+        client: &'a super::Client,
+        user_id: Result<types::TypedUuidForUserId, String>,
+        body: Result<types::builder::ApiUserPermissionParamsForRfdPermission, String>,
+    }
+
+    impl<'a> RemoveApiUserPermission<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                user_id: Err("user_id was not initialized".to_string()),
+                body: Ok(::std::default::Default::default()),
+            }
+        }
+
+        pub fn user_id<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::TypedUuidForUserId>,
+        {
+            self.user_id = value
+                .try_into()
+                .map_err(|_| "conversion to `TypedUuidForUserId` for user_id failed".to_string());
+            self
+        }
+
+        pub fn body<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::ApiUserPermissionParamsForRfdPermission>,
+            <V as std::convert::TryInto<types::ApiUserPermissionParamsForRfdPermission>>::Error:
+                std::fmt::Display,
+        {
+            self.body = value.try_into().map(From::from).map_err(|s| {
+                format!(
+                    "conversion to `ApiUserPermissionParamsForRfdPermission` for body failed: {}",
+                    s
+                )
+            });
+            self
+        }
+
+        pub fn body_map<F>(mut self, f: F) -> Self
+        where
+            F: std::ops::FnOnce(
+                types::builder::ApiUserPermissionParamsForRfdPermission,
+            )
+                -> types::builder::ApiUserPermissionParamsForRfdPermission,
+        {
+            self.body = self.body.map(f);
+            self
+        }
+
+        /// Sends a `DELETE` request to `/api-user/{user_id}/permission`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::GetUserResponseForRfdPermission>, Error<types::Error>>
+        {
+            let Self {
+                client,
+                user_id,
+                body,
+            } = self;
+            let user_id = user_id.map_err(Error::InvalidRequest)?;
+            let body = body
+                .and_then(|v| {
+                    types::ApiUserPermissionParamsForRfdPermission::try_from(v)
+                        .map_err(|e| e.to_string())
+                })
+                .map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/api-user/{}/permission",
+                client.baseurl,
+                encode_path(&user_id.to_string()),
+            );
+            let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+            header_map.append(
+                ::reqwest::header::HeaderName::from_static("api-version"),
+                ::reqwest::header::HeaderValue::from_static(super::Client::api_version()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .delete(url)
+                .header(
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .json(&body)
+                .headers(header_map)
+                .build()?;
+            let info = OperationInfo {
+                operation_id: "remove_api_user_permission",
+            };
+            client.pre(&mut request, &info).await?;
+            let result = client.exec(request, &info).await;
+            client.post(&result, &info).await?;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
+            }
+        }
+    }
+
     /// Builder for [`Client::list_api_user_tokens`]
     ///
     /// [`Client::list_api_user_tokens`]: super::Client::list_api_user_tokens
@@ -17542,6 +17643,8 @@ pub mod builder {
         client: &'a super::Client,
         provider: Result<types::OAuthProviderName, String>,
         client_id: Result<types::TypedUuidForOAuthClientId, String>,
+        code_challenge: Result<::std::string::String, String>,
+        code_challenge_method: Result<::std::string::String, String>,
         redirect_uri: Result<::std::string::String, String>,
         response_type: Result<::std::string::String, String>,
         scope: Result<Option<::std::string::String>, String>,
@@ -17554,6 +17657,8 @@ pub mod builder {
                 client: client,
                 provider: Err("provider was not initialized".to_string()),
                 client_id: Err("client_id was not initialized".to_string()),
+                code_challenge: Err("code_challenge was not initialized".to_string()),
+                code_challenge_method: Err("code_challenge_method was not initialized".to_string()),
                 redirect_uri: Err("redirect_uri was not initialized".to_string()),
                 response_type: Err("response_type was not initialized".to_string()),
                 scope: Ok(None),
@@ -17577,6 +17682,27 @@ pub mod builder {
         {
             self.client_id = value.try_into().map_err(|_| {
                 "conversion to `TypedUuidForOAuthClientId` for client_id failed".to_string()
+            });
+            self
+        }
+
+        pub fn code_challenge<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<::std::string::String>,
+        {
+            self.code_challenge = value.try_into().map_err(|_| {
+                "conversion to `:: std :: string :: String` for code_challenge failed".to_string()
+            });
+            self
+        }
+
+        pub fn code_challenge_method<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<::std::string::String>,
+        {
+            self.code_challenge_method = value.try_into().map_err(|_| {
+                "conversion to `:: std :: string :: String` for code_challenge_method failed"
+                    .to_string()
             });
             self
         }
@@ -17627,6 +17753,8 @@ pub mod builder {
                 client,
                 provider,
                 client_id,
+                code_challenge,
+                code_challenge_method,
                 redirect_uri,
                 response_type,
                 scope,
@@ -17634,6 +17762,8 @@ pub mod builder {
             } = self;
             let provider = provider.map_err(Error::InvalidRequest)?;
             let client_id = client_id.map_err(Error::InvalidRequest)?;
+            let code_challenge = code_challenge.map_err(Error::InvalidRequest)?;
+            let code_challenge_method = code_challenge_method.map_err(Error::InvalidRequest)?;
             let redirect_uri = redirect_uri.map_err(Error::InvalidRequest)?;
             let response_type = response_type.map_err(Error::InvalidRequest)?;
             let scope = scope.map_err(Error::InvalidRequest)?;
@@ -17653,6 +17783,14 @@ pub mod builder {
                 .client
                 .get(url)
                 .query(&progenitor_client::QueryParam::new("client_id", &client_id))
+                .query(&progenitor_client::QueryParam::new(
+                    "code_challenge",
+                    &code_challenge,
+                ))
+                .query(&progenitor_client::QueryParam::new(
+                    "code_challenge_method",
+                    &code_challenge_method,
+                ))
                 .query(&progenitor_client::QueryParam::new(
                     "redirect_uri",
                     &redirect_uri,
@@ -17807,6 +17945,7 @@ pub mod builder {
     pub struct AuthzCodeExchange<'a> {
         client: &'a super::Client,
         provider: Result<types::OAuthProviderName, String>,
+        request_idp_token: Result<Option<bool>, String>,
         body: Result<types::builder::OAuthAuthzCodeExchangeBody, String>,
     }
 
@@ -17815,6 +17954,7 @@ pub mod builder {
             Self {
                 client: client,
                 provider: Err("provider was not initialized".to_string()),
+                request_idp_token: Ok(None),
                 body: Ok(::std::default::Default::default()),
             }
         }
@@ -17826,6 +17966,17 @@ pub mod builder {
             self.provider = value
                 .try_into()
                 .map_err(|_| "conversion to `OAuthProviderName` for provider failed".to_string());
+            self
+        }
+
+        pub fn request_idp_token<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<bool>,
+        {
+            self.request_idp_token = value
+                .try_into()
+                .map(Some)
+                .map_err(|_| "conversion to `bool` for request_idp_token failed".to_string());
             self
         }
 
@@ -17862,9 +18013,11 @@ pub mod builder {
             let Self {
                 client,
                 provider,
+                request_idp_token,
                 body,
             } = self;
             let provider = provider.map_err(Error::InvalidRequest)?;
+            let request_idp_token = request_idp_token.map_err(Error::InvalidRequest)?;
             let body = body
                 .and_then(|v| {
                     types::OAuthAuthzCodeExchangeBody::try_from(v).map_err(|e| e.to_string())
@@ -17889,6 +18042,10 @@ pub mod builder {
                     ::reqwest::header::HeaderValue::from_static("application/json"),
                 )
                 .form_urlencoded(&body)?
+                .query(&progenitor_client::QueryParam::new(
+                    "request_idp_token",
+                    &request_idp_token,
+                ))
                 .headers(header_map)
                 .build()?;
             let info = OperationInfo {
@@ -17941,7 +18098,7 @@ pub mod builder {
         /// Sends a `GET` request to `/login/oauth/{provider}/device`
         pub async fn send(
             self,
-        ) -> Result<ResponseValue<types::OAuthProviderInfo>, Error<types::Error>> {
+        ) -> Result<ResponseValue<types::OAuthProviderDeviceInfo>, Error<types::Error>> {
             let Self { client, provider } = self;
             let provider = provider.map_err(Error::InvalidRequest)?;
             let url = format!(
@@ -17984,6 +18141,104 @@ pub mod builder {
         }
     }
 
+    /// Builder for [`Client::device_authz`]
+    ///
+    /// [`Client::device_authz`]: super::Client::device_authz
+    #[derive(Debug, Clone)]
+    pub struct DeviceAuthz<'a> {
+        client: &'a super::Client,
+        provider: Result<types::OAuthProviderName, String>,
+        body: Result<types::builder::DeviceAuthorizationRequest, String>,
+    }
+
+    impl<'a> DeviceAuthz<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                provider: Err("provider was not initialized".to_string()),
+                body: Ok(::std::default::Default::default()),
+            }
+        }
+
+        pub fn provider<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::OAuthProviderName>,
+        {
+            self.provider = value
+                .try_into()
+                .map_err(|_| "conversion to `OAuthProviderName` for provider failed".to_string());
+            self
+        }
+
+        pub fn body<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::DeviceAuthorizationRequest>,
+            <V as std::convert::TryInto<types::DeviceAuthorizationRequest>>::Error:
+                std::fmt::Display,
+        {
+            self.body = value.try_into().map(From::from).map_err(|s| {
+                format!(
+                    "conversion to `DeviceAuthorizationRequest` for body failed: {}",
+                    s
+                )
+            });
+            self
+        }
+
+        pub fn body_map<F>(mut self, f: F) -> Self
+        where
+            F: std::ops::FnOnce(
+                types::builder::DeviceAuthorizationRequest,
+            ) -> types::builder::DeviceAuthorizationRequest,
+        {
+            self.body = self.body.map(f);
+            self
+        }
+
+        /// Sends a `POST` request to `/login/oauth/{provider}/device`
+        pub async fn send(self) -> Result<ResponseValue<ByteStream>, Error<ByteStream>> {
+            let Self {
+                client,
+                provider,
+                body,
+            } = self;
+            let provider = provider.map_err(Error::InvalidRequest)?;
+            let body = body
+                .and_then(|v| {
+                    types::DeviceAuthorizationRequest::try_from(v).map_err(|e| e.to_string())
+                })
+                .map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/login/oauth/{}/device",
+                client.baseurl,
+                encode_path(&provider.to_string()),
+            );
+            let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+            header_map.append(
+                ::reqwest::header::HeaderName::from_static("api-version"),
+                ::reqwest::header::HeaderValue::from_static(super::Client::api_version()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .post(url)
+                .json(&body)
+                .headers(header_map)
+                .build()?;
+            let info = OperationInfo {
+                operation_id: "device_authz",
+            };
+            client.pre(&mut request, &info).await?;
+            let result = client.exec(request, &info).await;
+            client.post(&result, &info).await?;
+            let response = result?;
+            match response.status().as_u16() {
+                200..=299 => Ok(ResponseValue::stream(response)),
+                _ => Err(Error::ErrorResponse(ResponseValue::stream(response))),
+            }
+        }
+    }
+
     /// Builder for [`Client::exchange_device_token`]
     ///
     /// [`Client::exchange_device_token`]: super::Client::exchange_device_token
@@ -17991,7 +18246,7 @@ pub mod builder {
     pub struct ExchangeDeviceToken<'a> {
         client: &'a super::Client,
         provider: Result<types::OAuthProviderName, String>,
-        body: Result<types::builder::AccessTokenExchangeRequest, String>,
+        body: Result<types::builder::DeviceTokenExchangeRequest, String>,
     }
 
     impl<'a> ExchangeDeviceToken<'a> {
@@ -18015,13 +18270,13 @@ pub mod builder {
 
         pub fn body<V>(mut self, value: V) -> Self
         where
-            V: std::convert::TryInto<types::AccessTokenExchangeRequest>,
-            <V as std::convert::TryInto<types::AccessTokenExchangeRequest>>::Error:
+            V: std::convert::TryInto<types::DeviceTokenExchangeRequest>,
+            <V as std::convert::TryInto<types::DeviceTokenExchangeRequest>>::Error:
                 std::fmt::Display,
         {
             self.body = value.try_into().map(From::from).map_err(|s| {
                 format!(
-                    "conversion to `AccessTokenExchangeRequest` for body failed: {}",
+                    "conversion to `DeviceTokenExchangeRequest` for body failed: {}",
                     s
                 )
             });
@@ -18031,8 +18286,8 @@ pub mod builder {
         pub fn body_map<F>(mut self, f: F) -> Self
         where
             F: std::ops::FnOnce(
-                types::builder::AccessTokenExchangeRequest,
-            ) -> types::builder::AccessTokenExchangeRequest,
+                types::builder::DeviceTokenExchangeRequest,
+            ) -> types::builder::DeviceTokenExchangeRequest,
         {
             self.body = self.body.map(f);
             self
@@ -18048,7 +18303,7 @@ pub mod builder {
             let provider = provider.map_err(Error::InvalidRequest)?;
             let body = body
                 .and_then(|v| {
-                    types::AccessTokenExchangeRequest::try_from(v).map_err(|e| e.to_string())
+                    types::DeviceTokenExchangeRequest::try_from(v).map_err(|e| e.to_string())
                 })
                 .map_err(Error::InvalidRequest)?;
             let url = format!(
@@ -18078,6 +18333,80 @@ pub mod builder {
             match response.status().as_u16() {
                 200..=299 => Ok(ResponseValue::stream(response)),
                 _ => Err(Error::ErrorResponse(ResponseValue::stream(response))),
+            }
+        }
+    }
+
+    /// Builder for [`Client::get_web_pkce_provider`]
+    ///
+    /// [`Client::get_web_pkce_provider`]: super::Client::get_web_pkce_provider
+    #[derive(Debug, Clone)]
+    pub struct GetWebPkceProvider<'a> {
+        client: &'a super::Client,
+        provider: Result<types::OAuthProviderName, String>,
+    }
+
+    impl<'a> GetWebPkceProvider<'a> {
+        pub fn new(client: &'a super::Client) -> Self {
+            Self {
+                client: client,
+                provider: Err("provider was not initialized".to_string()),
+            }
+        }
+
+        pub fn provider<V>(mut self, value: V) -> Self
+        where
+            V: std::convert::TryInto<types::OAuthProviderName>,
+        {
+            self.provider = value
+                .try_into()
+                .map_err(|_| "conversion to `OAuthProviderName` for provider failed".to_string());
+            self
+        }
+
+        /// Sends a `GET` request to `/login/oauth/{provider}/public-pkce`
+        pub async fn send(
+            self,
+        ) -> Result<ResponseValue<types::OAuthProviderAuthorizationCodePkceInfo>, Error<types::Error>>
+        {
+            let Self { client, provider } = self;
+            let provider = provider.map_err(Error::InvalidRequest)?;
+            let url = format!(
+                "{}/login/oauth/{}/public-pkce",
+                client.baseurl,
+                encode_path(&provider.to_string()),
+            );
+            let mut header_map = ::reqwest::header::HeaderMap::with_capacity(1usize);
+            header_map.append(
+                ::reqwest::header::HeaderName::from_static("api-version"),
+                ::reqwest::header::HeaderValue::from_static(super::Client::api_version()),
+            );
+            #[allow(unused_mut)]
+            let mut request = client
+                .client
+                .get(url)
+                .header(
+                    ::reqwest::header::ACCEPT,
+                    ::reqwest::header::HeaderValue::from_static("application/json"),
+                )
+                .headers(header_map)
+                .build()?;
+            let info = OperationInfo {
+                operation_id: "get_web_pkce_provider",
+            };
+            client.pre(&mut request, &info).await?;
+            let result = client.exec(request, &info).await;
+            client.post(&result, &info).await?;
+            let response = result?;
+            match response.status().as_u16() {
+                200u16 => ResponseValue::from_response(response).await,
+                400u16..=499u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                500u16..=599u16 => Err(Error::ErrorResponse(
+                    ResponseValue::from_response(response).await?,
+                )),
+                _ => Err(Error::UnexpectedResponse(response)),
             }
         }
     }

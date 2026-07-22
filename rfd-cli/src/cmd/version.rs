@@ -5,7 +5,7 @@
 use anyhow::Result;
 use clap::Parser;
 
-use crate::Context;
+use crate::context::Context;
 
 /// Print the version
 #[derive(Debug, Parser)]
