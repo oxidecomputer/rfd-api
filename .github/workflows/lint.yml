@@ -32,6 +32,6 @@ jobs:
       - run: |
           rustup toolchain install
       - run: |
-          cargo install cargo-shear
+          cargo install cargo-shear --version 1.13.2 # 2026-07-16
       - run: |
           cargo shear --deny-warnings
