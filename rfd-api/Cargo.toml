@@ -9,38 +9,26 @@ local-dev = ["v-api/local-dev"]
 
 [dependencies]
 anyhow = { workspace = true }
-async-bb8-diesel = { workspace = true }
 async-trait = { workspace = true }
-base64 = { workspace = true }
-bb8 = { workspace = true }
 chrono = { workspace = true, features = ["serde"] }
 clap = { workspace = true }
 config = { workspace = true }
-cookie = { workspace = true }
-crc32c = { workspace = true }
-diesel = { workspace = true }
 dropshot = { workspace = true }
-dropshot-authorization-header = { workspace = true }
 dropshot-verified-body = { workspace = true, features = ["github"] }
 hex = { workspace = true }
 http = { workspace = true }
-hyper = { workspace = true }
 jsonwebtoken = { workspace = true }
 meilisearch-sdk = { workspace = true }
 minijinja = { workspace = true }
 newtype-uuid = { workspace = true }
-oauth2 = { workspace = true }
 octorust = { workspace = true, features = ["httpcache"] }
 partial-struct = { workspace = true }
-rand = { workspace = true}
-rand_core = { workspace = true }
 regex = { workspace = true }
 reqwest = { workspace = true }
 reqwest-middleware = { workspace = true }
 reqwest-retry = { workspace = true }
 reqwest-tracing = { workspace = true }
 resend-rs = { workspace = true }
-ring = { workspace = true }
 rustls = { workspace = true }
 rfd-data = { path = "../rfd-data" }
 rfd-github = { path = "../rfd-github" }
@@ -51,15 +39,12 @@ secrecy = { workspace = true, features = ["serde"] }
 semver = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
-serde_urlencoded = { workspace = true }
-sha2 = { workspace = true }
 slog = { workspace = true }
 slog-async = { workspace = true }
 strum = { workspace = true }
 tap = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
-toml = { workspace = true }
 trace-request = { path = "../trace-request" }
 tracing = { workspace = true }
 tracing-appender = { workspace = true }
@@ -69,14 +54,12 @@ uuid = { workspace = true, features = ["v4", "serde"]  }
 v-api = { workspace = true }
 v-model = { workspace = true }
 v-api-permission-derive = { workspace = true }
-yup-oauth2 = { workspace = true }
 
 [build-dependencies]
 build-info = { path = "../build-info" }
 
 [dev-dependencies]
 async-trait = { workspace = true }
-mockall = { workspace = true }
 rfd-model = { path = "../rfd-model", features = ["mock"] }
 rsa = { workspace = true, features = ["pem"] }
 
