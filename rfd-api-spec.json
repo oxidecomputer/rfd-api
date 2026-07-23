@@ -7,7 +7,7 @@
       "url": "https://oxide.computer",
       "email": "corp-services@oxidecomputer.com"
     },
-    "version": "0.15.1"
+    "version": "0.15.2"
   },
   "paths": {
     "/.well-known/jwks.json": {
