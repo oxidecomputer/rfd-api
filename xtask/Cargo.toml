@@ -10,7 +10,6 @@ progenitor = { workspace = true }
 regex = { workspace = true }
 rustfmt-wrapper = { workspace = true }
 semver = { workspace = true }
-serde = { workspace = true }
 serde_json = { workspace = true }
 similar = { workspace = true }
 
