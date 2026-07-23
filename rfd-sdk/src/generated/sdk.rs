@@ -14053,7 +14053,7 @@ pub mod types {
 ///
 /// Programmatic access to RFDs
 ///
-/// Version: 0.15.0
+/// Version: 0.15.1
 pub struct Client {
     pub(crate) baseurl: String,
     pub(crate) client: reqwest::Client,
@@ -14094,7 +14094,7 @@ impl Client {
 
 impl ClientInfo<()> for Client {
     fn api_version() -> &'static str {
-        "0.15.0"
+        "0.15.1"
     }
 
     fn baseurl(&self) -> &str {
