@@ -2,6 +2,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+// TODO(peter): Remove this when we replace octorust
+#![allow(clippy::result_large_err)]
+
 use clap::Parser;
 use config::{Config, ConfigError, Environment, File};
 use processor::{processor, JobError};
