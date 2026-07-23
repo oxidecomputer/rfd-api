@@ -239,7 +239,7 @@ fn describe_config_paths(paths: &[String]) -> String {
 }
 
 async fn run_processor(config_path: Option<String>) -> Result<(), Box<dyn std::error::Error>> {
-    rustls::crypto::ring::default_provider()
+    rustls::crypto::aws_lc_rs::default_provider()
         .install_default()
         .expect("Failed to install rustls crypto provider");
 
