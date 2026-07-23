@@ -36,7 +36,7 @@ dropshot = "0.17"
 dropshot-authorization-header = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.4.7" }
 dropshot-verified-body = { git = "https://github.com/oxidecomputer/dropshot-verified-body", rev = "0b124eeb0f52db783a44d395a41425a1f9b709b7" }
 futures = "0.3.32"
-google-drive3 = "7.0.0"
+google-drive3 = { version = "7.0.0", default-features = false, features = ["yup-oauth2-service-account", "aws-lc-rs"] }
 google-storage1 = "7.0.0"
 hex = "0.4.3"
 hmac = "0.13.0"
@@ -97,7 +97,7 @@ v-api = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.4.7", defaul
 v-cli-sdk = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.4.7" }
 v-model = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.4.7" }
 v-api-permission-derive = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.4.7" }
-yup-oauth2 = { version = "12.1.2" }
+yup-oauth2 = { version = "12.1.2", default-features = false, features = ["hyper-rustls", "service-account", "aws-lc-rs"] }
 
 # Config for 'cargo dist'
 [workspace.metadata.dist]
