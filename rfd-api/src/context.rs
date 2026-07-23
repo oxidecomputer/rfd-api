@@ -473,7 +473,7 @@ impl RfdContext {
             .collect::<Vec<_>>();
 
         // Finally sort the RFD list by RFD number
-        rfd_list.sort_by(|a, b| b.rfd_number.cmp(&a.rfd_number));
+        rfd_list.sort_by_key(|b| std::cmp::Reverse(b.rfd_number));
 
         Ok(rfd_list)
     }
@@ -927,7 +927,7 @@ impl RfdContext {
         });
 
         // Finally sort the jobs list by create time
-        jobs.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+        jobs.sort_by_key(|b| std::cmp::Reverse(b.created_at));
 
         Ok(jobs)
     }
