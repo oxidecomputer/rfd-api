@@ -170,9 +170,6 @@ async fn main() -> anyhow::Result<()> {
 }
 
 async fn run_server(config_path: Option<String>) -> anyhow::Result<()> {
-    rustls::crypto::aws_lc_rs::default_provider()
-        .install_default()
-        .expect("Failed to install rustls crypto provider");
     jsonwebtoken::crypto::aws_lc::DEFAULT_PROVIDER
         .install_default()
         .expect("Failed to install jsonwebtoken crypto provider");
