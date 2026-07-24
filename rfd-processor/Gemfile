@@ -1,6 +1,6 @@
 source "https://rubygems.org"
 
-gem "asciidoctor", "2.0.20"
+gem "asciidoctor", "2.0.26"
 gem "asciidoctor-mermaid", "0.4.1"
 gem "asciidoctor-pdf", "2.3.2"
 gem "base64", "0.3.0"
