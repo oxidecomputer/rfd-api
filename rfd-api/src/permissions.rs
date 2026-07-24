@@ -28,7 +28,12 @@ pub enum RfdPermission {
         scope(to = "rfd:content:r", from = "rfd:content:r")
     )]
     GetRfdsAssigned,
-    #[v_api(scope(to = "rfd:content:r", from = "rfd:content:r"))]
+    #[v_api(
+        implies(variant = GetRfd),
+        implies(variant = GetRfds),
+        implies(variant = GetRfdsAssigned),
+        scope(to = "rfd:content:r", from = "rfd:content:r")
+    )]
     GetRfdsAll,
     #[v_api(scope(to = "rfd:content:w", from = "rfd:content:w"))]
     CreateRfd,
@@ -48,7 +53,12 @@ pub enum RfdPermission {
         scope(to = "rfd:content:w", from = "rfd:content:w")
     )]
     UpdateRfdsAssigned,
-    #[v_api(scope(to = "rfd:content:w", from = "rfd:content:w"))]
+    #[v_api(
+        implies(variant = UpdateRfd),
+        implies(variant = UpdateRfds),
+        implies(variant = UpdateRfdsAssigned),
+        scope(to = "rfd:content:w", from = "rfd:content:w")
+    )]
     UpdateRfdsAll,
     #[v_api(
         contract(kind = append, variant = ManageRfdsVisibility),
@@ -66,7 +76,12 @@ pub enum RfdPermission {
         scope(to = "rfd:visibility:w", from = "rfd:visibility:w")
     )]
     ManageRfdsVisibilityAssigned,
-    #[v_api(scope(to = "rfd:visibility:w", from = "rfd:visibility:w"))]
+    #[v_api(
+        implies(variant = ManageRfdVisibility),
+        implies(variant = ManageRfdsVisibility),
+        implies(variant = ManageRfdsVisibilityAssigned),
+        scope(to = "rfd:visibility:w", from = "rfd:visibility:w")
+    )]
     ManageRfdsVisibilityAll,
     #[v_api(
         contract(kind = append, variant = GetDiscussions),
@@ -84,7 +99,12 @@ pub enum RfdPermission {
         scope(to = "rfd:discussion:r", from = "rfd:discussion:r")
     )]
     GetDiscussionsAssigned,
-    #[v_api(scope(to = "rfd:discussion:r", from = "rfd:discussion:r"))]
+    #[v_api(
+        implies(variant = GetDiscussion),
+        implies(variant = GetDiscussions),
+        implies(variant = GetDiscussionsAssigned),
+        scope(to = "rfd:discussion:r", from = "rfd:discussion:r")
+    )]
     GetDiscussionsAll,
     #[v_api(scope(to = "search", from = "search"))]
     SearchRfds,
