@@ -50,10 +50,10 @@ partial-struct = { git = "https://github.com/oxidecomputer/partial-struct" }
 progenitor = { version = "0.14" }
 progenitor-client = { version = "0.14" }
 regex = "1.12.3"
-reqwest = { version = "0.12", default-features = false, features = ["json", "stream", "rustls-tls"] }
-reqwest-middleware = "0.4"
-reqwest-retry = "0.7"
-reqwest-tracing = "0.5"
+reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "rustls-tls"] }
+reqwest-middleware = "0.5"
+reqwest-retry = "0.9"
+reqwest-tracing = "0.7"
 resend-rs = { version = "0.25.1", default-features = false, features = ["rustls-tls"] }
 rsa = "0.9.10"
 rustfmt-wrapper = "0.2.1"
