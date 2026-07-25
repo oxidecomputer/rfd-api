@@ -25,27 +25,35 @@ pub async fn scanner(ctx: Arc<Context>) -> Result<(), ScannerError> {
 
     loop {
         if ctx.scanner.enabled {
-            let updates = ctx
+            // Errors reaching GitHub (including transient auth and rate limit failures) must not
+            // take down the scanner. Skip this scan and try again on the next tick
+            match ctx
                 .github
                 .repository
                 .get_rfd_sync_updates(&ctx.github.client)
-                .await?;
-
-            for update in updates {
-                match JobStore::upsert(&ctx.db.storage, update.clone().into_job()).await {
-                    Ok(job) => tracing::trace!(?job.id, "Added job to the queue"),
-                    Err(err) => {
-                        match err {
-                            StoreError::Conflict => {
-                                // Nothing to do here, we expect uniqueness conflicts. It is expected
-                                // that the scanner picks ups redundant jobs for RFDs that have not
-                                // changed since the last scan
-                            }
-                            err => {
-                                tracing::warn!(?err, ?update, "Failed to add job")
+                .await
+            {
+                Ok(updates) => {
+                    for update in updates {
+                        match JobStore::upsert(&ctx.db.storage, update.clone().into_job()).await {
+                            Ok(job) => tracing::trace!(?job.id, "Added job to the queue"),
+                            Err(err) => {
+                                match err {
+                                    StoreError::Conflict => {
+                                        // Nothing to do here, we expect uniqueness conflicts. It is expected
+                                        // that the scanner picks ups redundant jobs for RFDs that have not
+                                        // changed since the last scan
+                                    }
+                                    err => {
+                                        tracing::warn!(?err, ?update, "Failed to add job")
+                                    }
+                                }
                             }
                         }
                     }
+                }
+                Err(err) => {
+                    tracing::error!(?err, "Failed to fetch RFD updates from GitHub");
                 }
             }
         }
