@@ -39,24 +39,14 @@ pub async fn processor(ctx: Arc<Context>) -> Result<(), JobError> {
 
     loop {
         if ctx.processor.enabled {
-            // Errors fetching the job list (i.e. transient database failures) must not take down
-            // the processor. Skip this batch and try again on the next tick
-            let jobs = match JobStore::list(
+            let jobs = JobStore::list(
                 &ctx.db.storage,
                 vec![JobFilter::default()
                     .processed(Some(false))
                     .started(Some(false))],
                 &pagination,
             )
-            .await
-            {
-                Ok(jobs) => jobs,
-                Err(err) => {
-                    tracing::error!(?err, "Failed to fetch job batch");
-                    interval.tick().await;
-                    continue;
-                }
-            };
+            .await?;
 
             tracing::info!(jobs = ?jobs.iter().map(|job| job.id).collect::<Vec<_>>(), "Spawning jobs");
 
