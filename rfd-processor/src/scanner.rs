@@ -5,6 +5,7 @@
 use rfd_github::{GitHubError, GitHubRfdUpdate};
 use rfd_model::{storage::JobStore, NewJob};
 use std::sync::Arc;
+use tap::TapFallible;
 use thiserror::Error;
 use tokio::time::interval;
 use v_model::storage::StoreError;
@@ -29,7 +30,9 @@ pub async fn scanner(ctx: Arc<Context>) -> Result<(), ScannerError> {
                 .github
                 .repository
                 .get_rfd_sync_updates(&ctx.github.client)
-                .await?;
+                .await
+                .tap_err(|err| tracing::error!(?err, "Failed to fetch RFD updates from GitHub"))
+                .unwrap_or_default();
 
             for update in updates {
                 match JobStore::upsert(&ctx.db.storage, update.clone().into_job()).await {
