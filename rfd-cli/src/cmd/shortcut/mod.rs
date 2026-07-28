@@ -7,13 +7,11 @@ use clap::{Parser, Subcommand};
 
 use crate::{
     cmd::shortcut::{
-        access::{AccessShortcut, AccessShortcuts, RfdAccessShortcut, RfdAccessShortcuts},
+        access::{AccessShortcut, AccessShortcuts, RfdAccessShortcuts},
         mapper::{MapperShortcut, MapperShortcuts},
     },
-    Context,
+    context::Context,
 };
-
-use self::mapper::{EmailMapper, GitHubMapper};
 
 mod access;
 mod mapper;

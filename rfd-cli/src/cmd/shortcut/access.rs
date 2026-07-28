@@ -6,7 +6,7 @@ use anyhow::{bail, Ok, Result};
 use clap::{Parser, Subcommand};
 use rfd_sdk::types::RfdPermission;
 
-use crate::Context;
+use crate::context::Context;
 
 #[derive(Debug, Parser)]
 pub struct AccessShortcut {
@@ -52,7 +52,7 @@ pub struct RemoveRfdAccessShortcut {
 
 impl AddRfdAccessShortcut {
     pub async fn run(&self, ctx: &mut Context) -> Result<()> {
-        let client = ctx.client()?;
+        let client = ctx.require_client()?;
         let groups = client.get_groups().send().await?.into_inner();
         let group = groups
             .iter()
@@ -79,7 +79,7 @@ impl AddRfdAccessShortcut {
 
 impl RemoveRfdAccessShortcut {
     pub async fn run(&self, ctx: &mut Context) -> Result<()> {
-        let client = ctx.client()?;
+        let client = ctx.require_client()?;
         let groups = client.get_groups().send().await?.into_inner();
         let group = groups
             .iter()

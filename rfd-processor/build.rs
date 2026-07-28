@@ -3,5 +3,6 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 fn main() {
-    println!("cargo:rerun-if-changed=../rfd-model/migrations");
+    println!("cargo:rerun-if-changed=build.rs");
+    build_info::emit("RFD_PROCESSOR");
 }

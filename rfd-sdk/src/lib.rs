@@ -204,6 +204,7 @@ impl Display for RfdPermission {
             Self::ManageMagicLinkClientsAll => write!(f, "manage-magic-link-all"),
 
             Self::CreateAccessToken => Ok(()),
+            Self::RetrieveRemoteAccessToken => write!(f, "retrieve-remote-access-token"),
             Self::Unsupported(deprecated) => write!(f, "deprecated-permission:{:?}", deprecated),
         }
     }

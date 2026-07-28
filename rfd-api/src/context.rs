@@ -473,7 +473,7 @@ impl RfdContext {
             .collect::<Vec<_>>();
 
         // Finally sort the RFD list by RFD number
-        rfd_list.sort_by(|a, b| b.rfd_number.cmp(&a.rfd_number));
+        rfd_list.sort_by_key(|b| std::cmp::Reverse(b.rfd_number));
 
         Ok(rfd_list)
     }
@@ -927,7 +927,7 @@ impl RfdContext {
         });
 
         // Finally sort the jobs list by create time
-        jobs.sort_by(|a, b| b.created_at.cmp(&a.created_at));
+        jobs.sort_by_key(|b| std::cmp::Reverse(b.created_at));
 
         Ok(jobs)
     }
@@ -950,8 +950,8 @@ pub(crate) mod test_mocks {
     };
     use std::sync::Arc;
     use v_api::{
-        config::{AsymmetricKey, JwtConfig},
-        endpoints::login::oauth::{google::GoogleOAuthProvider, OAuthProviderName},
+        config::{AsymmetricKey, JwtConfig, ResolvedOAuthConfig, ResolvedOAuthWebConfig},
+        endpoints::login::oauth::{remote::google::GoogleOAuthProvider, OAuthProviderName},
         VContextBuilder,
     };
     use v_model::storage::postgres::PostgresStore;
@@ -1015,10 +1015,15 @@ pub(crate) mod test_mocks {
             OAuthProviderName::Google,
             Box::new(move || {
                 Box::new(GoogleOAuthProvider::new(
-                    "google_device_client_id".to_string(),
-                    "google_device_client_secret".to_string().into(),
-                    "google_web_client_id".to_string(),
-                    "google_web_client_secret".to_string().into(),
+                    ResolvedOAuthConfig {
+                        device: None,
+                        web: Some(ResolvedOAuthWebConfig {
+                            remote_client_id: "google_web_client_id".to_string(),
+                            remote_client_secret: "google_web_client_secret".to_string().into(),
+                        }),
+                        proxy_web: None,
+                    },
+                    String::new(),
                     None,
                 ))
             }),

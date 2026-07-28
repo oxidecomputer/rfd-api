@@ -8,17 +8,18 @@ use std::{
     path::PathBuf,
 };
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use config::{Config, Environment, File};
 use serde::{Deserialize, Serialize};
+use v_cli_sdk::{FormatStyle, VCliConfig};
 
-use crate::FormatStyle;
-
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 pub struct CliConfig {
     host: Option<String>,
     token: Option<String>,
     default_format: Option<FormatStyle>,
+    mlink_redirect: Option<String>,
+    mlink_secret: Option<String>,
 }
 
 impl CliConfig {
@@ -32,7 +33,7 @@ impl CliConfig {
         Ok(config.try_deserialize()?)
     }
 
-    fn file(clear: bool) -> Result<(PathBuf, StdFile)> {
+    fn file(clear: bool) -> Result<(PathBuf, StdFile), std::io::Error> {
         let mut path = dirs::config_dir().expect("Failed to determine configs path");
         path.push("rfd-cli");
         create_dir_all(&path).expect("Failed to create configs path");
@@ -46,43 +47,44 @@ impl CliConfig {
 
         Ok((path, file))
     }
+}
 
-    pub fn host(&self) -> Result<&str> {
-        self.host.as_deref().ok_or_else(|| {
-            anyhow!("Host must either be configured via a configuration file or the environment")
-        })
+impl VCliConfig for CliConfig {
+    fn host(&self) -> Option<&str> {
+        self.host.as_deref()
     }
-
-    pub fn set_host(&mut self, host: String) {
+    fn set_host(&mut self, host: String) {
         self.host = Some(host);
     }
-
-    pub fn token(&self) -> Result<&str> {
-        self.token.as_deref().ok_or_else(|| {
-            anyhow!("Token must either be configured via a configuration file or the environment")
-        })
+    fn token(&self) -> Option<&str> {
+        self.token.as_deref()
     }
-
-    pub fn set_token(&mut self, token: String) {
+    fn set_token(&mut self, token: String) {
         self.token = Some(token);
     }
-
-    pub fn format_style(&self) -> FormatStyle {
-        self.default_format
-            .as_ref()
-            .cloned()
-            .unwrap_or(FormatStyle::Json)
+    fn default_format(&self) -> FormatStyle {
+        self.default_format.unwrap_or_default()
     }
-
-    pub fn set_format(&mut self, format: FormatStyle) {
+    fn set_default_format(&mut self, format: FormatStyle) {
         self.default_format = Some(format);
     }
+    fn mlink_redirect(&self) -> Option<&str> {
+        self.mlink_redirect.as_deref()
+    }
+    fn set_mlink_redirect(&mut self, redirect: String) {
+        self.mlink_redirect = Some(redirect);
+    }
+    fn mlink_secret(&self) -> Option<&str> {
+        self.mlink_secret.as_deref()
+    }
+    fn set_mlink_secret(&mut self, secret: String) {
+        self.mlink_secret = Some(secret);
+    }
+    fn save(&self) -> Result<(), std::io::Error> {
+        let (filename, mut file) = Self::file(true)?;
+        file.write_all(toml::to_string(&self).unwrap().as_bytes())?;
 
-    pub fn save(&self) -> Result<()> {
-        let (_, mut file) = Self::file(true)?;
-        file.write_all(toml::to_string(&self)?.as_bytes())?;
-
-        println!("Configuration updated");
+        println!("Configuration updated. Wrote to: {}", filename.display());
         Ok(())
     }
 }

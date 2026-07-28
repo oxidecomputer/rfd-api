@@ -77,6 +77,7 @@ export type RfdPermission =
   | 'ManageMagicLinkClientsAssigned'
   | 'ManageMagicLinkClientsAll'
   | 'CreateAccessToken'
+  | 'RetrieveRemoteAccessToken'
   | { 'GetRfd': number }
   | { 'GetRfds': (number)[] }
   | { 'UpdateRfd': number }
@@ -124,8 +125,6 @@ export type AccessGroup_for_RfdPermission = {
   'updatedAt': Date
 }
 
-export type AccessTokenExchangeRequest = { 'deviceCode': string; 'expiresAt'?: Date | null; 'grantType': string }
-
 export type AddGroupBody = { 'groupId': TypedUuidForAccessGroupId }
 
 export type AddMagicLinkRedirectBody = { 'redirectUri': string }
@@ -134,13 +133,13 @@ export type AddOAuthClientRedirectBody = { 'redirectUri': string }
 
 export type ApiKeyCreateParams_for_RfdPermission = {
   'expiresAt': Date
-  'permissions'?: Permissions_for_RfdPermission | null
+  'permissionBoundary'?: Permissions_for_RfdPermission | null
 }
 
 export type ApiKeyResponse_for_RfdPermission = {
   'createdAt': Date
   'id': TypedUuidForApiKeyId
-  'permissions'?: Permissions_for_RfdPermission | null
+  'permissionBoundary'?: Permissions_for_RfdPermission | null
 }
 
 export type UserProviderId = Record<string, unknown>
@@ -164,6 +163,8 @@ export type SecretString = string
 
 export type ApiUserLinkRequestResponse = { 'token': SecretString }
 
+export type ApiUserPermissionParams_for_RfdPermission = { 'permission': RfdPermission }
+
 export type ApiUserProvider = {
   'createdAt': Date
   'deletedAt'?: Date | null
@@ -179,7 +180,7 @@ export type ApiUserProvider = {
 export type ApiUserProviderLinkPayload = { 'token': string }
 
 export type ApiUserUpdateParams_for_RfdPermission = {
-  'groupIds': (TypedUuidForAccessGroupId)[]
+  'groupIds'?: (TypedUuidForAccessGroupId)[]
   'permissions': Permissions_for_RfdPermission
 }
 
@@ -199,6 +200,20 @@ export type ContentFormat =
   | 'markdown'
 
 export type CreateMapper = { 'maxActivations'?: number | null; 'name': string; 'rule': Record<string, unknown> }
+
+/**
+ * Request body for initiating a device authorization flow. The client sends its `client_id` and an optional `scope`. The API server proxies the device authorization request to the upstream provider and tracks it as a login attempt.
+ */
+export type DeviceAuthorizationRequest = { 'clientId': TypedUuidForOAuthClientId; 'scope'?: string | null }
+
+/**
+ * Request body for the device token exchange. The client polls this endpoint with the device_code received from the authorization step.
+ */
+export type DeviceTokenExchangeRequest = {
+  'clientId': TypedUuidForOAuthClientId
+  'deviceCode': string
+  'grantType': string
+}
 
 export type FileSha = string
 
@@ -249,7 +264,7 @@ export type InitialApiKeyResponse_for_RfdPermission = {
   'createdAt': Date
   'id': TypedUuidForApiKeyId
   'key': SecretString
-  'permissions'?: Permissions_for_RfdPermission | null
+  'permissionBoundary'?: Permissions_for_RfdPermission | null
 }
 
 export type MagicLinkSecretId = Record<string, unknown>
@@ -329,7 +344,7 @@ export type TypedUuidForMagicLinkAttemptId = string
 export type MagicLinkExchangeRequest = {
   'attemptId': TypedUuidForMagicLinkAttemptId
   'recipient': string
-  'secret': string
+  'secret': SecretString
 }
 
 export type MagicLinkExchangeResponse = { 'accessToken': string; 'expiresIn': number; 'tokenType': string }
@@ -342,10 +357,17 @@ export type MagicLinkSendRequest = {
   'recipient': string
   'redirectUri': string
   'scope'?: string | null
-  'secret': string
+  'secret': SecretString
 }
 
 export type MagicLinkSendResponse = { 'attemptId': TypedUuidForMagicLinkAttemptId }
+
+export type MapperSource = (
+  /** Created via the API, persisted in the database, supports activation limits */
+  | 'dynamic'
+  /** Loaded from service configuration, in-memory only, no activation limits */
+  | 'preset'
+)
 
 export type Mapper = {
   'activations'?: number | null
@@ -356,6 +378,7 @@ export type Mapper = {
   'maxActivations'?: number | null
   'name': string
   'rule': Record<string, unknown>
+  'source': MapperSource
   'updatedAt': Date
 }
 
@@ -363,12 +386,20 @@ export type OAuthAuthzCodeExchangeBody = {
   'clientId'?: TypedUuidForOAuthClientId | null
   'clientSecret'?: SecretString | null
   'code': string
+  /** PKCE code verifier (RFC 7636). Required for all authorization code exchanges. */
+  'codeVerifier': string
   'grantType': string
-  'pkceVerifier'?: string | null
   'redirectUri': string
 }
 
-export type OAuthAuthzCodeExchangeResponse = { 'accessToken': string; 'expiresIn': number; 'tokenType': string }
+export type OAuthAuthzCodeExchangeResponse = {
+  'accessToken': string
+  'expiresIn': number
+  'idpToken'?: string | null
+  /** The scope granted to the access token per RFC 6749 §5.1. An empty string indicates no permissions. Use "full" for all permissions. */
+  'scope': string
+  'tokenType': string
+}
 
 export type OAuthRedirectUriId = Record<string, unknown>
 
@@ -398,16 +429,23 @@ export type OAuthClient = {
   'secrets': (OAuthClientSecret)[]
 }
 
-export type OAuthProviderName =
-  | 'github'
-  | 'google'
-
-export type OAuthProviderInfo = {
+export type OAuthProviderAuthorizationCodeInfo = {
   'authUrlEndpoint': string
-  'clientId': string
-  'deviceCodeEndpoint': string
-  'provider': OAuthProviderName
-  'scopes': (string)[]
+  'redirectEndpoint': string
+  'tokenEndpoint': string
+  'tokenEndpointContentType': string
+}
+
+export type OAuthProviderAuthorizationCodePkceInfo = {
+  'clientId': TypedUuidForOAuthClientId
+  'proxyPort': number
+  'redirectEndpoint': string
+  'web': OAuthProviderAuthorizationCodeInfo
+}
+
+export type OAuthProviderDeviceInfo = {
+  'authUrlEndpoint': string
+  'clientId': TypedUuidForOAuthClientId
   'tokenEndpoint': string
 }
 
@@ -601,6 +639,11 @@ export type SearchResults = {
 
 export type UpdateRfdAttrBody = { 'majorChange'?: boolean | null }
 
+export type OAuthProviderName =
+  | 'github'
+  | 'google'
+  | 'zendesk'
+
 export type RfdAttrName =
   | 'discussion'
   | 'labels'
@@ -628,6 +671,14 @@ export interface RemoveApiUserFromGroupPathParams {
 }
 
 export interface LinkProviderPathParams {
+  userId: TypedUuidForUserId
+}
+
+export interface AddApiUserPermissionPathParams {
+  userId: TypedUuidForUserId
+}
+
+export interface RemoveApiUserPermissionPathParams {
   userId: TypedUuidForUserId
 }
 
@@ -685,6 +736,8 @@ export interface AuthzCodeRedirectPathParams {
 
 export interface AuthzCodeRedirectQueryParams {
   clientId: TypedUuidForOAuthClientId
+  codeChallenge: string
+  codeChallengeMethod: string
   redirectUri: string
   responseType: string
   scope?: string | null
@@ -705,11 +758,23 @@ export interface AuthzCodeExchangePathParams {
   provider: OAuthProviderName
 }
 
+export interface AuthzCodeExchangeQueryParams {
+  requestIdpToken?: boolean
+}
+
 export interface GetDeviceProviderPathParams {
   provider: OAuthProviderName
 }
 
+export interface DeviceAuthzPathParams {
+  provider: OAuthProviderName
+}
+
 export interface ExchangeDeviceTokenPathParams {
+  provider: OAuthProviderName
+}
+
+export interface GetWebPkceProviderPathParams {
   provider: OAuthProviderName
 }
 
@@ -879,7 +944,7 @@ export class Api {
    * Pulled from info.version in the OpenAPI schema. Sent in the
    * `api-version` header on all requests.
    */
-  apiVersion = '0.14.6'
+  apiVersion = '0.15.3'
 
   constructor({ host = '', baseParams = {}, token }: ApiConfig = {}) {
     this.host = host
@@ -961,7 +1026,7 @@ export class Api {
       })
     },
     /**
-     * Update the permissions assigned to a given user
+     * Update the permissions assigned to a given user. These replace any existing
      */
     updateApiUser: ({
       path,
@@ -1024,6 +1089,40 @@ export class Api {
       return this.request<void>({
         path: `/api-user/${path.userId}/link`,
         method: 'POST',
+        body,
+        ...params,
+      })
+    },
+    /**
+     * Add a single permission to a user
+     */
+    addApiUserPermission: (
+      {
+        path,
+        body,
+      }: { path: AddApiUserPermissionPathParams; body: ApiUserPermissionParams_for_RfdPermission },
+      params: FetchParams = {},
+    ) => {
+      return this.request<GetUserResponse_for_RfdPermission>({
+        path: `/api-user/${path.userId}/permission`,
+        method: 'POST',
+        body,
+        ...params,
+      })
+    },
+    /**
+     * Remove a single permission from a user
+     */
+    removeApiUserPermission: (
+      {
+        path,
+        body,
+      }: { path: RemoveApiUserPermissionPathParams; body: ApiUserPermissionParams_for_RfdPermission },
+      params: FetchParams = {},
+    ) => {
+      return this.request<GetUserResponse_for_RfdPermission>({
+        path: `/api-user/${path.userId}/permission`,
+        method: 'DELETE',
         body,
         ...params,
       })
@@ -1240,27 +1339,43 @@ export class Api {
      */
     authzCodeExchange: ({
       path,
-    }: { path: AuthzCodeExchangePathParams }, params: FetchParams = {}) => {
+      query = {},
+    }: { path: AuthzCodeExchangePathParams; query?: AuthzCodeExchangeQueryParams }, params: FetchParams = {}) => {
       return this.request<OAuthAuthzCodeExchangeResponse>({
         path: `/login/oauth/${path.provider}/code/token`,
         method: 'POST',
+        query,
         ...params,
       })
     },
     /**
-     * Retrieve the metadata about an OAuth provider
+     * Retrieve the metadata about an OAuth provider for device authorization flow
      */
     getDeviceProvider: ({
       path,
     }: { path: GetDeviceProviderPathParams }, params: FetchParams = {}) => {
-      return this.request<OAuthProviderInfo>({
+      return this.request<OAuthProviderDeviceInfo>({
         path: `/login/oauth/${path.provider}/device`,
         method: 'GET',
         ...params,
       })
     },
     /**
-     * Exchange an OAuth device code request for an access token
+     * Initiate a device authorization flow by proxying the request to the
+     */
+    deviceAuthz: ({
+      path,
+      body,
+    }: { path: DeviceAuthzPathParams; body: DeviceAuthorizationRequest }, params: FetchParams = {}) => {
+      return this.request<void>({
+        path: `/login/oauth/${path.provider}/device`,
+        method: 'POST',
+        body,
+        ...params,
+      })
+    },
+    /**
+     * Exchange an OAuth device code for an access token. The client polls
      */
     exchangeDeviceToken: ({
       path,
@@ -1268,6 +1383,18 @@ export class Api {
       return this.request<void>({
         path: `/login/oauth/${path.provider}/device/exchange`,
         method: 'POST',
+        ...params,
+      })
+    },
+    /**
+     * Retrieve the metadata about an OAuth provider for public PKCE authorization code flow
+     */
+    getWebPkceProvider: ({
+      path,
+    }: { path: GetWebPkceProviderPathParams }, params: FetchParams = {}) => {
+      return this.request<OAuthProviderAuthorizationCodePkceInfo>({
+        path: `/login/oauth/${path.provider}/public-pkce`,
+        method: 'GET',
         ...params,
       })
     },

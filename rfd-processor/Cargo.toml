@@ -9,21 +9,19 @@ edition = { workspace = true }
 async-trait = { workspace = true }
 base64 = { workspace = true }
 chrono = { workspace = true }
+clap = { workspace = true }
 config = { workspace = true }
-diesel = { workspace = true }
 futures = { workspace = true }
 google-drive3 = { workspace = true }
 google-storage1 = { workspace = true }
 hex = { workspace = true }
 hmac = { workspace = true }
-http = { workspace = true }
 meilisearch-sdk = { workspace = true }
 md-5 = { workspace = true }
 mime_guess = { workspace = true }
 newtype-uuid = { workspace = true }
 octorust = { workspace = true, features = ["httpcache"] }
 parse-rfd = { path = "../parse-rfd" }
-regex = { workspace = true }
 reqwest = { workspace = true }
 reqwest-middleware = { workspace = true }
 reqwest-retry = { workspace = true }
@@ -43,6 +41,9 @@ tracing-subscriber = { workspace = true, features = ["env-filter", "fmt", "json"
 v-model = { workspace = true }
 uuid = { workspace = true }
 yup-oauth2 = { workspace = true }
+
+[build-dependencies]
+build-info = { path = "../build-info" }
 
 [package.metadata.dist]
 targets = ["x86_64-unknown-linux-gnu"]

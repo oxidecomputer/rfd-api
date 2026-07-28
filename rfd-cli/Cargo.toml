@@ -12,28 +12,21 @@ chrono = { workspace = true }
 clap = { workspace = true }
 config = { workspace = true }
 dirs = { workspace = true }
-futures = { workspace = true }
-itertools = { workspace = true }
-jsonwebtoken = { workspace = true }
-oauth2 = { workspace = true }
-owo-colors = { workspace = true }
 progenitor-client = { workspace = true }
-reqwest = { workspace = true }
+# progenitor 0.14 / v-cli-sdk target reqwest 0.13.
+reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "rustls"] }
 rfd-sdk = { path = "../rfd-sdk" }
-rustls = { workspace = true }
 schemars = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-tabwriter = { workspace = true }
+thiserror = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 toml = { workspace = true }
 uuid = { workspace = true, features = ["serde", "v4"] }
+v-cli-sdk = { workspace = true }
 
 [build-dependencies]
-serde_json = { workspace = true }
-
-[dev-dependencies]
-regex = { workspace = true }
+build-info = { path = "../build-info" }
 
 [package.metadata.dist]
 targets = ["x86_64-unknown-linux-gnu", "aarch64-apple-darwin", "x86_64-apple-darwin"]

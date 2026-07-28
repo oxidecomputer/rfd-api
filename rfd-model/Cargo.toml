@@ -7,25 +7,21 @@ edition = { workspace = true }
 
 [features]
 mock = ["mockall"]
+installer = ["dep:diesel_migrations", "diesel/r2d2"]
 
 [dependencies]
 async-bb8-diesel = { workspace = true }
 async-trait = { workspace = true }
-bb8 = { workspace = true }
 chrono = { workspace = true, features = ["serde"] }
 diesel = { workspace = true, features = ["chrono", "uuid", "serde_json"] }
+diesel_migrations = { workspace = true, features = ["postgres"], optional = true }
 mockall = { workspace = true, optional = true }
 newtype-uuid = { workspace = true }
 partial-struct = { workspace = true }
 schemars = { workspace = true, features = ["chrono", "uuid1"] }
 serde = { workspace = true, features = ["derive"] }
-serde_json = { workspace = true }
 tap = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 uuid = { workspace = true, features = ["v4", "serde"]  }
 v-model = { workspace = true }
-
-[dev-dependencies]
-diesel_migrations = { workspace = true, features = ["postgres"] }
-tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }

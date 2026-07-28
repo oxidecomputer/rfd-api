@@ -16,6 +16,8 @@ use std::fmt::Display;
 use thiserror::Error;
 
 pub mod db;
+#[cfg(feature = "installer")]
+pub mod migrations;
 #[rustfmt::skip]
 pub mod schema;
 pub mod schema_ext;
