@@ -142,7 +142,11 @@ impl RfdStore for PostgresStore {
         query = query
             .offset(pagination.offset)
             .limit(pagination.limit)
-            .order((rfd::id.asc(), rfd_revision::committed_at.desc()));
+            .order((
+                rfd::id.asc(),
+                rfd_revision::committed_at.desc(),
+                rfd_revision::created_at.desc(),
+            ));
 
         tracing::trace!(query = ?debug_query(&query), "List RFDs query");
 
@@ -380,7 +384,9 @@ impl RfdMetaStore for PostgresStore {
                 SELECT rfd_revision.id
                 FROM rfd_revision
                 WHERE rfd_revision.rfd_id = rfd.id AND rfd_revision.major_change = TRUE
-                ORDER BY rfd_revision.committed_at DESC
+                ORDER BY
+                    rfd_revision.committed_at DESC,
+                    rfd_revision.created_at DESC
                 LIMIT 1
             )
         WHERE {} AND
@@ -388,12 +394,15 @@ impl RfdMetaStore for PostgresStore {
                 SELECT rfd_revision.id
                 FROM rfd_revision
                 WHERE rfd_revision.rfd_id = rfd.id
-                ORDER BY rfd_revision.committed_at DESC
+                ORDER BY
+                    rfd_revision.committed_at DESC,
+                    rfd_revision.created_at DESC
                 LIMIT 1
             )
         ORDER BY
             rfd_revision.rfd_id ASC,
-            rfd_revision.committed_at DESC
+            rfd_revision.committed_at DESC,
+            rfd_revision.created_at DESC
         LIMIT ${} OFFSET ${}"#,
             where_clause,
             bind_count,
@@ -623,7 +632,9 @@ impl RfdPdfsStore for PostgresStore {
                 SELECT rfd_revision.id
                 FROM rfd_revision
                 WHERE rfd_revision.rfd_id = rfd.id AND rfd_revision.major_change = TRUE
-                ORDER BY rfd_revision.committed_at DESC
+                ORDER BY
+                    rfd_revision.committed_at DESC,
+                    rfd_revision.created_at DESC
                 LIMIT 1
             )
         WHERE {} AND
@@ -631,12 +642,15 @@ impl RfdPdfsStore for PostgresStore {
                 SELECT rfd_revision.id
                 FROM rfd_revision
                 WHERE rfd_revision.rfd_id = rfd.id
-                ORDER BY rfd_revision.committed_at DESC
+                ORDER BY
+                    rfd_revision.committed_at DESC,
+                    rfd_revision.created_at DESC
                 LIMIT 1
             )
         ORDER BY
             rfd_revision.rfd_id ASC,
-            rfd_revision.committed_at DESC
+            rfd_revision.committed_at DESC,
+            rfd_revision.created_at DESC
         LIMIT ${} OFFSET ${}"#,
             where_clause,
             bind_count,
@@ -804,7 +818,10 @@ impl RfdRevisionStore for PostgresStore {
         let query = query
             .offset(pagination.offset)
             .limit(pagination.limit)
-            .order(rfd_revision::committed_at.desc());
+            .order((
+                rfd_revision::committed_at.desc(),
+                rfd_revision::created_at.desc(),
+            ));
 
         tracing::info!(query = ?debug_query(&query), "Run list rfds");
 
@@ -971,7 +988,10 @@ impl RfdRevisionMetaStore for PostgresStore {
         let query = query
             .offset(pagination.offset)
             .limit(pagination.limit)
-            .order(rfd_revision::committed_at.desc());
+            .order((
+                rfd_revision::committed_at.desc(),
+                rfd_revision::created_at.desc(),
+            ));
 
         tracing::info!(query = ?debug_query(&query), "Run list rfd metadata");
 
@@ -1093,7 +1113,10 @@ impl RfdRevisionPdfStore for PostgresStore {
         let query = query
             .offset(pagination.offset)
             .limit(pagination.limit)
-            .order(rfd_revision::committed_at.desc());
+            .order((
+                rfd_revision::committed_at.desc(),
+                rfd_revision::created_at.desc(),
+            ));
 
         tracing::info!(query = ?debug_query(&query), "Run list rfd pdf");
 

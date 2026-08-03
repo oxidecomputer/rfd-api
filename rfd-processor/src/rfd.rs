@@ -358,56 +358,58 @@ impl RemoteRfd {
         )
         .await?;
 
-        let id = RfdRevisionStore::list(
+        let latest_revision = RfdRevisionStore::list(
             storage,
-            vec![RfdRevisionFilter::default()
-                .rfd(Some(vec![rfd.id]))
-                .commit(Some(vec![payload.commit_sha.clone()]))],
+            vec![RfdRevisionFilter::default().rfd(Some(vec![rfd.id]))],
             &ListPagination::latest(),
         )
         .await?
         .into_iter()
-        .next()
-        .map(|revision| {
-            tracing::info!("Found existing RFD revision for this commit. Updating the revision.");
-            revision.id
-        })
-        .unwrap_or_else(|| {
-            tracing::info!("No existing revisions exist for this commit. Creating a new revision.");
-            TypedUuid::new_v4()
-        });
+        .next();
 
-        let revision = RfdRevisionStore::upsert(
-            storage,
-            NewRfdRevision {
-                id,
-                rfd_id: rfd.id,
-                title: payload.title,
-                state: if payload.state.is_empty() {
-                    None
-                } else {
-                    Some(payload.state)
-                },
-                discussion: payload.discussion,
-                authors: if payload.authors.is_empty() {
-                    None
-                } else {
-                    Some(payload.authors)
-                },
-                labels: if payload.labels.is_empty() {
-                    None
-                } else {
-                    Some(payload.labels)
-                },
-                content: payload.content.raw().to_string(),
-                content_format: payload.content_format,
-                sha: payload.sha,
-                commit: payload.commit_sha,
-                committed_at: payload.commit_date,
-                major_change,
-            },
-        )
-        .await?;
+        let revision = match latest_revision {
+            Some(revision) if revision.sha == payload.sha => {
+                tracing::info!(
+                    revision = %revision.id,
+                    "RFD source is unchanged. Using the existing revision."
+                );
+                revision
+            }
+            _ => {
+                tracing::info!("RFD source has changed. Creating a new revision.");
+                RfdRevisionStore::upsert(
+                    storage,
+                    NewRfdRevision {
+                        id: TypedUuid::new_v4(),
+                        rfd_id: rfd.id,
+                        title: payload.title,
+                        state: if payload.state.is_empty() {
+                            None
+                        } else {
+                            Some(payload.state)
+                        },
+                        discussion: payload.discussion,
+                        authors: if payload.authors.is_empty() {
+                            None
+                        } else {
+                            Some(payload.authors)
+                        },
+                        labels: if payload.labels.is_empty() {
+                            None
+                        } else {
+                            Some(payload.labels)
+                        },
+                        content: payload.content.raw().to_string(),
+                        content_format: payload.content_format,
+                        sha: payload.sha,
+                        commit: payload.commit_sha,
+                        committed_at: payload.commit_date,
+                        major_change,
+                    },
+                )
+                .await?
+            }
+        };
 
         let mut existing_pdf = RfdPdfStore::list(
             storage,
