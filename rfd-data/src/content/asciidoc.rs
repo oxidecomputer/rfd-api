@@ -133,7 +133,9 @@ impl<'a> RfdAsciidoc<'a> {
         Self::body(content).and_then(|body| {
             // After splitting the document at the title, the very first line (asuming it is non-empty)
             // is considered the author line
-            body.split_inclusive('\n').nth(0).filter(|&line| !(line.is_empty() || line == "\n"))
+            body.split_inclusive('\n')
+                .nth(0)
+                .filter(|&line| !(line.is_empty() || line == "\n"))
         })
     }
 
