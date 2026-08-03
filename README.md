@@ -405,7 +405,7 @@ groups = [
 ```
 
 ```bash
-cargo run -p rfd-cli mapper create --json-body /dev/stdin <<EOM
+cargo run -p rfd-cli sys mapper create --json-body /dev/stdin <<EOM
 {
   "name": "add_email_address",
   "max_activations": 1,
@@ -435,7 +435,7 @@ groups = [
 ```
 
 ```bash
-cargo run -p rfd-cli mapper create --json-body /dev/stdin <<EOM
+cargo run -p rfd-cli sys mapper create --json-body /dev/stdin <<EOM
 {
   "name": "add_email_domain",
   "max_activations": 5,
@@ -464,7 +464,7 @@ groups = [
 ```
 
 ```bash
-cargo run -p rfd-cli mapper create --json-body /dev/stdin <<EOM
+cargo run -p rfd-cli sys mapper create --json-body /dev/stdin <<EOM
 {
   "name": "add_github_user",
   "max_activations": 1,
