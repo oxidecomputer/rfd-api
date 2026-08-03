@@ -975,8 +975,8 @@ dependencies = [
 
 [[package]]
 name = "dropshot-verified-body"
-version = "0.2.0"
-source = "git+https://github.com/oxidecomputer/dropshot-verified-body?rev=0b124eeb0f52db783a44d395a41425a1f9b709b7#0b124eeb0f52db783a44d395a41425a1f9b709b7"
+version = "0.2.1"
+source = "git+https://github.com/oxidecomputer/dropshot-verified-body?tag=v0.2.1#1b63975efa221f43376547ef33b92bedbb66a3f9"
 dependencies = [
  "async-trait",
  "digest 0.11.3",
