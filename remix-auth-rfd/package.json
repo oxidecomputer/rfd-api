@@ -11,7 +11,7 @@
     "require": "./dist/index.cjs"
   },
   "scripts": {
-    "build": "tsup --dts",
+    "build": "tsup",
     "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "tsc": "tsc"
@@ -34,18 +34,8 @@
     "react-router": "^8.3.0"
   },
   "devDependencies": {
-    "tsup": "^8.0.2",
+    "tsup": "^8.5.1",
     "typescript": "^6.0.3"
-  },
-  "tsup": {
-    "clean": true,
-    "entry": [
-      "src/index.ts"
-    ],
-    "format": [
-      "cjs",
-      "esm"
-    ]
   },
   "dependencies": {
     "@oxide/rfd.ts": "^0.15.0",
