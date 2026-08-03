@@ -5,8 +5,8 @@
   },
   "description": "TypeScript client for the RFD API",
   "devDependencies": {
-    "tsup": "^8.0.2",
-    "typescript": "^5.7.2"
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3"
   },
   "engines": {
     "node": ">=18"
@@ -30,30 +30,17 @@
   "license": "MPL-2.0",
   "name": "@oxide/rfd.ts",
   "peerDependencies": {
-    "zod": "^3.23.8 || ^4.0.0"
+    "zod": "^4.0.0"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/oxidecomputer/rfd-api.git"
   },
   "scripts": {
-    "build": "tsup --dts",
+    "build": "tsup",
     "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "tsc": "tsc"
-  },
-  "tsup": {
-    "clean": true,
-    "entry": [
-      "src/Api.ts",
-      "src/retry.ts",
-      "src/validate.ts"
-    ],
-    "format": [
-      "cjs",
-      "esm"
-    ],
-    "splitting": false
   },
   "type": "module",
   "typesVersions": {
