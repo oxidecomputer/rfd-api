@@ -2,7 +2,7 @@
   "name": "@oxide/remix-auth-rfd",
   "version": "0.1.5",
   "engines": {
-    "node": ">=18"
+    "node": ">=24"
   },
   "type": "module",
   "main": "./dist/index.js",
@@ -11,7 +11,7 @@
     "require": "./dist/index.cjs"
   },
   "scripts": {
-    "build": "tsup --dts",
+    "build": "tsup",
     "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "tsc": "tsc"
@@ -31,24 +31,14 @@
   },
   "peerDependencies": {
     "remix-auth": "^4.0.0",
-    "react-router": "^7.4.0"
+    "react-router": "^8.3.0"
   },
   "devDependencies": {
-    "tsup": "^8.0.2",
-    "typescript": "^5.7.2"
-  },
-  "tsup": {
-    "clean": true,
-    "entry": [
-      "src/index.ts"
-    ],
-    "format": [
-      "cjs",
-      "esm"
-    ]
+    "tsup": "^8.5.1",
+    "typescript": "^6.0.3"
   },
   "dependencies": {
-    "@oxide/rfd.ts": "^0.2.1",
-    "remix-auth-oauth2": "^3.4.0"
+    "@oxide/rfd.ts": "^0.15.0",
+    "remix-auth-oauth2": "^3.4.1"
   }
 }
