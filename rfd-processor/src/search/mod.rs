@@ -75,7 +75,7 @@ impl RfdSearchIndex {
                 index.set_settings(&settings).await?;
             }
             Err(err) => {
-                return Err(err)?;
+                Err(err)?;
             }
         }
 
