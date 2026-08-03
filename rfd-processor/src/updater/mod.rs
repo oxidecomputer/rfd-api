@@ -267,7 +267,7 @@ impl<'a> RfdUpdater<'a> {
                     }
                     RfdUpdateActionErr::Stop(action_err) => {
                         tracing::warn!(action_err, "Updating RFD failed with fatal error");
-                        return Err(action_err)?;
+                        Err(action_err)?;
                     }
                 },
             }
