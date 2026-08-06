@@ -322,9 +322,9 @@ fn format_code(code: String) -> String {
 
     // Add newlines after end-braces at <= two levels of indentation. Rustfmt's
     // `blank_lines_lower_bound` is broken.
-    let regex = regex::Regex::new(r#"(})(\n\s{0,8}[^} ])"#).unwrap();
+    let regex = regex::regex!(r#"(})(\n\s{0,8}[^} ])"#);
     let contents = regex.replace_all(&contents, "$1\n$2");
 
-    let regex = regex::Regex::new(r#"(\n\s*///)(\S)"#).unwrap();
+    let regex = regex::regex!(r#"(\n\s*///)(\S)"#);
     regex.replace_all(&contents, "$1 $2").to_string()
 }

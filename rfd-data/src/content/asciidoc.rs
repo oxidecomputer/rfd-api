@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use regex::Regex;
+use regex::{regex, Regex};
 use std::borrow::Cow;
 use thiserror::Error;
 
@@ -123,10 +123,10 @@ impl<'a> RfdAsciidoc<'a> {
         title.map(|m| m.as_str())
     }
 
-    fn title_pattern() -> Regex {
+    fn title_pattern() -> &'static Regex {
         // This pattern also include markdown title handling fallbacks to handle malformed
         // documents
-        Regex::new(r"(?m)^[=#][ ]+(?:RFD ?)?(?:\d+:? )?(.*)\n").unwrap()
+        regex!(r"(?m)^[=#][ ]+(?:RFD ?)?(?:\d+:? )?(.*)\n")
     }
 
     fn author_line(content: &str) -> Option<&str> {
@@ -150,8 +150,8 @@ impl<'a> RfdAsciidoc<'a> {
         Self::title_pattern().splitn(content, 2).nth(1)
     }
 
-    fn include_pattern() -> Regex {
-        Regex::new(r"(?m)^include::(.*)\[\]$").unwrap()
+    fn include_pattern() -> &'static Regex {
+        regex!(r"(?m)^include::(.*)\[\]$")
     }
 
     pub fn includes(&'a self) -> Vec<AsciidocInclude<'a>> {
@@ -189,7 +189,7 @@ impl<'a> RfdDocument for RfdAsciidoc<'a> {
     type Error = RfdAsciidocError;
 
     fn get_title(&self) -> Option<&str> {
-        let fallback_title_pattern = Regex::new(r"(?m)^= (.*)$").unwrap();
+        let fallback_title_pattern = regex!(r"(?m)^= (.*)$");
 
         if let Some(caps) = Self::title_pattern().captures(&self.content) {
             Some(caps.get(1).unwrap().as_str().trim())

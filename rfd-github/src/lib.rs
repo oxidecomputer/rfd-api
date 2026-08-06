@@ -21,7 +21,7 @@ use octorust::{
     types::{GitCreateRefRequest, PullRequestSimple, ReposCreateUpdateFileContentsRequest},
     Client, ClientError, Response,
 };
-use regex::Regex;
+use regex::regex;
 use rfd_data::{
     content::{RfdAsciidoc, RfdAsciidocError, RfdContent, RfdMarkdown},
     RfdNumber,
@@ -162,7 +162,7 @@ impl GitHubRfdRepo {
     }
 
     pub async fn branches(&self) -> Result<Vec<GitHubRfdLocation>, GitHubError> {
-        let branch_pattern = Regex::new(r#"^\d{4}$"#).unwrap();
+        let branch_pattern = regex!(r#"^\d{4}$"#);
         let responses = self
             .client
             .repos()
