@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use regex::Regex;
+use regex::{regex, Regex};
 use std::borrow::Cow;
 
 use super::RfdDocument;
@@ -61,8 +61,8 @@ impl<'a> RfdMarkdown<'a> {
         Regex::new(&format!(r"(?m)^{}:(.*)$\n", attr)).unwrap()
     }
 
-    fn title_pattern(&self) -> Regex {
-        Regex::new(r"(?m)^[#].*$[\n\r]+").unwrap()
+    fn title_pattern(&self) -> &'static Regex {
+        regex!(r"(?m)^[#].*$[\n\r]+")
     }
 }
 
@@ -70,8 +70,8 @@ impl<'a> RfdDocument for RfdMarkdown<'a> {
     type Error = ();
 
     fn get_title(&self) -> Option<&str> {
-        let title_pattern = Regex::new(r"(?m)^[=# ]+(?:RFD ?)?(?:\d+:? )?(.*)$").unwrap();
-        let fallback_title_pattern = Regex::new(r"(?m)^# (.*)$").unwrap();
+        let title_pattern = regex!(r"(?m)^[=# ]+(?:RFD ?)?(?:\d+:? )?(.*)$");
+        let fallback_title_pattern = regex!(r"(?m)^# (.*)$");
 
         if let Some(caps) = title_pattern.captures(&self.content) {
             Some(caps.get(1).unwrap().as_str().trim())

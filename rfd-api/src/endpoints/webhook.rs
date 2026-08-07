@@ -11,7 +11,7 @@ use dropshot::{
 use dropshot_verified_body::{hmac::HmacVerifiedBody, services::github::GitHubWebhookVerification};
 use http::HeaderName;
 use newtype_uuid::{GenericUuid, TypedUuid};
-use regex::Regex;
+use regex::regex;
 use rfd_model::{NewJob, WebhookDeliveryId};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -94,7 +94,7 @@ impl GitHubCommitPayload {
         // commit, changes will be accepted to rejected. Changes on the default repository branch
         // are accepted for all RFDs, but on a RFD specific branch (i.e. 0123) on changes to
         // RFD 123 are accepted. Changes on non-default, non-rfd branches are always rejected
-        let pattern = Regex::new(r#"^rfd/(\d{4})/"#).unwrap();
+        let pattern = regex!(r#"^rfd/(\d{4})/"#);
         let branch = self.branch();
 
         self.changed_files()
