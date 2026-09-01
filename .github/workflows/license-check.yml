@@ -10,10 +10,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.ref_name == 'main' && github.sha || 'anysha' }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   license:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Check License Header
-        uses: apache/skywalking-eyes/header@0630b017b4e34f27f0d8719c873d703fb31ec8de
+        uses: apache/skywalking-eyes/header@a196742f472feaffafea537ce5a2a4c3c53a8de4 # v0.9.0

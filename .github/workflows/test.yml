@@ -31,8 +31,8 @@ jobs:
           - 5432:5432
 
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: ruby/setup-ruby@6e5d382445ae5590b7449d8b3bc8cb1c2c27f617 # v1.3.7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ruby/setup-ruby@95ef2b042f9d7a56d8268cba8559e2842e2ad01b # v1.321.0
         with:
           working-directory: rfd-processor
           bundler-cache: true
@@ -56,7 +56,7 @@ jobs:
           mmdc --version
       - run: |
           rustup toolchain install
-      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - run: |
           cargo test
         env:
@@ -94,11 +94,11 @@ jobs:
   generate:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: |
           rustup toolchain install
           rustup toolchain install nightly --component rustfmt
-      - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2.9.1
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - name: Install Dprint
         run: |
           mkdir -p "$HOME/.dprint/bin"

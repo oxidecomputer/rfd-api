@@ -10,18 +10,21 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.ref_name == 'main' && github.sha || 'anysha' }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   format:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: |
           cargo fmt --all -- --check
 
   clippy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: |
           cargo clippy --all-features --workspace --all-targets -- -Dwarnings
 
@@ -30,8 +33,9 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - run: |
-          rustup toolchain install
+          rustup toolchain install stable
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - run: |
-          cargo install cargo-shear --version 1.13.2 # 2026-07-16
+          cargo +stable install cargo-shear --version 1.13.4 --locked # 2026-08-11
       - run: |
           cargo shear --deny-warnings
