@@ -6,7 +6,7 @@
   "description": "TypeScript client for the RFD API",
   "devDependencies": {
     "msw": "^2.13.4",
-    "tsup": "^8.5.1",
+    "tsdown": "^0.22.14",
     "type-fest": "^5.5.0",
     "typescript": "^6.0.3"
   },
@@ -15,20 +15,44 @@
   },
   "exports": {
     "./client": {
-      "import": "./dist/Api.js",
-      "require": "./dist/Api.cjs"
+      "import": {
+        "types": "./dist/Api.d.mts",
+        "default": "./dist/Api.mjs"
+      },
+      "require": {
+        "types": "./dist/Api.d.cts",
+        "default": "./dist/Api.cjs"
+      }
     },
     "./client-retry": {
-      "import": "./dist/retry.js",
-      "require": "./dist/retry.cjs"
+      "import": {
+        "types": "./dist/retry.d.mts",
+        "default": "./dist/retry.mjs"
+      },
+      "require": {
+        "types": "./dist/retry.d.cts",
+        "default": "./dist/retry.cjs"
+      }
     },
     "./msw-handlers": {
-      "import": "./dist/msw-handlers.js",
-      "require": "./dist/msw-handlers.cjs"
+      "import": {
+        "types": "./dist/msw-handlers.d.mts",
+        "default": "./dist/msw-handlers.mjs"
+      },
+      "require": {
+        "types": "./dist/msw-handlers.d.cts",
+        "default": "./dist/msw-handlers.cjs"
+      }
     },
     "./validation": {
-      "import": "./dist/validate.js",
-      "require": "./dist/validate.cjs"
+      "import": {
+        "types": "./dist/validate.d.mts",
+        "default": "./dist/validate.mjs"
+      },
+      "require": {
+        "types": "./dist/validate.d.cts",
+        "default": "./dist/validate.cjs"
+      }
     }
   },
   "homepage": "https://github.com/oxidecomputer/rfd-api#readme",
@@ -45,7 +69,7 @@
     "url": "git+https://github.com/oxidecomputer/rfd-api.git"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown",
     "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "tsc": "tsc"
@@ -54,16 +78,16 @@
   "typesVersions": {
     "*": {
       "client": [
-        "dist/Api.d.ts"
+        "dist/Api.d.mts"
       ],
       "client-retry": [
-        "dist/retry.d.ts"
+        "dist/retry.d.mts"
       ],
       "msw-handlers": [
-        "dist/msw-handlers.d.ts"
+        "dist/msw-handlers.d.mts"
       ],
       "validation": [
-        "dist/validate.d.ts"
+        "dist/validate.d.mts"
       ]
     }
   },
