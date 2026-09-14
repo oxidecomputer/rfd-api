@@ -19,7 +19,7 @@ version = "0.15.5"
 edition = "2024"
 
 [workspace.dependencies]
-anyhow = "1.0.102"
+anyhow = "1.0.104"
 async-bb8-diesel = "0.3.0"
 async-trait = "0.1.89"
 base64 = "0.22"
