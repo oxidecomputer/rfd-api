@@ -207,6 +207,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
 
 [[package]]
+name = "base64"
+version = "0.23.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ac07cdecf99051d9a5238b80f35af32cdeba5b336e55d957b318b50137e18da5"
+
+[[package]]
 name = "base64ct"
 version = "1.8.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -345,7 +351,7 @@ version = "0.1.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1f927b07c74ba84c7e5fe4db2baeb3e996ab2688992e39ac68ce3220a677c7e"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "encoding_rs",
 ]
 
@@ -913,7 +919,7 @@ dependencies = [
  "async-compression",
  "async-stream",
  "async-trait",
- "base64",
+ "base64 0.22.1",
  "bytes",
  "camino",
  "chrono",
@@ -962,7 +968,7 @@ version = "0.4.10"
 source = "git+https://github.com/oxidecomputer/v-api?tag=v0.4.10#e012ae208a9e4b5fbefdc8f2807b253441036e26"
 dependencies = [
  "async-trait",
- "base64",
+ "base64 0.22.1",
  "dropshot",
  "tracing",
 ]
@@ -1300,7 +1306,7 @@ version = "8.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "020dd415ee200770d835d01674084400a4d11e6c108ae941f660e8264f49d4ca"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "chrono",
  "http 1.4.2",
  "http-body-util",
@@ -1624,7 +1630,7 @@ version = "0.1.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "96547c2556ec9d12fb1578c4eaf448b04993e7fb79cbaad930a656880a6bdfa0"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "bytes",
  "futures-channel",
  "futures-util",
@@ -1925,7 +1931,7 @@ version = "9.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5a87cc7a48537badeae96744432de36f4be2b4a34a05a5ef32e9dd8a1c169dde"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "js-sys",
  "pem",
  "ring",
@@ -1941,7 +1947,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eba32bfb4ffdeaca3e34431072faf01745c9b26d25504aa7a6cf5684334fc4fc"
 dependencies = [
  "aws-lc-rs",
- "base64",
+ "base64 0.22.1",
  "getrandom 0.2.17",
  "js-sys",
  "pem",
@@ -2358,7 +2364,7 @@ version = "5.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "51e219e79014df21a225b1860a479e2dcd7cbd9130f4defd4bd0e191ea31d67d"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "chrono",
  "getrandom 0.2.17",
  "http 1.4.2",
@@ -2378,7 +2384,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "234fb5c965bbce983ee5de636a7a51d6a3223da8067ea02f9ab2d2d78ac08be2"
 dependencies = [
  "oauth2",
- "reqwest 0.13.4",
+ "reqwest 0.13.5",
 ]
 
 [[package]]
@@ -2398,7 +2404,7 @@ dependencies = [
  "parse_link_header",
  "pem",
  "percent-encoding",
- "reqwest 0.13.4",
+ "reqwest 0.13.5",
  "reqwest-conditional-middleware",
  "reqwest-middleware",
  "reqwest-retry",
@@ -2536,7 +2542,7 @@ version = "3.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1d30c53c26bc5b31a98cd02d20f25a7c8567146caf63ed593a9d87b2775291be"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "serde_core",
 ]
 
@@ -2732,7 +2738,7 @@ dependencies = [
  "bytes",
  "futures-core",
  "percent-encoding",
- "reqwest 0.13.4",
+ "reqwest 0.13.5",
  "serde",
  "serde_json",
  "serde_urlencoded",
@@ -3078,7 +3084,7 @@ version = "0.12.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eddd3ca559203180a307f12d114c268abf583f59b03cb906fd0b3ff8646c1147"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "bytes",
  "futures-core",
  "futures-util",
@@ -3116,11 +3122,11 @@ dependencies = [
 
 [[package]]
 name = "reqwest"
-version = "0.13.4"
+version = "0.13.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "219c5811de6525e5416c7d5d53bb656d3afdbc6c5af816e0802bcfa42dbdc1c3"
+checksum = "16a1cfa75cc186dd73d5818e510e042e40927bccc9c236b061cea97e1eb08029"
 dependencies = [
- "base64",
+ "base64 0.23.1",
  "bytes",
  "futures-core",
  "futures-util",
@@ -3165,7 +3171,7 @@ checksum = "51b1fc1521b1ec6eeebcf412357bfe28db3eb23008c91852bb69120a1d7ab6d0"
 dependencies = [
  "async-trait",
  "http 1.4.2",
- "reqwest 0.13.4",
+ "reqwest 0.13.5",
  "reqwest-middleware",
 ]
 
@@ -3178,7 +3184,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "http 1.4.2",
- "reqwest 0.13.4",
+ "reqwest 0.13.5",
  "thiserror 2.0.18",
  "tower-service",
 ]
@@ -3195,7 +3201,7 @@ dependencies = [
  "getrandom 0.2.17",
  "http 1.4.2",
  "hyper",
- "reqwest 0.13.4",
+ "reqwest 0.13.5",
  "reqwest-middleware",
  "retry-policies",
  "thiserror 2.0.18",
@@ -3215,7 +3221,7 @@ dependencies = [
  "getrandom 0.2.17",
  "http 1.4.2",
  "matchit",
- "reqwest 0.13.4",
+ "reqwest 0.13.5",
  "reqwest-middleware",
  "tracing",
 ]
@@ -3232,7 +3238,7 @@ dependencies = [
  "mailparse",
  "maybe-async",
  "rand 0.10.2",
- "reqwest 0.13.4",
+ "reqwest 0.13.5",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -3268,7 +3274,7 @@ dependencies = [
  "octorust",
  "partial-struct",
  "regex",
- "reqwest 0.13.4",
+ "reqwest 0.13.5",
  "reqwest-middleware",
  "reqwest-retry",
  "reqwest-tracing",
@@ -3311,7 +3317,7 @@ dependencies = [
  "config",
  "dirs 6.0.0",
  "progenitor-client",
- "reqwest 0.13.4",
+ "reqwest 0.13.5",
  "rfd-sdk",
  "schemars 0.8.22",
  "serde",
@@ -3340,7 +3346,7 @@ name = "rfd-github"
 version = "0.15.5"
 dependencies = [
  "async-trait",
- "base64",
+ "base64 0.22.1",
  "chrono",
  "http 1.4.2",
  "octorust",
@@ -3377,7 +3383,7 @@ name = "rfd-processor"
 version = "0.15.5"
 dependencies = [
  "async-trait",
- "base64",
+ "base64 0.22.1",
  "build-info",
  "chrono",
  "clap",
@@ -3393,7 +3399,7 @@ dependencies = [
  "newtype-uuid",
  "octorust",
  "parse-rfd",
- "reqwest 0.13.4",
+ "reqwest 0.13.5",
  "reqwest-middleware",
  "reqwest-retry",
  "reqwest-tracing",
@@ -3420,7 +3426,7 @@ version = "0.15.5"
 dependencies = [
  "chrono",
  "progenitor-client",
- "reqwest 0.13.4",
+ "reqwest 0.13.5",
  "schemars 0.8.22",
  "serde",
  "serde_json",
@@ -3884,7 +3890,7 @@ version = "3.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "76a5c54c7310e7b8b9577c286d7e399ddd876c3e12b3ed917a8aabc4b96e9e8c"
 dependencies = [
- "base64",
+ "base64 0.22.1",
  "bs58",
  "chrono",
  "hex",
@@ -4906,7 +4912,7 @@ source = "git+https://github.com/oxidecomputer/v-api?tag=v0.4.10#e012ae208a9e4b5
 dependencies = [
  "anyhow",
  "async-trait",
- "base64",
+ "base64 0.22.1",
  "chrono",
  "cookie",
  "crc32c",
@@ -4924,7 +4930,7 @@ dependencies = [
  "oauth2-reqwest",
  "partial-struct",
  "rand 0.10.2",
- "reqwest 0.13.4",
+ "reqwest 0.13.5",
  "rsa",
  "schemars 0.8.22",
  "secrecy",
@@ -4979,7 +4985,7 @@ dependencies = [
  "oauth2",
  "owo-colors",
  "progenitor-client",
- "reqwest 0.13.4",
+ "reqwest 0.13.5",
  "schemars 0.8.22",
  "serde",
  "serde_json",
@@ -5483,7 +5489,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ef19a12dfb29fe39f78e1547e1be49717b84aef8762a4001359ed4f94d3accc1"
 dependencies = [
  "async-trait",
- "base64",
+ "base64 0.22.1",
  "http 1.4.2",
  "http-body-util",
  "hyper",
