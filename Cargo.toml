@@ -69,7 +69,7 @@ slog-async = "2.8.0"
 strum = { version = "0.28.0", features = ["derive"] }
 tap = "1.0.1"
 thiserror = "2"
-tokio = { version = "1.52.3", default-features = false, features = ["rt-multi-thread", "macros"] }
+tokio = { version = "1.53.1", default-features = false, features = ["rt-multi-thread", "macros"] }
 toml = "1.1.2"
 tracing = "0.1.44"
 tracing-appender = "0.2.5"
