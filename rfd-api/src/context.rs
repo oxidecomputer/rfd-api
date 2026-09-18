@@ -950,7 +950,7 @@ pub(crate) mod test_mocks {
     };
     use std::sync::Arc;
     use v_api::{
-        config::{AsymmetricKey, JwtConfig, ResolvedOAuthConfig, ResolvedOAuthWebConfig},
+        config::{JwtConfig, ResolvedAsymmetricKey, ResolvedOAuthConfig, ResolvedOAuthWebConfig},
         endpoints::login::oauth::{remote::google::GoogleOAuthProvider, OAuthProviderName},
         VContextBuilder,
     };
@@ -981,7 +981,7 @@ pub(crate) mod test_mocks {
         let mut kid = [0; 24];
         rng.fill_bytes(&mut kid);
 
-        let signer = AsymmetricKey::LocalSigner {
+        let signer = ResolvedAsymmetricKey::LocalSigner {
             kid: hex::encode(kid),
             private: String::from_utf8(
                 priv_key
@@ -993,7 +993,7 @@ pub(crate) mod test_mocks {
             .unwrap()
             .into(),
         };
-        let verifier = AsymmetricKey::LocalVerifier {
+        let verifier = ResolvedAsymmetricKey::LocalVerifier {
             kid: hex::encode(kid),
             public: pub_key.to_public_key_pem(LineEnding::LF).unwrap().into(),
         };

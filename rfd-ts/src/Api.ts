@@ -8,6 +8,16 @@ export type { ApiResult, ErrorBody, ErrorResult } from './http-client'
 
 export type AccessGroupId = Record<string, unknown>
 
+/**
+ * Where an access group is defined. Groups loaded from service configuration are immutable at runtime; only their membership can change.
+ */
+export type AccessGroupSource = (
+  /** Created via the API and persisted in the database */
+  | 'dynamic'
+  /** Loaded from service configuration, in-memory only, name and permissions are fixed */
+  | 'preset'
+)
+
 export type UserId = Record<string, unknown>
 
 export type TypedUuidForUserId = string
@@ -122,6 +132,7 @@ export type AccessGroup_for_RfdPermission = {
   'id': TypedUuidForAccessGroupId
   'name': string
   'permissions': Permissions_for_RfdPermission
+  'source': AccessGroupSource
   'updatedAt': Date
 }
 
@@ -395,6 +406,9 @@ export type OAuthAuthzCodeExchangeBody = {
 export type OAuthAuthzCodeExchangeResponse = {
   'accessToken': string
   'expiresIn': number
+  /** Refresh token issued by the upstream identity provider. Returned under the same conditions as `idp_token`, and only when the provider issued one. */
+  'idpRefreshToken'?: string | null
+  /** Access token issued by the upstream identity provider. Only returned when the caller requested it and holds the `RetrieveRemoteAccessToken` permission. */
   'idpToken'?: string | null
   /** The scope granted to the access token per RFC 6749 §5.1. An empty string indicates no permissions. Use "full" for all permissions. */
   'scope': string
@@ -449,7 +463,14 @@ export type OAuthProviderDeviceInfo = {
   'tokenEndpoint': string
 }
 
-export type OpenIdConfiguration = { 'jwksUri': string }
+export type OpenIdConfiguration = {
+  'claimsSupported': (string)[]
+  'idTokenSigningAlgValuesSupported': (string)[]
+  'issuer': string
+  'jwksUri': string
+  'responseTypesSupported': (string)[]
+  'subjectTypesSupported': (string)[]
+}
 
 export type PdfSource =
   | 'github'

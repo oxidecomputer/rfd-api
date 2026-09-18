@@ -159,8 +159,10 @@ impl<T: CliConfig> Cli<T> {
                     .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
-            .about("Update the permissions assigned to a given user. These replace any existing")
-            .long_about("permissions.")
+            .about(
+                "Update the permissions assigned to a given user. These replace any \
+                 existing\n\npermissions.",
+            )
     }
 
     pub fn cli_set_api_user_contact_email() -> ::clap::Command {
@@ -908,9 +910,9 @@ impl<T: CliConfig> Cli<T> {
                     .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
-            .about("Initiate a device authorization flow by proxying the request to the")
-            .long_about(
-                "upstream OAuth provider. Creates a login attempt and returns the upstream device \
+            .about(
+                "Initiate a device authorization flow by proxying the request to the\n\nupstream \
+                 OAuth provider. Creates a login attempt and returns the upstream device \
                  authorization response.",
             )
     }
@@ -962,8 +964,10 @@ impl<T: CliConfig> Cli<T> {
                     .action(::clap::ArgAction::SetTrue)
                     .help("XXX"),
             )
-            .about("Exchange an OAuth device code for an access token. The client polls")
-            .long_about("this endpoint until the user completes authorization.")
+            .about(
+                "Exchange an OAuth device code for an access token. The client polls\n\nthis \
+                 endpoint until the user completes authorization.",
+            )
     }
 
     pub fn cli_get_web_pkce_provider() -> ::clap::Command {
