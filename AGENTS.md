@@ -6,7 +6,7 @@
 - test: `cargo test --quiet --all-features --workspace --all-targets`
 - format: `cargo fmt`
 - clippy: `cargo clippy --quiet --fix --allow-dirty --all-features --workspace --all-targets`
-- generate: `cargo xtask --quiet generate` (regen OpenAPI, Rust/TS SDKs, CLI)
+- generate: `cargo --quiet xtask generate` (regen OpenAPI, Rust/TS SDKs, CLI)
 
 ## Crates
 

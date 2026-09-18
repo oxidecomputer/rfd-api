@@ -13,7 +13,7 @@ clap = { workspace = true }
 config = { workspace = true }
 dirs = { workspace = true }
 progenitor-client = { workspace = true }
-# progenitor 0.14 / v-cli-sdk target reqwest 0.13.
+# progenitor 0.15 / v-cli-sdk target reqwest 0.13.
 reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "rustls"] }
 rfd-sdk = { path = "../rfd-sdk" }
 schemars = { workspace = true }

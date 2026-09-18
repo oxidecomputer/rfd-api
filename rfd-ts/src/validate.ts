@@ -25,6 +25,11 @@ const LargeInt = z.number().refine(Number.isInteger, 'Invalid input: expected in
 
 export const AccessGroupId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
 
+/**
+ * Where an access group is defined. Groups loaded from service configuration are immutable at runtime; only their membership can change.
+ */
+export const AccessGroupSource = z.preprocess(processResponseBody, z.enum(['dynamic', 'preset']))
+
 export const UserId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
 
 export const TypedUuidForUserId = z.preprocess(processResponseBody, z.uuid())
@@ -150,6 +155,7 @@ export const AccessGroup_for_RfdPermission = z.preprocess(
     'id': TypedUuidForAccessGroupId,
     'name': z.string(),
     'permissions': Permissions_for_RfdPermission,
+    'source': AccessGroupSource,
     'updatedAt': z.coerce.date(),
   }),
 )
@@ -504,6 +510,7 @@ export const OAuthAuthzCodeExchangeResponse = z.preprocess(
   z.object({
     'accessToken': z.string(),
     'expiresIn': LargeInt,
+    'idpRefreshToken': z.string().nullable().optional(),
     'idpToken': z.string().nullable().optional(),
     'scope': z.string(),
     'tokenType': z.string(),
@@ -572,7 +579,17 @@ export const OAuthProviderDeviceInfo = z.preprocess(
   z.object({ 'authUrlEndpoint': z.string(), 'clientId': TypedUuidForOAuthClientId, 'tokenEndpoint': z.string() }),
 )
 
-export const OpenIdConfiguration = z.preprocess(processResponseBody, z.object({ 'jwksUri': z.string() }))
+export const OpenIdConfiguration = z.preprocess(
+  processResponseBody,
+  z.object({
+    'claimsSupported': z.string().array(),
+    'idTokenSigningAlgValuesSupported': z.string().array(),
+    'issuer': z.string(),
+    'jwksUri': z.string(),
+    'responseTypesSupported': z.string().array(),
+    'subjectTypesSupported': z.string().array(),
+  }),
+)
 
 export const PdfSource = z.preprocess(processResponseBody, z.enum(['github', 'google']))
 

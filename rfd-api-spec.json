@@ -2915,6 +2915,25 @@
       "AccessGroupId": {
         "not": {}
       },
+      "AccessGroupSource": {
+        "description": "Where an access group is defined. Groups loaded from service configuration are immutable at runtime; only their membership can change.",
+        "oneOf": [
+          {
+            "description": "Created via the API and persisted in the database",
+            "type": "string",
+            "enum": [
+              "dynamic"
+            ]
+          },
+          {
+            "description": "Loaded from service configuration, in-memory only, name and permissions are fixed",
+            "type": "string",
+            "enum": [
+              "preset"
+            ]
+          }
+        ]
+      },
       "AccessGroupUpdateParams_for_RfdPermission": {
         "type": "object",
         "properties": {
@@ -2951,6 +2970,9 @@
           "permissions": {
             "$ref": "#/components/schemas/Permissions_for_RfdPermission"
           },
+          "source": {
+            "$ref": "#/components/schemas/AccessGroupSource"
+          },
           "updated_at": {
             "type": "string",
             "format": "date-time"
@@ -2961,6 +2983,7 @@
           "id",
           "name",
           "permissions",
+          "source",
           "updated_at"
         ]
       },
@@ -4037,8 +4060,14 @@
             "type": "integer",
             "format": "int64"
           },
+          "idp_refresh_token": {
+            "nullable": true,
+            "description": "Refresh token issued by the upstream identity provider. Returned under the same conditions as `idp_token`, and only when the provider issued one.",
+            "type": "string"
+          },
           "idp_token": {
             "nullable": true,
+            "description": "Access token issued by the upstream identity provider. Only returned when the caller requested it and holds the `RetrieveRemoteAccessToken` permission.",
             "type": "string"
           },
           "scope": {
@@ -4228,12 +4257,44 @@
       "OpenIdConfiguration": {
         "type": "object",
         "properties": {
+          "claims_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "id_token_signing_alg_values_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "issuer": {
+            "type": "string"
+          },
           "jwks_uri": {
             "type": "string"
+          },
+          "response_types_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "subject_types_supported": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
-          "jwks_uri"
+          "claims_supported",
+          "id_token_signing_alg_values_supported",
+          "issuer",
+          "jwks_uri",
+          "response_types_supported",
+          "subject_types_supported"
         ]
       },
       "PdfSource": {

@@ -215,11 +215,15 @@ async fn run_server(config_path: Option<String>) -> anyhow::Result<()> {
                 tracing::error!(?err, "Failed to establish initial database connection");
             })?,
     );
+    let keys = std::mem::take(&mut config.keys)
+        .into_iter()
+        .map(|key| key.resolve(param_path.as_deref()))
+        .collect::<Result<Vec<_>, _>>()?;
     let mut v_ctx_builder = VContextBuilder::<RfdPermission>::new()
         .with_public_url(config.public_url.clone())
         .with_storage(storage.clone())
         .with_jwt_expiration(config.jwt.default_expiration)
-        .with_keys(std::mem::take(&mut config.keys))
+        .with_keys(keys)
         .with_additional_builtin_permissions(RfdPermission::iter().collect());
     if let Some(param_path) = param_path.clone() {
         v_ctx_builder = v_ctx_builder.with_param_path(param_path);

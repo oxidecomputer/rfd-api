@@ -7,93 +7,18 @@ pub use progenitor_client::{ByteStream, ClientInfo, Error, ResponseValue};
 /// Types used as operation parameters and responses.
 #[allow(clippy::all)]
 pub mod types {
-    /// Error types.
-    pub mod error {
-        /// Error from a `TryFrom` or `FromStr` implementation.
-        pub struct ConversionError(::std::borrow::Cow<'static, str>);
-        impl ::std::error::Error for ConversionError {}
-
-        impl ::std::fmt::Display for ConversionError {
-            fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> Result<(), ::std::fmt::Error> {
-                ::std::fmt::Display::fmt(&self.0, f)
-            }
-        }
-
-        impl ::std::fmt::Debug for ConversionError {
-            fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> Result<(), ::std::fmt::Error> {
-                ::std::fmt::Debug::fmt(&self.0, f)
-            }
-        }
-
-        impl From<&'static str> for ConversionError {
-            fn from(value: &'static str) -> Self {
-                Self(value.into())
-            }
-        }
-
-        impl From<String> for ConversionError {
-            fn from(value: String) -> Self {
-                Self(value.into())
-            }
-        }
-    }
-
     /// `AccessGroupForRfdPermission`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id",
-    ///    "name",
-    ///    "permissions",
-    ///    "updated_at"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
-    ///    },
-    ///    "name": {
-    ///      "type": "string"
-    ///    },
-    ///    "permissions": {
-    ///      "$ref": "#/components/schemas/Permissions_for_RfdPermission"
-    ///    },
-    ///    "updated_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct AccessGroupForRfdPermission {
         pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub id: TypedUuidForAccessGroupId,
         pub name: ::std::string::String,
         pub permissions: PermissionsForRfdPermission,
+        pub source: AccessGroupSource,
         pub updated_at: ::chrono::DateTime<::chrono::offset::Utc>,
     }
 
@@ -104,13 +29,6 @@ pub mod types {
     }
 
     /// `AccessGroupId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// false
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -127,31 +45,69 @@ pub mod types {
     #[serde(deny_unknown_fields)]
     pub enum AccessGroupId {}
 
+    /// Where an access group is defined. Groups loaded from service
+    /// configuration are immutable at runtime; only their membership can
+    /// change.
+    #[derive(
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Copy,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    pub enum AccessGroupSource {
+        /// Created via the API and persisted in the database
+        #[serde(rename = "dynamic")]
+        Dynamic,
+        /// Loaded from service configuration, in-memory only, name and
+        /// permissions are fixed
+        #[serde(rename = "preset")]
+        Preset,
+    }
+
+    impl ::std::fmt::Display for AccessGroupSource {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            match *self {
+                Self::Dynamic => f.write_str("dynamic"),
+                Self::Preset => f.write_str("preset"),
+            }
+        }
+    }
+
+    impl ::std::str::FromStr for AccessGroupSource {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            match value {
+                "dynamic" => Ok(Self::Dynamic),
+                "preset" => Ok(Self::Preset),
+                _ => Err("invalid value".into()),
+            }
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for AccessGroupSource {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for AccessGroupSource {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
     /// `AccessGroupUpdateParamsForRfdPermission`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "name",
-    ///    "permissions"
-    ///  ],
-    ///  "properties": {
-    ///    "name": {
-    ///      "type": "string"
-    ///    },
-    ///    "permissions": {
-    ///      "$ref": "#/components/schemas/Permissions_for_RfdPermission"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -167,26 +123,6 @@ pub mod types {
     }
 
     /// `AddGroupBody`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "group_id"
-    ///  ],
-    ///  "properties": {
-    ///    "group_id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -201,26 +137,6 @@ pub mod types {
     }
 
     /// `AddMagicLinkRedirectBody`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "redirect_uri"
-    ///  ],
-    ///  "properties": {
-    ///    "redirect_uri": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -235,26 +151,6 @@ pub mod types {
     }
 
     /// `AddOAuthClientRedirectBody`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "redirect_uri"
-    ///  ],
-    ///  "properties": {
-    ///    "redirect_uri": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -269,50 +165,12 @@ pub mod types {
     }
 
     /// `ApiKeyCreateParamsForRfdPermission`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "expires_at"
-    ///  ],
-    ///  "properties": {
-    ///    "expires_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "permission_boundary": {
-    ///      "oneOf": [
-    ///        {
-    ///          "type": "null"
-    ///        },
-    ///        {
-    ///          "allOf": [
-    ///            {
-    ///              "$ref":
-    /// "#/components/schemas/Permissions_for_RfdPermission"
-    ///            }
-
-    ///          ]
-    ///        }
-
-    ///      ]
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct ApiKeyCreateParamsForRfdPermission {
         pub expires_at: ::chrono::DateTime<::chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub permission_boundary: ::std::option::Option<PermissionsForRfdPermission>,
     }
 
@@ -323,13 +181,6 @@ pub mod types {
     }
 
     /// `ApiKeyId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// false
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -347,55 +198,13 @@ pub mod types {
     pub enum ApiKeyId {}
 
     /// `ApiKeyResponseForRfdPermission`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForApiKeyId"
-    ///    },
-    ///    "permission_boundary": {
-    ///      "oneOf": [
-    ///        {
-    ///          "type": "null"
-    ///        },
-    ///        {
-    ///          "allOf": [
-    ///            {
-    ///              "$ref":
-    /// "#/components/schemas/Permissions_for_RfdPermission"
-    ///            }
-
-    ///          ]
-    ///        }
-
-    ///      ]
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct ApiKeyResponseForRfdPermission {
         pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         pub id: TypedUuidForApiKeyId,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub permission_boundary: ::std::option::Option<PermissionsForRfdPermission>,
     }
 
@@ -406,57 +215,12 @@ pub mod types {
     }
 
     /// `ApiUserContactEmail`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "email",
-    ///    "id",
-    ///    "updated_at",
-    ///    "user_id"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "email": {
-    ///      "type": "string"
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForUserProviderId"
-    ///    },
-    ///    "updated_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "user_id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForUserId"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct ApiUserContactEmail {
         pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub email: ::std::string::String,
         pub id: TypedUuidForUserProviderId,
@@ -471,26 +235,6 @@ pub mod types {
     }
 
     /// `ApiUserEmailUpdateParams`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "email"
-    ///  ],
-    ///  "properties": {
-    ///    "email": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -505,63 +249,14 @@ pub mod types {
     }
 
     /// `ApiUserForRfdPermission`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "groups",
-    ///    "id",
-    ///    "permissions",
-    ///    "updated_at"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "groups": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
-    ///      },
-    ///      "uniqueItems": true
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForUserId"
-    ///    },
-    ///    "permissions": {
-    ///      "$ref": "#/components/schemas/Permissions_for_RfdPermission"
-    ///    },
-    ///    "updated_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct ApiUserForRfdPermission {
         pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
-        pub groups: Vec<TypedUuidForAccessGroupId>,
+        pub groups: ::std::vec::Vec<TypedUuidForAccessGroupId>,
         pub id: TypedUuidForUserId,
         pub permissions: PermissionsForRfdPermission,
         pub updated_at: ::chrono::DateTime<::chrono::offset::Utc>,
@@ -574,26 +269,6 @@ pub mod types {
     }
 
     /// `ApiUserLinkRequestPayload`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "user_id"
-    ///  ],
-    ///  "properties": {
-    ///    "user_id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForUserId"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -608,26 +283,6 @@ pub mod types {
     }
 
     /// `ApiUserLinkRequestResponse`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "token"
-    ///  ],
-    ///  "properties": {
-    ///    "token": {
-    ///      "$ref": "#/components/schemas/SecretString"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -642,26 +297,6 @@ pub mod types {
     }
 
     /// `ApiUserPermissionParamsForRfdPermission`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "permission"
-    ///  ],
-    ///  "properties": {
-    ///    "permission": {
-    ///      "$ref": "#/components/schemas/RfdPermission"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -676,77 +311,12 @@ pub mod types {
     }
 
     /// `ApiUserProvider`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "display_names",
-    ///    "emails",
-    ///    "id",
-    ///    "provider",
-    ///    "provider_id",
-    ///    "updated_at",
-    ///    "user_id"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "display_names": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": "string"
-    ///      }
-
-    ///    },
-    ///    "emails": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": "string"
-    ///      }
-
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForUserProviderId"
-    ///    },
-    ///    "provider": {
-    ///      "type": "string"
-    ///    },
-    ///    "provider_id": {
-    ///      "type": "string"
-    ///    },
-    ///    "updated_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "user_id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForUserId"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct ApiUserProvider {
         pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub display_names: ::std::vec::Vec<::std::string::String>,
         pub emails: ::std::vec::Vec<::std::string::String>,
@@ -764,26 +334,6 @@ pub mod types {
     }
 
     /// `ApiUserProviderLinkPayload`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "token"
-    ///  ],
-    ///  "properties": {
-    ///    "token": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -798,40 +348,12 @@ pub mod types {
     }
 
     /// `ApiUserUpdateParamsForRfdPermission`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "permissions"
-    ///  ],
-    ///  "properties": {
-    ///    "group_ids": {
-    ///      "default": [],
-    ///      "type": "array",
-    ///      "items": {
-    ///        "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
-    ///      },
-    ///      "uniqueItems": true
-    ///    },
-    ///    "permissions": {
-    ///      "$ref": "#/components/schemas/Permissions_for_RfdPermission"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct ApiUserUpdateParamsForRfdPermission {
         #[serde(default = "defaults::api_user_update_params_for_rfd_permission_group_ids")]
-        pub group_ids: Vec<TypedUuidForAccessGroupId>,
+        pub group_ids: ::std::vec::Vec<TypedUuidForAccessGroupId>,
         pub permissions: PermissionsForRfdPermission,
     }
 
@@ -842,16 +364,6 @@ pub mod types {
     }
 
     /// `CommitSha`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string"
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -885,6 +397,12 @@ pub mod types {
         }
     }
 
+    impl ::std::fmt::Display for CommitSha {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
     impl ::std::str::FromStr for CommitSha {
         type Err = ::std::convert::Infallible;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
@@ -892,27 +410,7 @@ pub mod types {
         }
     }
 
-    impl ::std::fmt::Display for CommitSha {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
     /// `ContentFormat`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "enum": [
-    ///    "asciidoc",
-    ///    "markdown"
-    ///  ]
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -960,15 +458,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::TryFrom<&::std::string::String> for ContentFormat {
-        type Error = self::error::ConversionError;
-        fn try_from(
-            value: &::std::string::String,
-        ) -> ::std::result::Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-
     impl ::std::convert::TryFrom<::std::string::String> for ContentFormat {
         type Error = self::error::ConversionError;
         fn try_from(
@@ -979,40 +468,11 @@ pub mod types {
     }
 
     /// `CreateMapper`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "name",
-    ///    "rule"
-    ///  ],
-    ///  "properties": {
-    ///    "max_activations": {
-    ///      "type": [
-    ///        "integer",
-    ///        "null"
-    ///      ],
-    ///      "format": "int32"
-    ///    },
-    ///    "name": {
-    ///      "type": "string"
-    ///    },
-    ///    "rule": {}
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct CreateMapper {
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub max_activations: ::std::option::Option<i32>,
         pub name: ::std::string::String,
         pub rule: ::serde_json::Value,
@@ -1028,42 +488,12 @@ pub mod types {
     /// sends its `client_id` and an optional `scope`. The API server proxies
     /// the device authorization request to the upstream provider and tracks it
     /// as a login attempt.
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "description": "Request body for initiating a device authorization
-    /// flow. The client sends its `client_id` and an optional `scope`. The API
-    /// server proxies the device authorization request to the upstream provider
-    /// and tracks it as a login attempt.",
-    ///  "type": "object",
-    ///  "required": [
-    ///    "client_id"
-    ///  ],
-    ///  "properties": {
-    ///    "client_id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
-    ///    },
-    ///    "scope": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct DeviceAuthorizationRequest {
         pub client_id: TypedUuidForOAuthClientId,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub scope: ::std::option::Option<::std::string::String>,
     }
 
@@ -1075,37 +505,6 @@ pub mod types {
 
     /// Request body for the device token exchange. The client polls this
     /// endpoint with the device_code received from the authorization step.
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "description": "Request body for the device token exchange. The client
-    /// polls this endpoint with the device_code received from the authorization
-    /// step.",
-    ///  "type": "object",
-    ///  "required": [
-    ///    "client_id",
-    ///    "device_code",
-    ///    "grant_type"
-    ///  ],
-    ///  "properties": {
-    ///    "client_id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
-    ///    },
-    ///    "device_code": {
-    ///      "type": "string"
-    ///    },
-    ///    "grant_type": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -1122,39 +521,11 @@ pub mod types {
     }
 
     /// Error information from a response.
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "description": "Error information from a response.",
-    ///  "type": "object",
-    ///  "required": [
-    ///    "message",
-    ///    "request_id"
-    ///  ],
-    ///  "properties": {
-    ///    "error_code": {
-    ///      "type": "string"
-    ///    },
-    ///    "message": {
-    ///      "type": "string"
-    ///    },
-    ///    "request_id": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct Error {
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub error_code: ::std::option::Option<::std::string::String>,
         pub message: ::std::string::String,
         pub request_id: ::std::string::String,
@@ -1167,16 +538,6 @@ pub mod types {
     }
 
     /// `FileSha`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string"
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -1210,6 +571,12 @@ pub mod types {
         }
     }
 
+    impl ::std::fmt::Display for FileSha {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
     impl ::std::str::FromStr for FileSha {
         type Err = ::std::convert::Infallible;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
@@ -1217,94 +584,20 @@ pub mod types {
         }
     }
 
-    impl ::std::fmt::Display for FileSha {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
     /// `FormattedSearchResultHit`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "hierarchy",
-    ///    "hierarchy_radio",
-    ///    "object_id",
-    ///    "rfd_number"
-    ///  ],
-    ///  "properties": {
-    ///    "anchor": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "content": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "hierarchy": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": [
-    ///          "string",
-    ///          "null"
-    ///        ]
-    ///      },
-    ///      "maxItems": 6,
-    ///      "minItems": 6
-    ///    },
-    ///    "hierarchy_radio": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": [
-    ///          "string",
-    ///          "null"
-    ///        ]
-    ///      },
-    ///      "maxItems": 6,
-    ///      "minItems": 6
-    ///    },
-    ///    "object_id": {
-    ///      "type": "string"
-    ///    },
-    ///    "rfd_number": {
-    ///      "type": "integer",
-    ///      "format": "uint64",
-    ///      "minimum": 0.0
-    ///    },
-    ///    "url": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct FormattedSearchResultHit {
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub anchor: ::std::option::Option<::std::string::String>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub content: ::std::option::Option<::std::string::String>,
         pub hierarchy: [::std::option::Option<::std::string::String>; 6usize],
         pub hierarchy_radio: [::std::option::Option<::std::string::String>; 6usize],
         pub object_id: ::std::string::String,
         pub rfd_number: u64,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub url: ::std::option::Option<::std::string::String>,
     }
 
@@ -1315,34 +608,6 @@ pub mod types {
     }
 
     /// `GetUserResponseForRfdPermission`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "info",
-    ///    "providers"
-    ///  ],
-    ///  "properties": {
-    ///    "info": {
-    ///      "$ref": "#/components/schemas/ApiUser_for_RfdPermission"
-    ///    },
-    ///    "providers": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "$ref": "#/components/schemas/ApiUserProvider"
-    ///      }
-
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -1358,55 +623,6 @@ pub mod types {
     }
 
     /// `GitHubCommit`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "added",
-    ///    "id",
-    ///    "modified",
-    ///    "removed",
-    ///    "timestamp"
-    ///  ],
-    ///  "properties": {
-    ///    "added": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": "string"
-    ///      }
-
-    ///    },
-    ///    "id": {
-    ///      "type": "string"
-    ///    },
-    ///    "modified": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": "string"
-    ///      }
-
-    ///    },
-    ///    "removed": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": "string"
-    ///      }
-
-    ///    },
-    ///    "timestamp": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -1425,68 +641,12 @@ pub mod types {
     }
 
     /// `GitHubCommitPayload`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "commits",
-    ///    "installation",
-    ///    "ref",
-    ///    "repository",
-    ///    "sender"
-    ///  ],
-    ///  "properties": {
-    ///    "commits": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "$ref": "#/components/schemas/GitHubCommit"
-    ///      }
-
-    ///    },
-    ///    "head_commit": {
-    ///      "oneOf": [
-    ///        {
-    ///          "type": "null"
-    ///        },
-    ///        {
-    ///          "allOf": [
-    ///            {
-    ///              "$ref": "#/components/schemas/GitHubCommit"
-    ///            }
-
-    ///          ]
-    ///        }
-
-    ///      ]
-    ///    },
-    ///    "installation": {
-    ///      "$ref": "#/components/schemas/GitHubInstallation"
-    ///    },
-    ///    "ref": {
-    ///      "type": "string"
-    ///    },
-    ///    "repository": {
-    ///      "$ref": "#/components/schemas/GitHubRepository"
-    ///    },
-    ///    "sender": {
-    ///      "$ref": "#/components/schemas/GitHubSender"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct GitHubCommitPayload {
         pub commits: ::std::vec::Vec<GitHubCommit>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub head_commit: ::std::option::Option<GitHubCommit>,
         pub installation: GitHubInstallation,
         #[serde(rename = "ref")]
@@ -1502,32 +662,6 @@ pub mod types {
     }
 
     /// `GitHubInstallation`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "id",
-    ///    "node_id"
-    ///  ],
-    ///  "properties": {
-    ///    "id": {
-    ///      "type": "integer",
-    ///      "format": "uint64",
-    ///      "minimum": 0.0
-    ///    },
-    ///    "node_id": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -1543,44 +677,6 @@ pub mod types {
     }
 
     /// `GitHubRepository`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "default_branch",
-    ///    "id",
-    ///    "name",
-    ///    "node_id",
-    ///    "owner"
-    ///  ],
-    ///  "properties": {
-    ///    "default_branch": {
-    ///      "type": "string"
-    ///    },
-    ///    "id": {
-    ///      "type": "integer",
-    ///      "format": "uint64",
-    ///      "minimum": 0.0
-    ///    },
-    ///    "name": {
-    ///      "type": "string"
-    ///    },
-    ///    "node_id": {
-    ///      "type": "string"
-    ///    },
-    ///    "owner": {
-    ///      "$ref": "#/components/schemas/GitHubRepositoryOwner"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -1599,26 +695,6 @@ pub mod types {
     }
 
     /// `GitHubRepositoryOwner`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "login"
-    ///  ],
-    ///  "properties": {
-    ///    "login": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -1633,40 +709,6 @@ pub mod types {
     }
 
     /// `GitHubSender`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "id",
-    ///    "login",
-    ///    "node_id",
-    ///    "type"
-    ///  ],
-    ///  "properties": {
-    ///    "id": {
-    ///      "type": "integer",
-    ///      "format": "uint64",
-    ///      "minimum": 0.0
-    ///    },
-    ///    "login": {
-    ///      "type": "string"
-    ///    },
-    ///    "node_id": {
-    ///      "type": "string"
-    ///    },
-    ///    "type": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -1685,52 +727,6 @@ pub mod types {
     }
 
     /// `InitialApiKeyResponseForRfdPermission`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id",
-    ///    "key"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForApiKeyId"
-    ///    },
-    ///    "key": {
-    ///      "$ref": "#/components/schemas/SecretString"
-    ///    },
-    ///    "permission_boundary": {
-    ///      "oneOf": [
-    ///        {
-    ///          "type": "null"
-    ///        },
-    ///        {
-    ///          "allOf": [
-    ///            {
-    ///              "$ref":
-    /// "#/components/schemas/Permissions_for_RfdPermission"
-    ///            }
-
-    ///          ]
-    ///        }
-
-    ///      ]
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -1738,7 +734,7 @@ pub mod types {
         pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
         pub id: TypedUuidForApiKeyId,
         pub key: SecretString,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub permission_boundary: ::std::option::Option<PermissionsForRfdPermission>,
     }
 
@@ -1749,35 +745,6 @@ pub mod types {
     }
 
     /// `InitialMagicLinkSecretResponse`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id",
-    ///    "key"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForMagicLinkSecretId"
-    ///    },
-    ///    "key": {
-    ///      "$ref": "#/components/schemas/SecretString"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -1794,35 +761,6 @@ pub mod types {
     }
 
     /// `InitialOAuthClientSecretResponse`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id",
-    ///    "key"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForOAuthSecretId"
-    ///    },
-    ///    "key": {
-    ///      "$ref": "#/components/schemas/SecretString"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -1839,86 +777,6 @@ pub mod types {
     }
 
     /// `Job`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "branch",
-    ///    "committed_at",
-    ///    "created_at",
-    ///    "id",
-    ///    "owner",
-    ///    "processed",
-    ///    "repository",
-    ///    "rfd",
-    ///    "sha"
-    ///  ],
-    ///  "properties": {
-    ///    "branch": {
-    ///      "type": "string"
-    ///    },
-    ///    "committed_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "type": "integer",
-    ///      "format": "int32"
-    ///    },
-    ///    "owner": {
-    ///      "type": "string"
-    ///    },
-    ///    "processed": {
-    ///      "type": "boolean"
-    ///    },
-    ///    "repository": {
-    ///      "type": "string"
-    ///    },
-    ///    "rfd": {
-    ///      "type": "integer",
-    ///      "format": "int32"
-    ///    },
-    ///    "sha": {
-    ///      "$ref": "#/components/schemas/CommitSha"
-    ///    },
-    ///    "started_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "webhook_delivery_id": {
-    ///      "oneOf": [
-    ///        {
-    ///          "type": "null"
-    ///        },
-    ///        {
-    ///          "allOf": [
-    ///            {
-    ///              "$ref":
-    /// "#/components/schemas/TypedUuidForWebhookDeliveryId"
-    ///            }
-
-    ///          ]
-    ///        }
-
-    ///      ]
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -1932,9 +790,9 @@ pub mod types {
         pub repository: ::std::string::String,
         pub rfd: i32,
         pub sha: CommitSha,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub started_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub webhook_delivery_id: ::std::option::Option<TypedUuidForWebhookDeliveryId>,
     }
 
@@ -1945,42 +803,6 @@ pub mod types {
     }
 
     /// `Jwk`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "e",
-    ///    "kid",
-    ///    "kty",
-    ///    "n",
-    ///    "use"
-    ///  ],
-    ///  "properties": {
-    ///    "e": {
-    ///      "type": "string"
-    ///    },
-    ///    "kid": {
-    ///      "type": "string"
-    ///    },
-    ///    "kty": {
-    ///      "type": "string"
-    ///    },
-    ///    "n": {
-    ///      "type": "string"
-    ///    },
-    ///    "use": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -2000,30 +822,6 @@ pub mod types {
     }
 
     /// `Jwks`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "keys"
-    ///  ],
-    ///  "properties": {
-    ///    "keys": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "$ref": "#/components/schemas/Jwk"
-    ///      }
-
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -2038,60 +836,12 @@ pub mod types {
     }
 
     /// `MagicLink`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id",
-    ///    "redirect_uris",
-    ///    "secrets"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForMagicLinkId"
-    ///    },
-    ///    "redirect_uris": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "$ref": "#/components/schemas/MagicLinkRedirectUri"
-    ///      }
-
-    ///    },
-    ///    "secrets": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "$ref": "#/components/schemas/MagicLinkSecret"
-    ///      }
-
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct MagicLink {
         pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub id: TypedUuidForMagicLinkId,
         pub redirect_uris: ::std::vec::Vec<MagicLinkRedirectUri>,
@@ -2105,13 +855,6 @@ pub mod types {
     }
 
     /// `MagicLinkAttemptId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// false
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -2129,34 +872,6 @@ pub mod types {
     pub enum MagicLinkAttemptId {}
 
     /// `MagicLinkExchangeRequest`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "attempt_id",
-    ///    "recipient",
-    ///    "secret"
-    ///  ],
-    ///  "properties": {
-    ///    "attempt_id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForMagicLinkAttemptId"
-    ///    },
-    ///    "recipient": {
-    ///      "type": "string"
-    ///    },
-    ///    "secret": {
-    ///      "$ref": "#/components/schemas/SecretString"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -2173,35 +888,6 @@ pub mod types {
     }
 
     /// `MagicLinkExchangeResponse`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "access_token",
-    ///    "expires_in",
-    ///    "token_type"
-    ///  ],
-    ///  "properties": {
-    ///    "access_token": {
-    ///      "type": "string"
-    ///    },
-    ///    "expires_in": {
-    ///      "type": "integer",
-    ///      "format": "int64"
-    ///    },
-    ///    "token_type": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -2218,13 +904,6 @@ pub mod types {
     }
 
     /// `MagicLinkId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// false
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -2242,19 +921,6 @@ pub mod types {
     pub enum MagicLinkId {}
 
     /// `MagicLinkMedium`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "enum": [
-    ///    "email"
-    ///  ]
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -2298,15 +964,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::TryFrom<&::std::string::String> for MagicLinkMedium {
-        type Error = self::error::ConversionError;
-        fn try_from(
-            value: &::std::string::String,
-        ) -> ::std::result::Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-
     impl ::std::convert::TryFrom<::std::string::String> for MagicLinkMedium {
         type Error = self::error::ConversionError;
         fn try_from(
@@ -2317,52 +974,12 @@ pub mod types {
     }
 
     /// `MagicLinkRedirectUri`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id",
-    ///    "magic_link_client_id",
-    ///    "redirect_uri"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForMagicLinkRedirectUriId"
-    ///    },
-    ///    "magic_link_client_id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForMagicLinkId"
-    ///    },
-    ///    "redirect_uri": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct MagicLinkRedirectUri {
         pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub id: TypedUuidForMagicLinkRedirectUriId,
         pub magic_link_client_id: TypedUuidForMagicLinkId,
@@ -2376,13 +993,6 @@ pub mod types {
     }
 
     /// `MagicLinkRedirectUriId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// false
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -2400,52 +1010,12 @@ pub mod types {
     pub enum MagicLinkRedirectUriId {}
 
     /// `MagicLinkSecret`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id",
-    ///    "magic_link_client_id",
-    ///    "secret_signature"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForMagicLinkSecretId"
-    ///    },
-    ///    "magic_link_client_id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForMagicLinkId"
-    ///    },
-    ///    "secret_signature": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct MagicLinkSecret {
         pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub id: TypedUuidForMagicLinkSecretId,
         pub magic_link_client_id: TypedUuidForMagicLinkId,
@@ -2459,13 +1029,6 @@ pub mod types {
     }
 
     /// `MagicLinkSecretId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// false
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -2483,50 +1046,6 @@ pub mod types {
     pub enum MagicLinkSecretId {}
 
     /// `MagicLinkSendRequest`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "expires_in",
-    ///    "medium",
-    ///    "recipient",
-    ///    "redirect_uri",
-    ///    "secret"
-    ///  ],
-    ///  "properties": {
-    ///    "expires_in": {
-    ///      "type": "integer",
-    ///      "format": "int64"
-    ///    },
-    ///    "medium": {
-    ///      "$ref": "#/components/schemas/MagicLinkMedium"
-    ///    },
-    ///    "recipient": {
-    ///      "type": "string"
-    ///    },
-    ///    "redirect_uri": {
-    ///      "type": "string",
-    ///      "format": "uri"
-    ///    },
-    ///    "scope": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "secret": {
-    ///      "$ref": "#/components/schemas/SecretString"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -2535,7 +1054,7 @@ pub mod types {
         pub medium: MagicLinkMedium,
         pub recipient: ::std::string::String,
         pub redirect_uri: ::std::string::String,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub scope: ::std::option::Option<::std::string::String>,
         pub secret: SecretString,
     }
@@ -2547,26 +1066,6 @@ pub mod types {
     }
 
     /// `MagicLinkSendResponse`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "attempt_id"
-    ///  ],
-    ///  "properties": {
-    ///    "attempt_id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForMagicLinkAttemptId"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -2581,87 +1080,19 @@ pub mod types {
     }
 
     /// `Mapper`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id",
-    ///    "name",
-    ///    "rule",
-    ///    "source",
-    ///    "updated_at"
-    ///  ],
-    ///  "properties": {
-    ///    "activations": {
-    ///      "type": [
-    ///        "integer",
-    ///        "null"
-    ///      ],
-    ///      "format": "int32"
-    ///    },
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "depleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForMapperId"
-    ///    },
-    ///    "max_activations": {
-    ///      "type": [
-    ///        "integer",
-    ///        "null"
-    ///      ],
-    ///      "format": "int32"
-    ///    },
-    ///    "name": {
-    ///      "type": "string"
-    ///    },
-    ///    "rule": {},
-    ///    "source": {
-    ///      "$ref": "#/components/schemas/MapperSource"
-    ///    },
-    ///    "updated_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct Mapper {
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub activations: ::std::option::Option<i32>,
         pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub depleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub id: TypedUuidForMapperId,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub max_activations: ::std::option::Option<i32>,
         pub name: ::std::string::String,
         pub rule: ::serde_json::Value,
@@ -2676,13 +1107,6 @@ pub mod types {
     }
 
     /// `MapperId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// false
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -2700,34 +1124,6 @@ pub mod types {
     pub enum MapperId {}
 
     /// `MapperSource`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "oneOf": [
-    ///    {
-    ///      "description": "Created via the API, persisted in the database,
-    /// supports activation limits",
-    ///      "type": "string",
-    ///      "enum": [
-    ///        "dynamic"
-    ///      ]
-    ///    },
-    ///    {
-    ///      "description": "Loaded from service configuration, in-memory only,
-    /// no activation limits",
-    ///      "type": "string",
-    ///      "enum": [
-    ///        "preset"
-    ///      ]
-    ///    }
-
-    ///  ]
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -2779,15 +1175,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::TryFrom<&::std::string::String> for MapperSource {
-        type Error = self::error::ConversionError;
-        fn try_from(
-            value: &::std::string::String,
-        ) -> ::std::result::Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-
     impl ::std::convert::TryFrom<::std::string::String> for MapperSource {
         type Error = self::error::ConversionError;
         fn try_from(
@@ -2798,79 +1185,13 @@ pub mod types {
     }
 
     /// `OAuthAuthzCodeExchangeBody`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "code",
-    ///    "code_verifier",
-    ///    "grant_type",
-    ///    "redirect_uri"
-    ///  ],
-    ///  "properties": {
-    ///    "client_id": {
-    ///      "oneOf": [
-    ///        {
-    ///          "type": "null"
-    ///        },
-    ///        {
-    ///          "allOf": [
-    ///            {
-    ///              "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
-    ///            }
-
-    ///          ]
-    ///        }
-
-    ///      ]
-    ///    },
-    ///    "client_secret": {
-    ///      "oneOf": [
-    ///        {
-    ///          "type": "null"
-    ///        },
-    ///        {
-    ///          "allOf": [
-    ///            {
-    ///              "$ref": "#/components/schemas/SecretString"
-    ///            }
-
-    ///          ]
-    ///        }
-
-    ///      ]
-    ///    },
-    ///    "code": {
-    ///      "type": "string"
-    ///    },
-    ///    "code_verifier": {
-    ///      "description": "PKCE code verifier (RFC 7636). Required for all
-    /// authorization code exchanges.",
-    ///      "type": "string"
-    ///    },
-    ///    "grant_type": {
-    ///      "type": "string"
-    ///    },
-    ///    "redirect_uri": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct OAuthAuthzCodeExchangeBody {
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub client_id: ::std::option::Option<TypedUuidForOAuthClientId>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub client_secret: ::std::option::Option<SecretString>,
         pub code: ::std::string::String,
         /// PKCE code verifier (RFC 7636). Required for all authorization code
@@ -2887,55 +1208,21 @@ pub mod types {
     }
 
     /// `OAuthAuthzCodeExchangeResponse`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "access_token",
-    ///    "expires_in",
-    ///    "scope",
-    ///    "token_type"
-    ///  ],
-    ///  "properties": {
-    ///    "access_token": {
-    ///      "type": "string"
-    ///    },
-    ///    "expires_in": {
-    ///      "type": "integer",
-    ///      "format": "int64"
-    ///    },
-    ///    "idp_token": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "scope": {
-    ///      "description": "The scope granted to the access token per RFC 6749
-    /// §5.1. An empty string indicates no permissions. Use \"full\" for all
-    /// permissions.",
-    ///      "type": "string"
-    ///    },
-    ///    "token_type": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct OAuthAuthzCodeExchangeResponse {
         pub access_token: ::std::string::String,
         pub expires_in: i64,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        /// Refresh token issued by the upstream identity provider. Returned
+        /// under the same conditions as `idp_token`, and only when the provider
+        /// issued one.
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
+        pub idp_refresh_token: ::std::option::Option<::std::string::String>,
+        /// Access token issued by the upstream identity provider. Only returned
+        /// when the caller requested it and holds the
+        /// `RetrieveRemoteAccessToken` permission.
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub idp_token: ::std::option::Option<::std::string::String>,
         /// The scope granted to the access token per RFC 6749 §5.1. An empty
         /// string indicates no permissions. Use "full" for all permissions.
@@ -2950,60 +1237,12 @@ pub mod types {
     }
 
     /// `OAuthClient`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id",
-    ///    "redirect_uris",
-    ///    "secrets"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
-    ///    },
-    ///    "redirect_uris": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "$ref": "#/components/schemas/OAuthClientRedirectUri"
-    ///      }
-
-    ///    },
-    ///    "secrets": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "$ref": "#/components/schemas/OAuthClientSecret"
-    ///      }
-
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct OAuthClient {
         pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub id: TypedUuidForOAuthClientId,
         pub redirect_uris: ::std::vec::Vec<OAuthClientRedirectUri>,
@@ -3017,13 +1256,6 @@ pub mod types {
     }
 
     /// `OAuthClientId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// false
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -3041,52 +1273,12 @@ pub mod types {
     pub enum OAuthClientId {}
 
     /// `OAuthClientRedirectUri`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id",
-    ///    "oauth_client_id",
-    ///    "redirect_uri"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForOAuthRedirectUriId"
-    ///    },
-    ///    "oauth_client_id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
-    ///    },
-    ///    "redirect_uri": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct OAuthClientRedirectUri {
         pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub id: TypedUuidForOAuthRedirectUriId,
         pub oauth_client_id: TypedUuidForOAuthClientId,
@@ -3100,52 +1292,12 @@ pub mod types {
     }
 
     /// `OAuthClientSecret`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id",
-    ///    "oauth_client_id",
-    ///    "secret_signature"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForOAuthSecretId"
-    ///    },
-    ///    "oauth_client_id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
-    ///    },
-    ///    "secret_signature": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct OAuthClientSecret {
         pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub id: TypedUuidForOAuthSecretId,
         pub oauth_client_id: TypedUuidForOAuthClientId,
@@ -3159,38 +1311,6 @@ pub mod types {
     }
 
     /// `OAuthProviderAuthorizationCodeInfo`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "auth_url_endpoint",
-    ///    "redirect_endpoint",
-    ///    "token_endpoint",
-    ///    "token_endpoint_content_type"
-    ///  ],
-    ///  "properties": {
-    ///    "auth_url_endpoint": {
-    ///      "type": "string"
-    ///    },
-    ///    "redirect_endpoint": {
-    ///      "type": "string"
-    ///    },
-    ///    "token_endpoint": {
-    ///      "type": "string"
-    ///    },
-    ///    "token_endpoint_content_type": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -3208,40 +1328,6 @@ pub mod types {
     }
 
     /// `OAuthProviderAuthorizationCodePkceInfo`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "client_id",
-    ///    "proxy_port",
-    ///    "redirect_endpoint",
-    ///    "web"
-    ///  ],
-    ///  "properties": {
-    ///    "client_id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
-    ///    },
-    ///    "proxy_port": {
-    ///      "type": "integer",
-    ///      "format": "uint16",
-    ///      "minimum": 0.0
-    ///    },
-    ///    "redirect_endpoint": {
-    ///      "type": "string"
-    ///    },
-    ///    "web": {
-    ///      "$ref": "#/components/schemas/OAuthProviderAuthorizationCodeInfo"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -3259,34 +1345,6 @@ pub mod types {
     }
 
     /// `OAuthProviderDeviceInfo`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "auth_url_endpoint",
-    ///    "client_id",
-    ///    "token_endpoint"
-    ///  ],
-    ///  "properties": {
-    ///    "auth_url_endpoint": {
-    ///      "type": "string"
-    ///    },
-    ///    "client_id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
-    ///    },
-    ///    "token_endpoint": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -3303,21 +1361,6 @@ pub mod types {
     }
 
     /// `OAuthProviderName`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "enum": [
-    ///    "github",
-    ///    "google",
-    ///    "zendesk"
-    ///  ]
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -3369,15 +1412,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::TryFrom<&::std::string::String> for OAuthProviderName {
-        type Error = self::error::ConversionError;
-        fn try_from(
-            value: &::std::string::String,
-        ) -> ::std::result::Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-
     impl ::std::convert::TryFrom<::std::string::String> for OAuthProviderName {
         type Error = self::error::ConversionError;
         fn try_from(
@@ -3388,13 +1422,6 @@ pub mod types {
     }
 
     /// `OAuthRedirectUriId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// false
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -3412,13 +1439,6 @@ pub mod types {
     pub enum OAuthRedirectUriId {}
 
     /// `OAuthSecretId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// false
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -3436,31 +1456,16 @@ pub mod types {
     pub enum OAuthSecretId {}
 
     /// `OpenIdConfiguration`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "jwks_uri"
-    ///  ],
-    ///  "properties": {
-    ///    "jwks_uri": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct OpenIdConfiguration {
+        pub claims_supported: ::std::vec::Vec<::std::string::String>,
+        pub id_token_signing_alg_values_supported: ::std::vec::Vec<::std::string::String>,
+        pub issuer: ::std::string::String,
         pub jwks_uri: ::std::string::String,
+        pub response_types_supported: ::std::vec::Vec<::std::string::String>,
+        pub subject_types_supported: ::std::vec::Vec<::std::string::String>,
     }
 
     impl OpenIdConfiguration {
@@ -3470,20 +1475,6 @@ pub mod types {
     }
 
     /// `PdfSource`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "enum": [
-    ///    "github",
-    ///    "google"
-    ///  ]
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -3531,15 +1522,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::TryFrom<&::std::string::String> for PdfSource {
-        type Error = self::error::ConversionError;
-        fn try_from(
-            value: &::std::string::String,
-        ) -> ::std::result::Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-
     impl ::std::convert::TryFrom<::std::string::String> for PdfSource {
         type Error = self::error::ConversionError;
         fn try_from(
@@ -3550,20 +1532,6 @@ pub mod types {
     }
 
     /// `PermissionsForRfdPermission`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "array",
-    ///  "items": {
-    ///    "$ref": "#/components/schemas/RfdPermission"
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -3589,40 +1557,12 @@ pub mod types {
     }
 
     /// `ReserveRfdBody`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "title"
-    ///  ],
-    ///  "properties": {
-    ///    "content": {
-    ///      "description": "Optional contents of the RFD",
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "title": {
-    ///      "description": "Title of the RFD",
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct ReserveRfdBody {
         /// Optional contents of the RFD
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub content: ::std::option::Option<::std::string::String>,
         /// Title of the RFD
         pub title: ::std::string::String,
@@ -3635,27 +1575,6 @@ pub mod types {
     }
 
     /// `ReserveRfdResponse`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "number"
-    ///  ],
-    ///  "properties": {
-    ///    "number": {
-    ///      "type": "integer",
-    ///      "format": "int32"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -3670,95 +1589,20 @@ pub mod types {
     }
 
     /// `Rfd`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "id",
-    ///    "rfd_number",
-    ///    "updated_at",
-    ///    "visibility"
-    ///  ],
-    ///  "properties": {
-    ///    "content": {
-    ///      "oneOf": [
-    ///        {
-    ///          "type": "null"
-    ///        },
-    ///        {
-    ///          "allOf": [
-    ///            {
-    ///              "$ref": "#/components/schemas/RfdRevision"
-    ///            }
-
-    ///          ]
-    ///        }
-
-    ///      ]
-    ///    },
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForRfdId"
-    ///    },
-    ///    "latest_major_change_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "link": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "rfd_number": {
-    ///      "type": "integer",
-    ///      "format": "int32"
-    ///    },
-    ///    "updated_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "visibility": {
-    ///      "$ref": "#/components/schemas/Visibility"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct Rfd {
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub content: ::std::option::Option<RfdRevision>,
         pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub id: TypedUuidForRfdId,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub latest_major_change_at:
             ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub link: ::std::option::Option<::std::string::String>,
         pub rfd_number: i32,
         pub updated_at: ::chrono::DateTime<::chrono::offset::Utc>,
@@ -3772,57 +1616,6 @@ pub mod types {
     }
 
     /// `RfdAttr`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "oneOf": [
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "discussion"
-    ///      ],
-    ///      "properties": {
-    ///        "discussion": {
-    ///          "type": "string"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "labels"
-    ///      ],
-    ///      "properties": {
-    ///        "labels": {
-    ///          "type": "string"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "state"
-    ///      ],
-    ///      "properties": {
-    ///        "state": {
-    ///          "$ref": "#/components/schemas/RfdState"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    }
-
-    ///  ]
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -3842,21 +1635,6 @@ pub mod types {
     }
 
     /// `RfdAttrName`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "enum": [
-    ///    "discussion",
-    ///    "labels",
-    ///    "state"
-    ///  ]
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -3908,15 +1686,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::TryFrom<&::std::string::String> for RfdAttrName {
-        type Error = self::error::ConversionError;
-        fn try_from(
-            value: &::std::string::String,
-        ) -> ::std::result::Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-
     impl ::std::convert::TryFrom<::std::string::String> for RfdAttrName {
         type Error = self::error::ConversionError;
         fn try_from(
@@ -3927,42 +1696,12 @@ pub mod types {
     }
 
     /// `RfdAttrValue`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "value"
-    ///  ],
-    ///  "properties": {
-    ///    "message": {
-    ///      "description": "Optional Git commit message to send with this
-    /// update (recommended)",
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "value": {
-    ///      "description": "Full value to set this attribute to in the existing
-    /// RFD contents",
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct RfdAttrValue {
         /// Optional Git commit message to send with this update (recommended)
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub message: ::std::option::Option<::std::string::String>,
         /// Full value to set this attribute to in the existing RFD contents
         pub value: ::std::string::String,
@@ -3975,13 +1714,6 @@ pub mod types {
     }
 
     /// `RfdId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// false
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -3999,69 +1731,12 @@ pub mod types {
     pub enum RfdId {}
 
     /// `RfdPdf`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "created_at",
-    ///    "external_id",
-    ///    "id",
-    ///    "link",
-    ///    "rfd_id",
-    ///    "rfd_revision_id",
-    ///    "source",
-    ///    "updated_at"
-    ///  ],
-    ///  "properties": {
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "external_id": {
-    ///      "type": "string"
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForRfdPdfId"
-    ///    },
-    ///    "link": {
-    ///      "type": "string"
-    ///    },
-    ///    "rfd_id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForRfdId"
-    ///    },
-    ///    "rfd_revision_id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForRfdRevisionId"
-    ///    },
-    ///    "source": {
-    ///      "$ref": "#/components/schemas/PdfSource"
-    ///    },
-    ///    "updated_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct RfdPdf {
         pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub external_id: ::std::string::String,
         pub id: TypedUuidForRfdPdfId,
@@ -4079,13 +1754,6 @@ pub mod types {
     }
 
     /// `RfdPdfId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// false
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -4103,565 +1771,6 @@ pub mod types {
     pub enum RfdPdfId {}
 
     /// `RfdPermission`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "oneOf": [
-    ///    {
-    ///      "type": "string",
-    ///      "enum": [
-    ///        "GetRfdsAssigned",
-    ///        "GetRfdsAll",
-    ///        "CreateRfd",
-    ///        "UpdateRfdsAssigned",
-    ///        "UpdateRfdsAll",
-    ///        "ManageRfdsVisibilityAssigned",
-    ///        "ManageRfdsVisibilityAll",
-    ///        "GetDiscussionsAssigned",
-    ///        "GetDiscussionsAll",
-    ///        "SearchRfds",
-    ///        "CreateApiUser",
-    ///        "GetApiUserSelf",
-    ///        "GetApiUsersAssigned",
-    ///        "GetApiUsersAll",
-    ///        "ManageApiUsersAssigned",
-    ///        "ManageApiUsersAll",
-    ///        "CreateApiKeySelf",
-    ///        "CreateApiKeyAssigned",
-    ///        "CreateApiKeyAll",
-    ///        "GetApiKeysAssigned",
-    ///        "GetApiKeysAll",
-    ///        "ManageApiKeysAssigned",
-    ///        "ManageApiKeysAll",
-    ///        "CreateUserApiProviderLinkToken",
-    ///        "CreateGroup",
-    ///        "GetGroupsJoined",
-    ///        "GetGroupsAll",
-    ///        "ManageGroupsAssigned",
-    ///        "ManageGroupsAll",
-    ///        "ManageGroupMembershipsAssigned",
-    ///        "ManageGroupMembershipsAll",
-    ///        "CreateMapper",
-    ///        "GetMappersAll",
-    ///        "ManageMappersAssigned",
-    ///        "ManageMappersAll",
-    ///        "CreateOAuthClient",
-    ///        "GetOAuthClientsAssigned",
-    ///        "GetOAuthClientsAll",
-    ///        "ManageOAuthClientsAssigned",
-    ///        "ManageOAuthClientsAll",
-    ///        "CreateMagicLinkClient",
-    ///        "GetMagicLinkClientsAssigned",
-    ///        "GetMagicLinkClientsAll",
-    ///        "ManageMagicLinkClientsAssigned",
-    ///        "ManageMagicLinkClientsAll",
-    ///        "CreateAccessToken",
-    ///        "RetrieveRemoteAccessToken"
-    ///      ]
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "GetRfd"
-    ///      ],
-    ///      "properties": {
-    ///        "GetRfd": {
-    ///          "type": "integer",
-    ///          "format": "int32"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "GetRfds"
-    ///      ],
-    ///      "properties": {
-    ///        "GetRfds": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "integer",
-    ///            "format": "int32"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "UpdateRfd"
-    ///      ],
-    ///      "properties": {
-    ///        "UpdateRfd": {
-    ///          "type": "integer",
-    ///          "format": "int32"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "UpdateRfds"
-    ///      ],
-    ///      "properties": {
-    ///        "UpdateRfds": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "integer",
-    ///            "format": "int32"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageRfdVisibility"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageRfdVisibility": {
-    ///          "type": "integer",
-    ///          "format": "int32"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageRfdsVisibility"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageRfdsVisibility": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "integer",
-    ///            "format": "int32"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "GetDiscussion"
-    ///      ],
-    ///      "properties": {
-    ///        "GetDiscussion": {
-    ///          "type": "integer",
-    ///          "format": "int32"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "GetDiscussions"
-    ///      ],
-    ///      "properties": {
-    ///        "GetDiscussions": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "type": "integer",
-    ///            "format": "int32"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "GetApiUser"
-    ///      ],
-    ///      "properties": {
-    ///        "GetApiUser": {
-    ///          "$ref": "#/components/schemas/TypedUuidForUserId"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "GetApiUsers"
-    ///      ],
-    ///      "properties": {
-    ///        "GetApiUsers": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "$ref": "#/components/schemas/TypedUuidForUserId"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageApiUser"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageApiUser": {
-    ///          "$ref": "#/components/schemas/TypedUuidForUserId"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageApiUsers"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageApiUsers": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "$ref": "#/components/schemas/TypedUuidForUserId"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "CreateApiKey"
-    ///      ],
-    ///      "properties": {
-    ///        "CreateApiKey": {
-    ///          "$ref": "#/components/schemas/TypedUuidForUserId"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "GetApiKey"
-    ///      ],
-    ///      "properties": {
-    ///        "GetApiKey": {
-    ///          "$ref": "#/components/schemas/TypedUuidForApiKeyId"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "GetApiKeys"
-    ///      ],
-    ///      "properties": {
-    ///        "GetApiKeys": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "$ref": "#/components/schemas/TypedUuidForApiKeyId"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageApiKey"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageApiKey": {
-    ///          "$ref": "#/components/schemas/TypedUuidForApiKeyId"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageApiKeys"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageApiKeys": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "$ref": "#/components/schemas/TypedUuidForApiKeyId"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "GetGroup"
-    ///      ],
-    ///      "properties": {
-    ///        "GetGroup": {
-    ///          "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageGroup"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageGroup": {
-    ///          "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageGroups"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageGroups": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageGroupMembership"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageGroupMembership": {
-    ///          "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageGroupMemberships"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageGroupMemberships": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "$ref": "#/components/schemas/TypedUuidForAccessGroupId"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageMapper"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageMapper": {
-    ///          "$ref": "#/components/schemas/TypedUuidForMapperId"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageMappers"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageMappers": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "$ref": "#/components/schemas/TypedUuidForMapperId"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "GetOAuthClient"
-    ///      ],
-    ///      "properties": {
-    ///        "GetOAuthClient": {
-    ///          "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "GetOAuthClients"
-    ///      ],
-    ///      "properties": {
-    ///        "GetOAuthClients": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageOAuthClient"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageOAuthClient": {
-    ///          "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageOAuthClients"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageOAuthClients": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "$ref": "#/components/schemas/TypedUuidForOAuthClientId"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "GetMagicLinkClient"
-    ///      ],
-    ///      "properties": {
-    ///        "GetMagicLinkClient": {
-    ///          "$ref": "#/components/schemas/TypedUuidForMagicLinkId"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "GetMagicLinkClients"
-    ///      ],
-    ///      "properties": {
-    ///        "GetMagicLinkClients": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "$ref": "#/components/schemas/TypedUuidForMagicLinkId"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageMagicLinkClient"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageMagicLinkClient": {
-    ///          "$ref": "#/components/schemas/TypedUuidForMagicLinkId"
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "ManageMagicLinkClients"
-    ///      ],
-    ///      "properties": {
-    ///        "ManageMagicLinkClients": {
-    ///          "type": "array",
-    ///          "items": {
-    ///            "$ref": "#/components/schemas/TypedUuidForMagicLinkId"
-    ///          },
-    ///          "uniqueItems": true
-    ///        }
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    },
-    ///    {
-    ///      "type": "object",
-    ///      "required": [
-    ///        "Unsupported"
-    ///      ],
-    ///      "properties": {
-    ///        "Unsupported": {}
-
-    ///      },
-    ///      "additionalProperties": false
-    ///    }
-
-    ///  ]
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -4714,37 +1823,37 @@ pub mod types {
         CreateAccessToken,
         RetrieveRemoteAccessToken,
         GetRfd(i32),
-        GetRfds(Vec<i32>),
+        GetRfds(::std::vec::Vec<i32>),
         UpdateRfd(i32),
-        UpdateRfds(Vec<i32>),
+        UpdateRfds(::std::vec::Vec<i32>),
         ManageRfdVisibility(i32),
-        ManageRfdsVisibility(Vec<i32>),
+        ManageRfdsVisibility(::std::vec::Vec<i32>),
         GetDiscussion(i32),
-        GetDiscussions(Vec<i32>),
+        GetDiscussions(::std::vec::Vec<i32>),
         GetApiUser(TypedUuidForUserId),
-        GetApiUsers(Vec<TypedUuidForUserId>),
+        GetApiUsers(::std::vec::Vec<TypedUuidForUserId>),
         ManageApiUser(TypedUuidForUserId),
-        ManageApiUsers(Vec<TypedUuidForUserId>),
+        ManageApiUsers(::std::vec::Vec<TypedUuidForUserId>),
         CreateApiKey(TypedUuidForUserId),
         GetApiKey(TypedUuidForApiKeyId),
-        GetApiKeys(Vec<TypedUuidForApiKeyId>),
+        GetApiKeys(::std::vec::Vec<TypedUuidForApiKeyId>),
         ManageApiKey(TypedUuidForApiKeyId),
-        ManageApiKeys(Vec<TypedUuidForApiKeyId>),
+        ManageApiKeys(::std::vec::Vec<TypedUuidForApiKeyId>),
         GetGroup(TypedUuidForAccessGroupId),
         ManageGroup(TypedUuidForAccessGroupId),
-        ManageGroups(Vec<TypedUuidForAccessGroupId>),
+        ManageGroups(::std::vec::Vec<TypedUuidForAccessGroupId>),
         ManageGroupMembership(TypedUuidForAccessGroupId),
-        ManageGroupMemberships(Vec<TypedUuidForAccessGroupId>),
+        ManageGroupMemberships(::std::vec::Vec<TypedUuidForAccessGroupId>),
         ManageMapper(TypedUuidForMapperId),
-        ManageMappers(Vec<TypedUuidForMapperId>),
+        ManageMappers(::std::vec::Vec<TypedUuidForMapperId>),
         GetOAuthClient(TypedUuidForOAuthClientId),
-        GetOAuthClients(Vec<TypedUuidForOAuthClientId>),
+        GetOAuthClients(::std::vec::Vec<TypedUuidForOAuthClientId>),
         ManageOAuthClient(TypedUuidForOAuthClientId),
-        ManageOAuthClients(Vec<TypedUuidForOAuthClientId>),
+        ManageOAuthClients(::std::vec::Vec<TypedUuidForOAuthClientId>),
         GetMagicLinkClient(TypedUuidForMagicLinkId),
-        GetMagicLinkClients(Vec<TypedUuidForMagicLinkId>),
+        GetMagicLinkClients(::std::vec::Vec<TypedUuidForMagicLinkId>),
         ManageMagicLinkClient(TypedUuidForMagicLinkId),
-        ManageMagicLinkClients(Vec<TypedUuidForMagicLinkId>),
+        ManageMagicLinkClients(::std::vec::Vec<TypedUuidForMagicLinkId>),
         Unsupported(::serde_json::Value),
     }
 
@@ -4754,8 +1863,8 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::From<Vec<TypedUuidForMapperId>> for RfdPermission {
-        fn from(value: Vec<TypedUuidForMapperId>) -> Self {
+    impl ::std::convert::From<::std::vec::Vec<TypedUuidForMapperId>> for RfdPermission {
+        fn from(value: ::std::vec::Vec<TypedUuidForMapperId>) -> Self {
             Self::ManageMappers(value)
         }
     }
@@ -4767,122 +1876,28 @@ pub mod types {
     }
 
     /// `RfdRevision`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "commit",
-    ///    "committed_at",
-    ///    "content",
-    ///    "content_format",
-    ///    "created_at",
-    ///    "id",
-    ///    "major_change",
-    ///    "rfd_id",
-    ///    "sha",
-    ///    "title",
-    ///    "updated_at"
-    ///  ],
-    ///  "properties": {
-    ///    "authors": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "commit": {
-    ///      "$ref": "#/components/schemas/CommitSha"
-    ///    },
-    ///    "committed_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "content": {
-    ///      "type": "string"
-    ///    },
-    ///    "content_format": {
-    ///      "$ref": "#/components/schemas/ContentFormat"
-    ///    },
-    ///    "created_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "deleted_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "discussion": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForRfdRevisionId"
-    ///    },
-    ///    "labels": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "major_change": {
-    ///      "type": "boolean"
-    ///    },
-    ///    "rfd_id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForRfdId"
-    ///    },
-    ///    "sha": {
-    ///      "$ref": "#/components/schemas/FileSha"
-    ///    },
-    ///    "state": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "title": {
-    ///      "type": "string"
-    ///    },
-    ///    "updated_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct RfdRevision {
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub authors: ::std::option::Option<::std::string::String>,
         pub commit: CommitSha,
         pub committed_at: ::chrono::DateTime<::chrono::offset::Utc>,
         pub content: ::std::string::String,
         pub content_format: ContentFormat,
         pub created_at: ::chrono::DateTime<::chrono::offset::Utc>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub deleted_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub discussion: ::std::option::Option<::std::string::String>,
         pub id: TypedUuidForRfdRevisionId,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub labels: ::std::option::Option<::std::string::String>,
         pub major_change: bool,
         pub rfd_id: TypedUuidForRfdId,
         pub sha: FileSha,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub state: ::std::option::Option<::std::string::String>,
         pub title: ::std::string::String,
         pub updated_at: ::chrono::DateTime<::chrono::offset::Utc>,
@@ -4895,13 +1910,6 @@ pub mod types {
     }
 
     /// `RfdRevisionId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// false
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -4919,39 +1927,6 @@ pub mod types {
     pub enum RfdRevisionId {}
 
     /// `RfdRevisionMeta`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "commit_sha",
-    ///    "committed_at",
-    ///    "id",
-    ///    "major_change"
-    ///  ],
-    ///  "properties": {
-    ///    "commit_sha": {
-    ///      "$ref": "#/components/schemas/CommitSha"
-    ///    },
-    ///    "committed_at": {
-    ///      "type": "string",
-    ///      "format": "date-time"
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForRfdRevisionId"
-    ///    },
-    ///    "major_change": {
-    ///      "type": "boolean"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -4969,24 +1944,6 @@ pub mod types {
     }
 
     /// `RfdState`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "enum": [
-    ///    "abandoned",
-    ///    "committed",
-    ///    "discussion",
-    ///    "ideation",
-    ///    "prediscussion",
-    ///    "published"
-    ///  ]
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -5050,15 +2007,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::TryFrom<&::std::string::String> for RfdState {
-        type Error = self::error::ConversionError;
-        fn try_from(
-            value: &::std::string::String,
-        ) -> ::std::result::Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-
     impl ::std::convert::TryFrom<::std::string::String> for RfdState {
         type Error = self::error::ConversionError;
         fn try_from(
@@ -5069,35 +2017,6 @@ pub mod types {
     }
 
     /// `RfdUpdateBody`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "document"
-    ///  ],
-    ///  "properties": {
-    ///    "document": {
-    ///      "description": "Full Asciidoc document to store for this RFD",
-    ///      "type": "string"
-    ///    },
-    ///    "message": {
-    ///      "description": "Optional Git commit message to send with this
-    /// update (recommended)",
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -5105,7 +2024,7 @@ pub mod types {
         /// Full Asciidoc document to store for this RFD
         pub document: ::std::string::String,
         /// Optional Git commit message to send with this update (recommended)
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub message: ::std::option::Option<::std::string::String>,
     }
 
@@ -5116,35 +2035,6 @@ pub mod types {
     }
 
     /// `RfdUpdateContentBody`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "content"
-    ///  ],
-    ///  "properties": {
-    ///    "content": {
-    ///      "description": "Asciidoc content to store for this RFD",
-    ///      "type": "string"
-    ///    },
-    ///    "message": {
-    ///      "description": "Optional Git commit message to send with this
-    /// update (recommended)",
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -5152,7 +2042,7 @@ pub mod types {
         /// Asciidoc content to store for this RFD
         pub content: ::std::string::String,
         /// Optional Git commit message to send with this update (recommended)
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub message: ::std::option::Option<::std::string::String>,
     }
 
@@ -5163,26 +2053,6 @@ pub mod types {
     }
 
     /// `RfdVisibility`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "visibility"
-    ///  ],
-    ///  "properties": {
-    ///    "visibility": {
-    ///      "$ref": "#/components/schemas/Visibility"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -5197,170 +2067,35 @@ pub mod types {
     }
 
     /// `RfdWithPdf`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "content",
-    ///    "id",
-    ///    "rfd_number",
-    ///    "visibility"
-    ///  ],
-    ///  "properties": {
-    ///    "authors": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "commit": {
-    ///      "oneOf": [
-    ///        {
-    ///          "type": "null"
-    ///        },
-    ///        {
-    ///          "allOf": [
-    ///            {
-    ///              "$ref": "#/components/schemas/CommitSha"
-    ///            }
-
-    ///          ]
-    ///        }
-
-    ///      ]
-    ///    },
-    ///    "committed_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "content": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "$ref": "#/components/schemas/RfdPdf"
-    ///      }
-
-    ///    },
-    ///    "discussion": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "format": {
-    ///      "oneOf": [
-    ///        {
-    ///          "type": "null"
-    ///        },
-    ///        {
-    ///          "allOf": [
-    ///            {
-    ///              "$ref": "#/components/schemas/ContentFormat"
-    ///            }
-
-    ///          ]
-    ///        }
-
-    ///      ]
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForRfdId"
-    ///    },
-    ///    "labels": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "latest_major_change_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "link": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "rfd_number": {
-    ///      "type": "integer",
-    ///      "format": "int32"
-    ///    },
-    ///    "sha": {
-    ///      "oneOf": [
-    ///        {
-    ///          "type": "null"
-    ///        },
-    ///        {
-    ///          "allOf": [
-    ///            {
-    ///              "$ref": "#/components/schemas/FileSha"
-    ///            }
-
-    ///          ]
-    ///        }
-
-    ///      ]
-    ///    },
-    ///    "state": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "title": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "visibility": {
-    ///      "$ref": "#/components/schemas/Visibility"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct RfdWithPdf {
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub authors: ::std::option::Option<::std::string::String>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub commit: ::std::option::Option<CommitSha>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub committed_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
         pub content: ::std::vec::Vec<RfdPdf>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub discussion: ::std::option::Option<::std::string::String>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub format: ::std::option::Option<ContentFormat>,
         pub id: TypedUuidForRfdId,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub labels: ::std::option::Option<::std::string::String>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub latest_major_change_at:
             ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub link: ::std::option::Option<::std::string::String>,
         pub rfd_number: i32,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub sha: ::std::option::Option<FileSha>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub state: ::std::option::Option<::std::string::String>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub title: ::std::option::Option<::std::string::String>,
         pub visibility: Visibility,
     }
@@ -5372,169 +2107,36 @@ pub mod types {
     }
 
     /// `RfdWithRaw`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "id",
-    ///    "rfd_number",
-    ///    "visibility"
-    ///  ],
-    ///  "properties": {
-    ///    "authors": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "commit": {
-    ///      "oneOf": [
-    ///        {
-    ///          "type": "null"
-    ///        },
-    ///        {
-    ///          "allOf": [
-    ///            {
-    ///              "$ref": "#/components/schemas/CommitSha"
-    ///            }
-
-    ///          ]
-    ///        }
-
-    ///      ]
-    ///    },
-    ///    "committed_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "content": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "discussion": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "format": {
-    ///      "oneOf": [
-    ///        {
-    ///          "type": "null"
-    ///        },
-    ///        {
-    ///          "allOf": [
-    ///            {
-    ///              "$ref": "#/components/schemas/ContentFormat"
-    ///            }
-
-    ///          ]
-    ///        }
-
-    ///      ]
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForRfdId"
-    ///    },
-    ///    "labels": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "latest_major_change_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "link": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "rfd_number": {
-    ///      "type": "integer",
-    ///      "format": "int32"
-    ///    },
-    ///    "sha": {
-    ///      "oneOf": [
-    ///        {
-    ///          "type": "null"
-    ///        },
-    ///        {
-    ///          "allOf": [
-    ///            {
-    ///              "$ref": "#/components/schemas/FileSha"
-    ///            }
-
-    ///          ]
-    ///        }
-
-    ///      ]
-    ///    },
-    ///    "state": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "title": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "visibility": {
-    ///      "$ref": "#/components/schemas/Visibility"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct RfdWithRaw {
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub authors: ::std::option::Option<::std::string::String>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub commit: ::std::option::Option<CommitSha>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub committed_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub content: ::std::option::Option<::std::string::String>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub discussion: ::std::option::Option<::std::string::String>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub format: ::std::option::Option<ContentFormat>,
         pub id: TypedUuidForRfdId,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub labels: ::std::option::Option<::std::string::String>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub latest_major_change_at:
             ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub link: ::std::option::Option<::std::string::String>,
         pub rfd_number: i32,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub sha: ::std::option::Option<FileSha>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub state: ::std::option::Option<::std::string::String>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub title: ::std::option::Option<::std::string::String>,
         pub visibility: Visibility,
     }
@@ -5546,161 +2148,34 @@ pub mod types {
     }
 
     /// `RfdWithoutContent`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "id",
-    ///    "rfd_number",
-    ///    "visibility"
-    ///  ],
-    ///  "properties": {
-    ///    "authors": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "commit": {
-    ///      "oneOf": [
-    ///        {
-    ///          "type": "null"
-    ///        },
-    ///        {
-    ///          "allOf": [
-    ///            {
-    ///              "$ref": "#/components/schemas/CommitSha"
-    ///            }
-
-    ///          ]
-    ///        }
-
-    ///      ]
-    ///    },
-    ///    "committed_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "discussion": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "format": {
-    ///      "oneOf": [
-    ///        {
-    ///          "type": "null"
-    ///        },
-    ///        {
-    ///          "allOf": [
-    ///            {
-    ///              "$ref": "#/components/schemas/ContentFormat"
-    ///            }
-
-    ///          ]
-    ///        }
-
-    ///      ]
-    ///    },
-    ///    "id": {
-    ///      "$ref": "#/components/schemas/TypedUuidForRfdId"
-    ///    },
-    ///    "labels": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "latest_major_change_at": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ],
-    ///      "format": "date-time"
-    ///    },
-    ///    "link": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "rfd_number": {
-    ///      "type": "integer",
-    ///      "format": "int32"
-    ///    },
-    ///    "sha": {
-    ///      "oneOf": [
-    ///        {
-    ///          "type": "null"
-    ///        },
-    ///        {
-    ///          "allOf": [
-    ///            {
-    ///              "$ref": "#/components/schemas/FileSha"
-    ///            }
-
-    ///          ]
-    ///        }
-
-    ///      ]
-    ///    },
-    ///    "state": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "title": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "visibility": {
-    ///      "$ref": "#/components/schemas/Visibility"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct RfdWithoutContent {
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub authors: ::std::option::Option<::std::string::String>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub commit: ::std::option::Option<CommitSha>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub committed_at: ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub discussion: ::std::option::Option<::std::string::String>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub format: ::std::option::Option<ContentFormat>,
         pub id: TypedUuidForRfdId,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub labels: ::std::option::Option<::std::string::String>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub latest_major_change_at:
             ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub link: ::std::option::Option<::std::string::String>,
         pub rfd_number: i32,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub sha: ::std::option::Option<FileSha>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub state: ::std::option::Option<::std::string::String>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub title: ::std::option::Option<::std::string::String>,
         pub visibility: Visibility,
     }
@@ -5712,102 +2187,20 @@ pub mod types {
     }
 
     /// `SearchResultHit`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "content",
-    ///    "hierarchy",
-    ///    "hierarchy_radio",
-    ///    "object_id",
-    ///    "rfd_number"
-    ///  ],
-    ///  "properties": {
-    ///    "anchor": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    },
-    ///    "content": {
-    ///      "type": "string"
-    ///    },
-    ///    "formatted": {
-    ///      "oneOf": [
-    ///        {
-    ///          "type": "null"
-    ///        },
-    ///        {
-    ///          "allOf": [
-    ///            {
-    ///              "$ref": "#/components/schemas/FormattedSearchResultHit"
-    ///            }
-
-    ///          ]
-    ///        }
-
-    ///      ]
-    ///    },
-    ///    "hierarchy": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": [
-    ///          "string",
-    ///          "null"
-    ///        ]
-    ///      },
-    ///      "maxItems": 6,
-    ///      "minItems": 6
-    ///    },
-    ///    "hierarchy_radio": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "type": [
-    ///          "string",
-    ///          "null"
-    ///        ]
-    ///      },
-    ///      "maxItems": 6,
-    ///      "minItems": 6
-    ///    },
-    ///    "object_id": {
-    ///      "type": "string"
-    ///    },
-    ///    "rfd_number": {
-    ///      "type": "integer",
-    ///      "format": "uint64",
-    ///      "minimum": 0.0
-    ///    },
-    ///    "url": {
-    ///      "type": [
-    ///        "string",
-    ///        "null"
-    ///      ]
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct SearchResultHit {
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub anchor: ::std::option::Option<::std::string::String>,
         pub content: ::std::string::String,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub formatted: ::std::option::Option<FormattedSearchResultHit>,
         pub hierarchy: [::std::option::Option<::std::string::String>; 6usize],
         pub hierarchy_radio: [::std::option::Option<::std::string::String>; 6usize],
         pub object_id: ::std::string::String,
         pub rfd_number: u64,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub url: ::std::option::Option<::std::string::String>,
     }
 
@@ -5818,58 +2211,14 @@ pub mod types {
     }
 
     /// `SearchResults`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "required": [
-    ///    "hits",
-    ///    "query"
-    ///  ],
-    ///  "properties": {
-    ///    "hits": {
-    ///      "type": "array",
-    ///      "items": {
-    ///        "$ref": "#/components/schemas/SearchResultHit"
-    ///      }
-
-    ///    },
-    ///    "limit": {
-    ///      "type": [
-    ///        "integer",
-    ///        "null"
-    ///      ],
-    ///      "format": "uint",
-    ///      "minimum": 0.0
-    ///    },
-    ///    "offset": {
-    ///      "type": [
-    ///        "integer",
-    ///        "null"
-    ///      ],
-    ///      "format": "uint",
-    ///      "minimum": 0.0
-    ///    },
-    ///    "query": {
-    ///      "type": "string"
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
     pub struct SearchResults {
         pub hits: ::std::vec::Vec<SearchResultHit>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub limit: ::std::option::Option<u32>,
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub offset: ::std::option::Option<u32>,
         pub query: ::std::string::String,
     }
@@ -5881,16 +2230,6 @@ pub mod types {
     }
 
     /// `SecretString`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string"
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -5924,6 +2263,12 @@ pub mod types {
         }
     }
 
+    impl ::std::fmt::Display for SecretString {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
     impl ::std::str::FromStr for SecretString {
         type Err = ::std::convert::Infallible;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
@@ -5931,36 +2276,7 @@ pub mod types {
         }
     }
 
-    impl ::std::fmt::Display for SecretString {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
     /// `TypedUuidForAccessGroupId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "format": "uuid",
-    ///  "x-rust-type": {
-    ///    "crate": "newtype-uuid",
-    ///    "parameters": [
-    ///      {
-    ///        "$ref": "#/components/schemas/AccessGroupId"
-    ///      }
-
-    ///    ],
-    ///    "path": "newtype_uuid::TypedUuid",
-    ///    "version": "1"
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -5985,6 +2301,12 @@ pub mod types {
         }
     }
 
+    impl ::std::fmt::Display for TypedUuidForAccessGroupId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
     impl ::std::str::FromStr for TypedUuidForAccessGroupId {
         type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
@@ -6006,36 +2328,7 @@ pub mod types {
         }
     }
 
-    impl ::std::fmt::Display for TypedUuidForAccessGroupId {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
     /// `TypedUuidForApiKeyId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "format": "uuid",
-    ///  "x-rust-type": {
-    ///    "crate": "newtype-uuid",
-    ///    "parameters": [
-    ///      {
-    ///        "$ref": "#/components/schemas/ApiKeyId"
-    ///      }
-
-    ///    ],
-    ///    "path": "newtype_uuid::TypedUuid",
-    ///    "version": "1"
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -6060,6 +2353,12 @@ pub mod types {
         }
     }
 
+    impl ::std::fmt::Display for TypedUuidForApiKeyId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
     impl ::std::str::FromStr for TypedUuidForApiKeyId {
         type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
@@ -6081,36 +2380,7 @@ pub mod types {
         }
     }
 
-    impl ::std::fmt::Display for TypedUuidForApiKeyId {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
     /// `TypedUuidForMagicLinkAttemptId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "format": "uuid",
-    ///  "x-rust-type": {
-    ///    "crate": "newtype-uuid",
-    ///    "parameters": [
-    ///      {
-    ///        "$ref": "#/components/schemas/MagicLinkAttemptId"
-    ///      }
-
-    ///    ],
-    ///    "path": "newtype_uuid::TypedUuid",
-    ///    "version": "1"
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -6135,6 +2405,12 @@ pub mod types {
         }
     }
 
+    impl ::std::fmt::Display for TypedUuidForMagicLinkAttemptId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
     impl ::std::str::FromStr for TypedUuidForMagicLinkAttemptId {
         type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
@@ -6156,36 +2432,7 @@ pub mod types {
         }
     }
 
-    impl ::std::fmt::Display for TypedUuidForMagicLinkAttemptId {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
     /// `TypedUuidForMagicLinkId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "format": "uuid",
-    ///  "x-rust-type": {
-    ///    "crate": "newtype-uuid",
-    ///    "parameters": [
-    ///      {
-    ///        "$ref": "#/components/schemas/MagicLinkId"
-    ///      }
-
-    ///    ],
-    ///    "path": "newtype_uuid::TypedUuid",
-    ///    "version": "1"
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -6210,6 +2457,12 @@ pub mod types {
         }
     }
 
+    impl ::std::fmt::Display for TypedUuidForMagicLinkId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
     impl ::std::str::FromStr for TypedUuidForMagicLinkId {
         type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
@@ -6231,36 +2484,7 @@ pub mod types {
         }
     }
 
-    impl ::std::fmt::Display for TypedUuidForMagicLinkId {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
     /// `TypedUuidForMagicLinkRedirectUriId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "format": "uuid",
-    ///  "x-rust-type": {
-    ///    "crate": "newtype-uuid",
-    ///    "parameters": [
-    ///      {
-    ///        "$ref": "#/components/schemas/MagicLinkRedirectUriId"
-    ///      }
-
-    ///    ],
-    ///    "path": "newtype_uuid::TypedUuid",
-    ///    "version": "1"
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -6285,6 +2509,12 @@ pub mod types {
         }
     }
 
+    impl ::std::fmt::Display for TypedUuidForMagicLinkRedirectUriId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
     impl ::std::str::FromStr for TypedUuidForMagicLinkRedirectUriId {
         type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
@@ -6306,36 +2536,7 @@ pub mod types {
         }
     }
 
-    impl ::std::fmt::Display for TypedUuidForMagicLinkRedirectUriId {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
     /// `TypedUuidForMagicLinkSecretId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "format": "uuid",
-    ///  "x-rust-type": {
-    ///    "crate": "newtype-uuid",
-    ///    "parameters": [
-    ///      {
-    ///        "$ref": "#/components/schemas/MagicLinkSecretId"
-    ///      }
-
-    ///    ],
-    ///    "path": "newtype_uuid::TypedUuid",
-    ///    "version": "1"
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -6360,6 +2561,12 @@ pub mod types {
         }
     }
 
+    impl ::std::fmt::Display for TypedUuidForMagicLinkSecretId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
     impl ::std::str::FromStr for TypedUuidForMagicLinkSecretId {
         type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
@@ -6381,36 +2588,7 @@ pub mod types {
         }
     }
 
-    impl ::std::fmt::Display for TypedUuidForMagicLinkSecretId {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
     /// `TypedUuidForMapperId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "format": "uuid",
-    ///  "x-rust-type": {
-    ///    "crate": "newtype-uuid",
-    ///    "parameters": [
-    ///      {
-    ///        "$ref": "#/components/schemas/MapperId"
-    ///      }
-
-    ///    ],
-    ///    "path": "newtype_uuid::TypedUuid",
-    ///    "version": "1"
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -6435,6 +2613,12 @@ pub mod types {
         }
     }
 
+    impl ::std::fmt::Display for TypedUuidForMapperId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
     impl ::std::str::FromStr for TypedUuidForMapperId {
         type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
@@ -6456,36 +2640,7 @@ pub mod types {
         }
     }
 
-    impl ::std::fmt::Display for TypedUuidForMapperId {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
     /// `TypedUuidForOAuthClientId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "format": "uuid",
-    ///  "x-rust-type": {
-    ///    "crate": "newtype-uuid",
-    ///    "parameters": [
-    ///      {
-    ///        "$ref": "#/components/schemas/OAuthClientId"
-    ///      }
-
-    ///    ],
-    ///    "path": "newtype_uuid::TypedUuid",
-    ///    "version": "1"
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -6510,6 +2665,12 @@ pub mod types {
         }
     }
 
+    impl ::std::fmt::Display for TypedUuidForOAuthClientId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
     impl ::std::str::FromStr for TypedUuidForOAuthClientId {
         type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
@@ -6531,36 +2692,7 @@ pub mod types {
         }
     }
 
-    impl ::std::fmt::Display for TypedUuidForOAuthClientId {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
     /// `TypedUuidForOAuthRedirectUriId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "format": "uuid",
-    ///  "x-rust-type": {
-    ///    "crate": "newtype-uuid",
-    ///    "parameters": [
-    ///      {
-    ///        "$ref": "#/components/schemas/OAuthRedirectUriId"
-    ///      }
-
-    ///    ],
-    ///    "path": "newtype_uuid::TypedUuid",
-    ///    "version": "1"
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -6585,6 +2717,12 @@ pub mod types {
         }
     }
 
+    impl ::std::fmt::Display for TypedUuidForOAuthRedirectUriId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
     impl ::std::str::FromStr for TypedUuidForOAuthRedirectUriId {
         type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
@@ -6606,36 +2744,7 @@ pub mod types {
         }
     }
 
-    impl ::std::fmt::Display for TypedUuidForOAuthRedirectUriId {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
     /// `TypedUuidForOAuthSecretId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "format": "uuid",
-    ///  "x-rust-type": {
-    ///    "crate": "newtype-uuid",
-    ///    "parameters": [
-    ///      {
-    ///        "$ref": "#/components/schemas/OAuthSecretId"
-    ///      }
-
-    ///    ],
-    ///    "path": "newtype_uuid::TypedUuid",
-    ///    "version": "1"
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -6660,6 +2769,12 @@ pub mod types {
         }
     }
 
+    impl ::std::fmt::Display for TypedUuidForOAuthSecretId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
     impl ::std::str::FromStr for TypedUuidForOAuthSecretId {
         type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
@@ -6681,36 +2796,7 @@ pub mod types {
         }
     }
 
-    impl ::std::fmt::Display for TypedUuidForOAuthSecretId {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
     /// `TypedUuidForRfdId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "format": "uuid",
-    ///  "x-rust-type": {
-    ///    "crate": "newtype-uuid",
-    ///    "parameters": [
-    ///      {
-    ///        "$ref": "#/components/schemas/RfdId"
-    ///      }
-
-    ///    ],
-    ///    "path": "newtype_uuid::TypedUuid",
-    ///    "version": "1"
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -6735,6 +2821,12 @@ pub mod types {
         }
     }
 
+    impl ::std::fmt::Display for TypedUuidForRfdId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
     impl ::std::str::FromStr for TypedUuidForRfdId {
         type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
@@ -6756,36 +2848,7 @@ pub mod types {
         }
     }
 
-    impl ::std::fmt::Display for TypedUuidForRfdId {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
     /// `TypedUuidForRfdPdfId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "format": "uuid",
-    ///  "x-rust-type": {
-    ///    "crate": "newtype-uuid",
-    ///    "parameters": [
-    ///      {
-    ///        "$ref": "#/components/schemas/RfdPdfId"
-    ///      }
-
-    ///    ],
-    ///    "path": "newtype_uuid::TypedUuid",
-    ///    "version": "1"
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -6810,6 +2873,12 @@ pub mod types {
         }
     }
 
+    impl ::std::fmt::Display for TypedUuidForRfdPdfId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
     impl ::std::str::FromStr for TypedUuidForRfdPdfId {
         type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
@@ -6831,36 +2900,7 @@ pub mod types {
         }
     }
 
-    impl ::std::fmt::Display for TypedUuidForRfdPdfId {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
     /// `TypedUuidForRfdRevisionId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "format": "uuid",
-    ///  "x-rust-type": {
-    ///    "crate": "newtype-uuid",
-    ///    "parameters": [
-    ///      {
-    ///        "$ref": "#/components/schemas/RfdRevisionId"
-    ///      }
-
-    ///    ],
-    ///    "path": "newtype_uuid::TypedUuid",
-    ///    "version": "1"
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -6885,6 +2925,12 @@ pub mod types {
         }
     }
 
+    impl ::std::fmt::Display for TypedUuidForRfdRevisionId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
     impl ::std::str::FromStr for TypedUuidForRfdRevisionId {
         type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
@@ -6906,36 +2952,7 @@ pub mod types {
         }
     }
 
-    impl ::std::fmt::Display for TypedUuidForRfdRevisionId {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
     /// `TypedUuidForUserId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "format": "uuid",
-    ///  "x-rust-type": {
-    ///    "crate": "newtype-uuid",
-    ///    "parameters": [
-    ///      {
-    ///        "$ref": "#/components/schemas/UserId"
-    ///      }
-
-    ///    ],
-    ///    "path": "newtype_uuid::TypedUuid",
-    ///    "version": "1"
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -6960,6 +2977,12 @@ pub mod types {
         }
     }
 
+    impl ::std::fmt::Display for TypedUuidForUserId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
     impl ::std::str::FromStr for TypedUuidForUserId {
         type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
@@ -6981,36 +3004,7 @@ pub mod types {
         }
     }
 
-    impl ::std::fmt::Display for TypedUuidForUserId {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
     /// `TypedUuidForUserProviderId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "format": "uuid",
-    ///  "x-rust-type": {
-    ///    "crate": "newtype-uuid",
-    ///    "parameters": [
-    ///      {
-    ///        "$ref": "#/components/schemas/UserProviderId"
-    ///      }
-
-    ///    ],
-    ///    "path": "newtype_uuid::TypedUuid",
-    ///    "version": "1"
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -7035,6 +3029,12 @@ pub mod types {
         }
     }
 
+    impl ::std::fmt::Display for TypedUuidForUserProviderId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
     impl ::std::str::FromStr for TypedUuidForUserProviderId {
         type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
@@ -7056,36 +3056,7 @@ pub mod types {
         }
     }
 
-    impl ::std::fmt::Display for TypedUuidForUserProviderId {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
     /// `TypedUuidForWebhookDeliveryId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "format": "uuid",
-    ///  "x-rust-type": {
-    ///    "crate": "newtype-uuid",
-    ///    "parameters": [
-    ///      {
-    ///        "$ref": "#/components/schemas/WebhookDeliveryId"
-    ///      }
-
-    ///    ],
-    ///    "path": "newtype_uuid::TypedUuid",
-    ///    "version": "1"
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
     )]
@@ -7110,6 +3081,12 @@ pub mod types {
         }
     }
 
+    impl ::std::fmt::Display for TypedUuidForWebhookDeliveryId {
+        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
     impl ::std::str::FromStr for TypedUuidForWebhookDeliveryId {
         type Err = <::uuid::Uuid as ::std::str::FromStr>::Err;
         fn from_str(value: &str) -> ::std::result::Result<Self, Self::Err> {
@@ -7131,47 +3108,18 @@ pub mod types {
         }
     }
 
-    impl ::std::fmt::Display for TypedUuidForWebhookDeliveryId {
-        fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-            self.0.fmt(f)
-        }
-    }
-
     /// `UpdateRfdAttrBody`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "object",
-    ///  "properties": {
-    ///    "major_change": {
-    ///      "type": [
-    ///        "boolean",
-    ///        "null"
-    ///      ]
-    ///    }
-
-    ///  }
-
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
-        :: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, schemars :: JsonSchema,
+        :: serde :: Deserialize,
+        :: serde :: Serialize,
+        Clone,
+        Debug,
+        Default,
+        schemars :: JsonSchema,
     )]
     pub struct UpdateRfdAttrBody {
-        #[serde(default, skip_serializing_if = "::std::option::Option::is_none")]
+        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub major_change: ::std::option::Option<bool>,
-    }
-
-    impl ::std::default::Default for UpdateRfdAttrBody {
-        fn default() -> Self {
-            Self {
-                major_change: Default::default(),
-            }
-        }
     }
 
     impl UpdateRfdAttrBody {
@@ -7181,13 +3129,6 @@ pub mod types {
     }
 
     /// `UserId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// false
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -7205,13 +3146,6 @@ pub mod types {
     pub enum UserId {}
 
     /// `UserProviderId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// false
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -7229,20 +3163,6 @@ pub mod types {
     pub enum UserProviderId {}
 
     /// `Visibility`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// {
-    ///  "type": "string",
-    ///  "enum": [
-    ///    "public",
-    ///    "private"
-    ///  ]
-    /// }
-
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -7290,15 +3210,6 @@ pub mod types {
         }
     }
 
-    impl ::std::convert::TryFrom<&::std::string::String> for Visibility {
-        type Error = self::error::ConversionError;
-        fn try_from(
-            value: &::std::string::String,
-        ) -> ::std::result::Result<Self, self::error::ConversionError> {
-            value.parse()
-        }
-    }
-
     impl ::std::convert::TryFrom<::std::string::String> for Visibility {
         type Error = self::error::ConversionError;
         fn try_from(
@@ -7309,13 +3220,6 @@ pub mod types {
     }
 
     /// `WebhookDeliveryId`
-    ///
-    /// <details><summary>JSON schema</summary>
-    ///
-    /// ```json
-    /// false
-    /// ```
-    /// </details>
     #[derive(
         :: serde :: Deserialize,
         :: serde :: Serialize,
@@ -7348,6 +3252,7 @@ pub mod types {
             name: ::std::result::Result<::std::string::String, ::std::string::String>,
             permissions:
                 ::std::result::Result<super::PermissionsForRfdPermission, ::std::string::String>,
+            source: ::std::result::Result<super::AccessGroupSource, ::std::string::String>,
             updated_at: ::std::result::Result<
                 ::chrono::DateTime<::chrono::offset::Utc>,
                 ::std::string::String,
@@ -7362,6 +3267,7 @@ pub mod types {
                     id: Err("no value supplied for id".to_string()),
                     name: Err("no value supplied for name".to_string()),
                     permissions: Err("no value supplied for permissions".to_string()),
+                    source: Err("no value supplied for source".to_string()),
                     updated_at: Err("no value supplied for updated_at".to_string()),
                 }
             }
@@ -7420,6 +3326,16 @@ pub mod types {
                     .map_err(|e| format!("error converting supplied value for permissions: {e}"));
                 self
             }
+            pub fn source<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<super::AccessGroupSource>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.source = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for source: {e}"));
+                self
+            }
             pub fn updated_at<T>(mut self, value: T) -> Self
             where
                 T: ::std::convert::TryInto<::chrono::DateTime<::chrono::offset::Utc>>,
@@ -7443,6 +3359,7 @@ pub mod types {
                     id: value.id?,
                     name: value.name?,
                     permissions: value.permissions?,
+                    source: value.source?,
                     updated_at: value.updated_at?,
                 })
             }
@@ -7456,6 +3373,7 @@ pub mod types {
                     id: Ok(value.id),
                     name: Ok(value.name),
                     permissions: Ok(value.permissions),
+                    source: Ok(value.source),
                     updated_at: Ok(value.updated_at),
                 }
             }
@@ -7998,8 +3916,10 @@ pub mod types {
                 ::std::option::Option<::chrono::DateTime<::chrono::offset::Utc>>,
                 ::std::string::String,
             >,
-            groups:
-                ::std::result::Result<Vec<super::TypedUuidForAccessGroupId>, ::std::string::String>,
+            groups: ::std::result::Result<
+                ::std::vec::Vec<super::TypedUuidForAccessGroupId>,
+                ::std::string::String,
+            >,
             id: ::std::result::Result<super::TypedUuidForUserId, ::std::string::String>,
             permissions:
                 ::std::result::Result<super::PermissionsForRfdPermission, ::std::string::String>,
@@ -8047,7 +3967,7 @@ pub mod types {
             }
             pub fn groups<T>(mut self, value: T) -> Self
             where
-                T: ::std::convert::TryInto<Vec<super::TypedUuidForAccessGroupId>>,
+                T: ::std::convert::TryInto<::std::vec::Vec<super::TypedUuidForAccessGroupId>>,
                 T::Error: ::std::fmt::Display,
             {
                 self.groups = value
@@ -8476,8 +4396,10 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct ApiUserUpdateParamsForRfdPermission {
-            group_ids:
-                ::std::result::Result<Vec<super::TypedUuidForAccessGroupId>, ::std::string::String>,
+            group_ids: ::std::result::Result<
+                ::std::vec::Vec<super::TypedUuidForAccessGroupId>,
+                ::std::string::String,
+            >,
             permissions:
                 ::std::result::Result<super::PermissionsForRfdPermission, ::std::string::String>,
         }
@@ -8496,7 +4418,7 @@ pub mod types {
         impl ApiUserUpdateParamsForRfdPermission {
             pub fn group_ids<T>(mut self, value: T) -> Self
             where
-                T: ::std::convert::TryInto<Vec<super::TypedUuidForAccessGroupId>>,
+                T: ::std::convert::TryInto<::std::vec::Vec<super::TypedUuidForAccessGroupId>>,
                 T::Error: ::std::fmt::Display,
             {
                 self.group_ids = value
@@ -11126,6 +7048,10 @@ pub mod types {
         pub struct OAuthAuthzCodeExchangeResponse {
             access_token: ::std::result::Result<::std::string::String, ::std::string::String>,
             expires_in: ::std::result::Result<i64, ::std::string::String>,
+            idp_refresh_token: ::std::result::Result<
+                ::std::option::Option<::std::string::String>,
+                ::std::string::String,
+            >,
             idp_token: ::std::result::Result<
                 ::std::option::Option<::std::string::String>,
                 ::std::string::String,
@@ -11139,6 +7065,7 @@ pub mod types {
                 Self {
                     access_token: Err("no value supplied for access_token".to_string()),
                     expires_in: Err("no value supplied for expires_in".to_string()),
+                    idp_refresh_token: Ok(Default::default()),
                     idp_token: Ok(Default::default()),
                     scope: Err("no value supplied for scope".to_string()),
                     token_type: Err("no value supplied for token_type".to_string()),
@@ -11165,6 +7092,16 @@ pub mod types {
                 self.expires_in = value
                     .try_into()
                     .map_err(|e| format!("error converting supplied value for expires_in: {e}"));
+                self
+            }
+            pub fn idp_refresh_token<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::option::Option<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.idp_refresh_token = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for idp_refresh_token: {e}")
+                });
                 self
             }
             pub fn idp_token<T>(mut self, value: T) -> Self
@@ -11209,6 +7146,7 @@ pub mod types {
                 Ok(Self {
                     access_token: value.access_token?,
                     expires_in: value.expires_in?,
+                    idp_refresh_token: value.idp_refresh_token?,
                     idp_token: value.idp_token?,
                     scope: value.scope?,
                     token_type: value.token_type?,
@@ -11223,6 +7161,7 @@ pub mod types {
                 Self {
                     access_token: Ok(value.access_token),
                     expires_in: Ok(value.expires_in),
+                    idp_refresh_token: Ok(value.idp_refresh_token),
                     idp_token: Ok(value.idp_token),
                     scope: Ok(value.scope),
                     token_type: Ok(value.token_type),
@@ -11830,18 +7769,79 @@ pub mod types {
 
         #[derive(Clone, Debug)]
         pub struct OpenIdConfiguration {
+            claims_supported: ::std::result::Result<
+                ::std::vec::Vec<::std::string::String>,
+                ::std::string::String,
+            >,
+            id_token_signing_alg_values_supported: ::std::result::Result<
+                ::std::vec::Vec<::std::string::String>,
+                ::std::string::String,
+            >,
+            issuer: ::std::result::Result<::std::string::String, ::std::string::String>,
             jwks_uri: ::std::result::Result<::std::string::String, ::std::string::String>,
+            response_types_supported: ::std::result::Result<
+                ::std::vec::Vec<::std::string::String>,
+                ::std::string::String,
+            >,
+            subject_types_supported: ::std::result::Result<
+                ::std::vec::Vec<::std::string::String>,
+                ::std::string::String,
+            >,
         }
 
         impl ::std::default::Default for OpenIdConfiguration {
             fn default() -> Self {
                 Self {
+                    claims_supported: Err("no value supplied for claims_supported".to_string()),
+                    id_token_signing_alg_values_supported: Err(
+                        "no value supplied for id_token_signing_alg_values_supported".to_string(),
+                    ),
+                    issuer: Err("no value supplied for issuer".to_string()),
                     jwks_uri: Err("no value supplied for jwks_uri".to_string()),
+                    response_types_supported: Err(
+                        "no value supplied for response_types_supported".to_string()
+                    ),
+                    subject_types_supported: Err(
+                        "no value supplied for subject_types_supported".to_string()
+                    ),
                 }
             }
         }
 
         impl OpenIdConfiguration {
+            pub fn claims_supported<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::vec::Vec<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.claims_supported = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for claims_supported: {e}")
+                });
+                self
+            }
+            pub fn id_token_signing_alg_values_supported<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::vec::Vec<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.id_token_signing_alg_values_supported = value.try_into().map_err(|e| {
+                    format!(
+                        "error converting supplied value for \
+                         id_token_signing_alg_values_supported: {e}"
+                    )
+                });
+                self
+            }
+            pub fn issuer<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::string::String>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.issuer = value
+                    .try_into()
+                    .map_err(|e| format!("error converting supplied value for issuer: {e}"));
+                self
+            }
             pub fn jwks_uri<T>(mut self, value: T) -> Self
             where
                 T: ::std::convert::TryInto<::std::string::String>,
@@ -11852,6 +7852,26 @@ pub mod types {
                     .map_err(|e| format!("error converting supplied value for jwks_uri: {e}"));
                 self
             }
+            pub fn response_types_supported<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::vec::Vec<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.response_types_supported = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for response_types_supported: {e}")
+                });
+                self
+            }
+            pub fn subject_types_supported<T>(mut self, value: T) -> Self
+            where
+                T: ::std::convert::TryInto<::std::vec::Vec<::std::string::String>>,
+                T::Error: ::std::fmt::Display,
+            {
+                self.subject_types_supported = value.try_into().map_err(|e| {
+                    format!("error converting supplied value for subject_types_supported: {e}")
+                });
+                self
+            }
         }
 
         impl ::std::convert::TryFrom<OpenIdConfiguration> for super::OpenIdConfiguration {
@@ -11860,7 +7880,13 @@ pub mod types {
                 value: OpenIdConfiguration,
             ) -> ::std::result::Result<Self, super::error::ConversionError> {
                 Ok(Self {
+                    claims_supported: value.claims_supported?,
+                    id_token_signing_alg_values_supported: value
+                        .id_token_signing_alg_values_supported?,
+                    issuer: value.issuer?,
                     jwks_uri: value.jwks_uri?,
+                    response_types_supported: value.response_types_supported?,
+                    subject_types_supported: value.subject_types_supported?,
                 })
             }
         }
@@ -11868,7 +7894,14 @@ pub mod types {
         impl ::std::convert::From<super::OpenIdConfiguration> for OpenIdConfiguration {
             fn from(value: super::OpenIdConfiguration) -> Self {
                 Self {
+                    claims_supported: Ok(value.claims_supported),
+                    id_token_signing_alg_values_supported: Ok(
+                        value.id_token_signing_alg_values_supported
+                    ),
+                    issuer: Ok(value.issuer),
                     jwks_uri: Ok(value.jwks_uri),
+                    response_types_supported: Ok(value.response_types_supported),
+                    subject_types_supported: Ok(value.subject_types_supported),
                 }
             }
         }
@@ -14042,8 +10075,39 @@ pub mod types {
     /// Generation of default values for serde.
     pub mod defaults {
         pub(super) fn api_user_update_params_for_rfd_permission_group_ids(
-        ) -> Vec<super::TypedUuidForAccessGroupId> {
+        ) -> ::std::vec::Vec<super::TypedUuidForAccessGroupId> {
             vec![]
+        }
+    }
+
+    /// Error types.
+    pub mod error {
+        /// Error from a `TryFrom` or `FromStr` implementation.
+        pub struct ConversionError(::std::borrow::Cow<'static, str>);
+        impl ::std::error::Error for ConversionError {}
+
+        impl ::std::fmt::Display for ConversionError {
+            fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> Result<(), ::std::fmt::Error> {
+                ::std::fmt::Display::fmt(&self.0, f)
+            }
+        }
+
+        impl ::std::fmt::Debug for ConversionError {
+            fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> Result<(), ::std::fmt::Error> {
+                ::std::fmt::Debug::fmt(&self.0, f)
+            }
+        }
+
+        impl From<&'static str> for ConversionError {
+            fn from(value: &'static str) -> Self {
+                Self(value.into())
+            }
+        }
+
+        impl From<String> for ConversionError {
+            fn from(value: String) -> Self {
+                Self(value.into())
+            }
         }
     }
 }
