@@ -11,7 +11,9 @@ regex = { workspace = true }
 rustfmt-wrapper = { workspace = true }
 semver = { workspace = true }
 serde_json = { workspace = true }
-similar = { workspace = true }
+
+[dev-dependencies]
+toml = { workspace = true }
 
 [package.metadata.dist]
 dist = false
