@@ -268,7 +268,7 @@ dependencies = [
 
 [[package]]
 name = "build-info"
-version = "0.15.5"
+version = "0.15.6"
 
 [[package]]
 name = "bumpalo"
@@ -2502,7 +2502,7 @@ dependencies = [
 
 [[package]]
 name = "parse-rfd"
-version = "0.15.5"
+version = "0.15.6"
 dependencies = [
  "serde",
  "serde_json",
@@ -3260,7 +3260,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-api"
-version = "0.15.5"
+version = "0.15.6"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3313,7 +3313,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-cli"
-version = "0.15.5"
+version = "0.15.6"
 dependencies = [
  "anyhow",
  "build-info",
@@ -3336,7 +3336,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-data"
-version = "0.15.5"
+version = "0.15.6"
 dependencies = [
  "regex",
  "rfd-model",
@@ -3348,7 +3348,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-github"
-version = "0.15.5"
+version = "0.15.6"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -3364,7 +3364,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-model"
-version = "0.15.5"
+version = "0.15.6"
 dependencies = [
  "async-bb8-diesel",
  "async-trait",
@@ -3385,7 +3385,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-processor"
-version = "0.15.5"
+version = "0.15.6"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -3427,7 +3427,7 @@ dependencies = [
 
 [[package]]
 name = "rfd-sdk"
-version = "0.15.5"
+version = "0.15.6"
 dependencies = [
  "chrono",
  "progenitor-client",
@@ -4658,7 +4658,7 @@ checksum = "8df9b6e13f2d32c91b9bd719c00d1958837bc7dec474d94952798cc8e69eeec3"
 
 [[package]]
 name = "trace-request"
-version = "0.15.5"
+version = "0.15.6"
 dependencies = [
  "dropshot",
  "http 1.4.2",
@@ -5429,7 +5429,7 @@ checksum = "1ffae5123b2d3fc086436f8834ae3ab053a283cfac8fe0a0b8eaae044768a4c4"
 
 [[package]]
 name = "xtask"
-version = "0.15.5"
+version = "0.15.6"
 dependencies = [
  "clap",
  "newline-converter",
