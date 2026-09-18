@@ -6,7 +6,7 @@
   "description": "TypeScript client for the RFD API",
   "devDependencies": {
     "msw": "^2.13.4",
-    "tsdown": "^0.22.14",
+    "tsdown": "^0.23.0",
     "type-fest": "^5.5.0",
     "typescript": "^6.0.3"
   },
@@ -15,44 +15,20 @@
   },
   "exports": {
     "./client": {
-      "import": {
-        "types": "./dist/Api.d.mts",
-        "default": "./dist/Api.mjs"
-      },
-      "require": {
-        "types": "./dist/Api.d.cts",
-        "default": "./dist/Api.cjs"
-      }
+      "types": "./dist/Api.d.ts",
+      "import": "./dist/Api.js"
     },
     "./client-retry": {
-      "import": {
-        "types": "./dist/retry.d.mts",
-        "default": "./dist/retry.mjs"
-      },
-      "require": {
-        "types": "./dist/retry.d.cts",
-        "default": "./dist/retry.cjs"
-      }
+      "types": "./dist/retry.d.ts",
+      "import": "./dist/retry.js"
     },
     "./msw-handlers": {
-      "import": {
-        "types": "./dist/msw-handlers.d.mts",
-        "default": "./dist/msw-handlers.mjs"
-      },
-      "require": {
-        "types": "./dist/msw-handlers.d.cts",
-        "default": "./dist/msw-handlers.cjs"
-      }
+      "types": "./dist/msw-handlers.d.ts",
+      "import": "./dist/msw-handlers.js"
     },
     "./validation": {
-      "import": {
-        "types": "./dist/validate.d.mts",
-        "default": "./dist/validate.mjs"
-      },
-      "require": {
-        "types": "./dist/validate.d.cts",
-        "default": "./dist/validate.cjs"
-      }
+      "types": "./dist/validate.d.ts",
+      "import": "./dist/validate.js"
     }
   },
   "homepage": "https://github.com/oxidecomputer/rfd-api#readme",
@@ -75,21 +51,5 @@
     "tsc": "tsc"
   },
   "type": "module",
-  "typesVersions": {
-    "*": {
-      "client": [
-        "dist/Api.d.mts"
-      ],
-      "client-retry": [
-        "dist/retry.d.mts"
-      ],
-      "msw-handlers": [
-        "dist/msw-handlers.d.mts"
-      ],
-      "validation": [
-        "dist/validate.d.mts"
-      ]
-    }
-  },
   "version": "0.15.5"
 }
