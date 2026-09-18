@@ -321,6 +321,18 @@ fn git_status<const N: usize>(root_path: &Path, args: [&str; N]) -> Result<(), S
     Ok(())
 }
 
+fn npm<const N: usize>(dir: &Path, args: [&str; N]) -> Result<(), String> {
+    let status = Command::new("npm")
+        .args(args)
+        .current_dir(dir)
+        .status()
+        .map_err(|e| format!("failed to run npm: {}", e))?;
+    if !status.success() {
+        return Err(format!("npm {} failed", args.join(" ")));
+    }
+    Ok(())
+}
+
 fn workspace_root() -> PathBuf {
     let xtask_path = PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap());
     xtask_path.parent().unwrap().to_path_buf()
@@ -423,16 +435,18 @@ fn generate() -> Result<(), String> {
     println!("done.");
 
     // Typescript SDK
+    let xtask_dir = root_path.join("xtask");
+    print!("installing typescript sdk generator ... ");
+    std::io::stdout().flush().unwrap();
+    npm(
+        &xtask_dir,
+        ["install", "--silent", "--no-audit", "--no-fund"],
+    )?;
+    println!("done.");
+
     print!("generating typescript sdk ... ");
-    Command::new("npx")
-        .arg("@oxide/openapi-gen-ts@0.12.0")
-        .arg("rfd-api-spec.json")
-        .arg("rfd-ts/src")
-        .arg("--features")
-        .arg("zod")
-        .current_dir(&root_path)
-        .output()
-        .map_err(|err| err.to_string())?;
+    std::io::stdout().flush().unwrap();
+    npm(&xtask_dir, ["run", "--silent", "generate-ts"])?;
     println!("done.");
 
     // The generator's parseIfDate heuristic doesn't include `_at` suffixes,
