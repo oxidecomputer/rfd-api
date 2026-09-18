@@ -6,7 +6,7 @@
   "description": "TypeScript client for the RFD API",
   "devDependencies": {
     "msw": "^2.13.4",
-    "tsup": "^8.5.1",
+    "tsdown": "^0.23.0",
     "type-fest": "^5.5.0",
     "typescript": "^6.0.3"
   },
@@ -15,20 +15,20 @@
   },
   "exports": {
     "./client": {
-      "import": "./dist/Api.js",
-      "require": "./dist/Api.cjs"
+      "types": "./dist/Api.d.ts",
+      "import": "./dist/Api.js"
     },
     "./client-retry": {
-      "import": "./dist/retry.js",
-      "require": "./dist/retry.cjs"
+      "types": "./dist/retry.d.ts",
+      "import": "./dist/retry.js"
     },
     "./msw-handlers": {
-      "import": "./dist/msw-handlers.js",
-      "require": "./dist/msw-handlers.cjs"
+      "types": "./dist/msw-handlers.d.ts",
+      "import": "./dist/msw-handlers.js"
     },
     "./validation": {
-      "import": "./dist/validate.js",
-      "require": "./dist/validate.cjs"
+      "types": "./dist/validate.d.ts",
+      "import": "./dist/validate.js"
     }
   },
   "homepage": "https://github.com/oxidecomputer/rfd-api#readme",
@@ -45,27 +45,11 @@
     "url": "git+https://github.com/oxidecomputer/rfd-api.git"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown",
     "prepublishOnly": "npm run build",
     "test": "echo \"Error: no test specified\" && exit 1",
     "tsc": "tsc"
   },
   "type": "module",
-  "typesVersions": {
-    "*": {
-      "client": [
-        "dist/Api.d.ts"
-      ],
-      "client-retry": [
-        "dist/retry.d.ts"
-      ],
-      "msw-handlers": [
-        "dist/msw-handlers.d.ts"
-      ],
-      "validation": [
-        "dist/validate.d.ts"
-      ]
-    }
-  },
   "version": "0.15.5"
 }
