@@ -16,6 +16,13 @@ const IntEnum = <T extends readonly number[]>(values: T) =>
 /** Helper to ensure booleans provided as strings end up with the correct value */
 const SafeBoolean = z.preprocess(v => v === 'false' ? false : v, z.coerce.boolean())
 
+/**
+ * z.int() rejects values outside the JS safe-integer range, so it can't be
+ * used for int64/uint64 or for integers with explicit bounds beyond that
+ * range. This accepts any integral number instead.
+ */
+const LargeInt = z.number().refine(Number.isInteger, 'Invalid input: expected int, received number')
+
 export const AccessGroupId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
 
 export const UserId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
@@ -92,14 +99,14 @@ export const RfdPermission = z.preprocess(
       'CreateAccessToken',
       'RetrieveRemoteAccessToken',
     ]),
-    z.object({ 'GetRfd': z.number().min(-2147483647).max(2147483647) }),
-    z.object({ 'GetRfds': z.number().min(-2147483647).max(2147483647).array().refine(...uniqueItems) }),
-    z.object({ 'UpdateRfd': z.number().min(-2147483647).max(2147483647) }),
-    z.object({ 'UpdateRfds': z.number().min(-2147483647).max(2147483647).array().refine(...uniqueItems) }),
-    z.object({ 'ManageRfdVisibility': z.number().min(-2147483647).max(2147483647) }),
-    z.object({ 'ManageRfdsVisibility': z.number().min(-2147483647).max(2147483647).array().refine(...uniqueItems) }),
-    z.object({ 'GetDiscussion': z.number().min(-2147483647).max(2147483647) }),
-    z.object({ 'GetDiscussions': z.number().min(-2147483647).max(2147483647).array().refine(...uniqueItems) }),
+    z.object({ 'GetRfd': z.int().min(-2147483648).max(2147483647) }),
+    z.object({ 'GetRfds': z.int().min(-2147483648).max(2147483647).array().refine(...uniqueItems) }),
+    z.object({ 'UpdateRfd': z.int().min(-2147483648).max(2147483647) }),
+    z.object({ 'UpdateRfds': z.int().min(-2147483648).max(2147483647).array().refine(...uniqueItems) }),
+    z.object({ 'ManageRfdVisibility': z.int().min(-2147483648).max(2147483647) }),
+    z.object({ 'ManageRfdsVisibility': z.int().min(-2147483648).max(2147483647).array().refine(...uniqueItems) }),
+    z.object({ 'GetDiscussion': z.int().min(-2147483648).max(2147483647) }),
+    z.object({ 'GetDiscussions': z.int().min(-2147483648).max(2147483647).array().refine(...uniqueItems) }),
     z.object({ 'GetApiUser': TypedUuidForUserId }),
     z.object({ 'GetApiUsers': TypedUuidForUserId.array().refine(...uniqueItems) }),
     z.object({ 'ManageApiUser': TypedUuidForUserId }),
@@ -216,7 +223,7 @@ export const ApiUserProviderLinkPayload = z.preprocess(processResponseBody, z.ob
 export const ApiUserUpdateParams_for_RfdPermission = z.preprocess(
   processResponseBody,
   z.object({
-    'groupIds': TypedUuidForAccessGroupId.array().default([]).refine(...uniqueItems).optional(),
+    'groupIds': TypedUuidForAccessGroupId.array().default([]).refine(...uniqueItems),
     'permissions': Permissions_for_RfdPermission,
   }),
 )
@@ -240,7 +247,7 @@ export const ContentFormat = z.preprocess(processResponseBody, z.enum(['asciidoc
 export const CreateMapper = z.preprocess(
   processResponseBody,
   z.object({
-    'maxActivations': z.number().min(-2147483647).max(2147483647).nullable().optional(),
+    'maxActivations': z.int().min(-2147483648).max(2147483647).nullable().optional(),
     'name': z.string(),
     'rule': z.record(z.string(), z.unknown()),
   }),
@@ -280,7 +287,7 @@ export const FormattedSearchResultHit = z.preprocess(
     'hierarchy': z.string().nullable().array(),
     'hierarchyRadio': z.string().nullable().array(),
     'objectId': z.string(),
-    'rfdNumber': z.number().min(0),
+    'rfdNumber': LargeInt.min(0),
     'url': z.string().nullable().optional(),
   }),
 )
@@ -303,7 +310,7 @@ export const GitHubCommit = z.preprocess(
 
 export const GitHubInstallation = z.preprocess(
   processResponseBody,
-  z.object({ 'id': z.number().min(0), 'nodeId': z.string() }),
+  z.object({ 'id': LargeInt.min(0), 'nodeId': z.string() }),
 )
 
 export const GitHubRepositoryOwner = z.preprocess(processResponseBody, z.object({ 'login': z.string() }))
@@ -312,7 +319,7 @@ export const GitHubRepository = z.preprocess(
   processResponseBody,
   z.object({
     'defaultBranch': z.string(),
-    'id': z.number().min(0),
+    'id': LargeInt.min(0),
     'name': z.string(),
     'nodeId': z.string(),
     'owner': GitHubRepositoryOwner,
@@ -321,7 +328,7 @@ export const GitHubRepository = z.preprocess(
 
 export const GitHubSender = z.preprocess(
   processResponseBody,
-  z.object({ 'id': z.number().min(0), 'login': z.string(), 'nodeId': z.string(), 'type': z.string() }),
+  z.object({ 'id': LargeInt.min(0), 'login': z.string(), 'nodeId': z.string(), 'type': z.string() }),
 )
 
 export const GitHubCommitPayload = z.preprocess(
@@ -374,11 +381,11 @@ export const Job = z.preprocess(
     'branch': z.string(),
     'committedAt': z.coerce.date(),
     'createdAt': z.coerce.date(),
-    'id': z.number().min(-2147483647).max(2147483647),
+    'id': z.int().min(-2147483648).max(2147483647),
     'owner': z.string(),
     'processed': SafeBoolean,
     'repository': z.string(),
-    'rfd': z.number().min(-2147483647).max(2147483647),
+    'rfd': z.int().min(-2147483648).max(2147483647),
     'sha': CommitSha,
     'startedAt': z.coerce.date().nullable().optional(),
     'webhookDeliveryId': TypedUuidForWebhookDeliveryId.nullable().optional(),
@@ -440,7 +447,7 @@ export const MagicLinkExchangeRequest = z.preprocess(
 
 export const MagicLinkExchangeResponse = z.preprocess(
   processResponseBody,
-  z.object({ 'accessToken': z.string(), 'expiresIn': z.number(), 'tokenType': z.string() }),
+  z.object({ 'accessToken': z.string(), 'expiresIn': LargeInt, 'tokenType': z.string() }),
 )
 
 export const MagicLinkMedium = z.preprocess(processResponseBody, z.enum(['email']))
@@ -448,7 +455,7 @@ export const MagicLinkMedium = z.preprocess(processResponseBody, z.enum(['email'
 export const MagicLinkSendRequest = z.preprocess(
   processResponseBody,
   z.object({
-    'expiresIn': z.number(),
+    'expiresIn': LargeInt,
     'medium': MagicLinkMedium,
     'recipient': z.string(),
     'redirectUri': z.string(),
@@ -467,12 +474,12 @@ export const MapperSource = z.preprocess(processResponseBody, z.enum(['dynamic',
 export const Mapper = z.preprocess(
   processResponseBody,
   z.object({
-    'activations': z.number().min(-2147483647).max(2147483647).nullable().optional(),
+    'activations': z.int().min(-2147483648).max(2147483647).nullable().optional(),
     'createdAt': z.coerce.date(),
     'deletedAt': z.coerce.date().nullable().optional(),
     'depletedAt': z.coerce.date().nullable().optional(),
     'id': TypedUuidForMapperId,
-    'maxActivations': z.number().min(-2147483647).max(2147483647).nullable().optional(),
+    'maxActivations': z.int().min(-2147483648).max(2147483647).nullable().optional(),
     'name': z.string(),
     'rule': z.record(z.string(), z.unknown()),
     'source': MapperSource,
@@ -496,7 +503,7 @@ export const OAuthAuthzCodeExchangeResponse = z.preprocess(
   processResponseBody,
   z.object({
     'accessToken': z.string(),
-    'expiresIn': z.number(),
+    'expiresIn': LargeInt,
     'idpToken': z.string().nullable().optional(),
     'scope': z.string(),
     'tokenType': z.string(),
@@ -554,7 +561,7 @@ export const OAuthProviderAuthorizationCodePkceInfo = z.preprocess(
   processResponseBody,
   z.object({
     'clientId': TypedUuidForOAuthClientId,
-    'proxyPort': z.number().min(0).max(65535),
+    'proxyPort': z.int().min(0).max(65535),
     'redirectEndpoint': z.string(),
     'web': OAuthProviderAuthorizationCodeInfo,
   }),
@@ -576,7 +583,7 @@ export const ReserveRfdBody = z.preprocess(
 
 export const ReserveRfdResponse = z.preprocess(
   processResponseBody,
-  z.object({ 'number': z.number().min(-2147483647).max(2147483647) }),
+  z.object({ 'number': z.int().min(-2147483648).max(2147483647) }),
 )
 
 export const RfdRevisionId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))
@@ -620,7 +627,7 @@ export const Rfd = z.preprocess(
     'id': TypedUuidForRfdId,
     'latestMajorChangeAt': z.coerce.date().nullable().optional(),
     'link': z.string().nullable().optional(),
-    'rfdNumber': z.number().min(-2147483647).max(2147483647),
+    'rfdNumber': z.int().min(-2147483648).max(2147483647),
     'updatedAt': z.coerce.date(),
     'visibility': Visibility,
   }),
@@ -699,7 +706,7 @@ export const RfdWithPdf = z.preprocess(
     'labels': z.string().nullable().optional(),
     'latestMajorChangeAt': z.coerce.date().nullable().optional(),
     'link': z.string().nullable().optional(),
-    'rfdNumber': z.number().min(-2147483647).max(2147483647),
+    'rfdNumber': z.int().min(-2147483648).max(2147483647),
     'sha': FileSha.nullable().optional(),
     'state': z.string().nullable().optional(),
     'title': z.string().nullable().optional(),
@@ -720,7 +727,7 @@ export const RfdWithRaw = z.preprocess(
     'labels': z.string().nullable().optional(),
     'latestMajorChangeAt': z.coerce.date().nullable().optional(),
     'link': z.string().nullable().optional(),
-    'rfdNumber': z.number().min(-2147483647).max(2147483647),
+    'rfdNumber': z.int().min(-2147483648).max(2147483647),
     'sha': FileSha.nullable().optional(),
     'state': z.string().nullable().optional(),
     'title': z.string().nullable().optional(),
@@ -740,7 +747,7 @@ export const RfdWithoutContent = z.preprocess(
     'labels': z.string().nullable().optional(),
     'latestMajorChangeAt': z.coerce.date().nullable().optional(),
     'link': z.string().nullable().optional(),
-    'rfdNumber': z.number().min(-2147483647).max(2147483647),
+    'rfdNumber': z.int().min(-2147483648).max(2147483647),
     'sha': FileSha.nullable().optional(),
     'state': z.string().nullable().optional(),
     'title': z.string().nullable().optional(),
@@ -757,7 +764,7 @@ export const SearchResultHit = z.preprocess(
     'hierarchy': z.string().nullable().array(),
     'hierarchyRadio': z.string().nullable().array(),
     'objectId': z.string(),
-    'rfdNumber': z.number().min(0),
+    'rfdNumber': LargeInt.min(0),
     'url': z.string().nullable().optional(),
   }),
 )
@@ -766,8 +773,8 @@ export const SearchResults = z.preprocess(
   processResponseBody,
   z.object({
     'hits': SearchResultHit.array(),
-    'limit': z.number().min(0).nullable().optional(),
-    'offset': z.number().min(0).nullable().optional(),
+    'limit': LargeInt.min(0).nullable().optional(),
+    'offset': LargeInt.min(0).nullable().optional(),
     'query': z.string(),
   }),
 )
@@ -1005,8 +1012,8 @@ export const ListJobsParams = z.preprocess(
   z.object({
     path: z.object({}),
     query: z.object({
-      limit: z.number().nullable().optional(),
-      offset: z.number().nullable().optional(),
+      limit: LargeInt.nullable().optional(),
+      offset: LargeInt.nullable().optional(),
       rfd: z.string(),
     }),
   }),
@@ -1385,8 +1392,8 @@ export const ListRfdRevisionsParams = z.preprocess(
       number: z.string(),
     }),
     query: z.object({
-      limit: z.number().nullable().optional(),
-      offset: z.number().nullable().optional(),
+      limit: LargeInt.nullable().optional(),
+      offset: LargeInt.nullable().optional(),
     }),
   }),
 )
@@ -1496,8 +1503,8 @@ export const SearchRfdsParams = z.preprocess(
       attributesToCrop: z.string().nullable().optional(),
       highlightPostTag: z.string().nullable().optional(),
       highlightPreTag: z.string().nullable().optional(),
-      limit: z.number().min(0).max(4294967295).nullable().optional(),
-      offset: z.number().min(0).max(4294967295).nullable().optional(),
+      limit: z.int().min(0).max(4294967295).nullable().optional(),
+      offset: z.int().min(0).max(4294967295).nullable().optional(),
       q: z.string(),
     }),
   }),

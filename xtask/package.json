@@ -1,0 +1,13 @@
+{
+  "name": "@oxide/rfd-xtask",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The npm tooling `cargo xtask generate` runs. Nothing here is published or imported; it exists so the generator version is an ordinary npm dependency that Renovate can bump.",
+  "license": "MPL-2.0",
+  "scripts": {
+    "generate-ts": "openapi-gen-ts ../rfd-api-spec.json ../rfd-ts/src --features zod,msw"
+  },
+  "devDependencies": {
+    "@oxide/openapi-gen-ts": "0.16.0"
+  }
+}
