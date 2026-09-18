@@ -63,7 +63,6 @@ secrecy = "0.10.3"
 semver = "1.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-similar = "3.1.0"
 slog = "2.8.2"
 slog-async = "2.8.0"
 strum = { version = "0.28.0", features = ["derive"] }
