@@ -50,7 +50,7 @@ GEM
       prawn (~> 2.2)
     public_suffix (7.0.5)
     rexml (3.4.4)
-    rouge (5.0.0)
+    rouge (5.1.0)
       strscan (~> 3.1)
     ruby-rc4 (0.1.5)
     strscan (3.1.8)
@@ -68,7 +68,7 @@ DEPENDENCIES
   asciidoctor-pdf (= 2.3.27)
   base64 (= 0.3.0)
   logger (= 1.7.0)
-  rouge (= 5.0.0)
+  rouge (= 5.1.0)
 
 CHECKSUMS
   Ascii85 (2.0.1) sha256=15cb5d941808543cbb9e7e6aea3c8ec3877f154c3461e8b3673e97f7ecedbe5a
@@ -94,7 +94,7 @@ CHECKSUMS
   prawn-templates (0.1.2) sha256=117aa03db570147cb86fcd7de4fd896994f702eada1d699848a9529a87cd31f1
   public_suffix (7.0.5) sha256=1a8bb08f1bbea19228d3bed6e5ed908d1cb4f7c2726d18bd9cadf60bc676f623
   rexml (3.4.4) sha256=19e0a2c3425dfbf2d4fc1189747bdb2f849b6c5e74180401b15734bc97b5d142
-  rouge (5.0.0) sha256=e2de9bba2f9cb88f8a73bca3643b560b2b398f32f91bf716f584477bc0175ebc
+  rouge (5.1.0) sha256=b77c632842ab7f5147940212f0345808cccfbce864fd5b631d7d12a35ac85452
   ruby-rc4 (0.1.5) sha256=00cc40a39d20b53f5459e7ea006a92cf584e9bc275e2a6f7aa1515510e896c03
   strscan (3.1.8) sha256=aae2db611a225559f21ffbb71765c9a4e60fd262534a9ea84f4f11c7f32f679e
   treetop (1.6.18) sha256=a3043f32f1c652aa2abdf3a3848edb2d2f69897257af2675516ac61355c183da
