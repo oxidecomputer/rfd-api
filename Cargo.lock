@@ -918,7 +918,7 @@ dependencies = [
  "form_urlencoded",
  "futures",
  "hostname 0.4.2",
- "http 1.4.2",
+ "http 1.5.0",
  "http-body-util",
  "hyper",
  "hyper-util",
@@ -973,7 +973,7 @@ dependencies = [
  "dropshot",
  "hex",
  "hmac",
- "http 1.4.2",
+ "http 1.5.0",
  "hyper",
  "schemars 0.8.22",
  "serde",
@@ -1298,7 +1298,7 @@ checksum = "020dd415ee200770d835d01674084400a4d11e6c108ae941f660e8264f49d4ca"
 dependencies = [
  "base64 0.22.1",
  "chrono",
- "http 1.4.2",
+ "http 1.5.0",
  "http-body-util",
  "hyper",
  "hyper-util",
@@ -1406,7 +1406,7 @@ dependencies = [
  "fnv",
  "futures-core",
  "futures-sink",
- "http 1.4.2",
+ "http 1.5.0",
  "indexmap 2.14.0",
  "slab",
  "tokio",
@@ -1523,9 +1523,9 @@ dependencies = [
 
 [[package]]
 name = "http"
-version = "1.4.2"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6970f50e31d6fc17d3fa27329444bfa74e196cf62e95052a3f6fee181dba6425"
+checksum = "918d3568bebf352712bc2ef3d46a8bcf1a75b373be6539de198e9105cbbf9ce0"
 dependencies = [
  "bytes",
  "itoa",
@@ -1538,7 +1538,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ca2a8f2913ee65f60facd6a5905613afaa448497a0230cc41ce022d93290bc2c"
 dependencies = [
  "bytes",
- "http 1.4.2",
+ "http 1.5.0",
 ]
 
 [[package]]
@@ -1549,7 +1549,7 @@ checksum = "23169fe34a5fbcdd3f3862e78fb9b6fccd5f02a6dc6f732547005d45631ce71c"
 dependencies = [
  "bytes",
  "futures-core",
- "http 1.4.2",
+ "http 1.5.0",
  "http-body",
  "pin-project-lite",
 ]
@@ -1586,7 +1586,7 @@ dependencies = [
  "futures-channel",
  "futures-core",
  "h2",
- "http 1.4.2",
+ "http 1.5.0",
  "http-body",
  "httparse",
  "httpdate",
@@ -1603,7 +1603,7 @@ version = "0.27.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "33ca68d021ef39cf6463ab54c1d0f5daf03377b70561305bb89a8f83aab66e0f"
 dependencies = [
- "http 1.4.2",
+ "http 1.5.0",
  "hyper",
  "hyper-util",
  "rustls",
@@ -1624,7 +1624,7 @@ dependencies = [
  "bytes",
  "futures-channel",
  "futures-util",
- "http 1.4.2",
+ "http 1.5.0",
  "http-body",
  "hyper",
  "ipnet",
@@ -2241,7 +2241,7 @@ dependencies = [
  "bytes",
  "encoding_rs",
  "futures-util",
- "http 1.4.2",
+ "http 1.5.0",
  "httparse",
  "memchr",
  "mime",
@@ -2373,7 +2373,7 @@ dependencies = [
  "base64 0.22.1",
  "chrono",
  "getrandom 0.2.17",
- "http 1.4.2",
+ "http 1.5.0",
  "rand 0.8.7",
  "serde",
  "serde_json",
@@ -2403,7 +2403,7 @@ dependencies = [
  "bytes",
  "chrono",
  "dirs 3.0.2",
- "http 1.4.2",
+ "http 1.5.0",
  "jsonwebtoken 9.3.1",
  "log",
  "mime",
@@ -2757,7 +2757,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "83aef4388cf237992f3f55aeead8417f45e9305fdbb77e97a551e8166629c692"
 dependencies = [
  "heck",
- "http 1.4.2",
+ "http 1.5.0",
  "indexmap 2.14.0",
  "openapiv3",
  "proc-macro2",
@@ -3094,7 +3094,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "h2",
- "http 1.4.2",
+ "http 1.5.0",
  "http-body",
  "http-body-util",
  "hyper",
@@ -3136,7 +3136,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "h2",
- "http 1.4.2",
+ "http 1.5.0",
  "http-body",
  "http-body-util",
  "hyper",
@@ -3175,7 +3175,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "51b1fc1521b1ec6eeebcf412357bfe28db3eb23008c91852bb69120a1d7ab6d0"
 dependencies = [
  "async-trait",
- "http 1.4.2",
+ "http 1.5.0",
  "reqwest 0.13.5",
  "reqwest-middleware",
 ]
@@ -3188,7 +3188,7 @@ checksum = "07bc3f1384cffa4f274dad2d4ddd73aed32fed8f786d96c6be8aa4e5fd3c3b58"
 dependencies = [
  "anyhow",
  "async-trait",
- "http 1.4.2",
+ "http 1.5.0",
  "reqwest 0.13.5",
  "thiserror 2.0.20",
  "tower-service",
@@ -3204,7 +3204,7 @@ dependencies = [
  "async-trait",
  "futures",
  "getrandom 0.2.17",
- "http 1.4.2",
+ "http 1.5.0",
  "hyper",
  "reqwest 0.13.5",
  "reqwest-middleware",
@@ -3224,7 +3224,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "getrandom 0.2.17",
- "http 1.4.2",
+ "http 1.5.0",
  "matchit",
  "reqwest 0.13.5",
  "reqwest-middleware",
@@ -3271,7 +3271,7 @@ dependencies = [
  "dropshot",
  "dropshot-verified-body",
  "hex",
- "http 1.4.2",
+ "http 1.5.0",
  "jsonwebtoken 11.1.0",
  "meilisearch-sdk",
  "minijinja",
@@ -3353,7 +3353,7 @@ dependencies = [
  "async-trait",
  "base64 0.22.1",
  "chrono",
- "http 1.4.2",
+ "http 1.5.0",
  "octorust",
  "regex",
  "rfd-data",
@@ -4635,7 +4635,7 @@ dependencies = [
  "bitflags",
  "bytes",
  "futures-util",
- "http 1.4.2",
+ "http 1.5.0",
  "http-body",
  "pin-project-lite",
  "tower",
@@ -4661,7 +4661,7 @@ name = "trace-request"
 version = "0.15.5"
 dependencies = [
  "dropshot",
- "http 1.4.2",
+ "http 1.5.0",
  "proc-macro2",
  "quote",
  "syn 2.0.119",
@@ -4925,7 +4925,7 @@ dependencies = [
  "futures",
  "google-cloudkms1",
  "hex",
- "http 1.4.2",
+ "http 1.5.0",
  "http-body-util",
  "hyper",
  "jsonwebtoken 11.1.0",
@@ -4982,7 +4982,7 @@ source = "git+https://github.com/oxidecomputer/v-api?tag=v0.5.14#c10dbe34f67ae0e
 dependencies = [
  "anyhow",
  "clap",
- "http 1.4.2",
+ "http 1.5.0",
  "http-body-util",
  "hyper",
  "hyper-util",
@@ -5494,7 +5494,7 @@ checksum = "ef19a12dfb29fe39f78e1547e1be49717b84aef8762a4001359ed4f94d3accc1"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
- "http 1.4.2",
+ "http 1.5.0",
  "http-body-util",
  "hyper",
  "hyper-rustls",
