@@ -3351,7 +3351,7 @@ name = "rfd-github"
 version = "0.15.5"
 dependencies = [
  "async-trait",
- "base64 0.22.1",
+ "base64 0.23.1",
  "chrono",
  "http 1.4.2",
  "octorust",
@@ -3388,7 +3388,7 @@ name = "rfd-processor"
 version = "0.15.5"
 dependencies = [
  "async-trait",
- "base64 0.22.1",
+ "base64 0.23.1",
  "build-info",
  "chrono",
  "clap",
