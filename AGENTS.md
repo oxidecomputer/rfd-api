@@ -25,5 +25,5 @@
 
 - `rfd-ts` — TypeScript client generated from the OpenAPI spec (`@oxide/rfd.ts`)
   Optional MSW handlers and Zod validation.
-- `remix-auth-rfd` — Remix Auth strategies package (`@oxide/remix-auth-rfd`)
-  Built on top of `rfd-ts`, currently exporting both magic-link and OAuth flows.
+- `remix-auth-vapi` — Remix Auth strategies package (`@oxide/remix-auth-vapi`)
+  for magic-link and OAuth flows.
