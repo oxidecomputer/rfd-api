@@ -42,7 +42,7 @@ meilisearch-sdk = "0.33.0"
 md-5 = "0.11.0"
 mime_guess = "2.0.5"
 minijinja = { version = "2.19", features = ["loader"] }
-mockall = "0.14"
+mockall = "0.15"
 newline-converter = "0.3.0"
 newtype-uuid = { version = "1.4.0", features = ["schemars08", "serde", "v4"] }
 octorust = { git = "https://github.com/oxidecomputer/third-party-api-clients", tag = "v0.11.0-rc.0" }
