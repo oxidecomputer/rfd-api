@@ -287,6 +287,7 @@ pub enum RfdRevisionMetadataChange {
 }
 
 impl RfdContext {
+    #[allow(clippy::result_large_err)]
     pub async fn new(
         public_url: String,
         storage: Arc<dyn RfdStorage>,
@@ -367,6 +368,7 @@ impl RfdContext {
 
     // RFD Operations
 
+    #[allow(clippy::result_large_err)]
     #[instrument(skip(self, caller), err(Debug))]
     pub async fn create_rfd(
         &self,
@@ -651,6 +653,7 @@ impl RfdContext {
         self.get_rfd_pdf(caller, rfd_number, revision).await
     }
 
+    #[allow(clippy::result_large_err)]
     #[instrument(skip(self, caller, content))]
     pub async fn update_rfd_content(
         &self,
@@ -696,6 +699,7 @@ impl RfdContext {
         }
     }
 
+    #[allow(clippy::result_large_err)]
     #[instrument(skip(self, caller, document))]
     pub async fn update_rfd_document(
         &self,
@@ -734,6 +738,7 @@ impl RfdContext {
         }
     }
 
+    #[allow(clippy::result_large_err)]
     #[instrument(skip(self, caller, document), err(Debug))]
     async fn commit_rfd_document(
         &self,
