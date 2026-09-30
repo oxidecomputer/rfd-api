@@ -54,7 +54,7 @@ reqwest = { version = "0.13", default-features = false, features = ["json", "str
 reqwest-middleware = "0.5"
 reqwest-retry = "0.9"
 reqwest-tracing = "0.7"
-resend-rs = { version = "0.25.1", default-features = false, features = ["rustls-tls"] }
+resend-rs = { version = "0.33.0", default-features = false, features = ["rustls-tls"] }
 rsa = "0.9.10"
 rustfmt-wrapper = "0.2.1"
 rustls = "0.23"
