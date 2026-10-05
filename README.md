@@ -11,13 +11,13 @@ Backend services and tools for processing and managing RFDs
 #### Authenticate with short lived session
 To log in with a short lived session run:
 ```sh
-rfd-cli auth login google
+rfd-cli auth login oauth google
 ```
 
 #### Authenticate with long lived token
 To generate and log in with a long lived token run:
 ```sh
-rfd-cli auth login google -m token
+rfd-cli auth login oauth google -m token
 ```
 
 ### Formatting
