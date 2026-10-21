@@ -36,6 +36,6 @@ jobs:
           rustup toolchain install stable
       - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
       - run: |
-          cargo +stable install cargo-shear --version 1.13.4 --locked # 2026-08-11
+          cargo +stable install cargo-shear --locked
       - run: |
           cargo shear --deny-warnings
