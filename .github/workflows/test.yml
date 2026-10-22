@@ -127,3 +127,20 @@ jobs:
             echo "  cargo xtask generate"
             exit 1
           fi
+
+  parser:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Verify parse-rfd parser bundle
+        working-directory: parse-rfd/parser
+        run: |
+          npm ci
+          npm run build
+          if ! git diff --quiet HEAD -- dist/index.js; then
+            git diff --stat HEAD -- dist/index.js
+            echo "parse-rfd/parser/dist/index.js does not match a fresh build from index.js and package-lock.json"
+            echo "To fix, rebuild the bundle and commit the result:"
+            echo "  cd parse-rfd/parser && npm ci && npm run build"
+            exit 1
+          fi
