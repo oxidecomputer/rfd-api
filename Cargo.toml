@@ -74,7 +74,7 @@ tracing = "0.1.44"
 tracing-appender = "0.2.5"
 tracing-slog = { git = "https://github.com/oxidecomputer/tracing-slog", default-features = false }
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
-uuid = { version = "1.26.1", features = ["serde", "v4", "v5"] }
+uuid = { version = "1.28.0", features = ["serde", "v4", "v5"] }
 v-api = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.5.14", default-features = false }
 # Default features include `sagas`, which pulls in a ratatui TUI stack that no
 # workspace crate uses.
