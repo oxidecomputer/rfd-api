@@ -38,7 +38,13 @@ impl RfdUpdateAction for CopyImagesToStorage {
                 .path
                 .replace(&format!("rfd/{}/", update.number.as_number_string()), "");
             let object_name = format!("rfd/{}/latest/{}", update.number, sub_path);
-            let mime_type = mime_guess::from_path(&object_name).first_or_octet_stream();
+            // Asciidoc is not a registered mime type, so serve RFD sources as plain text instead
+            // of falling through to application/octet-stream
+            let mime_type = if object_name.ends_with(".adoc") {
+                mime_guess::mime::TEXT_PLAIN_UTF_8
+            } else {
+                mime_guess::from_path(&object_name).first_or_octet_stream()
+            };
             let data = decode_base64(&image.content)
                 .map_err(|err| RfdUpdateActionErr::Continue(Box::new(err)))?;
 

@@ -27,7 +27,7 @@ impl RfdUpdateAction for ProcessIncludes {
         new: &mut PersistedRfd,
         _mode: RfdUpdateMode,
     ) -> Result<RfdUpdateActionResponse, RfdUpdateActionErr> {
-        tracing::info!("Processing inculdes");
+        tracing::info!("Processing includes");
         let RfdUpdateActionContext { ctx, update, .. } = ctx;
 
         let content = new
