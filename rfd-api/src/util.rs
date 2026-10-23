@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 pub mod response {
-    use dropshot::{ClientErrorStatusCode, HttpError};
+    use dropshot::{ClientErrorStatusCode, ErrorStatusCode, HttpError};
     use std::error::Error;
     use tracing::instrument;
 
@@ -35,5 +35,19 @@ pub mod response {
         let internal_message = internal_message.to_string();
         tracing::error!(internal_message, "Request failed");
         HttpError::for_internal_error(internal_message)
+    }
+
+    pub fn not_implemented<S>(message: S) -> HttpError
+    where
+        S: ToString,
+    {
+        let message = message.to_string();
+        HttpError {
+            status_code: ErrorStatusCode::NOT_IMPLEMENTED,
+            error_code: None,
+            external_message: message.clone(),
+            internal_message: message,
+            headers: None,
+        }
     }
 }
