@@ -15,7 +15,7 @@ pub struct RfdNumber(i32);
 impl RfdNumber {
     /// Get the path to where the source contents of this RFD exists in the RFD repo.
     pub fn repo_path(&self) -> String {
-        format!("/rfd/{}", self.as_number_string())
+        format!("rfd/{}", self.as_number_string())
     }
 
     /// Get a RFD number in its expanded form with leading 0s
