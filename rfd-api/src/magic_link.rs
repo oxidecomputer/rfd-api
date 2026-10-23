@@ -27,21 +27,21 @@ impl MagicLinkMessage for MagicLinkMessageBuilder {
                 subject: subject
                     .render(context! {
                         recipient => recipient,
-                        url => url,
+                        url => url.as_str(),
                     })
                     .ok(),
                 text: text
                     .render(context! {
                         recipient => recipient,
                         token => token,
-                        url => url,
+                        url => url.as_str(),
                     })
                     .ok()?,
                 html: html.and_then(|html| {
                     html.render(context! {
                         recipient => recipient,
                         token => token,
-                        url => url,
+                        url => url.as_str(),
                     })
                     .ok()
                 }),
