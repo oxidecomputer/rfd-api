@@ -2,6 +2,10 @@
 
 Backend services and tools for processing and managing RFDs
 
+## Claude Code skill
+
+This repository contains an experimental Claude Code skill which "knows" how to set up and use the RFD CLI. See [CLAUDE_CODE_SKILL.md] for more details.
+
 ## RFD CLI
 ### Getting Started
 1. Download the latest release of `rfd-cli` or run `cargo run -p rfd-cli`
