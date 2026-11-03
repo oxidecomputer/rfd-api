@@ -3,7 +3,7 @@ name: Release CLI
 on:
   push:
     tags:
-      - "**[0-9]+.[0-9]+.[0-9]+*"
+      - '**[0-9]+.[0-9]+.[0-9]+*'
   pull_request:
     types: [labeled, synchronize]
 
@@ -11,7 +11,10 @@ permissions:
   contents: read
 
 jobs:
-  release:
+  # Builds run with a read-only token. Only the publish job below, on Linux,
+  # gets write access, so a compromised build runner can't directly modify the
+  # repo or its releases. It can still supply malicious release binaries.
+  build:
     if: >-
       github.event_name == 'push' ||
       github.event.label.name == 'release-test' ||
@@ -32,20 +35,11 @@ jobs:
             binary: rfd-cli.exe
             artifact: rfd-cli-x86_64-pc-windows-msvc.exe
     runs-on: ${{ matrix.os }}
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - name: Determine release tag
-        id: tag
-        shell: bash
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "value=v0.0.0-pre+${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-          else
-            echo "value=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
-          fi
       - run: |
           rustup toolchain install
 
@@ -60,9 +54,36 @@ jobs:
         run: |
           mv "target/release/${{ matrix.binary }}" "target/release/${{ matrix.artifact }}"
 
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ matrix.artifact }}
+          path: target/release/${{ matrix.artifact }}
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: Determine release tag
+        id: tag
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "value=v0.0.0-pre+${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: dist
+          merge-multiple: true
+
       - uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd # v1.21.0
         with:
           allowUpdates: true
           draft: ${{ github.event_name == 'pull_request' }}
           tag: ${{ steps.tag.outputs.value }}
-          artifacts: "target/release/${{ matrix.artifact }}"
+          artifacts: 'dist/*'
