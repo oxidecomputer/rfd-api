@@ -1,0 +1,62 @@
+# Temporary: checks which TLS stacks on hosted runners still trust the
+# compromised eMudhra intermediates (CVE-2026-111943). Each check should fail
+# with a certificate error. A check that gets a response from the server (an
+# HTTP status, or a parse error on what it returned) trusts the bad chain.
+# https://github.com/actions/runner-images/issues/15228
+name: eMudhra probe
+
+on:
+  push:
+    branches: [emudhra-probe]
+
+permissions: {}
+
+jobs:
+  probe:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, macos-15, macos-15-intel, macos-26, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Versions
+        run: |
+          uname -a
+          if command -v sw_vers > /dev/null; then sw_vers; fi
+          rustup --version
+          cargo --version
+
+      - name: Probe
+        shell: bash
+        run: |
+          probe() {
+            echo "::group::$1"
+            shift
+            "$@" 2>&1 | tail -n 15
+            echo "exit status: ${PIPESTATUS[0]}"
+            echo "::endgroup::"
+          }
+
+          # emSign chain and AAA Certificate Services chain
+          for host in dv-g3b-emudhra.we-have-a-problem.com dv-g3b-aaa-emudhra.we-have-a-problem.com; do
+            url="https://$host/"
+            echo "===== $host"
+
+            # Security.framework, via rustls-platform-verifier / native-tls
+            probe "rustup ($host)" env RUSTUP_DIST_SERVER="https://$host" \
+              rustup toolchain install stable --profile minimal --no-self-update
+            if command -v nscurl > /dev/null; then
+              probe "nscurl ($host)" nscurl "$url"
+            fi
+
+            # cargo's HTTP stack, as used for registry and git dependencies
+            probe "cargo ($host)" cargo search --index "sparse+$url" probe
+
+            # Baselines from the issue
+            probe "curl on PATH: $(command -v curl) ($host)" curl --silent --show-error --head "$url"
+            if [ -x /usr/bin/curl ]; then
+              probe "/usr/bin/curl ($host)" /usr/bin/curl --silent --show-error --head "$url"
+            fi
+          done
+
+          probe "git on PATH: $(command -v git)" git ls-remote https://git-emudhra.we-have-a-problem.com/check.git
