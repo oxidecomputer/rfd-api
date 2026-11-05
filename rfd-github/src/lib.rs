@@ -31,9 +31,11 @@ use thiserror::Error;
 use tracing::{instrument, Instrument};
 
 pub mod ext;
+mod ignore_revs;
 mod util;
 
 use ext::ReposExt;
+pub use ignore_revs::{IgnoredRevs, IGNORE_REVS_PATH};
 use util::decode_base64;
 
 #[derive(Debug, Error)]
@@ -616,11 +618,41 @@ impl GitHubRfdLocation {
         Ok(prs)
     }
 
-    pub async fn get_commit_date(
+    /// Fetch `.git-blame-ignore-revs` from the default branch. A missing file is an empty set.
+    #[instrument(skip(self, client), fields(repo = self.repo, branch = self.default_branch))]
+    pub async fn get_ignored_revs(&self, client: &Client) -> Result<IgnoredRevs, GitHubError> {
+        let file = client
+            .repos()
+            .get_content_blob(
+                &self.owner,
+                &self.repo,
+                &self.default_branch,
+                IGNORE_REVS_PATH,
+            )
+            .await;
+
+        match file {
+            Ok(file) => {
+                let decoded = decode_base64(&file.content)?;
+                let revs = IgnoredRevs::parse(from_utf8(&decoded)?);
+                tracing::debug!(count = revs.len(), "Loaded ignored revisions");
+                Ok(revs)
+            }
+            Err(ClientError::HttpError { status, .. }) if status == StatusCode::NOT_FOUND => {
+                tracing::debug!("No {} file found in repository", IGNORE_REVS_PATH);
+                Ok(IgnoredRevs::default())
+            }
+            Err(err) => Err(err.into()),
+        }
+    }
+
+    /// Most recent commit touching the RFD, skipping any in `ignored`
+    pub async fn get_latest_commit(
         &self,
         client: &Client,
         rfd_number: &RfdNumber,
-    ) -> Result<DateTime<Utc>, GitHubError> {
+        ignored: &IgnoredRevs,
+    ) -> Result<RfdCommit, GitHubError> {
         let commits = client
             .repos()
             .list_commits(
@@ -631,23 +663,46 @@ impl GitHubRfdLocation {
                 "",
                 None,
                 None,
-                0,
+                100,
                 0,
             )
             .await?
             .body;
-        let latest_commit = commits
-            .into_iter()
-            .next()
-            .ok_or_else(|| GitHubError::NoCommitsFound)?;
 
-        Ok(latest_commit
+        let newest = commits.first().ok_or(GitHubError::NoCommitsFound)?;
+        let newest_ignored = ignored.contains_str(&newest.sha);
+
+        let selected = if newest_ignored {
+            match commits
+                .iter()
+                .find(|commit| !ignored.contains_str(&commit.sha))
+            {
+                Some(commit) => {
+                    tracing::info!(skipped = newest.sha, used = commit.sha, "Ignored commit");
+                    commit
+                }
+                None => {
+                    tracing::warn!(sha = newest.sha, "All commits ignored, using newest");
+                    newest
+                }
+            }
+        } else {
+            newest
+        };
+
+        let committed_at = selected
             .commit
             .committer
             .as_ref()
             .ok_or_else(|| GitHubError::FailedToFindCommitter)?
             .date
-            .parse()?)
+            .parse()?;
+
+        Ok(RfdCommit {
+            sha: selected.sha.clone().into(),
+            committed_at,
+            newest_ignored,
+        })
     }
 
     #[instrument(skip(self, content))]
@@ -751,6 +806,14 @@ pub struct GitHubRfdReadmeLocation {
     pub blob_link: String,
     pub tree_link: Option<String>,
     pub branch: GitHubRfdLocation,
+}
+
+#[derive(Debug, Clone)]
+pub struct RfdCommit {
+    pub sha: CommitSha,
+    pub committed_at: DateTime<Utc>,
+    /// The newest commit was in `.git-blame-ignore-revs` and was skipped
+    pub newest_ignored: bool,
 }
 
 #[derive(Debug, Clone)]

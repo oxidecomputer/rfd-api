@@ -179,6 +179,9 @@ impl<'a> RfdUpdater<'a> {
             // be nothing, mistaking the revision as a minor change.
             if existing.revision.commit == remote.commit {
                 existing.revision.major_change
+            } else if remote.newest_commit_ignored {
+                // Commit is in .git-blame-ignore-revs, never a major change
+                false
             } else {
                 is_major_change(
                     &existing

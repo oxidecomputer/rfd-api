@@ -239,6 +239,8 @@ pub enum FetchRemoteRfdError {
     FailedToFindReadme(GitHubError),
     #[error("Failed to determine a most recent commit date")]
     NoCommitDate(GitHubError),
+    #[error("Failed to fetch ignored revisions")]
+    IgnoredRevs(GitHubError),
 }
 
 #[derive(Debug)]
@@ -247,6 +249,7 @@ pub struct RemoteRfd {
     pub readme: GitHubRfdReadme<'static>,
     pub commit: CommitSha,
     pub commit_date: DateTime<Utc>,
+    pub newest_commit_ignored: bool,
 }
 
 impl RemoteRfd {
@@ -260,9 +263,14 @@ impl RemoteRfd {
             .get_readme_contents(client, &update.number)
             .await
             .map_err(FetchRemoteRfdError::FailedToFindReadme)?;
-        let commit_date = update
+        let ignored = update
             .location
-            .get_commit_date(client, &update.number)
+            .get_ignored_revs(client)
+            .await
+            .map_err(FetchRemoteRfdError::IgnoredRevs)?;
+        let latest_commit = update
+            .location
+            .get_latest_commit(client, &update.number, &ignored)
             .await
             .map_err(FetchRemoteRfdError::NoCommitDate)?;
 
@@ -270,7 +278,8 @@ impl RemoteRfd {
             number: update.number,
             readme,
             commit: update.location.commit.clone(),
-            commit_date,
+            commit_date: latest_commit.committed_at,
+            newest_commit_ignored: latest_commit.newest_ignored,
         })
     }
 
