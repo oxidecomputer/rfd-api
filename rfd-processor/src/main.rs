@@ -48,6 +48,9 @@ pub struct AppConfig {
     pub scanner_enabled: bool,
     pub scanner_interval: u64,
     pub database_url: String,
+    /// Public URL of the RFD site i.e. https://rfd.shared.oxide.computer
+    #[serde(default)]
+    pub rfd_site_url: Option<String>,
     pub actions: Vec<String>,
     pub auth: AuthConfig,
     pub source: GitHubSourceRepo,

@@ -79,6 +79,8 @@ pub struct Context {
     pub scanner: ScannerCtx,
     pub db: Database,
     pub github: GitHubCtx,
+    /// Normalized public URL of the RFD site without a trailing slash, if one is configured
+    pub rfd_site_url: Option<String>,
     pub actions: Vec<BoxedAction>,
     pub assets: StaticAssetStorageCtx,
     pub pdf: PdfStorageCtx,
@@ -156,6 +158,12 @@ impl Context {
                 client: github_client,
                 repository,
             },
+            rfd_site_url: config
+                .rfd_site_url
+                .as_deref()
+                .map(|url| url.trim().trim_end_matches('/'))
+                .filter(|url| !url.is_empty())
+                .map(str::to_string),
             actions: config
                 .actions
                 .iter()
