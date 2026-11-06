@@ -75,10 +75,10 @@ jobs:
           generated_checksum="$(sha256sum "$generated_pdf" | cut -d ' ' -f 1)"
 
           if [[ "$expected_checksum" != "$generated_checksum" ]]; then
-            echo "::error::Rendered PDF does not match $expected_pdf. If the new rendering is correct, download rfd_9999-generated.pdf from the rfd-processor-rfd-9999-pdf-artifacts artifact and commit it as $expected_pdf (see README.md to render locally)."
-            sudo apt-get update
-            sudo apt-get install -y diff-pdf-wx xvfb
+            sudo apt-get update -qq >/dev/null
+            sudo NEEDRESTART_SUSPEND=1 apt-get install -y -qq diff-pdf-wx xvfb >/dev/null
             NO_AT_BRIDGE=1 xvfb-run -a diff-pdf --skip-identical --mark-differences "$expected_pdf" "$generated_pdf" --output-diff "$diff_pdf" || true
+            echo "::error::Rendered PDF does not match $expected_pdf. If the new rendering is correct, download rfd_9999-generated.pdf from the rfd-processor-rfd-9999-pdf-artifacts artifact and commit it as $expected_pdf (see README.md to render locally)."
             exit 1
           fi
       - name: Upload rendered PDF
