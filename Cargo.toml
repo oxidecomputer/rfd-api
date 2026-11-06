@@ -15,7 +15,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "0.15.7"
+version = "0.15.8"
 edition = "2024"
 
 [workspace.dependencies]
@@ -26,7 +26,7 @@ base64 = "0.23"
 chrono = "0.4.45"
 clap = { version = "4.6.7", features = ["derive", "string", "env"] }
 config = { version = "0.15.27", features = ["toml"] }
-diesel = { version = "2.3.13", features = ["postgres"] }
+diesel = { version = "2.3.14", features = ["postgres"] }
 diesel_migrations = { version = "2.3.2" }
 dirs = "7.0.0"
 dropshot = "0.17.1"
@@ -41,7 +41,7 @@ jsonwebtoken = { version = "11.0", features = ["aws_lc_rs"] }
 meilisearch-sdk = "0.33.0"
 md-5 = "0.11.0"
 mime_guess = "2.0.5"
-minijinja = { version = "2.19", features = ["loader"] }
+minijinja = "3.0"
 mockall = "0.15"
 newline-converter = "0.3.0"
 newtype-uuid = { version = "1.4.0", features = ["schemars08", "serde", "v4"] }
@@ -54,7 +54,7 @@ reqwest = { version = "0.13", default-features = false, features = ["json", "str
 reqwest-middleware = "0.5"
 reqwest-retry = "0.9"
 reqwest-tracing = "0.7"
-resend-rs = { version = "0.33.0", default-features = false, features = ["rustls-tls"] }
+resend-rs = { version = "0.35.0", default-features = false, features = ["rustls-tls"] }
 rsa = "0.9.10"
 rustfmt-wrapper = "0.2.1"
 rustls = "0.23"
@@ -68,13 +68,13 @@ slog-async = "2.8.0"
 strum = { version = "0.28.0", features = ["derive"] }
 tap = "1.0.1"
 thiserror = "2"
-tokio = { version = "1.53.1", default-features = false, features = ["rt-multi-thread", "macros"] }
-toml = "1.1.6"
+tokio = { version = "1.54.1", default-features = false, features = ["rt-multi-thread", "macros"] }
+toml = "1.1.8"
 tracing = "0.1.44"
 tracing-appender = "0.2.5"
 tracing-slog = { git = "https://github.com/oxidecomputer/tracing-slog", default-features = false }
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
-uuid = { version = "1.26.1", features = ["serde", "v4", "v5"] }
+uuid = { version = "1.29.0", features = ["serde", "v4", "v5"] }
 v-api = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.5.14", default-features = false }
 # Default features include `sagas`, which pulls in a ratatui TUI stack that no
 # workspace crate uses.

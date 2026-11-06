@@ -79,6 +79,8 @@ pub struct Context {
     pub scanner: ScannerCtx,
     pub db: Database,
     pub github: GitHubCtx,
+    /// Normalized public URL of the RFD site without a trailing slash, if one is configured
+    pub rfd_site_url: Option<String>,
     pub actions: Vec<BoxedAction>,
     pub assets: StaticAssetStorageCtx,
     pub pdf: PdfStorageCtx,
@@ -156,6 +158,12 @@ impl Context {
                 client: github_client,
                 repository,
             },
+            rfd_site_url: config
+                .rfd_site_url
+                .as_deref()
+                .map(|url| url.trim().trim_end_matches('/'))
+                .filter(|url| !url.is_empty())
+                .map(str::to_string),
             actions: config
                 .actions
                 .iter()
@@ -284,7 +292,7 @@ impl PdfStorage for PdfStorageCtx {
         filename: &str,
         pdf: &RfdPdf,
     ) -> Vec<Result<PdfFileLocation, RfdPdfError>> {
-        tracing::info!("Attempt to store PFD");
+        tracing::info!("Attempt to store PDF");
 
         if let Some(location) = self.locations.first() {
             let mut req = File {
@@ -296,7 +304,7 @@ impl PdfStorage for PdfStorageCtx {
 
             let response = match external_id {
                 Some(file_id) => {
-                    tracing::info!(?req, "Updating existing PDF with new version");
+                    tracing::info!(name = ?req.name, ?file_id, "Updating existing PDF with new version");
                     self.client
                         .files()
                         .update(req, file_id)
@@ -310,7 +318,7 @@ impl PdfStorage for PdfStorageCtx {
                 }
                 None => {
                     req.parents = Some(vec![location.folder_id.to_string()]);
-                    tracing::info!(?req, "Creating new PDF file");
+                    tracing::info!(name = ?req.name, parents = ?req.parents, "Creating new PDF file");
                     self.client
                         .files()
                         .create(req)
@@ -324,7 +332,7 @@ impl PdfStorage for PdfStorageCtx {
                 }
             }
             .tap_ok(|_| {
-                tracing::info!("Sucessfully uploaded PDF");
+                tracing::info!("Successfully uploaded PDF");
             })
             .tap_err(|err| {
                 tracing::error!(?err, "Failed to upload PDF");

@@ -31,7 +31,7 @@ use crate::{
     endpoints::UNLIMITED,
     permissions::RfdPermission,
     search::{MeiliSearchResult, SearchRequest},
-    util::response::{client_error, internal_error, unauthorized},
+    util::response::{client_error, internal_error, not_implemented, unauthorized},
 };
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -180,7 +180,10 @@ pub async fn view_rfd_discussion(
     rqctx: RequestContext<RfdContext>,
     path: Path<RfdPathParams>,
 ) -> Result<HttpResponseOk<()>, HttpError> {
-    unimplemented!()
+    let ctx = rqctx.context();
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let path = path.into_inner();
+    view_rfd_discussion_op(ctx, &caller, path.number, None).await
 }
 
 // Specific RFD revision endpoints
@@ -295,7 +298,10 @@ pub async fn view_rfd_revision_discussion(
     rqctx: RequestContext<RfdContext>,
     path: Path<RfdRevisionPathParams>,
 ) -> Result<HttpResponseOk<()>, HttpError> {
-    unimplemented!()
+    let ctx = rqctx.context();
+    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let path = path.into_inner();
+    view_rfd_discussion_op(ctx, &caller, path.number, Some(path.revision.into())).await
 }
 
 #[derive(Debug, Deserialize, JsonSchema)]
@@ -486,15 +492,18 @@ async fn view_rfd_attr_op(
     }
 }
 
-#[allow(dead_code)]
 #[instrument(skip(_ctx, caller), fields(caller = ?caller.id), err(Debug))]
 async fn view_rfd_discussion_op(
     _ctx: &RfdContext,
     caller: &Caller<RfdPermission>,
-    number: String,
-    revision: Option<RfdRevisionIdentifier>,
-) -> Result<HttpResponseOk<RfdWithRaw>, HttpError> {
-    unimplemented!()
+    _number: String,
+    _revision: Option<RfdRevisionIdentifier>,
+) -> Result<HttpResponseOk<()>, HttpError> {
+    // Discussion retrieval is not implemented. Respond with a well formed error rather than
+    // panicking, which drops the connection and leaves clients with an empty response body.
+    Err(not_implemented(
+        "RFD discussion retrieval is not implemented",
+    ))
 }
 
 #[instrument(skip(ctx, caller), fields(caller = ?caller.id), err(Debug))]

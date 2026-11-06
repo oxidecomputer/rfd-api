@@ -380,6 +380,61 @@ pub enum RfdUpdateActionErr {
     Stop(Box<dyn std::error::Error + Send>),
 }
 
+/// A change is major if the state changed or the body changed by more than whitespace.
 fn is_major_change(old: &RfdContent, new: &RfdContent) -> bool {
-    old.body() != new.body() || old.get_state() != new.get_state()
+    old.get_state() != new.get_state() || !bodies_match_ignoring_whitespace(old.body(), new.body())
+}
+
+fn bodies_match_ignoring_whitespace(old: Option<&str>, new: Option<&str>) -> bool {
+    match (old, new) {
+        (Some(old), Some(new)) => {
+            let non_whitespace = |c: &char| !matches!(c, ' ' | '\t' | '\r' | '\n');
+            old.chars()
+                .filter(non_whitespace)
+                .eq(new.chars().filter(non_whitespace))
+        }
+        (None, None) => true,
+        _ => false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use rfd_data::content::RfdAsciidoc;
+
+    use super::*;
+
+    const ADOC: &str = ":state: discussion\n:discussion: https://github.com/oxidecomputer/rfd/pull/1\n\n= RFD 1 Test\nAuthor <author@example.com>\n\nSome text with trailing whitespace.  \nAnother line.\n";
+
+    fn adoc(content: &str) -> RfdContent<'static> {
+        RfdContent::Asciidoc(RfdAsciidoc::new(content.to_string()).unwrap())
+    }
+
+    #[test]
+    fn test_whitespace_only_change_is_minor() {
+        let new = ADOC
+            .replace("whitespace.  \n", "whitespace.\n")
+            .replace('\n', "\r\n")
+            .trim_end()
+            .to_string();
+        assert!(!is_major_change(&adoc(ADOC), &adoc(&new)));
+    }
+
+    #[test]
+    fn test_frontmatter_change_is_minor() {
+        let new = ADOC.replace("pull/1", "pull/2");
+        assert!(!is_major_change(&adoc(ADOC), &adoc(&new)));
+    }
+
+    #[test]
+    fn test_state_change_is_major() {
+        let new = ADOC.replace(":state: discussion", ":state: published");
+        assert!(is_major_change(&adoc(ADOC), &adoc(&new)));
+    }
+
+    #[test]
+    fn test_body_text_change_is_major() {
+        let new = ADOC.replace("Another line.", "A different line.");
+        assert!(is_major_change(&adoc(ADOC), &adoc(&new)));
+    }
 }

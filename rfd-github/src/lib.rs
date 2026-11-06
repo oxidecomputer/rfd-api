@@ -23,7 +23,7 @@ use octorust::{
 };
 use regex::regex;
 use rfd_data::{
-    content::{RfdAsciidoc, RfdAsciidocError, RfdContent, RfdMarkdown},
+    content::{RfdAsciidoc, RfdAsciidocError, RfdContent},
     RfdNumber,
 };
 use rfd_model::{CommitSha, FileSha};
@@ -358,12 +358,8 @@ impl GitHubRfdRepo {
                         let rfd_number = RfdNumber::from(number);
 
                         // Only interested in exactly the RFD file that matches the branch name
-                        let mut response = client.repos().get_content_file(&self.owner, &self.repo, &format!("rfd/{}/README.adoc", rfd_number.as_number_string()), &branch.commit.sha).await;
-
-                        // If we fail to find an Asciidoc readme, try to fall back to a Markdown version
-                        if matches!(response, Err(ClientError::HttpError { status, .. }) if status == StatusCode::NOT_FOUND) {
-                            response = client.repos().get_content_file(&self.owner, &self.repo, &format!("rfd/{}/README.md", rfd_number.as_number_string()), &branch.commit.sha).await;
-                        }
+                        let path = format!("rfd/{}/README.adoc", rfd_number.as_number_string());
+                        let response = client.repos().get_content_file(&self.owner, &self.repo, &path, &branch.commit.sha).await;
 
                         // 404s are returned as errors, but that should not stop processing. This only
                         // means that the branch should be skipped
@@ -394,7 +390,7 @@ impl GitHubRfdRepo {
                                 }
                             }
                             _ => {
-                                tracing::info!(?number, ?response, "Skipping branch due to non-200 response during lookup");
+                                tracing::info!(?number, ?path, ?response, "Skipping branch due to non-200 response during lookup");
                             }
                         }
                     } else {
@@ -437,34 +433,9 @@ impl GitHubRfdLocation {
         self.branch == self.default_branch
     }
 
-    pub async fn readme_path(&self, client: &Client, rfd_number: &RfdNumber) -> String {
+    pub fn readme_path(&self, rfd_number: &RfdNumber) -> String {
         // Use the supplied RFD number to determine the location in the RFD repo to read from
-        let dir = rfd_number.repo_path();
-
-        // Get the contents of the file
-        let mut path = format!("{}/README.adoc", dir);
-        match self.fetch_content(client, &path, &self.commit).await {
-            Ok(_) => path,
-            Err(err) => {
-                tracing::trace!(
-                    ?err,
-                    "Failed to find asciidoc README, falling back to markdown"
-                );
-
-                path = format!("{}/README.md", dir);
-                match self.fetch_content(client, &path, &self.commit).await {
-                    Ok(_) => path,
-                    Err(err) => {
-                        tracing::trace!(
-                            ?err,
-                            "Failed to find markdown README. With no README detected, defaulting to asciidoc"
-                        );
-
-                        format!("{}/README.adoc", dir)
-                    }
-                }
-            }
-        }
+        format!("{}/README.adoc", rfd_number.repo_path())
     }
 
     /// Checks if this branch actually exists in the remote system (GitHub)
@@ -476,28 +447,23 @@ impl GitHubRfdLocation {
             .is_ok()
     }
 
-    /// Try to get the markdown or asciidoc contents from the repo.
+    /// Try to get the asciidoc contents from the repo.
     #[instrument(skip(self, client), fields(repo = self.repo, branch = self.branch))]
     pub async fn get_readme_contents<'a>(
         &self,
         client: &Client,
         rfd_number: &RfdNumber,
     ) -> Result<GitHubRfdReadme<'a>, GitHubError> {
-        let readme_path = self.readme_path(client, rfd_number).await;
+        let readme_path = self.readme_path(rfd_number);
         tracing::info!(?readme_path, "Fetch readme contents");
 
-        let is_markdown = readme_path.ends_with(".md");
         let FetchedRfdContent {
             parsed, sha, url, ..
         } = self
             .fetch_content(client, &readme_path, &self.commit)
             .await?;
 
-        let content = if is_markdown {
-            RfdContent::Markdown(RfdMarkdown::new(Cow::Owned(parsed)))
-        } else {
-            RfdContent::Asciidoc(RfdAsciidoc::new(Cow::Owned(parsed))?)
-        };
+        let content = RfdContent::Asciidoc(RfdAsciidoc::new(Cow::Owned(parsed))?);
 
         // The html_url for the README.* file will look something like:
         //   https://github.com/<owner>/<repo>/blob/<number>/rfd/<number>/README.*
@@ -691,7 +657,7 @@ impl GitHubRfdLocation {
         content: &[u8],
         message: &str,
     ) -> Result<Option<CommitSha>, GitHubError> {
-        let readme_path = self.readme_path(&self.client, rfd_number).await;
+        let readme_path = self.readme_path(rfd_number);
         let (decoded, sha) = match self
             .fetch_content(&self.client, &readme_path, &self.commit)
             .await

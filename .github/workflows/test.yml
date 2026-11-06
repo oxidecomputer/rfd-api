@@ -32,7 +32,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: ruby/setup-ruby@14594264cd68ce8a2345dd349bc3d138a4ef85c8 # v1.327.0
+      - uses: ruby/setup-ruby@de492cf36cbab201753d720ce4f4e336cd688c94 # v1.336.0
         with:
           working-directory: rfd-processor
           bundler-cache: true
@@ -56,7 +56,7 @@ jobs:
           mmdc --version
       - run: |
           rustup toolchain install
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - run: |
           cargo test
         env:
@@ -83,7 +83,7 @@ jobs:
           fi
       - name: Upload rendered PDF
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: rfd-processor-rfd-9999-pdf-artifacts
           path: |
@@ -98,7 +98,7 @@ jobs:
       - run: |
           rustup toolchain install
           rustup toolchain install nightly --component rustfmt
-      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
       - name: Install Dprint
         run: |
           mkdir -p "$HOME/.dprint/bin"
@@ -125,5 +125,22 @@ jobs:
             git status -s -- "$GENERATED"
             echo "To fix, regenerate with, commit the changes from running:"
             echo "  cargo xtask generate"
+            exit 1
+          fi
+
+  parser:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Verify parse-rfd parser bundle
+        working-directory: parse-rfd/parser
+        run: |
+          npm ci
+          npm run build
+          if ! git diff --quiet HEAD -- dist/index.js; then
+            git diff --stat HEAD -- dist/index.js
+            echo "parse-rfd/parser/dist/index.js does not match a fresh build from index.js and package-lock.json"
+            echo "To fix, rebuild the bundle and commit the result:"
+            echo "  cd parse-rfd/parser && npm ci && npm run build"
             exit 1
           fi
