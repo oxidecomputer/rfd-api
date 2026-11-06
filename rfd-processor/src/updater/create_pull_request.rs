@@ -43,6 +43,12 @@ impl RfdUpdateAction for CreatePullRequest {
             tracing::info!("RFD is in the discussion state but there are no open pull requests, creating a new pull request");
 
             if mode == RfdUpdateMode::Write {
+                let number = new.number.as_number_string();
+                let link = match &ctx.rfd_site_url {
+                    Some(url) => format!("\n\nView this RFD at {url}/rfd/{number}"),
+                    None => String::new(),
+                };
+
                 let pull = ctx
                     .github
                     .client
@@ -57,11 +63,15 @@ impl RfdUpdateAction for CreatePullRequest {
                                 ctx.github.repository.owner, update.location.branch
                             ),
                             base: update.location.default_branch.to_string(),
-                            body: "Automatically opening the pull request since the document \
-                                is marked as being in discussion. If you wish to not have \
-                                a pull request open, change the state of your document and \
-                                close this pull request."
-                                .to_string(),
+                            body: format!(
+                                "This pull request was opened automatically because RFD {} is \
+                                marked as being in discussion.{link}\n\n\
+                                If you do not want a pull request open for this RFD, change the \
+                                state of the document to something other than `discussion` and \
+                                close this pull request. Once closed, a new pull request will \
+                                not be opened automatically for this branch.",
+                                new.number,
+                            ),
                             draft: Some(false),
                             maintainer_can_modify: Some(true),
                             issue: 0,

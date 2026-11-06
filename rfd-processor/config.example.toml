@@ -26,6 +26,9 @@ scanner_interval = 900
 # The internal database url to store RFD information
 database_url = "postgres://<user>:<pass>@<host>/<database>"
 
+# Public URL of the site that renders RFDs (i.e. https://rfd.shared.oxide.computer)
+rfd_site_url = ""
+
 # The list of actions that should be run for each processing job
 actions = [
   # "CopyImagesToStorage",
