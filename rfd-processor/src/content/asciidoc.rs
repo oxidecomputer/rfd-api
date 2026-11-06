@@ -5,6 +5,7 @@
 use async_trait::async_trait;
 use rfd_data::content::{RfdAsciidoc, RfdContentError, RfdDocument};
 use std::{path::PathBuf, process::Command};
+use uuid::Uuid;
 
 use crate::util::write_file;
 
@@ -22,6 +23,11 @@ pub(crate) async fn render_pdf_from_dir(
     render_pdf(&content, content_dir).await
 }
 
+/// Mermaid configuration handed to mmdc for every diagram, and the Ruby shim
+/// that makes asciidoctor-mermaid pass it. See the shim for why this exists.
+const MERMAID_CONFIG_JSON: &str = include_str!("../../asciidoctor/mermaid-config.json");
+const MERMAID_CONFIG_SHIM: &str = include_str!("../../asciidoctor/mermaid_config.rb");
+
 async fn render_pdf(
     content: &RfdAsciidoc<'_>,
     content_dir: PathBuf,
@@ -32,6 +38,18 @@ async fn render_pdf(
     write_file(&file_path, content.raw().as_bytes()).await?;
     tracing::info!("Wrote file to temp dir");
 
+    // asciidoctor-mermaid has no way to configure mmdc, so the shim is loaded
+    // after it to add `--configFile`. The files go in their own directory so
+    // the content directory is left untouched.
+    let support_dir = std::env::temp_dir().join(format!("rfd-mermaid-{}", Uuid::new_v4()));
+    let shim_path = support_dir.join("mermaid_config.rb");
+    write_file(
+        &support_dir.join("mermaid-config.json"),
+        MERMAID_CONFIG_JSON.as_bytes(),
+    )
+    .await?;
+    write_file(&shim_path, MERMAID_CONFIG_SHIM.as_bytes()).await?;
+
     let mut command = Command::new("asciidoctor-pdf");
     command.current_dir(content_dir.clone()).args([
         "-o",
@@ -40,6 +58,8 @@ async fn render_pdf(
         "base64",
         "-r",
         "asciidoctor-mermaid/pdf",
+        "-r",
+        shim_path.to_str().unwrap(),
         "-a",
         "reproducible",
         "-a",
@@ -48,6 +68,10 @@ async fn render_pdf(
     ]);
 
     let cmd_output = tokio::task::spawn_blocking(move || command.output()).await?;
+
+    if let Err(error) = tokio::fs::remove_dir_all(&support_dir).await {
+        tracing::warn!(?error, ?support_dir, "Failed to remove mermaid config dir");
+    }
 
     let cmd_output = cmd_output.map_err(|error| RenderableRfdError::ProcessStart {
         command: "asciidoctor-pdf",
