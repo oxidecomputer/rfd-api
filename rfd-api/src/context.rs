@@ -33,7 +33,8 @@ use serde::{Deserialize, Serialize};
 use std::{cmp::Ordering, sync::Arc};
 use tap::TapFallible;
 use thiserror::Error;
-use tracing::instrument;
+use tokio::sync::Mutex;
+use tracing::{instrument, Instrument};
 use v_api::{
     response::{
         resource_not_found, resource_restricted, OptionalResource, ResourceError,
@@ -55,6 +56,7 @@ use crate::{
 
 static UNLIMITED: i64 = 9999999;
 
+#[derive(Clone)]
 pub struct RfdContext {
     pub public_url: String,
     pub storage: Arc<dyn RfdStorage>,
@@ -63,6 +65,8 @@ pub struct RfdContext {
     pub github: GitHubRfdRepo,
 
     v_context: Arc<VContext<RfdPermission>>,
+    /// Serializes RFD number reservations made by this server
+    reserve_lock: Arc<Mutex<()>>,
 }
 
 impl ApiContext for RfdContext {
@@ -72,10 +76,12 @@ impl ApiContext for RfdContext {
     }
 }
 
+#[derive(Clone)]
 pub struct SearchContext {
     pub client: SearchClient,
 }
 
+#[derive(Clone)]
 pub struct ContentContext {
     pub placeholder_template: RfdTemplate,
     pub new_template: RfdTemplate,
@@ -363,6 +369,7 @@ impl RfdContext {
             )
             .await?,
             v_context: Arc::new(v_context),
+            reserve_lock: Arc::new(Mutex::new(())),
         })
     }
 
@@ -379,8 +386,12 @@ impl RfdContext {
         if caller.can(&RfdPermission::CreateRfd) {
             tracing::info!("Reserving new RFD");
 
-            // We acknowledge that there are race conditions here, as there would be if an end user
-            // were to attempt to reserve a RFD number manually
+            // Hold the reservation lock while determining the next number and creating its branch
+            // so that concurrent requests to this server can not reserve the same number. A race
+            // still exists with reservations made outside of this server (i.e. a user manually
+            // pushing a branch), as it always has
+            let reservation = self.reserve_lock.lock().await;
+
             let GitHubNewRfdNumber {
                 number: next_rfd_number,
                 commit,
@@ -419,25 +430,47 @@ impl RfdContext {
                 .map_err(UpdateRfdContentError::GitHub)
                 .map_err(ResourceError::InternalError)?;
 
+            // The number is reserved as soon as the branch exists
+            drop(reservation);
+
             tracing::info!(
                 ?next_rfd_number,
                 ?commit,
                 "Created new branch for reserving RFD off of default branch"
             );
 
-            self.commit_rfd_document(
-                caller,
-                next_rfd_number,
-                &content.render(),
-                Some("Reserving RFD number"),
-                commit,
-                Some(&next_rfd_number.as_number_string()),
-            )
-            .await?;
+            // Committing the placeholder document requires several more round trips to GitHub.
+            // Push it in the background so that the reserved number can be returned immediately
+            let ctx = self.clone();
+            let caller = caller.clone();
+            let document = content.render();
+            let span = tracing::info_span!("reserve_rfd_placeholder", number = ?next_rfd_number);
 
-            tracing::info!(
-                ?next_rfd_number,
-                "Pushed placeholder RFD to reserved branch"
+            tokio::spawn(
+                async move {
+                    match ctx
+                        .commit_rfd_document(
+                            &caller,
+                            next_rfd_number,
+                            &document,
+                            Some("Reserving RFD number"),
+                            commit,
+                            Some(&next_rfd_number.as_number_string()),
+                        )
+                        .await
+                    {
+                        Ok(_) => {
+                            tracing::info!("Pushed placeholder RFD to reserved branch")
+                        }
+                        Err(err) => {
+                            tracing::error!(
+                                ?err,
+                                "Failed to push placeholder RFD to reserved branch"
+                            )
+                        }
+                    }
+                }
+                .instrument(span),
             );
 
             Ok(next_rfd_number)

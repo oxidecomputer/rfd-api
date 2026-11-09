@@ -19,6 +19,7 @@ pub enum SearchError {
     Deserialize(#[from] serde_json::Error),
 }
 
+#[derive(Clone)]
 pub struct SearchClient {
     client: Client,
     endpoint: String,
