@@ -57,8 +57,19 @@ impl<'a> RfdMarkdown<'a> {
         }
     }
 
-    fn attr_pattern(&self, attr: &str) -> Regex {
-        Regex::new(&format!(r"(?m)^{}:(.*)$\n", attr)).unwrap()
+    /// Patterns for the attributes the RFD tooling reads and writes are compiled once. Any other
+    /// attribute name falls back to compiling a pattern on demand.
+    fn attr_pattern(&self, attr: &str) -> Cow<'static, Regex> {
+        match attr {
+            "state" => Cow::Borrowed(regex!(r"(?m)^state:(.*)$\n")),
+            "discussion" => Cow::Borrowed(regex!(r"(?m)^discussion:(.*)$\n")),
+            "authors" => Cow::Borrowed(regex!(r"(?m)^authors:(.*)$\n")),
+            "labels" => Cow::Borrowed(regex!(r"(?m)^labels:(.*)$\n")),
+            _ => Cow::Owned(
+                Regex::new(&format!(r"(?m)^{}:(.*)$\n", regex::escape(attr)))
+                    .expect("escaped attribute name produces a valid pattern"),
+            ),
+        }
     }
 
     fn title_pattern(&self) -> &'static Regex {
