@@ -65,7 +65,7 @@ impl Context {
         let http_client = reqwest::Client::builder()
             .default_headers(default_headers)
             .connect_timeout(Duration::from_secs(5))
-            .timeout(Duration::from_secs(10))
+            .timeout(Duration::from_secs(15))
             .build()?;
 
         Ok(Client::new_with_client(host, http_client))
