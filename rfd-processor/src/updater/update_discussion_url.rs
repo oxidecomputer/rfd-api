@@ -58,8 +58,7 @@ impl RfdUpdateAction for UpdateDiscussionUrl {
                             "Stored discussion link does not match the pull request found"
                         );
 
-                        new.update_discussion(&pull_request.html_url)
-                            .map_err(|err| RfdUpdateActionErr::Continue(Box::new(err)))?;
+                        new.update_discussion(&pull_request.html_url);
 
                         tracing::info!("Updated RFD file in GitHub with discussion link change");
 

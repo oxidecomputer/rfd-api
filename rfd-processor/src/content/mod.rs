@@ -8,7 +8,7 @@ use async_trait::async_trait;
 use base64::DecodeError;
 use octorust::Client;
 use rfd_data::{
-    content::{RfdAsciidoc, RfdContent, RfdContentError, RfdDocument, RfdMarkdown},
+    content::{RfdAsciidoc, RfdContent, RfdDocument, RfdMarkdown},
     RfdNumber,
 };
 use rfd_github::{GitHubError, GitHubRfdLocation};
@@ -36,8 +36,6 @@ pub enum RenderableRfdError {
     GitHub(#[from] GitHubError),
     #[error("Failed to convert content string {0}")]
     InvalidContent(#[from] Utf8Error),
-    #[error("Failed to parse Rfd contents")]
-    InvalidRfdContent(#[from] RfdContentError),
     #[error("General io failure {0}")]
     Io(#[from] io::Error),
     #[error("File io failure {0}")]
@@ -70,17 +68,14 @@ impl<'a> RenderableRfd<'a> {
     }
 
     /// Construct a new RfdContent wrapper that contains Asciidoc content
-    #[allow(clippy::result_large_err)]
-    pub fn new_asciidoc<T>(content: T) -> Result<Self, RenderableRfdError>
+    pub fn new_asciidoc<T>(content: T) -> Self
     where
         T: Into<Cow<'a, str>>,
     {
-        Ok(Self {
-            content: RfdContent::Asciidoc(
-                RfdAsciidoc::new(content.into()).map_err(RfdContentError::Asciidoc)?,
-            ),
+        Self {
+            content: RfdContent::Asciidoc(RfdAsciidoc::new(content.into())),
             render_id: Uuid::new_v4(),
-        })
+        }
     }
 
     /// Construct a new RfdContent wrapper that contains Markdown content
@@ -200,8 +195,6 @@ impl<'a> RenderableRfd<'a> {
 }
 
 impl<'a> RfdDocument for RenderableRfd<'a> {
-    type Error = RenderableRfdError;
-
     fn get_title(&self) -> Option<&str> {
         RfdDocument::get_title(&self.content)
     }
@@ -210,18 +203,18 @@ impl<'a> RfdDocument for RenderableRfd<'a> {
         RfdDocument::get_state(&self.content)
     }
 
-    fn update_state(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
-        RfdDocument::update_state(&mut self.content, value)?;
-        Ok(self)
+    fn update_state(&mut self, value: &str) -> &mut Self {
+        RfdDocument::update_state(&mut self.content, value);
+        self
     }
 
     fn get_discussion(&self) -> Option<&str> {
         RfdDocument::get_discussion(&self.content)
     }
 
-    fn update_discussion(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
-        RfdDocument::update_discussion(&mut self.content, value)?;
-        Ok(self)
+    fn update_discussion(&mut self, value: &str) -> &mut Self {
+        RfdDocument::update_discussion(&mut self.content, value);
+        self
     }
 
     fn get_authors(&self) -> Option<&str> {
@@ -232,9 +225,9 @@ impl<'a> RfdDocument for RenderableRfd<'a> {
         RfdDocument::get_labels(&self.content)
     }
 
-    fn update_labels(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
-        RfdDocument::update_labels(&mut self.content, value)?;
-        Ok(self)
+    fn update_labels(&mut self, value: &str) -> &mut Self {
+        RfdDocument::update_labels(&mut self.content, value);
+        self
     }
 
     fn header(&self) -> Option<&str> {
@@ -245,18 +238,18 @@ impl<'a> RfdDocument for RenderableRfd<'a> {
         RfdDocument::body(&self.content)
     }
 
-    fn update_body(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
-        RfdDocument::update_body(&mut self.content, value)?;
-        Ok(self)
+    fn update_body(&mut self, value: &str) -> &mut Self {
+        RfdDocument::update_body(&mut self.content, value);
+        self
     }
 
     fn raw(&self) -> &str {
         RfdDocument::raw(&self.content)
     }
 
-    fn set_raw(&mut self, content: &str) -> Result<&mut Self, Self::Error> {
-        self.content.set_raw(content)?;
-        Ok(self)
+    fn set_raw(&mut self, content: &str) -> &mut Self {
+        self.content.set_raw(content);
+        self
     }
 }
 

@@ -67,8 +67,6 @@ impl<'a> RfdMarkdown<'a> {
 }
 
 impl<'a> RfdDocument for RfdMarkdown<'a> {
-    type Error = ();
-
     fn get_title(&self) -> Option<&str> {
         let title_pattern = regex!(r"(?m)^[=# ]+(?:RFD ?)?(?:\d+:? )?(.*)$");
         let fallback_title_pattern = regex!(r"(?m)^# (.*)$");
@@ -86,18 +84,18 @@ impl<'a> RfdDocument for RfdMarkdown<'a> {
         self.attr("state")
     }
 
-    fn update_state(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
+    fn update_state(&mut self, value: &str) -> &mut Self {
         self.set_attr("state", value);
-        Ok(self)
+        self
     }
 
     fn get_discussion(&self) -> Option<&str> {
         self.attr("discussion")
     }
 
-    fn update_discussion(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
+    fn update_discussion(&mut self, value: &str) -> &mut Self {
         self.set_attr("discussion", value);
-        Ok(self)
+        self
     }
 
     fn get_authors(&self) -> Option<&str> {
@@ -108,9 +106,9 @@ impl<'a> RfdDocument for RfdMarkdown<'a> {
         self.attr("labels")
     }
 
-    fn update_labels(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
+    fn update_labels(&mut self, value: &str) -> &mut Self {
         self.set_attr("labels", value);
-        Ok(self)
+        self
     }
 
     fn header(&self) -> Option<&str> {
@@ -124,7 +122,7 @@ impl<'a> RfdDocument for RfdMarkdown<'a> {
         self.title_pattern().splitn(&self.content, 2).nth(1)
     }
 
-    fn update_body(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
+    fn update_body(&mut self, value: &str) -> &mut Self {
         self.content = Cow::Owned(
             self.title_pattern()
                 .splitn(&self.content, 2)
@@ -133,7 +131,7 @@ impl<'a> RfdDocument for RfdMarkdown<'a> {
                 .to_string()
                 + value,
         );
-        Ok(self)
+        self
     }
 
     /// Get a reference to the internal unparsed contents
@@ -141,9 +139,9 @@ impl<'a> RfdDocument for RfdMarkdown<'a> {
         &self.content
     }
 
-    fn set_raw(&mut self, content: &str) -> Result<&mut Self, Self::Error> {
+    fn set_raw(&mut self, content: &str) -> &mut Self {
         self.content = Cow::Owned(content.to_string());
-        Ok(self)
+        self
     }
 }
 
@@ -238,7 +236,7 @@ dsfsdf
 sdf
 authors: nope"#;
         let mut rfd = RfdMarkdown::new(content);
-        rfd.update_discussion(link).unwrap();
+        rfd.update_discussion(link);
 
         let expected = r#"sdfsdf
 sdfsdf
@@ -262,7 +260,7 @@ dsfsdf
 sdf
 authors: nope"#;
         let mut rfd = RfdMarkdown::new(content);
-        rfd.update_state(state).unwrap();
+        rfd.update_state(state);
 
         let expected = r#"sdfsdf
 sdfsdf

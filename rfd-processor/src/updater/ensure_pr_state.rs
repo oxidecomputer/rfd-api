@@ -58,8 +58,7 @@ impl RfdUpdateAction for EnsureRfdWithPullRequestIsInValidState {
                     && !new.is_state("ideation")
                     && !new.is_state("abandoned")
                 {
-                    new.update_state("discussion")
-                        .map_err(|err| RfdUpdateActionErr::Stop(Box::new(err)))?;
+                    new.update_state("discussion");
                     requires_source_commit = true;
                 } else {
                     tracing::debug!("RFD is in a valid state and does not need to be updated");

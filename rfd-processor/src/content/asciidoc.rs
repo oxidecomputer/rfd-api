@@ -3,7 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use async_trait::async_trait;
-use rfd_data::content::{RfdAsciidoc, RfdContentError, RfdDocument};
+use rfd_data::content::{RfdAsciidoc, RfdDocument};
 use std::{path::PathBuf, process::Command};
 
 use crate::util::write_file;
@@ -15,9 +15,7 @@ pub(crate) async fn render_pdf_from_dir(
 ) -> Result<RenderedPdf, RfdOutputError> {
     let content_dir = content_dir.canonicalize()?;
     let contents = std::fs::read_to_string(content_dir.join("contents.adoc"))?;
-    let content = RfdAsciidoc::new(contents)
-        .map_err(RfdContentError::Asciidoc)
-        .map_err(RenderableRfdError::InvalidRfdContent)?;
+    let content = RfdAsciidoc::new(contents);
 
     render_pdf(&content, content_dir).await
 }

@@ -4,22 +4,8 @@
 
 use regex::{regex, Regex};
 use std::borrow::Cow;
-use thiserror::Error;
 
 use super::RfdDocument;
-
-static SUPPORTED_REFERENCES: [&str; 1] = ["authors"];
-
-#[derive(Debug, Error)]
-pub enum RfdAsciidocError {
-    #[error("Failed to parse author line")]
-    AuthorParse,
-    #[error("Failed to resolve reference for {attribute}")]
-    ReferenceResolver {
-        attribute: String,
-        error: regex::Error,
-    },
-}
 
 /// The text data of an Asciidoc RFD
 #[derive(Debug, Clone)]
@@ -29,46 +15,36 @@ pub struct RfdAsciidoc<'a> {
 }
 
 impl<'a> RfdAsciidoc<'a> {
-    pub fn new<T>(content: T) -> Result<Self, RfdAsciidocError>
+    pub fn new<T>(content: T) -> Self
     where
         T: Into<Cow<'a, str>>,
     {
         let content = content.into();
-        let mut resolved = Self::resolve_references(&content)?;
+        let mut resolved = Self::resolve_references(&content);
         Self::apply_author_line_attributes(&mut resolved);
 
-        Ok(Self { content, resolved })
+        Self { content, resolved }
     }
 
-    fn resolve_references(content: &str) -> Result<String, RfdAsciidocError> {
-        let mut resolved = content.to_string();
+    /// Resolve attribute references within the document. Currently only `{authors}` is supported.
+    fn resolve_references(content: &str) -> String {
+        let pattern = regex!(r"(?<b>[^\\]?)(\{authors\})");
 
-        for attribute in SUPPORTED_REFERENCES {
-            let pattern =
-                Regex::new(&format!(r#"(?<b>[^\\]?)(\{{{}\}})"#, attribute)).map_err(|err| {
-                    RfdAsciidocError::ReferenceResolver {
-                        attribute: attribute.to_string(),
-                        error: err,
-                    }
-                })?;
-            let captures = pattern.captures(&resolved);
-
-            if let Some(captures) = captures {
-                let prefix = captures.get(1).map(|c| c.as_str()).unwrap_or_default();
-                resolved = pattern
-                    .replace_all(
-                        &resolved,
-                        format!(
-                            "{}{}",
-                            prefix,
-                            Self::attr(attribute, &resolved).unwrap_or_default()
-                        ),
-                    )
-                    .to_string();
-            }
+        if let Some(captures) = pattern.captures(content) {
+            let prefix = captures.get(1).map(|c| c.as_str()).unwrap_or_default();
+            pattern
+                .replace_all(
+                    content,
+                    format!(
+                        "{}{}",
+                        prefix,
+                        Self::attr("authors", content).unwrap_or_default()
+                    ),
+                )
+                .to_string()
+        } else {
+            content.to_string()
         }
-
-        Ok(resolved)
     }
 
     fn apply_author_line_attributes(content: &mut String) {
@@ -186,8 +162,6 @@ impl<'a> AsciidocInclude<'a> {
 }
 
 impl<'a> RfdDocument for RfdAsciidoc<'a> {
-    type Error = RfdAsciidocError;
-
     fn get_title(&self) -> Option<&str> {
         let fallback_title_pattern = regex!(r"(?m)^= (.*)$");
 
@@ -204,7 +178,7 @@ impl<'a> RfdDocument for RfdAsciidoc<'a> {
         Self::attr("state", &self.resolved)
     }
 
-    fn update_state(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
+    fn update_state(&mut self, value: &str) -> &mut Self {
         self.set_raw(&Self::set_attr(&self.content, "state", value.trim()))
     }
 
@@ -217,7 +191,7 @@ impl<'a> RfdDocument for RfdAsciidoc<'a> {
         }
     }
 
-    fn update_discussion(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
+    fn update_discussion(&mut self, value: &str) -> &mut Self {
         self.set_raw(&Self::set_attr(&self.content, "discussion", value.trim()))
     }
 
@@ -229,7 +203,7 @@ impl<'a> RfdDocument for RfdAsciidoc<'a> {
         Self::attr("labels", &self.resolved)
     }
 
-    fn update_labels(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
+    fn update_labels(&mut self, value: &str) -> &mut Self {
         self.set_raw(&Self::set_attr(&self.content, "labels", value.trim()))
     }
 
@@ -241,7 +215,7 @@ impl<'a> RfdDocument for RfdAsciidoc<'a> {
         RfdAsciidoc::body(&self.content)
     }
 
-    fn update_body(&mut self, value: &str) -> Result<&mut Self, Self::Error> {
+    fn update_body(&mut self, value: &str) -> &mut Self {
         self.set_raw(&format!(
             "{}\n\n{}{}\n{}",
             self.header().unwrap_or_default(),
@@ -255,12 +229,12 @@ impl<'a> RfdDocument for RfdAsciidoc<'a> {
         &self.content
     }
 
-    fn set_raw(&mut self, content: &str) -> Result<&mut Self, Self::Error> {
-        let mut resolved = Self::resolve_references(content)?;
+    fn set_raw(&mut self, content: &str) -> &mut Self {
+        let mut resolved = Self::resolve_references(content);
         Self::apply_author_line_attributes(&mut resolved);
         self.resolved = resolved;
         self.content = Cow::Owned(content.to_string());
-        Ok(self)
+        self
     }
 }
 
@@ -552,7 +526,7 @@ mod tests {
 {authors}
 dsfsdf
 sdf"#;
-        let rfd = RfdAsciidoc::new(content).unwrap();
+        let rfd = RfdAsciidoc::new(content);
         assert!(rfd.content != rfd.resolved);
         assert!(!rfd.resolved.contains("{authors}"));
     }
@@ -567,7 +541,7 @@ things <things@company>, firstname <email@company>
 dsfsdf
 sdf
 authors: nope"#;
-        let rfd = RfdAsciidoc::new(content).unwrap();
+        let rfd = RfdAsciidoc::new(content);
         let authors = rfd.get_authors().unwrap();
         let expected = r#"things <things@company>; firstname <email@company>"#.to_string();
         assert_eq!(expected, authors);
@@ -580,7 +554,7 @@ authors: nope"#;
 {authors}
 dsfsdf
 sdf"#;
-        let rfd = RfdAsciidoc::new(content).unwrap();
+        let rfd = RfdAsciidoc::new(content);
         let authors = rfd.get_authors().unwrap();
         let expected = r#"firstname <email@company>"#.to_string();
         assert_eq!(expected, authors);
@@ -600,7 +574,7 @@ sdf"#;
 
 dsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdf
 "#;
-        let rfd = RfdAsciidoc::new(content).unwrap();
+        let rfd = RfdAsciidoc::new(content);
         let authors = rfd.get_authors().unwrap();
         let expected = r#"firstname <email@company>"#.to_string();
         assert_eq!(expected, authors);
@@ -618,7 +592,7 @@ dsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdf
 ## External References
 * https://company.com[link to company] - An external reference
 "#;
-        let rfd = RfdAsciidoc::new(content).unwrap();
+        let rfd = RfdAsciidoc::new(content);
         let authors = rfd.get_authors().unwrap();
         let expected = r#"Author One <one@company>; Author Two <two@company>"#.to_string();
         assert_eq!(expected, authors);
@@ -640,7 +614,7 @@ dsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdfdsfsdf
 == Introduction
 "#;
 
-        let rfd = RfdAsciidoc::new(content).unwrap();
+        let rfd = RfdAsciidoc::new(content);
         let authors = rfd.get_authors().unwrap();
         let expected =
             r#":authors: Author One <one@company>; Author Two <two@company>"#.to_string();
@@ -658,7 +632,7 @@ Author One <one@company>, Author Two <two@company>
 :authors: Author One <one@company>
 "#;
 
-        let rfd = RfdAsciidoc::new(content).unwrap();
+        let rfd = RfdAsciidoc::new(content);
         let authors = rfd.get_authors().unwrap();
         let expected = r#"Author One <one@company>; Author Two <two@company>"#.to_string();
         assert_eq!(expected, authors);
@@ -674,7 +648,7 @@ Author One <one@company>, Author Two <two@company>
 dsfsdf
 sdf
 :state: nope"#;
-        let rfd = RfdAsciidoc::new(content).unwrap();
+        let rfd = RfdAsciidoc::new(content);
         let state = rfd.get_state().unwrap();
         let expected = "prediscussion".to_string();
         assert_eq!(expected, state);
@@ -690,7 +664,7 @@ sdf
 dsfsdf
 sdf
 :discussion: nope"#;
-        let rfd = RfdAsciidoc::new(content).unwrap();
+        let rfd = RfdAsciidoc::new(content);
         let discussion = rfd.get_discussion().unwrap();
         let expected = "https://github.com/org/repo/pulls/1".to_string();
         assert_eq!(expected, discussion);
@@ -704,9 +678,8 @@ sdf
 dsfsdf
 sdf
 :discussion: nope"#;
-        let mut rfd = RfdAsciidoc::new(content).unwrap();
-        rfd.set_raw(&RfdAsciidoc::set_attr(rfd.raw(), "xrefstyle", "short"))
-            .unwrap();
+        let mut rfd = RfdAsciidoc::new(content);
+        rfd.set_raw(&RfdAsciidoc::set_attr(rfd.raw(), "xrefstyle", "short"));
         assert_eq!(Some("short"), RfdAsciidoc::attr("xrefstyle", &rfd.content))
     }
 
@@ -724,8 +697,8 @@ dsfsdf
 sdf
 :discussion: nope"#;
 
-        let mut rfd = RfdAsciidoc::new(content).unwrap();
-        rfd.update_discussion(link).unwrap();
+        let mut rfd = RfdAsciidoc::new(content);
+        rfd.update_discussion(link);
         let expected = r#"sdfsdf
 = sdfgsd
 discussion: fgsdfg
@@ -748,8 +721,8 @@ dsfsdf
 sdf
 :discussion: nope"#;
 
-        let mut rfd = RfdAsciidoc::new(content).unwrap();
-        rfd.update_discussion(link).unwrap();
+        let mut rfd = RfdAsciidoc::new(content);
+        rfd.update_discussion(link);
         let expected = r#"sdfsdf
 = sdfgsd
 discussion: fgsdfg
@@ -772,8 +745,8 @@ state: fgsdfg
 dsfsdf
 sdf
 :state: nope"#;
-        let mut rfd = RfdAsciidoc::new(content).unwrap();
-        rfd.update_state(state).unwrap();
+        let mut rfd = RfdAsciidoc::new(content);
+        rfd.update_state(state);
         let expected = r#"sdfsdf
 = sdfgsd
 state: fgsdfg
@@ -794,8 +767,8 @@ state: fgsdfg
 dsfsdf
 sdf
 :state: nope"#;
-        let mut rfd = RfdAsciidoc::new(content).unwrap();
-        rfd.update_state(state).unwrap();
+        let mut rfd = RfdAsciidoc::new(content);
+        rfd.update_state(state);
         let expected = r#"sdfsdf
 = sdfgsd
 state: fgsdfg
@@ -817,7 +790,7 @@ dsfsdf
 = RFD 53 Bye
 sdf
 :title: nope"#;
-        let rfd = RfdAsciidoc::new(content).unwrap();
+        let rfd = RfdAsciidoc::new(content);
         let expected = "Identity and Access Management (IAM)".to_string();
         assert_eq!(expected, rfd.get_title().unwrap());
     }
@@ -832,7 +805,7 @@ sdf
 dsfsdf
 sdf
 :title: nope"#;
-        let rfd = RfdAsciidoc::new(content).unwrap();
+        let rfd = RfdAsciidoc::new(content);
         let expected = "Identity and Access Management (IAM)".to_string();
         assert_eq!(expected, rfd.get_title().unwrap());
     }
@@ -846,7 +819,7 @@ sdf
 dsfsdf
 sdf
 :title: nope"#;
-        let rfd = RfdAsciidoc::new(content).unwrap();
+        let rfd = RfdAsciidoc::new(content);
         let expected = "Identity and Access Management (IAM)".to_string();
         assert_eq!(expected, rfd.get_title().unwrap());
     }
@@ -869,7 +842,7 @@ sdf
 {authors}
 "#;
 
-        let rfd = RfdAsciidoc::new(Cow::Borrowed(content)).unwrap();
+        let rfd = RfdAsciidoc::new(Cow::Borrowed(content));
         let expected = "This should be the title";
 
         assert_eq!(expected, rfd.get_title().unwrap());
@@ -918,7 +891,7 @@ in velit.
 
     #[test]
     fn test_get_asciidoc_labels() {
-        let rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content())).unwrap();
+        let rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content()));
         let labels = rfd.get_labels().unwrap();
         let expected = "label1, label2".to_string();
         assert_eq!(expected, labels);
@@ -930,14 +903,14 @@ in velit.
         = RFD 43 Identity and Access Management (IAM)
         No labels here
         "#;
-        let rfd = RfdAsciidoc::new(content).unwrap();
+        let rfd = RfdAsciidoc::new(content);
         assert!(rfd.get_labels().is_none());
     }
 
     #[test]
     fn test_update_asciidoc_labels() {
-        let mut rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content())).unwrap();
-        rfd.update_labels("newlabel1, newlabel2").unwrap();
+        let mut rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content()));
+        rfd.update_labels("newlabel1, newlabel2");
         let labels = rfd.get_labels().unwrap();
         let expected = "newlabel1, newlabel2".to_string();
         assert_eq!(expected, labels);
@@ -961,8 +934,8 @@ in velit.
 FirstName LastName <fname@company.org>
 
 This is the new body"#;
-        let mut rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content())).unwrap();
-        rfd.update_body(new_content).unwrap();
+        let mut rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content()));
+        rfd.update_body(new_content);
         assert_eq!(expected, rfd.raw());
     }
 
@@ -986,7 +959,7 @@ include::sub_doc1.adoc[]
 This is the new body
 
 include::sub_doc2.adoc[]"#;
-        let rfd = RfdAsciidoc::new(Cow::Borrowed(contents)).unwrap();
+        let rfd = RfdAsciidoc::new(Cow::Borrowed(contents));
         let includes = rfd.includes();
 
         let expected = vec![

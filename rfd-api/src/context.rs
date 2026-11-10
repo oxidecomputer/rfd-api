@@ -11,7 +11,7 @@ use octorust::{
 };
 use partial_struct::partial;
 use rfd_data::{
-    content::{RfdContent, RfdContentError, RfdDocument, RfdTemplate, TemplateError},
+    content::{RfdContent, RfdDocument, RfdTemplate, TemplateError},
     RfdNumber,
 };
 use rfd_github::{GitHubError, GitHubNewRfdNumber, GitHubRfdRepo};
@@ -87,8 +87,6 @@ pub enum UpdateRfdContentError {
     GitHub(#[from] GitHubError),
     #[error("Internal GitHub state does not currently allow for update. This commit appears as the head commit on multiple branches.")]
     InternalState,
-    #[error("Unable to parse RFD contents")]
-    InvalidContent(#[from] RfdContentError),
     #[error("Failed to construct new RFD template")]
     InvalidTemplate(#[from] TemplateError),
     #[error("Unable to perform action. Unable to find the default branch on GitHub.")]
@@ -676,14 +674,8 @@ impl RfdContext {
                 .inner_err_into()?;
 
             let sha = latest_revision.commit.clone();
-            let mut updated_content: RfdContent = latest_revision
-                .try_into()
-                .map_err(UpdateRfdContentError::InvalidContent)
-                .map_err(ResourceError::InternalError)?;
-            updated_content
-                .update_body(content)
-                .map_err(UpdateRfdContentError::InvalidContent)
-                .map_err(ResourceError::InternalError)?;
+            let mut updated_content: RfdContent = latest_revision.into();
+            updated_content.update_body(content);
 
             self.commit_rfd_document(
                 caller,
