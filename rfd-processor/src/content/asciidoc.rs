@@ -48,22 +48,58 @@ async fn render_pdf(
     .await?;
     write_file(&shim_path, MERMAID_CONFIG_SHIM.as_bytes()).await?;
 
+    // RFD content is untrusted. The CLI defaults to the unsafe safe mode, so run
+    // in safe mode jailed to the content directory, and lock the theme and font
+    // attributes (which asciidoctor-pdf does not jail) so the document cannot
+    // point them elsewhere on disk. The renderer also only receives the
+    // environment it needs to locate Ruby, Node and Chromium.
     let mut command = Command::new("asciidoctor-pdf");
-    command.current_dir(content_dir.clone()).args([
-        "-o",
-        "-",
-        "-r",
-        "base64",
-        "-r",
-        "asciidoctor-mermaid/pdf",
-        "-r",
-        shim_path.to_str().unwrap(),
-        "-a",
-        "reproducible",
-        "-a",
-        "source-highlighter=rouge",
-        file_path.to_str().unwrap(),
-    ]);
+    command
+        .current_dir(content_dir.clone())
+        .env_clear()
+        .envs(std::env::vars_os().filter(|(key, _)| {
+            key.to_str().is_some_and(|key| {
+                ["PATH", "HOME", "TMPDIR", "LANG", "TZ"].contains(&key)
+                    || [
+                        "LC_",
+                        "GEM_",
+                        "BUNDLE_",
+                        "RUBY",
+                        "NODE_",
+                        "PUPPETEER_",
+                        "XDG_",
+                    ]
+                    .iter()
+                    .any(|prefix| key.starts_with(prefix))
+            })
+        }))
+        .args([
+            "-S",
+            "safe",
+            "-B",
+            content_dir.to_str().unwrap(),
+            "-a",
+            "pdf-theme!",
+            "-a",
+            "pdf-themesdir!",
+            "-a",
+            "pdf-fontsdir!",
+        ])
+        .args([
+            "-o",
+            "-",
+            "-r",
+            "base64",
+            "-r",
+            "asciidoctor-mermaid/pdf",
+            "-r",
+            shim_path.to_str().unwrap(),
+            "-a",
+            "reproducible",
+            "-a",
+            "source-highlighter=rouge",
+            file_path.to_str().unwrap(),
+        ]);
 
     let cmd_output = tokio::task::spawn_blocking(move || command.output()).await?;
 
