@@ -201,12 +201,12 @@ impl<'a> RenderableRfd<'a> {
     }
 }
 
-/// Path of a supporting document relative to the RFD directory `dir`. Returns `None` unless the
-/// repository path lies under `dir` and the remainder is made up only of normal components, so the
-/// result always stays inside the render directory it is joined onto.
+/// Returns `repo_path` relative to the RFD directory `dir`,
+/// or `None` if it is not strictly inside `dir` (e.g. it contains `..`).
+/// The result is safe to join onto the render directory.
 fn supporting_document_path<'a>(dir: &str, repo_path: &'a str) -> Option<&'a Path> {
     let relative = Path::new(repo_path).strip_prefix(dir).ok()?;
-    let is_contained = relative.components().next().is_some()
+    let is_contained = !relative.as_os_str().is_empty()
         && relative
             .components()
             .all(|component| matches!(component, Component::Normal(_)));
