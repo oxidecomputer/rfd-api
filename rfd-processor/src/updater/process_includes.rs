@@ -30,9 +30,7 @@ impl RfdUpdateAction for ProcessIncludes {
         tracing::info!("Processing includes");
         let RfdUpdateActionContext { ctx, update, .. } = ctx;
 
-        let content = new
-            .content()
-            .map_err(|err| RfdUpdateActionErr::Continue(Box::new(err)))?;
+        let content = new.content();
         let (format, new_content) = match &content.content {
             RfdContent::Asciidoc(adoc) => {
                 let mut raw = adoc.raw().to_string();

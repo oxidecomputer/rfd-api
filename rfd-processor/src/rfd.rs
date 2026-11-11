@@ -19,7 +19,7 @@ use rfd_model::{
 use thiserror::Error;
 use v_model::storage::{ListPagination, StoreError};
 
-use crate::content::{RenderableRfd, RenderableRfdError};
+use crate::content::RenderableRfd;
 
 #[derive(Debug)]
 pub struct PersistedRfd {
@@ -117,12 +117,11 @@ impl PersistedRfd {
         Ok(())
     }
 
-    #[allow(clippy::result_large_err)]
-    pub fn content(&self) -> Result<RenderableRfd<'_>, RenderableRfdError> {
-        Ok(match self.revision.content_format {
-            ContentFormat::Asciidoc => RenderableRfd::new_asciidoc(&self.revision.content)?,
+    pub fn content(&self) -> RenderableRfd<'_> {
+        match self.revision.content_format {
+            ContentFormat::Asciidoc => RenderableRfd::new_asciidoc(&self.revision.content),
             ContentFormat::Markdown => RenderableRfd::new_markdown(&self.revision.content),
-        })
+        }
     }
 
     pub fn set_content(&mut self, format: ContentFormat, content: &str) {
@@ -132,19 +131,16 @@ impl PersistedRfd {
         *self.needs_update.lock().unwrap() = true;
     }
 
-    #[allow(clippy::result_large_err)]
-    pub fn update_discussion(&mut self, new_discussion_url: impl ToString) -> Result<(), RfdError> {
+    pub fn update_discussion(&mut self, new_discussion_url: impl ToString) {
         let new_discussion_url = new_discussion_url.to_string();
 
-        let mut content = self.content()?;
-        content.update_discussion(&new_discussion_url)?;
+        let mut content = self.content();
+        content.update_discussion(&new_discussion_url);
 
         self.revision.content = content.into_inner_content();
         self.revision.discussion = Some(new_discussion_url);
 
         *self.needs_update.lock().unwrap() = true;
-
-        Ok(())
     }
 
     pub fn is_state(&self, state: &str) -> bool {
@@ -155,19 +151,16 @@ impl PersistedRfd {
             .unwrap_or(false)
     }
 
-    #[allow(clippy::result_large_err)]
-    pub fn update_state(&mut self, new_state: impl ToString) -> Result<(), RfdError> {
+    pub fn update_state(&mut self, new_state: impl ToString) {
         let new_state = new_state.to_string();
 
-        let mut content = self.content()?;
-        content.update_state(&new_state)?;
+        let mut content = self.content();
+        content.update_state(&new_state);
 
         self.revision.content = content.into_inner_content();
         self.revision.state = Some(new_state);
 
         *self.needs_update.lock().unwrap() = true;
-
-        Ok(())
     }
 
     pub fn get_pdf_filename(&self) -> String {
@@ -196,8 +189,6 @@ impl PersistedRfd {
 
 #[derive(Debug, Error)]
 pub enum RfdError {
-    #[error(transparent)]
-    Asciidoc(#[from] RenderableRfdError),
     #[error(transparent)]
     Storage(#[from] StoreError),
 }

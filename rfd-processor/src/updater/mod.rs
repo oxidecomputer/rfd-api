@@ -16,7 +16,6 @@ use tracing::instrument;
 use v_model::storage::StoreError;
 
 use crate::{
-    content::RenderableRfdError,
     context::Context,
     rfd::{FetchRemoteRfdError, PersistedRfd, RemoteRfd, RemoteRfdError, RfdError},
 };
@@ -59,8 +58,6 @@ pub enum RfdUpdaterError {
     RfdUpdate(RfdError),
     #[error("Newly persisted RFD has an internal id that does match the expected existing id")]
     RfdIdMismatch((TypedUuid<RfdId>, TypedUuid<RfdId>)),
-    #[error("Failed to retrieve the content of the previous revision (to detect if this is a major change)")]
-    ContentOfExistingRfd(#[source] RenderableRfdError),
 }
 
 trait Validate {
@@ -180,13 +177,7 @@ impl<'a> RfdUpdater<'a> {
             if existing.revision.commit == remote.commit {
                 existing.revision.major_change
             } else {
-                is_major_change(
-                    &existing
-                        .content()
-                        .map_err(RfdUpdaterError::ContentOfExistingRfd)?
-                        .content,
-                    &remote.readme.content,
-                )
+                is_major_change(&existing.content().content, &remote.readme.content)
             }
         } else {
             tracing::info!(number = ?update.number, "No previous revisions found for RFD");
@@ -283,10 +274,7 @@ impl<'a> RfdUpdater<'a> {
                 .location
                 .upsert(
                     &new.number,
-                    new.content()
-                        .map_err(|err| RfdUpdaterError::RfdUpdate(RfdError::Asciidoc(err)))?
-                        .raw()
-                        .as_bytes(),
+                    new.content().raw().as_bytes(),
                     "RFD processor update",
                 )
                 .await
@@ -407,7 +395,7 @@ mod tests {
     const ADOC: &str = ":state: discussion\n:discussion: https://github.com/oxidecomputer/rfd/pull/1\n\n= RFD 1 Test\nAuthor <author@example.com>\n\nSome text with trailing whitespace.  \nAnother line.\n";
 
     fn adoc(content: &str) -> RfdContent<'static> {
-        RfdContent::Asciidoc(RfdAsciidoc::new(content.to_string()).unwrap())
+        RfdContent::Asciidoc(RfdAsciidoc::new(content.to_string()))
     }
 
     #[test]

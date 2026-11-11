@@ -38,7 +38,6 @@ impl UpdatePdfs {
         // Generate the PDFs for the RFD
         let pdf = match new
             .content()
-            .map_err(RfdOutputError::ContentFailure)?
             .to_pdf(&ctx.github.client, &update.number, &update.location)
             .await
         {

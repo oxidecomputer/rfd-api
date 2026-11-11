@@ -469,13 +469,7 @@ async fn view_rfd_attr_op(
         let rfd = ctx.view_rfd(caller, rfd_number, None).await?;
         let content = match (rfd.content, rfd.format) {
             (Some(content), Some(ContentFormat::Asciidoc)) => {
-                RfdContent::Asciidoc(RfdAsciidoc::new(content).map_err(|err| {
-                    tracing::warn!(?err, "Failed to parse RFD content");
-                    HttpError::for_internal_error(format!(
-                        "Failed to parse RFD content for RFD {}",
-                        number
-                    ))
-                })?)
+                RfdContent::Asciidoc(RfdAsciidoc::new(content))
             }
             (Some(content), Some(ContentFormat::Markdown)) => {
                 RfdContent::Markdown(RfdMarkdown::new(content))
@@ -760,15 +754,7 @@ async fn set_rfd_attr_op(
 
         // TODO: Get rid of these clones
         let mut content = match revision.content_format {
-            ContentFormat::Asciidoc => {
-                RfdContent::Asciidoc(RfdAsciidoc::new(revision.content).map_err(|err| {
-                    tracing::warn!(?err, "Failed to parse RFD content");
-                    HttpError::for_internal_error(format!(
-                        "Failed to parse RFD content for RFD {}",
-                        number
-                    ))
-                })?)
-            }
+            ContentFormat::Asciidoc => RfdContent::Asciidoc(RfdAsciidoc::new(revision.content)),
             ContentFormat::Markdown => RfdContent::Markdown(RfdMarkdown::new(revision.content)),
         };
 
@@ -783,14 +769,7 @@ async fn set_rfd_attr_op(
                 })?;
                 content.update_state(&state.to_string())
             }
-        }
-        .map_err(|err| {
-            tracing::info!(?err, "Update resulted in malfored RFD");
-            HttpError::for_bad_request(
-                None,
-                "Update would result in a malformed RFD. Update has not been applied".to_string(),
-            )
-        })?;
+        };
 
         tracing::info!("Updated attribute in RFD document");
 
