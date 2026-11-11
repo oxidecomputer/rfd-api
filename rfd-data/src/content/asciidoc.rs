@@ -2,11 +2,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use regex::{regex, Regex};
+use regex::{regex, NoExpand, Regex};
 use std::borrow::Cow;
 
 use super::RfdDocument;
 use crate::SingleLineString;
+
+/// Extra bytes reference resolution may add beyond 2x the input size
+const MAX_REFERENCE_EXPANSION_ALLOWANCE: usize = 64 * 1024;
 
 /// The text data of an Asciidoc RFD
 #[derive(Debug, Clone)]
@@ -33,15 +36,32 @@ impl<'a> RfdAsciidoc<'a> {
 
         if let Some(captures) = pattern.captures(content) {
             let prefix = captures.get(1).map(|c| c.as_str()).unwrap_or_default();
+            let replacement = format!(
+                "{}{}",
+                prefix,
+                Self::attr("authors", content).unwrap_or_default()
+            );
+
+            // Bound expansion size; leave oversized documents unresolved
+            let max_len = content
+                .len()
+                .saturating_mul(2)
+                .saturating_add(MAX_REFERENCE_EXPANSION_ALLOWANCE);
+            let expanded_len = pattern
+                .find_iter(content)
+                .try_fold(content.len(), |len, _| len.checked_add(replacement.len()));
+
+            if !expanded_len.is_some_and(|len| len <= max_len) {
+                tracing::warn!(
+                    content_len = content.len(),
+                    "Skipping reference resolution that would exceed the maximum document size"
+                );
+                return content.to_string();
+            }
+
+            // NoExpand: don't treat `$` as regex capture reference ($1, etc)
             pattern
-                .replace_all(
-                    content,
-                    format!(
-                        "{}{}",
-                        prefix,
-                        Self::attr("authors", content).unwrap_or_default()
-                    ),
-                )
+                .replace_all(content, NoExpand(&replacement))
                 .to_string()
         } else {
             content.to_string()
@@ -1051,5 +1071,23 @@ include::sub_doc2.adoc[]"#;
             expected,
             include.perform_replacement(original, replacement_content)
         );
+    }
+
+    #[test]
+    fn test_skip_unbounded_reference_expansion() {
+        let authors = "a".repeat(100_000);
+        let references = "{authors}\n".repeat(10_000);
+        let content = format!(":authors: {}\n\n= RFD 123 Place\n\n{}", authors, references);
+
+        let rfd = RfdAsciidoc::new(content.as_str());
+        assert!(rfd.resolved.len() <= 2 * content.len() + MAX_REFERENCE_EXPANSION_ALLOWANCE);
+        assert!(rfd.resolved.contains("{authors}"));
+    }
+
+    #[test]
+    fn test_reference_value_inserted_literally() {
+        let content = ":authors: Cost $1 ${b} $$\n\n= RFD 123 Place\n\nBy {authors}\n";
+        let rfd = RfdAsciidoc::new(content);
+        assert!(rfd.resolved.contains("By Cost $1 ${b} $$\n"));
     }
 }

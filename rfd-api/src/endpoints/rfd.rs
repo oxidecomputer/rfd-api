@@ -19,7 +19,10 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use trace_request::trace_request;
 use tracing::instrument;
-use v_api::{response::not_found, ApiContext};
+use v_api::{
+    response::{forbidden, not_found},
+    ApiContext,
+};
 use v_model::{permissions::Caller, storage::ListPagination};
 
 use crate::{
@@ -749,6 +752,16 @@ async fn set_rfd_attr_op(
     body: &RfdAttrValue,
 ) -> Result<HttpResponseAccepted<RfdAttr>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
+        if !caller.any(
+            [
+                RfdPermission::UpdateRfd(rfd_number),
+                RfdPermission::UpdateRfdsAll,
+            ]
+            .iter(),
+        ) {
+            return Err(forbidden());
+        }
+
         // Get the latest revision
         let revision = ctx.view_rfd_revision(caller, rfd_number, None).await?;
 
