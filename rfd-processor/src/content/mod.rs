@@ -2,7 +2,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use std::{borrow::Cow, env, io, path::PathBuf, str::Utf8Error, string::FromUtf8Error};
+use std::{
+    borrow::Cow,
+    env, io,
+    path::{Component, Path, PathBuf},
+    str::Utf8Error,
+    string::FromUtf8Error,
+};
 
 use async_trait::async_trait;
 use base64::DecodeError;
@@ -149,14 +155,15 @@ impl<'a> RenderableRfd<'a> {
             .await?;
 
         for document in documents {
-            let document_path = storage_path.join(
-                document
-                    .path
-                    .replace(dir.trim_start_matches('/'), "")
-                    .trim_start_matches('/'),
-            );
+            let Some(relative_path) = supporting_document_path(&dir, &document.path) else {
+                tracing::warn!(
+                    document.path,
+                    "Skipping supporting document with unsafe path"
+                );
+                continue;
+            };
 
-            let path = document_path;
+            let path = storage_path.join(relative_path);
             write_file(&path, &decode_base64(&document.content)?).await?;
 
             tracing::info!(?path, "Wrote supporting document",);
@@ -192,6 +199,19 @@ impl<'a> RenderableRfd<'a> {
 
         Ok(())
     }
+}
+
+/// Path of a supporting document relative to the RFD directory `dir`. Returns `None` unless the
+/// repository path lies under `dir` and the remainder is made up only of normal components, so the
+/// result always stays inside the render directory it is joined onto.
+fn supporting_document_path<'a>(dir: &str, repo_path: &'a str) -> Option<&'a Path> {
+    let relative = Path::new(repo_path).strip_prefix(dir).ok()?;
+    let is_contained = relative.components().next().is_some()
+        && relative
+            .components()
+            .all(|component| matches!(component, Component::Normal(_)));
+
+    is_contained.then_some(relative)
 }
 
 impl<'a> RfdDocument for RenderableRfd<'a> {
@@ -286,4 +306,49 @@ pub enum RfdOutputError {
     FormatNotSupported,
     #[error(transparent)]
     Io(#[from] std::io::Error),
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+
+    use super::supporting_document_path;
+
+    #[test]
+    fn test_supporting_document_path_keeps_rfd_relative_path() {
+        assert_eq!(
+            supporting_document_path("rfd/0123", "rfd/0123/example.csv"),
+            Some(Path::new("example.csv"))
+        );
+        assert_eq!(
+            supporting_document_path("rfd/0123", "rfd/0123/images/rfd/0123/diagram.svg"),
+            Some(Path::new("images/rfd/0123/diagram.svg"))
+        );
+    }
+
+    #[test]
+    fn test_supporting_document_path_rejects_escaping_paths() {
+        // Removing every occurrence of `rfd/0123` would turn this into `../../evil`.
+        let spliced = "rfd/0123/.rfd/0123./.rfd/0123./evil";
+        assert_eq!(
+            spliced.replace("rfd/0123", "").trim_start_matches('/'),
+            "../../evil"
+        );
+        assert_eq!(
+            supporting_document_path("rfd/0123", spliced),
+            Some(Path::new(".rfd/0123./.rfd/0123./evil"))
+        );
+
+        assert_eq!(
+            supporting_document_path("rfd/0123", "rfd/0123/../evil"),
+            None
+        );
+        assert_eq!(
+            supporting_document_path("rfd/0123", "rfd/0123/a/../../evil"),
+            None
+        );
+        assert_eq!(supporting_document_path("rfd/0123", "/etc/passwd"), None);
+        assert_eq!(supporting_document_path("rfd/0123", "rfd/0124/evil"), None);
+        assert_eq!(supporting_document_path("rfd/0123", "rfd/0123"), None);
+    }
 }
