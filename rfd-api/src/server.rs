@@ -26,6 +26,7 @@ use crate::{
             view_rfd_revision_meta, view_rfd_revision_pdf,
         },
         webhook::github_webhook,
+        DEFAULT_REQUEST_BODY_MAX_BYTES,
     },
     permissions::RfdPermission,
 };
@@ -149,7 +150,7 @@ pub fn server(
 ) -> Result<ServerBuilder<RfdContext>, Box<dyn Error + Send + Sync>> {
     let config_dropshot = ConfigDropshot {
         bind_address: config.server_address,
-        default_request_body_max_bytes: 1024 * 1024,
+        default_request_body_max_bytes: DEFAULT_REQUEST_BODY_MAX_BYTES,
         ..Default::default()
     };
 
