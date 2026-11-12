@@ -8,9 +8,6 @@ use std::borrow::Cow;
 use super::RfdDocument;
 use crate::SingleLineString;
 
-/// Extra bytes reference resolution may add beyond 2x the input size
-const MAX_REFERENCE_EXPANSION_ALLOWANCE: usize = 64 * 1024;
-
 /// The text data of an Asciidoc RFD
 #[derive(Debug, Clone)]
 pub struct RfdAsciidoc<'a> {
@@ -31,6 +28,7 @@ impl<'a> RfdAsciidoc<'a> {
     }
 
     /// Resolve attribute references within the document. Currently only `{authors}` is supported.
+    /// Only the first reference is expanded, which bounds growth to the size of one value.
     fn resolve_references(content: &str) -> String {
         let pattern = regex!(r"(?<b>[^\\]?)(\{authors\})");
 
@@ -42,26 +40,9 @@ impl<'a> RfdAsciidoc<'a> {
                 Self::attr("authors", content).unwrap_or_default()
             );
 
-            // Bound expansion size; leave oversized documents unresolved
-            let max_len = content
-                .len()
-                .saturating_mul(2)
-                .saturating_add(MAX_REFERENCE_EXPANSION_ALLOWANCE);
-            let expanded_len = pattern
-                .find_iter(content)
-                .try_fold(content.len(), |len, _| len.checked_add(replacement.len()));
-
-            if !expanded_len.is_some_and(|len| len <= max_len) {
-                tracing::warn!(
-                    content_len = content.len(),
-                    "Skipping reference resolution that would exceed the maximum document size"
-                );
-                return content.to_string();
-            }
-
             // NoExpand: don't treat `$` as regex capture reference ($1, etc)
             pattern
-                .replace_all(content, NoExpand(&replacement))
+                .replacen(content, 1, NoExpand(&replacement))
                 .to_string()
         } else {
             content.to_string()
@@ -1074,14 +1055,14 @@ include::sub_doc2.adoc[]"#;
     }
 
     #[test]
-    fn test_skip_unbounded_reference_expansion() {
+    fn test_only_first_reference_expanded() {
         let authors = "a".repeat(100_000);
         let references = "{authors}\n".repeat(10_000);
         let content = format!(":authors: {}\n\n= RFD 123 Place\n\n{}", authors, references);
 
         let rfd = RfdAsciidoc::new(content.as_str());
-        assert!(rfd.resolved.len() <= 2 * content.len() + MAX_REFERENCE_EXPANSION_ALLOWANCE);
-        assert!(rfd.resolved.contains("{authors}"));
+        assert!(rfd.resolved.len() <= content.len() + authors.len());
+        assert_eq!(rfd.resolved.matches("{authors}").count(), 10_000 - 1);
     }
 
     #[test]
