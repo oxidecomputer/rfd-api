@@ -19,17 +19,14 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use trace_request::trace_request;
 use tracing::instrument;
-use v_api::{
-    response::{forbidden, not_found},
-    ApiContext,
-};
+use v_api::{response::not_found, ApiContext};
 use v_model::{permissions::Caller, storage::ListPagination};
 
 use crate::{
     caller::CallerExt,
     context::{
-        RfdContext, RfdRevisionIdentifier, RfdRevisionMeta, RfdRevisionMetadataChange, RfdWithPdf,
-        RfdWithRaw, RfdWithoutContent,
+        RfdAttrUpdate, RfdContext, RfdRevisionIdentifier, RfdRevisionMeta,
+        RfdRevisionMetadataChange, RfdWithPdf, RfdWithRaw, RfdWithoutContent,
     },
     endpoints::UNLIMITED,
     permissions::RfdPermission,
@@ -752,51 +749,20 @@ async fn set_rfd_attr_op(
     body: &RfdAttrValue,
 ) -> Result<HttpResponseAccepted<RfdAttr>, HttpError> {
     if let Ok(rfd_number) = number.parse::<i32>() {
-        if !caller.any(
-            [
-                RfdPermission::UpdateRfd(rfd_number),
-                RfdPermission::UpdateRfdsAll,
-            ]
-            .iter(),
-        ) {
-            return Err(forbidden());
-        }
-
-        // Get the latest revision
-        let revision = ctx.view_rfd_revision(caller, rfd_number, None).await?;
-
-        // TODO: Get rid of these clones
-        let mut content = match revision.content_format {
-            ContentFormat::Asciidoc => RfdContent::Asciidoc(RfdAsciidoc::new(revision.content)),
-            ContentFormat::Markdown => RfdContent::Markdown(RfdMarkdown::new(revision.content)),
-        };
-
-        // Update the requested attribute
-        match &attr {
-            RfdAttrName::Discussion => content.update_discussion(&body.value),
-            RfdAttrName::Labels => content.update_labels(&body.value),
+        let update = match &attr {
+            RfdAttrName::Discussion => RfdAttrUpdate::Discussion(body.value.clone()),
+            RfdAttrName::Labels => RfdAttrUpdate::Labels(body.value.clone()),
             RfdAttrName::State => {
-                let state: RfdState = body.value.as_str().try_into().map_err(|err| {
+                RfdAttrUpdate::State(body.value.as_str().try_into().map_err(|err| {
                     tracing::info!(?err, "Invalid state was supplied");
                     HttpError::for_bad_request(None, "Invalid RFD state".to_string())
-                })?;
-                content.update_state(&state.into())
+                })?)
             }
         };
 
-        tracing::info!("Updated attribute in RFD document");
-
-        // Persist the data back to GitHub. Note that we do not store this back to the database.
-        // We rely on GitHub as the source of truth and revisions are required to tbe linked to
-        // commits
-        ctx.update_rfd_document(
-            caller,
-            rfd_number,
-            content.raw(),
-            body.message.as_deref(),
-            None,
-        )
-        .await?;
+        let content = ctx
+            .update_rfd_attr(caller, rfd_number, update, body.message.as_deref())
+            .await?;
 
         extract_attr(&attr, &content).map(HttpResponseAccepted)
     } else {
