@@ -965,7 +965,7 @@ export class Api {
    * Pulled from info.version in the OpenAPI schema. Sent in the
    * `api-version` header on all requests.
    */
-  apiVersion = '0.15.9'
+  apiVersion = '0.15.10'
 
   constructor({ host = '', baseParams = {}, token }: ApiConfig = {}) {
     this.host = host
