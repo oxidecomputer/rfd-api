@@ -12,7 +12,7 @@ use octorust::{
 use partial_struct::partial;
 use rfd_data::{
     content::{RfdContent, RfdDocument, RfdTemplate, TemplateError},
-    RfdNumber,
+    RfdNumber, RfdState, SingleLineString,
 };
 use rfd_github::{GitHubError, GitHubNewRfdNumber, GitHubRfdRepo};
 use rfd_model::{
@@ -79,6 +79,14 @@ pub struct SearchContext {
 pub struct ContentContext {
     pub placeholder_template: RfdTemplate,
     pub new_template: RfdTemplate,
+}
+
+/// A single attribute change to apply to the header of a RFD document
+#[derive(Debug)]
+pub enum RfdAttrUpdate {
+    Discussion(SingleLineString),
+    Labels(SingleLineString),
+    State(RfdState),
 }
 
 #[derive(Debug, Error)]
@@ -686,6 +694,50 @@ impl RfdContext {
                 branch_name,
             )
             .await
+        } else {
+            resource_restricted()
+        }
+    }
+
+    #[allow(clippy::result_large_err)]
+    #[instrument(skip(self, caller))]
+    pub async fn update_rfd_attr(
+        &self,
+        caller: &Caller<RfdPermission>,
+        rfd_number: i32,
+        update: RfdAttrUpdate,
+        message: Option<&str>,
+    ) -> ResourceResult<RfdContent<'static>, UpdateRfdContentError> {
+        if caller.any(
+            [
+                RfdPermission::UpdateRfd(rfd_number),
+                RfdPermission::UpdateRfdsAll,
+            ]
+            .iter(),
+        ) {
+            let latest_revision = self
+                .get_latest_rfd_revision(caller, rfd_number)
+                .await
+                .inner_err_into()?;
+
+            let sha = latest_revision.commit.clone();
+            let mut content: RfdContent = latest_revision.into();
+
+            match update {
+                RfdAttrUpdate::Discussion(value) => content.update_discussion(&value),
+                RfdAttrUpdate::Labels(value) => content.update_labels(&value),
+                RfdAttrUpdate::State(state) => content.update_state(&state.into()),
+            };
+
+            tracing::info!("Updated attribute in RFD document");
+
+            // Persist the data back to GitHub. Note that we do not store this back to the database.
+            // We rely on GitHub as the source of truth and revisions are required to be linked to
+            // commits
+            self.commit_rfd_document(caller, rfd_number.into(), content.raw(), message, sha, None)
+                .await?;
+
+            Ok(content)
         } else {
             resource_restricted()
         }

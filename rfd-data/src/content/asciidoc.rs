@@ -2,7 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-use regex::{regex, Regex};
+use regex::{regex, NoExpand, Regex};
 use std::borrow::Cow;
 
 use super::RfdDocument;
@@ -28,20 +28,21 @@ impl<'a> RfdAsciidoc<'a> {
     }
 
     /// Resolve attribute references within the document. Currently only `{authors}` is supported.
+    /// Only the first reference is expanded, which bounds growth to the size of one value.
     fn resolve_references(content: &str) -> String {
         let pattern = regex!(r"(?<b>[^\\]?)(\{authors\})");
 
         if let Some(captures) = pattern.captures(content) {
             let prefix = captures.get(1).map(|c| c.as_str()).unwrap_or_default();
+            let replacement = format!(
+                "{}{}",
+                prefix,
+                Self::attr("authors", content).unwrap_or_default()
+            );
+
+            // NoExpand: don't treat `$` as regex capture reference ($1, etc)
             pattern
-                .replace_all(
-                    content,
-                    format!(
-                        "{}{}",
-                        prefix,
-                        Self::attr("authors", content).unwrap_or_default()
-                    ),
-                )
+                .replacen(content, 1, NoExpand(&replacement))
                 .to_string()
         } else {
             content.to_string()
@@ -1051,5 +1052,12 @@ include::sub_doc2.adoc[]"#;
             expected,
             include.perform_replacement(original, replacement_content)
         );
+    }
+
+    #[test]
+    fn test_reference_value_inserted_literally() {
+        let content = ":authors: Cost $1 ${b} $$\n\n= RFD 123 Place\n\nBy {authors}\n";
+        let rfd = RfdAsciidoc::new(content);
+        assert!(rfd.resolved.contains("By Cost $1 ${b} $$\n"));
     }
 }
