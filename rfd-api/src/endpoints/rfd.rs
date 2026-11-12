@@ -28,7 +28,7 @@ use crate::{
         RfdAttrUpdate, RfdContext, RfdRevisionIdentifier, RfdRevisionMeta,
         RfdRevisionMetadataChange, RfdWithPdf, RfdWithRaw, RfdWithoutContent,
     },
-    endpoints::UNLIMITED,
+    endpoints::{LARGE_REQUEST_BODY_MAX_BYTES, UNLIMITED},
     permissions::RfdPermission,
     search::{MeiliSearchResult, SearchRequest},
     util::response::{client_error, internal_error, not_implemented, unauthorized},
@@ -631,6 +631,7 @@ pub struct RfdUpdateBody {
 #[endpoint {
     method = POST,
     path = "/rfd/{number}/raw",
+    request_body_max_bytes = LARGE_REQUEST_BODY_MAX_BYTES,
 }]
 pub async fn set_rfd_document(
     rqctx: RequestContext<RfdContext>,
@@ -679,6 +680,7 @@ pub struct RfdUpdateContentBody {
 #[endpoint {
     method = POST,
     path = "/rfd/{number}/content",
+    request_body_max_bytes = LARGE_REQUEST_BODY_MAX_BYTES,
 }]
 pub async fn set_rfd_content(
     rqctx: RequestContext<RfdContext>,

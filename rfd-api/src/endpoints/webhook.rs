@@ -18,11 +18,12 @@ use serde::{Deserialize, Serialize};
 use tracing::instrument;
 use uuid::Uuid;
 
-use crate::{context::RfdContext, error::ApiError};
+use crate::{context::RfdContext, endpoints::WEBHOOK_REQUEST_BODY_MAX_BYTES, error::ApiError};
 
 #[endpoint {
     method = POST,
     path = "/github",
+    request_body_max_bytes = WEBHOOK_REQUEST_BODY_MAX_BYTES,
     tags = ["hidden"],
 }]
 #[instrument(
