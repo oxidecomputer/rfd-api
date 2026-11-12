@@ -12,6 +12,8 @@ pub use template::{RenderableRfdTemplate, RfdTemplate, TemplateError};
 
 use rfd_model::{schema_ext::ContentFormat, RfdRevision};
 
+use crate::SingleLineString;
+
 pub trait RfdDocument {
     /// Extract the title from the internal content
     fn get_title(&self) -> Option<&str>;
@@ -20,13 +22,13 @@ pub trait RfdDocument {
     fn get_state(&self) -> Option<&str>;
 
     // Update the state value stored within the document or add it if it does not exist
-    fn update_state(&mut self, value: &str) -> &mut Self;
+    fn update_state(&mut self, value: &SingleLineString) -> &mut Self;
 
     /// Get the discussion link stored within the document
     fn get_discussion(&self) -> Option<&str>;
 
     // Update the discussion link stored within the document or add it if it does not exist
-    fn update_discussion(&mut self, value: &str) -> &mut Self;
+    fn update_discussion(&mut self, value: &SingleLineString) -> &mut Self;
 
     /// Get the authors line stored within the document. The returned string may contain multiple
     /// names
@@ -36,7 +38,7 @@ pub trait RfdDocument {
     fn get_labels(&self) -> Option<&str>;
 
     // Update the labels stored within the document or add them if they do not exist
-    fn update_labels(&mut self, value: &str) -> &mut Self;
+    fn update_labels(&mut self, value: &SingleLineString) -> &mut Self;
 
     // Get a reference to the contents of the RFD header
     fn header(&self) -> Option<&str>;
@@ -84,7 +86,7 @@ impl<'a> RfdDocument for RfdContent<'a> {
         }
     }
 
-    fn update_state(&mut self, value: &str) -> &mut Self {
+    fn update_state(&mut self, value: &SingleLineString) -> &mut Self {
         match self {
             Self::Asciidoc(inner) => {
                 inner.update_state(value);
@@ -103,7 +105,7 @@ impl<'a> RfdDocument for RfdContent<'a> {
         }
     }
 
-    fn update_discussion(&mut self, value: &str) -> &mut Self {
+    fn update_discussion(&mut self, value: &SingleLineString) -> &mut Self {
         match self {
             Self::Asciidoc(inner) => {
                 inner.update_discussion(value);
@@ -129,7 +131,7 @@ impl<'a> RfdDocument for RfdContent<'a> {
         }
     }
 
-    fn update_labels(&mut self, value: &str) -> &mut Self {
+    fn update_labels(&mut self, value: &SingleLineString) -> &mut Self {
         match self {
             Self::Asciidoc(inner) => {
                 inner.update_labels(value);

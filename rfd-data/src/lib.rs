@@ -4,7 +4,10 @@
 
 use std::fmt::Display;
 
-use schemars::JsonSchema;
+use schemars::{
+    schema::{InstanceType, Schema, SchemaObject, StringValidation},
+    JsonSchema,
+};
 use serde::{Deserialize, Serialize};
 
 pub mod content;
@@ -98,5 +101,87 @@ impl<'a> TryFrom<&'a str> for RfdState {
             "published" => Ok(RfdState::Published),
             _ => Err(InvalidRfdState(value)),
         }
+    }
+}
+
+/// A string that contains no line breaks (`\r` or `\n`). Fails to deserialize otherwise.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
+#[serde(try_from = "String", into = "String")]
+pub struct SingleLineString(String);
+
+/// Inlined as a string with a pattern so that generated clients validate it too
+impl JsonSchema for SingleLineString {
+    fn schema_name() -> String {
+        "SingleLineString".to_string()
+    }
+
+    fn is_referenceable() -> bool {
+        false
+    }
+
+    fn json_schema(_: &mut schemars::r#gen::SchemaGenerator) -> Schema {
+        SchemaObject {
+            instance_type: Some(InstanceType::String.into()),
+            string: Some(Box::new(StringValidation {
+                pattern: Some(r"^[^\r\n]*$".to_string()),
+                ..Default::default()
+            })),
+            ..Default::default()
+        }
+        .into()
+    }
+}
+
+impl SingleLineString {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl TryFrom<String> for SingleLineString {
+    type Error = &'static str;
+
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        if value.contains(['\r', '\n']) {
+            Err("value must not contain line breaks")
+        } else {
+            Ok(Self(value))
+        }
+    }
+}
+
+impl From<SingleLineString> for String {
+    fn from(value: SingleLineString) -> Self {
+        value.0
+    }
+}
+
+impl From<RfdState> for SingleLineString {
+    fn from(state: RfdState) -> Self {
+        Self(state.to_string())
+    }
+}
+
+impl std::ops::Deref for SingleLineString {
+    type Target = str;
+
+    fn deref(&self) -> &str {
+        &self.0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::SingleLineString;
+
+    #[test]
+    fn test_single_line_string_rejects_line_breaks() {
+        for value in ["a\nb", "a\r\nb", "a\rb", "\n"] {
+            assert!(SingleLineString::try_from(value.to_string()).is_err());
+            assert!(serde_json::from_value::<SingleLineString>(serde_json::json!(value)).is_err());
+        }
+
+        let parsed: SingleLineString = serde_json::from_value(serde_json::json!("ok")).unwrap();
+        assert_eq!(parsed.as_str(), "ok");
     }
 }

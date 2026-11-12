@@ -15,7 +15,7 @@ use base64::DecodeError;
 use octorust::Client;
 use rfd_data::{
     content::{RfdAsciidoc, RfdContent, RfdDocument, RfdMarkdown},
-    RfdNumber,
+    RfdNumber, SingleLineString,
 };
 use rfd_github::{GitHubError, GitHubRfdLocation};
 use rfd_model::schema_ext::ContentFormat;
@@ -223,7 +223,7 @@ impl<'a> RfdDocument for RenderableRfd<'a> {
         RfdDocument::get_state(&self.content)
     }
 
-    fn update_state(&mut self, value: &str) -> &mut Self {
+    fn update_state(&mut self, value: &SingleLineString) -> &mut Self {
         RfdDocument::update_state(&mut self.content, value);
         self
     }
@@ -232,7 +232,7 @@ impl<'a> RfdDocument for RenderableRfd<'a> {
         RfdDocument::get_discussion(&self.content)
     }
 
-    fn update_discussion(&mut self, value: &str) -> &mut Self {
+    fn update_discussion(&mut self, value: &SingleLineString) -> &mut Self {
         RfdDocument::update_discussion(&mut self.content, value);
         self
     }
@@ -245,7 +245,7 @@ impl<'a> RfdDocument for RenderableRfd<'a> {
         RfdDocument::get_labels(&self.content)
     }
 
-    fn update_labels(&mut self, value: &str) -> &mut Self {
+    fn update_labels(&mut self, value: &SingleLineString) -> &mut Self {
         RfdDocument::update_labels(&mut self.content, value);
         self
     }

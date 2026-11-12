@@ -6,6 +6,7 @@ use regex::{regex, Regex};
 use std::borrow::Cow;
 
 use super::RfdDocument;
+use crate::SingleLineString;
 
 #[derive(Debug, Clone)]
 pub struct RfdMarkdown<'a> {
@@ -95,7 +96,7 @@ impl<'a> RfdDocument for RfdMarkdown<'a> {
         self.attr("state")
     }
 
-    fn update_state(&mut self, value: &str) -> &mut Self {
+    fn update_state(&mut self, value: &SingleLineString) -> &mut Self {
         self.set_attr("state", value);
         self
     }
@@ -104,7 +105,7 @@ impl<'a> RfdDocument for RfdMarkdown<'a> {
         self.attr("discussion")
     }
 
-    fn update_discussion(&mut self, value: &str) -> &mut Self {
+    fn update_discussion(&mut self, value: &SingleLineString) -> &mut Self {
         self.set_attr("discussion", value);
         self
     }
@@ -117,7 +118,7 @@ impl<'a> RfdDocument for RfdMarkdown<'a> {
         self.attr("labels")
     }
 
-    fn update_labels(&mut self, value: &str) -> &mut Self {
+    fn update_labels(&mut self, value: &SingleLineString) -> &mut Self {
         self.set_attr("labels", value);
         self
     }
@@ -159,6 +160,10 @@ impl<'a> RfdDocument for RfdMarkdown<'a> {
 #[cfg(test)]
 mod tests {
     use crate::content::{markdown::RfdMarkdown, RfdDocument};
+
+    fn line(value: &str) -> crate::SingleLineString {
+        value.to_string().try_into().unwrap()
+    }
 
     // Read authors tests
 
@@ -247,7 +252,7 @@ dsfsdf
 sdf
 authors: nope"#;
         let mut rfd = RfdMarkdown::new(content);
-        rfd.update_discussion(link);
+        rfd.update_discussion(&line(link));
 
         let expected = r#"sdfsdf
 sdfsdf
@@ -271,7 +276,7 @@ dsfsdf
 sdf
 authors: nope"#;
         let mut rfd = RfdMarkdown::new(content);
-        rfd.update_state(state);
+        rfd.update_state(&line(state));
 
         let expected = r#"sdfsdf
 sdfsdf
