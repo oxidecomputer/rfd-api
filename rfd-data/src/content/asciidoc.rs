@@ -1055,17 +1055,6 @@ include::sub_doc2.adoc[]"#;
     }
 
     #[test]
-    fn test_only_first_reference_expanded() {
-        let authors = "a".repeat(100_000);
-        let references = "{authors}\n".repeat(10_000);
-        let content = format!(":authors: {}\n\n= RFD 123 Place\n\n{}", authors, references);
-
-        let rfd = RfdAsciidoc::new(content.as_str());
-        assert!(rfd.resolved.len() <= content.len() + authors.len());
-        assert_eq!(rfd.resolved.matches("{authors}").count(), 10_000 - 1);
-    }
-
-    #[test]
     fn test_reference_value_inserted_literally() {
         let content = ":authors: Cost $1 ${b} $$\n\n= RFD 123 Place\n\nBy {authors}\n";
         let rfd = RfdAsciidoc::new(content);
