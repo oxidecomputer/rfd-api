@@ -4441,7 +4441,8 @@
           },
           "value": {
             "description": "Full value to set this attribute to in the existing RFD contents",
-            "type": "string"
+            "type": "string",
+            "pattern": "^[^\\r\\n]*$"
           }
         },
         "required": [

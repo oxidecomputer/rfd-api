@@ -7,7 +7,7 @@ use std::sync::Mutex;
 use chrono::{DateTime, Utc};
 use newtype_uuid::TypedUuid;
 use octorust::{Client, ClientError};
-use rfd_data::{content::RfdDocument, RfdNumber};
+use rfd_data::{content::RfdDocument, RfdNumber, RfdState, SingleLineString};
 use rfd_github::{GitHubError, GitHubRfdReadme, GitHubRfdUpdate};
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
@@ -132,15 +132,20 @@ impl PersistedRfd {
     }
 
     pub fn update_discussion(&mut self, new_discussion_url: impl ToString) {
-        let new_discussion_url = new_discussion_url.to_string();
+        match SingleLineString::try_from(new_discussion_url.to_string()) {
+            Ok(new_discussion_url) => {
+                let mut content = self.content();
+                content.update_discussion(&new_discussion_url);
 
-        let mut content = self.content();
-        content.update_discussion(&new_discussion_url);
+                self.revision.content = content.into_inner_content();
+                self.revision.discussion = Some(new_discussion_url.into());
 
-        self.revision.content = content.into_inner_content();
-        self.revision.discussion = Some(new_discussion_url);
-
-        *self.needs_update.lock().unwrap() = true;
+                *self.needs_update.lock().unwrap() = true;
+            }
+            Err(err) => {
+                tracing::warn!(?err, "Refusing to set an invalid discussion url");
+            }
+        }
     }
 
     pub fn is_state(&self, state: &str) -> bool {
@@ -151,14 +156,14 @@ impl PersistedRfd {
             .unwrap_or(false)
     }
 
-    pub fn update_state(&mut self, new_state: impl ToString) {
-        let new_state = new_state.to_string();
+    pub fn update_state(&mut self, new_state: RfdState) {
+        let new_state = SingleLineString::from(new_state);
 
         let mut content = self.content();
         content.update_state(&new_state);
 
         self.revision.content = content.into_inner_content();
-        self.revision.state = Some(new_state);
+        self.revision.state = Some(new_state.into());
 
         *self.needs_update.lock().unwrap() = true;
     }

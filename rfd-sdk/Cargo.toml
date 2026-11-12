@@ -8,6 +8,7 @@ edition = { workspace = true }
 [dependencies]
 chrono = { workspace = true, features = ["serde"] }
 progenitor-client = { workspace = true }
+regress = { workspace = true }
 schemars = { workspace = true, features = ["chrono", "uuid1"] }
 serde = { workspace = true }
 serde_json = { workspace = true }

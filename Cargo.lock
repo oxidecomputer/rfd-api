@@ -3274,6 +3274,7 @@ dependencies = [
  "rfd-model",
  "schemars 0.8.22",
  "serde",
+ "serde_json",
  "thiserror 2.0.21",
  "tracing",
 ]
@@ -3363,6 +3364,7 @@ version = "0.15.9"
 dependencies = [
  "chrono",
  "progenitor-client",
+ "regress",
  "reqwest 0.13.5",
  "schemars 0.8.22",
  "serde",

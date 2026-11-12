@@ -666,7 +666,7 @@ export const RfdAttr = z.preprocess(
 
 export const RfdAttrValue = z.preprocess(
   processResponseBody,
-  z.object({ 'message': z.string().nullable().optional(), 'value': z.string() }),
+  z.object({ 'message': z.string().nullable().optional(), 'value': z.string().regex(/^[^\r\n]*$/) }),
 )
 
 export const RfdPdfId = z.preprocess(processResponseBody, z.record(z.string(), z.unknown()))

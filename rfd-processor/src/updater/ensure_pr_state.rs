@@ -3,6 +3,7 @@
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
 use async_trait::async_trait;
+use rfd_data::RfdState;
 use std::cmp::Ordering;
 use tracing::instrument;
 
@@ -58,7 +59,7 @@ impl RfdUpdateAction for EnsureRfdWithPullRequestIsInValidState {
                     && !new.is_state("ideation")
                     && !new.is_state("abandoned")
                 {
-                    new.update_state("discussion");
+                    new.update_state(RfdState::Discussion);
                     requires_source_commit = true;
                 } else {
                     tracing::debug!("RFD is in a valid state and does not need to be updated");

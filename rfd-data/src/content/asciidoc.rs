@@ -6,6 +6,7 @@ use regex::{regex, Regex};
 use std::borrow::Cow;
 
 use super::RfdDocument;
+use crate::SingleLineString;
 
 /// The text data of an Asciidoc RFD
 #[derive(Debug, Clone)]
@@ -189,7 +190,7 @@ impl<'a> RfdDocument for RfdAsciidoc<'a> {
         Self::attr("state", &self.resolved)
     }
 
-    fn update_state(&mut self, value: &str) -> &mut Self {
+    fn update_state(&mut self, value: &SingleLineString) -> &mut Self {
         self.set_raw(&Self::set_attr(&self.content, "state", value.trim()))
     }
 
@@ -202,7 +203,7 @@ impl<'a> RfdDocument for RfdAsciidoc<'a> {
         }
     }
 
-    fn update_discussion(&mut self, value: &str) -> &mut Self {
+    fn update_discussion(&mut self, value: &SingleLineString) -> &mut Self {
         self.set_raw(&Self::set_attr(&self.content, "discussion", value.trim()))
     }
 
@@ -214,7 +215,7 @@ impl<'a> RfdDocument for RfdAsciidoc<'a> {
         Self::attr("labels", &self.resolved)
     }
 
-    fn update_labels(&mut self, value: &str) -> &mut Self {
+    fn update_labels(&mut self, value: &SingleLineString) -> &mut Self {
         self.set_raw(&Self::set_attr(&self.content, "labels", value.trim()))
     }
 
@@ -428,6 +429,10 @@ impl RfdAuthor {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn line(value: &str) -> crate::SingleLineString {
+        value.to_string().try_into().unwrap()
+    }
 
     // RFD Author tests
 
@@ -709,7 +714,7 @@ sdf
 :discussion: nope"#;
 
         let mut rfd = RfdAsciidoc::new(content);
-        rfd.update_discussion(link);
+        rfd.update_discussion(&line(link));
         let expected = r#"sdfsdf
 = sdfgsd
 discussion: fgsdfg
@@ -733,7 +738,7 @@ sdf
 :discussion: nope"#;
 
         let mut rfd = RfdAsciidoc::new(content);
-        rfd.update_discussion(link);
+        rfd.update_discussion(&line(link));
         let expected = r#"sdfsdf
 = sdfgsd
 discussion: fgsdfg
@@ -757,7 +762,7 @@ dsfsdf
 sdf
 :state: nope"#;
         let mut rfd = RfdAsciidoc::new(content);
-        rfd.update_state(state);
+        rfd.update_state(&line(state));
         let expected = r#"sdfsdf
 = sdfgsd
 state: fgsdfg
@@ -779,7 +784,7 @@ dsfsdf
 sdf
 :state: nope"#;
         let mut rfd = RfdAsciidoc::new(content);
-        rfd.update_state(state);
+        rfd.update_state(&line(state));
         let expected = r#"sdfsdf
 = sdfgsd
 state: fgsdfg
@@ -921,7 +926,7 @@ in velit.
     #[test]
     fn test_update_asciidoc_labels() {
         let mut rfd = RfdAsciidoc::new(Cow::Borrowed(test_rfd_content()));
-        rfd.update_labels("newlabel1, newlabel2");
+        rfd.update_labels(&line("newlabel1, newlabel2"));
         let labels = rfd.get_labels().unwrap();
         let expected = "newlabel1, newlabel2".to_string();
         assert_eq!(expected, labels);

@@ -1345,7 +1345,7 @@ impl<T: CliConfig> Cli<T> {
             .arg(
                 ::clap::Arg::new("value")
                     .long("value")
-                    .value_parser(::clap::value_parser!(::std::string::String))
+                    .value_parser(::clap::value_parser!(types::RfdAttrValueValue))
                     .required_unless_present("json-body")
                     .help("Full value to set this attribute to in the existing RFD contents"),
             )
@@ -3437,7 +3437,7 @@ impl<T: CliConfig> Cli<T> {
             request = request.number(value.clone());
         }
 
-        if let Some(value) = matches.get_one::<::std::string::String>("value") {
+        if let Some(value) = matches.get_one::<types::RfdAttrValueValue>("value") {
             request = request.body_map(|body| body.value(value.clone()))
         }
 

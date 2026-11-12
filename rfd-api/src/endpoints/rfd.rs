@@ -9,7 +9,7 @@ use dropshot::{
 use newtype_uuid::TypedUuid;
 use rfd_data::{
     content::{RfdAsciidoc, RfdContent, RfdDocument, RfdMarkdown},
-    RfdState,
+    RfdState, SingleLineString,
 };
 use rfd_model::{
     schema_ext::{ContentFormat, Visibility},
@@ -717,7 +717,7 @@ async fn set_rfd_content_op(
 #[derive(Debug, Deserialize, Serialize, JsonSchema)]
 pub struct RfdAttrValue {
     /// Full value to set this attribute to in the existing RFD contents
-    value: String,
+    value: SingleLineString,
     /// Optional Git commit message to send with this update (recommended)
     message: Option<String>,
 }
@@ -767,7 +767,7 @@ async fn set_rfd_attr_op(
                     tracing::info!(?err, "Invalid state was supplied");
                     HttpError::for_bad_request(None, "Invalid RFD state".to_string())
                 })?;
-                content.update_state(&state.to_string())
+                content.update_state(&state.into())
             }
         };
 
@@ -814,7 +814,7 @@ pub async fn discuss_rfd(
         path.number,
         RfdAttrName::State,
         &RfdAttrValue {
-            value: RfdState::Discussion.to_string(),
+            value: RfdState::Discussion.into(),
             message: Some("Move to discussion".to_string()),
         },
     )
@@ -841,7 +841,7 @@ pub async fn publish_rfd(
         path.number,
         RfdAttrName::State,
         &RfdAttrValue {
-            value: RfdState::Published.to_string(),
+            value: RfdState::Published.into(),
             message: Some("Publish".to_string()),
         },
     )

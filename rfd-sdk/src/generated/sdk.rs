@@ -1704,12 +1704,80 @@ pub mod types {
         #[serde(skip_serializing_if = "::std::option::Option::is_none")]
         pub message: ::std::option::Option<::std::string::String>,
         /// Full value to set this attribute to in the existing RFD contents
-        pub value: ::std::string::String,
+        pub value: RfdAttrValueValue,
     }
 
     impl RfdAttrValue {
         pub fn builder() -> builder::RfdAttrValue {
             Default::default()
+        }
+    }
+
+    /// Full value to set this attribute to in the existing RFD contents
+    #[derive(
+        :: serde :: Serialize,
+        Clone,
+        Debug,
+        Eq,
+        Hash,
+        Ord,
+        PartialEq,
+        PartialOrd,
+        schemars :: JsonSchema,
+    )]
+    #[serde(transparent)]
+    pub struct RfdAttrValueValue(::std::string::String);
+    impl ::std::ops::Deref for RfdAttrValueValue {
+        type Target = ::std::string::String;
+        fn deref(&self) -> &::std::string::String {
+            &self.0
+        }
+    }
+
+    impl ::std::convert::From<RfdAttrValueValue> for ::std::string::String {
+        fn from(value: RfdAttrValueValue) -> Self {
+            value.0
+        }
+    }
+
+    impl ::std::str::FromStr for RfdAttrValueValue {
+        type Err = self::error::ConversionError;
+        fn from_str(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            static PATTERN: ::std::sync::LazyLock<::regress::Regex> =
+                ::std::sync::LazyLock::new(|| ::regress::Regex::new("^[^\\r\\n]*$").unwrap());
+            if PATTERN.find(value).is_none() {
+                return Err("doesn't match pattern \"^[^\\r\\n]*$\"".into());
+            }
+            Ok(Self(value.to_string()))
+        }
+    }
+
+    impl ::std::convert::TryFrom<&str> for RfdAttrValueValue {
+        type Error = self::error::ConversionError;
+        fn try_from(value: &str) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl ::std::convert::TryFrom<::std::string::String> for RfdAttrValueValue {
+        type Error = self::error::ConversionError;
+        fn try_from(
+            value: ::std::string::String,
+        ) -> ::std::result::Result<Self, self::error::ConversionError> {
+            value.parse()
+        }
+    }
+
+    impl<'de> ::serde::Deserialize<'de> for RfdAttrValueValue {
+        fn deserialize<D>(deserializer: D) -> ::std::result::Result<Self, D::Error>
+        where
+            D: ::serde::Deserializer<'de>,
+        {
+            ::std::string::String::deserialize(deserializer)?
+                .parse()
+                .map_err(|e: self::error::ConversionError| {
+                    <D::Error as ::serde::de::Error>::custom(e.to_string())
+                })
         }
     }
 
@@ -8196,7 +8264,7 @@ pub mod types {
                 ::std::option::Option<::std::string::String>,
                 ::std::string::String,
             >,
-            value: ::std::result::Result<::std::string::String, ::std::string::String>,
+            value: ::std::result::Result<super::RfdAttrValueValue, ::std::string::String>,
         }
 
         impl ::std::default::Default for RfdAttrValue {
@@ -8221,7 +8289,7 @@ pub mod types {
             }
             pub fn value<T>(mut self, value: T) -> Self
             where
-                T: ::std::convert::TryInto<::std::string::String>,
+                T: ::std::convert::TryInto<super::RfdAttrValueValue>,
                 T::Error: ::std::fmt::Display,
             {
                 self.value = value
