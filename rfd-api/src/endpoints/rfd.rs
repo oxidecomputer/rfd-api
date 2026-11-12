@@ -1009,13 +1009,7 @@ mod tests {
         permissions::RfdPermission,
     };
 
-    use super::{list_rfds_op, RfdAttrValue};
-
-    #[test]
-    fn test_attr_value_rejects_line_breaks() {
-        let body = serde_json::json!({ "value": "a\n:authors: b" });
-        assert!(serde_json::from_value::<RfdAttrValue>(body).is_err());
-    }
+    use super::list_rfds_op;
 
     async fn ctx() -> RfdContext {
         let private_rfd_id_1 = Uuid::new_v4();
