@@ -26,11 +26,11 @@ base64 = "0.23"
 chrono = "0.4.45"
 clap = { version = "4.6.7", features = ["derive", "string", "env"] }
 config = { version = "0.15.27", features = ["toml"] }
-diesel = { version = "2.3.14", features = ["postgres"] }
-diesel_migrations = { version = "2.3.2" }
+diesel = { version = "2.4", features = ["postgres"] }
+diesel_migrations = { version = "2.4" }
 dirs = "7.0.0"
-dropshot = "0.17.1"
-dropshot-verified-body = { git = "https://github.com/oxidecomputer/dropshot-verified-body", tag = "v0.2.1" }
+dropshot = "0.18"
+dropshot-verified-body = { git = "https://github.com/oxidecomputer/dropshot-verified-body", tag = "v0.2.2" }
 futures = "0.3.34"
 google-drive3 = { version = "7.0.0", default-features = false, features = ["yup-oauth2-service-account", "aws-lc-rs"] }
 google-storage1 = "7.0.0"
@@ -47,8 +47,8 @@ newline-converter = "0.3.0"
 newtype-uuid = { version = "1.4.0", features = ["schemars08", "serde", "v4"] }
 octorust = { git = "https://github.com/oxidecomputer/third-party-api-clients", tag = "v0.11.0-rc.2" }
 partial-struct = { git = "https://github.com/oxidecomputer/partial-struct" }
-progenitor = { version = "0.15" }
-progenitor-client = { version = "0.15" }
+progenitor = { version = "0.16.0" }
+progenitor-client = { version = "0.16.0" }
 regex = "1.13.1"
 regress = "0.12"
 reqwest = { version = "0.13", default-features = false, features = ["json", "stream", "rustls"] }
@@ -76,12 +76,12 @@ tracing-appender = "0.2.5"
 tracing-slog = { git = "https://github.com/oxidecomputer/tracing-slog", default-features = false }
 tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
 uuid = { version = "1.29.0", features = ["serde", "v4", "v5"] }
-v-api = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.5.14", default-features = false }
+v-api = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.6.1", default-features = false }
 # Default features include `sagas`, which pulls in a ratatui TUI stack that no
 # workspace crate uses.
-v-cli-sdk = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.5.14", default-features = false }
-v-model = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.5.14" }
-v-api-permission-derive = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.5.14" }
+v-cli-sdk = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.6.1", default-features = false }
+v-model = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.6.1" }
+v-api-permission-derive = { git = "https://github.com/oxidecomputer/v-api", tag = "v0.6.1" }
 yup-oauth2 = { version = "12.1.2", default-features = false, features = ["hyper-rustls", "service-account", "aws-lc-rs"] }
 
 # Config for 'cargo dist'
