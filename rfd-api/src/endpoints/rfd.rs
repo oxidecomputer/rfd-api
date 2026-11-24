@@ -19,7 +19,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use trace_request::trace_request;
 use tracing::instrument;
-use v_api::{response::not_found, ApiContext};
+use v_api::{response::not_found, ApiContext, UnauthenticatedCaller};
 use v_model::{permissions::Caller, storage::ListPagination};
 
 use crate::{
@@ -95,7 +95,11 @@ pub async fn list_rfds(
     rqctx: RequestContext<RfdContext>,
 ) -> Result<HttpResponseOk<Vec<RfdWithoutContent>>, HttpError> {
     let ctx = rqctx.context();
-    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let caller = ctx
+        .v_ctx()
+        .get_caller(&rqctx)
+        .await
+        .allow_unauthenticated()?;
     list_rfds_op(ctx, &caller).await
 }
 
@@ -113,7 +117,11 @@ pub async fn view_rfd_meta(
     path: Path<RfdPathParams>,
 ) -> Result<HttpResponseOk<RfdWithoutContent>, HttpError> {
     let ctx = rqctx.context();
-    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let caller = ctx
+        .v_ctx()
+        .get_caller(&rqctx)
+        .await
+        .allow_unauthenticated()?;
     let path = path.into_inner();
     view_rfd_meta_op(ctx, &caller, path.number, None).await
 }
@@ -130,7 +138,11 @@ pub async fn view_rfd(
     path: Path<RfdPathParams>,
 ) -> Result<HttpResponseOk<RfdWithRaw>, HttpError> {
     let ctx = rqctx.context();
-    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let caller = ctx
+        .v_ctx()
+        .get_caller(&rqctx)
+        .await
+        .allow_unauthenticated()?;
     let path = path.into_inner();
     view_rfd_op(ctx, &caller, path.number, None).await
 }
@@ -147,7 +159,11 @@ pub async fn view_rfd_pdf(
     path: Path<RfdPathParams>,
 ) -> Result<HttpResponseOk<RfdWithPdf>, HttpError> {
     let ctx = rqctx.context();
-    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let caller = ctx
+        .v_ctx()
+        .get_caller(&rqctx)
+        .await
+        .allow_unauthenticated()?;
     let path = path.into_inner();
     view_rfd_pdf_op(ctx, &caller, path.number, None).await
 }
@@ -164,7 +180,11 @@ pub async fn view_rfd_attr(
     path: Path<RfdAttrPathParams>,
 ) -> Result<HttpResponseOk<RfdAttr>, HttpError> {
     let ctx = rqctx.context();
-    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let caller = ctx
+        .v_ctx()
+        .get_caller(&rqctx)
+        .await
+        .allow_unauthenticated()?;
     let path = path.into_inner();
     view_rfd_attr_op(ctx, &caller, path.number, None, path.attr).await
 }
@@ -207,7 +227,11 @@ pub async fn list_rfd_revisions(
     query: Query<ListRevisionQuery>,
 ) -> Result<HttpResponseOk<Vec<RfdRevisionMeta>>, HttpError> {
     let ctx = rqctx.context();
-    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let caller = ctx
+        .v_ctx()
+        .get_caller(&rqctx)
+        .await
+        .allow_unauthenticated()?;
     let number = path.into_inner().number;
     list_rfd_revisions_op(ctx, &caller, number, query.into_inner()).await
 }
@@ -224,7 +248,11 @@ pub async fn view_rfd_revision_meta(
     path: Path<RfdRevisionPathParams>,
 ) -> Result<HttpResponseOk<RfdWithoutContent>, HttpError> {
     let ctx = rqctx.context();
-    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let caller = ctx
+        .v_ctx()
+        .get_caller(&rqctx)
+        .await
+        .allow_unauthenticated()?;
     let path = path.into_inner();
     view_rfd_meta_op(ctx, &caller, path.number, Some(path.revision.into())).await
 }
@@ -241,7 +269,11 @@ pub async fn view_rfd_revision(
     path: Path<RfdRevisionPathParams>,
 ) -> Result<HttpResponseOk<RfdWithRaw>, HttpError> {
     let ctx = rqctx.context();
-    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let caller = ctx
+        .v_ctx()
+        .get_caller(&rqctx)
+        .await
+        .allow_unauthenticated()?;
     let path = path.into_inner();
     view_rfd_op(ctx, &caller, path.number, Some(path.revision.into())).await
 }
@@ -258,7 +290,11 @@ pub async fn view_rfd_revision_pdf(
     path: Path<RfdRevisionPathParams>,
 ) -> Result<HttpResponseOk<RfdWithPdf>, HttpError> {
     let ctx = rqctx.context();
-    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let caller = ctx
+        .v_ctx()
+        .get_caller(&rqctx)
+        .await
+        .allow_unauthenticated()?;
     let path = path.into_inner();
     view_rfd_pdf_op(ctx, &caller, path.number, Some(path.revision.into())).await
 }
@@ -275,7 +311,11 @@ pub async fn view_rfd_revision_attr(
     path: Path<RfdRevisionAttrPathParams>,
 ) -> Result<HttpResponseOk<RfdAttr>, HttpError> {
     let ctx = rqctx.context();
-    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let caller = ctx
+        .v_ctx()
+        .get_caller(&rqctx)
+        .await
+        .allow_unauthenticated()?;
     let path = path.into_inner();
     view_rfd_attr_op(
         ctx,
@@ -359,7 +399,11 @@ pub async fn search_rfds(
     query: Query<RfdSearchQuery>,
 ) -> Result<HttpResponseOk<SearchResults>, HttpError> {
     let ctx = rqctx.context();
-    let caller = ctx.v_ctx().get_caller(&rqctx).await?;
+    let caller = ctx
+        .v_ctx()
+        .get_caller(&rqctx)
+        .await
+        .allow_unauthenticated()?;
     search_rfds_op(ctx, &caller, query.into_inner()).await
 }
 
@@ -981,7 +1025,7 @@ mod tests {
         CommitSha, FileSha, Rfd, RfdMeta, RfdRevision, RfdRevisionMeta,
     };
     use uuid::Uuid;
-    use v_api::ApiContext;
+    use v_api::{ApiContext, UnauthenticatedCaller};
     use v_model::{permissions::Caller, Permissions};
 
     use crate::{
@@ -1440,14 +1484,21 @@ mod tests {
 
     // Test RFD access to public RFDs as the unauthenticated user
 
+    async fn unauthenticated_caller(ctx: &RfdContext) -> Caller<RfdPermission> {
+        ctx.v_ctx()
+            .get_caller_from_token(None)
+            .await
+            .allow_unauthenticated()
+            .unwrap()
+    }
+
     #[tokio::test]
     async fn list_rfds_as_unauthenticated() {
         let ctx = ctx().await;
 
-        let HttpResponseOk(rfds) =
-            list_rfds_op(&ctx, &ctx.v_ctx().builtin_unauthenticated_caller())
-                .await
-                .unwrap();
+        let HttpResponseOk(rfds) = list_rfds_op(&ctx, &unauthenticated_caller(&ctx).await)
+            .await
+            .unwrap();
         assert_eq!(1, rfds.len());
         assert_eq!(456, rfds[0].rfd_number);
     }
@@ -1455,7 +1506,7 @@ mod tests {
     #[tokio::test]
     async fn view_rfd_as_unauthenticated() {
         let ctx = ctx().await;
-        let caller = ctx.v_ctx().builtin_unauthenticated_caller();
+        let caller = unauthenticated_caller(&ctx).await;
 
         let result = view_rfd_op(&ctx, &caller, "0123".to_string(), None).await;
         match result {
